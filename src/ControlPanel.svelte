@@ -1,4 +1,4 @@
-<script>
+<script type="ts">
   import { draggable } from '@neodrag/svelte';
   import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
@@ -9,8 +9,9 @@
   let height = 1188;
   let max = 4096;
 
-  function submit(x) {
-
+  function setDimensions(w: number, h: number) {
+    width = w;
+    height = h;
   }
 
 </script>
@@ -22,20 +23,24 @@
     <div class="vbox expand">
       <div class="hbox">
         <div class="font-bold slider-label">Width</div>
-        <RangeSlider name="range-slider" bind:value={width} max={max} step={1}>
-        </RangeSlider>
-        <div class="text-xs slider-value-text"><InPlaceEdit bind:value={width}/> / {max}</div>
+        <RangeSlider name="range-slider" bind:value={width} max={max} step={1}/>
+        <div class="text-xs slider-value-text">
+          <div class="number-box"><InPlaceEdit bind:value={width}/></div>
+           / {max}
+        </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">Height</div>
-        <RangeSlider name="range-slider" bind:value={height} max={max} step={1}>
-        </RangeSlider>
-        <div class="text-xs slider-value-text"><InPlaceEdit bind:value={height}/> / {max}</div>
+        <RangeSlider name="range-slider" bind:value={height} max={max} step={1}/>
+        <div class="text-xs slider-value-text">
+          <div class="number-box"><InPlaceEdit bind:value={height}/></div>
+           / {max}
+        </div>
       </div>
     </div>
     <div class="hbox space-around" style="width: 90px;">
-      <button class="btn btn-sm variant-filled" id="A4">A4</button>
-      <button class="btn btn-sm variant-filled" id="B5">B5</button>
+      <button class="btn btn-sm variant-filled" on:click={() => setDimensions(840, 1188)}>A4</button>
+      <button class="btn btn-sm variant-filled" on:click={() => setDimensions(728, 1028)}>B5</button>
     </div>
   </div>
 
@@ -74,5 +79,9 @@
   }
   .canvas-size-container {
     margin-right: 16px;
+  }
+  .number-box {
+    width: 35px;
+    display: inline-block;
   }
 </style>
