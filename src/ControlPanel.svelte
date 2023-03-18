@@ -16,9 +16,11 @@
 
 </script>
 
-<div class="control-panel" use:draggable={{ handle: '.title-bar' }}>
+<div class="control-panel variant-soft-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }}>
   <div class="title-bar">Control Panel</div>
-  <TemplateChooser />
+  <div class="px-2">
+    <TemplateChooser />
+  </div>
   <div class="hbox space-around canvas-size-container">
     <div class="vbox expand">
       <div class="hbox">
@@ -55,12 +57,8 @@
     position: absolute;
     width: 400px;
     height: 800px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
     display: flex;
     flex-direction: column;
-    /* ... other styles */
   }
   .title-bar {
     cursor: move;
