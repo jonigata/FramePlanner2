@@ -1,19 +1,59 @@
-<script>
+<script type="ts">
+  import { onMount } from 'svelte';
+  import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
+  import { initializeKeyCache, keyDownFlags } from './lib/layeredCanvas/keyCache.js';
+  import { FrameElement, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
+  import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
+  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+
   export let width = '140px';
   export let height = '198px';
+  export let frameJson: unknown;
+
+  let canvas;
+  let layeredCanvas;
+  let latestJson;
+  let frameLayer;
+
+  $:initializePaper(frameJson);
+  function initializePaper(newFrameJson: unknown) {
+    if (!frameLayer) { return; }
+    const images = collectImages(frameLayer.frameTree);
+    const newFrameTree = FrameElement.compile(newFrameJson);
+    frameLayer.frameTree = newFrameTree;
+    dealImages(newFrameTree, images);
+    layeredCanvas.redraw();
+    latestJson = newFrameJson;
+  }
+
+  onMount(() => {
+    const frameTree = FrameElement.compile(frameJson ?? frameExamples[0]);
+
+    sequentializePointer(FrameLayer);
+    layeredCanvas = new LayeredCanvas(canvas);
+    frameLayer = new FrameLayer(
+        frameTree,
+        false,
+        (frameTree) => {
+            const markUp = FrameElement.decompile(frameTree);
+/*
+            skipJsonChange = true;
+            editor.set({ text: JSONstringifyOrder(markUp, 2) });
+            skipJsonChange = false;
+*/
+
+            frameLayer.constraintAll();
+        });
+    layeredCanvas.addLayer(frameLayer);
+    layeredCanvas.redraw();
+
+  });
 </script>
 
-<canvas />
+<canvas style="width: {width}; height: {height};" bind:this={canvas} />
 
 <style>
   canvas {
-    width: var(--canvas-width, 140px);
-    height: var(--canvas-height, 198px);
-    background-color: black;
-  }
-
-  :host {
-    --canvas-width: {width}
-    --canvas-height: {height}
+    background-color: white;
   }
 </style>

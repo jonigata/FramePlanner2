@@ -4,7 +4,8 @@
   import { Drawer, drawerStore } from '@skeletonlabs/skeleton';
   import type { DrawerSettings } from '@skeletonlabs/skeleton';
   import './box.css';
-    import WebFontList from './WebFontList.svelte';
+  import WebFontList from './WebFontList.svelte';
+  import TemplateChooser from './TemplateChooser.svelte';
 
   let fontsize = 22;
   let fontStyle = "font-family: 'Shippori Mincho', serif; font-weight: regular; font-style: normal";
@@ -31,16 +32,19 @@
   }
 </script>
 
-<div class="bubble-detail variant-soft-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }}>
+<div class="bubble-detail variant-soft-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }}>
   <div class="title-bar">Bubble Detail</div>
   <div class="hbox gap-x-2">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="hbox expand selected-font variant-soft-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
     <div class="hbox px-2 variant-soft-primary rounded-container-token">fontsize <div class="number-box"><NumberEdit bind:value={fontsize} showSlider="{true}"/></div></div>
   </div>
-  <textarea class="m-2 rounded-container-token" style="{fontStyle}; font-size: {fontsize}px;">
+  <textarea class="mx-2 my-2 rounded-container-token" style="{fontStyle}; font-size: {fontsize}px;">
 
   </textarea>
+  <div class="px-2 template-chooser-container">
+    <TemplateChooser paperWidth={"96px"} paperHeight={"96px"} />
+  </div>
 </div>
 
 <Drawer>
@@ -61,17 +65,19 @@
 
     position: absolute;
     width: 350px;
-    height: 250px;
+    height: 320px;
     display: flex;
     flex-direction: column;
     padding: 8px;
   }
   textarea {
     flex: 1;
+    align-self: stretch;
     resize: none;
     border: none;
     outline: none;
     padding: 0.5rem;
+    box-sizing: border-box;
   }
   .number-box {
     width: 35px;
@@ -80,5 +86,9 @@
   }
   .selected-font:hover {
     color: rgb(128, 93, 47);
+  }
+  .template-chooser-container {
+    height: 120px;
+    width: 100%;
   }
 </style>
