@@ -9,6 +9,7 @@
   export let width = '140px';
   export let height = '198px';
   export let frameJson: unknown;
+  export let editable = false;
 
   let canvas;
   let layeredCanvas;
@@ -33,7 +34,7 @@
     layeredCanvas = new LayeredCanvas(canvas);
     frameLayer = new FrameLayer(
         frameTree,
-        false,
+        editable,
         (frameTree) => {
             const markUp = FrameElement.decompile(frameTree);
 /*
@@ -50,7 +51,7 @@
   });
 </script>
 
-<canvas style="width: {width}; height: {height};" bind:this={canvas} />
+<canvas width={width} height={height} bind:this={canvas} />
 
 <style>
   canvas {
