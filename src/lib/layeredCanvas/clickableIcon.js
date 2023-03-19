@@ -8,7 +8,11 @@ export class ClickableIcon {
     }
 
     render(ctx) {
+        ctx.save();
+        ctx.shadowColor = "white";
+        ctx.shadowBlur = 5;
         ctx.drawImage(this.image, this.position[0], this.position[1], this.size[0], this.size[1]);
+        ctx.restore();
     }
 
     contains(point) {

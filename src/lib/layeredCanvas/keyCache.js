@@ -1,6 +1,7 @@
 export const keyDownFlags = {};
 
 export function initializeKeyCache(canvas, consume) {
+    console.log("initializeKeyCache");
     function getCanvasPosition(event) {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -22,6 +23,7 @@ export function initializeKeyCache(canvas, consume) {
         mouseCursor = [-1, -1];
     });
     document.addEventListener("keydown", (event) => { 
+        console.log(event.code);
         if (!isMouseOnCanvas()) {return;}
         if (!consume(event.code)) {return;}
         keyDownFlags[event.code] = true; 
@@ -30,5 +32,10 @@ export function initializeKeyCache(canvas, consume) {
     document.addEventListener("keyup", (event) => { 
         keyDownFlags[event.code] = false; 
         event.preventDefault();
+    });
+    canvas.addEventListener("mouseleave", (event) => {
+        for (let key in keyDownFlags) {
+            delete keyDownFlags[key];
+        }
     });
 }

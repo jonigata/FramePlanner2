@@ -4,7 +4,10 @@
   import { initializeKeyCache, keyDownFlags } from './lib/layeredCanvas/keyCache.js';
   import { FrameElement, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
+  import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+  import BubbleDetail from './BubbleDetail.svelte';
+  import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
 
   export let width = '140px';
   export let height = '198px';
@@ -15,6 +18,8 @@
   let layeredCanvas;
   let latestJson;
   let frameLayer;
+  let isBubbleInspectorOpened;
+  let bubbleInspectorPosition;
 
   $:initializePaper(frameJson);
   function initializePaper(newFrameJson: unknown) {
@@ -25,6 +30,22 @@
     dealImages(newFrameTree, images);
     layeredCanvas.redraw();
     latestJson = newFrameJson;
+
+  }
+
+  function showInspector(bubble, p) {
+    console.log('showInspector', bubble);
+    bubbleInspectorPosition = elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector(p));
+    isBubbleInspectorOpened = true;
+  }
+
+  function hideInspector() {
+    console.log('hideInspector');
+    isBubbleInspectorOpened = false;
+  }
+
+  function submit() {
+    console.log('submit');
   }
 
   onMount(() => {
@@ -46,12 +67,27 @@
             frameLayer.constraintAll();
         });
     layeredCanvas.addLayer(frameLayer);
+
+    sequentializePointer(BubbleLayer);
+    let bubbleLayer = new BubbleLayer(showInspector, hideInspector, submit)
+    layeredCanvas.addLayer(bubbleLayer);
+
     layeredCanvas.redraw();
 
+    initializeKeyCache(canvas, (code) => {
+      return code === "AltLeft" || code === "AltRight" ||
+          code === "ControlLeft" || code === "ControlRight" ||
+          code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF";
+    });
   });
 </script>
 
 <canvas width={width} height={height} bind:this={canvas} />
+
+{#if editable}
+  <BubbleDetail isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition}/>
+{/if}
+
 
 <style>
   canvas {

@@ -3,7 +3,6 @@
   import '@skeletonlabs/skeleton/styles/all.css';
   //import '../app.postcss';  
   import ControlPanel from './ControlPanel.svelte';
-  import BubbleDetail from './BubbleDetail.svelte';
   import MainPaper from './MainPaper.svelte';
 </script>
 
@@ -24,5 +23,4 @@
 
 <div class="control-panel-container">
   <ControlPanel />
-  <BubbleDetail />
 </div>

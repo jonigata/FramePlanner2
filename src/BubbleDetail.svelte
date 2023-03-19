@@ -7,9 +7,24 @@
   import WebFontList from './WebFontList.svelte';
   import BubbleChooser from './BubbleChooser.svelte';
 
+  import { onMount, afterUpdate } from 'svelte';
+
+  onMount(() => {
+    console.log('Component mounted, position:', position);
+  });
+
+  afterUpdate(() => {
+    console.log('Component updated, position:', position);
+  });
+
+  export let isOpen = false;
+
   let fontsize = 22;
   let fontStyle = "font-family: 'Shippori Mincho', serif; font-weight: regular; font-style: normal";
   let fontFamily = "'Shippori Mincho', serif";
+  export let position = { x: 0, y: 0 };
+  let adjustedPosition = { x: 0, y: 0 };
+  let dialog = null;
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -30,22 +45,32 @@
     fontStyle = event.detail.fontStyle;
     fontFamily = getFontFamily();
   }
+
+  $:move(position)
+  function move(p) {
+    console.log(p);
+    adjustedPosition = { x: p.x - 175, y: p.y + 40 };
+  }
 </script>
 
-<div class="bubble-detail variant-soft-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }}>
-  <div class="title-bar">Bubble Detail</div>
-  <div class="hbox gap-x-2">
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="hbox expand selected-font variant-soft-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
-    <div class="hbox px-2 variant-soft-primary rounded-container-token">fontsize <div class="number-box"><NumberEdit bind:value={fontsize} showSlider="{true}"/></div></div>
-  </div>
-  <textarea class="mx-2 my-2 rounded-container-token" style="{fontStyle}; font-size: {fontsize}px;">
+{#if isOpen}
+<div class="bubble-inspector-container">
+  <div class="bubble-inspector variant-soft-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}} bind:this={dialog}>
+    <div class="title-bar">Bubble Detail</div>
+    <div class="hbox gap-x-2">
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <div class="hbox expand selected-font variant-soft-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
+      <div class="hbox px-2 variant-soft-primary rounded-container-token">fontsize <div class="number-box"><NumberEdit bind:value={fontsize} showSlider="{true}"/></div></div>
+    </div>
+    <textarea class="mx-2 my-2 rounded-container-token" style="{fontStyle}; font-size: {fontsize}px;">
 
-  </textarea>
-  <div class="px-2 template-chooser-container">
-    <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} />
+    </textarea>
+    <div class="px-2 template-chooser-container">
+      <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} />
+    </div>
   </div>
 </div>
+{/if}
 
 <Drawer>
   <div class="drawer-content">
@@ -60,9 +85,12 @@
     cursor: move;
     padding: 8px;
   }
-  .bubble-detail {
-    transform: translate(-50%, -50%); /* 自身のサイズに基づいて中心に配置 */
-
+  .bubble-inspector-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+  }
+  .bubble-inspector {
     position: absolute;
     width: 350px;
     height: 320px;

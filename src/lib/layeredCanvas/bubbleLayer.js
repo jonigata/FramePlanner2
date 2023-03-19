@@ -2,15 +2,18 @@ import { Layer, sequentializePointer } from "./layeredCanvas.js";
 import { keyDownFlags } from "./keyCache.js";
 import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
+import { ClickableIcon } from "./clickableIcon.js";
 
 export class BubbleLayer extends Layer {
-    constructor() {
+    constructor(onShowInspector, onHideInspector, onSubmit) {
         super();
         this.bubbles = [];
+        this.onShowInspector = onShowInspector;
+        this.onHideInspector = onHideInspector;
+        this.onSubmit = onSubmit;
 
         // load write.png
-        this.writeImage = new Image();
-        this.writeImage.src = "write.png";
+        this.writeIcon = new ClickableIcon("write.png", [0, 0], [32, 32]);
     }
 
     render(ctx) {
@@ -18,20 +21,6 @@ export class BubbleLayer extends Layer {
             const [x,y] = bubble.p0;
             const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
 
-            // draw ellipse, fill with white and 70% opacity and stroke with black
-/*
-            ctx.save();
-            ctx.beginPath();
-            ctx.translate(x, y);
-            ctx.scale(w/2, h/2);
-            ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
-            ctx.restore();
-            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-            ctx.fill();
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.stroke();
-            ctx.closePath();
-*/
             drawBubble(ctx, bubble.text, [x, y, w, h], 'strokes');
 
 
@@ -49,10 +38,6 @@ export class BubbleLayer extends Layer {
                 const tw = s.width;
                 const th = s.height;
                 drawVerticalText(ctx, { x:tx, y:ty, width:tw, height:th }, bubble.text, baselineSkip, charSkip);
-
-                // draw rect
-                // ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
-                // ctx.strokeRect(tx, ty, tw, th);
             }
 
             if (bubble === this.selected) {
@@ -60,7 +45,8 @@ export class BubbleLayer extends Layer {
                 ctx.strokeRect(x, y, w, h);
 
                 // draw write icon on center
-                ctx.drawImage(this.writeImage, x + w/2 - 32, y + h/2 - 32);
+                this.writeIcon.position = [x + w/2 - 16, y + h - 32];
+                this.writeIcon.render(ctx);
             }
 
             // draw resize handle
@@ -106,9 +92,8 @@ export class BubbleLayer extends Layer {
             const bubble = this.selected;
             const [x,y] = bubble.p0;
             const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
-            if (point[0] >= x + w/2 - 32 && point[0] <= x + w/2 + 32 &&
-                point[1] >= y + h/2 - 32 && point[1] <= y + h/2 + 32) {
-                this.createSpeechEditor(bubble);
+            if (this.writeIcon.contains(point)) {
+                this.onShowInspector(bubble, this.writeIcon.position);
                 return true;
             }
         }
@@ -131,7 +116,8 @@ export class BubbleLayer extends Layer {
     }
 
     unfocus() {
-        this.commitSpeech();
+        this.onSubmit();
+        this.onHideInspector();
         this.selected = null;
         this.redraw();
     }
@@ -180,7 +166,6 @@ export class BubbleLayer extends Layer {
     }
 
     *pointer(dragStart, payload) {
-
         if (payload.action === 'create') {
             const bubble = { p0: dragStart, p1: dragStart, text: "今回は……、\n「日常会話でしたーり」、\nプレゼントや【ジャジュジョ】" };
             this.bubbles.push(bubble);
@@ -202,14 +187,13 @@ export class BubbleLayer extends Layer {
                 this.redraw();
             }
         } else if (payload.action === 'select') {
+            console.log('select');
             this.unfocus();
             this.selected = payload.bubble;
             this.redraw();
         } else if (payload.action === 'resize') {
             const bubble = payload.bubble;
             const handle = payload.handle;
-            const [dx, dy] = [dragStart[0] - bubble.p0[0], dragStart[1] - bubble.p0[1]];
-            const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
 
             let p;
             while (p = yield) {
@@ -243,48 +227,6 @@ export class BubbleLayer extends Layer {
                 }
                 this.redraw();
             }
-        }
-    }
-
-    createSpeechEditor(bubble) {
-        const rect = canvas.getBoundingClientRect();
-        const x = (bubble.p0[0] + bubble.p1[0]) * 0.5 + rect.left;
-        const y = bubble.p1[1] + rect.top;
-
-        const textArea = document.createElement('textarea');
-        textArea.style.position = 'absolute';
-        textArea.value = "hiho";
-        document.body.appendChild(textArea);
-        textArea.style.left = `${x - textArea.offsetWidth / 2}px`;
-        textArea.style.top = `${y - textArea.offsetHeight / 2}px`;
-
-        setTimeout(() => {
-            textArea.focus();
-        }, 0);
-
-        textArea.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && event.shiftKey) {
-                event.preventDefault();
-                this.commitSpeech();
-            }
-        });
-
-        this.speechEditor = textArea;
-        return textArea;
-    }
-
-    commitSpeech() {
-        if (this.speechEditor) {
-            this.selected.text = this.speechEditor.value;
-            this.destroySpeechEditor();
-            this.redraw();
-        }
-    }
-
-    destroySpeechEditor() {
-        if (this.speechEditor) { // editor is dom element
-            this.speechEditor.remove();
-            this.speechEditor = null;
         }
     }
 

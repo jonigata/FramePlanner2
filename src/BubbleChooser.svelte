@@ -15,8 +15,8 @@
 
 <div class="sample-selector rounded-container-token">
   <swiper-container style="{style}" navigation="true" pagination="true">
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'rounded'}/></swiper-slide>
     <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'square'}/></swiper-slide>
+    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'rounded'}/></swiper-slide>
     <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'ellipse'}/></swiper-slide>
     <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'strokes'}/></swiper-slide>
   </swiper-container>

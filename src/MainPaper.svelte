@@ -1,11 +1,11 @@
 <script type="ts">
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
+  import { initializeKeyCache } from './lib/layeredCanvas/keyCache';
   import Paper from './Paper.svelte';
 
   let paperWidth = '840px';
   let paperHeight = '1180px';
   let frameJson = frameExamples[0];
-
 </script>
 
 <div class="main-paper-container">
