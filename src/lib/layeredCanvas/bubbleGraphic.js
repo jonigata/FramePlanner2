@@ -68,6 +68,19 @@ function drawStrokesBubble(context, seed, rect) {
     const cookedPoints = QuickHull(rawPoints.map(p => ({x: p[0], y: p[1]})));
     const points = cookedPoints.map(p => [p.x, p.y]);
 
+    context.fillStyle = 'white';
+    context.beginPath();
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        if (i === 0) {
+            context.moveTo(p[0], p[1]);
+        } else {
+            context.lineTo(p[0], p[1]);
+        }
+    }
+    context.closePath();
+    context.fill();
+
     context.beginPath();
     for (let i = 0; i < points.length; i++) {
         const p0 = points[i];

@@ -5,7 +5,7 @@
   import type { DrawerSettings } from '@skeletonlabs/skeleton';
   import './box.css';
   import WebFontList from './WebFontList.svelte';
-  import TemplateChooser from './TemplateChooser.svelte';
+  import BubbleChooser from './BubbleChooser.svelte';
 
   let fontsize = 22;
   let fontStyle = "font-family: 'Shippori Mincho', serif; font-weight: regular; font-style: normal";
@@ -43,7 +43,7 @@
 
   </textarea>
   <div class="px-2 template-chooser-container">
-    <TemplateChooser paperWidth={"96px"} paperHeight={"96px"} />
+    <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} />
   </div>
 </div>
 
