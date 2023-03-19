@@ -6,7 +6,7 @@
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-  import BubbleDetail from './BubbleDetail.svelte';
+  import BubbleInspector from './BubbleInspector.svelte';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
 
   export let width = '140px';
@@ -85,7 +85,7 @@
 <canvas width={width} height={height} bind:this={canvas} />
 
 {#if editable}
-  <BubbleDetail isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition}/>
+  <BubbleInspector isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition}/>
 {/if}
 
 
