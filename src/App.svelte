@@ -3,6 +3,7 @@
   import '@skeletonlabs/skeleton/styles/all.css';
   //import '../app.postcss';  
   import ControlPanel from './ControlPanel.svelte';
+  import BubbleDetail from './BubbleDetail.svelte';
 </script>
 
 <style>
@@ -21,7 +22,7 @@
   .control-panel-container {
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: 232px;
   }
 
 </style>
@@ -30,4 +31,5 @@
 
 <div class="control-panel-container">
   <ControlPanel />
+  <BubbleDetail />
 </div>

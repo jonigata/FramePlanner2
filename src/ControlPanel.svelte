@@ -2,7 +2,7 @@
   import { draggable } from '@neodrag/svelte';
   import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import InPlaceEdit from './InPlaceEdit.svelte';
+  import NumberEdit from './NumberEdit.svelte';
   import './box.css';
 
   let width = 840;
@@ -27,7 +27,7 @@
         <div class="font-bold slider-label">Width</div>
         <RangeSlider name="range-slider" bind:value={width} max={max} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><InPlaceEdit bind:value={width}/></div>
+          <div class="number-box"><NumberEdit bind:value={width} showSlider={false}/></div>
            / {max}
         </div>
       </div>
@@ -35,7 +35,7 @@
         <div class="font-bold slider-label">Height</div>
         <RangeSlider name="range-slider" bind:value={height} max={max} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><InPlaceEdit bind:value={height}/></div>
+          <div class="number-box"><NumberEdit bind:value={height} showSlider={false}/></div>
            / {max}
         </div>
       </div>
@@ -80,6 +80,8 @@
   }
   .number-box {
     width: 35px;
+    height: 20px;
     display: inline-block;
+    vertical-align: bottom;
   }
 </style>
