@@ -267,6 +267,8 @@ export function findBorderAt(layout, position) {
     return null;
 }
 
+const BORDER_WIDTH = 10;
+
 export function makeBorderRect(layout, index) {
     if (layout.dir == 'h') {
         return makeHorizontalBorderRect(layout, index);
@@ -282,7 +284,7 @@ function makeHorizontalBorderRect(layout, index) {
     const coy0 = curr.origin[1];
     const cox1 = curr.origin[0];
     const coy1 = curr.origin[1] + curr.size[1];
-    return [cox0 - 2, coy0, cox1 + 2, coy1];
+    return [cox0 - BORDER_WIDTH, coy0, cox1 + BORDER_WIDTH, coy1];
 }
 
 function makeVerticalBorderRect(layout, index) {
@@ -292,7 +294,7 @@ function makeVerticalBorderRect(layout, index) {
     const coy0 = prev.origin[1] + prev.size[1];
     const cox1 = curr.origin[0] + curr.size[0];
     const coy1 = curr.origin[1];
-    return [cox0, coy0 - 2, cox1, coy1 + 2];
+    return [cox0, coy0 - BORDER_WIDTH, cox1, coy1 + BORDER_WIDTH];
 }
 
 export function collectImages(frameTree) {

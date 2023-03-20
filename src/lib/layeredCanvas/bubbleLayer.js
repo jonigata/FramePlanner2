@@ -92,10 +92,13 @@ export class BubbleLayer extends Layer {
             return { action: 'create' };
         }
         if (this.selected) {
-            // check write icon
             const bubble = this.selected;
-            const [x,y] = bubble.p0;
-            const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
+
+            const handle = this.getHandleOf(bubble, point);
+            if (handle) {
+              return { action: "resize", bubble: bubble, handle: handle };
+            }
+
             if (this.writeIcon.contains(point)) {
                 this.onShowInspector(bubble, this.writeIcon.position);
                 return true;

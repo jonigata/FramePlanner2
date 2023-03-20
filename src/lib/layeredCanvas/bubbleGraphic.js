@@ -112,7 +112,7 @@ function generateRandomPoints(rng, rect, numPoints) {
 
     const points = [];
     for (let i = 0; i < numPoints; i++) {
-        const angle = (i / numPoints + (rng() - 0.5) / numPoints) * 2 * Math.PI;
+        const angle = (i / numPoints + (rng() - 0.5) / (numPoints*2)) * 2 * Math.PI;
         
         const x = r * Math.cos(angle);
         const y = r * Math.sin(angle);
