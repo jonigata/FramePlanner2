@@ -23,7 +23,6 @@ export function initializeKeyCache(canvas, consume) {
         mouseCursor = [-1, -1];
     });
     document.addEventListener("keydown", (event) => { 
-        console.log(event.code);
         if (!isMouseOnCanvas()) {return;}
         if (!consume(event.code)) {return;}
         keyDownFlags[event.code] = true; 

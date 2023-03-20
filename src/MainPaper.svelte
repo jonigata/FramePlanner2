@@ -1,15 +1,13 @@
 <script type="ts">
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
-  import { initializeKeyCache } from './lib/layeredCanvas/keyCache';
   import Paper from './Paper.svelte';
+  import { paperTemplate, paperWidth, paperHeight } from './paperStore.js';
 
-  let paperWidth = '840px';
-  let paperHeight = '1180px';
-  let frameJson = frameExamples[0];
+  $paperTemplate = frameExamples[0];
 </script>
 
 <div class="main-paper-container">
-  <Paper width={paperWidth} height={paperHeight} frameJson={frameJson} editable={true}/>
+  <Paper width={`${$paperWidth}px`} height={`${$paperHeight}px`} frameJson={$paperTemplate} editable={true}/>
 </div>
 
 <style>

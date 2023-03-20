@@ -1,5 +1,5 @@
 <script type="ts">
-  import { onMount } from 'svelte';
+  import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { initializeKeyCache, keyDownFlags } from './lib/layeredCanvas/keyCache.js';
   import { FrameElement, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
@@ -20,6 +20,16 @@
   let frameLayer;
   let isBubbleInspectorOpened;
   let bubbleInspectorPosition;
+
+  const dispatch = createEventDispatcher();
+
+  function handleClick() {
+    dispatch('click');
+  }
+
+  afterUpdate(() =>{
+    layeredCanvas?.redraw(); 
+  });
 
   $:initializePaper(frameJson);
   function initializePaper(newFrameJson: unknown) {
@@ -82,10 +92,12 @@
   });
 </script>
 
-<canvas width={width} height={height} bind:this={canvas} />
 
 {#if editable}
+  <canvas width={width} height={height} bind:this={canvas}/>
   <BubbleInspector isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition}/>
+{:else}
+  <canvas width={width} height={height} bind:this={canvas} on:click={handleClick}/>
 {/if}
 
 

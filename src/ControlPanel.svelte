@@ -4,14 +4,17 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
+  import { paperTemplate, paperWidth, paperHeight } from './paperStore';
 
-  let width = 840;
-  let height = 1188;
   let max = 4096;
 
   function setDimensions(w: number, h: number) {
-    width = w;
-    height = h;
+    $paperWidth = w;
+    $paperHeight = h;
+  }
+
+  function applyTemplate(event) {
+    paperTemplate.set(event.detail);
   }
 
 </script>
@@ -19,23 +22,23 @@
 <div class="control-panel variant-soft-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }}>
   <div class="title-bar">Control Panel</div>
   <div class="px-2">
-    <TemplateChooser />
+    <TemplateChooser on:apply={applyTemplate} />
   </div>
   <div class="hbox space-around canvas-size-container">
     <div class="vbox expand">
       <div class="hbox">
         <div class="font-bold slider-label">Width</div>
-        <RangeSlider name="range-slider" bind:value={width} max={max} step={1}/>
+        <RangeSlider name="range-slider" bind:value={$paperWidth} max={max} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={width} showSlider={false}/></div>
+          <div class="number-box"><NumberEdit bind:value={$paperWidth} showSlider={false}/></div>
            / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">Height</div>
-        <RangeSlider name="range-slider" bind:value={height} max={max} step={1}/>
+        <RangeSlider name="range-slider" bind:value={$paperHeight} max={max} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={height} showSlider={false}/></div>
+          <div class="number-box"><NumberEdit bind:value={$paperHeight} showSlider={false}/></div>
            / {max}
         </div>
       </div>
