@@ -17,27 +17,29 @@
   export let position = { x: 0, y: 0 };
   export let bubble = null;
   let adjustedPosition = { x: 0, y: 0 };
+  let bubbleShape;
 
   $:inputValue(bubble);
   function inputValue(b) {
     if (b) {
       fontSize = b.fontSize;
       fontStyle = b.fontStyle;
-      fontWeight = b.fontWeight === "400" ? "normal" : b.fontWeight;
+      fontWeight = b.fontWeight === "regular" ? "normal" : b.fontWeight;
       fontFamily = b.fontFamily;
       bubbleText = b.text;
+      bubbleShape = b.shape;
     }
   }
 
-  $:outputValue(fontSize, fontWeight, fontFamily, bubbleText);
-  function outputValue(fs, fw, ff, bt) {
+  $:outputValue(fontSize, fontWeight, fontFamily, bubbleText, bubbleShape);
+  function outputValue(fs, fw, ff, bt, bs) {
     if (bubble) {
-      bubble.fontSize = fontSize;
+      bubble.fontSize = fs;
       bubble.fontStyle = fontStyle;
-      bubble.fontWeight = fontWeight;
-      bubble.fontFamily = fontFamily;
+      bubble.fontWeight = fw;
+      bubble.fontFamily = ff;
       bubble.text = bt;
-      // TODO: reflect
+      bubble.shape = bs;
     }
   }
 
@@ -66,7 +68,7 @@
 {#if isOpen}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-soft-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
-    <div class="title-bar">Bubble Detail</div>
+    <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/bubble.png" alt="title"/></div>
     <div class="hbox gap-x-2">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div class="hbox expand selected-font variant-soft-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
@@ -77,7 +79,7 @@
       bind:value={bubbleText}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="px-2 template-chooser-container">
-      <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} />
+      <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} bind:selectedShape={bubbleShape} />
     </div>
   </div>
 </div>
@@ -92,10 +94,6 @@
 </Drawer>
 
 <style>
-  .title-bar {
-    cursor: move;
-    padding: 8px;
-  }
   .bubble-inspector-container {
       position: absolute;
       top: 0;
@@ -104,10 +102,23 @@
   .bubble-inspector {
     position: absolute;
     width: 350px;
-    height: 320px;
+    height: 340px;
     display: flex;
     flex-direction: column;
     padding: 8px;
+    gap: 2px;
+  }
+  .title-bar {
+    cursor: move;
+    align-self: stretch;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .title-image {
+    width: 32px;
+    height: 32px;
   }
   textarea {
     flex: 1;

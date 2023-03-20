@@ -21,7 +21,8 @@ export class BubbleLayer extends Layer {
             const [x,y] = bubble.p0;
             const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
 
-            drawBubble(ctx, bubble.text, [x, y, w, h], 'strokes');
+            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
 
             if (bubble.text) {
@@ -53,6 +54,7 @@ export class BubbleLayer extends Layer {
             // draw resize handle
             if (bubble === this.selected && this.handle) {
                 const threshold = 5;
+                ctx.save();
                 ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
                 switch (this.handle) {
                     case 'top-left':
@@ -80,6 +82,7 @@ export class BubbleLayer extends Layer {
                         ctx.fillRect(x + w - threshold, y - threshold, threshold*2, h + threshold*2);
                         break;
                 }
+                ctx.restore();
             }
         }
     }
@@ -172,8 +175,9 @@ export class BubbleLayer extends Layer {
               p0: dragStart,
               p1: dragStart,
               text: "まつしまや\nああまつしまや\nまつしまや",
+              shape: "square",
               fontStyle: "normal",
-              fontWeight: "regular",
+              fontWeight: "400",
               fontSize: 22,
               fontFamily: "Shippori Mincho",
             };

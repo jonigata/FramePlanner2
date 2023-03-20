@@ -5,20 +5,26 @@
 
   export let paperWidth = '96px';
   export let paperHeight = '96px';
+  export let selectedShape = 'square';
 
   let style;
   onMount(() => {
     // なぜか後刺ししないとうまく動かない
     style = "height: 100%;";
   });
+
+  function choose(s) {
+    console.log(s);
+    selectedShape = s;
+  }
 </script>
 
 <div class="sample-selector rounded-container-token">
   <swiper-container style="{style}" navigation="true" pagination="true">
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'square'}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'rounded'}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'ellipse'}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'strokes'}/></swiper-slide>
+    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'square'} on:click={()=>choose('square')}/></swiper-slide>
+    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'rounded'} on:click={()=>choose('rounded')}/></swiper-slide>
+    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'ellipse'} on:click={()=>choose('ellipse')}/></swiper-slide>
+    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'strokes'} on:click={()=>choose('strokes')}/></swiper-slide>
   </swiper-container>
 </div>
 

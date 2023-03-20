@@ -20,7 +20,7 @@
 </script>
 
 <div class="control-panel variant-soft-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }}>
-  <div class="title-bar">Control Panel</div>
+  <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/control-panel.png" alt="title"/></div>
   <div class="px-2">
     <TemplateChooser on:apply={applyTemplate} />
   </div>
@@ -65,7 +65,15 @@
   }
   .title-bar {
     cursor: move;
-    padding: 8px;
+    padding: 2px;
+    margin: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .title-image {
+    width: 32px;
+    height: 32px;
   }
   .labeled-component {
     display: flex;
@@ -80,6 +88,7 @@
   }
   .canvas-size-container {
     margin-right: 16px;
+    margin-top: 4px;
   }
   .number-box {
     width: 35px;
