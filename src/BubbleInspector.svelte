@@ -79,7 +79,7 @@
       bind:value={bubbleText}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="px-2 template-chooser-container">
-      <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} bind:selectedShape={bubbleShape} />
+      <BubbleChooser paperWidth={"64px"} paperHeight={"96px"} bind:selectedShape={bubbleShape} />
     </div>
   </div>
 </div>

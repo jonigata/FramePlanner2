@@ -1,23 +1,44 @@
 import seedrandom from "seedrandom";
+import { claim_text, xlink_attr } from "svelte/internal";
 import { QuickHull } from "./quickHull.js"
 
 export function drawBubble(context, seed, rect, patternName) {
-    switch (patternName) {
-        case 'rounded':
-            drawRoundedBubble(context, seed, rect);
-            break;
-        case 'square':
-            drawSquareBubble(context, seed, rect);
-            break;
-        case 'ellipse':
-            drawEllipseBubble(context, seed, rect);
-            break;
-        case 'strokes':
-            drawStrokesBubble(context, seed, rect);
-            break;
-        default:
-            throw new Error(`Unknown bubble pattern: ${patternName}, candidates are "rounded", "square", "ellipse", "strokes"`);
-    }
+  switch (patternName) {
+    case "rounded":
+      drawRoundedBubble(context, seed, rect);
+      break;
+    case "square":
+      drawSquareBubble(context, seed, rect);
+      break;
+    case "ellipse":
+      drawEllipseBubble(context, seed, rect);
+      break;
+    case "concentration":
+      drawConcentrationBubble(context, seed, rect);
+      break;
+    case "polygon":
+      drawPolygonBubble(context, seed, rect);
+      break;
+    case "strokes":
+      drawStrokesBubble(context, seed, rect);
+      break;
+    case "double-strokes":
+      drawDoubleStrokesBubble(context, seed, rect);
+      break;
+    case "harsh":
+      drawHarshBubble(context, seed, rect);
+      break;
+    case "harsh-curve":
+      drawHarshCurveBubble(context, seed, rect);
+      break;
+    case "soft":
+      drawSoftBubble(context, seed, rect);
+      break;
+    default:
+      throw new Error(
+        `Unknown bubble pattern: ${patternName}, candidates are "rounded", "square", "ellipse", "strokes"`
+      );
+  }
 }
 
 function drawRoundedBubble(context, seed, rect) {
@@ -52,48 +73,241 @@ function drawSquareBubble(context, seed, rect) {
     context.strokeRect(x, y, w, h);
 }
 
-function drawEllipseBubble(context, seed, rect) {
-    const [x, y, w, h] = rect;
+function drawHarshBubble(context, seed, rect) {
+  const bump = Math.min(rect[2], rect[3]) / 10;
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, rect, 10);
+  const points = subdividedPointsWithBump(rawPoints, bump);
 
-    // fill
+  function makePath() {
     context.beginPath();
-    context.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 2 * Math.PI);
-    context.fill();
-    context.stroke();
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) {
+        context.moveTo(p[0], p[1]);
+      } else {
+        context.lineTo(p[0], p[1]);
+      }
+    }
+    context.closePath();
+  }
+
+  makePath();
+  context.fill();
+
+  makePath();
+  context.stroke();
+}
+
+function drawPoints(context, points, color) {
+  context.save();
+  context.strokeStyle = color;
+  context.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    // draw circle
+    context.moveTo(p[0], p[1]);
+    context.arc(p[0], p[1], 2, 0, 2 * Math.PI);
+  }
+  context.stroke();
+  context.restore();
+}
+
+function drawHarshCurveBubble(context, seed, rect) {
+  const bump = Math.min(rect[2], rect[3]) / 10;
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, rect, 12);
+
+  // drawPoints(context, rawPoints, 'red');
+
+  const points = subdividedPointsWithBump(rawPoints, bump);
+  // drawPoints(context, points, 'blue');
+
+  function makePath() {
+    context.beginPath();
+    context.moveTo(points[0][0], points[0][1]);
+    for (let i = 0; i < points.length; i += 2) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const p2 = points[(i + 2) % points.length];
+      context.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+    }
+    context.closePath();
+  }
+
+  makePath();
+  context.fill();
+
+  makePath();
+  context.stroke();
+}
+
+function drawSoftBubble(context, seed, rect) {
+  const bump = Math.min(rect[2], rect[3]) / 15;
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, rect, 12);
+  const points = subdividedPointsWithBump(rawPoints, -bump);
+
+  function makePath() {
+    context.beginPath();
+    context.moveTo(points[0][0], points[0][1]);
+    for (let i = 0; i < points.length; i += 2) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const p2 = points[(i + 2) % points.length];
+      context.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+    }
+    context.closePath();
+  }
+
+  makePath();
+  context.fill();
+
+  makePath();
+  context.stroke();
+}
+
+function subdivideSegmentWithBump(p1, p2, bump) {
+  const q = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+  const [dx, dy] = [p2[0] - p1[0], p2[1] - p1[1]];
+  const [nx, ny] = [-dy, dx];
+  const [mx, my] = [
+    nx / Math.sqrt(nx * nx + ny * ny),
+    ny / Math.sqrt(nx * nx + ny * ny),
+  ];
+  const [qx, qy] = [q[0] + mx * bump, q[1] + my * bump];
+  return [qx, qy];
+}
+
+function subdividedPointsWithBump(points, bump) {
+  const result = [];
+  for (let i = 0; i < points.length; i++) {
+    const p1 = points[i];
+    const p2 = points[(i + 1) % points.length];
+    result.push(p1);
+    result.push(subdivideSegmentWithBump(p1, p2, bump));
+  }
+  return result;
+}
+
+function drawEllipseBubble(context, seed, rect) {
+  const [x, y, w, h] = rect;
+
+  context.beginPath();
+  context.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 2 * Math.PI);
+  context.fill();
+  context.stroke();
+}
+
+function drawConcentrationBubble(context, seed, rect) {
+  const [x, y, w, h] = rect;
+  const [cx, cy] = [x + w / 2, y + h / 2];
+
+  context.save();
+  context.translate(cx, cy);
+  context.scale(w / 2, h / 2);
+
+  context.lineWidth = 1 / Math.min(w, h);
+  // draw n radial line
+  const n = 200;
+  context.save();
+  const gradient = context.createRadialGradient(0, 0, 1, 0, 0, 1.15);
+  gradient.addColorStop(0.0, "rgba(0,0,0,1)");
+  gradient.addColorStop(1.0, "rgba(0,0,0,0)");
+  context.strokeStyle = gradient;
+  context.beginPath();
+  for (let i = 0; i < n; i++) {
+    const angle = (i * 2 * Math.PI) / n;
+    const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
+    const [lx, ly] = [dx * 1.15, dy * 1.15];
+    context.moveTo(0, 0);
+    context.lineTo(lx, ly);
+  }
+  context.closePath();
+  context.stroke();
+  context.restore();
+
+  context.beginPath();
+  context.ellipse(0, 0, 1, 1, 0, 0, 2 * Math.PI);
+  context.fill();
+  context.restore();
+}
+
+function drawPolygonBubble(context, seed, rect, double) {
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, rect, 10);
+  const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
+  const points = cookedPoints.map((p) => [p.x, p.y]);
+
+  context.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    if (i === 0) {
+      context.moveTo(p[0], p[1]);
+    } else {
+      context.lineTo(p[0], p[1]);
+    }
+  }
+  context.closePath();
+  context.fill();
+  context.stroke();
 }
 
 function drawStrokesBubble(context, seed, rect) {
-    const rng = seedrandom(seed);
-    const rawPoints = generateRandomPoints(rng, rect, 10);
-    const cookedPoints = QuickHull(rawPoints.map(p => ({x: p[0], y: p[1]})));
-    const points = cookedPoints.map(p => [p.x, p.y]);
+    drawStrokesBubbleAux(context, seed, rect, false);
+}
 
-    context.fillStyle = 'white';
-    context.beginPath();
-    for (let i = 0; i < points.length; i++) {
-        const p = points[i];
-        if (i === 0) {
-            context.moveTo(p[0], p[1]);
-        } else {
-            context.lineTo(p[0], p[1]);
-        }
+function drawDoubleStrokesBubble(context, seed, rect) {
+    drawStrokesBubbleAux(context, seed, rect, true);
+}
+
+function drawStrokesBubbleAux(context, seed, rect, double) {
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, rect, 10);
+  const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
+  const points = cookedPoints.map((p) => [p.x, p.y]);
+
+  context.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    if (i === 0) {
+      context.moveTo(p[0], p[1]);
+    } else {
+      context.lineTo(p[0], p[1]);
     }
-    context.closePath();
-    context.fill();
+  }
+  context.closePath();
+  context.fill();
 
-    context.beginPath();
-    for (let i = 0; i < points.length; i++) {
-        const p0 = points[i];
-        const p1 = points[(i + 1) % points.length];
+  const dist = Math.min(rect[2], rect[3]) / 60;
 
-        const [q0, q1] = extendLineSegment(p0, p1, 1.1);
+  context.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const p0 = points[i];
+    const p1 = points[(i + 1) % points.length];
 
-        context.moveTo(q0[0], q0[1]);
-        context.lineTo(q1[0], q1[1]);
+    const [q0, q1] = extendLineSegment(p0, p1, 1.1);
+
+    context.moveTo(q0[0], q0[1]);
+    context.lineTo(q1[0], q1[1]);
+
+    if (double) {
+        const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
+        const [nx, ny] = [-dy, dx];
+        const [mx, my] = [
+        nx / Math.sqrt(nx * nx + ny * ny),
+        ny / Math.sqrt(nx * nx + ny * ny),
+        ];
+        const [qx, qy] = [q0[0] + mx * dist, q0[1] + my * dist];
+        const [rx, ry] = [q1[0] + mx * dist, q1[1] + my * dist];
+
+        context.moveTo(qx, qy);
+        context.lineTo(rx, ry);
     }
+  }
 
-    context.closePath();
-    context.stroke();
+  context.closePath();
+  context.stroke();
 }
 
 function extendLineSegment(p0, p1, extensionFactor) {
@@ -112,7 +326,9 @@ function generateRandomPoints(rng, rect, numPoints) {
 
     const points = [];
     for (let i = 0; i < numPoints; i++) {
-        const angle = (i / numPoints + (rng() - 0.5) / (numPoints*2)) * 2 * Math.PI;
+        const angleJitter = (rng() - 0.5) / (numPoints * 2);
+        // const angleJitter = 0;
+        const angle = (i / numPoints + angleJitter) * 2 * Math.PI;
         
         const x = r * Math.cos(angle);
         const y = r * Math.sin(angle);
@@ -131,4 +347,4 @@ function superellipsePoint(a, b, n, theta) {
     const x = a * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), 2 / n);
     const y = b * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), 2 / n);
     return [x, y];
-  }
+}

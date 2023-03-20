@@ -21,10 +21,9 @@
 
 <div class="sample-selector rounded-container-token">
   <swiper-container style="{style}" navigation="true" pagination="true" slides-per-view="2" centered-slides="true" grab-cursor="true">
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'square'} on:click={()=>choose('square')}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'rounded'} on:click={()=>choose('rounded')}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'ellipse'} on:click={()=>choose('ellipse')}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'strokes'} on:click={()=>choose('strokes')}/></swiper-slide>
+    {#each ['square', 'rounded', 'soft', 'harsh', 'harsh-curve', 'ellipse', 'concentration', 'polygon', 'strokes', 'double-strokes'] as s}
+      <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={s} on:click={()=>choose(s)}/></swiper-slide>
+    {/each}
   </swiper-container>
 </div>
 

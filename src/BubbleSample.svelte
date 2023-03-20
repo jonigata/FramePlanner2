@@ -3,7 +3,7 @@
   import { drawBubble } from "./lib/layeredCanvas/bubbleGraphic.js";
   import { createEventDispatcher } from 'svelte';
 
-  export let width = '96px';
+  export let width = '64px';
   export let height = '96px';
   export let pattern = 'rounded';
 
