@@ -20,6 +20,7 @@
   let frameLayer;
   let isBubbleInspectorOpened;
   let bubbleInspectorPosition;
+  let bubble;
 
   const dispatch = createEventDispatcher();
 
@@ -43,10 +44,11 @@
 
   }
 
-  function showInspector(bubble, p) {
+  function showInspector(b, p) {
     console.log('showInspector', bubble);
     bubbleInspectorPosition = elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector(p));
     isBubbleInspectorOpened = true;
+    bubble = b;
   }
 
   function hideInspector() {
@@ -95,9 +97,9 @@
 
 {#if editable}
   <canvas width={width} height={height} bind:this={canvas}/>
-  <BubbleInspector isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition}/>
+  <BubbleInspector isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition} bind:bubble={bubble}/>
 {:else}
-  <canvas width={width} height={height} bind:this={canvas} on:click={handleClick}/>
+  <canvas width={width} height={height} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
 {/if}
 
 

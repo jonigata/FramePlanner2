@@ -21,3 +21,9 @@
 </script>
 
 <canvas style="width: {width}; height: {height};" bind:this={canvas} />
+
+<style>
+  canvas {
+    cursor: pointer;
+  }
+</style>

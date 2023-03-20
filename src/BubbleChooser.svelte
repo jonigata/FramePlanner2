@@ -20,7 +20,6 @@
     <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'ellipse'}/></swiper-slide>
     <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><BubbleSample width={paperWidth} height={paperHeight} pattern={'strokes'}/></swiper-slide>
   </swiper-container>
-  <img id="load-frame-template" src="/src/assets/get.png" alt="get" />
 </div>
 
 <style>

@@ -2,10 +2,11 @@
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontDefinition, GoogleFontVariant } from "@svelte-web-fonts/google";
   import { createEventDispatcher } from 'svelte';
+  import { parseFontFamily } from 'css-font-parser';
 
   const dispatch = createEventDispatcher();
 
-  const fontSources = [
+  const normalFontFamilies = [
     "'BIZ UDGothic', sans-serif",
     "'BIZ UDMincho', serif",
     "'BIZ UDPGothic', sans-serif",
@@ -56,17 +57,53 @@
     "'Zen Old Mincho', serif",
   ];
 
-  const fonts = fontSources.map((fontSource) => {
+  const boldFontFamilies = [
+    "'BIZ UDGothic', sans-serif",
+    "'BIZ UDMincho', serif",
+    "'BIZ UDPGothic', sans-serif",
+    "'BIZ UDPMincho', serif",
+    "'IBM Plex Sans JP', sans-serif",
+    "'Kaisei Decol', serif",
+    "'Kaisei HarunoUmi', serif",
+    "'Kaisei Opti', serif",
+    "'Kaisei Tokumin', serif",
+    // "'Kiwi Maru', serif", 500
+    // "'Klee One', cursive", 600
+    "'M PLUS 1', sans-serif",
+    "'M PLUS 1 Code', sans-serif",
+    "'M PLUS 1p', sans-serif",
+    "'M PLUS 2', sans-serif",
+    "'M PLUS Rounded 1c', sans-serif",
+    "'Noto Sans JP', sans-serif",
+    "'Noto Serif JP', serif",
+    "'Shippori Mincho', serif",
+    "'Shippori Mincho B1', serif",
+    "'Zen Kaku Gothic Antique', sans-serif",
+    "'Zen Kaku Gothic New', sans-serif",
+    "'Zen Maru Gothic', sans-serif",
+    "'Zen Old Mincho', serif",
+  ];
+
+  const normalFonts = normalFontFamilies.map((fontFamily) => {
     const font: GoogleFontDefinition = {
-      family: fontSource,
-      variants: ["regular", "bold"],
+      family: parseFontFamily(fontFamily)[0],
+      variants: ["400"],
     };
     return font;
   });
 
-  function chooseFont(event, fontStyle) {
-    console.log(fontStyle);
-    dispatch('choose', { fontStyle: fontStyle });
+  const boldFonts = boldFontFamilies.map((fontFamily) => {
+    const font: GoogleFontDefinition = {
+      family: parseFontFamily(fontFamily)[0],
+      variants: ["700"],
+    };
+    return font;
+  });
+
+  const fonts = [...normalFonts, ...boldFonts];
+
+  function chooseFont(event, fontFamily, fontWeight) {
+    dispatch('choose', { fontFamily, fontWeight });
   }
 </script>
 
@@ -83,7 +120,7 @@
         {#each font.variants as variant}
             <div class="font-sample" style={getFontStyle(font.family, variant)}>
               <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <span on:click={e=>chooseFont(e,getFontStyle(font.family, variant))}>{font.family} 今日はいい天気ですね</span>
+              <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
             </div>
         {/each}
     {/each}

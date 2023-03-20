@@ -7,24 +7,39 @@
   import WebFontList from './WebFontList.svelte';
   import BubbleChooser from './BubbleChooser.svelte';
 
-  import { onMount, afterUpdate } from 'svelte';
-
-  onMount(() => {
-    console.log('Component mounted, position:', position);
-  });
-
-  afterUpdate(() => {
-    console.log('Component updated, position:', position);
-  });
-
   export let isOpen = false;
 
-  let fontsize = 22;
-  let fontStyle = "font-family: 'Shippori Mincho', serif; font-weight: regular; font-style: normal";
+  let fontSize = 22;
+  let fontStyle = "normal";
+  let fontWeight = "400";
   let fontFamily = "'Shippori Mincho', serif";
+  let bubbleText = "";
   export let position = { x: 0, y: 0 };
+  export let bubble = null;
   let adjustedPosition = { x: 0, y: 0 };
-  let dialog = null;
+
+  $:inputValue(bubble);
+  function inputValue(b) {
+    if (b) {
+      fontSize = b.fontSize;
+      fontStyle = b.fontStyle;
+      fontWeight = b.fontWeight === "400" ? "normal" : b.fontWeight;
+      fontFamily = b.fontFamily;
+      bubbleText = b.text;
+    }
+  }
+
+  $:outputValue(fontSize, fontWeight, fontFamily, bubbleText);
+  function outputValue(fs, fw, ff, bt) {
+    if (bubble) {
+      bubble.fontSize = fontSize;
+      bubble.fontStyle = fontStyle;
+      bubble.fontWeight = fontWeight;
+      bubble.fontFamily = fontFamily;
+      bubble.text = bt;
+      // TODO: reflect
+    }
+  }
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -34,37 +49,33 @@
     drawerStore.open(settings);
   }
 
-  function getFontFamily() {
-    const fontFamily = fontStyle.split(':')[1].split(',')[0].trim();
-    return fontFamily;
-  }
-
-  function onChoose(event) {
+  function onChangeFont(event) {
     drawerStore.close();
-    console.log(event.detail);
-    fontStyle = event.detail.fontStyle;
-    fontFamily = getFontFamily();
+    fontWeight = event.detail.fontWeight;
+    fontFamily = event.detail.fontFamily;
   }
 
-  $:move(position)
+  $:move(position);
   function move(p) {
     console.log(p);
     adjustedPosition = { x: p.x - 175, y: p.y + 40 };
   }
+
 </script>
 
 {#if isOpen}
 <div class="bubble-inspector-container">
-  <div class="bubble-inspector variant-soft-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}} bind:this={dialog}>
+  <div class="bubble-inspector variant-soft-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
     <div class="title-bar">Bubble Detail</div>
     <div class="hbox gap-x-2">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div class="hbox expand selected-font variant-soft-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
-      <div class="hbox px-2 variant-soft-primary rounded-container-token">fontsize <div class="number-box"><NumberEdit bind:value={fontsize} showSlider="{true}"/></div></div>
+      <div class="hbox px-2 variant-soft-primary rounded-container-token">fontSize <div class="number-box"><NumberEdit bind:value={fontSize} showSlider="{true}"/></div></div>
     </div>
-    <textarea class="mx-2 my-2 rounded-container-token" style="{fontStyle}; font-size: {fontsize}px;">
-
-    </textarea>
+    <textarea
+      class="mx-2 my-2 rounded-container-token" 
+      bind:value={bubbleText}/>
+    <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="px-2 template-chooser-container">
       <BubbleChooser paperWidth={"96px"} paperHeight={"96px"} />
     </div>
@@ -76,7 +87,7 @@
   <div class="drawer-content">
     <h1>Font</h1>
     <p>Choose a font.</p>
-    <WebFontList on:choose={onChoose}/>
+    <WebFontList on:choose={onChangeFont}/>
   </div>
 </Drawer>
 
@@ -106,6 +117,7 @@
     outline: none;
     padding: 0.5rem;
     box-sizing: border-box;
+    line-height: 1.1;
   }
   .number-box {
     width: 35px;

@@ -25,12 +25,13 @@ export class BubbleLayer extends Layer {
 
 
             if (bubble.text) {
-                const baselineSkip = 32;
-                const charSkip = 22;
+                const baselineSkip = bubble.fontSize * 1.5;
+                const charSkip = bubble.fontSize;
 
                 // draw text
                 ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-                ctx.font = "20px 'Noto Serif JP', serif";
+                const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+                ctx.font = ss;
                 const textMaxHeight = h * 0.85;
                 const s = measureVerticalText(ctx, textMaxHeight, bubble.text, baselineSkip, charSkip);
                 const tx = bubble.p0[0] + (w - s.width)/2;
@@ -167,8 +168,16 @@ export class BubbleLayer extends Layer {
 
     *pointer(dragStart, payload) {
         if (payload.action === 'create') {
-            const bubble = { p0: dragStart, p1: dragStart, text: "今回は……、\n「日常会話でしたーり」、\nプレゼントや【ジャジュジョ】" };
-            this.bubbles.push(bubble);
+            const bubble = {
+              p0: dragStart,
+              p1: dragStart,
+              text: "まつしまや\nああまつしまや\nまつしまや",
+              fontStyle: "normal",
+              fontWeight: "regular",
+              fontSize: 22,
+              fontFamily: "Shippori Mincho",
+            };
+                this.bubbles.push(bubble);
 
             let p;
             while (p = yield) {
