@@ -70,7 +70,7 @@ function visitPng(png, type) {
 function createChunk(type, data) {
     var dataLength = data.length;
     var chunk = new Uint8Array(4 + 4 + dataLength + 4);
-    var type = stringToUint8Array(type);
+    type = stringToUint8Array(type);
     var pos = 0;
 
     // length
@@ -130,6 +130,7 @@ function mergeCanvasWithPose(canvas, keyword, content) {
   
     var blob = new Blob([destBuffer], {type: "image/png"});
     var url = URL.createObjectURL(blob);
+    console.log("saving canvas with pose");
     return url;  
 }
 
@@ -144,4 +145,22 @@ export function saveCanvas(canvas, filename, jsonData) {
 
     createEl.click();
     createEl.remove();
+}
+
+export async function copyCanvasToClipboard(canvas) {
+  try {
+    // CanvasをBlobとして取得する
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve));
+
+    // BlobをClipboardItemとしてクリップボードに書き込む
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob,
+      }),
+    ]);
+
+    console.log("Canvas content copied to clipboard.");
+  } catch (err) {
+    console.error("Failed to copy canvas content to clipboard:", err);
+  }
 }

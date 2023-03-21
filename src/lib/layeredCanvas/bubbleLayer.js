@@ -3,7 +3,6 @@ import { keyDownFlags } from "./keyCache.js";
 import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
-import { HtmlTagHydration } from "svelte/internal";
 
 export class BubbleLayer extends Layer {
     constructor(interactable, onShowInspector, onHideInspector, onSubmit) {
@@ -51,6 +50,8 @@ export class BubbleLayer extends Layer {
                 drawVerticalText(ctx, { x:tx, y:ty, width:tw, height:th }, bubble.text, baselineSkip, charSkip);
             }
 
+            if (!this.interactable) { continue; }
+            
             if (bubble === this.selected) {
                 ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
                 ctx.strokeRect(x, y, w, h);

@@ -24,8 +24,8 @@ export class FrameLayer extends Layer {
 
         // fill background
         ctx.save();
-        const pattern = ctx.createPattern(this.transparentPattern, 'repeat');
-        ctx.fillStyle = pattern;
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = "rgb(255,255,255, 1)";
         ctx.fillRect(0, 0, size[0], size[1]);
         ctx.restore();
 
@@ -107,9 +107,11 @@ export class FrameLayer extends Layer {
             ctx.restore();
         }
 
-        ctx.strokeStyle = "rgb(0,0,0)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(origin[0], origin[1], size[0], size[1]);
+        if (layout.element.bgColor !== "transparent") {
+            ctx.strokeStyle = "rgb(0,0,0)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(origin[0], origin[1], size[0], size[1]);
+        }
     }
 
     renderBackground(ctx, layout) {
@@ -120,7 +122,7 @@ export class FrameLayer extends Layer {
         if (bgColor == "transparent") {
           ctx.save();
           ctx.globalCompositeOperation = "destination-out";
-          ctx.fillStyle = "rgb(255,255,255, 0)";
+          ctx.fillStyle = "rgb(255,255,255, 1)";
           ctx.fillRect(origin[0], origin[1], size[0], size[1]);
           ctx.restore();
         } else {

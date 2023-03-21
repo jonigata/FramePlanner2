@@ -4,7 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { paperTemplate, paperWidth, paperHeight } from './paperStore';
+  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken } from './paperStore';
 
   let max = 4096;
 
@@ -15,6 +15,14 @@
 
   function applyTemplate(event) {
     paperTemplate.set(event.detail);
+  }
+
+  function save() {
+    $saveToken = true;
+  }
+
+  function copyToClipboard() {
+    $clipboardToken = true;
   }
 
 </script>
@@ -53,6 +61,10 @@
         <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
       </div>  
     </div>
+  </div>
+  <div class="hbox gap" style="margin-top: 16px;">
+    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button" on:click={save}>Download</button>
+    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button" on:click={copyToClipboard}>Copy</button>
   </div>
 
 </div>
@@ -104,5 +116,8 @@
   }
   .paper-size {
     height: 20px;
+  }
+  .download-button {
+    width: 160px;
   }
 </style>

@@ -1,13 +1,31 @@
 <script type="ts">
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
   import Paper from './Paper.svelte';
-  import { paperTemplate, paperWidth, paperHeight } from './paperStore.js';
+  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken } from './paperStore.js';
 
   $paperTemplate = frameExamples[0];
+
+  let paper;
+
+  $:save($saveToken);
+  function save(token) {
+    if (!token) return;
+    console.log('tokenValue', token);
+      paper.save();
+      $saveToken = false;
+  }
+
+  $:copyToClipboard($clipboardToken);
+  function copyToClipboard(token) {
+    if (!token) return;
+      console.log('tokenValue', token);
+      paper.copyToClipboard();
+      $clipboardToken = false;
+  }
 </script>
 
 <div class="main-paper-container">
-  <Paper width={`${$paperWidth}px`} height={`${$paperHeight}px`} frameJson={$paperTemplate} editable={true}/>
+  <Paper width={`${$paperWidth}px`} height={`${$paperHeight}px`} frameJson={$paperTemplate} editable={true} bind:this={paper}/>
 </div>
 
 <style>
