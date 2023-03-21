@@ -204,6 +204,7 @@ export class BubbleLayer extends Layer {
 
     *pointer(dragStart, payload) {
         if (payload.action === 'create') {
+            this.unfocus();
             const bubble = { 
                 ...this.defaultBubble ,
                 p0: dragStart, 
