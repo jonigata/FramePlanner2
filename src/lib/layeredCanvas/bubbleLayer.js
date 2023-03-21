@@ -3,6 +3,7 @@ import { keyDownFlags } from "./keyCache.js";
 import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
+import { HtmlTagHydration } from "svelte/internal";
 
 export class BubbleLayer extends Layer {
     constructor(onShowInspector, onHideInspector, onSubmit) {
@@ -13,6 +14,7 @@ export class BubbleLayer extends Layer {
         this.onSubmit = onSubmit;
 
         this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [32, 32]);
+        this.dragIcon = new ClickableIcon("drag.png", [0, 0], [32, 32]);
     }
 
     render(ctx) {
@@ -46,6 +48,8 @@ export class BubbleLayer extends Layer {
             if (bubble === this.selected) {
                 ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
                 ctx.strokeRect(x, y, w, h);
+
+                this.dragIcon.render(ctx);
             }
 
             // draw resize handle
@@ -104,6 +108,8 @@ export class BubbleLayer extends Layer {
                 point[1] >= bubble.p0[1] && point[1] <= bubble.p1[1]) {
                 if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
                     return { action: 'move', bubble: bubble };
+                } else if (bubble === this.selected && this.dragIcon.contains(point)) {
+                    return { action: "move", bubble: bubble };
                 } else {
                     return { action: 'select', bubble: bubble };
                 }
@@ -195,6 +201,9 @@ export class BubbleLayer extends Layer {
             while (p = yield) {
                 bubble.p0 = [p[0] - dx, p[1] - dy];
                 bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
+                const [x0, y0] = this.selected.p0;
+                const [x1, y1] = this.selected.p1;
+                this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
                 this.redraw();
             }
         } else if (payload.action === 'select') {
@@ -204,6 +213,8 @@ export class BubbleLayer extends Layer {
             const [x0, y0] = this.selected.p0;
             const [x1, y1] = this.selected.p1;
             this.onShowInspector(this.selected, [(x0 + x1) / 2, y1]);
+            this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
+
             this.redraw();
         } else if (payload.action === 'resize') {
             const bubble = payload.bubble;
