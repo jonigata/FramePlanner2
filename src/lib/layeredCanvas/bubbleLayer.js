@@ -3,6 +3,7 @@ import { keyDownFlags } from "./keyCache.js";
 import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
+import { text } from "svelte/internal";
 
 export class BubbleLayer extends Layer {
     constructor(interactable, onShowInspector, onHideInspector, onSubmit) {
@@ -53,12 +54,14 @@ export class BubbleLayer extends Layer {
             if (!this.interactable) { continue; }
             
             if (bubble === this.selected) {
+                ctx.save();
                 ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
                 ctx.strokeRect(x, y, w, h);
 
                 this.dragIcon.render(ctx);
                 this.zMinusIcon.render(ctx);
                 this.zPlusIcon.render(ctx);
+                ctx.restore();
             }
 
             // draw resize handle
@@ -263,6 +266,7 @@ export class BubbleLayer extends Layer {
                         bubble.p1 = [p[0], bubble.p1[1]];
                         break;
                 }
+                this.setIconPositions();
                 this.redraw();
             }
         } else if (payload.action === 'z-plus') {
