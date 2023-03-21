@@ -164,7 +164,6 @@ export class FrameLayer extends Layer {
   }
 
   dropped(image, position) {
-    const size = [image.width, image.height];
     const layout = calculatePhysicalLayout(
       this.frameTree,
       this.getCanvasSize(),
@@ -419,13 +418,15 @@ export class FrameLayer extends Layer {
   }
 
   importImage(layoutlet, image) {
-    //console.log(image);
     const size = [image.width, image.height];
     // calc expansion to longer size
+    console.log(layoutlet.size, size);
     const scale = Math.max(
       layoutlet.size[0] / size[0],
       layoutlet.size[1] / size[1]
     );
+    console.log(scale);
+
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
     this.redraw();

@@ -8,6 +8,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import type { ToastSettings } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
+  import { tick } from 'svelte';
 
   let max = 4096;
 
@@ -35,24 +36,18 @@
 
   let files: FileList;
   $: uploadImage(files);
-  function uploadImage(files: FileList) {
+  async function uploadImage(files: FileList) {
     if (files && files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const t: ToastSettings = {
-          message: 'Assign image file.',
-          timeout: 1500
-        };
-        toastStore.trigger(t);
-        const image = new Image();
-        image.onload = () => {
-          setDimensions(image.width, image.height);
-          $paperTemplate = {};
-          $importingImage = image;
-        };
-        image.src = e.target.result as string;
+      const imageBitmap = await createImageBitmap(files[0]);
+      const t: ToastSettings = {
+        message: 'Assign image file.',
+        timeout: 1500
       };
-      reader.readAsDataURL(files[0]);
+      toastStore.trigger(t);
+      setDimensions(imageBitmap.width, imageBitmap.height);
+      $paperTemplate = {};
+      await tick();
+      $importingImage = imageBitmap;
     }
   }
 

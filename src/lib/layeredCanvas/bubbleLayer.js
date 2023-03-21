@@ -14,7 +14,16 @@ export class BubbleLayer extends Layer {
         this.onShowInspector = onShowInspector;
         this.onHideInspector = onHideInspector;
         this.onSubmit = onSubmit;
-        this.defaultShape = "square";
+        this.defaultBubble = {
+          p0: [0,0],
+          p1: [128,128],
+          text: getHaiku(),
+          shape: "square",
+          fontStyle: "normal",
+          fontWeight: "400",
+          fontSize: 22,
+          fontFamily: "Shippori Mincho",
+        };
 
         this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [32, 32]);
         this.dragIcon = new ClickableIcon("drag.png", [0, 0], [32, 32]);
@@ -195,17 +204,13 @@ export class BubbleLayer extends Layer {
 
     *pointer(dragStart, payload) {
         if (payload.action === 'create') {
-            const bubble = {
-              p0: dragStart,
-              p1: dragStart,
-              text: getHaiku(),
-              shape: this.defaultShape,
-              fontStyle: "normal",
-              fontWeight: "400",
-              fontSize: 22,
-              fontFamily: "Shippori Mincho",
+            const bubble = { 
+                ...this.defaultBubble ,
+                p0: dragStart, 
+                p1: dragStart, 
+                text: getHaiku(), 
             };
-                this.bubbles.push(bubble);
+            this.bubbles.push(bubble);
 
             let p;
             while (p = yield) {

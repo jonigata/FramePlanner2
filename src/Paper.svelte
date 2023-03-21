@@ -27,6 +27,7 @@
   const dispatch = createEventDispatcher();
 
   export function importImage(image) {
+    console.log(frameLayer.frameTree);
     const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getCanvasSize(), [0,0]);
     frameLayer.importImage(layout, image);
   }
@@ -51,10 +52,11 @@
 
   }
 
-  $:changeDefaultBubbleShape(bubble?.shape);
-  function changeDefaultBubbleShape(newShape: string) {
-    if (!bubbleLayer || !bubble) { return; }
-    bubbleLayer.defaultShape = newShape;
+  $:changeDefaultBubble(bubble);
+  function changeDefaultBubble(newBubble) {
+    console.log('changeDefaultBubble', newBubble);
+    if (!bubbleLayer || !newBubble) { return; }
+    bubbleLayer.defaultBubble = newBubble;
   }
 
   function showInspector(b, p) {
