@@ -6,8 +6,9 @@ import { ClickableIcon } from "./clickableIcon.js";
 import { HtmlTagHydration } from "svelte/internal";
 
 export class BubbleLayer extends Layer {
-    constructor(onShowInspector, onHideInspector, onSubmit) {
+    constructor(interactable, onShowInspector, onHideInspector, onSubmit) {
         super();
+        this.interactable = interactable;
         this.bubbles = [];
         this.onShowInspector = onShowInspector;
         this.onHideInspector = onHideInspector;
@@ -21,7 +22,9 @@ export class BubbleLayer extends Layer {
     }
 
     render(ctx) {
-        this.createBubbleIcon.render(ctx);
+        if (this.interactable) {
+            this.createBubbleIcon.render(ctx);
+        }
 
         for (let bubble of this.bubbles) {
             const [x,y] = bubble.p0;
@@ -94,6 +97,8 @@ export class BubbleLayer extends Layer {
     }
 
     accepts(point) {
+        if (!this.interactable) { return null; }
+
         if (keyDownFlags["KeyF"]) {
             return { action: 'create' };
         }

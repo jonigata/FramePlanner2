@@ -81,7 +81,7 @@
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);
-    let bubbleLayer = new BubbleLayer(showInspector, hideInspector, submit)
+    let bubbleLayer = new BubbleLayer(editable, showInspector, hideInspector, submit)
     layeredCanvas.addLayer(bubbleLayer);
 
     layeredCanvas.redraw();

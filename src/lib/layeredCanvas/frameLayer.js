@@ -160,6 +160,8 @@ export class FrameLayer extends Layer {
     }
 
     accepts(point) {
+        if (!this.interactable)  { return null; }
+
         const layout = calculatePhysicalLayout(this.frameTree, this.getCanvasSize(), [0, 0]);
         const layoutElement = findLayoutAt(layout, point);
         if (layoutElement) {
