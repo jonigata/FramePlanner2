@@ -4,6 +4,7 @@ import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 import { text } from "svelte/internal";
+import { getHaiku } from "./haiku.js";
 
 export class BubbleLayer extends Layer {
     constructor(interactable, onShowInspector, onHideInspector, onSubmit) {
@@ -196,7 +197,7 @@ export class BubbleLayer extends Layer {
             const bubble = {
               p0: dragStart,
               p1: dragStart,
-              text: "まつしまや\nああまつしまや\nまつしまや",
+              text: getHaiku(),
               shape: "square",
               fontStyle: "normal",
               fontWeight: "400",
