@@ -43,9 +43,15 @@
         </div>
       </div>
     </div>
-    <div class="hbox space-around" style="width: 90px;">
-      <button class="btn btn-sm variant-filled" on:click={() => setDimensions(840, 1188)}>A4</button>
-      <button class="btn btn-sm variant-filled" on:click={() => setDimensions(728, 1028)}>B5</button>
+    <div class="vbox space-around" style="width: 90px; height: 52px;">
+      <div class="hbox gap">
+        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1680, 2376)}>A3</button>
+        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1456, 2056)}>B4</button>
+      </div>
+      <div class="hbox gap">
+        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(840, 1188)}>A4</button>
+        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
+      </div>  
     </div>
   </div>
 
@@ -95,5 +101,8 @@
     height: 20px;
     display: inline-block;
     vertical-align: bottom;
+  }
+  .paper-size {
+    height: 20px;
   }
 </style>
