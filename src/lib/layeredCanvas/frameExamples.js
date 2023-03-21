@@ -56,4 +56,7 @@ export const frameExamples = [
       },
     ],
   },
+  {
+    bgColor: "transparent",
+  },
 ];

@@ -15,6 +15,9 @@ export class BubbleLayer extends Layer {
 
         this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [32, 32]);
         this.dragIcon = new ClickableIcon("drag.png", [0, 0], [32, 32]);
+
+        this.zPlusIcon = new ClickableIcon("zplus.png", [0, 0], [32, 32]);
+        this.zMinusIcon = new ClickableIcon("zminus.png", [0, 0], [32, 32]);
     }
 
     render(ctx) {
@@ -50,6 +53,8 @@ export class BubbleLayer extends Layer {
                 ctx.strokeRect(x, y, w, h);
 
                 this.dragIcon.render(ctx);
+                this.zMinusIcon.render(ctx);
+                this.zPlusIcon.render(ctx);
             }
 
             // draw resize handle
@@ -110,6 +115,10 @@ export class BubbleLayer extends Layer {
                     return { action: 'move', bubble: bubble };
                 } else if (bubble === this.selected && this.dragIcon.contains(point)) {
                     return { action: "move", bubble: bubble };
+                } else if (bubble === this.selected && this.zMinusIcon.contains(point)) {
+                    return { action: "z-minus", bubble: bubble };
+                } else if (bubble === this.selected && this.zPlusIcon.contains(point)) {
+                    return { action: "z-plus", bubble: bubble };
                 } else {
                     return { action: 'select', bubble: bubble };
                 }
@@ -201,9 +210,7 @@ export class BubbleLayer extends Layer {
             while (p = yield) {
                 bubble.p0 = [p[0] - dx, p[1] - dy];
                 bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
-                const [x0, y0] = this.selected.p0;
-                const [x1, y1] = this.selected.p1;
-                this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
+                this.setIconPositions();
                 this.redraw();
             }
         } else if (payload.action === 'select') {
@@ -212,8 +219,8 @@ export class BubbleLayer extends Layer {
             this.selected = payload.bubble;
             const [x0, y0] = this.selected.p0;
             const [x1, y1] = this.selected.p1;
+            this.setIconPositions();
             this.onShowInspector(this.selected, [(x0 + x1) / 2, y1]);
-            this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
 
             this.redraw();
         } else if (payload.action === 'resize') {
@@ -252,7 +259,33 @@ export class BubbleLayer extends Layer {
                 }
                 this.redraw();
             }
+        } else if (payload.action === 'z-plus') {
+            const bubble = payload.bubble;
+            const index = this.bubbles.indexOf(bubble);
+            if (index < this.bubbles.length - 1) {
+                this.bubbles.splice(index, 1);
+                this.bubbles.push(bubble);
+                this.redraw();
+            }
+        } else if (payload.action === 'z-minus') {
+            const bubble = payload.bubble;
+            const index = this.bubbles.indexOf(bubble);
+            if (0 < index) {
+                this.bubbles.splice(index, 1);
+                this.bubbles.unshift(bubble);
+                this.redraw();
+            }
         }
+
+    }
+
+    setIconPositions() {
+        const [x0, y0] = this.selected.p0;
+        const [x1, y1] = this.selected.p1;
+
+        this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
+        this.zPlusIcon.position = [x1 - 68, y0 + 4];
+        this.zMinusIcon.position = [x1 - 36, y0 + 4];
     }
 
 }

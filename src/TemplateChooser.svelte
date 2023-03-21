@@ -13,8 +13,8 @@
 
   const dispatch = createEventDispatcher();
 
-  function handleClick(index) {
-    dispatch('apply', frameExamples[index]);
+  function handleClick(frame) {
+    dispatch('apply', frame);
   }
 
   let style;
@@ -26,9 +26,9 @@
 
 <div class="template-selector rounded-container-token">
   <swiper-container style="{style}" navigation="true" pagination="true" slides-per-view="2" centered-slides="true" grab-cursor="true" bind:this={swiper}>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><Paper width={paperWidth} height={paperHeight} frameJson={frameExamples[0]} on:click={()=>handleClick(0)}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><Paper width={paperWidth} height={paperHeight} frameJson={frameExamples[1]} on:click={()=>handleClick(1)}/></swiper-slide>
-    <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><Paper width={paperWidth} height={paperHeight} frameJson={frameExamples[2]} on:click={()=>handleClick(2)}/></swiper-slide>
+    {#each frameExamples as frame}
+      <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><Paper width={paperWidth} height={paperHeight} frameJson={frame} on:click={()=>handleClick(frame)}/></swiper-slide>
+    {/each}
   </swiper-container>
 </div>
 

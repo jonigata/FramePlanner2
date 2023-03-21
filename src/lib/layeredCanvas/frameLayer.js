@@ -15,13 +15,19 @@ export class FrameLayer extends Layer {
         this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png", [0, 0], [32, 32]);
         this.expandVerticalIcon = new ClickableIcon("expand-vertical.png", [0, 0], [32, 32]);
         this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32]);
+        this.transparentPattern = new Image();
+        this.transparentPattern.src = new URL('../../assets/transparent.png', import.meta.url).href;
     }
 
     render(ctx) {
         const size = this.getCanvasSize();
-        // render white
-        ctx.fillStyle = "rgb(255,255,255)";
+
+        // fill background
+        ctx.save();
+        const pattern = ctx.createPattern(this.transparentPattern, 'repeat');
+        ctx.fillStyle = pattern;
         ctx.fillRect(0, 0, size[0], size[1]);
+        ctx.restore();
 
         const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
         this.renderElement(ctx, layout);
@@ -56,6 +62,8 @@ export class FrameLayer extends Layer {
     }
 
     renderElement(ctx, layout) {
+        this.renderBackground(ctx, layout);
+
         if (layout.children){
             for (let i = 0; i < layout.children.length; i++) {
                 this.renderElement(ctx, layout.children[i]);
@@ -69,8 +77,7 @@ export class FrameLayer extends Layer {
         const origin = layout.origin;
         const size = layout.size;
 
-        ctx.fillStyle = "rgb(255,255,255)";
-        ctx.fillRect(origin[0], origin[1], size[0], size[1]);
+        this.renderBackground(ctx, layout);
 
         const element = layout.element;
         if (element.image) {
@@ -103,6 +110,23 @@ export class FrameLayer extends Layer {
         ctx.strokeStyle = "rgb(0,0,0)";
         ctx.lineWidth = 1;
         ctx.strokeRect(origin[0], origin[1], size[0], size[1]);
+    }
+
+    renderBackground(ctx, layout) {
+        const origin = layout.origin;
+        const size = layout.size;
+
+        let bgColor = layout.element.bgColor;
+        if (bgColor == "transparent") {
+          ctx.save();
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.fillStyle = "rgb(255,255,255, 0)";
+          ctx.fillRect(origin[0], origin[1], size[0], size[1]);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(origin[0], origin[1], size[0], size[1]);
+        }
     }
 
     dropped(image, position) {
