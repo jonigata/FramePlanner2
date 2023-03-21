@@ -3,8 +3,8 @@
   import { register } from 'swiper/element/bundle';
   import BubbleSample from './BubbleSample.svelte';
 
-  export let paperWidth = '96px';
-  export let paperHeight = '96px';
+  export let paperWidth = 96;
+  export let paperHeight = 96;
   export let selectedShape = 'square';
 
   let style;

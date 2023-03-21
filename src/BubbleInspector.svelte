@@ -68,10 +68,11 @@
 {#if isOpen}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-soft-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
-    <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/bubble.png" alt="title"/></div>
+    <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/title-bubble.png" alt="title"/></div>
     <div class="hbox gap-x-2" style="align-self: stretch;">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div class="hbox expand selected-font variant-soft-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
+      <!-- svelte-ignore a11y-label-has-associated-control -->
       <label class="hbox px-2 variant-soft-primary rounded-container-token">fontSize <div class="number-box"><NumberEdit bind:value={fontSize} showSlider="{true}"/></div></label>
     </div>
     <textarea
@@ -79,7 +80,7 @@
       bind:value={bubbleText}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="px-2 template-chooser-container">
-      <BubbleChooser paperWidth={"64px"} paperHeight={"96px"} bind:selectedShape={bubbleShape} />
+      <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubbleShape} />
     </div>
   </div>
 </div>

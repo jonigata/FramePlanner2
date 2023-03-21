@@ -20,7 +20,7 @@
 </script>
 
 <div class="control-panel variant-soft-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }}>
-  <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/control-panel.png" alt="title"/></div>
+  <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/title-control-panel.png" alt="title"/></div>
   <div class="px-2">
     <TemplateChooser on:apply={applyTemplate} />
   </div>

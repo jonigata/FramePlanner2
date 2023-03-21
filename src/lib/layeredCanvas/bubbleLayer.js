@@ -12,11 +12,12 @@ export class BubbleLayer extends Layer {
         this.onHideInspector = onHideInspector;
         this.onSubmit = onSubmit;
 
-        // load write.png
-        this.writeIcon = new ClickableIcon("write.png", [0, 0], [32, 32]);
+        this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [32, 32]);
     }
 
     render(ctx) {
+        this.createBubbleIcon.render(ctx);
+
         for (let bubble of this.bubbles) {
             const [x,y] = bubble.p0;
             const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
@@ -45,10 +46,6 @@ export class BubbleLayer extends Layer {
             if (bubble === this.selected) {
                 ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
                 ctx.strokeRect(x, y, w, h);
-
-                // draw write icon on center
-                this.writeIcon.position = [x + w/2 - 16, y + h - 32];
-                this.writeIcon.render(ctx);
             }
 
             // draw resize handle
@@ -91,17 +88,15 @@ export class BubbleLayer extends Layer {
         if (keyDownFlags["KeyF"]) {
             return { action: 'create' };
         }
+        if (this.createBubbleIcon.contains(point)) {
+            return { action: "create" };
+        }
         if (this.selected) {
             const bubble = this.selected;
 
             const handle = this.getHandleOf(bubble, point);
             if (handle) {
               return { action: "resize", bubble: bubble, handle: handle };
-            }
-
-            if (this.writeIcon.contains(point)) {
-                this.onShowInspector(bubble, this.writeIcon.position);
-                return true;
             }
         }
         for (let bubble of this.bubbles) {
@@ -206,6 +201,9 @@ export class BubbleLayer extends Layer {
             console.log('select');
             this.unfocus();
             this.selected = payload.bubble;
+            const [x0, y0] = this.selected.p0;
+            const [x1, y1] = this.selected.p1;
+            this.onShowInspector(this.selected, [(x0 + x1) / 2, y1]);
             this.redraw();
         } else if (payload.action === 'resize') {
             const bubble = payload.bubble;

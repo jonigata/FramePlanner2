@@ -28,7 +28,7 @@
 
 </script>
 
-<canvas style="width: {width}; height: {height};" bind:this={canvas} on:click={click}/>
+<canvas width={width} height={height} bind:this={canvas} on:click={click}/>
 
 <style>
   canvas {
