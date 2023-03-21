@@ -4,6 +4,7 @@
   //import '../app.postcss';  
   import ControlPanel from './ControlPanel.svelte';
   import MainPaper from './MainPaper.svelte';
+  import { Toast } from '@skeletonlabs/skeleton';
 </script>
 
 <style>
@@ -24,3 +25,6 @@
 <div class="control-panel-container">
   <ControlPanel />
 </div>
+
+<Toast/>
+

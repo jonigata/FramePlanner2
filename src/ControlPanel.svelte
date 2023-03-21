@@ -5,7 +5,9 @@
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
   import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken } from './paperStore';
-
+  import { toastStore } from '@skeletonlabs/skeleton';
+  import type { ToastSettings } from '@skeletonlabs/skeleton';
+			
   let max = 4096;
 
   function setDimensions(w: number, h: number) {
@@ -23,6 +25,11 @@
 
   function copyToClipboard() {
     $clipboardToken = true;
+    const t: ToastSettings = {
+    	message: 'Copy image to clipboard.',
+    	timeout: 1500
+    };
+    toastStore.trigger(t);
   }
 
 </script>
