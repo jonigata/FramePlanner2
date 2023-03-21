@@ -2,7 +2,7 @@
   import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { initializeKeyCache, keyDownFlags } from './lib/layeredCanvas/keyCache.js';
-  import { FrameElement, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
+  import { FrameElement, calculatePhysicalLayout, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
@@ -26,6 +26,11 @@
 
   const dispatch = createEventDispatcher();
 
+  export function importImage(image) {
+    const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getCanvasSize(), [0,0]);
+    frameLayer.importImage(layout, image);
+  }
+
   function handleClick() {
     dispatch('click');
   }
@@ -44,6 +49,12 @@
     layeredCanvas.redraw();
     latestJson = newFrameJson;
 
+  }
+
+  $:changeDefaultBubbleShape(bubble?.shape);
+  function changeDefaultBubbleShape(newShape: string) {
+    if (!bubbleLayer || !bubble) { return; }
+    bubbleLayer.defaultShape = newShape;
   }
 
   function showInspector(b, p) {

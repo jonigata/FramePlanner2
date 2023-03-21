@@ -1,7 +1,7 @@
 <script type="ts">
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
   import Paper from './Paper.svelte';
-  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken } from './paperStore.js';
+  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore.js';
 
   $paperTemplate = frameExamples[0];
 
@@ -21,6 +21,13 @@
       console.log('tokenValue', token);
       paper.copyToClipboard();
       $clipboardToken = false;
+  }
+
+  $:importImage($importingImage);
+  function importImage(image) {
+    if (!image) return;
+    paper.importImage(image);
+    $importingImage = null;
   }
 </script>
 

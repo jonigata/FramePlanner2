@@ -14,6 +14,7 @@ export class BubbleLayer extends Layer {
         this.onShowInspector = onShowInspector;
         this.onHideInspector = onHideInspector;
         this.onSubmit = onSubmit;
+        this.defaultShape = "square";
 
         this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [32, 32]);
         this.dragIcon = new ClickableIcon("drag.png", [0, 0], [32, 32]);
@@ -198,7 +199,7 @@ export class BubbleLayer extends Layer {
               p0: dragStart,
               p1: dragStart,
               text: getHaiku(),
-              shape: "square",
+              shape: this.defaultShape,
               fontStyle: "normal",
               fontWeight: "400",
               fontSize: 22,

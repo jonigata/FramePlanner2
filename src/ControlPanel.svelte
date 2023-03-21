@@ -4,10 +4,11 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken } from './paperStore';
+  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import type { ToastSettings } from '@skeletonlabs/skeleton';
-			
+  import { FileDropzone } from '@skeletonlabs/skeleton';
+
   let max = 4096;
 
   function setDimensions(w: number, h: number) {
@@ -30,6 +31,29 @@
     	timeout: 1500
     };
     toastStore.trigger(t);
+  }
+
+  let files: FileList;
+  $: uploadImage(files);
+  function uploadImage(files: FileList) {
+    if (files && files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const t: ToastSettings = {
+          message: 'Assign image file.',
+          timeout: 1500
+        };
+        toastStore.trigger(t);
+        const image = new Image();
+        image.onload = () => {
+          setDimensions(image.width, image.height);
+          $paperTemplate = {};
+          $importingImage = image;
+        };
+        image.src = e.target.result as string;
+      };
+      reader.readAsDataURL(files[0]);
+    }
   }
 
 </script>
@@ -75,8 +99,13 @@
     </button>
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
       <img class="button-icon" src="/src/assets/clipboard.png" alt="copy"/>
-    </div>
-
+    </button>
+  </div>
+  <div class="hbox gap mx-2" style="margin-top: 16px;">
+    <FileDropzone name="upload-file" accept="image/png, image/jpeg" bind:files={files}>
+    	<svelte:fragment slot="message"><b>Upload</b> or <b>Drop</b> .png here</svelte:fragment>
+    </FileDropzone> 
+  </div>  
 </div>
 
 <style>
