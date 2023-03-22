@@ -21,8 +21,10 @@
     opacity: 0;
     transition: opacity 0.2s;
     transform: translate(-50%, -50%);
-    text-shadow: 1px 2px 3px #808080;
-    color: #86c8ff;
+    text-shadow: 1px 2px 3px #202020;
+    font-family: "Kosugi Maru", sans-serif;
+    font-size: 22px;
+    color: #FFCB44;
   }
 
   .tooltip-container.active {

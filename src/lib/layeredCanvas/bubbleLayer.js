@@ -169,7 +169,7 @@ export class BubbleLayer extends Layer {
         }
 
         if (this.createBubbleIcon.contains(p)) {
-            this.hint(this.createBubbleIcon.hintPosition, "Drag to Create bubble");
+            this.hint(this.createBubbleIcon.hintPosition, "ドラッグでフキダシ作成");
             return true;
         }
 
@@ -178,11 +178,11 @@ export class BubbleLayer extends Layer {
             this.handle = this.getHandleOf(this.selected, p);
             if (this.isBubbleContains(this.selected, p)) {
                 if (this.dragIcon.contains(p)) {
-                  this.hint(this.dragIcon.hintPosition, "Drag to move");
+                  this.hint(this.dragIcon.hintPosition, "ドラッグで移動");
                 } else if (this.zMinusIcon.contains(p)) {
-                  this.hint(this.zMinusIcon.hintPosition, "Z-");
+                  this.hint(this.zMinusIcon.hintPosition, "手前に");
                 } else if (this.zPlusIcon.contains(p)) {
-                  this.hint(this.zPlusIcon.hintPosition, "Z+");
+                  this.hint(this.zPlusIcon.hintPosition, "奥に");
                 } else {
                   this.hint(p, null);
                 }
