@@ -55,7 +55,6 @@ export class FrameLayer extends Layer {
     }
 
     if (this.borderRect) {
-      // fill cyan
       ctx.fillStyle = "rgba(0,200,200,0.7)";
       ctx.fillRect(
         this.borderRect[0],
@@ -79,15 +78,8 @@ export class FrameLayer extends Layer {
     }
 
     if (this.focusedLayout) {
-      // draw 2 icons on center
-      const origin = this.focusedLayout.origin;
-      const size = this.focusedLayout.size;
-      const [x, y] = [origin[0] + size[0] / 2, origin[1] + size[1] / 2];
-      this.splitHorizontalIcon.position = [x + 32, y];
       this.splitHorizontalIcon.render(ctx);
-      this.splitVerticalIcon.position = [x, y + 32];
       this.splitVerticalIcon.render(ctx);
-      this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
       this.deleteIcon.render(ctx);
     }
   }
@@ -194,6 +186,23 @@ export class FrameLayer extends Layer {
       this.borderRect = null;
       this.focusedBorder = null;
       this.focusedLayout = findLayoutAt(layout, point);
+      if (this.focusedLayout) {
+        const origin = this.focusedLayout.origin;
+        const size = this.focusedLayout.size;
+        const [x, y] = [origin[0] + size[0] / 2, origin[1] + size[1] / 2];
+        this.splitHorizontalIcon.position = [x + 32, y];
+        this.splitVerticalIcon.position = [x, y + 32];
+        this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
+        if (this.splitHorizontalIcon.contains(point)) {
+          this.hint(this.splitHorizontalIcon.hintPosition, "Split Horizontal");
+        } else if (this.splitVerticalIcon.contains(point)) {
+          this.hint(this.splitVerticalIcon.hintPosition, "Split Vertical");
+        } else if (this.deleteIcon.contains(point)) {
+          this.hint(this.deleteIcon.hintPosition, "Delete");
+        } else {
+          this.hint(point, null);
+        }
+      }
     }
     this.redraw();
   }

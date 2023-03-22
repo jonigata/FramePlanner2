@@ -6,6 +6,7 @@
   import MainPaper from './MainPaper.svelte';
   import { Toast } from '@skeletonlabs/skeleton';
   import BodyDrag from './BodyDrag.svelte';
+  import PassiveToolTip from './PassiveToolTip.svelte';
 </script>
 
 <style>
@@ -15,8 +16,11 @@
 
   .control-panel-container {
     position: absolute;
-    top: 50%;
-    left: 232px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
 </style>
@@ -27,6 +31,7 @@
 
 <div class="control-panel-container">
   <ControlPanel />
+  <PassiveToolTip />
 </div>
 
 <Toast/>

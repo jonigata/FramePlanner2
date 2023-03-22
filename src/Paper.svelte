@@ -9,6 +9,8 @@
   import BubbleInspector from './BubbleInspector.svelte';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard } from './lib/layeredCanvas/saveCanvas.js';
+  import { toolTipRequest } from './passiveToolTipStore';
+  import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
 
   export let width = '140px';
   export let height = '198px';
@@ -79,7 +81,19 @@
     const frameTree = FrameElement.compile(frameJson ?? frameExamples[0]);
 
     sequentializePointer(FrameLayer);
-    layeredCanvas = new LayeredCanvas(canvas);
+    layeredCanvas = new LayeredCanvas(
+      canvas, 
+      (p, s) => {
+        if (s) {
+          const q = convertPointFromNodeToPage(canvas, ...p);
+          toolTipRequest.set({
+            message: s,
+            position: q
+          });
+        } else {
+          toolTipRequest.set(null);
+        }
+      });
     frameLayer = new FrameLayer(
         frameTree,
         editable,

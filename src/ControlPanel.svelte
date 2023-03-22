@@ -54,7 +54,7 @@
 
 </script>
 
-<div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'}">
+<div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src="/src/assets/title-control-panel.png" alt="title"/></div>
   <div class="px-2">
     <TemplateChooser on:apply={applyTemplate} />
@@ -106,16 +106,13 @@
 
 <style>
   .control-panel {
-    top: 50%; /* Y軸の中心に移動 */
-    left: 50%; /* X軸の中心に移動 */
-    transform: translate(-50%, -50%); /* 自身のサイズに基づいて中心に配置 */
-
     position: absolute;
     width: 400px;
     height: 800px;
     display: flex;
     flex-direction: column;
-    top: -400px;
+    top: 200px;
+    left: 0;
   }
   .title-bar {
     cursor: move;

@@ -1,7 +1,7 @@
 import { convertPointFromNodeToPage, convertPointFromPageToNode } from "./convertPoint";
 
 export class LayeredCanvas {
-    constructor(c) {
+    constructor(c, onHint) {
         console.log("initializeLayeredCanvas");
         this.canvas = c;
         this.context = this.canvas.getContext('2d');
@@ -15,6 +15,7 @@ export class LayeredCanvas {
         this.canvas.addEventListener('drop', this.handleDrop.bind(this));
 
         this.layers = [];
+        this.onHint = onHint;
 
         setInterval(() => {
             this.redrawIfRequired();
@@ -157,6 +158,7 @@ export class LayeredCanvas {
     
     addLayer(layer) {
         layer.canvas = this.canvas;
+        layer.hint = this.onHint;
         this.layers.push(layer);
     }
     

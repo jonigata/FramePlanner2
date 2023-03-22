@@ -23,4 +23,15 @@ export class ClickableIcon {
         const f = x <= point[0] && point[0] <= x + w && y <= point[1] && point[1] <= y + h;
         return f;
     }
+
+    get center() {
+        const x = this.position[0] + this.size[0] / 2;
+        const y = this.position[1] + this.size[1] / 2;
+        return [x, y];
+    }
+
+    get hintPosition() {
+        const p = this.center;
+        return [p[0], p[1] - 32];
+    }
 }
