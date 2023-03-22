@@ -3,8 +3,8 @@
   import { drawBubble } from "./lib/layeredCanvas/bubbleGraphic.js";
   import { createEventDispatcher } from 'svelte';
 
-  export let width = '64px';
-  export let height = '96px';
+  export let width = 64;
+  export let height = 96;
   export let pattern = 'rounded';
 
   let canvas;
@@ -28,7 +28,7 @@
 
 </script>
 
-<canvas width={width} height={height} bind:this={canvas} on:click={click}/>
+<canvas width="{width}px" height="{height}px" bind:this={canvas} on:click={click}/>
 
 <style>
   canvas {

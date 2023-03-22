@@ -34,6 +34,8 @@ export function drawBubble(context, seed, rect, patternName) {
     case "soft":
       drawSoftBubble(context, seed, rect);
       break;
+    case "none":
+      break;
     default:
       throw new Error(
         `Unknown bubble pattern: ${patternName}, candidates are "rounded", "square", "ellipse", "strokes"`
