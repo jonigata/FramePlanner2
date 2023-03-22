@@ -357,9 +357,9 @@ export class BubbleLayer extends Layer {
         const [x1, y1] = this.selected.p1;
 
         this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
-        this.zPlusIcon.position = [x1 - 68, y0 + 4];
-        this.zMinusIcon.position = [x1 - 36, y0 + 4];
-        this.removeIcon.position = [x0 + 4, y0 + 4];
+        this.zPlusIcon.position = [x0 + 4, y0 + 4];
+        this.zMinusIcon.position = [x0 +36, y0 + 4];
+        this.removeIcon.position = [x1 - 36, y0 + 4];
     }
 
     isBubbleContains(bubble, p) {
