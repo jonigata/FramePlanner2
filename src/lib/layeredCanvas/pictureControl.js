@@ -7,7 +7,7 @@ export function *translate(p, f) {
     }
 }
 
-export function *scale(p, f) {
+export function *scale(canvas, p, f) {
     let dragStart = p;
 
     while (p = yield) {

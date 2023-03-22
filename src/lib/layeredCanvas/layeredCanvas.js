@@ -98,7 +98,7 @@ export class LayeredCanvas {
     handlePointerLeave(event) {
         this.pointerCursor = [-1,-1];
         if (this.draggingLayer) {
-            this.handlepointerUp(event);
+            this.handlePointerUp(event);
             this.redrawIfRequired();
             this.canvas.releasePointerCapture(event.pointerId);
         }

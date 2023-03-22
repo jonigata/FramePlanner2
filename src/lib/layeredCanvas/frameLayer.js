@@ -10,27 +10,12 @@ export class FrameLayer extends Layer {
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onModify = onModify;
-    this.splitHorizontalIcon = new ClickableIcon(
-      "split-horizontal.png",
-      [0, 0],
-      [32, 32]
-    );
-    this.splitVerticalIcon = new ClickableIcon(
-      "split-vertical.png",
-      [0, 0],
-      [32, 32]
-    );
-    this.expandHorizontalIcon = new ClickableIcon(
-      "expand-horizontal.png",
-      [0, 0],
-      [32, 32]
-    );
-    this.expandVerticalIcon = new ClickableIcon(
-      "expand-vertical.png",
-      [0, 0],
-      [32, 32]
-    );
+    this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32]);
+    this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32]);
+    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",[0, 0],[32, 32]);
+    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",[0, 0],[32, 32]);
     this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32]);
+    this.scaleIcon = new ClickableIcon("scale.png", [0, 0], [32, 32]);
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL(
       "../../assets/transparent.png",
@@ -77,10 +62,13 @@ export class FrameLayer extends Layer {
       }
     }
 
-    if (this.focusedLayout) {
+    if (this.focusedLayout && !this.pointerHandler) {
       this.splitHorizontalIcon.render(ctx);
       this.splitVerticalIcon.render(ctx);
       this.deleteIcon.render(ctx);
+      if (this.focusedLayout.element.image) {
+        this.scaleIcon.render(ctx);
+      }
     }
   }
 
@@ -193,12 +181,17 @@ export class FrameLayer extends Layer {
         this.splitHorizontalIcon.position = [x + 32, y];
         this.splitVerticalIcon.position = [x, y + 32];
         this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
+        this.scaleIcon.position = [origin[0] + size[0] - 32, origin[1] + size[1] - 32];
         if (this.splitHorizontalIcon.contains(point)) {
           this.hint(this.splitHorizontalIcon.hintPosition, "Split Horizontal");
         } else if (this.splitVerticalIcon.contains(point)) {
           this.hint(this.splitVerticalIcon.hintPosition, "Split Vertical");
         } else if (this.deleteIcon.contains(point)) {
           this.hint(this.deleteIcon.hintPosition, "Delete");
+        } else if (this.scaleIcon.contains(point)) {
+          this.hint(this.scaleIcon.hintPosition, "Drag to Scale");
+        } else if (this.focusedLayout.element.image) {
+          this.hint([x, origin[1] + 8], "Drag to move, Ctrl+Drag to scale");
         } else {
           this.hint(point, null);
         }
@@ -286,19 +279,20 @@ export class FrameLayer extends Layer {
     if (payload.layout) {
       const layout = payload.layout;
       const element = layout.element;
-      if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
-        const origin = element.translation;
-        yield* translate(p, (q) => {
-          element.translation = [origin[0] + q[0], origin[1] + q[1]];
+      if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
+          this.scaleIcon.contains(p)) {
+        const origin = element.scale[0];
+        const size = layout.size;
+        yield* scale(this.canvas, p, (q) => {
+          const s = Math.max(q[0], q[1]);
+          element.scale = [origin * s, origin * s];
           this.constraintTranslationAndScale(layout);
           this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
         });
-      } else if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
-        const origin = element.scale[0];
-        const size = layout.size;
-        yield* scale(p, (q) => {
-          const s = Math.max(q[0], q[1]);
-          element.scale = [origin * s, origin * s];
+      } else {
+        const origin = element.translation;
+        yield* translate(p, (q) => {
+          element.translation = [origin[0] + q[0], origin[1] + q[1]];
           this.constraintTranslationAndScale(layout);
           this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
         });
@@ -401,13 +395,13 @@ export class FrameLayer extends Layer {
     const size = layout.size;
 
     let scale = element.scale[0];
-
     if (element.image.width * scale < size[0]) {
       scale = size[0] / element.image.width;
     }
     if (element.image.height * scale < size[1]) {
       scale = size[1] / element.image.height;
     }
+    element.scale = [scale, scale];
 
     const [rw, rh] = [
       element.image.width * scale,
