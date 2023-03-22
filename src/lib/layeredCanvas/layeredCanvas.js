@@ -79,7 +79,9 @@ export class LayeredCanvas {
         } else {
             for (let i = this.layers.length - 1; i >= 0; i--) {
                 const layer = this.layers[i];
-                layer.pointerHover(this.getCanvasPosition(event));
+                if (layer.pointerHover(this.getCanvasPosition(event))) {
+                    break;
+                }
             }
             this.redrawIfRequired();
         }

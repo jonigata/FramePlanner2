@@ -165,13 +165,33 @@ export class BubbleLayer extends Layer {
 
     pointerHover(p) {
         if (keyDownFlags["Space"]) {
-        return;
+            return false;
         }
 
         // edge selection, top/bottom/left/right
         if (this.selected) {
             this.handle = this.getHandleOf(this.selected, p);
+            if (this.isBubbleContains(this.selected, p)) {
+                if (this.dragIcon.contains(p)) {
+                  this.hint(this.dragIcon.hintPosition, "Drag to move");
+                } else if (this.zMinusIcon.contains(p)) {
+                  this.hint(this.zMinusIcon.hintPosition, "Z-");
+                } else if (this.zPlusIcon.contains(p)) {
+                  this.hint(this.zPlusIcon.hintPosition, "Z+");
+                } else {
+                  this.hint(p, null);
+                }
+                return true;
+            }
         }
+
+        for (let bubble of this.bubbles) {
+            if (this.isBubbleContains(bubble, p)) {
+                this.hint(p, null);
+                return true;
+            }
+        }
+        return false;
     }
 
     getHandleOf(bubble, p) {
@@ -211,6 +231,8 @@ export class BubbleLayer extends Layer {
     }
 
     *pointer(dragStart, payload) {
+        this.hint(dragStart, null);
+
         if (payload.action === 'create') {
             this.unfocus();
             const bubble = { 
@@ -312,6 +334,17 @@ export class BubbleLayer extends Layer {
         this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
         this.zPlusIcon.position = [x1 - 68, y0 + 4];
         this.zMinusIcon.position = [x1 - 36, y0 + 4];
+    }
+
+    isBubbleContains(bubble, p) {
+        const [px, py] = p;
+        const [rx0, ry0] = bubble.p0;
+        const [rx1, ry1] = bubble.p1;
+
+        if (rx0 <= px && px <= rx1 && ry0 <= py && py <= ry1) {
+            return true;
+        }
+        return false;
     }
 
 }
