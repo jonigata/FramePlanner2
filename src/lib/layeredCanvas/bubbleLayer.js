@@ -114,6 +114,10 @@ export class BubbleLayer extends Layer {
     accepts(point) {
         if (!this.interactable) { return null; }
 
+        if (keyDownFlags["Space"]) {
+            return null;
+        }
+
         if (keyDownFlags["KeyF"]) {
             return { action: 'create' };
         }
@@ -160,6 +164,10 @@ export class BubbleLayer extends Layer {
     }
 
     pointerHover(p) {
+        if (keyDownFlags["Space"]) {
+        return;
+        }
+
         // edge selection, top/bottom/left/right
         if (this.selected) {
             this.handle = this.getHandleOf(this.selected, p);

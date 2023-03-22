@@ -178,6 +178,8 @@ export class FrameLayer extends Layer {
   }
 
   pointerHover(point) {
+    if (keyDownFlags["Space"]) { return; }
+
     const layout = calculatePhysicalLayout(
       this.frameTree,
       this.getCanvasSize(),
@@ -198,6 +200,10 @@ export class FrameLayer extends Layer {
 
   accepts(point) {
     if (!this.interactable) {
+      return null;
+    }
+
+    if (keyDownFlags["Space"]) {
       return null;
     }
 

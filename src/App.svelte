@@ -5,6 +5,7 @@
   import ControlPanel from './ControlPanel.svelte';
   import MainPaper from './MainPaper.svelte';
   import { Toast } from '@skeletonlabs/skeleton';
+  import BodyDrag from './BodyDrag.svelte';
 </script>
 
 <style>
@@ -20,7 +21,9 @@
 
 </style>
 
-<MainPaper></MainPaper>
+<BodyDrag>
+  <MainPaper/>
+</BodyDrag>
 
 <div class="control-panel-container">
   <ControlPanel />

@@ -9,6 +9,7 @@
   import type { ToastSettings } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { tick } from 'svelte';
+  import { bodyDragging } from './uiStore';
 
   let max = 4096;
 
@@ -53,7 +54,7 @@
 
 </script>
 
-<div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }}>
+<div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'}">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src="/src/assets/title-control-panel.png" alt="title"/></div>
   <div class="px-2">
     <TemplateChooser on:apply={applyTemplate} />
@@ -114,6 +115,7 @@
     height: 800px;
     display: flex;
     flex-direction: column;
+    top: -400px;
   }
   .title-bar {
     cursor: move;

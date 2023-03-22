@@ -104,7 +104,8 @@
     initializeKeyCache(canvas, (code) => {
       return code === "AltLeft" || code === "AltRight" ||
           code === "ControlLeft" || code === "ControlRight" ||
-          code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF";
+          code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF" ||
+          code === "Space";
     });
   });
 
