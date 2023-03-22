@@ -1,7 +1,6 @@
 <script type="ts">
   import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
-  import { initializeKeyCache, keyDownFlags } from './lib/layeredCanvas/keyCache.js';
   import { FrameElement, calculatePhysicalLayout, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
@@ -115,12 +114,6 @@
 
     layeredCanvas.redraw();
 
-    initializeKeyCache(canvas, (code) => {
-      return code === "AltLeft" || code === "AltRight" ||
-          code === "ControlLeft" || code === "ControlRight" ||
-          code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF" ||
-          code === "Space";
-    });
   });
 
   export function save() {

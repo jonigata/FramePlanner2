@@ -7,6 +7,7 @@
   import { Toast } from '@skeletonlabs/skeleton';
   import BodyDrag from './BodyDrag.svelte';
   import PassiveToolTip from './PassiveToolTip.svelte';
+  import About from './About.svelte';
 </script>
 
 <style>
@@ -33,6 +34,8 @@
   <ControlPanel />
   <PassiveToolTip />
 </div>
+
+<About/>
 
 <Toast/>
 

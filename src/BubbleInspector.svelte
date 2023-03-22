@@ -87,7 +87,6 @@
 </div>
 {/if}
 
-{#if $drawerStore.id === 'font'}
 <Drawer>
   <div class="drawer-content">
     <h1>Font</h1>
@@ -95,7 +94,7 @@
     <WebFontList on:choose={onChangeFont}/>
   </div>
 </Drawer>
-{/if}
+
 
 <style>
   .bubble-inspector-container {

@@ -1,11 +1,13 @@
 <script type="ts">
-  import { keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
+  import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { bodyDragging } from './uiStore';
   import { drawerStore } from '@skeletonlabs/skeleton';
+  import { onMount } from "svelte";
 
   let dragging = false;
   let dragStart = [0, 0];
   let origin = [0, 0];
+  let fullscreen = null;
   let inner = null;
   let x = 0;
   let y = 0;
@@ -13,6 +15,7 @@
 
   function handlePointerDown(e) {
     if (keyDownFlags["Space"]) {
+      console.log('handlePointerDown', e);
       dragging = true;
       dragStart = [e.clientX, e.clientY];
       origin = [x, y];
@@ -38,6 +41,22 @@
     if (scale > 10) scale = 10;
   }
 
+  onMount(() => {
+    // move to center of parent
+    const parent = inner.parentElement;
+    const [parentWidth, parentHeight] = [parent.clientWidth, parent.clientHeight];
+    const [innerWidth, innerHeight] = [inner.clientWidth, inner.clientHeight];
+    x = (parentWidth - innerWidth) / 2;
+    y = (parentHeight - innerHeight) / 2;
+
+    initializeKeyCache(fullscreen, (code) => {
+      return code === "AltLeft" || code === "AltRight" ||
+          code === "ControlLeft" || code === "ControlRight" ||
+          code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF" ||
+          code === "Space";
+    });
+  });
+
 </script>
 
 <div class="fullscreen" 
@@ -46,6 +65,7 @@
   on:pointerup={handlePointerUp}
   on:pointerleave={handlePointerUp}
   on:wheel={handleWheel}
+  bind:this={fullscreen}
 >
   <div class="inner" style="transform: translate({x}px, {y}px) scale({scale});" bind:this={inner}>
     <slot/>
@@ -62,9 +82,5 @@
   }
   .inner {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
   }
 </style>

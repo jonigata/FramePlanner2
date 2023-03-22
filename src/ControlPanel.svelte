@@ -10,8 +10,7 @@
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { tick } from 'svelte';
   import { bodyDragging } from './uiStore';
-  import { Drawer, drawerStore } from '@skeletonlabs/skeleton';
-  import type { DrawerSettings } from '@skeletonlabs/skeleton';
+  import { aboutOpen } from './aboutStore';
 
   let max = 4096;
 
@@ -55,12 +54,7 @@
   }
 
   function about() {
-    const settings: DrawerSettings = {
-      position: 'left',
-      width: 'w-[480px]',
-      id: 'about'
-    };
-    drawerStore.open(settings);
+    $aboutOpen = true;
   }
 
 </script>
@@ -120,40 +114,6 @@
   </div>  
 </div>
 
-{#if $drawerStore.id === 'about'}
-<Drawer>
-  <div class="drawer-content vbox center gap">
-    <div>
-      <h2>FramePlanner</h2>
-      <p><a href="https://github.com/jonigata/FramePlanner">github</a></p>
-      <p><a href="https://twitter.com/jonigata_ai">twitter</a></p>
-      <p><a href="https://t.co/UC3jJOJJtS">anonymous request</a></p>
-    </div>
-    <div>
-      <h2>Tips</h2>
-      <h3>Paper</h3>
-      <p>Space + Drag: スクロール</p>f
-      <p>Wheel: ズーム</p>
-    </div>
-    <div>
-      <h3>フレーム</h3>
-      <p>Q+Click: 削除</p>
-      <p>W+Click: 横に分割</p> 
-      <p>E+Click: 縦に分割</p> 
-    </div>
-    <div>
-      <h3>フキダシ</h3>
-      <p>Alt+ドラッグ: 移動</p>
-      <p>F+ドラッグ: 作成</p>
-    </div>
-    <div>
-      <h3>枠線</h3>
-      <p>Ctrl+ドラッグ: 太さ</p>
-    </div>
-  </div>
-</Drawer>
-{/if}
-
 <style>
   .control-panel {
     position: absolute;
@@ -206,8 +166,5 @@
   .button-icon {
     width: 32px;
     height: 32px;
-  }
-  .drawer-content {
-    height: 100%;
   }
 </style>
