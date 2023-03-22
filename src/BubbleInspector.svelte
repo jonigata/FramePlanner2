@@ -46,7 +46,8 @@
   function chooseFont() {
     const settings: DrawerSettings = {
       position: 'right',
-      width: 'w-[720px]'
+      width: 'w-[720px]',
+      id: 'font'
     };
     drawerStore.open(settings);
   }
@@ -86,6 +87,7 @@
 </div>
 {/if}
 
+{#if $drawerStore.id === 'font'}
 <Drawer>
   <div class="drawer-content">
     <h1>Font</h1>
@@ -93,6 +95,7 @@
     <WebFontList on:choose={onChangeFont}/>
   </div>
 </Drawer>
+{/if}
 
 <style>
   .bubble-inspector-container {
