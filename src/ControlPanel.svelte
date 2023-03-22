@@ -130,7 +130,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 800px;
+    height: 650px;
     display: flex;
     flex-direction: column;
     top: 200px;
