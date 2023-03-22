@@ -1,3 +1,5 @@
+import { convertPointFromNodeToPage, convertPointFromPageToNode } from "./convertPoint";
+
 export class LayeredCanvas {
     constructor(c) {
         console.log("initializeLayeredCanvas");
@@ -33,10 +35,14 @@ export class LayeredCanvas {
     }
     
     getCanvasPosition(event) {
+/*
         const rect = this.canvas.getBoundingClientRect();
         const x = Math.floor(event.clientX - rect.left);
         const y = Math.floor(event.clientY - rect.top);
         return [x, y];
+*/
+        const p = convertPointFromPageToNode(this.canvas, event.pageX, event.pageY);
+        return [Math.floor(p.x), Math.floor(p.y)];
     }
     
     handlePointerDown(event) {

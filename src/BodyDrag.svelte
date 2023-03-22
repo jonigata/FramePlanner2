@@ -8,9 +8,9 @@
   let inner = null;
   let x = 0;
   let y = 0;
+  let scale = 1.0;
 
   function handlePointerDown(e) {
-    console.log('pointerdown');
     if (keyDownFlags["Space"]) {
       dragging = true;
       dragStart = [e.clientX, e.clientY];
@@ -20,16 +20,20 @@
   }
   function handlePointerMove(e) {
     if (!dragging) return;
-    console.log('dragging');
     const [dx, dy] = [e.clientX - dragStart[0], e.clientY - dragStart[1]];
     x = origin[0] + dx;
     y = origin[1] + dy;
   }
 
   function handlePointerUp(e) {
-    console.log('pointerup');
     dragging = false;
-    $bodyDragging = false;
+     $bodyDragging = false;
+  }
+
+  function handleWheel(e) {
+    scale += e.deltaY * 0.0001;
+    if (scale < 0.1) scale = 0.1;
+    if (scale > 10) scale = 10;
   }
 
 </script>
@@ -39,8 +43,9 @@
   on:pointermove={handlePointerMove}
   on:pointerup={handlePointerUp}
   on:pointerleave={handlePointerUp}
+  on:wheel={handleWheel}
 >
-  <div class="inner" style="transform: translate({x}px, {y}px);" bind:this={inner}>
+  <div class="inner" style="transform: translate({x}px, {y}px) scale({scale});" bind:this={inner}>
     <slot/>
   </div>
 </div>
