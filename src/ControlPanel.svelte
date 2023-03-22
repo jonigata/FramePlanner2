@@ -12,6 +12,9 @@
   import { bodyDragging } from './uiStore';
   import { aboutOpen } from './aboutStore';
   import { postContact } from './firebase';
+  import titleBarIcon from './assets/title-control-panel.png';
+  import downloadIcon from './assets/get.png';
+  import clipboardIcon from './assets/clipboard.png';
 
   let max = 4096;
   let contactText = null;
@@ -65,7 +68,7 @@
 </script>
 
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
-  <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src="/src/assets/title-control-panel.png" alt="title"/></div>
+  <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="px-2">
     <TemplateChooser on:apply={applyTemplate} />
   </div>
@@ -101,10 +104,10 @@
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
-      <img class="button-icon" src="/src/assets/get.png" alt="download"/>
+      <img class="button-icon" src={downloadIcon} alt="download"/>
     </button>
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
-      <img class="button-icon" src="/src/assets/clipboard.png" alt="copy"/>
+      <img class="button-icon" src={clipboardIcon} alt="copy"/>
     </button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">

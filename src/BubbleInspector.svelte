@@ -6,6 +6,7 @@
   import './box.css';
   import WebFontList from './WebFontList.svelte';
   import BubbleChooser from './BubbleChooser.svelte';
+  import bubbleIcon from './assets/title-bubble.png';
 
   export let isOpen = false;
 
@@ -69,7 +70,7 @@
 {#if isOpen}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
-    <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" id="load-frame-template" src="/src/assets/title-bubble.png" alt="title"/></div>
+    <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={bubbleIcon} alt="title"/></div>
       <div class="hbox gap-x-2" style="align-self: stretch;">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div class="hbox expand selected-font variant-ghost-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
