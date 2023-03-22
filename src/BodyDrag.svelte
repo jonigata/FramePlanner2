@@ -1,6 +1,7 @@
 <script type="ts">
   import { keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { bodyDragging } from './uiStore';
+  import { drawerStore } from '@skeletonlabs/skeleton';
 
   let dragging = false;
   let dragStart = [0, 0];
@@ -31,6 +32,7 @@
   }
 
   function handleWheel(e) {
+    if ($drawerStore.open) { return; }
     scale += e.deltaY * 0.0001;
     if (scale < 0.1) scale = 0.1;
     if (scale > 10) scale = 10;
