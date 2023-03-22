@@ -102,6 +102,7 @@ export class LayeredCanvas {
             this.redrawIfRequired();
             this.canvas.releasePointerCapture(event.pointerId);
         }
+        this.onHint(null, null);
     }
 
     handleDragOver(event) {
@@ -209,6 +210,8 @@ export function sequentializePointer(layerClass) {
 }
 
 export class Layer {
+    canvas=null;
+
     constructor() {}
 
     getCanvasSize() {return [this.canvas.width, this.canvas.height];}
