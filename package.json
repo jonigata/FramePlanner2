@@ -29,6 +29,7 @@
     "@neodrag/svelte": "^2.0.3",
     "@svelte-web-fonts/google": "^1.0.4",
     "css-font-parser": "^2.0.0",
+    "firebase": "^9.18.0",
     "seedrandom": "^3.0.5",
     "svelte-drawer-component": "^1.2.2",
     "swiper": "^9.1.1",

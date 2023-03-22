@@ -11,8 +11,10 @@
   import { tick } from 'svelte';
   import { bodyDragging } from './uiStore';
   import { aboutOpen } from './aboutStore';
+  import { postContact } from './firebase';
 
   let max = 4096;
+  let contactText = null;
 
   function setDimensions(w: number, h: number) {
     $paperWidth = w;
@@ -29,11 +31,7 @@
 
   function copyToClipboard() {
     $clipboardToken = true;
-    const t: ToastSettings = {
-    	message: 'Copy image to clipboard.',
-    	timeout: 1500
-    };
-    toastStore.trigger(t);
+    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
 
   let files: FileList;
@@ -55,6 +53,13 @@
 
   function about() {
     $aboutOpen = true;
+  }
+
+  async function contact() {
+    console.log(contactText);
+    await postContact(contactText);
+    toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
+    contactText = null;
   }
 
 </script>
@@ -108,7 +113,11 @@
     </FileDropzone> 
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 16px;">
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={about}>
+    <textarea class="mx-2 my-2 rounded-container-token grow" bind:value={contactText}></textarea>
+    <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
+  </div>
+  <div class="hbox gap mx-2" style="margin-top: 16px;">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={about}>
       About FramePlanner
     </button>
   </div>  
