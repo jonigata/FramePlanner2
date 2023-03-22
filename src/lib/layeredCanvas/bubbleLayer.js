@@ -30,6 +30,7 @@ export class BubbleLayer extends Layer {
 
         this.zPlusIcon = new ClickableIcon("zplus.png", [0, 0], [32, 32]);
         this.zMinusIcon = new ClickableIcon("zminus.png", [0, 0], [32, 32]);
+        this.removeIcon = new ClickableIcon("remove.png", [0, 0], [32, 32]);
     }
 
     render(ctx) {
@@ -72,6 +73,7 @@ export class BubbleLayer extends Layer {
                 this.dragIcon.render(ctx);
                 this.zMinusIcon.render(ctx);
                 this.zPlusIcon.render(ctx);
+                this.removeIcon.render(ctx);
                 ctx.restore();
             }
 
@@ -143,6 +145,8 @@ export class BubbleLayer extends Layer {
                     return { action: "z-minus", bubble: bubble };
                 } else if (bubble === this.selected && this.zPlusIcon.contains(point)) {
                     return { action: "z-plus", bubble: bubble };
+                } else if (bubble === this.selected && this.removeIcon.contains(point)) {
+                    return { action: "remove", bubble: bubble };
                 } else {
                     return { action: 'select', bubble: bubble };
                 }
@@ -183,6 +187,8 @@ export class BubbleLayer extends Layer {
                   this.hint(this.zMinusIcon.hintPosition, "手前に");
                 } else if (this.zPlusIcon.contains(p)) {
                   this.hint(this.zPlusIcon.hintPosition, "奥に");
+                } else if (this.removeIcon.contains(p)) {
+                  this.hint(this.removeIcon.hintPosition, "削除");
                 } else {
                   this.hint(p, null);
                 }
@@ -196,7 +202,7 @@ export class BubbleLayer extends Layer {
                 const [x1, y1] = bubble.p1;
                 this.hint(
                     [(x0 + x1) / 2 - 16, y0 + 4],
-                    "Alt + Drag to move, Click to select"
+                    "Alt+ドラッグで移動、クリックで選択"
                     );
                 return true;
             }
@@ -336,6 +342,12 @@ export class BubbleLayer extends Layer {
                 this.bubbles.unshift(bubble);
                 this.redraw();
             }
+        } else if (payload.action === 'remove') {
+            const bubble = payload.bubble;
+            const index = this.bubbles.indexOf(bubble);
+            this.bubbles.splice(index, 1);
+            this.unfocus();
+            this.redraw();
         }
 
     }
@@ -347,6 +359,7 @@ export class BubbleLayer extends Layer {
         this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
         this.zPlusIcon.position = [x1 - 68, y0 + 4];
         this.zMinusIcon.position = [x1 - 36, y0 + 4];
+        this.removeIcon.position = [x0 + 4, y0 + 4];
     }
 
     isBubbleContains(bubble, p) {
