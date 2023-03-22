@@ -168,6 +168,11 @@ export class BubbleLayer extends Layer {
             return false;
         }
 
+        if (this.createBubbleIcon.contains(p)) {
+            this.hint(this.createBubbleIcon.hintPosition, "Drag to Create bubble");
+            return true;
+        }
+
         // edge selection, top/bottom/left/right
         if (this.selected) {
             this.handle = this.getHandleOf(this.selected, p);
@@ -187,7 +192,12 @@ export class BubbleLayer extends Layer {
 
         for (let bubble of this.bubbles) {
             if (this.isBubbleContains(bubble, p)) {
-                this.hint(p, null);
+                const [x0, y0] = bubble.p0;
+                const [x1, y1] = bubble.p1;
+                this.hint(
+                    [(x0 + x1) / 2 - 16, y0 + 4],
+                    "Alt + Drag to move, Click to select"
+                    );
                 return true;
             }
         }
@@ -231,6 +241,7 @@ export class BubbleLayer extends Layer {
     }
 
     *pointer(dragStart, payload) {
+        console.log(payload);
         this.hint(dragStart, null);
 
         if (payload.action === 'create') {
@@ -257,7 +268,9 @@ export class BubbleLayer extends Layer {
             while (p = yield) {
                 bubble.p0 = [p[0] - dx, p[1] - dy];
                 bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
-                this.setIconPositions();
+                if (bubble === this.selected) {
+                    this.setIconPositions();
+                }
                 this.redraw();
             }
         } else if (payload.action === 'select') {
