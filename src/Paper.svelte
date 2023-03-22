@@ -5,11 +5,11 @@
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-  import BubbleInspector from './BubbleInspector.svelte';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
+  import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
 
   export let width = '140px';
   export let height = '198px';
@@ -21,9 +21,6 @@
   let latestJson;
   let frameLayer;
   let bubbleLayer;
-  let isBubbleInspectorOpened;
-  let bubbleInspectorPosition;
-  let bubble;
 
   const dispatch = createEventDispatcher();
 
@@ -53,7 +50,7 @@
 
   }
 
-  $:changeDefaultBubble(bubble);
+  $:changeDefaultBubble($bubble);
   function changeDefaultBubble(newBubble) {
     console.log('changeDefaultBubble', newBubble);
     if (!bubbleLayer || !newBubble) { return; }
@@ -62,14 +59,13 @@
 
   function showInspector(b, p) {
     console.log('showInspector', bubble);
-    bubbleInspectorPosition = elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector(p));
-    isBubbleInspectorOpened = true;
-    bubble = b;
+    $bubbleInspectorPosition = elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector(p));
+    $bubble = b;
   }
 
   function hideInspector() {
     console.log('hideInspector');
-    isBubbleInspectorOpened = false;
+    $bubble = null;
   }
 
   function submit() {
@@ -146,7 +142,6 @@
   <div class="canvas-container" style="width: {width}; height: {height};">
     <canvas width={width} height={height} bind:this={canvas}/>
   </div>    
-  <BubbleInspector isOpen={isBubbleInspectorOpened} position={bubbleInspectorPosition} bind:bubble={bubble}/>
 {:else}
   <div class="canvas-container" style="width: {width}; height: {height};">
     <canvas width={width} height={height} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>

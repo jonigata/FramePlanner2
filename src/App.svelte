@@ -8,6 +8,8 @@
   import BodyDrag from './BodyDrag.svelte';
   import PassiveToolTip from './PassiveToolTip.svelte';
   import About from './About.svelte';
+  import BubbleInspector from './BubbleInspector.svelte';
+  import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
 </script>
 
 <style>
@@ -34,6 +36,8 @@
   <ControlPanel />
   <PassiveToolTip />
 </div>
+
+<BubbleInspector isOpen={$bubble} position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
 
 <About/>
 

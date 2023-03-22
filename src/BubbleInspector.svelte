@@ -62,6 +62,7 @@
   $:move(position);
   function move(p) {
     console.log(p);
+    if (!p) {return;}
     adjustedPosition = { x: p.x - 175, y: p.y + 40 };
   }
 
