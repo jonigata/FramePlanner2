@@ -182,20 +182,25 @@ export class FrameLayer extends Layer {
         this.splitVerticalIcon.position = [x, y + 32];
         this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
         this.scaleIcon.position = [origin[0] + size[0] - 32, origin[1] + size[1] - 32];
-        if (this.splitHorizontalIcon.contains(point)) {
-          this.hint(this.splitHorizontalIcon.hintPosition, "横に分割");
-        } else if (this.splitVerticalIcon.contains(point)) {
-          this.hint(this.splitVerticalIcon.hintPosition, "縦に分割");
-        } else if (this.deleteIcon.contains(point)) {
-          this.hint(this.deleteIcon.hintPosition, "削除");
-        } else if (this.scaleIcon.contains(point)) {
-          if (this.focusedLayout.element.image) {
-            this.hint(this.scaleIcon.hintPosition, "スケール");
+        if (this.interactable) {
+          if (this.splitHorizontalIcon.contains(point)) {
+            this.hint(this.splitHorizontalIcon.hintPosition, "横に分割");
+          } else if (this.splitVerticalIcon.contains(point)) {
+            this.hint(this.splitVerticalIcon.hintPosition, "縦に分割");
+          } else if (this.deleteIcon.contains(point)) {
+            this.hint(this.deleteIcon.hintPosition, "削除");
+          } else if (this.scaleIcon.contains(point)) {
+            if (this.focusedLayout.element.image) {
+              this.hint(this.scaleIcon.hintPosition, "スケール");
+            }
+          } else if (this.focusedLayout.element.image) {
+            this.hint(
+              [x, origin[1] + 16],
+              "ドラッグで移動、Ctrl+ドラッグでスケール"
+            );
+          } else {
+            this.hint([x, origin[1] + 16], "画像をドロップ");
           }
-        } else if (this.focusedLayout.element.image) {
-          this.hint([x, origin[1] + 16], "ドラッグで移動、Ctrl+ドラッグでスケール");
-        } else {
-          this.hint([x, origin[1] + 16], "画像をドロップ");
         }
       } else {
         this.hint(point, null);

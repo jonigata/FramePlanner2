@@ -19,7 +19,7 @@
   import { useClipboard } from './clipboardStore';
 
   let max = 4096;
-  let contactText = null;
+  let contactText = "";
 
   function setDimensions(w: number, h: number) {
     $paperWidth = w;
