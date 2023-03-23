@@ -13,6 +13,7 @@ https://user-images.githubusercontent.com/128374/227375169-74fbdb1f-0aa0-4926-94
 ## インストール方法
 
 以下の手順に従って、FramePlanner2をインストールして開発サーバーを起動します。
+（WSL2、ubuntu22前提で確認）
 
 1.このリポジトリをクローン:
 ```bash
