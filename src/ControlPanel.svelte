@@ -116,14 +116,6 @@
       </div>  
     </div>
   </div>
-  <div class="hbox gap" style="margin-top: 16px;">
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
-      <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
-    </button>
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
-      <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
-    </button>
-  </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/png, image/jpeg" bind:files={files}>
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
@@ -131,6 +123,14 @@
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 12px;">
     <SlideToggle name="slider-label" size="sm" bind:checked={$useClipboard}>セリフ作成時にクリップボードを使う</SlideToggle>
+  </div>
+  <div class="hbox gap" style="margin-top: 16px;">
+    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
+      <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
+    </button>
+    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
+      <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
+    </button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 4px;">
     <textarea class="mx-2 my-2 rounded-container-token grow" bind:value={contactText}></textarea>
