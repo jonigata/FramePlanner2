@@ -7,9 +7,9 @@
   <div class="drawer-content vbox center gap">
     <div>
       <h2>FramePlanner</h2>
-      <p><a href="https://github.com/jonigata/FramePlanner">github</a></p>
-      <p><a href="https://twitter.com/jonigata_ai">twitter</a></p>
-      <p><a href="https://t.co/UC3jJOJJtS">anonymous request</a></p>
+      <p><a href="https://github.com/jonigata/FramePlanner" target="_blank" rel="noopener noreferrer">github</a></p>
+      <p><a href="https://twitter.com/jonigata_ai" target="_blank" rel="noopener noreferrer">twitter</a></p>
+      <p><a href="https://t.co/UC3jJOJJtS" target="_blank" rel="noopener noreferrer">anonymous request</a></p>
     </div>
     <div>
       <h2>Tips</h2>
