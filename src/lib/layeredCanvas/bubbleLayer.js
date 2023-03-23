@@ -43,10 +43,10 @@ export class BubbleLayer extends Layer {
             const [x,y] = bubble.p0;
             const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
 
-            if (w < minimumBubbleSize || h < minimumBubbleSize) {
-                ctx.fillStyle = "rgba(255, 128, 0, 0.9)";
-            } else {
+            if (this.isBubbleEnoughSize(bubble)) {
                 ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            } else {
+                ctx.fillStyle = "rgba(255, 128, 0, 0.9)";
             }
             drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
@@ -271,8 +271,7 @@ export class BubbleLayer extends Layer {
                 this.redraw();
             }
 
-            if (bubble.p1[0] - bubble.p0[0] < minimumBubbleSize || 
-                bubble.p1[1] - bubble.p0[1] < minimumBubbleSize) {
+            if (!this.isBubbleEnoughSize(bubble)) {
                 this.bubbles.pop();
             }
         } else if (payload.action === 'move') {
@@ -303,6 +302,7 @@ export class BubbleLayer extends Layer {
             const bubble = payload.bubble;
             const handle = payload.handle;
 
+            const oldRect = [bubble.p0, bubble.p1];
             let p;
             while (p = yield) {
                 switch (handle) {
@@ -333,6 +333,12 @@ export class BubbleLayer extends Layer {
                         bubble.p1 = [p[0], bubble.p1[1]];
                         break;
                 }
+                this.setIconPositions();
+                this.redraw();
+            }
+            if (!this.isBubbleEnoughSize(bubble)) {
+                bubble.p0 = oldRect[0];
+                bubble.p1 = oldRect[1];
                 this.setIconPositions();
                 this.redraw();
             }
@@ -383,5 +389,14 @@ export class BubbleLayer extends Layer {
         return false;
     }
 
+    isBubbleEnoughSize(bubble) {
+        const [rx0, ry0] = bubble.p0;
+        const [rx1, ry1] = bubble.p1;
+
+        if (rx1 - rx0 < minimumBubbleSize || ry1 - ry0 < minimumBubbleSize) {
+            return false;
+        }
+        return true;
+    }
 }
 
