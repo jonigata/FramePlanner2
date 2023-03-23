@@ -3,21 +3,20 @@ import { keyDownFlags } from "./keyCache.js";
 import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
-import { text } from "svelte/internal";
-import { getHaiku } from "./haiku.js";
 
 export class BubbleLayer extends Layer {
-    constructor(interactable, onShowInspector, onHideInspector, onSubmit) {
+    constructor(interactable, onShowInspector, onHideInspector, onSubmit, onGetDefaultText) {
         super();
         this.interactable = interactable;
         this.bubbles = [];
         this.onShowInspector = onShowInspector;
         this.onHideInspector = onHideInspector;
         this.onSubmit = onSubmit;
+        this.onGetDefaultText = onGetDefaultText;
         this.defaultBubble = {
           p0: [0,0],
           p1: [128,128],
-          text: getHaiku(),
+          text: "empty",
           shape: "square",
           fontStyle: "normal",
           fontWeight: "400",
@@ -246,7 +245,7 @@ export class BubbleLayer extends Layer {
         return null;
     }
 
-    *pointer(dragStart, payload) {
+    async *pointer(dragStart, payload) {
         console.log(payload);
         this.hint(dragStart, null);
 
@@ -256,7 +255,7 @@ export class BubbleLayer extends Layer {
                 ...this.defaultBubble ,
                 p0: dragStart, 
                 p1: dragStart, 
-                text: getHaiku(), 
+                text: await this.onGetDefaultText(), 
             };
             this.bubbles.push(bubble);
 

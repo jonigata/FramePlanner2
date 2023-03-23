@@ -12,7 +12,7 @@
       <p><a href="https://t.co/UC3jJOJJtS" target="_blank" rel="noopener noreferrer">anonymous request</a></p>
     </div>
     <div>
-      <h2>Tips</h2>
+      <h2>チートシート</h2>
       <h3>Paper</h3>
       <p>Space + Drag: スクロール</p>
       <p>Wheel: ズーム</p>
@@ -31,6 +31,13 @@
     <div>
       <h3>枠線</h3>
       <p>Ctrl+ドラッグ: 太さ</p>
+    </div>
+    <div>
+      <h2>Q&A</h2>
+      <dl>
+        <dt>Q: 「セリフ作成時にクリップボードを使う」をブロックしてしまったが、使いたい</dt>
+        <dd>A.ブラウザの設定のサイトごとのセキュリティ設定で「許可」にしてください</dd>
+      </dl>
     </div>
   </div>
 </Drawer>

@@ -10,6 +10,8 @@
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
+  import { useClipboard } from './clipboardStore';
+  import { getHaiku } from './lib/layeredCanvas/haiku.js';
 
   export let width = '140px';
   export let height = '198px';
@@ -72,6 +74,14 @@
     console.log('submit');
   }
 
+  async function getDefaultText() {
+    if ($useClipboard) {
+      return await navigator.clipboard.readText()
+    } else {
+      return getHaiku();
+    }
+  }
+
   onMount(() => {
     const frameTree = FrameElement.compile(frameJson ?? frameExamples[0]);
 
@@ -105,7 +115,7 @@
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);
-    bubbleLayer = new BubbleLayer(editable, showInspector, hideInspector, submit)
+    bubbleLayer = new BubbleLayer(editable, showInspector, hideInspector, submit, getDefaultText)
     layeredCanvas.addLayer(bubbleLayer);
 
     layeredCanvas.redraw();

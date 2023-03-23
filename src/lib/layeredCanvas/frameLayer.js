@@ -277,7 +277,7 @@ export class FrameLayer extends Layer {
     return null;
   }
 
-  *pointer(p, payload) {
+  async *pointer(p, payload) {
     if (payload.layout) {
       const layout = payload.layout;
       const element = layout.element;
