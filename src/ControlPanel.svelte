@@ -111,10 +111,10 @@
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
-      <img class="button-icon" src={downloadIcon} alt="download"/>
+      <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
     </button>
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
-      <img class="button-icon" src={clipboardIcon} alt="copy"/>
+      <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
     </button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
