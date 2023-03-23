@@ -5,6 +5,7 @@ import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 
 const minimumBubbleSize = 72;
+const iconSize = 20;
 
 export class BubbleLayer extends Layer {
     constructor(interactable, onShowInspector, onHideInspector, onSubmit, onGetDefaultText) {
@@ -26,12 +27,12 @@ export class BubbleLayer extends Layer {
           fontFamily: "Shippori Mincho",
         };
 
-        this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [32, 32]);
-        this.dragIcon = new ClickableIcon("drag.png", [0, 0], [32, 32]);
+        this.createBubbleIcon = new ClickableIcon("bubble.png", [4, 4], [iconSize, iconSize]);
+        this.dragIcon = new ClickableIcon("drag.png", [0, 0], [iconSize, iconSize]);
 
-        this.zPlusIcon = new ClickableIcon("zplus.png", [0, 0], [32, 32]);
-        this.zMinusIcon = new ClickableIcon("zminus.png", [0, 0], [32, 32]);
-        this.removeIcon = new ClickableIcon("remove.png", [0, 0], [32, 32]);
+        this.zPlusIcon = new ClickableIcon("zplus.png", [0, 0], [iconSize, iconSize]);
+        this.zMinusIcon = new ClickableIcon("zminus.png", [0, 0], [iconSize, iconSize]);
+        this.removeIcon = new ClickableIcon("remove.png", [0, 0], [iconSize, iconSize]);
     }
 
     render(ctx) {
@@ -372,10 +373,10 @@ export class BubbleLayer extends Layer {
         const [x0, y0] = this.selected.p0;
         const [x1, y1] = this.selected.p1;
 
-        this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
+        this.dragIcon.position = [(x0 + x1) / 2 - iconSize*0.5, y0 + 4];
         this.zPlusIcon.position = [x0 + 4, y0 + 4];
-        this.zMinusIcon.position = [x0 + 4, y0 + 36];
-        this.removeIcon.position = [x1 - 36, y0 + 4];
+        this.zMinusIcon.position = [x0 + 4, y0 + 4 + iconSize];
+        this.removeIcon.position = [x1 - 4 - iconSize, y0 + 4];
     }
 
     isBubbleContains(bubble, p) {
