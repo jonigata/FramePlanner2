@@ -38,9 +38,9 @@ http://localhost:5173
 
 ## フキダシの追加方法
 
-1.src/lib/layeredCanvas/bubbleGraphic.jsに関数を追加
-2.src/lib/layeredCanvas/bubbleGraphic.jsのdrawBubbleにエントリを追加
-3.src/BubbleChooser.svelteの真ん中あたりに形状が列挙してある場所があるので、そこに追加
+1. src/lib/layeredCanvas/bubbleGraphic.jsに関数を追加
+2. src/lib/layeredCanvas/bubbleGraphic.jsのdrawBubbleにエントリを追加
+3. src/BubbleChooser.svelteの真ん中あたりに形状が列挙してある場所があるので、そこに追加
 
 ## ライセンス
 MIT
