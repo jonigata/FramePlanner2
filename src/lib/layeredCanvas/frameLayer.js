@@ -193,10 +193,12 @@ export class FrameLayer extends Layer {
             this.hint(this.scaleIcon.hintPosition, "スケール");
           }
         } else if (this.focusedLayout.element.image) {
-          this.hint([x, origin[1] + 8], "ドラッグで移動、Ctrl+ドラッグでスケール");
+          this.hint([x, origin[1] + 16], "ドラッグで移動、Ctrl+ドラッグでスケール");
         } else {
-          this.hint(point, null);
+          this.hint([x, origin[1] + 16], "画像をドロップ");
         }
+      } else {
+        this.hint(point, null);
       }
     }
     this.redraw();
