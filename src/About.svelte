@@ -7,13 +7,14 @@
   <div class="drawer-content vbox center gap">
     <div>
       <h2>FramePlanner</h2>
-      <p><a href="https://github.com/jonigata/FramePlanner" target="_blank" rel="noopener noreferrer">github</a></p>
+      <p><a href="https://github.com/jonigata/FramePlanner2" target="_blank" rel="noopener noreferrer">github</a></p>
       <p><a href="https://twitter.com/jonigata_ai" target="_blank" rel="noopener noreferrer">twitter</a></p>
       <p><a href="https://t.co/UC3jJOJJtS" target="_blank" rel="noopener noreferrer">anonymous request</a></p>
     </div>
     <div>
       <h2>チートシート</h2>
-      <h3>Paper</h3>
+
+      <h3>ペーパー</h3>
       <p>Space + Drag: スクロール</p>
       <p>Wheel: ズーム</p>
     </div>
