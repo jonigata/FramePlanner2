@@ -15,9 +15,11 @@
   import titleBarIcon from './assets/title-control-panel.png';
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
+  import { SlideToggle } from '@skeletonlabs/skeleton';
 
   let max = 4096;
   let contactText = null;
+  let useClipboard;
 
   function setDimensions(w: number, h: number) {
     $paperWidth = w;
@@ -63,6 +65,11 @@
     await postContact(contactText);
     toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
     contactText = null;
+  }
+
+  $:useClipboardChanged(useClipboard);
+  function useClipboardChanged(useClipboard) {
+    console.log(useClipboard);
   }
 
 </script>
@@ -112,10 +119,15 @@
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/png, image/jpeg" bind:files={files}>
-    	<svelte:fragment slot="message"><b>Upload</b> or <b>Drop</b> .png here</svelte:fragment>
+    	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
     </FileDropzone> 
   </div>  
-  <div class="hbox gap mx-2" style="margin-top: 16px;">
+<!--
+  <div class="hbox gap mx-2" style="margin-top: 12px;">
+    <SlideToggle name="slider-label" size="sm" checked={useClipboard}>セリフ作成時にクリップボードを使う</SlideToggle>
+  </div>
+-->
+  <div class="hbox gap mx-2" style="margin-top: 4px;">
     <textarea class="mx-2 my-2 rounded-container-token grow" bind:value={contactText}></textarea>
     <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
   </div>
