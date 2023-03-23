@@ -4,6 +4,8 @@ import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 
+const minimumBubbleSize = 96;
+
 export class BubbleLayer extends Layer {
     constructor(interactable, onShowInspector, onHideInspector, onSubmit, onGetDefaultText) {
         super();
@@ -41,7 +43,11 @@ export class BubbleLayer extends Layer {
             const [x,y] = bubble.p0;
             const [w,h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
 
-            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            if (w < minimumBubbleSize || h < minimumBubbleSize) {
+                ctx.fillStyle = "rgba(255, 128, 0, 0.9)";
+            } else {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            }
             drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
 
@@ -264,6 +270,11 @@ export class BubbleLayer extends Layer {
                 bubble.p1 = p;
                 this.redraw();
             }
+
+            if (bubble.p1[0] - bubble.p0[0] < minimumBubbleSize || 
+                bubble.p1[1] - bubble.p0[1] < minimumBubbleSize) {
+                this.bubbles.pop();
+            }
         } else if (payload.action === 'move') {
             const bubble = payload.bubble;
             const [dx, dy] = [dragStart[0] - bubble.p0[0], dragStart[1] - bubble.p0[1]];
@@ -357,7 +368,7 @@ export class BubbleLayer extends Layer {
 
         this.dragIcon.position = [(x0 + x1) / 2 - 16, y0 + 4];
         this.zPlusIcon.position = [x0 + 4, y0 + 4];
-        this.zMinusIcon.position = [x0 +36, y0 + 4];
+        this.zMinusIcon.position = [x0 + 4, y0 + 36];
         this.removeIcon.position = [x1 - 36, y0 + 4];
     }
 
