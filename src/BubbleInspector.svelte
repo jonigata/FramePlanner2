@@ -79,10 +79,10 @@
       <label class="hbox px-2 variant-ghost-primary rounded-container-token">fontSize <div class="number-box"><NumberEdit bind:value={fontSize} showSlider="{true}"/></div></label>
     </div>
     <textarea
-      class="mx-2 my-2 rounded-container-token" 
+      class="my-2 rounded-container-token textarea" 
       bind:value={bubbleText}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
-    <div class="px-2 template-chooser-container">
+    <div class="template-chooser-container">
       <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubbleShape} />
     </div>
   </div>
@@ -125,15 +125,15 @@
     width: 32px;
     height: 32px;
   }
-  textarea {
+  .textarea {
     flex: 1;
     align-self: stretch;
     resize: none;
-    border: none;
     outline: none;
     padding: 0.5rem;
     box-sizing: border-box;
     line-height: 1.1;
+    resize: none;
   }
   .number-box {
     width: 35px;

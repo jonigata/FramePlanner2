@@ -132,8 +132,8 @@
       <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
     </button>
   </div>
-  <div class="hbox gap mx-2" style="margin-top: 4px;">
-    <textarea class="mx-2 my-2 rounded-container-token grow" bind:value={contactText}></textarea>
+  <div class="hbox mx-2" style="margin-top: 4px;">
+    <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
     <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
@@ -195,5 +195,8 @@
   .button-icon {
     width: 32px;
     height: 32px;
+  }
+  .textarea {
+    resize: none;
   }
 </style>
