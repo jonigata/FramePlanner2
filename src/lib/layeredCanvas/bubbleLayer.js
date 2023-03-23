@@ -201,7 +201,7 @@ export class BubbleLayer extends Layer {
                 const [x0, y0] = bubble.p0;
                 const [x1, y1] = bubble.p1;
                 this.hint(
-                    [(x0 + x1) / 2 - 16, y0 + 4],
+                    [(x0 + x1) / 2, y0 - 20],
                     "Alt+ドラッグで移動、クリックで選択"
                     );
                 return true;
