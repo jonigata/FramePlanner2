@@ -13,7 +13,7 @@ https://user-images.githubusercontent.com/128374/227375169-74fbdb1f-0aa0-4926-94
 ## インストール方法
 
 以下の手順に従って、FramePlanner2をインストールして開発サーバーを起動します。
-（WSL2、ubuntu22前提で確認）
+（WSL2、ubuntu22前提）
 
 1.このリポジトリをクローン:
 ```bash
@@ -36,5 +36,11 @@ npm run dev
 http://localhost:5173
 ```
 
-ライセンス
+## フキダシの追加方法
+
+1.src/lib/layeredCanvas/bubbleGraphic.jsに関数を追加
+2.src/lib/layeredCanvas/bubbleGraphic.jsのdrawBubbleにエントリを追加
+3.src/BubbleChooser.svelteの真ん中あたりに形状が列挙してある場所があるので、そこに追加
+
+## ライセンス
 MIT
