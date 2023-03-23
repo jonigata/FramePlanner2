@@ -63,6 +63,10 @@
 
   async function contact() {
     console.log(contactText);
+    if (contactText == null || contactText == "") {
+      toastStore.trigger({ message: '要望を入力してください', timeout: 1500});
+      return;
+    }
     await postContact(contactText);
     toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
     contactText = null;
