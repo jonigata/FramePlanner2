@@ -5,11 +5,11 @@ import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon } from "./clickableIcon.js";
 
 export class FrameLayer extends Layer {
-  constructor(frameTree, interactable, onModify) {
+  constructor(frameTree, interactable, onCommit) {
     super();
     this.frameTree = frameTree;
     this.interactable = interactable;
-    this.onModify = onModify;
+    this.onCommit = onCommit;
     this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32]);
     this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32]);
     this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",[0, 0],[32, 32]);
@@ -222,7 +222,7 @@ export class FrameLayer extends Layer {
     if (layoutElement) {
       if (keyDownFlags["KeyQ"]) {
         FrameElement.eraseElement(this.frameTree, layoutElement.element);
-        this.onModify(this.frameTree);
+        this.onCommit(this.frameTree);
         this.redraw();
       }
       if (keyDownFlags["KeyW"]) {
@@ -230,7 +230,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
-        this.onModify(this.frameTree);
+        this.onCommit(this.frameTree);
         this.redraw();
       }
       if (keyDownFlags["KeyS"]) {
@@ -238,7 +238,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
-        this.onModify(this.frameTree);
+        this.onCommit(this.frameTree);
         this.redraw();
       }
       if (this.splitHorizontalIcon.contains(point)) {
@@ -246,7 +246,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
-        this.onModify(this.frameTree);
+        this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
       }
@@ -255,13 +255,13 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
-        this.onModify(this.frameTree);
+        this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
       }
       if (this.deleteIcon.contains(point)) {
         FrameElement.eraseElement(this.frameTree, layoutElement.element);
-        this.onModify(this.frameTree);
+        this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
       }
@@ -335,7 +335,7 @@ export class FrameLayer extends Layer {
       this.redraw();
     }
 
-    this.onModify(this.frameTree);
+    this.onCommit(this.frameTree);
   }
 
   *expandBorder(p, border) {
@@ -352,7 +352,7 @@ export class FrameLayer extends Layer {
       this.redraw();
     }
 
-    this.onModify(this.frameTree);
+    this.onCommit(this.frameTree);
   }
 
   getBorderBalance(p, border) {

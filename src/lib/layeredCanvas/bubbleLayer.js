@@ -4,7 +4,7 @@ import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 
-const minimumBubbleSize = 96;
+const minimumBubbleSize = 72;
 
 export class BubbleLayer extends Layer {
     constructor(interactable, onShowInspector, onHideInspector, onSubmit, onGetDefaultText) {
