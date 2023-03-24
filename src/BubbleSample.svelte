@@ -28,10 +28,23 @@
 
 </script>
 
-<canvas width="{width}px" height="{height}px" bind:this={canvas} on:click={click}/>
+<div class="canvas-container" style="width: {width}px; height: {height}px;">
+  <canvas width="{width}px" height="{height}px" bind:this={canvas} on:click={click}/>
+</div>
 
 <style>
+  .canvas-container {
+    position: relative;
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+                      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    background-color: white;
+  }
   canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     cursor: pointer;
   }
 </style>
