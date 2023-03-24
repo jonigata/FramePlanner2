@@ -2,6 +2,7 @@
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { bodyDragging } from './uiStore';
   import { drawerStore } from '@skeletonlabs/skeleton';
+  import { undoStore } from './undoStore';
   import { onMount } from "svelte";
 
   let dragging = false;
@@ -50,8 +51,19 @@
     y = (parentHeight - innerHeight) / 2;
 
     initializeKeyCache(fullscreen, (code) => {
+      if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) && (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"])) {
+        console.log("ctrl+shift+z")
+        $undoStore.redo();
+        return false;
+      }
+      if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"])) {
+        console.log("ctrl+z")
+        $undoStore.undo();
+        return false;
+      }
       return code === "AltLeft" || code === "AltRight" ||
           code === "ControlLeft" || code === "ControlRight" ||
+          code === "ShiftLeft" || code === "ShiftRight" ||
           code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF" ||
           code === "Space";
     });

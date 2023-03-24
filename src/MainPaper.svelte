@@ -1,7 +1,9 @@
 <script type="ts">
+  import { onMount } from 'svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
   import Paper from './Paper.svelte';
   import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore';
+  import { undoStore } from './undoStore';
 
   $paperTemplate = frameExamples[0];
 
@@ -29,6 +31,10 @@
     paper.importImage(image);
     $importingImage = null;
   }
+
+  onMount(() => {
+    $undoStore = paper;
+  });
 </script>
 
 <div class="main-paper-container">

@@ -20,15 +20,41 @@
 
   let canvas;
   let layeredCanvas;
-  let latestJson;
   let frameLayer;
   let bubbleLayer;
   let history = [];
+  let historyIndex = 0;
 
   const dispatch = createEventDispatcher();
 
   function addHistory() {
-    history.push()
+    history.length = historyIndex;
+    history.push({
+      frameTree: frameLayer.frameTree.clone(),
+      bubbles: bubbleLayer.bubbles.map(b => b.clone()),
+    })
+    historyIndex = history.length;
+    console.log("addHistory", historyIndex);
+  }
+
+  export function undo() {
+    if (historyIndex <= 1) { return; }
+    historyIndex--;
+    console.log("undo", historyIndex);
+    const h = history[historyIndex-1];
+    frameLayer.frameTree = h.frameTree.clone();
+    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
+    layeredCanvas.redraw(); 
+  }
+
+  export function redo() {
+    console.log("redo", historyIndex);
+    if (history.length <= historyIndex) { return; }
+    historyIndex++;
+    const h = history[historyIndex-1];
+    frameLayer.frameTree = h.frameTree.clone();
+    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
+    layeredCanvas.redraw(); 
   }
 
   export function importImage(image) {
@@ -53,8 +79,6 @@
     frameLayer.frameTree = newFrameTree;
     dealImages(newFrameTree, images);
     layeredCanvas.redraw();
-    latestJson = newFrameJson;
-
   }
 
   $:changeDefaultBubble($bubble);
@@ -101,15 +125,15 @@
       frameTree,
       editable,
       (frameTree) => {
-        latestJson = FrameElement.decompile(frameTree);
+        console.log("commit frames");
         addHistory();
 /*
+        latestJson = FrameElement.decompile(frameTree);
         skipJsonChange = true;
         editor.set({ text: JSONstringifyOrder(markUp, 2) });
         skipJsonChange = false;
-*/
-
         frameLayer.constraintAll();
+*/
       });
     layeredCanvas.addLayer(frameLayer);
 
@@ -118,14 +142,15 @@
       editable, 
       showInspector, 
       hideInspector, 
-      bubbles => {
+      (bubbles) => {
+        console.log("commit bubbles");
         addHistory();
       },
       getDefaultText)
     layeredCanvas.addLayer(bubbleLayer);
-
     layeredCanvas.redraw();
 
+    addHistory();
   });
 
   export function save() {

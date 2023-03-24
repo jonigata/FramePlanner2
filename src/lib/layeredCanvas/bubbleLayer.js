@@ -12,7 +12,7 @@ export class BubbleLayer extends Layer {
     interactable,
     onShowInspector,
     onHideInspector,
-    onSubmit,
+    onCommit,
     onGetDefaultText
   ) {
     super();
@@ -20,7 +20,7 @@ export class BubbleLayer extends Layer {
     this.bubbles = [];
     this.onShowInspector = onShowInspector;
     this.onHideInspector = onHideInspector;
-    this.onSubmit = onSubmit;
+    this.onCommit = onCommit;
     this.onGetDefaultText = onGetDefaultText;
     this.defaultBubble = new Bubble();
     this.creatingBubble = null;
@@ -183,10 +183,12 @@ export class BubbleLayer extends Layer {
   }
 
   unfocus() {
-    this.onSubmit(this.bubbles);
-    this.onHideInspector();
-    this.selected = null;
-    this.redraw();
+    if (this.selected) {
+        this.onCommit(this.bubbles);
+        this.onHideInspector();
+        this.selected = null;
+        this.redraw();
+    }
   }
 
   pointerHover(p) {
@@ -260,6 +262,7 @@ export class BubbleLayer extends Layer {
       this.creatingBubble = null;
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
+        this.onCommit(this.bubbles);
       }
     } else if (payload.action === "move") {
       const bubble = payload.bubble;
@@ -275,6 +278,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
+      this.onCommit(this.bubbles);
     } else if (payload.action === "select") {
       console.log("select");
       this.unfocus();
