@@ -44,11 +44,6 @@
   async function uploadImage(files: FileList) {
     if (files && files.length > 0) {
       const imageBitmap = await createImageBitmap(files[0]);
-      const t: ToastSettings = {
-        message: 'Assign image file.',
-        timeout: 1500
-      };
-      toastStore.trigger(t);
       setDimensions(imageBitmap.width, imageBitmap.height);
       $paperTemplate = {};
       await tick();

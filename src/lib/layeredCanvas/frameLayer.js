@@ -445,6 +445,7 @@ export class FrameLayer extends Layer {
     );
     console.log(scale);
 
+    layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
     this.redraw();
