@@ -76,7 +76,7 @@
         min={min}
         max={max}
         step={1}
-        style="width: {containerWidth * 4}px;"
+        style="width: {containerWidth * 4}px; z-index:9999;"
       />
     {/if}
   {/if}
