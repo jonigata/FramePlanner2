@@ -291,10 +291,8 @@ export class BubbleLayer extends Layer {
       console.log("select");
       this.unfocus();
       this.selected = payload.bubble;
-      const [x0, y0] = this.selected.p0;
-      const [x1, y1] = this.selected.p1;
       this.setIconPositions();
-      this.onShowInspector(this.selected, [(x0 + x1) / 2, y1]);
+      this.onShowInspector(this.selected);
 
       this.redraw();
     } else if (payload.action === "resize") {

@@ -87,9 +87,18 @@
     bubbleLayer.defaultBubble = newBubble;
   }
 
-  function showInspector(b, p) {
+  function showInspector(b) {
     console.log('showInspector', bubble);
-    $bubbleInspectorPosition = elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector(p));
+    const [x0, y0] = b.p0;
+    const [x1, y1] = b.p1;
+    const [cx, cy] = [(x0+x1)/2, (y0+y1)/2];
+    const offset = canvas.height / 2 < cy ? 1 : -1;
+    
+    $bubbleInspectorPosition = {
+      center: elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector([cx,cy])),
+      height: y1 - y0,
+      offset
+    };
     $bubble = b;
   }
 

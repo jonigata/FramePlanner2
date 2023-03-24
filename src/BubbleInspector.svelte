@@ -61,9 +61,14 @@
 
   $:move(position);
   function move(p) {
-    console.log(p);
     if (!p) {return;}
-    adjustedPosition = { x: p.x - 175, y: p.y + 40 };
+    const center = p.center;
+    const height = p.height;
+    const offset = p.offset;
+    adjustedPosition = { 
+      x: center.x - 175, 
+      y: center.y + (offset === 1 ? -height*0.5 - 40 - 340 : height*0.5 + 40)
+    };
   }
 
 </script>
