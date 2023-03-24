@@ -146,7 +146,7 @@
     display: flex;
     flex-direction: column;
     top: 200px;
-    left: 0;
+    left: 20px;
   }
   .title-bar {
     cursor: move;
