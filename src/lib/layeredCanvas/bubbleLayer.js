@@ -147,6 +147,7 @@ export class BubbleLayer extends Layer {
     if (this.createBubbleIcon.contains(point)) {
       return { action: "create" };
     }
+
     if (this.selected) {
       const bubble = this.selected;
 
@@ -167,11 +168,18 @@ export class BubbleLayer extends Layer {
     }
     for (let bubble of this.bubbles) {
       if (bubble.contains(point)) {
-        if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+        console.log("A");
+        if (keyDownFlags["KeyQ"]) {
+            console.log("B");
+          return { action: "remove", bubble };
+        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+        console.log("C");
           return { action: "move", bubble };
         } else {
+        console.log("D");
           return { action: "select", bubble };
         }
+        console.log("E");
       }
       const handle = bubble.getHandleAt(point);
       if (handle) {

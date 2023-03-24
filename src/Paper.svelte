@@ -83,7 +83,6 @@
 
   $:changeDefaultBubble($bubble);
   function changeDefaultBubble(newBubble) {
-    console.log('changeDefaultBubble', newBubble);
     if (!bubbleLayer || !newBubble) { return; }
     bubbleLayer.defaultBubble = newBubble;
   }
