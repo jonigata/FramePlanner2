@@ -23,8 +23,13 @@
   let latestJson;
   let frameLayer;
   let bubbleLayer;
+  let history = [];
 
   const dispatch = createEventDispatcher();
+
+  function addHistory() {
+    history.push()
+  }
 
   export function importImage(image) {
     console.log(frameLayer.frameTree);
@@ -32,7 +37,7 @@
     frameLayer.importImage(layout, image);
   }
 
-  function handleClick() {
+  function handleClick() { // 非interactableの場合はボタンとして機能する
     dispatch('click');
   }
 
@@ -70,10 +75,6 @@
     $bubble = null;
   }
 
-  function submit() {
-    console.log('submit');
-  }
-
   async function getDefaultText() {
     if ($useClipboard) {
       return await navigator.clipboard.readText()
@@ -91,31 +92,36 @@
       (p, s) => {
         if (s) {
           const q = convertPointFromNodeToPage(canvas, ...p);
-          toolTipRequest.set({
-            message: s,
-            position: q
-          });
+          toolTipRequest.set({ message: s, position: q });
         } else {
           toolTipRequest.set(null);
         }
       });
     frameLayer = new FrameLayer(
-        frameTree,
-        editable,
-        (frameTree) => {
-            const markUp = FrameElement.decompile(frameTree);
+      frameTree,
+      editable,
+      (frameTree) => {
+        latestJson = FrameElement.decompile(frameTree);
+        addHistory();
 /*
-            skipJsonChange = true;
-            editor.set({ text: JSONstringifyOrder(markUp, 2) });
-            skipJsonChange = false;
+        skipJsonChange = true;
+        editor.set({ text: JSONstringifyOrder(markUp, 2) });
+        skipJsonChange = false;
 */
 
-            frameLayer.constraintAll();
-        });
+        frameLayer.constraintAll();
+      });
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);
-    bubbleLayer = new BubbleLayer(editable, showInspector, hideInspector, submit, getDefaultText)
+    bubbleLayer = new BubbleLayer(
+      editable, 
+      showInspector, 
+      hideInspector, 
+      bubbles => {
+        addHistory();
+      },
+      getDefaultText)
     layeredCanvas.addLayer(bubbleLayer);
 
     layeredCanvas.redraw();

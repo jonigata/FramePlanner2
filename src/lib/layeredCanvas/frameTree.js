@@ -17,6 +17,21 @@ export class FrameElement {
         this.image = null;
     }
 
+    clone() {
+        const element = new FrameElement(this.rawSize);
+        element.direction = this.direction;
+        element.children = this.children.map(child => child.clone());
+        element.localLength = this.localLength;
+        element.localBreadth = this.localBreadth;
+        element.spacing = this.spacing;
+        element.margin = { ...this.margin };
+        element.translation = [...this.translation];
+        element.scale = [...this.scale];
+        element.bgColor = this.bgColor;
+        element.image = this.image;
+        return element;
+    }
+
     static compile(markUpElement) {
         const width = markUpElement.width || 1;
         const height = markUpElement.height || 1;
