@@ -191,7 +191,7 @@ export class FrameLayer extends Layer {
             this.hint(this.deleteIcon.hintPosition, "削除");
           } else if (this.scaleIcon.contains(point)) {
             if (this.focusedLayout.element.image) {
-              this.hint(this.scaleIcon.hintPosition, "スケール");
+              this.hint(this.scaleIcon.hintPosition, "ドラッグでスケール");
             }
           } else if (this.focusedLayout.element.image) {
             this.hint(

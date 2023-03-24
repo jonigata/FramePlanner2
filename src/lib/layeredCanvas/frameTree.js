@@ -173,6 +173,12 @@ export class FrameElement {
                 newElement.calculateLengthAndBreadth();
                 parent.children[index] = newElement;
             } 
+        } else {
+            // target === root
+            const newElement = root.clone();
+            root.children = [newElement];
+            root.direction = splitDirection;
+            this.splitElement(root, newElement, splitDirection);
         }
     }
 
