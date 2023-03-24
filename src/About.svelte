@@ -17,6 +17,7 @@
       <h3>ペーパー</h3>
       <p>Space + Drag: スクロール</p>
       <p>Wheel: ズーム</p>
+      <p>Undo/Redo: Ctrl+Z/Shift+Ctrl+Z</p>
     </div>
     <div>
       <h3>フレーム</h3>
@@ -28,6 +29,7 @@
       <h3>フキダシ</h3>
       <p>Alt+ドラッグ: 移動</p>
       <p>F+ドラッグ: 作成</p>
+      <p>Q+クリック: 削除</p>
     </div>
     <div>
       <h3>枠線</h3>

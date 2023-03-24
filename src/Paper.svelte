@@ -166,6 +166,7 @@
     frameLayer.interactable = false;
     bubbleLayer.interactable = false;
     layeredCanvas.redraw();
+    const latestJson = FrameElement.decompile(frameLayer.frameTree);
     saveCanvas(canvas, "comic.png", latestJson);
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
