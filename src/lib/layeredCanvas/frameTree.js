@@ -152,7 +152,7 @@ export class FrameElement {
                 const newElement = new FrameElement((length - spacing) / 2);
                 newElement.calculateLengthAndBreadth();
                 target.rawSize = newElement.rawSize;
-                parent.children.splice(index+1, 0, newElement);
+                parent.children.splice(index+(dir=='h' ? 0 : 1), 0, newElement);
                 parent.calculateLengthAndBreadth();
             } else {
                 console.log("different direction");
@@ -166,9 +166,10 @@ export class FrameElement {
                     newElement.children.push(newChild);
                 }
                 if (target.image) {
-                    newElement.children[0].image = target.image;
-                    newElement.children[0].translation = target.translation;
-                    newElement.children[0].scale = target.scale;
+                    const inheritIndex = (dir == 'h' ? 0 : 1);
+                    newElement.children[inheritIndex].image = target.image;
+                    newElement.children[inheritIndex].translation = target.translation;
+                    newElement.children[inheritIndex].scale = target.scale;
                 }
                 newElement.calculateLengthAndBreadth();
                 parent.children[index] = newElement;
