@@ -1,6 +1,6 @@
 import { Layer, sequentializePointer } from "./layeredCanvas.js";
 import { keyDownFlags } from "./keyCache.js";
-import { drawVerticalText, measureVerticalText } from "./verticalText.js";
+import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 import { Bubble } from "./bubble.js";
@@ -79,28 +79,48 @@ export class BubbleLayer extends Layer {
       const charSkip = bubble.fontSize;
 
       // draw text
-      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillStyle = "rgba(0, 0, 0, 1)";
       const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
-      const textMaxHeight = h * 0.85;
-      const s = measureVerticalText(
-        ctx,
-        textMaxHeight,
-        bubble.text,
-        baselineSkip,
-        charSkip
-      );
-      const tx = bubble.p0[0] + (w - s.width) / 2;
-      const ty = bubble.p0[1] + (h - s.height) / 2;
-      const tw = s.width;
-      const th = s.height;
-      drawVerticalText(
-        ctx,
-        { x: tx, y: ty, width: tw, height: th },
-        bubble.text,
-        baselineSkip,
-        charSkip
-      );
+
+      if (bubble.direction == 'v') {
+        const textMaxHeight = h * 0.85;
+        const m = measureVerticalText(
+            ctx,
+            textMaxHeight,
+            bubble.text,
+            baselineSkip,
+            charSkip
+        );
+        const tw = m.width;
+        const th = m.height;
+        const tx = bubble.p0[0] + (w - tw) / 2;
+        const ty = bubble.p0[1] + (h - th) / 2;
+        drawVerticalText(
+            ctx,
+            { x: tx, y: ty, width: tw, height: th },
+            bubble.text,
+            baselineSkip,
+            charSkip
+        );
+      } else {
+        const textMaxWidth = w * 0.85;
+        const m = measureHorizontalText(
+          ctx,
+          textMaxWidth,
+          bubble.text,
+          baselineSkip);
+        const tw = m.width;
+        const th = m.height;
+        const tx = bubble.p0[0] + (w - tw) / 2;
+        const ty = bubble.p0[1] + (h - th) / 2;
+        drawHorizontalText(
+          ctx,
+          { x: tx, y: ty, width: tw, height: th },
+          bubble.text,
+          baselineSkip,
+          m);
+      }
     }
 
     if (!this.interactable) {

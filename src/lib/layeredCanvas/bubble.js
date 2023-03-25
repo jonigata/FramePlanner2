@@ -11,6 +11,7 @@ export class Bubble {
     this.fontWeight = "400";
     this.fontSize = 22;
     this.fontFamily = "Shippori Mincho";
+    this.direction = 'v';
   }
 
   clone() {
@@ -23,6 +24,7 @@ export class Bubble {
     b.fontWeight = this.fontWeight;
     b.fontSize = this.fontSize;
     b.fontFamily = this.fontFamily;
+    b.direction = this.direction;
     return b;
   }
 

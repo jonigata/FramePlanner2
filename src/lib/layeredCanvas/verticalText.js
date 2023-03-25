@@ -19,7 +19,7 @@ export function drawVerticalText(context, r, text, baselineSkip, charSkip) {
 
             function drawChar(ax, ay, colored) {
                 context.save();
-                context.fillStyle = colored ? 'red' : 'black';
+                if (colored) { context.fillStyle = 'red'; }
                 context.fillText(
                     c, 
                     cursorX - cw * 0.5 + cw * ax, 
@@ -32,7 +32,7 @@ export function drawVerticalText(context, r, text, baselineSkip, charSkip) {
                 const pivotX = cursorX + cw * ax;
                 const pivotY = r.y + charSkip + lineH + charSkip * ay;
                 context.save();
-                context.fillStyle = colored ? 'red' : 'black';
+                if (colored) { context.fillStyle = "red"; }
                 context.translate(pivotX, pivotY);
                 context.rotate(angle * Math.PI / 180);
                 context.scale(1, xscale);

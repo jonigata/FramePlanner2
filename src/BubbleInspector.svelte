@@ -6,7 +6,10 @@
   import './box.css';
   import WebFontList from './WebFontList.svelte';
   import BubbleChooser from './BubbleChooser.svelte';
+  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import bubbleIcon from './assets/title-bubble.png';
+  import horizontalIcon from './assets/horizontal.png';
+  import verticalIcon from './assets/vertical.png';
 
   export let isOpen = false;
 
@@ -15,6 +18,7 @@
   let fontWeight = "400";
   let fontFamily = "'Shippori Mincho', serif";
   let bubbleText = "";
+  let direction = "v";
   export let position = { x: 0, y: 0 };
   export let bubble = null;
   let adjustedPosition = { x: 0, y: 0 };
@@ -29,11 +33,12 @@
       fontFamily = b.fontFamily;
       bubbleText = b.text;
       bubbleShape = b.shape;
+      direction = b.direction;
     }
   }
 
-  $:outputValue(fontSize, fontWeight, fontFamily, bubbleText, bubbleShape);
-  function outputValue(fs, fw, ff, bt, bs) {
+  $:outputValue(fontSize, fontWeight, fontFamily, bubbleText, bubbleShape, direction);
+  function outputValue(fs, fw, ff, bt, bs, d) {
     if (bubble) {
       bubble.fontSize = fs;
       bubble.fontStyle = fontStyle;
@@ -41,6 +46,7 @@
       bubble.fontFamily = ff;
       bubble.text = bt;
       bubble.shape = bs;
+      bubble.direction = d;
     }
   }
 
@@ -65,9 +71,11 @@
     const center = p.center;
     const height = p.height;
     const offset = p.offset;
+    const dialogWidth = 350;
+    const dialogHeight = 360;
     adjustedPosition = { 
-      x: center.x - 175, 
-      y: center.y + (offset === 1 ? -height*0.5 - 40 - 340 : height*0.5 + 40)
+      x: center.x - dialogWidth*0.5, 
+      y: center.y + (offset === 1 ? -height*0.5 - 40 - dialogHeight : height*0.5 + 40)
     };
   }
 
@@ -77,12 +85,18 @@
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
     <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={bubbleIcon} alt="title"/></div>
-      <div class="hbox gap-x-2" style="align-self: stretch;">
+    <div class="hbox gap-x-2" style="align-self: stretch;">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div class="hbox expand selected-font variant-ghost-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
-      <!-- svelte-ignore a11y-label-has-associated-control -->
-      <label class="hbox px-2 variant-ghost-primary rounded-container-token">fontSize <div class="number-box"><NumberEdit bind:value={fontSize} showSlider="{true}"/></div></label>
+      <div class="direction hbox">
+        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+          <RadioItem bind:group={direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
+        </RadioGroup>
+      </div>
     </div>
+    <!-- svelte-ignore a11y-label-has-associated-control -->
+    <label class="hbox px-2 variant-ghost-primary rounded-container-token">fontSize <div class="number-box"><NumberEdit bind:value={fontSize} showSlider="{true}"/></div></label>
     <textarea
       class="my-2 rounded-container-token textarea" 
       bind:value={bubbleText}/>
@@ -112,7 +126,7 @@
   .bubble-inspector {
     position: absolute;
     width: 350px;
-    height: 340px;
+    height: 360px;
     display: flex;
     flex-direction: column;
     padding: 8px;
@@ -151,5 +165,13 @@
   .template-chooser-container {
     height: 120px;
     width: 100%;
+  }
+  .direction-item {
+    width: 12px;
+    height: 12px;
+  }
+  .direction :global(.radio-item) {
+    padding-left: 8px;
+    padding-right: 8px;
   }
 </style>
