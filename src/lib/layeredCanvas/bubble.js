@@ -12,6 +12,10 @@ export class Bubble {
     this.fontSize = 22;
     this.fontFamily = "Shippori Mincho";
     this.direction = 'v';
+    this.fontColor = '#000000FF';
+    this.fillColor = '#ffffffE6';
+    this.strokeColor = "#000000FF";
+    this.strokeWidth = 1;
   }
 
   clone() {

@@ -65,10 +65,12 @@ export class BubbleLayer extends Layer {
 
   renderBubble(ctx, bubble) {
     if (bubble.hasEnoughSize()) {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillStyle = bubble.fillColor;
     } else {
       ctx.fillStyle = "rgba(255, 128, 0, 0.9)";
     }
+    ctx.strokeStyle = bubble.strokeColor;
+    ctx.lineWidth = bubble.strokeWidth;
 
     const [x, y] = bubble.p0;
     const [w, h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
@@ -79,7 +81,7 @@ export class BubbleLayer extends Layer {
       const charSkip = bubble.fontSize;
 
       // draw text
-      ctx.fillStyle = "rgba(0, 0, 0, 1)";
+      ctx.fillStyle = bubble.fontColor;
       const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
 

@@ -11,6 +11,7 @@
   import horizontalIcon from './assets/horizontal.png';
   import verticalIcon from './assets/vertical.png';
   import { RangeSlider } from '@skeletonlabs/skeleton';
+	import ColorPicker from 'svelte-awesome-color-picker';
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -38,7 +39,7 @@
     const height = p.height;
     const offset = p.offset;
     const dialogWidth = 350;
-    const dialogHeight = 360;
+    const dialogHeight = 400;
     adjustedPosition = { 
       x: center.x - dialogWidth*0.5, 
       y: center.y + (offset === 1 ? -height*0.5 - 40 - dialogHeight : height*0.5 + 40)
@@ -63,12 +64,13 @@
       </div>
     </div>
 
-    <div class="hbox px-2 variant-ghost-primary rounded-container-token" style="align-self: stretch;">
+    <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">fontsize</div>
       <RangeSlider name="fontsize" bind:value={bubble.fontSize} max={100} step={1} style="width:200px;"/>
       <div class="text-xs slider-value-text">
         <div class="number-box"><NumberEdit bind:value={bubble.fontSize} showSlider={false}/></div>
       </div>
+      <ColorPicker bind:hex={bubble.fontColor} label="" />
     </div>
 
     <textarea
@@ -77,6 +79,14 @@
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="template-chooser-container">
       <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubble.shape} />
+    </div>
+
+    <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
+      <div class="font-bold slider-label">fill</div>
+      <ColorPicker bind:hex={bubble.fillColor} label="" />
+      <div class="font-bold slider-label">stroke</div>
+      <ColorPicker bind:hex={bubble.strokeColor} label="" />
+      <RangeSlider name="line" bind:value={bubble.strokeWidth} max={10} step={1} style="width:100px;"/>
     </div>
   </div>
 </div>
@@ -100,7 +110,7 @@
   .bubble-inspector {
     position: absolute;
     width: 350px;
-    height: 360px;
+    height: 400px;
     display: flex;
     flex-direction: column;
     padding: 8px;
@@ -147,5 +157,15 @@
   .direction :global(.radio-item) {
     padding-left: 8px;
     padding-right: 8px;
+  }
+  .font-color-picker :global(.container .color) {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+  }
+  .font-color-picker :global(.container .alpha) {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
   }
 </style>
