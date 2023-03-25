@@ -74,6 +74,15 @@
     }
   }
 
+  function onDragOver(e) {
+    e.preventDefault();
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    files = e.dataTransfer.files;
+  }
+
 </script>
 
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
@@ -112,7 +121,7 @@
     </div>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
-    <FileDropzone name="upload-file" accept="image/png, image/jpeg" bind:files={files}>
+    <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
     </FileDropzone> 
   </div>  
