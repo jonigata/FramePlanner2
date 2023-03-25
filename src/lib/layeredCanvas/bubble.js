@@ -29,6 +29,10 @@ export class Bubble {
     b.fontSize = this.fontSize;
     b.fontFamily = this.fontFamily;
     b.direction = this.direction;
+    b.fontColor = this.fontColor;
+    b.fillColor = this.fillColor;
+    b.strokeColor = this.strokeColor;
+    b.strokeWidth = this.strokeWidth;
     return b;
   }
 

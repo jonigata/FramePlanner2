@@ -278,7 +278,7 @@ export class BubbleLayer extends Layer {
 
     if (payload.action === "create") {
       this.unfocus();
-      const bubble = new Bubble();
+      const bubble = this.defaultBubble.clone();
       bubble.p0 = dragStart;
       bubble.p1 = dragStart;
       bubble.text = await this.onGetDefaultText();

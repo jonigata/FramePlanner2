@@ -81,12 +81,6 @@
     layeredCanvas.redraw();
   }
 
-  $:changeDefaultBubble($bubble);
-  function changeDefaultBubble(newBubble) {
-    if (!bubbleLayer || !newBubble) { return; }
-    bubbleLayer.defaultBubble = newBubble;
-  }
-
   function showInspector(b) {
     console.log('showInspector', bubble);
     const [x0, y0] = b.p0;
@@ -152,6 +146,7 @@
       hideInspector, 
       (bubbles) => {
         console.log("commit bubbles");
+        bubbleLayer.defaultBubble = $bubble.clone();
         addHistory();
       },
       getDefaultText)

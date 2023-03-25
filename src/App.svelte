@@ -37,7 +37,7 @@
   <PassiveToolTip />
 </div>
 
-<BubbleInspector isOpen={$bubble} position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
+<BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
 
 <About/>
 
