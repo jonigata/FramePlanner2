@@ -7,15 +7,19 @@
   import WebFontList from './WebFontList.svelte';
   import BubbleChooser from './BubbleChooser.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { RangeSlider } from '@skeletonlabs/skeleton';
+	import ColorPicker from 'svelte-awesome-color-picker';
+
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
   import verticalIcon from './assets/vertical.png';
-  import { RangeSlider } from '@skeletonlabs/skeleton';
-	import ColorPicker from 'svelte-awesome-color-picker';
+  import whitePinIcon from './assets/pin-white.png';
+  import pinIcon from './assets/pin.png';
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
   let adjustedPosition = { x: 0, y: 0 };
+  let pinned = false;
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -32,9 +36,18 @@
     bubble.fontFamily = event.detail.fontFamily;
   }
 
+  $:onChangeAdjustedPosition(adjustedPosition);
+  function onChangeAdjustedPosition(p) {
+    console.log("onChangeAdjustedPosition", p);
+  }
+
   $:move(position);
   function move(p) {
+    console.log(p, pinned, adjustedPosition);
     if (!p) {return;}
+    if (pinned) {return;}
+    console.log("move");
+
     const center = p.center;
     const height = p.height;
     const offset = p.offset;
@@ -46,12 +59,33 @@
     };
   }
 
+  function resetPin() {
+    pinned = false;
+  }
+
+  function setPin() {
+    pinned = true;
+  }
+
+  function onDrag({offsetX, offsetY}) {
+    adjustedPosition = {x: offsetX, y: offsetY};
+  }
+
 </script>
 
 {#if bubble}
 <div class="bubble-inspector-container">
-  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
-    <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={bubbleIcon} alt="title"/></div>
+  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}}>
+    <div class="title-bar variant-filled-surface rounded-container-token">
+      <img class="title-image" src={bubbleIcon} alt="title"/>
+      {#if pinned}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="pin-image" src={whitePinIcon} alt="pin" on:click={resetPin}/>
+      {:else}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="pin-image" src={pinIcon} alt="pin" on:click={setPin}/>
+      {/if}
+    </div>
 
     <div class="hbox gap-x-2" style="align-self: stretch;">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -103,9 +137,9 @@
 
 <style>
   .bubble-inspector-container {
-      position: absolute;
-      top: 0;
-      left: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
   }
   .bubble-inspector {
     position: absolute;
@@ -123,10 +157,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
   }
   .title-image {
     width: 32px;
     height: 32px;
+  }
+  .pin-image {
+    width: 24px;
+    height: 24px;
+    right: 4px;
+    top: 4px;
+    position: absolute;
+    cursor: pointer;
   }
   .textarea {
     flex: 1;
