@@ -36,17 +36,10 @@
     bubble.fontFamily = event.detail.fontFamily;
   }
 
-  $:onChangeAdjustedPosition(adjustedPosition);
-  function onChangeAdjustedPosition(p) {
-    console.log("onChangeAdjustedPosition", p);
-  }
-
   $:move(position);
   function move(p) {
-    console.log(p, pinned, adjustedPosition);
     if (!p) {return;}
     if (pinned) {return;}
-    console.log("move");
 
     const center = p.center;
     const height = p.height;
