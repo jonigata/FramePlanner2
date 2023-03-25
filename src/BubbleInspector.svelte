@@ -12,44 +12,9 @@
   import verticalIcon from './assets/vertical.png';
   import { RangeSlider } from '@skeletonlabs/skeleton';
 
-  export let isOpen = false;
-
-  let fontSize = 22;
-  let fontStyle = "normal";
-  let fontWeight = "400";
-  let fontFamily = "'Shippori Mincho', serif";
-  let bubbleText = "";
-  let direction = "v";
   export let position = { x: 0, y: 0 };
   export let bubble = null;
   let adjustedPosition = { x: 0, y: 0 };
-  let bubbleShape;
-
-  $:inputValue(bubble);
-  function inputValue(b) {
-    if (b) {
-      fontSize = b.fontSize;
-      fontStyle = b.fontStyle;
-      fontWeight = b.fontWeight === "regular" ? "normal" : b.fontWeight;
-      fontFamily = b.fontFamily;
-      bubbleText = b.text;
-      bubbleShape = b.shape;
-      direction = b.direction;
-    }
-  }
-
-  $:outputValue(fontSize, fontWeight, fontFamily, bubbleText, bubbleShape, direction);
-  function outputValue(fs, fw, ff, bt, bs, d) {
-    if (bubble) {
-      bubble.fontSize = fs;
-      bubble.fontStyle = fontStyle;
-      bubble.fontWeight = fw;
-      bubble.fontFamily = ff;
-      bubble.text = bt;
-      bubble.shape = bs;
-      bubble.direction = d;
-    }
-  }
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -62,8 +27,8 @@
 
   function onChangeFont(event) {
     drawerStore.close();
-    fontWeight = event.detail.fontWeight;
-    fontFamily = event.detail.fontFamily;
+    bubble.fontWeight = event.detail.fontWeight;
+    bubble.fontFamily = event.detail.fontFamily;
   }
 
   $:move(position);
@@ -82,36 +47,36 @@
 
 </script>
 
-{#if isOpen}
+{#if bubble}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, handle: '.title-bar'}}>
     <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={bubbleIcon} alt="title"/></div>
 
     <div class="hbox gap-x-2" style="align-self: stretch;">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token" on:click={chooseFont}>{fontFamily}</div>
+      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token" on:click={chooseFont}>{bubble.fontFamily}</div>
       <div class="direction hbox">
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
-          <RadioItem bind:group={direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
         </RadioGroup>
       </div>
     </div>
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token" style="align-self: stretch;">
       <div class="font-bold slider-label">fontsize</div>
-      <RangeSlider name="fontsize" bind:value={fontSize} max={100} step={1} style="width:200px;"/>
+      <RangeSlider name="fontsize" bind:value={bubble.fontSize} max={100} step={1} style="width:200px;"/>
       <div class="text-xs slider-value-text">
-        <div class="number-box"><NumberEdit bind:value={fontSize} showSlider={false}/></div>
+        <div class="number-box"><NumberEdit bind:value={bubble.fontSize} showSlider={false}/></div>
       </div>
     </div>
 
     <textarea
       class="my-2 rounded-container-token textarea" 
-      bind:value={bubbleText}/>
+      bind:value={bubble.text}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="template-chooser-container">
-      <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubbleShape} />
+      <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubble.shape} />
     </div>
   </div>
 </div>
