@@ -47,8 +47,8 @@
     const dialogWidth = 350;
     const dialogHeight = 400;
     adjustedPosition = { 
-      x: center.x - dialogWidth*0.5, 
-      y: center.y + (offset === 1 ? -height*0.5 - 40 - dialogHeight : height*0.5 + 40)
+      x: Math.floor(center.x - dialogWidth*0.5), 
+      y: Math.floor(center.y + (offset === 1 ? -height*0.5 - 40 - dialogHeight : height*0.5 + 40))
     };
   }
 
