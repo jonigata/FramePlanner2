@@ -146,7 +146,9 @@
       hideInspector, 
       (bubbles) => {
         console.log("commit bubbles");
-        bubbleLayer.defaultBubble = $bubble.clone();
+        if ($bubble) {
+          bubbleLayer.defaultBubble = $bubble.clone();
+        }
         addHistory();
       },
       getDefaultText)
