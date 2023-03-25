@@ -11,7 +11,7 @@ export function drawHorizontalText(context, r, text, baselineSkip, m) {
   for (let i = 0; i < m.lines.length; i++) {
     const lineTail = m.lines[i];
     const line = text.substring(lineHead, lineTail);
-    context.fillText(line, r.x, r.y + baselineSkip * (i + 1));
+    context.fillText(line, r.x, r.y + baselineSkip * i + baselineSkip * 0.8 /* Ascentの雑な計算 */ );
     lineHead = lineTail;
   }
 }
@@ -52,5 +52,5 @@ export function measureHorizontalText(
     width: width,
     height: baselineSkip * lines.length,
     lines: lines,
-  }
+  };
 }

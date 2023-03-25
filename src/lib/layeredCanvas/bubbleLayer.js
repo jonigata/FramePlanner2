@@ -114,6 +114,7 @@ export class BubbleLayer extends Layer {
         const th = m.height;
         const tx = bubble.p0[0] + (w - tw) / 2;
         const ty = bubble.p0[1] + (h - th) / 2;
+        // ctx.strokeRect(tx, ty, tw, th);
         drawHorizontalText(
           ctx,
           { x: tx, y: ty, width: tw, height: th },
