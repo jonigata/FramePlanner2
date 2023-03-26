@@ -38,8 +38,8 @@ export class Bubble {
 
   hasEnoughSize() {
     return (
-      this.p1[0] - this.p0[0] >= minimumBubbleSize &&
-      this.p1[1] - this.p0[1] >= minimumBubbleSize
+      minimumBubbleSize <= Math.abs(this.p1[0] - this.p0[0]) &&
+      minimumBubbleSize <= Math.abs(this.p1[1] - this.p0[1])
     );
   }
 
@@ -115,5 +115,15 @@ export class Bubble {
         ];
     }
     return null;
+  }
+
+  regularized() {
+    const p0 = [Math.min(this.p0[0], this.p1[0]), Math.min(this.p0[1], this.p1[1])];
+    const p1 = [Math.max(this.p0[0], this.p1[0]), Math.max(this.p0[1], this.p1[1])];
+    return [p0, p1];
+  }
+
+  regularize() {
+    [this.p0, this.p1] = this.regularized();
   }
 }

@@ -72,8 +72,10 @@ export class BubbleLayer extends Layer {
     ctx.strokeStyle = bubble.strokeColor;
     ctx.lineWidth = bubble.strokeWidth;
 
-    const [x, y] = bubble.p0;
-    const [w, h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
+    // create/resize終わるまでは入れ替わっている可能性がある
+    const [p0, p1] = bubble.regularized();
+    const [x, y] = p0;
+    const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
     drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
     if (bubble.text) {
@@ -96,8 +98,8 @@ export class BubbleLayer extends Layer {
         );
         const tw = m.width;
         const th = m.height;
-        const tx = bubble.p0[0] + (w - tw) / 2;
-        const ty = bubble.p0[1] + (h - th) / 2;
+        const tx = p0[0] + (w - tw) / 2;
+        const ty = p0[1] + (h - th) / 2;
         drawVerticalText(
             ctx,
             { x: tx, y: ty, width: tw, height: th },
@@ -114,8 +116,8 @@ export class BubbleLayer extends Layer {
           baselineSkip);
         const tw = m.width;
         const th = m.height;
-        const tx = bubble.p0[0] + (w - tw) / 2;
-        const ty = bubble.p0[1] + (h - th) / 2;
+        const tx = p0[0] + (w - tw) / 2;
+        const ty = p0[1] + (h - th) / 2;
         // ctx.strokeRect(tx, ty, tw, th);
         drawHorizontalText(
           ctx,
@@ -291,6 +293,7 @@ export class BubbleLayer extends Layer {
       }
 
       this.creatingBubble = null;
+      bubble.regularize();
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
         this.onCommit(this.bubbles);
@@ -353,9 +356,11 @@ export class BubbleLayer extends Layer {
             bubble.p1 = [p[0], bubble.p1[1]];
             break;
         }
+
         this.setIconPositions();
         this.redraw();
       }
+      bubble.regularize();
       if (!bubble.hasEnoughSize()) {
         bubble.p0 = oldRect[0];
         bubble.p1 = oldRect[1];
