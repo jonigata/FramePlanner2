@@ -41,6 +41,9 @@
         <dt>Q: 「セリフ作成時にクリップボードを使う」をブロックしてしまったが、使いたい</dt>
         <dd>A.ブラウザの設定のサイトごとのセキュリティ設定で「許可」にしてください</dd>
       </dl>
+      <h2>AI画像SNS</h2>
+      
+      <p><a href="https://www.chichi-pui.com/posts/tags/FramePlanner/" target="_blank" rel="noopener noreferrer">ちちぷい</a></p>
     </div>
   </div>
 </Drawer>

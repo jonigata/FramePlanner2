@@ -12,10 +12,12 @@
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
   import { useClipboard } from './clipboardStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
+  import { Bubble } from './lib/layeredCanvas/bubble.js'; 
 
   export let width = '140px';
   export let height = '198px';
-  export let frameJson: unknown;
+  export let documentInput: unknown;
+  export let documentOutput: unknown;
   export let editable = false;
 
   let canvas;
@@ -71,14 +73,27 @@
     layeredCanvas?.redraw(); 
   });
 
-  $:initializePaper(frameJson);
-  function initializePaper(newFrameJson: unknown) {
+  $:onInputDocument(documentInput);
+  function onInputDocument(newDocumentInput) {
     if (!frameLayer) { return; }
     const images = collectImages(frameLayer.frameTree);
-    const newFrameTree = FrameElement.compile(newFrameJson);
+    const newFrameTree = FrameElement.compile(newDocumentInput.frameTree);
     frameLayer.frameTree = newFrameTree;
     dealImages(newFrameTree, images);
+
+    const canvasSize = frameLayer.getCanvasSize();
+    bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(canvasSize, b));
+
     layeredCanvas.redraw();
+  }
+
+  function outputDocument() {
+    console.log("outputDocument");
+    const canvasSize = frameLayer.getCanvasSize();
+    documentOutput = {
+      frameTree: FrameElement.decompile(frameLayer.frameTree),
+      bubbles: bubbleLayer.bubbles.map(b => Bubble.decompile(canvasSize, b)),
+    }
   }
 
   function showInspector(b) {
@@ -110,7 +125,8 @@
   }
 
   onMount(() => {
-    const frameTree = FrameElement.compile(frameJson ?? frameExamples[0]);
+    const frameJson = documentInput ? documentInput.frameTree : frameExamples[0];
+    const frameTree = FrameElement.compile(frameJson);
 
     sequentializePointer(FrameLayer);
     layeredCanvas = new LayeredCanvas(
@@ -129,13 +145,7 @@
       (frameTree) => {
         console.log("commit frames");
         addHistory();
-/*
-        latestJson = FrameElement.decompile(frameTree);
-        skipJsonChange = true;
-        editor.set({ text: JSONstringifyOrder(markUp, 2) });
-        skipJsonChange = false;
-        frameLayer.constraintAll();
-*/
+        outputDocument();
       });
     layeredCanvas.addLayer(frameLayer);
 
@@ -150,6 +160,7 @@
           bubbleLayer.defaultBubble = $bubble.clone();
         }
         addHistory();
+        outputDocument();
       },
       getDefaultText)
     layeredCanvas.addLayer(bubbleLayer);

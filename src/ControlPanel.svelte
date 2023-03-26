@@ -6,7 +6,6 @@
   import './box.css';
   import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import type { ToastSettings } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { tick } from 'svelte';
   import { bodyDragging } from './uiStore';
@@ -17,6 +16,7 @@
   import clipboardIcon from './assets/clipboard.png';
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import { useClipboard } from './clipboardStore';
+  import { isJsonEditorOpen } from './jsonEditorStore';
 
   let max = 4096;
   let contactText = "";
@@ -27,7 +27,7 @@
   }
 
   function applyTemplate(event) {
-    paperTemplate.set(event.detail);
+    $paperTemplate = { frameTree: event.detail, bubbles: [] };
   }
 
   function save() {
@@ -45,7 +45,7 @@
     if (files && files.length > 0) {
       const imageBitmap = await createImageBitmap(files[0]);
       setDimensions(imageBitmap.width, imageBitmap.height);
-      $paperTemplate = {};
+      $paperTemplate = { frameTree: {}, bubbles: [] };
       await tick();
       $importingImage = imageBitmap;
     }
@@ -54,6 +54,11 @@
   function about() {
     console.log("about");
     $aboutOpen = true;
+  }
+
+  function toggleJsonEditor() {
+    console.log("openJsonEditor");
+    $isJsonEditorOpen = !$isJsonEditorOpen;      
   }
 
   async function contact() {
@@ -143,6 +148,9 @@
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={about}>
       About FramePlanner
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleJsonEditor}>
+      JSON Editor
     </button>
   </div>  
 </div>

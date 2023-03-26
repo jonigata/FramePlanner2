@@ -10,6 +10,7 @@
   import About from './About.svelte';
   import BubbleInspector from './BubbleInspector.svelte';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
+  import JsonEditor from './JsonEditor.svelte';
 </script>
 
 <style>
@@ -38,6 +39,8 @@
 </div>
 
 <BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
+
+<JsonEditor/>
 
 <About/>
 

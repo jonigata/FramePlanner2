@@ -36,6 +36,50 @@ export class Bubble {
     return b;
   }
 
+  static normalizedPosition(canvasSize, p) {
+    return [p[0] / canvasSize[0], p[1] / canvasSize[1]];
+  }
+
+  static denormalizedPosition(canvasSize, p) {
+    return [p[0] * canvasSize[0], p[1] * canvasSize[1]];
+  }
+
+  static compile(canvasSize, json) {
+    const b = new Bubble();
+    b.p0 = this.denormalizedPosition(canvasSize, json.p0);
+    b.p1 = this.denormalizedPosition(canvasSize, json.p1);
+    b.text = json.text;
+    b.shape = json.shape;
+    b.fontStyle = json.fontStyle;
+    b.fontWeight = json.fontWeight;
+    b.fontSize = json.fontSize * Math.min(canvasSize[0], canvasSize[1]);
+    b.fontFamily = json.fontFamily;
+    b.direction = json.direction;
+    b.fontColor = json.fontColor;
+    b.fillColor = json.fillColor;
+    b.strokeColor = json.strokeColor;
+    b.strokeWidth = json.strokeWidth;
+    return b;
+  }
+
+  static decompile(canvasSize, b) {
+    return {
+      p0: this.normalizedPosition(canvasSize, b.p0),
+      p1: this.normalizedPosition(canvasSize, b.p1),
+      text: b.text,
+      shape: b.shape,
+      fontStyle: b.fontStyle,
+      fontWeight: b.fontWeight,
+      fontSize: b.fontSize / Math.min(canvasSize[0], canvasSize[1]),
+      fontFamily: b.fontFamily,
+      direction: b.direction,
+      fontColor: b.fontColor,
+      fillColor: b.fillColor,
+      strokeColor: b.strokeColor,
+      strokeWidth: b.strokeWidth,
+    };
+  }
+
   hasEnoughSize() {
     return (
       minimumBubbleSize <= Math.abs(this.p1[0] - this.p0[0]) &&

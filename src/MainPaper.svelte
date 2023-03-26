@@ -4,10 +4,13 @@
   import Paper from './Paper.svelte';
   import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore } from './undoStore';
+  import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
 
-  $paperTemplate = frameExamples[0];
+  $paperTemplate = { frameTree: frameExamples[0], bubbles:[] };
 
   let paper;
+  let documentInput;
+  let documentOutput;
 
   $:save($saveToken);
   function save(token) {
@@ -32,13 +35,38 @@
     $importingImage = null;
   }
 
+  $:onInputDocument($jsonEditorInput);
+  function onInputDocument(doc) {
+    console.log("onInputDocument", doc);
+    if (!doc) return;
+    console.log(doc);
+    documentInput = doc;
+  }
+
+  $:onOutputDocument(documentOutput);
+  function onOutputDocument(doc) {
+    console.log("onOutputDocument");
+    if (!doc) return;
+    console.log(doc);
+    $jsonEditorOutput = doc;
+  }
+
+  $:onSetPaperTemplate($paperTemplate);
+  function onSetPaperTemplate(template) {
+    console.log("onSetPaperTemplate", template);
+    if (!template) return;
+    documentOutput = template;
+    onOutputDocument(documentOutput);
+    documentInput = template;
+  }
+
   onMount(() => {
     $undoStore = paper;
   });
 </script>
 
 <div class="main-paper-container">
-  <Paper width={`${$paperWidth}px`} height={`${$paperHeight}px`} frameJson={$paperTemplate} editable={true} bind:this={paper}/>
+  <Paper width={`${$paperWidth}px`} height={`${$paperHeight}px`} documentInput={documentInput} bind:documentOutput={documentOutput} editable={true} bind:this={paper}/>
 </div>
 
 <style>

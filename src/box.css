@@ -12,8 +12,8 @@
 .hbox.bottom {align-items: end;}
 .hbox.gap {gap: 12px;}
 .hbox.stretch-child {align-items: stretch;}
-.hbox.expand {flex: 1;}
-.hbox.grow {flex-grow: 1;}
+.hbox .expand {align-self: stretch;}
+.hbox .grow {flex-grow: 1;}
 
 .vbox {
     display: flex;
@@ -26,5 +26,5 @@
 .vbox.gap {gap: 12px;}
 .vbox.stretch-child {align-items: stretch;}
 .vbox.space-around {justify-content: space-around;}
-.vbox.expand {flex: 1;}
-.vbox.grow {flex-grow: 1;}
+.vbox .expand {align-self: stretch;}
+.vbox .grow {flex-grow: 1;}

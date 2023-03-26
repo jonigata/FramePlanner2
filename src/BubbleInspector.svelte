@@ -68,7 +68,7 @@
 
 {#if bubble}
 <div class="bubble-inspector-container">
-  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}}>
+  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}}>
     <div class="title-bar variant-filled-surface rounded-container-token">
       <img class="title-image" src={bubbleIcon} alt="title"/>
       {#if pinned}
@@ -80,9 +80,9 @@
       {/if}
     </div>
 
-    <div class="hbox gap-x-2" style="align-self: stretch;">
+    <div class="hbox gap-x-2 expand">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token" on:click={chooseFont}>{bubble.fontFamily}</div>
+      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={chooseFont}>{bubble.fontFamily}</div>
       <div class="direction hbox">
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
           <RadioItem bind:group={bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>

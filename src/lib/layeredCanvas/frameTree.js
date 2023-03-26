@@ -77,6 +77,7 @@ export class FrameElement {
         }
 
         const markUpElement = {};
+        markUpElement.bgColor = element.bgColor;
         if (element.direction) {
             const dir = element.direction == 'h' ? 'row' : 'column';
             markUpElement[dir] = [];
