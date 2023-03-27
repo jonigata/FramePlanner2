@@ -60,48 +60,63 @@ export const frameExamples = [
     ],
   },
   {
-    "bgColor": "white",
-    "column": [
+    bgColor: "white",
+    column: [
       {
-        "height": 60
+        height: 60,
       },
       {
-        "bgColor": null,
-        "row": [
+        bgColor: null,
+        row: [
           {
-            "bgColor": null,
-            "width": 30
+            bgColor: null,
+            width: 30,
           },
           {
-            "bgColor": null,
-            "column": [
+            bgColor: null,
+            column: [
               {
-                "bgColor": null,
-                "height": 30
+                bgColor: null,
+                height: 30,
               },
               {
-                "bgColor": null,
-                "height": 30
-              }
+                bgColor: null,
+                height: 30,
+              },
             ],
-            "spacing": 1,
-            "width": 30
-          }
+            spacing: 1,
+            width: 30,
+          },
         ],
-        "spacing": 2,
-        "height": 120
-      }
+        spacing: 2,
+        height: 120,
+      },
     ],
-    "spacing": 4,
-    "margin": {
-      "top": 4,
-      "bottom": 4,
-      "left": 4,
-      "right": 4
+    spacing: 4,
+    margin: {
+      top: 4,
+      bottom: 4,
+      left: 4,
+      right: 4,
     },
-    "height": 180
+    height: 180,
   },
   {
     bgColor: "transparent",
+  },
+  {
+    margin: {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10,
+    },
+    width: 80,
+    bgColor: "white",
+    column: [
+      {
+        height: 80,
+      },
+    ],
   },
 ];

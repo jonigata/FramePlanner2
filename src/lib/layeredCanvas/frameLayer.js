@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, makeBorderRect, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, makeBorderRect, makeMarginRect, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon } from "./clickableIcon.js";
@@ -38,6 +38,19 @@ export class FrameLayer extends Layer {
     this.renderElement(ctx, layout, inheritanceContext);
     if (!this.interactable) {
       return;
+    }
+
+    if (this.focusedMargin) {
+      const newLayout = findLayoutOf(layout, this.focusedMargin.layout.element);
+      const marginRect = makeMarginRect(newLayout, this.focusedMargin.handle);
+
+      ctx.fillStyle = "rgba(0,0,200,0.7)";
+      ctx.fillRect(
+        marginRect[0],
+        marginRect[1],
+        marginRect[2] - marginRect[0],
+        marginRect[3] - marginRect[1]
+      );
     }
 
     if (this.focusedBorder) {
@@ -172,46 +185,60 @@ export class FrameLayer extends Layer {
       this.getCanvasSize(),
       [0, 0]
     );
+
+    this.focusedMargin = null;
+    this.focusedBorder = null;
+    this.focusedLayout = null;
+
+    if (keyDownFlags["KeyR"]) {
+      this.focusedMargin = findMarginAt(layout, point);
+      if (this.focusedMargin) {
+        this.redraw();
+        this.hint(point, null);
+        return;
+      }
+    }
+
     const border = findBorderAt(layout, point);
     if (border) {
       this.focusedBorder = border;
-      this.focusedLayout = null;
-    } else {
-      this.focusedBorder = null;
-      this.focusedLayout = findLayoutAt(layout, point);
-      if (this.focusedLayout) {
-        const origin = this.focusedLayout.origin;
-        const size = this.focusedLayout.size;
-        const [x, y] = [origin[0] + size[0] / 2, origin[1] + size[1] / 2];
-        this.splitHorizontalIcon.position = [x + 32, y];
-        this.splitVerticalIcon.position = [x, y + 32];
-        this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
-        this.scaleIcon.position = [origin[0] + size[0] - 32, origin[1] + size[1] - 32];
-        if (this.interactable) {
-          if (this.splitHorizontalIcon.contains(point)) {
-            this.hint(this.splitHorizontalIcon.hintPosition, "横に分割");
-          } else if (this.splitVerticalIcon.contains(point)) {
-            this.hint(this.splitVerticalIcon.hintPosition, "縦に分割");
-          } else if (this.deleteIcon.contains(point)) {
-            this.hint(this.deleteIcon.hintPosition, "削除");
-          } else if (this.scaleIcon.contains(point)) {
-            if (this.focusedLayout.element.image) {
-              this.hint(this.scaleIcon.hintPosition, "ドラッグでスケール");
-            }
-          } else if (this.focusedLayout.element.image) {
-            this.hint(
-              [x, origin[1] + 16],
-              "ドラッグで移動、Ctrl+ドラッグでスケール"
-            );
-          } else {
-            this.hint([x, origin[1] + 16], "画像をドロップ");
+      this.redraw();
+      this.hint(point, null);
+      return;
+    } 
+
+    this.focusedLayout = findLayoutAt(layout, point);
+    if (this.focusedLayout) {
+      const origin = this.focusedLayout.origin;
+      const size = this.focusedLayout.size;
+      const [x, y] = [origin[0] + size[0] / 2, origin[1] + size[1] / 2];
+      this.splitHorizontalIcon.position = [x + 32, y];
+      this.splitVerticalIcon.position = [x, y + 32];
+      this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
+      this.scaleIcon.position = [origin[0] + size[0] - 32, origin[1] + size[1] - 32];
+      if (this.interactable) {
+        if (this.splitHorizontalIcon.contains(point)) {
+          this.hint(this.splitHorizontalIcon.hintPosition, "横に分割");
+        } else if (this.splitVerticalIcon.contains(point)) {
+          this.hint(this.splitVerticalIcon.hintPosition, "縦に分割");
+        } else if (this.deleteIcon.contains(point)) {
+          this.hint(this.deleteIcon.hintPosition, "削除");
+        } else if (this.scaleIcon.contains(point)) {
+          if (this.focusedLayout.element.image) {
+            this.hint(this.scaleIcon.hintPosition, "ドラッグでスケール");
           }
+        } else if (this.focusedLayout.element.image) {
+          this.hint(
+            [x, origin[1] + 16],
+            "ドラッグで移動、Ctrl+ドラッグでスケール"
+          );
+        } else {
+          this.hint([x, origin[1] + 16], "画像をドロップ");
         }
-      } else {
-        this.hint(point, null);
       }
+      this.hint(point, null);
+      this.redraw();
     }
-    this.redraw();
   }
 
   accepts(point) {
@@ -229,9 +256,16 @@ export class FrameLayer extends Layer {
       [0, 0]
     );
 
+    if (keyDownFlags["KeyR"]) {
+      const margin = findMarginAt(layout, point);
+      if (margin) {
+        return { margin };
+      }
+    }
+
     const border = findBorderAt(layout, point);
     if (border) {
-      return { border: border };
+      return { border };
     }
 
     const layoutElement = findLayoutAt(layout, point);
@@ -312,6 +346,8 @@ export class FrameLayer extends Layer {
           this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
         });
       }
+    } else if (payload.margin) {
+        yield* this.expandMargin(p, payload.margin);
     } else {
       if (
         keyDownFlags["ControlLeft"] ||
@@ -357,8 +393,30 @@ export class FrameLayer extends Layer {
     const s = p;
 
     while ((p = yield)) {
-      const op = border.layout.dir == "h" ? p[0] - s[0] : p[1] - s[1];
+      const op = p[dir] - s[dir];
       element.spacing = Math.max(0, rawSpacing + op * factor * 0.1);
+      element.calculateLengthAndBreadth();
+      this.redraw();
+    }
+
+    this.onCommit(this.frameTree);
+  }
+
+  *expandMargin(p, margin) {
+    const element = margin.layout.element;
+    const dir = margin.handle === "top" || margin.handle === "bottom" ? 1 : 0;
+    const physicalSize = margin.layout.size[dir];
+    const logicalSize = element.getLogicalSize()[dir];
+    const factor = logicalSize / physicalSize;
+    const s = p;
+
+    const oldLogicalMargin = element.margin[margin.handle];
+
+    while ((p = yield)) {
+      let physicalMarginDelta = p[dir] - s[dir];
+      if (margin.handle === "bottom" || margin.handle === "right") { physicalMarginDelta = -physicalMarginDelta; }
+      // 比率なのでだんだん乖離していくが、一旦そのまま
+      element.margin[margin.handle] = Math.max(0, oldLogicalMargin + physicalMarginDelta * factor);
       element.calculateLengthAndBreadth();
       this.redraw();
     }

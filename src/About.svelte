@@ -23,7 +23,7 @@
       <h3>フレーム</h3>
       <p>Q+Click: 削除</p>
       <p>W+Click: 横に分割</p> 
-      <p>E+Click: 縦に分割</p> 
+      <p>S+Click: 縦に分割</p> 
     </div>
     <div>
       <h3>フキダシ</h3>

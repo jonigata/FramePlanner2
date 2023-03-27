@@ -5,8 +5,8 @@ export class FrameElement {
         this.rawSize = size;
         this.direction = null;
         this.children = [];
-        this.localLength = 0; // 子要素の進行方向サイズ
-        this.localBreadth = 0; // 子要素の進行方向以外のサイズ
+        this.localLength = 0; // 主軸サイズ
+        this.localBreadth = 0; // 交差軸サイズ
         this.spacing = 0;
         this.margin = {top:0, bottom:0, left:0, right:0};
         this.translation = [0, 0];
@@ -201,6 +201,13 @@ export class FrameElement {
         this.localLength = totalLength;
     }
 
+    getLogicalSize() {
+        if (this.direction == 'h') {
+            return [this.localLength, this.localBreadth];
+        } else {
+            return [this.localBreadth, this.localLength];
+        }
+    }
 }
 
 export function calculatePhysicalLayout(element, size, origin) {
@@ -234,7 +241,13 @@ function calculatePhysicalLayoutElements(element, size, origin) {
         if (dir == 'h') { x += child.rawSize + element.spacing; }
         if (dir == 'v') { y += child.rawSize + element.spacing; }
     }
-    return { size, origin, children, element, dir };
+    const physicalMargin = {
+        top: margin.top * yf,
+        bottom: margin.bottom * yf,
+        left: margin.left * xf,
+        right: margin.right * xf,
+    };
+    return { size, origin, children, element, dir, margin: physicalMargin };
 }
 
 function calculatePhysicalLayoutLeaf(element, size, origin) {
@@ -301,6 +314,47 @@ export function findBorderAt(layout, position) {
             if (found) { return found; }
         }
         return null;
+    }
+    return null;
+}
+
+export function findMarginAt(layout, position) {
+    const [x,y] = position;
+
+    const r = rectFromPositionAndSize(layout.origin, layout.size);
+    if (!isPointInRect(r, position)) {
+        return null;
+    }
+    if (layout.children) {
+        for (let i = 0; i < layout.children.length; i++) {
+            const found = findMarginAt(layout.children[i], position);
+            if (found) { return found; }
+        }
+
+        for (let handle of ["top", "bottom", "left", "right"]) {
+            const marginRect = makeMarginRect(layout, handle);
+            if (isPointInRect(marginRect, [x, y])) {
+                return { layout, handle };
+            }
+        }
+    }
+    return null;
+}
+
+export function makeMarginRect(layout, handle) {
+    const [x, y] = layout.origin;
+    const [w, h] = layout.size;
+    const margin = layout.margin;
+    const MIN_MARGIN = 10;
+    switch (handle) {
+        case 'top':
+            return [x, y, x + w, y + Math.max(margin.top, MIN_MARGIN)];
+        case 'bottom':
+            return [x, y + h - Math.max(margin.bottom, MIN_MARGIN), x + w, y + h];
+        case 'left':
+            return [x, y, x + Math.max(margin.left, MIN_MARGIN), y + h];
+        case 'right':
+            return [x + w - Math.max(margin.right, MIN_MARGIN), y, x + w, y + h];
     }
     return null;
 }

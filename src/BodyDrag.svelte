@@ -64,7 +64,8 @@
       return code === "AltLeft" || code === "AltRight" ||
           code === "ControlLeft" || code === "ControlRight" ||
           code === "ShiftLeft" || code === "ShiftRight" ||
-          code === "KeyQ" || code === "KeyW" || code === "KeyS" || code === "KeyF" ||
+          code === "KeyQ" || code === "KeyW" || code === "KeyS" || 
+          code === "KeyF" || code === "KeyR" ||
           code === "Space";
     });
   });
