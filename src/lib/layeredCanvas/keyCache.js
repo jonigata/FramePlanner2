@@ -24,8 +24,11 @@ export function initializeKeyCache(canvas, consume) {
     });
     document.addEventListener("keydown", (event) => { 
         if (!isMouseOnCanvas()) {return;}
-        if (!consume(event.code)) {return;}
-        keyDownFlags[event.code] = true; 
+        let code = event.code;
+        if (code == "MetaLeft") { code = "ControlLeft"; }
+        if (code == "MetaRight") { code = "ControlRight"; }
+        if (!consume(code)) {return;}
+        keyDownFlags[code] = true; 
         event.preventDefault();
     });
     document.addEventListener("keyup", (event) => { 
