@@ -62,4 +62,46 @@ export const frameExamples = [
   {
     bgColor: "transparent",
   },
+  {
+    "bgColor": "white",
+    "column": [
+      {
+        "height": 60
+      },
+      {
+        "bgColor": null,
+        "row": [
+          {
+            "bgColor": null,
+            "width": 30
+          },
+          {
+            "bgColor": null,
+            "column": [
+              {
+                "bgColor": null,
+                "height": 30
+              },
+              {
+                "bgColor": null,
+                "height": 30
+              }
+            ],
+            "spacing": 1,
+            "width": 30
+          }
+        ],
+        "spacing": 2,
+        "height": 120
+      }
+    ],
+    "spacing": 4,
+    "margin": {
+      "top": 4,
+      "bottom": 4,
+      "left": 4,
+      "right": 4
+    },
+    "height": 180
+  }  
 ];
