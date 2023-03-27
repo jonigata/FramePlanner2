@@ -34,7 +34,8 @@ export class FrameLayer extends Layer {
     ctx.restore();
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
-    this.renderElement(ctx, layout);
+    const inheritanceContext = { bgColor: "transparent"};
+    this.renderElement(ctx, layout, inheritanceContext);
     if (!this.interactable) {
       return;
     }
@@ -72,23 +73,26 @@ export class FrameLayer extends Layer {
     }
   }
 
-  renderElement(ctx, layout) {
-    this.renderBackground(ctx, layout);
+  renderElement(ctx, layout, inheritanceContext) {
+    if (layout.element.bgColor) { 
+      inheritanceContext.bgColor = layout.element.bgColor;
+    }
+    this.renderBackground(ctx, layout, inheritanceContext);
 
     if (layout.children) {
       for (let i = 0; i < layout.children.length; i++) {
-        this.renderElement(ctx, layout.children[i]);
+        this.renderElement(ctx, layout.children[i], inheritanceContext);
       }
     } else {
-      this.renderElementLeaf(ctx, layout);
+      this.renderElementLeaf(ctx, layout, inheritanceContext);
     }
   }
 
-  renderElementLeaf(ctx, layout) {
+  renderElementLeaf(ctx, layout, inheritanceContext) {
     const origin = layout.origin;
     const size = layout.size;
 
-    this.renderBackground(ctx, layout);
+    this.renderBackground(ctx, layout, inheritanceContext);
 
     const element = layout.element;
     if (element.image) {
@@ -126,11 +130,12 @@ export class FrameLayer extends Layer {
     }
   }
 
-  renderBackground(ctx, layout) {
+  renderBackground(ctx, layout, inheritanceContext) {
     const origin = layout.origin;
     const size = layout.size;
 
-    let bgColor = layout.element.bgColor;
+    let bgColor = inheritanceContext.bgColor;
+    console.log(bgColor);
     if (bgColor == "transparent") {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";

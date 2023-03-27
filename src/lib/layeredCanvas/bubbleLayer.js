@@ -69,7 +69,11 @@ export class BubbleLayer extends Layer {
     } else {
       ctx.fillStyle = "rgba(255, 128, 0, 0.9)";
     }
-    ctx.strokeStyle = bubble.strokeColor;
+    if (0 < bubble.strokeWidth) {
+        ctx.strokeStyle = bubble.strokeColor;
+    } else {
+        ctx.strokeStyle = "rgba(0, 0, 0, 0)";
+    }
     ctx.lineWidth = bubble.strokeWidth;
 
     // create/resize終わるまでは入れ替わっている可能性がある

@@ -8,6 +8,7 @@ export const frameExamples = [
     },
     width: 180,
     spacing: 2,
+    bgColor: "white",
     column: [
       { height: 17 },
       {
@@ -26,6 +27,7 @@ export const frameExamples = [
       right: 4,
     },
     width: 180,
+    bgColor: "white",
     column: [
       {
         height: 180,
@@ -41,6 +43,7 @@ export const frameExamples = [
     },
     width: 3,
     spacing: 1,
+    bgColor: "white",
     column: [
       {
         height: 8,

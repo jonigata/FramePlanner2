@@ -11,7 +11,7 @@ export class FrameElement {
         this.margin = {top:0, bottom:0, left:0, right:0};
         this.translation = [0, 0];
         this.scale = [1, 1]; 
-        this.bgColor = 'white';
+        this.bgColor = null;
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;
@@ -39,7 +39,7 @@ export class FrameElement {
         const children = markUpElement.column || markUpElement.row;
         element.spacing = markUpElement.spacing || 0;
         element.margin = {top:0, bottom:0, left:0, right:0};
-        element.bgColor = markUpElement.bgColor || 'white';
+        element.bgColor = markUpElement.bgColor;
         Object.assign(element.margin, markUpElement.margin || {});
 
         if (children) {
