@@ -269,6 +269,19 @@ export function findLayoutAt(layout, position) {
     return layout;
 }
 
+export function findLayoutOf(layout, element) {
+    if (layout.element === element) {
+        return layout;
+    }
+    if (layout.children) {
+        for (let i = 0; i < layout.children.length; i++) {
+            const found = findLayoutOf(layout.children[i], element);
+            if (found) { return found; }
+        }
+    }
+    return null;
+}
+
 export function findBorderAt(layout, position) {
     const [x,y] = position;
 

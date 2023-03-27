@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findBorderAt, makeBorderRect, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, makeBorderRect, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon } from "./clickableIcon.js";
@@ -40,24 +40,27 @@ export class FrameLayer extends Layer {
       return;
     }
 
-    if (this.borderRect) {
+    if (this.focusedBorder) {
+      const newLayout = findLayoutOf(layout, this.focusedBorder.layout.element);
+      const borderRect = makeBorderRect(newLayout, this.focusedBorder.index);
+
       ctx.fillStyle = "rgba(0,200,200,0.7)";
       ctx.fillRect(
-        this.borderRect[0],
-        this.borderRect[1],
-        this.borderRect[2] - this.borderRect[0],
-        this.borderRect[3] - this.borderRect[1]
+        borderRect[0],
+        borderRect[1],
+        borderRect[2] - borderRect[0],
+        borderRect[3] - borderRect[1]
       );
       if (this.focusedBorder.layout.dir === "v") {
         this.expandVerticalIcon.position = [
-          this.borderRect[2] - 32,
-          (this.borderRect[1] + this.borderRect[3]) * 0.5 - 16,
+          borderRect[2] - 32,
+          (borderRect[1] + borderRect[3]) * 0.5 - 16,
         ];
         this.expandVerticalIcon.render(ctx);
       } else {
         this.expandHorizontalIcon.position = [
-          (this.borderRect[0] + this.borderRect[2]) * 0.5 - 16,
-          this.borderRect[3] - 32,
+          (borderRect[0] + borderRect[2]) * 0.5 - 16,
+          borderRect[3] - 32,
         ];
         this.expandHorizontalIcon.render(ctx);
       }
@@ -135,7 +138,6 @@ export class FrameLayer extends Layer {
     const size = layout.size;
 
     let bgColor = inheritanceContext.bgColor;
-    console.log(bgColor);
     if (bgColor == "transparent") {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
@@ -172,11 +174,9 @@ export class FrameLayer extends Layer {
     );
     const border = findBorderAt(layout, point);
     if (border) {
-      this.borderRect = makeBorderRect(border.layout, border.index);
       this.focusedBorder = border;
       this.focusedLayout = null;
     } else {
-      this.borderRect = null;
       this.focusedBorder = null;
       this.focusedLayout = findLayoutAt(layout, point);
       if (this.focusedLayout) {
@@ -228,6 +228,12 @@ export class FrameLayer extends Layer {
       this.getCanvasSize(),
       [0, 0]
     );
+
+    const border = findBorderAt(layout, point);
+    if (border) {
+      return { border: border };
+    }
+
     const layoutElement = findLayoutAt(layout, point);
     if (layoutElement) {
       if (keyDownFlags["KeyQ"]) {
@@ -279,11 +285,6 @@ export class FrameLayer extends Layer {
         console.log("accepts");
         return { layout: layoutElement };
       }
-    }
-
-    const border = findBorderAt(layout, point);
-    if (border) {
-      return { border: border };
     }
 
     return null;
