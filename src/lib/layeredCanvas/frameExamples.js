@@ -60,9 +60,6 @@ export const frameExamples = [
     ],
   },
   {
-    bgColor: "transparent",
-  },
-  {
     "bgColor": "white",
     "column": [
       {
@@ -103,5 +100,8 @@ export const frameExamples = [
       "right": 4
     },
     "height": 180
-  }  
+  },
+  {
+    bgColor: "transparent",
+  },
 ];
