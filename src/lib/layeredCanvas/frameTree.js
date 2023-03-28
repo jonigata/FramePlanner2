@@ -57,6 +57,7 @@ export class FrameElement {
             // leaf
             element.translation = [0, 0];
             element.scale = [1, 1]; 
+            element.reverse = [1, 1];
         }
         return element;
     }
