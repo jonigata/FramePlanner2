@@ -119,22 +119,16 @@ export class FrameLayer extends Layer {
       ctx.rect(origin[0], origin[1], size[0], size[1]);
       ctx.clip();
 
-      const scale = element.scale[0]; // 今のところxとyは同じ
       const [rw, rh] = [
-        element.image.width * scale,
-        element.image.height * scale,
+        element.image.width,
+        element.image.height,
       ];
 
-      let x = origin[0] + (size[0] - rw) / 2 + element.translation[0];
-      let y = origin[1] + (size[1] - rh) / 2 + element.translation[1];
-
-      ctx.drawImage(
-        element.image,
-        x,
-        y,
-        element.image.width * scale,
-        element.image.height * scale
-      );
+      console.log(element.reverse);
+      ctx.translate(origin[0] + size[0] * 0.5 + element.translation[0], origin[1] + size[1] * 0.5 + element.translation[1]);
+      ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
+      ctx.translate(-rw * 0.5, -rh * 0.5);
+      ctx.drawImage(element.image, 0, 0);
 
       // unclip
       ctx.restore();
@@ -294,6 +288,14 @@ export class FrameLayer extends Layer {
       }
       if (keyDownFlags["KeyD"]) {
         layoutElement.element.image = null;
+        this.redraw();
+      }
+      if (keyDownFlags["KeyT"]) {
+        layoutElement.element.reverse[0] *= -1;
+        this.redraw();
+      }
+      if (keyDownFlags["KeyY"]) {
+        layoutElement.element.reverse[1] *= -1;
         this.redraw();
       }
       if (this.splitHorizontalIcon.contains(point)) {

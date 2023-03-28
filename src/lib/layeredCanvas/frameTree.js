@@ -11,6 +11,7 @@ export class FrameElement {
         this.margin = {top:0, bottom:0, left:0, right:0};
         this.translation = [0, 0];
         this.scale = [1, 1]; 
+        this.reverse = [1, 1];
         this.bgColor = null;
 
         // リーフ要素の場合は絵がある可能性がある
@@ -27,6 +28,7 @@ export class FrameElement {
         element.margin = { ...this.margin };
         element.translation = [...this.translation];
         element.scale = [...this.scale];
+        element.reverse = [...this.reverse];
         element.bgColor = this.bgColor;
         element.image = this.image;
         return element;
