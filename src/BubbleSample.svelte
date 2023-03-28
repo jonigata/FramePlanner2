@@ -18,6 +18,9 @@
     ctx.fillStyle = "white";
     // stroke black
     ctx.strokeStyle = "black";
+    ctx.bubbleDrawMethod = "fill";
+    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], pattern);
+    ctx.bubbleDrawMethod = "stroke";
     drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], pattern);
   });
 

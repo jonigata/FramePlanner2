@@ -44,45 +44,35 @@ export function drawBubble(context, seed, rect, patternName) {
 }
 
 function drawRoundedBubble(context, seed, rect) {
-    const [x, y, w, h] = rect;
-    const rw = w / 2;
-    const rh = h / 2;
-    const x1 = x + rw;
-    const x2 = x + w - rw;
-    const y1 = y + rh;
-    const y2 = y + h - rh;
+  const [x, y, w, h] = rect;
+  const rw = w / 2;
+  const rh = h / 2;
+  const x1 = x + rw;
+  const x2 = x + w - rw;
+  const y1 = y + rh;
+  const y2 = y + h - rh;
 
-    // fill path and stroke frame
-    context.beginPath();
-    context.moveTo(x1, y);
-    context.lineTo(x2, y);
-    context.quadraticCurveTo(x + w, y, x + w, y1);
-    context.lineTo(x + w, y2);
-    context.quadraticCurveTo(x + w, y + h, x2, y + h);
-    context.lineTo(x1, y + h);
-    context.quadraticCurveTo(x, y + h, x, y2);
-    context.lineTo(x, y1);
-    context.quadraticCurveTo(x, y, x1, y);
-    if (context.clipping) {
-      context.clip();
-    } else {
-      context.fill();
-      context.stroke();
-    }
+  // fill path and stroke frame
+  context.beginPath();
+  context.moveTo(x1, y);
+  context.lineTo(x2, y);
+  context.quadraticCurveTo(x + w, y, x + w, y1);
+  context.lineTo(x + w, y2);
+  context.quadraticCurveTo(x + w, y + h, x2, y + h);
+  context.lineTo(x1, y + h);
+  context.quadraticCurveTo(x, y + h, x, y2);
+  context.lineTo(x, y1);
+  context.quadraticCurveTo(x, y, x1, y);
+  finishTrivialPath(context);
 }
 
 function drawSquareBubble(context, seed, rect) {
-    const [x, y, w, h] = rect;
+  const [x, y, w, h] = rect;
 
-    // fill
-    if (context.clipping) {
-      context.beginPath();
-      context.rect(x, y, w, h);
-      context.clip();
-    } else {
-      context.fillRect(x, y, w, h);
-      context.strokeRect(x, y, w, h);
-    }
+  // fill
+  context.beginPath();
+  context.rect(x, y, w, h);
+  finishTrivialPath(context);
 }
 
 function drawHarshBubble(context, seed, rect) {
@@ -100,16 +90,12 @@ function drawHarshBubble(context, seed, rect) {
         context.lineTo(p[0], p[1]);
       }
     }
+    context.lineTo(points[0][0], points[0][1]);
   }
 
   context.beginPath();
   makePath();
-  if (context.clipping) {
-    context.clip();
-  } else {
-    context.fill();
-    context.stroke();
-  }
+  finishTrivialPath(context);
 }
 
 function drawPoints(context, points, color) {
@@ -148,12 +134,7 @@ function drawHarshCurveBubble(context, seed, rect) {
 
   context.beginPath();
   makePath();
-  if (context.clipping) {
-    context.clip();
-  } else {
-    context.fill();
-    context.stroke();
-  }
+  finishTrivialPath(context);
 }
 
 function drawSoftBubble(context, seed, rect) {
@@ -174,12 +155,7 @@ function drawSoftBubble(context, seed, rect) {
 
   context.beginPath();
   makePath();
-  if (context.clipping) {
-    context.clip();
-  } else {
-    context.fill();
-    context.stroke();
-  }
+  finishTrivialPath(context);
 }
 
 function subdivideSegmentWithBump(p1, p2, bump) {
@@ -210,49 +186,48 @@ function drawEllipseBubble(context, seed, rect) {
 
   context.beginPath();
   context.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 2 * Math.PI);
-  if (context.clipping) {
-    context.clip();
-  } else {
-    context.fill();
-    context.stroke();
-  }
+  finishTrivialPath(context);
 }
 
 function drawConcentrationBubble(context, seed, rect) {
   const [x, y, w, h] = rect;
   const [cx, cy] = [x + w / 2, y + h / 2];
 
-  context.save();
-  context.translate(cx, cy);
-  context.scale(w / 2, h / 2);
+  if (context.bubbleDrawMethod === "fill") {
+    context.save();
+    context.translate(cx, cy);
+    context.scale(w / 2, h / 2);
 
-  context.lineWidth = 1 / Math.min(w, h);
-  // draw n radial line
-  const n = 200;
-  context.save();
-  const gradient = context.createRadialGradient(0, 0, 1, 0, 0, 1.15);
-  gradient.addColorStop(0.0, "rgba(0,0,0,1)");
-  gradient.addColorStop(1.0, "rgba(0,0,0,0)");
-  context.strokeStyle = gradient;
-  context.beginPath();
-  for (let i = 0; i < n; i++) {
-    const angle = (i * 2 * Math.PI) / n;
-    const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
-    const [lx, ly] = [dx * 1.15, dy * 1.15];
-    context.moveTo(0, 0);
-    context.lineTo(lx, ly);
-  }
-  context.closePath();
-  context.stroke();
-  context.restore();
+    context.lineWidth = 1 / Math.min(w, h);
+    // draw n radial line
+    const n = 200;
+    context.save();
+    const gradient = context.createRadialGradient(0, 0, 1, 0, 0, 1.15);
+    gradient.addColorStop(0.0, "rgba(0,0,0,1)");
+    gradient.addColorStop(1.0, "rgba(0,0,0,0)");
+    context.strokeStyle = gradient;
+    context.beginPath();
+    for (let i = 0; i < n; i++) {
+      const angle = (i * 2 * Math.PI) / n;
+      const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
+      const [lx, ly] = [dx * 1.15, dy * 1.15];
+      context.moveTo(dx, dy);
+      context.lineTo(lx, ly);
+    }
+    context.closePath();
+    context.stroke();
+    context.restore();
 
-  context.beginPath();
-  context.ellipse(0, 0, 1, 1, 0, 0, 2 * Math.PI);
-  if (context.clipping) {
-    context.clip();
-  } else {
+    context.beginPath();
+    context.ellipse(0, 0, 1, 1, 0, 0, 2 * Math.PI);
     context.fill();
     context.restore();
+  } else if (context.bubbleDrawMethod === "clip") {
+    context.beginPath();
+    context.ellipse(cx, cy, w*0.5, h*0.5, 0, 0, 2 * Math.PI);
+    context.clip();
+  } else {  // stroke
+    // do nothing;
   }
 }
 
@@ -271,12 +246,7 @@ function drawPolygonBubble(context, seed, rect, double) {
       context.lineTo(p[0], p[1]);
     }
   }
-  if (context.clipping) {
-    context.clip();
-  } else {
-    context.fill();
-    context.stroke();
-  }
+  finishTrivialPath(context);
 }
 
 function drawStrokesBubble(context, seed, rect) {
@@ -293,52 +263,46 @@ function drawStrokesBubbleAux(context, seed, rect, double) {
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
   const points = cookedPoints.map((p) => [p.x, p.y]);
 
-  context.beginPath();
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    if (i === 0) {
-      context.moveTo(p[0], p[1]);
-    } else {
-      context.lineTo(p[0], p[1]);
+  if (context.bubbleDrawMethod == "fill" || context.bubbleDrawMethod == "clip") {
+    context.beginPath();
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) {
+        context.moveTo(p[0], p[1]);
+      } else {
+        context.lineTo(p[0], p[1]);
+      }
     }
-  }
-  if (context.clipping) {
-    context.clip();
-    return;
+    finishTrivialPath(context);
   } else {
-    context.closePath();
-    context.fill();
-  }
+    const dist = Math.min(rect[2], rect[3]) / 60;
 
-  const dist = Math.min(rect[2], rect[3]) / 60;
+    context.beginPath();
+    for (let i = 0; i < points.length; i++) {
+      const p0 = points[i];
+      const p1 = points[(i + 1) % points.length];
 
-  context.beginPath();
-  for (let i = 0; i < points.length; i++) {
-    const p0 = points[i];
-    const p1 = points[(i + 1) % points.length];
+      const [q0, q1] = extendLineSegment(p0, p1, 1.1);
 
-    const [q0, q1] = extendLineSegment(p0, p1, 1.1);
+      context.moveTo(q0[0], q0[1]);
+      context.lineTo(q1[0], q1[1]);
 
-    context.moveTo(q0[0], q0[1]);
-    context.lineTo(q1[0], q1[1]);
+      if (double) {
+          const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
+          const [nx, ny] = [-dy, dx];
+          const [mx, my] = [
+          nx / Math.sqrt(nx * nx + ny * ny),
+          ny / Math.sqrt(nx * nx + ny * ny),
+          ];
+          const [qx, qy] = [q0[0] + mx * dist, q0[1] + my * dist];
+          const [rx, ry] = [q1[0] + mx * dist, q1[1] + my * dist];
 
-    if (double) {
-        const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
-        const [nx, ny] = [-dy, dx];
-        const [mx, my] = [
-        nx / Math.sqrt(nx * nx + ny * ny),
-        ny / Math.sqrt(nx * nx + ny * ny),
-        ];
-        const [qx, qy] = [q0[0] + mx * dist, q0[1] + my * dist];
-        const [rx, ry] = [q1[0] + mx * dist, q1[1] + my * dist];
-
-        context.moveTo(qx, qy);
-        context.lineTo(rx, ry);
+          context.moveTo(qx, qy);
+          context.lineTo(rx, ry);
+      }
     }
+    context.stroke();
   }
-
-  context.closePath();
-  context.stroke();
 }
 
 function extendLineSegment(p0, p1, extensionFactor) {
@@ -379,3 +343,18 @@ function superellipsePoint(a, b, n, theta) {
     const y = b * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), 2 / n);
     return [x, y];
 }
+
+function finishTrivialPath(context) {
+  switch(context.bubbleDrawMethod) {
+    case 'fill':
+      context.fill();
+      break;
+    case 'stroke':
+      context.stroke();
+      break;
+    case 'clip':
+      context.clip();
+      break;
+  }
+}
+

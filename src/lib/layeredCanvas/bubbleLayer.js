@@ -4,6 +4,7 @@ import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVer
 import { drawBubble } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 import { Bubble } from "./bubble.js";
+import { translate, scale } from "./pictureControl.js";
 
 const iconSize = 20;
 
@@ -80,21 +81,25 @@ export class BubbleLayer extends Layer {
     const [p0, p1] = bubble.regularized();
     const [x, y] = p0;
     const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
+    ctx.bubbleDrawMethod = "fill";
     drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
     if (bubble.image) {
       ctx.save();
-      ctx.clipping = true;
+      ctx.bubbleDrawMethod = "clip";
       drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
       const img = bubble.image;
-      let ix = x + w * 0.5 - img.image.width * 0.5 + img.translation[0];
-      let iy = y + h * 0.5 - img.image.height * 0.5 + img.translation[1];
       let iw = img.image.width * img.scale[0];
       let ih = img.image.height * img.scale[1];
+      let ix = x + w * 0.5 - iw * 0.5 + img.translation[0];
+      let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
       ctx.clipping = undefined;
       ctx.restore();
     }
+
+    ctx.bubbleDrawMethod = "stroke";
+    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
     if (bubble.text) {
       const baselineSkip = bubble.fontSize * 1.5;
@@ -207,6 +212,14 @@ export class BubbleLayer extends Layer {
       const handle = bubble.getHandleAt(point);
       if (handle) {
         return { action: "resize", bubble, handle };
+      }
+
+      if (bubble.image) {
+        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+          return { action: "image-scale", bubble };
+        } else {
+          return { action: "image-move", bubble };
+        }
       }
     }
     for (let bubble of this.bubbles) {
@@ -407,6 +420,23 @@ export class BubbleLayer extends Layer {
       this.bubbles.splice(index, 1);
       this.unfocus();
       this.redraw();
+    } else if (payload.action === "image-move") {
+      const bubble = payload.bubble;
+      const origin = bubble.image.translation;
+
+      yield* translate(dragStart, (q) => {
+        bubble.image.translation = [origin[0] + q[0], origin[1] + q[1]];
+        this.redraw();
+      });
+    } else if (payload.action === "image-scale") {
+      const bubble = payload.bubble;
+      const origin = bubble.image.scale[0];
+
+      yield* scale(this.canvas, dragStart, (q) => {
+        const s = Math.max(q[0], q[1]);
+        bubble.image.scale = [origin * s, origin * s];
+        this.redraw();
+      });
     }
   }
 
