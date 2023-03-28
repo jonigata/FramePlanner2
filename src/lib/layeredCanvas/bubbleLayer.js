@@ -82,6 +82,20 @@ export class BubbleLayer extends Layer {
     const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
     drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
+    if (bubble.image) {
+      ctx.save();
+      ctx.clipping = true;
+      drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
+      const img = bubble.image;
+      let ix = x + w * 0.5 - img.image.width * 0.5 + img.translation[0];
+      let iy = y + h * 0.5 - img.image.height * 0.5 + img.translation[1];
+      let iw = img.image.width * img.scale[0];
+      let ih = img.image.height * img.scale[1];
+      ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
+      ctx.clipping = undefined;
+      ctx.restore();
+    }
+
     if (bubble.text) {
       const baselineSkip = bubble.fontSize * 1.5;
       const charSkip = bubble.fontSize;
@@ -394,6 +408,17 @@ export class BubbleLayer extends Layer {
       this.unfocus();
       this.redraw();
     }
+  }
+
+  dropped(image, position) {
+    for (let bubble of this.bubbles) {
+      if (bubble.contains(position)) {
+         bubble.image = { image, translation: [0,0], scale: [1,1] };
+         this.redraw();
+         return true;
+      }
+    }
+    return false;
   }
 
   setIconPositions() {
