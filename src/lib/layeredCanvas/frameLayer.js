@@ -292,6 +292,10 @@ export class FrameLayer extends Layer {
         this.onCommit(this.frameTree);
         this.redraw();
       }
+      if (keyDownFlags["KeyD"]) {
+        layoutElement.element.image = null;
+        this.redraw();
+      }
       if (this.splitHorizontalIcon.contains(point)) {
         FrameElement.splitElementHorizontal(
           this.frameTree,
