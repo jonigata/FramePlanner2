@@ -233,15 +233,26 @@ function calculatePhysicalLayoutElements(element, size, origin) {
     let y = margin.top;
     const children = [];
     // console.log(margin, inner_width, inner_height, xf, yf, psize, ssize);
-    for (let i = 0; i < element.children.length; i++) {
-        const child = element.children[i];
-        const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
-        const cw = dir == 'h' ? child.rawSize * xf : inner_width;
-        const ch = dir == 'v' ? child.rawSize * yf : inner_height;
-        const childSize = [cw, ch];
-        children.push(calculatePhysicalLayout(child, childSize, childOrigin));
-        if (dir == 'h') { x += child.rawSize + element.spacing; }
-        if (dir == 'v') { y += child.rawSize + element.spacing; }
+    if (dir == 'h') {
+        for (let i = element.children.length - 1 ; 0 <= i ; i--) {
+          const child = element.children[i];
+          const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
+          const cw = child.rawSize * xf;
+          const ch = inner_height;
+          const childSize = [cw, ch];
+          children.push(calculatePhysicalLayout(child, childSize, childOrigin));
+          x += child.rawSize + element.spacing;
+        }
+    } else {
+        for (let i = 0; i < element.children.length; i++) {
+            const child = element.children[i];
+            const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
+            const cw = inner_width;
+            const ch = child.rawSize * yf;
+            const childSize = [cw, ch];
+            children.push(calculatePhysicalLayout(child, childSize, childOrigin));
+            y += child.rawSize + element.spacing;
+        }
     }
     const physicalMargin = {
         top: margin.top * yf,
