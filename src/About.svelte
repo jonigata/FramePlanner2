@@ -24,6 +24,9 @@
       <p>Q+Click: 削除</p>
       <p>W+Click: 横に分割</p> 
       <p>S+Click: 縦に分割</p> 
+      <p>D+Click: 画像削除</p>
+      <p>T+Click: 画像左右反転</p>
+      <p>Y+Click: 画像上下反転</p>
     </div>
     <div>
       <h3>フキダシ</h3>

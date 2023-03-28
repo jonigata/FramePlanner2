@@ -16,6 +16,9 @@ export class FrameLayer extends Layer {
     this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",[0, 0],[32, 32]);
     this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32]);
     this.scaleIcon = new ClickableIcon("scale.png", [0, 0], [32, 32]);
+    this.dropIcon = new ClickableIcon("drop.png", [0, 0], [32, 32]);
+    this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png", [0, 0], [32, 32]);
+    this.flipVerticalIcon = new ClickableIcon("flip-vertical.png", [0, 0], [32, 32]);
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL(
       "../../assets/transparent.png",
@@ -85,6 +88,9 @@ export class FrameLayer extends Layer {
       this.deleteIcon.render(ctx);
       if (this.focusedLayout.element.image) {
         this.scaleIcon.render(ctx);
+        this.dropIcon.render(ctx);
+        this.flipHorizontalIcon.render(ctx);
+        this.flipVerticalIcon.render(ctx);
       }
     }
   }
@@ -211,7 +217,11 @@ export class FrameLayer extends Layer {
       this.splitVerticalIcon.position = [x, y + 32];
       this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
       this.scaleIcon.position = [origin[0] + size[0] - 32, origin[1] + size[1] - 32];
+      this.dropIcon.position = [origin[0], origin[1] + size[1] - 32];
+      this.flipHorizontalIcon.position = [origin[0] + 48, origin[1] + size[1] - 32];
+      this.flipVerticalIcon.position = [origin[0] + 72, origin[1] + size[1] - 32,];
       if (this.interactable) {
+        // TODO: 整理する
         if (this.splitHorizontalIcon.contains(point)) {
           this.hint(this.splitHorizontalIcon.hintPosition, "横に分割");
         } else if (this.splitVerticalIcon.contains(point)) {
@@ -221,6 +231,18 @@ export class FrameLayer extends Layer {
         } else if (this.scaleIcon.contains(point)) {
           if (this.focusedLayout.element.image) {
             this.hint(this.scaleIcon.hintPosition, "ドラッグでスケール");
+          }
+        } else if (this.dropIcon.contains(point)) {
+          if (this.focusedLayout.element.image) {
+            this.hint(this.dropIcon, "画像除去");
+          }
+        } else if (this.flipHorizontalIcon.contains(point)) {
+          if (this.focusedLayout.element.image) {
+            this.hint(this.flipHorizontalIcon.hintPosition, "左右反転");
+          }
+        } else if (this.flipVerticalIcon.contains(point)) {
+          if (this.focusedLayout.element.image) {
+            this.hint(this.flipVerticalIcon.hintPosition, "上下反転");
           }
         } else if (this.focusedLayout.element.image) {
           this.hint(
@@ -324,7 +346,18 @@ export class FrameLayer extends Layer {
       }
       if (layoutElement.element.image) {
         console.log("accepts");
-        return { layout: layoutElement };
+        if (this.dropIcon.contains(point)) {
+          layoutElement.element.image = null;
+          this.redraw();
+        } else if (this.flipHorizontalIcon.contains(point)) {
+          layoutElement.element.reverse[0] *= -1;
+          this.redraw();
+        } else if (this.flipVerticalIcon.contains(point)) {
+          layoutElement.element.reverse[1] *= -1;
+          this.redraw();
+        } else {
+          return { layout: layoutElement };
+        }
       }
     }
 
