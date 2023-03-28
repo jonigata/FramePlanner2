@@ -217,7 +217,7 @@ export class BubbleLayer extends Layer {
       if (bubble.image) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble };
-        } else {
+        } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
           return { action: "image-move", bubble };
         }
       }
