@@ -105,8 +105,9 @@ export class FrameLayer extends Layer {
   }
 
   renderElementLeaf(ctx, layout, inheritanceContext) {
-    const origin = layout.origin;
-    const size = layout.size;
+    const margin = layout.physicalMargin;
+    const origin = [layout.origin[0] + margin.left, layout.origin[1] + margin.top];
+    const size = [layout.size[0] - margin.left - margin.right, layout.size[1] - margin.top - margin.bottom];
 
     this.renderBackground(ctx, layout, inheritanceContext);
 
@@ -403,6 +404,7 @@ export class FrameLayer extends Layer {
   }
 
   *expandMargin(p, margin) {
+    console.log("expandMargin");
     const element = margin.layout.element;
     const dir = margin.handle === "top" || margin.handle === "bottom" ? 1 : 0;
     const physicalSize = margin.layout.size[dir];
@@ -411,6 +413,8 @@ export class FrameLayer extends Layer {
     const s = p;
 
     const oldLogicalMargin = element.margin[margin.handle];
+    console.log(physicalSize, logicalSize, factor);
+    console.log(oldLogicalMargin);
 
     while ((p = yield)) {
       let physicalMarginDelta = p[dir] - s[dir];
@@ -420,6 +424,7 @@ export class FrameLayer extends Layer {
       element.calculateLengthAndBreadth();
       this.redraw();
     }
+    console.log(element.margin);
 
     this.onCommit(this.frameTree);
   }

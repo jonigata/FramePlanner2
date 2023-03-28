@@ -33,9 +33,7 @@ export class FrameElement {
     }
 
     static compile(markUpElement) {
-        const width = markUpElement.width || 1;
-        const height = markUpElement.height || 1;
-        const element = new FrameElement(markUpElement.width || markUpElement.height || 1);
+        const element = new FrameElement(markUpElement.width || markUpElement.height || markUpElement.size || 1);
         const children = markUpElement.column || markUpElement.row;
         element.spacing = markUpElement.spacing || 0;
         element.margin = {top:0, bottom:0, left:0, right:0};
@@ -202,10 +200,12 @@ export class FrameElement {
     }
 
     getLogicalSize() {
-        if (this.direction == 'h') {
+        if (this.direction === 'h') {
             return [this.localLength, this.localBreadth];
-        } else {
+        } else if (this.direction === 'v') {
             return [this.localBreadth, this.localLength];
+        } else {
+            return [this.rawSize, this.rawSize];
         }
     }
 }
@@ -247,11 +247,23 @@ function calculatePhysicalLayoutElements(element, size, origin) {
         left: margin.left * xf,
         right: margin.right * xf,
     };
-    return { size, origin, children, element, dir, margin: physicalMargin };
+    return { size, origin, children, element, dir, physicalMargin };
 }
 
 function calculatePhysicalLayoutLeaf(element, size, origin) {
-    return { size, origin, element };
+    // leafノードでは両軸本体100とみなす
+    const logicalWidth = element.margin.left + element.rawSize + element.margin.right;
+    const logicalHeight = element.margin.top + element.rawSize + element.margin.bottom;
+    const xf = size[0] / logicalWidth;
+    const yf = size[1] / logicalHeight;
+
+    const physicalMargin = {
+        top: element.margin.top * yf,
+        bottom: element.margin.bottom * yf,
+        left: element.margin.left * xf,
+        right: element.margin.right * xf,
+    }
+    return { size, origin, element, physicalMargin };
 }
 
 function isPointInRect(rect, point) {
@@ -337,6 +349,13 @@ export function findMarginAt(layout, position) {
                 return { layout, handle };
             }
         }
+    } else {
+        for (let handle of ["top", "bottom", "left", "right"]) {
+            const marginRect = makeMarginRect(layout, handle);
+            if (isPointInRect(marginRect, [x, y])) {
+                return { layout, handle };
+            }
+        }
     }
     return null;
 }
@@ -344,7 +363,7 @@ export function findMarginAt(layout, position) {
 export function makeMarginRect(layout, handle) {
     const [x, y] = layout.origin;
     const [w, h] = layout.size;
-    const margin = layout.margin;
+    const margin = layout.physicalMargin;
     const MIN_MARGIN = 10;
     switch (handle) {
         case 'top':

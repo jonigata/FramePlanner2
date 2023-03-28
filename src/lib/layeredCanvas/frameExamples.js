@@ -104,6 +104,7 @@ export const frameExamples = [
   {
     bgColor: "transparent",
   },
+/*
   {
     margin: {
       top: 10,
@@ -115,8 +116,9 @@ export const frameExamples = [
     bgColor: "white",
     column: [
       {
-        height: 80,
+        size: 80,
       },
     ],
   },
+*/
 ];
