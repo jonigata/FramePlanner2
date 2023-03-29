@@ -37,7 +37,7 @@
 
   function handleWheel(e) {
     if ($drawerStore.open) { return; }
-    scale += e.deltaY * 0.0001;
+    scale -= e.deltaY * 0.0001;
     if (scale < 0.1) scale = 0.1;
     if (scale > 10) scale = 10;
   }
