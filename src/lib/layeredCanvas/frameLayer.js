@@ -32,11 +32,8 @@ export class FrameLayer extends Layer {
     const size = this.getCanvasSize();
 
     // fill background
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
     ctx.fillStyle = "rgb(255,255,255, 1)";
     ctx.fillRect(0, 0, size[0], size[1]);
-    ctx.restore();
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
     const inheritanceContext = { bgColor: "transparent"};

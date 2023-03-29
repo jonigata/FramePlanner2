@@ -221,7 +221,7 @@ export class FrameElement {
     }
 }
 
-export function calculatePhysicalLayout(element, size, origin, context={}) {
+export function calculatePhysicalLayout(element, size, origin, context={leftSlant: 0,rightSlant: 0,topSlant: 0,bottomSlant: 0}){
     if (!element.direction) {
         return calculatePhysicalLayoutLeaf(element, size, origin, context);
     } else {
@@ -287,7 +287,6 @@ function calculatePhysicalLayoutElements(element, size, origin, context) {
 }
 
 function calculatePhysicalLayoutLeaf(element, size, origin, ctx) {
-    // leafノードでは両軸本体100とみなす
     const logicalWidth = element.margin.left + element.rawSize + element.margin.right;
     const logicalHeight = element.margin.top + element.rawSize + element.margin.bottom;
     const xf = size[0] / logicalWidth;
