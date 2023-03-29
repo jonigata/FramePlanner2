@@ -180,81 +180,6 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  accepts(point) {
-    if (!this.interactable) {
-      return null;
-    }
-
-    if (keyDownFlags["Space"]) {
-      return null;
-    }
-
-    if (keyDownFlags["KeyF"]) {
-      return { action: "create" };
-    }
-    if (this.createBubbleIcon.contains(point)) {
-      return { action: "create" };
-    }
-
-    if (this.selected) {
-      const bubble = this.selected;
-
-      if (this.removeIcon.contains(point)) {
-        return { action: "remove", bubble };
-      } else if (this.dragIcon.contains(point)) {
-        return { action: "move", bubble };
-      } else if (this.zMinusIcon.contains(point)) {
-        return { action: "z-minus", bubble };
-      } else if (this.zPlusIcon.contains(point)) {
-        return { action: "z-plus", bubble };
-      }
-
-      const handle = bubble.getHandleAt(point);
-      if (handle) {
-        return { action: "resize", bubble, handle };
-      }
-
-      if (bubble.image) {
-        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
-          return { action: "image-scale", bubble };
-        } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
-          return { action: "image-move", bubble };
-        }
-      }
-    }
-    for (let bubble of this.bubbles) {
-      if (bubble.contains(point)) {
-        console.log("A");
-        if (keyDownFlags["KeyQ"]) {
-            console.log("B");
-          return { action: "remove", bubble };
-        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
-        console.log("C");
-          return { action: "move", bubble };
-        } else {
-        console.log("D");
-          return { action: "select", bubble };
-        }
-        console.log("E");
-      }
-      const handle = bubble.getHandleAt(point);
-      if (handle) {
-        return { action: "resize", bubble, handle };
-      }
-    }
-
-    return null;
-  }
-
-  unfocus() {
-    if (this.selected) {
-        this.onCommit(this.bubbles);
-        this.onHideInspector();
-        this.selected = null;
-        this.redraw();
-    }
-  }
-
   pointerHover(p) {
     if (keyDownFlags["Space"]) {
       return false;
@@ -303,6 +228,81 @@ export class BubbleLayer extends Layer {
       }
     }
     return false;
+  }
+  
+  accepts(point) {
+    if (!this.interactable) {
+      return null;
+    }
+
+    if (keyDownFlags["Space"]) {
+      return null;
+    }
+
+    if (keyDownFlags["KeyF"]) {
+      return { action: "create" };
+    }
+    if (this.createBubbleIcon.contains(point)) {
+      return { action: "create" };
+    }
+
+    if (this.selected) {
+      const bubble = this.selected;
+
+      if (this.removeIcon.contains(point)) {
+        return { action: "remove", bubble };
+      } else if (this.dragIcon.contains(point)) {
+        return { action: "move", bubble };
+      } else if (this.zMinusIcon.contains(point)) {
+        return { action: "z-minus", bubble };
+      } else if (this.zPlusIcon.contains(point)) {
+        return { action: "z-plus", bubble };
+      }
+
+      const handle = bubble.getHandleAt(point);
+      if (handle) {
+        return { action: "resize", bubble, handle };
+      }
+
+      if (bubble.image) {
+        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+          return { action: "image-scale", bubble };
+        } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
+          return { action: "image-move", bubble };
+        }
+      }
+    }
+    for (let bubble of [...this.bubbles].reverse()) {
+      if (bubble.contains(point)) {
+        console.log("A");
+        if (keyDownFlags["KeyQ"]) {
+            console.log("B");
+          return { action: "remove", bubble };
+        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+        console.log("C");
+          return { action: "move", bubble };
+        } else {
+        console.log("D");
+          return { action: "select", bubble };
+        }
+        console.log("E");
+      }
+      const handle = bubble.getHandleAt(point);
+      if (handle) {
+        return { action: "resize", bubble, handle };
+      }
+    }
+
+    return null;
+  }
+
+  unfocus() {
+    if (this.selected) {
+        this.onCommit(this.bubbles);
+        this.onHideInspector();
+        this.selected = null;
+        this.redraw();
+    }
   }
 
   async *pointer(dragStart, payload) {
@@ -452,7 +452,6 @@ export class BubbleLayer extends Layer {
   }
 
   doubleClicked(p) {
-    console.log("doubleClicked");
     const bubble = this.defaultBubble.clone();
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
