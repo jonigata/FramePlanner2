@@ -99,9 +99,9 @@ export class FrameLayer extends Layer {
     if (layout.element.bgColor) { 
       inheritanceContext.bgColor = layout.element.bgColor;
     }
-    this.renderBackground(ctx, layout, inheritanceContext);
 
     if (layout.children) {
+      this.renderBackground(ctx, layout, inheritanceContext);
       for (let i = 0; i < layout.children.length; i++) {
         this.renderElement(ctx, layout.children[i], inheritanceContext);
       }
@@ -111,24 +111,22 @@ export class FrameLayer extends Layer {
   }
 
   renderElementLeaf(ctx, layout, inheritanceContext) {
-    const margin = layout.physicalMargin;
-    const origin = [layout.origin[0] + margin.left, layout.origin[1] + margin.top];
-    const size = [layout.size[0] - margin.left - margin.right, layout.size[1] - margin.top - margin.bottom];
-
     this.renderBackground(ctx, layout, inheritanceContext);
 
     const element = layout.element;
     if (element.image) {
       // clip
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(origin[0], origin[1], size[0], size[1]);
       ctx.clip();
 
       const [rw, rh] = [
         element.image.width,
         element.image.height,
       ];
+
+      const margin = layout.physicalMargin;
+      const origin = [layout.origin[0] + margin.left, layout.origin[1] + margin.top];
+      const size = [layout.size[0] - margin.left - margin.right, layout.size[1] - margin.top - margin.bottom];
 
       console.log(element.reverse);
       ctx.translate(origin[0] + size[0] * 0.5 + element.translation[0], origin[1] + size[1] * 0.5 + element.translation[1]);
@@ -143,7 +141,7 @@ export class FrameLayer extends Layer {
     if (layout.element.bgColor !== "transparent") {
       ctx.strokeStyle = "rgb(0,0,0)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(origin[0], origin[1], size[0], size[1]);
+      ctx.stroke();
     }
   }
 
@@ -156,12 +154,25 @@ export class FrameLayer extends Layer {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
       ctx.fillStyle = "rgb(255,255,255, 1)";
-      ctx.fillRect(origin[0], origin[1], size[0], size[1]);
+      this.trapezoidPath(ctx, layout.corners);
+      ctx.fill();
       ctx.restore();
     } else {
       ctx.fillStyle = bgColor;
-      ctx.fillRect(origin[0], origin[1], size[0], size[1]);
+      // random color
+      ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+      ctx.beginPath();
+      this.trapezoidPath(ctx, layout.corners);
+      ctx.fill();
     }
+  }
+
+  trapezoidPath(ctx, corners) {
+    ctx.moveTo(...corners.topLeft);
+    ctx.lineTo(...corners.topRight);
+    ctx.lineTo(...corners.bottomRight);
+    ctx.lineTo(...corners.bottomLeft);
+    ctx.lineTo(...corners.topLeft);
   }
 
   dropped(image, position) {

@@ -7,13 +7,19 @@ export const frameExamples = [
       right: 8,
     },
     width: 180,
-    spacing: 2,
+    divider: {
+      spacing: 2,
+      slant: 30,
+    },
     bgColor: "white",
     column: [
       { height: 17 },
       {
         height: 25,
-        spacing: 2,
+        divider: {
+          spacing: 2,
+          slant: 30,
+        },
         row: [{ width: 45 }, { width: 55 }],
       },
       { height: 17 },
@@ -42,7 +48,10 @@ export const frameExamples = [
       right: 2,
     },
     width: 3,
-    spacing: 1,
+    divider: {
+      spacing: 1,
+      slant: 0,
+    },
     bgColor: "white",
     column: [
       {
@@ -84,15 +93,24 @@ export const frameExamples = [
                 height: 30,
               },
             ],
-            spacing: 1,
+            divider: {
+              spacing: 1,
+              slant: 0,
+            },
             width: 30,
           },
         ],
-        spacing: 2,
+        divider: {
+          spacing: 2,
+          slant: 0,
+        },
         height: 120,
       },
     ],
-    spacing: 4,
+    divider: {
+      spacing: 4,
+      slant: 0,
+    },
     margin: {
       top: 4,
       bottom: 4,

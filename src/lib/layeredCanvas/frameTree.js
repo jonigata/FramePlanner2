@@ -221,15 +221,15 @@ export class FrameElement {
     }
 }
 
-export function calculatePhysicalLayout(element, size, origin) {
+export function calculatePhysicalLayout(element, size, origin, context={}) {
     if (!element.direction) {
-        return calculatePhysicalLayoutLeaf(element, size, origin);
+        return calculatePhysicalLayoutLeaf(element, size, origin, context);
     } else {
-        return calculatePhysicalLayoutElements(element, size, origin);
+        return calculatePhysicalLayoutElements(element, size, origin, context);
     }
 }
 
-function calculatePhysicalLayoutElements(element, size, origin) {
+function calculatePhysicalLayoutElements(element, size, origin, context) {
     const margin = element.margin;
     const dir = element.direction;
     const psize = element.localLength;
@@ -244,22 +244,30 @@ function calculatePhysicalLayoutElements(element, size, origin) {
     // console.log(margin, inner_width, inner_height, xf, yf, psize, ssize);
     if (dir == 'h') {
         for (let i = element.children.length - 1 ; 0 <= i ; i--) {
-          const child = element.children[i];
-          const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
-          const cw = child.rawSize * xf;
-          const ch = inner_height;
-          const childSize = [cw, ch];
-          children.push(calculatePhysicalLayout(child, childSize, childOrigin));
-          x += child.rawSize + element.divider.spacing;
+            const child = element.children[i];
+            const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
+            const childSize = [child.rawSize * xf, inner_height];
+            context = {
+                leftSlant: i == element.children.length - 1 ? 0 : element.divider.slant,
+                rightSlant: i == 0 ? 0 : element.divider.slant,
+                topSlant: 0,
+                bottomSlant: 0,
+            }
+            children.push(calculatePhysicalLayout(child, childSize, childOrigin, context));
+            x += child.rawSize + element.divider.spacing;
         }
     } else {
         for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
             const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
-            const cw = inner_width;
-            const ch = child.rawSize * yf;
-            const childSize = [cw, ch];
-            children.push(calculatePhysicalLayout(child, childSize, childOrigin));
+            const childSize = [inner_width, child.rawSize * yf];
+            context = {
+                topSlant: i == element.children.length - 1 ? 0 : element.divider.slant,
+                bottomSlant: i == 0 ? 0 : element.divider.slant,
+                leftSlant: 0,
+                rightSlant: 0,
+            }
+            children.push(calculatePhysicalLayout(child, childSize, childOrigin, context));
             y += child.rawSize + element.divider.spacing;
         }
     }
@@ -269,10 +277,16 @@ function calculatePhysicalLayoutElements(element, size, origin) {
         left: margin.left * xf,
         right: margin.right * xf,
     };
-    return { size, origin, children, element, dir, physicalMargin };
+    const corners = {
+        topLeft: [origin[0] + physicalMargin.left, origin[1] + physicalMargin.top],
+        topRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + physicalMargin.top],
+        bottomLeft: [origin[0] + physicalMargin.left, origin[1] + size[1] - physicalMargin.bottom],
+        bottomRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + size[1] - physicalMargin.bottom],
+    }    
+    return { size, origin, children, element, dir, corners, physicalMargin };
 }
 
-function calculatePhysicalLayoutLeaf(element, size, origin) {
+function calculatePhysicalLayoutLeaf(element, size, origin, ctx) {
     // leafノードでは両軸本体100とみなす
     const logicalWidth = element.margin.left + element.rawSize + element.margin.right;
     const logicalHeight = element.margin.top + element.rawSize + element.margin.bottom;
@@ -285,7 +299,39 @@ function calculatePhysicalLayoutLeaf(element, size, origin) {
         left: element.margin.left * xf,
         right: element.margin.right * xf,
     }
-    return { size, origin, element, physicalMargin };
+
+    const corners = {
+        topLeft: [origin[0] + physicalMargin.left, origin[1] + physicalMargin.top],
+        topRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + physicalMargin.top],
+        bottomLeft: [origin[0] + physicalMargin.left, origin[1] + size[1] - physicalMargin.bottom],
+        bottomRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + size[1] - physicalMargin.bottom],
+    }    
+
+    const [w, h] = [size[0] - physicalMargin.left - physicalMargin.right, size[1] - physicalMargin.top - physicalMargin.bottom];
+
+    const rad = Math.PI / 180;
+    if (ctx.leftSlant != 0) {
+        const dx = Math.cos(Math.PI*0.5 + ctx.leftSlant * rad) * (h * 0.5);
+        corners.topLeft[0] -= dx;
+        corners.bottomLeft[0] += dx;
+    }
+    if (ctx.rightSlant != 0) {
+        const dx = Math.cos(Math.PI*0.5 + ctx.rightSlant * rad) * (h * 0.5);
+        corners.topRight[0] -= dx;
+        corners.bottomRight[0] += dx;
+    }
+    if (ctx.topSlant != 0) {
+        const dy = Math.sin(ctx.topSlant * rad) * (w * 0.5);
+        corners.topLeft[1] -= dy;
+        corners.topRight[1] -= dy;
+    }
+    if (ctx.bottomSlant != 0) {
+        const dy = Math.sin(ctx.bottomSlant * rad) * (w * 0.5);
+        corners.bottomLeft[1] += dy;
+        corners.bottomRight[1] += dy;
+    }
+
+    return { size, origin, element, corners, physicalMargin };
 }
 
 function isPointInRect(rect, point) {
