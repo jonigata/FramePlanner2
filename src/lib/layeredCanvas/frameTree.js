@@ -486,10 +486,11 @@ export function makeBorderTrapezoid(layout, index) {
 function makeHorizontalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
+    const margin = layout.physicalMargin;
     const cox0 = prev.origin[0] + prev.size[0];
-    const coy0 = curr.origin[1];
+    const coy0 = curr.origin[1] + margin.top;
     const cox1 = curr.origin[0];
-    const coy1 = curr.origin[1] + curr.size[1];
+    const coy1 = curr.origin[1] + curr.size[1] - margin.bottom;
 
     const corners = {
         topLeft: [cox0 - BORDER_WIDTH, coy0],
@@ -498,8 +499,7 @@ function makeHorizontalBorderTrapezoid(layout, index) {
         bottomRight: [cox1 + BORDER_WIDTH, coy1],
     }
 
-    const h = layout.size[1];
-
+    const h = layout.size[1] - margin.top - margin.bottom;
     const rad = Math.PI / 180;
     const slant = layout.element.divider.slant;
     if (slant != 0) {
@@ -516,6 +516,7 @@ function makeHorizontalBorderTrapezoid(layout, index) {
 function makeVerticalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
+    const margin = layout.physicalMargin;
     const cox0 = curr.origin[0];
     const coy0 = prev.origin[1] + prev.size[1];
     const cox1 = curr.origin[0] + curr.size[0];
@@ -528,7 +529,7 @@ function makeVerticalBorderTrapezoid(layout, index) {
         bottomRight: [cox1, coy1 + BORDER_WIDTH],
     }
 
-    const w = layout.size[0];
+    const w = layout.size[0] - margin.left - margin.right;
     const rad = Math.PI / 180;
     const slant = layout.element.divider.slant;
     if (slant != 0) {
