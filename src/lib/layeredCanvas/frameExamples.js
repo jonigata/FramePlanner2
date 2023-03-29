@@ -18,7 +18,7 @@ export const frameExamples = [
         height: 25,
         divider: {
           spacing: 2,
-          slant: 30,
+          slant: 0,
         },
         row: [{ width: 45 }, { width: 55 }],
       },

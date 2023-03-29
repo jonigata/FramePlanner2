@@ -292,6 +292,7 @@ export class FrameLayer extends Layer {
     if (layoutElement) {
       if (keyDownFlags["KeyQ"]) {
         FrameElement.eraseElement(this.frameTree, layoutElement.element);
+        this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
       }
@@ -300,6 +301,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
+        this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
       }
@@ -308,6 +310,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
+        this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
       }
@@ -328,6 +331,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
+        this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
@@ -337,12 +341,14 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layoutElement.element
         );
+        this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
       }
       if (this.deleteIcon.contains(point)) {
         FrameElement.eraseElement(this.frameTree, layoutElement.element);
+        this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
@@ -593,6 +599,7 @@ export class FrameLayer extends Layer {
     layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
+    this.constraintLeaf(layoutlet);
     this.redraw();
   }
 }
