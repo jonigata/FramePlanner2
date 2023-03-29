@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, makeBorderRect, makeMarginRect, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, makeBorderTrapezoid, makeMarginRect, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon } from "./clickableIcon.js";
@@ -19,6 +19,8 @@ export class FrameLayer extends Layer {
     this.dropIcon = new ClickableIcon("drop.png", [0, 0], [32, 32]);
     this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png", [0, 0], [32, 32]);
     this.flipVerticalIcon = new ClickableIcon("flip-vertical.png", [0, 0], [32, 32]);
+    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", [0, 0], [32, 32]);
+    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", [0, 0], [32, 32]);
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL(
       "../../assets/transparent.png",
@@ -58,26 +60,22 @@ export class FrameLayer extends Layer {
 
     if (this.focusedBorder) {
       const newLayout = findLayoutOf(layout, this.focusedBorder.layout.element);
-      const borderRect = makeBorderRect(newLayout, this.focusedBorder.index);
+      const bt = makeBorderTrapezoid(newLayout, this.focusedBorder.index);
 
       ctx.fillStyle = "rgba(0,200,200,0.7)";
-      ctx.fillRect(
-        borderRect[0],
-        borderRect[1],
-        borderRect[2] - borderRect[0],
-        borderRect[3] - borderRect[1]
-      );
+      ctx.beginPath();
+      this.trapezoidPath(ctx, bt);
+      ctx.fill();
+      
       if (this.focusedBorder.layout.dir === "v") {
-        this.expandVerticalIcon.position = [
-          borderRect[2] - 32,
-          (borderRect[1] + borderRect[3]) * 0.5 - 16,
-        ];
+        this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5 - 16];
+        this.slantVerticalIcon.render(ctx);
+        this.expandVerticalIcon.position = [bt.topRight[0] - 32,(bt.topRight[1] + bt.bottomRight[1]) * 0.5 - 16];
         this.expandVerticalIcon.render(ctx);
       } else {
-        this.expandHorizontalIcon.position = [
-          (borderRect[0] + borderRect[2]) * 0.5 - 16,
-          borderRect[3] - 32,
-        ];
+        this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5 - 16,bt.topLeft[1]];
+        this.slantHorizontalIcon.render(ctx);
+        this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5 - 16,bt.bottomLeft[1] - 32];
         this.expandHorizontalIcon.render(ctx);
       }
     }
@@ -128,7 +126,6 @@ export class FrameLayer extends Layer {
       const origin = [layout.origin[0] + margin.left, layout.origin[1] + margin.top];
       const size = [layout.size[0] - margin.left - margin.right, layout.size[1] - margin.top - margin.bottom];
 
-      console.log(element.reverse);
       ctx.translate(origin[0] + size[0] * 0.5 + element.translation[0], origin[1] + size[1] * 0.5 + element.translation[1]);
       ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
       ctx.translate(-rw * 0.5, -rh * 0.5);
@@ -160,7 +157,7 @@ export class FrameLayer extends Layer {
     } else {
       ctx.fillStyle = bgColor;
       // random color
-      ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+      // ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
       ctx.beginPath();
       this.trapezoidPath(ctx, layout.corners);
       ctx.fill();
@@ -356,7 +353,6 @@ export class FrameLayer extends Layer {
         this.redraw();
       }
       if (layoutElement.element.image) {
-        console.log("accepts");
         if (this.dropIcon.contains(point)) {
           layoutElement.element.image = null;
           this.redraw();
@@ -407,6 +403,13 @@ export class FrameLayer extends Layer {
         this.expandVerticalIcon.contains(p)
       ) {
         yield* this.expandBorder(p, payload.border);
+      } else if (
+        keyDownFlags["ShiftLeft"] ||
+        keyDownFlags["ShiftRight"] ||
+        this.slantHorizontalIcon.contains(p) ||
+        this.slantVerticalIcon.contains(p)
+      ) {
+        yield* this.slantBorder(p, payload.border);
       } else {
         yield* this.moveBorder(p, payload.border);
       }
@@ -422,7 +425,7 @@ export class FrameLayer extends Layer {
 
     const c0 = child0.element;
     const c1 = child1.element;
-    const rawSpacing = layout.element.spacing;
+    const rawSpacing = layout.element.divider.spacing;
     const rawSum = c0.rawSize + rawSpacing + c1.rawSize;
 
     while ((p = yield)) {
@@ -438,14 +441,30 @@ export class FrameLayer extends Layer {
 
   *expandBorder(p, border) {
     const element = border.layout.element;
-    const rawSpacing = element.spacing;
+    const rawSpacing = element.divider.spacing;
     const dir = border.layout.dir == "h" ? 0 : 1;
     const factor = border.layout.size[dir] / this.getCanvasSize()[dir];
     const s = p;
 
     while ((p = yield)) {
       const op = p[dir] - s[dir];
-      element.spacing = Math.max(0, rawSpacing + op * factor * 0.1);
+      element.divider.spacing = Math.max(0, rawSpacing + op * factor * 0.1);
+      element.calculateLengthAndBreadth();
+      this.redraw();
+    }
+
+    this.onCommit(this.frameTree);
+  }
+
+  *slantBorder(p, border) {
+    const element = border.layout.element;
+    const rawSlant = element.divider.slant;
+    const dir = border.layout.dir == "h" ? 0 : 1;
+
+    const s = p;
+    while ((p = yield)) {
+      const op = p[dir] - s[dir];
+      element.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
       element.calculateLengthAndBreadth();
       this.redraw();
     }
@@ -454,7 +473,6 @@ export class FrameLayer extends Layer {
   }
 
   *expandMargin(p, margin) {
-    console.log("expandMargin");
     const element = margin.layout.element;
     const dir = margin.handle === "top" || margin.handle === "bottom" ? 1 : 0;
     const physicalSize = margin.layout.size[dir];
@@ -463,8 +481,6 @@ export class FrameLayer extends Layer {
     const s = p;
 
     const oldLogicalMargin = element.margin[margin.handle];
-    console.log(physicalSize, logicalSize, factor);
-    console.log(oldLogicalMargin);
 
     while ((p = yield)) {
       let physicalMarginDelta = p[dir] - s[dir];
@@ -474,7 +490,6 @@ export class FrameLayer extends Layer {
       element.calculateLengthAndBreadth();
       this.redraw();
     }
-    console.log(element.margin);
 
     this.onCommit(this.frameTree);
   }
@@ -557,12 +572,10 @@ export class FrameLayer extends Layer {
   importImage(layoutlet, image) {
     const size = [image.width, image.height];
     // calc expansion to longer size
-    console.log(layoutlet.size, size);
     const scale = Math.max(
       layoutlet.size[0] / size[0],
       layoutlet.size[1] / size[1]
     );
-    console.log(scale);
 
     layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];

@@ -384,8 +384,8 @@ export function findBorderAt(layout, position) {
     }
     if (layout.children) {
         for (let i = 1; i < layout.children.length; i++) {
-            const borderRect = makeBorderRect(layout, i);
-            if (isPointInRect(borderRect, [x, y])) {
+            const bt = makeBorderTrapezoid(layout, i);
+            if (isPointInTrapezoid([x, y], bt)) {
                 return { layout, index: i };
             }
         }
@@ -474,6 +474,91 @@ function makeVerticalBorderRect(layout, index) {
     const cox1 = curr.origin[0] + curr.size[0];
     const coy1 = curr.origin[1];
     return [cox0, coy0 - BORDER_WIDTH, cox1, coy1 + BORDER_WIDTH];
+}
+
+export function makeBorderTrapezoid(layout, index) {
+    if (layout.dir == 'h') {
+        return makeHorizontalBorderTrapezoid(layout, index);
+    } else {
+        return makeVerticalBorderTrapezoid(layout, index);
+    }
+}
+
+function makeHorizontalBorderTrapezoid(layout, index) {
+    const prev = layout.children[index - 1];
+    const curr = layout.children[index];
+    const cox0 = prev.origin[0] + prev.size[0];
+    const coy0 = curr.origin[1];
+    const cox1 = curr.origin[0];
+    const coy1 = curr.origin[1] + curr.size[1];
+
+    const corners = {
+        topLeft: [cox0 - BORDER_WIDTH, coy0],
+        topRight: [cox1 + BORDER_WIDTH, coy0],
+        bottomLeft: [cox0 - BORDER_WIDTH, coy1],
+        bottomRight: [cox1 + BORDER_WIDTH, coy1],
+    }
+
+    const h = layout.size[1];
+
+    const rad = Math.PI / 180;
+    const slant = layout.element.divider.slant;
+    if (slant != 0) {
+        const dx = Math.cos(Math.PI*0.5 + slant * rad) * (h * 0.5);
+        corners.topLeft[0] -= dx;
+        corners.topRight[0] -= dx;
+        corners.bottomLeft[0] += dx;
+        corners.bottomRight[0] += dx;
+    }
+
+    return corners;
+}
+
+function makeVerticalBorderTrapezoid(layout, index) {
+    const prev = layout.children[index - 1];
+    const curr = layout.children[index];
+    const cox0 = curr.origin[0];
+    const coy0 = prev.origin[1] + prev.size[1];
+    const cox1 = curr.origin[0] + curr.size[0];
+    const coy1 = curr.origin[1];
+
+    const corners = {
+        topLeft: [cox0, coy0 - BORDER_WIDTH],
+        topRight: [cox1, coy0 - BORDER_WIDTH],
+        bottomLeft: [cox0, coy1 + BORDER_WIDTH],
+        bottomRight: [cox1, coy1 + BORDER_WIDTH],
+    }
+
+    const w = layout.size[0];
+    const rad = Math.PI / 180;
+    const slant = layout.element.divider.slant;
+    if (slant != 0) {
+        const dy = Math.sin(slant * rad) * (w * 0.5);
+        corners.topRight[1] -= dy;
+        corners.bottomRight[1] -= dy;
+        corners.topLeft[0] += dy;
+        corners.bottomLeft[0] += dy;
+    }
+
+    return corners;
+}
+
+function isPointInTriangle(p, t) {
+    const [x, y] = p;
+    const [x0, y0] = t[0];
+    const [x1, y1] = t[1]
+    const [x2, y2] = t[2]
+
+    const d1 = (x - x0) * (y1 - y0) - (x1 - x0) * (y - y0);
+    const d2 = (x - x1) * (y2 - y1) - (x2 - x1) * (y - y1);
+    const d3 = (x - x2) * (y0 - y2) - (x0 - x2) * (y - y2);
+
+    return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
+}
+
+function isPointInTrapezoid(p, t) {
+    return isPointInTriangle(p, [t.topLeft, t.topRight, t.bottomRight]) ||
+        isPointInTriangle(p, [t.topLeft, t.bottomRight, t.bottomLeft]);
 }
 
 export function collectImages(frameTree) {

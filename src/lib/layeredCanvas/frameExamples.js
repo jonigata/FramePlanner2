@@ -9,7 +9,7 @@ export const frameExamples = [
     width: 180,
     divider: {
       spacing: 2,
-      slant: 30,
+      slant: 0,
     },
     bgColor: "white",
     column: [
