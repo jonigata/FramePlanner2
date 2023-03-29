@@ -117,18 +117,16 @@ export class FrameLayer extends Layer {
       ctx.save();
       ctx.clip();
 
-      const [rw, rh] = [
-        element.image.width,
-        element.image.height,
-      ];
+      const [x0, y0, x1, y1] = [
+        Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
+        Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
+        Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
+        Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
+      ]
 
-      const margin = layout.physicalMargin;
-      const origin = [layout.origin[0] + margin.left, layout.origin[1] + margin.top];
-      const size = [layout.size[0] - margin.left - margin.right, layout.size[1] - margin.top - margin.bottom];
-
-      ctx.translate(origin[0] + size[0] * 0.5 + element.translation[0], origin[1] + size[1] * 0.5 + element.translation[1]);
+      ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
       ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-      ctx.translate(-rw * 0.5, -rh * 0.5);
+      ctx.translate(-element.image.width * 0.5, -element.image.height * 0.5);
       ctx.drawImage(element.image, 0, 0);
 
       // unclip
@@ -534,15 +532,20 @@ export class FrameLayer extends Layer {
 
   constraintTranslationAndScale(layout) {
     const element = layout.element;
-    const origin = layout.origin;
-    const size = layout.size;
+    const [x0, y0, x1, y1] = [
+      Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
+      Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
+      Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
+      Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
+    ]
+    const [w, h] = [x1 - x0, y1 - y0];
 
     let scale = element.scale[0];
-    if (element.image.width * scale < size[0]) {
-      scale = size[0] / element.image.width;
+    if (element.image.width * scale < w) {
+      scale = w / element.image.width;
     }
-    if (element.image.height * scale < size[1]) {
-      scale = size[1] / element.image.height;
+    if (element.image.height * scale < h) {
+      scale = h / element.image.height;
     }
     element.scale = [scale, scale];
 
@@ -550,23 +553,22 @@ export class FrameLayer extends Layer {
       element.image.width * scale,
       element.image.height * scale,
     ];
-    const [x0, y0] = [origin[0], origin[1]];
-    const [x1, y1] = [origin[0] + size[0], origin[1] + size[1]];
-    const x = origin[0] + (size[0] - rw) / 2 + element.translation[0];
-    const y = origin[1] + (size[1] - rh) / 2 + element.translation[1];
+    const x = (x0 + x1) * 0.5 + element.translation[0];
+    const y = (y0 + y1) * 0.5 + element.translation[1];
 
-    if (x0 < x) {
-      element.translation[0] = x0 - origin[0] - (size[0] - rw) / 2;
+    if (x0 < x - rw / 2) {
+      element.translation[0] = - (w - rw) / 2;
     }
-    if (x + rw < x1) {
-      element.translation[0] = x1 - origin[0] - (size[0] - rw) / 2 - rw;
+    if (x + rw / 2 < x1) {
+      element.translation[0] = (w - rw) / 2;
     }
-    if (y0 < y) {
-      element.translation[1] = y0 - origin[1] - (size[1] - rh) / 2;
+    if (y0 < y - rh / 2) {
+      element.translation[1] = - (h - rh) / 2;
     }
-    if (y + rh < y1) {
-      element.translation[1] = y1 - origin[1] - (size[1] - rh) / 2 - rh;
+    if (y1 > y + rh / 2) {
+      element.translation[1] = (h - rh) / 2;
     }
+
   }
 
   importImage(layoutlet, image) {
