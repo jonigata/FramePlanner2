@@ -7,8 +7,8 @@ export class FrameElement {
         this.children = [];
         this.localLength = 0; // 主軸サイズ
         this.localBreadth = 0; // 交差軸サイズ
-        this.spacing = 0;
-        this.margin = {top:0, bottom:0, left:0, right:0};
+        this.divider = { spacing: 0, slant: 0 };
+        this.margin = { top: 0, bottom: 0, left: 0, right: 0 };
         this.translation = [0, 0];
         this.scale = [1, 1]; 
         this.reverse = [1, 1];
@@ -24,7 +24,7 @@ export class FrameElement {
         element.children = this.children.map(child => child.clone());
         element.localLength = this.localLength;
         element.localBreadth = this.localBreadth;
-        element.spacing = this.spacing;
+        element.divider = { ...this.divider };
         element.margin = { ...this.margin };
         element.translation = [...this.translation];
         element.scale = [...this.scale];
@@ -37,7 +37,10 @@ export class FrameElement {
     static compile(markUpElement) {
         const element = new FrameElement(markUpElement.width || markUpElement.height || markUpElement.size || 1);
         const children = markUpElement.column || markUpElement.row;
-        element.spacing = markUpElement.spacing || 0;
+        element.divider = { 
+            spacing: markUpElement?.divider?.spacing || 0, 
+            slant: markUpElement?.divider?.slant || 0 
+        };
         element.margin = {top:0, bottom:0, left:0, right:0};
         element.bgColor = markUpElement.bgColor;
         Object.assign(element.margin, markUpElement.margin || {});
@@ -85,8 +88,14 @@ export class FrameElement {
             for (let i = 0; i < element.children.length; i++) {
                 markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
             }
-            if (element.spacing !== 0) {
-                markUpElement.spacing = element.spacing;
+            if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
+                markUpElement.divider = {};
+                if (element.divider.spacing !== 0) {
+                    markUpElement.divider.spacing = element.spacing;
+                }
+                if (element.divider.slant !== 0) {
+                    markUpElement.divider.slant = element.slant;
+                }
             }
             const margin = cleanMargin(element.margin);
             if (margin) {
@@ -149,7 +158,7 @@ export class FrameElement {
             if (dir === splitDirection) { 
                 console.log("same direction");
                 const index = parent.children.indexOf(target);
-                const spacing = parent.spacing;
+                const spacing = parent.divider.spacing;
                 const length = target.rawSize;
                 const newElement = new FrameElement((length - spacing) / 2);
                 newElement.calculateLengthAndBreadth();
@@ -195,7 +204,7 @@ export class FrameElement {
         }
         for (let i = 0; i < this.children.length; i++) {
             const child = this.children[i];
-            if (0 < i) { totalLength += this.spacing; }
+            if (0 < i) { totalLength += this.divider.spacing; }
             totalLength += child.rawSize;
         }
         this.localLength = totalLength;
@@ -241,7 +250,7 @@ function calculatePhysicalLayoutElements(element, size, origin) {
           const ch = inner_height;
           const childSize = [cw, ch];
           children.push(calculatePhysicalLayout(child, childSize, childOrigin));
-          x += child.rawSize + element.spacing;
+          x += child.rawSize + element.divider.spacing;
         }
     } else {
         for (let i = 0; i < element.children.length; i++) {
@@ -251,7 +260,7 @@ function calculatePhysicalLayoutElements(element, size, origin) {
             const ch = child.rawSize * yf;
             const childSize = [cw, ch];
             children.push(calculatePhysicalLayout(child, childSize, childOrigin));
-            y += child.rawSize + element.spacing;
+            y += child.rawSize + element.divider.spacing;
         }
     }
     const physicalMargin = {
