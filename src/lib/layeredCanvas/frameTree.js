@@ -262,8 +262,8 @@ function calculatePhysicalLayoutElements(element, size, origin, context) {
             const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
             const childSize = [inner_width, child.rawSize * yf];
             context = {
-                topSlant: i == element.children.length - 1 ? 0 : element.divider.slant,
-                bottomSlant: i == 0 ? 0 : element.divider.slant,
+                topSlant: i == 0 ? 0 : element.divider.slant,
+                bottomSlant: i == element.children.length - 1 ? 0 : element.divider.slant,
                 leftSlant: 0,
                 rightSlant: 0,
             }
@@ -321,13 +321,13 @@ function calculatePhysicalLayoutLeaf(element, size, origin, ctx) {
     }
     if (ctx.topSlant != 0) {
         const dy = Math.sin(ctx.topSlant * rad) * (w * 0.5);
-        corners.topLeft[1] -= dy;
+        corners.topLeft[1] += dy;
         corners.topRight[1] -= dy;
     }
     if (ctx.bottomSlant != 0) {
         const dy = Math.sin(ctx.bottomSlant * rad) * (w * 0.5);
         corners.bottomLeft[1] += dy;
-        corners.bottomRight[1] += dy;
+        corners.bottomRight[1] -= dy;
     }
 
     return { size, origin, element, corners, physicalMargin };
@@ -535,8 +535,8 @@ function makeVerticalBorderTrapezoid(layout, index) {
         const dy = Math.sin(slant * rad) * (w * 0.5);
         corners.topRight[1] -= dy;
         corners.bottomRight[1] -= dy;
-        corners.topLeft[0] += dy;
-        corners.bottomLeft[0] += dy;
+        corners.topLeft[1] += dy;
+        corners.bottomLeft[1] += dy;
     }
 
     return corners;
