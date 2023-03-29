@@ -428,11 +428,10 @@ export class FrameLayer extends Layer {
       const t = balance * rawSum;
       c0.rawSize = t - rawSpacing * 0.5;
       c1.rawSize = rawSum - t - rawSpacing * 0.5;
-      this.constraintBorder(border); // 前後だけ
+      this.constraintTree(border.layout);
       this.redraw();
     }
 
-    this.constraintAll();
     this.onCommit(this.frameTree);
   }
 
@@ -447,11 +446,10 @@ export class FrameLayer extends Layer {
       const op = p[dir] - s[dir];
       element.divider.spacing = Math.max(0, rawSpacing + op * factor * 0.1);
       element.calculateLengthAndBreadth();
-      this.constraintBorder(border); // 前後だけ
+      this.constraintTree(border.layout);
       this.redraw();
     }
 
-    this.constraintAll();
     this.onCommit(this.frameTree);
   }
 
@@ -464,11 +462,10 @@ export class FrameLayer extends Layer {
     while ((p = yield)) {
       const op = p[dir] - s[dir];
       element.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
-      this.constraintBorder(border); // 前後だけ
+      this.constraintTree(border.layout); // 前後だけ
       this.redraw();
     }
 
-    this.constraintAll();
     this.onCommit(this.frameTree);
   }
 
@@ -488,19 +485,11 @@ export class FrameLayer extends Layer {
       // 比率なのでだんだん乖離していくが、一旦そのまま
       element.margin[margin.handle] = Math.max(0, oldLogicalMargin + physicalMarginDelta * factor);
       element.calculateLengthAndBreadth();
-      this.constraintLeaf(margin.layout); // 対象だけ
+      this.constraintTree(margin.layout);
       this.redraw();
     }
 
-    this.constraintAll();
     this.onCommit(this.frameTree);
-  }
-
-  constraintBorder(border) {
-    const layout = border.layout;
-    const index = border.index;
-    this.constraintLeaf(layout.children[index - 1].element);
-    this.constraintLeaf(layout.children[index].element);
   }
 
   getBorderBalance(p, border) {
@@ -529,6 +518,15 @@ export class FrameLayer extends Layer {
       [0, 0]
     );
     this.constraintAllRecursive(layout);
+  }
+
+  constraintTree(layout) {
+    const newLayout = calculatePhysicalLayout(
+      layout.element,
+      layout.size,
+      layout.origin
+    );
+    this.constraintAllRecursive(newLayout);
   }
 
   constraintAllRecursive(layout) {
