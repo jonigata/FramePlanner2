@@ -451,6 +451,20 @@ export class BubbleLayer extends Layer {
     return false;
   }
 
+  doubleClicked(p) {
+    console.log("doubleClicked");
+    const bubble = this.defaultBubble.clone();
+    bubble.p0 = [p[0] - 100, p[1] - 100];
+    bubble.p1 = [p[0] + 100, p[1] + 100];
+    this.onGetDefaultText().then((text) => {
+      bubble.text = text;
+      this.bubbles.push(bubble);
+      this.onCommit(this.bubbles);
+      this.redraw();
+    });
+    return true;
+  }
+
   setIconPositions() {
     const [x0, y0] = this.selected.p0;
     const [x1, y1] = this.selected.p1;
