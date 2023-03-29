@@ -377,14 +377,14 @@ export class FrameLayer extends Layer {
         yield* scale(this.canvas, p, (q) => {
           const s = Math.max(q[0], q[1]);
           element.scale = [origin * s, origin * s];
-          this.constraintTranslationAndScale(layout);
+          this.constraintLeaf(layout);
           this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
         });
       } else {
         const origin = element.translation;
         yield* translate(p, (q) => {
           element.translation = [origin[0] + q[0], origin[1] + q[1]];
-          this.constraintTranslationAndScale(layout);
+          this.constraintLeaf(layout);
           this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
         });
       }
@@ -488,7 +488,7 @@ export class FrameLayer extends Layer {
       // 比率なのでだんだん乖離していくが、一旦そのまま
       element.margin[margin.handle] = Math.max(0, oldLogicalMargin + physicalMarginDelta * factor);
       element.calculateLengthAndBreadth();
-      this.constraintTranslationAndScale(margin.layout); // 対象だけ
+      this.constraintLeaf(margin.layout); // 対象だけ
       this.redraw();
     }
 
@@ -499,8 +499,8 @@ export class FrameLayer extends Layer {
   constraintBorder(border) {
     const layout = border.layout;
     const index = border.index;
-    this.constraintTranslationAndScale(layout.children[index - 1].element);
-    this.constraintTranslationAndScale(layout.children[index].element);
+    this.constraintLeaf(layout.children[index - 1].element);
+    this.constraintLeaf(layout.children[index].element);
   }
 
   getBorderBalance(p, border) {
@@ -537,12 +537,12 @@ export class FrameLayer extends Layer {
         this.constraintAllRecursive(child);
       }
     } else if (layout.element && layout.element.image) {
-      this.constraintTranslationAndScale(layout);
+      this.constraintLeaf(layout);
     }
   }
 
-  constraintTranslationAndScale(layout) {
-    if (!layout.corners) { return; }
+  constraintLeaf(layout) {
+    if (!layout.corners) {return; }
     if (!layout.element.image) { return; }
     const element = layout.element;
     const [x0, y0, x1, y1] = [
