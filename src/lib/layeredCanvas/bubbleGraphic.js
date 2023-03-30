@@ -11,7 +11,7 @@ export const bubbleOptionSets = {
   "double-strokes": {},
   "harsh": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "harsh-curve": {"angleVector": {hint: "しっぽ",icon:"tail"}},
-  "soft": {},
+  "soft": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "none": {},
 };
 
@@ -92,7 +92,7 @@ function drawHarshBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 10;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 10);
-  const points = subdividedPointsWithBump(rawPoints, bump);
+  const points = subdividedPointsWithBump(rawPoints, bump, -1, 0);
   if (opts?.angleVector) {
     const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
     const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
@@ -132,16 +132,19 @@ function drawPoints(context, points, color, opts) {
 }
 
 function drawHarshCurveBubble(context, seed, rect, opts) {
-  const bump = Math.min(rect[2], rect[3]) / 10;
+  let bump = Math.min(rect[2], rect[3]) / 10;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 12);
+  let points;
   if (opts?.angleVector) {
     const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
     const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
     const tailIndex = getNearestIndex(rawPoints, v);
     rawPoints[tailIndex] = v;
+    points = subdividedPointsWithBump(rawPoints, bump, tailIndex, bump*2);
+  } else {
+    points = subdividedPointsWithBump(rawPoints, bump);
   }
-  const points = subdividedPointsWithBump(rawPoints, bump);
 
   function makePath() {
     context.moveTo(points[0][0], points[0][1]);
@@ -162,7 +165,16 @@ function drawSoftBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 15;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 12);
-  const points = subdividedPointsWithBump(rawPoints, -bump);
+  let points;
+  if (opts?.angleVector) {
+    const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
+    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const tailIndex = getNearestIndex(rawPoints, v);
+    rawPoints[tailIndex] = v;
+    points = subdividedPointsWithBump(rawPoints, -bump, tailIndex, bump*2);
+  } else {
+    points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
+  }
 
   function makePath() {
     context.moveTo(points[0][0], points[0][1]);
@@ -191,13 +203,15 @@ function subdivideSegmentWithBump(p1, p2, bump) {
   return [qx, qy];
 }
 
-function subdividedPointsWithBump(points, bump) {
+function subdividedPointsWithBump(points, bump, tailIndex, tailBump) {
   const result = [];
   for (let i = 0; i < points.length; i++) {
+    const next = (i + 1) % points.length;
     const p1 = points[i];
-    const p2 = points[(i + 1) % points.length];
+    const p2 = points[next];
     result.push(p1);
-    result.push(subdivideSegmentWithBump(p1, p2, bump));
+    result.push(subdivideSegmentWithBump(
+      p1, p2, next === tailIndex || i === tailIndex ? tailBump : bump));
   }
   return result;
 }
