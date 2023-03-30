@@ -388,7 +388,7 @@ function drawHeartBubble(context, seed, rect, opts) {
   const [x, y] = [x0 + w*0.5, y0 + h*0.5];
 
   const h1 = h * -0.58;
-  const h2 = h * -0.3;
+  const h2 = h * -0.35;
   const h3 = h * -0.1;
   const h4 = h * 0.1;
   const h5 = h * 0.35;
@@ -396,10 +396,10 @@ function drawHeartBubble(context, seed, rect, opts) {
 
   context.beginPath();
   context.moveTo(x, y + h2);
-  context.bezierCurveTo(x, y + h1, x - 0.5 * w, y + h1, x - 0.5 * w, y + h3);
+  context.bezierCurveTo(x - 0.1 * w, y + h1, x - 0.5 * w, y + h1, x - 0.5 * w, y + h3);
   context.bezierCurveTo(x - 0.5 * w, y + h4, x - 0.3 * w, y + h5, x, y + h6);
   context.bezierCurveTo(x + 0.3 * w, y + h5, x + 0.5 * w, y + h4, x + 0.5 * w, y + h3);
-  context.bezierCurveTo(x + 0.5 * w, y + h1, x, y + h1, x, y + h2);
+  context.bezierCurveTo(x + 0.5 * w, y + h1, x + 0.1 * w, y + h1, x, y + h2);
   finishTrivialPath(context);
 }
 
