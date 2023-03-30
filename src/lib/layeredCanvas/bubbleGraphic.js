@@ -10,7 +10,7 @@ export const bubbleOptionSets = {
   "strokes": {},
   "double-strokes": {},
   "harsh": {"angleVector": {hint: "しっぽ",icon:"tail"}},
-  "harsh-curve": {},
+  "harsh-curve": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "soft": {},
   "none": {},
 };
@@ -135,11 +135,13 @@ function drawHarshCurveBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 10;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 12);
-
-  // drawPoints(context, rawPoints, 'red');
-
+  if (opts?.angleVector) {
+    const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
+    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const tailIndex = getNearestIndex(rawPoints, v);
+    rawPoints[tailIndex] = v;
+  }
   const points = subdividedPointsWithBump(rawPoints, bump);
-  // drawPoints(context, points, 'blue');
 
   function makePath() {
     context.moveTo(points[0][0], points[0][1]);
