@@ -19,7 +19,7 @@
   export let position = { x: 0, y: 0 };
   export let bubble = null;
   let adjustedPosition = { x: 0, y: 0 };
-  let pinned = false;
+  let pinned = true;
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -143,6 +143,8 @@
   }
   .bubble-inspector {
     position: absolute;
+    top: 800px;
+    left: 50px;
     width: 350px;
     height: 400px;
     display: flex;
