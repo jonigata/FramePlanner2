@@ -83,6 +83,7 @@
 
     const canvasSize = frameLayer.getCanvasSize();
     bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(canvasSize, b));
+    bubbleLayer.selected = null;
 
     layeredCanvas.redraw();
   }
