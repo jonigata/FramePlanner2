@@ -9,7 +9,8 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
-
+  import { tick } from 'svelte';
+  
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
   import verticalIcon from './assets/vertical.png';
@@ -18,8 +19,10 @@
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
+  let oldBubble = null;
   let adjustedPosition = { x: 0, y: 0 };
   let pinned = true;
+  let textarea = null;
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -50,6 +53,19 @@
       x: Math.floor(center.x - dialogWidth*0.5), 
       y: Math.floor(center.y + (offset === 1 ? -height*0.5 - 40 - dialogHeight : height*0.5 + 40))
     };
+  }
+
+  $:onChangeBubble(bubble);
+  async function onChangeBubble(b) {
+    if (b === oldBubble) {return;}
+    oldBubble = b;
+    if (b) {
+      await tick();
+      textarea.focus();
+      textarea.select();
+      pinned = true;
+      move(b.position);
+    }
   }
 
   $:onChangeShape(bubble?.shape);
@@ -109,7 +125,8 @@
 
     <textarea
       class="my-2 rounded-container-token textarea" 
-      bind:value={bubble.text}/>
+      bind:value={bubble.text}
+      bind:this={textarea}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="template-chooser-container">
       <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubble.shape} />
