@@ -316,7 +316,7 @@ export class BubbleLayer extends Layer {
         return { action: "resize", bubble, handle };
       }
 
-      if (bubble.image) {
+      if (bubble.image && bubble.contains(point)) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
@@ -324,6 +324,7 @@ export class BubbleLayer extends Layer {
         }
       }
     }
+
     for (let bubble of [...this.bubbles].reverse()) {
       if (bubble.contains(point)) {
         console.log("A");

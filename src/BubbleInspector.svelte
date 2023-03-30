@@ -52,6 +52,13 @@
     };
   }
 
+  $:onChangeShape(bubble?.shape);
+  function onChangeShape(shape) {
+    if (bubble) {
+      bubble.options = {};
+    }
+  }
+
   function resetPin() {
     pinned = false;
   }

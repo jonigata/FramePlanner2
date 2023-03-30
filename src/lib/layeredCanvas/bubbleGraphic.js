@@ -164,14 +164,14 @@ function drawHarshCurveBubble(context, seed, rect, opts) {
 function drawSoftBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 15;
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, rect, 12);
+  const rawPoints = generateRandomPoints(rng, rect, 16);
   let points;
   if (opts?.angleVector) {
     const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
     const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
     const tailIndex = getNearestIndex(rawPoints, v);
     rawPoints[tailIndex] = v;
-    points = subdividedPointsWithBump(rawPoints, -bump, tailIndex, bump*2);
+    points = subdividedPointsWithBump(rawPoints, -bump, tailIndex, bump);
   } else {
     points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
   }
