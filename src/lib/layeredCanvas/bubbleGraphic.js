@@ -1,49 +1,62 @@
 import seedrandom from "seedrandom";
-import { claim_text, xlink_attr } from "svelte/internal";
 import { QuickHull } from "./quickHull.js"
 
-export function drawBubble(context, seed, rect, patternName) {
+export const bubbleOptionSets = {
+  "rounded": {},
+  "square": {},
+  "ellipse": {"angleVector": {hint: "フキダシ",icon:"tail"}},
+  "concentration": {},
+  "polygon": {},
+  "strokes": {},
+  "double-strokes": {},
+  "harsh": {},
+  "harsh-curve": {},
+  "soft": {},
+  "none": {},
+};
+
+export function drawBubble(context, seed, rect, patternName, opts) {
   switch (patternName) {
     case "rounded":
-      drawRoundedBubble(context, seed, rect);
+      drawRoundedBubble(context, seed, rect, opts);
       break;
     case "square":
-      drawSquareBubble(context, seed, rect);
+      drawSquareBubble(context, seed, rect, opts);
       break;
     case "ellipse":
-      drawEllipseBubble(context, seed, rect);
+      drawEllipseBubble(context, seed, rect, opts);
       break;
     case "concentration":
-      drawConcentrationBubble(context, seed, rect);
+      drawConcentrationBubble(context, seed, rect, opts);
       break;
     case "polygon":
-      drawPolygonBubble(context, seed, rect);
+      drawPolygonBubble(context, seed, rect, opts);
       break;
     case "strokes":
-      drawStrokesBubble(context, seed, rect);
+      drawStrokesBubble(context, seed, rect, opts);
       break;
     case "double-strokes":
-      drawDoubleStrokesBubble(context, seed, rect);
+      drawDoubleStrokesBubble(context, seed, rect, opts);
       break;
     case "harsh":
-      drawHarshBubble(context, seed, rect);
+      drawHarshBubble(context, seed, rect, opts);
       break;
     case "harsh-curve":
-      drawHarshCurveBubble(context, seed, rect);
+      drawHarshCurveBubble(context, seed, rect, opts);
       break;
     case "soft":
-      drawSoftBubble(context, seed, rect);
+      drawSoftBubble(context, seed, rect, opts);
       break;
     case "none":
       break;
     default:
       throw new Error(
-        `Unknown bubble pattern: ${patternName}, candidates are "rounded", "square", "ellipse", "strokes"`
+        `Unknown bubble pattern: ${patternName}`
       );
   }
 }
 
-function drawRoundedBubble(context, seed, rect) {
+function drawRoundedBubble(context, seed, rect, opts) {
   const [x, y, w, h] = rect;
   const rw = w / 2;
   const rh = h / 2;
@@ -66,7 +79,7 @@ function drawRoundedBubble(context, seed, rect) {
   finishTrivialPath(context);
 }
 
-function drawSquareBubble(context, seed, rect) {
+function drawSquareBubble(context, seed, rect, opts) {
   const [x, y, w, h] = rect;
 
   // fill
@@ -75,7 +88,7 @@ function drawSquareBubble(context, seed, rect) {
   finishTrivialPath(context);
 }
 
-function drawHarshBubble(context, seed, rect) {
+function drawHarshBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 10;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 10);
@@ -98,7 +111,7 @@ function drawHarshBubble(context, seed, rect) {
   finishTrivialPath(context);
 }
 
-function drawPoints(context, points, color) {
+function drawPoints(context, points, color, opts) {
   context.save();
   context.strokeStyle = color;
   context.beginPath();
@@ -112,7 +125,7 @@ function drawPoints(context, points, color) {
   context.restore();
 }
 
-function drawHarshCurveBubble(context, seed, rect) {
+function drawHarshCurveBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 10;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 12);
@@ -137,7 +150,7 @@ function drawHarshCurveBubble(context, seed, rect) {
   finishTrivialPath(context);
 }
 
-function drawSoftBubble(context, seed, rect) {
+function drawSoftBubble(context, seed, rect, opts) {
   const bump = Math.min(rect[2], rect[3]) / 15;
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 12);
@@ -181,15 +194,50 @@ function subdividedPointsWithBump(points, bump) {
   return result;
 }
 
-function drawEllipseBubble(context, seed, rect) {
-  const [x, y, w, h] = rect;
+function drawEllipseBubble(context, seed, rect, opts) {
+  const [x, y, w, h] = rect
+  const [w2, h2] = [w / 2, h / 2];
+  const [cx, cy] = [x + w2, y + h2];
+
+  let startAngle = 0;
+  let endAngle = 2 * Math.PI;
+  let tail = [0,0];
+
+  if (opts?.angleVector) {
+    const angleVector = opts.angleVector;
+    if (angleVector[0] === 0 && angleVector[1] === 0) {
+      // do nothing
+    } else {
+      const theta = vectorToEllipseAngle(w2, h2, angleVector[0], angleVector[1]);
+      startAngle = theta + Math.PI / 32;
+      endAngle = theta - Math.PI / 32;
+      tail = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    }
+  }
 
   context.beginPath();
-  context.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 2 * Math.PI);
+  context.ellipse(cx, cy, w2, h2, 0, startAngle, endAngle);
+  if (opts?.angleVector) {
+    context.lineTo(...tail);
+  }
+  context.closePath();
   finishTrivialPath(context);
 }
 
-function drawConcentrationBubble(context, seed, rect) {
+function vectorToEllipseAngle(rx, ry, vx, vy) {
+  const length = Math.sqrt(vx * vx + vy * vy);
+  
+  const normalizedVx = vx / length;
+  const normalizedVy = vy / length;
+
+  const ellipseX = rx * ry * normalizedVx / Math.sqrt(ry * ry * normalizedVx * normalizedVx + rx * rx * normalizedVy * normalizedVy);
+  const ellipseY = rx * ry * normalizedVy / Math.sqrt(ry * ry * normalizedVx * normalizedVx + rx * rx * normalizedVy * normalizedVy);
+
+  const ellipseAngle = Math.atan2(ellipseY / ry, ellipseX / rx);
+  return ellipseAngle;
+}
+
+function drawConcentrationBubble(context, seed, rect, opts) {
   const [x, y, w, h] = rect;
   const [cx, cy] = [x + w / 2, y + h / 2];
 
@@ -231,7 +279,7 @@ function drawConcentrationBubble(context, seed, rect) {
   }
 }
 
-function drawPolygonBubble(context, seed, rect, double) {
+function drawPolygonBubble(context, seed, rect, opts) {
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 10);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
@@ -249,11 +297,11 @@ function drawPolygonBubble(context, seed, rect, double) {
   finishTrivialPath(context);
 }
 
-function drawStrokesBubble(context, seed, rect) {
+function drawStrokesBubble(context, seed, rect, opts) {
     drawStrokesBubbleAux(context, seed, rect, false);
 }
 
-function drawDoubleStrokesBubble(context, seed, rect) {
+function drawDoubleStrokesBubble(context, seed, rect, opts) {
     drawStrokesBubbleAux(context, seed, rect, true);
 }
 
@@ -357,4 +405,3 @@ function finishTrivialPath(context) {
       break;
   }
 }
-

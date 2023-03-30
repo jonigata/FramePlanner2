@@ -1,7 +1,7 @@
 import { Layer, sequentializePointer } from "./layeredCanvas.js";
 import { keyDownFlags } from "./keyCache.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
-import { drawBubble } from "./bubbleGraphic";
+import { drawBubble, bubbleOptionSets } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 import { Bubble } from "./bubble.js";
 import { translate, scale } from "./pictureControl.js";
@@ -25,29 +25,17 @@ export class BubbleLayer extends Layer {
     this.onGetDefaultText = onGetDefaultText;
     this.defaultBubble = new Bubble();
     this.creatingBubble = null;
+    this.optionEditActive = {}
 
-    this.createBubbleIcon = new ClickableIcon(
-      "bubble.png",
-      [4, 4],
-      [iconSize, iconSize]
-    );
+    this.createBubbleIcon = new ClickableIcon("bubble.png",[4, 4],[iconSize, iconSize]);
     this.dragIcon = new ClickableIcon("drag.png", [0, 0], [iconSize, iconSize]);
 
-    this.zPlusIcon = new ClickableIcon(
-      "zplus.png",
-      [0, 0],
-      [iconSize, iconSize]
-    );
-    this.zMinusIcon = new ClickableIcon(
-      "zminus.png",
-      [0, 0],
-      [iconSize, iconSize]
-    );
-    this.removeIcon = new ClickableIcon(
-      "remove.png",
-      [0, 0],
-      [iconSize, iconSize]
-    );
+    this.zPlusIcon = new ClickableIcon("zplus.png",[0, 0],[iconSize, iconSize]);
+    this.zMinusIcon = new ClickableIcon("zminus.png",[0, 0],[iconSize, iconSize]);
+    this.removeIcon = new ClickableIcon("remove.png",[0, 0],[iconSize, iconSize]);
+
+    this.optionIcons = {};
+    this.optionIcons.tail = new ClickableIcon("tail.png",[0, 0],[iconSize, iconSize]);
   }
 
   render(ctx) {
@@ -65,6 +53,7 @@ export class BubbleLayer extends Layer {
   }
 
   renderBubble(ctx, bubble) {
+    // fill/stroke設定
     if (bubble.hasEnoughSize()) {
       ctx.fillStyle = bubble.fillColor;
     } else {
@@ -77,6 +66,7 @@ export class BubbleLayer extends Layer {
     }
     ctx.lineWidth = bubble.strokeWidth;
 
+    // shape背景描画
     // create/resize終わるまでは入れ替わっている可能性がある
     const [p0, p1] = bubble.regularized();
     const [x, y] = p0;
@@ -84,6 +74,7 @@ export class BubbleLayer extends Layer {
     ctx.bubbleDrawMethod = "fill";
     drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
 
+    // 画像描画
     if (bubble.image) {
       ctx.save();
       ctx.bubbleDrawMethod = "clip";
@@ -98,9 +89,11 @@ export class BubbleLayer extends Layer {
       ctx.restore();
     }
 
+    // shape枠描画
     ctx.bubbleDrawMethod = "stroke";
-    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
+    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.options);
 
+    // テキスト描画
     if (bubble.text) {
       const baselineSkip = bubble.fontSize * 1.5;
       const charSkip = bubble.fontSize;
@@ -159,16 +152,20 @@ export class BubbleLayer extends Layer {
       return;
     }
 
+    // ハンドル枠描画
     ctx.save();
     ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
     ctx.strokeRect(x, y, w, h);
+    ctx.restore();
 
+    // ハンドルアイコン描画
     this.dragIcon.render(ctx);
     this.zMinusIcon.render(ctx);
     this.zPlusIcon.render(ctx);
     this.removeIcon.render(ctx);
-    ctx.restore();
+    this.drawOptionHandles(ctx, bubble);
 
+    // 操作対象のハンドルを強調表示
     if (this.handle) {
       ctx.save();
       ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
@@ -177,6 +174,34 @@ export class BubbleLayer extends Layer {
         ctx.fillRect(...handleRect);
       }
       ctx.restore();
+    }
+
+    // option用UI
+    this.drawOptionUI(ctx, bubble);
+  }
+
+  drawOptionHandles(ctx, bubble) {
+    const options = bubbleOptionSets[bubble.shape];
+    const [cx,cy] = bubble.center;
+    for (const option of Object.keys(options)) {
+      switch (option) {
+        case "angleVector":
+          const icon = this.optionIcons[options.angleVector.icon];
+          icon.position = [cx-iconSize/2, cy-iconSize/2];
+          icon.render(ctx);
+      }
+    }
+  }
+
+  drawOptionUI(ctx, bubble) {
+    if (this.optionEditActive.angleVector) {
+      const [cx, cy] = bubble.center;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + bubble.options.angleVector[0], cy + bubble.options.angleVector[1]);
+      ctx.stroke();
     }
   }
 
@@ -202,10 +227,12 @@ export class BubbleLayer extends Layer {
         this.hint(this.dragIcon.hintPosition, "ドラッグで移動");
       } else if (this.zMinusIcon.contains(p)) {
         this.handle = null;
-        this.hint(this.zMinusIcon.hintPosition, "手前に");
+        this.hint(this.zMinusIcon.hintPosition, "フキダシ順で手前に");
       } else if (this.zPlusIcon.contains(p)) {
         this.handle = null;
-        this.hint(this.zPlusIcon.hintPosition, "奥に");
+        this.hint(this.zPlusIcon.hintPosition, "フキダシ順で奥に");
+      } else if (this.hintOptionIcon(this.selected.shape, p)) {
+        this.handle = null;
       } else if (this.selected.contains(p)) {
         this.hint(p, null);
       }
@@ -230,6 +257,29 @@ export class BubbleLayer extends Layer {
     return false;
   }
   
+  hintOptionIcon(shape, p) {
+    const options = bubbleOptionSets[shape];
+    for (const option of Object.keys(options)) {
+      const icon = this.optionIcons[options[option].icon];
+      if (icon.contains(p)) {
+        this.hint(icon.hintPosition, options[option].hint);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  isOnOptionIcon(shape, p) {
+    const options = bubbleOptionSets[shape];
+    for (const option of Object.keys(options)) {
+      const icon = this.optionIcons[options[option].icon];
+      if (icon.contains(p)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   accepts(point) {
     if (!this.interactable) {
       return null;
@@ -257,6 +307,8 @@ export class BubbleLayer extends Layer {
         return { action: "z-minus", bubble };
       } else if (this.zPlusIcon.contains(point)) {
         return { action: "z-plus", bubble };
+      } else if (this.isOnOptionIcon(this.selected.shape, point)) {
+        return { action: "options-angleVector", bubble }; // TODO: 雑
       }
 
       const handle = bubble.getHandleAt(point);
@@ -437,6 +489,8 @@ export class BubbleLayer extends Layer {
         bubble.image.scale = [origin * s, origin * s];
         this.redraw();
       });
+    } else if (payload.action === "options-angleVector") {
+      yield* this.optionsAngleVector(dragStart, payload.bubble);
     }
   }
 
@@ -472,6 +526,17 @@ export class BubbleLayer extends Layer {
     this.zPlusIcon.position = [x0 + 4, y0 + 4];
     this.zMinusIcon.position = [x0 + 4, y0 + 4 + iconSize];
     this.removeIcon.position = [x1 - 4 - iconSize, y0 + 4];
+  }
+
+  *optionsAngleVector(p, bubble) {
+    console.log("optionsAngleVector");
+    this.optionEditActive.angleVector = true;
+    const q = p;
+    while (p = yield) {
+      bubble.options.angleVector = [p[0] - q[0], p[1] - q[1]];
+      this.redraw();
+    }
+    this.optionEditActive.angleVector = false;
   }
 
 }

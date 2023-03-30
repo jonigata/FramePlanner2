@@ -16,6 +16,8 @@ export class Bubble {
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
     this.strokeWidth = 1;
+    this.image = null;
+    this.options = {};
   }
 
   clone() {
@@ -33,6 +35,8 @@ export class Bubble {
     b.fillColor = this.fillColor;
     b.strokeColor = this.strokeColor;
     b.strokeWidth = this.strokeWidth;
+    b.image = this.image;
+    b.options = {...this.options};
     return b;
   }
 
@@ -59,6 +63,7 @@ export class Bubble {
     b.fillColor = json.fillColor;
     b.strokeColor = json.strokeColor;
     b.strokeWidth = json.strokeWidth;
+    b.options = json.options;
     return b;
   }
 
@@ -77,6 +82,7 @@ export class Bubble {
       fillColor: b.fillColor,
       strokeColor: b.strokeColor,
       strokeWidth: b.strokeWidth,
+      options: b.options,
     };
   }
 
@@ -169,5 +175,9 @@ export class Bubble {
 
   regularize() {
     [this.p0, this.p1] = this.regularized();
+  }
+  
+  get center() {
+    return [(this.p0[0] + this.p1[0]) / 2, (this.p0[1] + this.p1[1]) / 2];
   }
 }
