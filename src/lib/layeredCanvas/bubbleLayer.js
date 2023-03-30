@@ -507,6 +507,12 @@ export class BubbleLayer extends Layer {
   }
 
   doubleClicked(p) {
+    for (let bubble of this.bubbles) {
+      if (bubble.contains(p)) {
+        return;
+      }
+    }
+    
     const bubble = this.defaultBubble.clone();
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
