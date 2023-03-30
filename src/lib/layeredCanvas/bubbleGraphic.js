@@ -4,12 +4,12 @@ import { QuickHull } from "./quickHull.js"
 export const bubbleOptionSets = {
   "rounded": {},
   "square": {},
-  "ellipse": {"angleVector": {hint: "フキダシ",icon:"tail"}},
+  "ellipse": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "concentration": {},
   "polygon": {},
   "strokes": {},
   "double-strokes": {},
-  "harsh": {},
+  "harsh": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "harsh-curve": {},
   "soft": {},
   "none": {},
@@ -93,6 +93,12 @@ function drawHarshBubble(context, seed, rect, opts) {
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, rect, 10);
   const points = subdividedPointsWithBump(rawPoints, bump);
+  if (opts?.angleVector) {
+    const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
+    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const tailIndex = getNearestIndex(points, v);
+    points[tailIndex] = v;
+  }
 
   function makePath() {
     for (let i = 0; i < points.length; i++) {
@@ -404,4 +410,17 @@ function finishTrivialPath(context) {
       context.clip();
       break;
   }
+}
+
+function getNearestIndex(points, v) {
+  let minDist = Infinity;
+  let minIndex = -1;
+  for (let i = 0; i < points.length; i++) {
+    const dist = Math.hypot(points[i][0] - v[0], points[i][1] - v[1]);
+    if (dist < minDist) {
+      minDist = dist;
+      minIndex = i;
+    }
+  }
+  return minIndex;
 }
