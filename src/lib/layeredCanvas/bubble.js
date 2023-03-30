@@ -35,7 +35,7 @@ export class Bubble {
     b.fillColor = this.fillColor;
     b.strokeColor = this.strokeColor;
     b.strokeWidth = this.strokeWidth;
-    b.image = this.image;
+    b.image = this.image ? {...this.image} : null;
     b.options = {...this.options};
     return b;
   }
