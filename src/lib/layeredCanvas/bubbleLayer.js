@@ -72,13 +72,13 @@ export class BubbleLayer extends Layer {
     const [x, y] = p0;
     const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
     ctx.bubbleDrawMethod = "fill";
-    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
+    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.options);
 
     // 画像描画
     if (bubble.image) {
       ctx.save();
       ctx.bubbleDrawMethod = "clip";
-      drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape);
+      drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.options);
       const img = bubble.image;
       let iw = img.image.width * img.scale[0];
       let ih = img.image.height * img.scale[1];
