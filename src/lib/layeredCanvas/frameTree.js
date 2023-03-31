@@ -385,7 +385,7 @@ export function findBorderAt(layout, position) {
         for (let i = 1; i < layout.children.length; i++) {
             const bt = makeBorderTrapezoid(layout, i);
             if (isPointInTrapezoid([x, y], bt)) {
-                return { layout, index: i };
+                return { layout, index: i, trapezoid: bt };
             }
         }
         for (let i = 0; i < layout.children.length; i++) {

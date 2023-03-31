@@ -10,22 +10,23 @@ export class FrameLayer extends Layer {
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onCommit = onCommit;
-    this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32]);
-    this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32]);
-    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",[0, 0],[32, 32]);
-    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",[0, 0],[32, 32]);
-    this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32]);
-    this.scaleIcon = new ClickableIcon("scale.png", [0, 0], [32, 32]);
-    this.dropIcon = new ClickableIcon("drop.png", [0, 0], [32, 32]);
-    this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png", [0, 0], [32, 32]);
-    this.flipVerticalIcon = new ClickableIcon("flip-vertical.png", [0, 0], [32, 32]);
-    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", [0, 0], [32, 32]);
-    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", [0, 0], [32, 32]);
+
+    this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32], "横に分割", () => this.interactable && this.focusedLayout && !this.pointerHandler);
+    this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32], "縦に分割", () => this.interactable && this.focusedLayout && !this.pointerHandler);
+    this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32], "削除", () => this.interactable && this.focusedLayout && !this.pointerHandler);
+
+    this.scaleIcon = new ClickableIcon("scale.png", [0, 0], [32, 32], "スケール", () => this.interactable && this.focusedLayout);
+    this.dropIcon = new ClickableIcon("drop.png", [0, 0], [32, 32], "画像除去", () => this.interactable && this.focusedLayout && !this.pointerHandler);
+    this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png", [0, 0], [32, 32], "左右反転", () => this.interactable && this.focusedLayout?.element.image && !this.pointerHandler);
+    this.flipVerticalIcon = new ClickableIcon("flip-vertical.png", [0, 0], [32, 32], "上下反転", () => this.interactable && this.focusedLayout?.element.image && !this.pointerHandler);
+
+    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",[0, 0],[32, 32], "幅を変更", () => this.interactable && this.focusedBorder?.layout.dir === 'h');
+    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", [0, 0], [32, 32], "傾き", () => this.interactable && this.focusedBorder?.layout.dir === 'h');
+    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",[0, 0],[32, 32], "幅を変更", () => this.interactable && this.focusedBorder?.layout.dir === 'v');
+    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", [0, 0], [32, 32], "傾き", () => this.interactable && this.focusedBorder?.layout.dir === 'v');
+
     this.transparentPattern = new Image();
-    this.transparentPattern.src = new URL(
-      "../../assets/transparent.png",
-      import.meta.url
-    ).href;
+    this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
   }
 
   render(ctx) {
@@ -33,7 +34,7 @@ export class FrameLayer extends Layer {
 
     // fill background
     ctx.fillStyle = "rgb(255,255,255, 1)";
-    ctx.fillRect(0, 0, size[0], size[1]);
+    ctx.fillRect(0, 0, ...size);
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
     const inheritanceContext = { bgColor: "transparent"};
@@ -47,47 +48,27 @@ export class FrameLayer extends Layer {
       const marginRect = makeMarginRect(newLayout, this.focusedMargin.handle);
 
       ctx.fillStyle = "rgba(0,0,200,0.7)";
-      ctx.fillRect(
-        marginRect[0],
-        marginRect[1],
-        marginRect[2] - marginRect[0],
-        marginRect[3] - marginRect[1]
-      );
+      ctx.fillRect(marginRect[0],marginRect[1],marginRect[2] - marginRect[0],marginRect[3] - marginRect[1]);
     }
 
     if (this.focusedBorder) {
-      const newLayout = findLayoutOf(layout, this.focusedBorder.layout.element);
-      const bt = makeBorderTrapezoid(newLayout, this.focusedBorder.index);
-
       ctx.fillStyle = "rgba(0,200,200,0.7)";
       ctx.beginPath();
-      this.trapezoidPath(ctx, bt);
+      this.trapezoidPath(ctx, this.focusedBorder.trapezoid);
       ctx.fill();
+    }
       
-      if (this.focusedBorder.layout.dir === "v") {
-        this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5 - 16];
-        this.slantVerticalIcon.render(ctx);
-        this.expandVerticalIcon.position = [bt.topRight[0] - 32,(bt.topRight[1] + bt.bottomRight[1]) * 0.5 - 16];
-        this.expandVerticalIcon.render(ctx);
-      } else {
-        this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5 - 16,bt.topLeft[1]];
-        this.slantHorizontalIcon.render(ctx);
-        this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5 - 16,bt.bottomLeft[1] - 32];
-        this.expandHorizontalIcon.render(ctx);
-      }
-    }
-
-    if (this.focusedLayout && !this.pointerHandler) {
-      this.splitHorizontalIcon.render(ctx);
-      this.splitVerticalIcon.render(ctx);
-      this.deleteIcon.render(ctx);
-      if (this.focusedLayout.element.image) {
-        this.scaleIcon.render(ctx);
-        this.dropIcon.render(ctx);
-        this.flipHorizontalIcon.render(ctx);
-        this.flipVerticalIcon.render(ctx);
-      }
-    }
+    this.slantVerticalIcon.render(ctx);
+    this.expandVerticalIcon.render(ctx);
+    this.slantHorizontalIcon.render(ctx);
+    this.expandHorizontalIcon.render(ctx);
+    this.splitHorizontalIcon.render(ctx);
+    this.splitVerticalIcon.render(ctx);
+    this.deleteIcon.render(ctx);
+    this.scaleIcon.render(ctx);
+    this.dropIcon.render(ctx);
+    this.flipHorizontalIcon.render(ctx);
+    this.flipVerticalIcon.render(ctx);
   }
 
   renderElement(ctx, layout, inheritanceContext) {
@@ -206,28 +187,12 @@ export class FrameLayer extends Layer {
     const border = findBorderAt(layout, point);
     if (border) {
       this.focusedBorder = border;
+      this.updateBorderIconPositions(border);
       this.redraw();
-      if (this.interactable) {
-        // TODO: 整理する
-        if (border.layout.dir === "v") {
-          if (this.slantVerticalIcon.contains(point)) {
-            this.hint(this.slantVerticalIcon.hintPosition, "傾き");
-            return;
-          } else if (this.expandVerticalIcon.contains(point)) {
-            this.hint(this.expandVerticalIcon.hintPosition, "幅を変更");
-            return;
-          }
-        } else {
-          if (this.slantHorizontalIcon.contains(point)) {
-            this.hint(this.slantHorizontalIcon.hintPosition, "傾き");
-            return;
-          } else if (this.expandHorizontalIcon.contains(point)) {
-            this.hint(this.expandHorizontalIcon.hintPosition, "幅を変更");
-            return;
-          }
-        }
+
+      if (!this.hintIfContains(point, [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon])) {
+        this.hint(point, null);
       }
-      this.hint(point, null);
       return;
     } 
 
@@ -245,40 +210,15 @@ export class FrameLayer extends Layer {
       this.flipVerticalIcon.position = [origin[0] + 72, origin[1] + size[1] - 32,];
       this.redraw();
 
-      if (this.interactable) {
-        // TODO: 整理する
-        if (this.splitHorizontalIcon.contains(point)) {
-          this.hint(this.splitHorizontalIcon.hintPosition, "横に分割");
-        } else if (this.splitVerticalIcon.contains(point)) {
-          this.hint(this.splitVerticalIcon.hintPosition, "縦に分割");
-        } else if (this.deleteIcon.contains(point)) {
-          this.hint(this.deleteIcon.hintPosition, "削除");
-        } else if (this.scaleIcon.contains(point)) {
-          if (this.focusedLayout.element.image) {
-            this.hint(this.scaleIcon.hintPosition, "ドラッグでスケール");
-          }
-        } else if (this.dropIcon.contains(point)) {
-          if (this.focusedLayout.element.image) {
-            this.hint(this.dropIcon, "画像除去");
-          }
-        } else if (this.flipHorizontalIcon.contains(point)) {
-          if (this.focusedLayout.element.image) {
-            this.hint(this.flipHorizontalIcon.hintPosition, "左右反転");
-          }
-        } else if (this.flipVerticalIcon.contains(point)) {
-          if (this.focusedLayout.element.image) {
-            this.hint(this.flipVerticalIcon.hintPosition, "上下反転");
-          }
-        } else if (this.focusedLayout.element.image) {
-          this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール"
-          );
-        } else {
-          this.hint([x, origin[1] + 16], "画像をドロップ");
-        }
+      if (this.hintIfContains(point, [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon])) {
+      } else if (this.focusedLayout.element.image) {
+        this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール");
       } else {
-        this.hint(point, null);
+        this.hint([x, origin[1] + 16], "画像をドロップ");
       }
+      return;
     }
+    this.hint(point, null);
   }
 
   accepts(point) {
@@ -304,6 +244,7 @@ export class FrameLayer extends Layer {
     }
 
     const border = findBorderAt(layout, point);
+    this.focusedBorder = border;
     if (border) {
       return { border };
     }
@@ -373,19 +314,18 @@ export class FrameLayer extends Layer {
         this.focusedLayout = null;
         this.redraw();
       }
-      if (layoutElement.element.image) {
-        if (this.dropIcon.contains(point)) {
-          layoutElement.element.image = null;
-          this.redraw();
-        } else if (this.flipHorizontalIcon.contains(point)) {
-          layoutElement.element.reverse[0] *= -1;
-          this.redraw();
-        } else if (this.flipVerticalIcon.contains(point)) {
-          layoutElement.element.reverse[1] *= -1;
-          this.redraw();
-        } else {
-          return { layout: layoutElement };
-        }
+
+      if (this.dropIcon.contains(point)) {
+        layoutElement.element.image = null;
+        this.redraw();
+      } else if (this.flipHorizontalIcon.contains(point)) {
+        layoutElement.element.reverse[0] *= -1;
+        this.redraw();
+      } else if (this.flipVerticalIcon.contains(point)) {
+        layoutElement.element.reverse[1] *= -1;
+        this.redraw();
+      } else {
+        return { layout: layoutElement };
       }
     }
 
@@ -397,7 +337,7 @@ export class FrameLayer extends Layer {
       const layout = payload.layout;
       const element = layout.element;
       if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
-          this.scaleIcon.contains(p)) {
+      this.scaleIcon.contains(p)) {
         const origin = element.scale[0];
         const size = layout.size;
         yield* scale(this.canvas, p, (q) => {
@@ -454,7 +394,8 @@ export class FrameLayer extends Layer {
       const t = balance * rawSum;
       c0.rawSize = t - rawSpacing * 0.5;
       c1.rawSize = rawSum - t - rawSpacing * 0.5;
-      this.constraintTree(border.layout);
+      this.updateBorder(border);
+      this.constraintRecursive(border.layout);
       this.redraw();
     }
 
@@ -472,7 +413,8 @@ export class FrameLayer extends Layer {
       const op = p[dir] - s[dir];
       element.divider.spacing = Math.max(0, rawSpacing + op * factor * 0.1);
       element.calculateLengthAndBreadth();
-      this.constraintTree(border.layout);
+      this.updateBorder(border);
+      this.constraintRecursive(border.layout);
       this.redraw();
     }
 
@@ -488,7 +430,8 @@ export class FrameLayer extends Layer {
     while ((p = yield)) {
       const op = p[dir] - s[dir];
       element.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
-      this.constraintTree(border.layout); // 前後だけ
+      this.updateBorderTrapezoid(border);
+      this.constraintRecursive(border.layout);
       this.redraw();
     }
 
@@ -543,7 +486,7 @@ export class FrameLayer extends Layer {
       this.getCanvasSize(),
       [0, 0]
     );
-    this.constraintAllRecursive(layout);
+    this.constraintRecursive(layout);
   }
 
   constraintTree(layout) {
@@ -552,13 +495,13 @@ export class FrameLayer extends Layer {
       layout.size,
       layout.origin
     );
-    this.constraintAllRecursive(newLayout);
+    this.constraintRecursive(newLayout);
   }
 
-  constraintAllRecursive(layout) {
+  constraintRecursive(layout) {
     if (layout.children) {
       for (const child of layout.children) {
-        this.constraintAllRecursive(child);
+        this.constraintRecursive(child);
       }
     } else if (layout.element && layout.element.image) {
       this.constraintLeaf(layout);
@@ -622,4 +565,35 @@ export class FrameLayer extends Layer {
     this.constraintLeaf(layoutlet);
     this.redraw();
   }
+
+  hintIfContains(p, a) {
+    for (let e of a) {
+      if (e.hintIfContains(p, this.hint)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  updateBorder(border) {
+    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getCanvasSize(),[0, 0]);
+    const newLayout = findLayoutOf(rootLayout, border.layout.element);
+    border.layout = newLayout;
+    this.updateBorderTrapezoid(border);
+  }
+
+  updateBorderTrapezoid(border) {
+    const bt = makeBorderTrapezoid(border.layout, border.index);
+    border.trapezoid = bt;
+    this.updateBorderIconPositions(border);
+  }
+
+  updateBorderIconPositions(border) {
+    const bt = border.trapezoid;
+    this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5 - 16];
+    this.expandVerticalIcon.position = [bt.topRight[0] - 32,(bt.topRight[1] + bt.bottomRight[1]) * 0.5 - 16];
+    this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5 - 16,bt.topLeft[1]];
+    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5 - 16,bt.bottomLeft[1] - 32];
+  }
+
 }

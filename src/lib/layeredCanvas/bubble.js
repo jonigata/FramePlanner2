@@ -1,3 +1,6 @@
+import { bubbleOptionSets } from "./bubbleGraphic";
+import { v4 as uuidv4 } from 'uuid';
+
 const minimumBubbleSize = 72;
 const threshold = 10;
 
@@ -16,8 +19,11 @@ export class Bubble {
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
     this.strokeWidth = 1;
+    this.uuid = uuidv4();
+    this.parent = null;
+
     this.image = null;
-    this.options = {};
+    this.optionContext = {};
   }
 
   clone() {
@@ -35,17 +41,11 @@ export class Bubble {
     b.fillColor = this.fillColor;
     b.strokeColor = this.strokeColor;
     b.strokeWidth = this.strokeWidth;
+    b.uuid = uuidv4();
+    b.parent = null;
+
     b.image = this.image ? {...this.image} : null;
-    b.options = {...this.options};
     return b;
-  }
-
-  static normalizedPosition(canvasSize, p) {
-    return [p[0] / canvasSize[0], p[1] / canvasSize[1]];
-  }
-
-  static denormalizedPosition(canvasSize, p) {
-    return [p[0] * canvasSize[0], p[1] * canvasSize[1]];
   }
 
   static compile(canvasSize, json) {
@@ -63,7 +63,8 @@ export class Bubble {
     b.fillColor = json.fillColor;
     b.strokeColor = json.strokeColor;
     b.strokeWidth = json.strokeWidth;
-    b.options = json.options;
+    b.uuid = json.uuid;
+    b.parent = json.parent;
     return b;
   }
 
@@ -82,7 +83,8 @@ export class Bubble {
       fillColor: b.fillColor,
       strokeColor: b.strokeColor,
       strokeWidth: b.strokeWidth,
-      options: b.options,
+      uuid: b.uuid,
+      parent: b.parent,
     };
   }
 
@@ -176,12 +178,40 @@ export class Bubble {
   regularize() {
     [this.p0, this.p1] = this.regularized();
   }
+
+  regularizedPositionAndSize() {
+    const [p0, p1] = this.regularized();
+    const [x, y] = p0;
+    const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
+    return [x, y, w, h];
+  }
   
+  linkTo(b) {
+    this.parent = b.uuid;
+  }
+
+  linkedTo(b) {
+    return this.parent === b.uuid || b.parent === this.uuid;
+  }
+
+  static normalizedPosition(canvasSize, p) {
+    return [p[0] / canvasSize[0], p[1] / canvasSize[1]];
+  }
+
+  static denormalizedPosition(canvasSize, p) {
+    return [p[0] * canvasSize[0], p[1] * canvasSize[1]];
+  }
+
   get center() {
     return [(this.p0[0] + this.p1[0]) / 2, (this.p0[1] + this.p1[1]) / 2];
   }
 
   get size() {
-    return [this.p1[0] - this.p0[0], this.p1[1] - this.p0[1]];
+    return [Math.abs(this.p1[0] - this.p0[0]), Math.abs(this.p1[1] - this.p0[1])];
   }
+
+  get optionSet() {
+    return bubbleOptionSets[this.shape];
+  }
+
 }

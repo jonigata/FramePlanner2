@@ -1,11 +1,11 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
-//import { unifyEllipse } from "./unifyPolygon.js";
+import * as paper from 'paper';
 
 export const bubbleOptionSets = {
   "rounded": {},
   "square": {},
-  "ellipse": {"angleVector": {hint: "しっぽ",icon:"tail"}},
+  "ellipse": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "concentration": {},
   "polygon": {},
   "strokes": {},
@@ -18,8 +18,8 @@ export const bubbleOptionSets = {
   "none": {},
 };
 
-export function drawBubble(context, seed, rect, patternName, opts) {
-  switch (patternName) {
+export function drawBubble(context, seed, rect, shape, opts) {
+  switch (shape) {
     case "rounded":
       drawRoundedBubble(context, seed, rect, opts);
       break;
@@ -60,7 +60,7 @@ export function drawBubble(context, seed, rect, patternName, opts) {
       break;
     default:
       throw new Error(
-        `Unknown bubble pattern: ${patternName}`
+        `Unknown bubble : ${shape}`
       );
   }
 }
@@ -484,3 +484,32 @@ function getNearestIndex(points, v) {
   }
   return minIndex;
 }
+
+// https://github.com/paperjs/paper.js/issues/1889
+paper.setup(new paper.Size(1, 1)); // creates a virtual canvas
+paper.view.autoUpdate = false; // disables drawing any shape automatically
+
+export function getPath([x, y, w, h], shape, opts) {
+  const [cx, cy] = [x + w/2, y + h/2];
+  switch (shape) {
+    case 'ellipse':
+      return new paper.Path.Ellipse({center: [cx, cy],radius: [w/2, h/2]});
+  }
+  return null;
+}
+
+export function drawPath(context, unified) {
+  const path = new Path2D(unified.pathData);
+  switch(context.bubbleDrawMethod) {
+    case 'fill':
+      context.fill(path);
+      break;
+    case 'stroke':
+      context.stroke(path);
+      break;
+    case 'clip':
+      context.clip(path);
+      break;
+  }
+}
+

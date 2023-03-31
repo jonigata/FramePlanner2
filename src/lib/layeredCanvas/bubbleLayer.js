@@ -1,7 +1,7 @@
-import { Layer, sequentializePointer } from "./layeredCanvas.js";
-import { initializeKeyCache, keyDownFlags } from "./keyCache.js";
+import { Layer } from "./layeredCanvas.js";
+import { keyDownFlags } from "./keyCache.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
-import { drawBubble, bubbleOptionSets } from "./bubbleGraphic";
+import { drawBubble, bubbleOptionSets, getPath, drawPath } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
 import { Bubble } from "./bubble.js";
 import { translate, scale } from "./pictureControl.js";
@@ -27,71 +27,102 @@ export class BubbleLayer extends Layer {
     this.creatingBubble = null;
     this.optionEditActive = {}
 
-    this.createBubbleIcon = new ClickableIcon("bubble.png",[4, 4],[iconSize, iconSize]);
-    this.dragIcon = new ClickableIcon("drag.png", [0, 0], [iconSize, iconSize]);
+    this.createBubbleIcon = new ClickableIcon("bubble.png",[4, 4],[iconSize, iconSize], "ドラッグで作成", () => this.interactable);
+    this.dragIcon = new ClickableIcon("drag.png", [0, 0], [iconSize, iconSize], "ドラッグで移動", () => this.interactable && this.selected);
 
-    this.zPlusIcon = new ClickableIcon("zplus.png",[0, 0],[iconSize, iconSize]);
-    this.zMinusIcon = new ClickableIcon("zminus.png",[0, 0],[iconSize, iconSize]);
-    this.removeIcon = new ClickableIcon("remove.png",[0, 0],[iconSize, iconSize]);
+    this.zPlusIcon = new ClickableIcon("zplus.png",[0, 0],[iconSize, iconSize], "フキダシ順で手前", () => this.interactable && this.selected);
+    this.zMinusIcon = new ClickableIcon("zminus.png",[0, 0],[iconSize, iconSize], "フキダシ順で奥", () => this.interactable && this.selected);
+    this.removeIcon = new ClickableIcon("remove.png",[0, 0],[iconSize, iconSize], "削除", () => this.interactable && this.selected);
 
     this.optionIcons = {};
-    this.optionIcons.tail = new ClickableIcon("tail.png",[0, 0],[iconSize, iconSize]);
+    this.optionIcons.tail = new ClickableIcon("tail.png",[0, 0],[iconSize, iconSize], "ドラッグでしっぽ", () => this.interactable && this.selected);
+    this.optionIcons.unite = new ClickableIcon("unite.png",[0, 0],[iconSize, iconSize], "ドラッグでリンク", () => this.interactable && this.selected);
   }
 
   render(ctx) {
-    if (this.interactable) {
-      this.createBubbleIcon.render(ctx);
-    }
+    // 描画
+    this.renderBubbles(ctx);
 
-    for (let bubble of this.bubbles) {
-      this.renderBubble(ctx, bubble);
-    }
+    this.createBubbleIcon.render(ctx);
+    this.dragIcon.render(ctx);
 
-    if (this.creatingBubble) {
-      this.renderBubble(ctx, this.creatingBubble);
+    this.zPlusIcon.render(ctx);
+    this.zMinusIcon.render(ctx);
+    this.removeIcon.render(ctx);
+
+    if (this.interactable && this.selected) {
+      this.drawSelectedUI(ctx, this.selected);
+      this.drawOptionHandles(ctx, this.selected);
+      this.drawOptionUI(ctx, this.selected);
     }
   }
 
-  renderBubble(ctx, bubble) {
+  renderBubbles(ctx) {
+    // 親子関係解決
+    const bubbleDic = {};
+    for (let bubble of this.bubbles) {
+      bubble.unitedPath = null;
+      bubble.children = [];
+      bubbleDic[bubble.uuid] = bubble;
+    }
+
+    for (let bubble of this.bubbles) {
+      if (bubble.parent) {
+        bubbleDic[bubble.parent].children.push(bubble);
+      }
+    }
+
+    // 結合
+    for (let bubble of this.bubbles) {
+      if (0 < bubble.children.length) {
+        bubble.unitedPath = this.uniteBubble([bubble, ...bubble.children]);
+      }
+    }
+
+    const bubbles = [...this.bubbles];
+    if (this.creatingBubble) {
+      bubbles.push(this.creatingBubble);
+    }
+
+    for (let bubble of bubbles) {
+      if (!bubble) continue;
+      this.renderBubbleBackground(ctx, bubble);
+    }
+
+    for (let bubble of bubbles) {
+      if (!bubble) continue;
+      this.renderBubbleForeground(ctx, bubble);
+    }
+  }
+
+  renderBubbleBackground(ctx, bubble) {
     // fill/stroke設定
-    if (bubble.hasEnoughSize()) {
-      ctx.fillStyle = bubble.fillColor;
-    } else {
-      ctx.fillStyle = "rgba(255, 128, 0, 0.9)";
-    }
-    if (0 < bubble.strokeWidth) {
-        ctx.strokeStyle = bubble.strokeColor;
-    } else {
-        ctx.strokeStyle = "rgba(0, 0, 0, 0)";
-    }
+    ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
+    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
     ctx.lineWidth = bubble.strokeWidth;
 
     // shape背景描画
-    // create/resize終わるまでは入れ替わっている可能性がある
-    const [p0, p1] = bubble.regularized();
-    const [x, y] = p0;
-    const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
-    ctx.bubbleDrawMethod = "fill";
-    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.options);
+    this.drawBubble(ctx, 'fill', bubble);
 
     // 画像描画
     if (bubble.image) {
       ctx.save();
-      ctx.bubbleDrawMethod = "clip";
-      drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.options);
+      this.drawBubble(ctx, 'clip', bubble);
+
+      const [x, y, w, h] = bubble.regularizedPositionAndSize();
       const img = bubble.image;
       let iw = img.image.width * img.scale[0];
       let ih = img.image.height * img.scale[1];
       let ix = x + w * 0.5 - iw * 0.5 + img.translation[0];
       let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
-      ctx.clipping = undefined;
       ctx.restore();
     }
+  }
 
+  renderBubbleForeground(ctx, bubble) {
     // shape枠描画
-    ctx.bubbleDrawMethod = "stroke";
-    drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.options);
+    this.drawBubble(ctx, 'stroke', bubble);
 
     // テキスト描画
     if (bubble.text) {
@@ -103,67 +134,48 @@ export class BubbleLayer extends Layer {
       const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
 
+      const [cx, cy] = bubble.center;
+      const [w, h] = bubble.size;
       if (bubble.direction == 'v') {
         const textMaxHeight = h * 0.85;
-        const m = measureVerticalText(
-            ctx,
-            textMaxHeight,
-            bubble.text,
-            baselineSkip,
-            charSkip
-        );
+        const m = measureVerticalText(ctx,textMaxHeight,bubble.text,baselineSkip,charSkip);
         const tw = m.width;
         const th = m.height;
-        const tx = p0[0] + (w - tw) / 2;
-        const ty = p0[1] + (h - th) / 2;
-        drawVerticalText(
-            ctx,
-            { x: tx, y: ty, width: tw, height: th },
-            bubble.text,
-            baselineSkip,
-            charSkip
-        );
+        const tx = cx - tw * 0.5;
+        const ty = cy - th * 0.5;
+        drawVerticalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,charSkip);
       } else {
         const textMaxWidth = w * 0.85;
-        const m = measureHorizontalText(
-          ctx,
-          textMaxWidth,
-          bubble.text,
-          baselineSkip);
+        const m = measureHorizontalText(ctx,textMaxWidth,bubble.text,baselineSkip);
         const tw = m.width;
         const th = m.height;
-        const tx = p0[0] + (w - tw) / 2;
-        const ty = p0[1] + (h - th) / 2;
+        const tx = cx - tw * 0.5;
+        const ty = cy - th * 0.5;
         // ctx.strokeRect(tx, ty, tw, th);
-        drawHorizontalText(
-          ctx,
-          { x: tx, y: ty, width: tw, height: th },
-          bubble.text,
-          baselineSkip,
-          m);
+        drawHorizontalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,m);
       }
     }
+  }
 
-    if (!this.interactable) {
-      return;
-    }
+  drawBubble(ctx, method, bubble) {
+    const [x, y, w, h] = bubble.regularizedPositionAndSize();
 
-    if (bubble !== this.selected) {
-      return;
+    ctx.bubbleDrawMethod = method; // 行儀が悪い
+    if (bubble.unitedPath) {
+      drawPath(ctx, bubble.unitedPath);
+    } else if (!bubble.parent) {
+      drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.optionContext);
     }
+  }
+
+  drawSelectedUI(ctx, bubble) {
+    const [x, y, w, h] = bubble.regularizedPositionAndSize();
 
     // ハンドル枠描画
     ctx.save();
     ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
     ctx.strokeRect(x, y, w, h);
     ctx.restore();
-
-    // ハンドルアイコン描画
-    this.dragIcon.render(ctx);
-    this.zMinusIcon.render(ctx);
-    this.zPlusIcon.render(ctx);
-    this.removeIcon.render(ctx);
-    this.drawOptionHandles(ctx, bubble);
 
     // 操作対象のハンドルを強調表示
     if (this.handle) {
@@ -175,19 +187,21 @@ export class BubbleLayer extends Layer {
       }
       ctx.restore();
     }
-
-    // option用UI
-    this.drawOptionUI(ctx, bubble);
   }
 
   drawOptionHandles(ctx, bubble) {
-    const options = bubbleOptionSets[bubble.shape];
+    const optionSet = bubble.optionSet;
     const [cx,cy] = bubble.center;
-    for (const option of Object.keys(options)) {
+    for (const option of Object.keys(optionSet)) {
+      let icon;
       switch (option) {
         case "angleVector":
-          const icon = this.optionIcons[options.angleVector.icon];
+          icon = this.optionIcons[optionSet.angleVector.icon];
           icon.position = [cx-iconSize/2, cy-iconSize/2];
+          icon.render(ctx);
+        case "link":
+          icon = this.optionIcons[optionSet.link.icon];
+          icon.position = [cx-iconSize/2, bubble.p1[1]-iconSize];
           icon.render(ctx);
       }
     }
@@ -200,7 +214,23 @@ export class BubbleLayer extends Layer {
       ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + bubble.options.angleVector[0], cy + bubble.options.angleVector[1]);
+      ctx.lineTo(cx + bubble.optionContext.angleVector[0], cy + bubble.optionContext.angleVector[1]);
+      ctx.stroke();
+    }
+    if (this.optionEditActive.link) {
+      ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
+      for (let b of this.bubbles) {
+        if (b === this.selected) {continue;}
+        if (!b.optionSet.link) {continue;}
+        ctx.strokeRect(...b.p0, ...b.size);
+      }
+
+      const [cx, cy] = this.optionIcons[bubble.optionSet.link.icon].center;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + bubble.optionContext.link[0], cy + bubble.optionContext.link[1]);
       ctx.stroke();
     }
   }
@@ -210,29 +240,19 @@ export class BubbleLayer extends Layer {
       return false;
     }
 
-    if (this.createBubbleIcon.contains(p)) {
-      this.hint(this.createBubbleIcon.hintPosition, "ドラッグでフキダシ作成");
-      return true;
+    if (this.createBubbleIcon.hintIfContains(p, this.hint)) {
+      return true;      
     }
 
-    // edge selection, top/bottom/left/right
     if (this.selected) {
       this.handle = this.selected.getHandleAt(p);
 
-      if (this.removeIcon.contains(p)) {
-        this.handle = null;
-        this.hint(this.removeIcon.hintPosition, "削除");
-      } else if (this.dragIcon.contains(p)) {
-        this.handle = null;
-        this.hint(this.dragIcon.hintPosition, "ドラッグで移動");
-      } else if (this.zMinusIcon.contains(p)) {
-        this.handle = null;
-        this.hint(this.zMinusIcon.hintPosition, "フキダシ順で手前に");
-      } else if (this.zPlusIcon.contains(p)) {
-        this.handle = null;
-        this.hint(this.zPlusIcon.hintPosition, "フキダシ順で奥に");
-      } else if (this.hintOptionIcon(this.selected.shape, p)) {
-        this.handle = null;
+      if (this.removeIcon.hintIfContains(p, this.hint) ||
+          this.dragIcon.hintIfContains(p, this.hint) ||
+          this.zMinusIcon.hintIfContains(p, this.hint) ||
+          this.zPlusIcon.hintIfContains(p, this.hint) ||
+          this.hintOptionIcon(this.selected.shape, p)) {
+            this.handle = null;
       } else if (this.selected.contains(p)) {
         this.hint(p, null);
       }
@@ -247,10 +267,7 @@ export class BubbleLayer extends Layer {
       if (bubble.contains(p)) {
         const [x0, y0] = bubble.p0;
         const [x1, y1] = bubble.p1;
-        this.hint(
-          [(x0 + x1) / 2, y0 - 20],
-          "Alt+ドラッグで移動、クリックで選択"
-        );
+        this.hint([(x0 + x1) / 2, y0 - 20],"Alt+ドラッグで移動、クリックで選択");
         return true;
       }
     }
@@ -311,15 +328,18 @@ export class BubbleLayer extends Layer {
   removeBubble(bubble) {
     const index = this.bubbles.indexOf(bubble);
     this.bubbles.splice(index, 1);
+    for (let b of this.bubbles) {
+      if (b.parent === bubble.uuid) {
+        b.parent = null;
+      }
+    }
     this.unfocus();
   }
   
   hintOptionIcon(shape, p) {
-    const options = bubbleOptionSets[shape];
-    for (const option of Object.keys(options)) {
-      const icon = this.optionIcons[options[option].icon];
-      if (icon.contains(p)) {
-        this.hint(icon.hintPosition, options[option].hint);
+    const optionSet = bubbleOptionSets[shape];
+    for (const option of Object.keys(optionSet)) {
+      if (this.optionIcons[optionSet[option].icon].hintIfContains(p, this.hint)) {
         return true;
       }
     }
@@ -327,9 +347,9 @@ export class BubbleLayer extends Layer {
   }
 
   isOnOptionIcon(shape, p) {
-    const options = bubbleOptionSets[shape];
-    for (const option of Object.keys(options)) {
-      const icon = this.optionIcons[options[option].icon];
+    const optionSet = bubbleOptionSets[shape];
+    for (const option of Object.keys(optionSet)) {
+      const icon = this.optionIcons[optionSet[option].icon];
       if (icon.contains(p)) {
         return true;
       }
@@ -364,8 +384,11 @@ export class BubbleLayer extends Layer {
         return { action: "z-minus", bubble };
       } else if (this.zPlusIcon.contains(point)) {
         return { action: "z-plus", bubble };
-      } else if (this.isOnOptionIcon(this.selected.shape, point)) {
-        return { action: "options-angleVector", bubble }; // TODO: 雑
+      } else {
+        const icon = this.getOptionIconAt(bubble.shape, point);
+        if (icon) {
+          return { action: "options-" + icon, bubble };
+        }
       }
 
       const handle = bubble.getHandleAt(point);
@@ -384,18 +407,13 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of [...this.bubbles].reverse()) {
       if (bubble.contains(point)) {
-        console.log("A");
         if (keyDownFlags["KeyQ"]) {
-            console.log("B");
           return { action: "remove", bubble };
         } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
-        console.log("C");
           return { action: "move", bubble };
         } else {
-        console.log("D");
           return { action: "select", bubble };
         }
-        console.log("E");
       }
       const handle = bubble.getHandleAt(point);
       if (handle) {
@@ -403,6 +421,17 @@ export class BubbleLayer extends Layer {
       }
     }
 
+    return null;
+  }
+
+  getOptionIconAt(shape, p) {
+    const optionSet = bubbleOptionSets[shape];
+    for (const option of Object.keys(optionSet)) {
+      const icon = this.optionIcons[optionSet[option].icon];
+      if (icon.contains(p)) {
+        return option;
+      }
+    }
     return null;
   }
 
@@ -416,7 +445,6 @@ export class BubbleLayer extends Layer {
   }
 
   async *pointer(dragStart, payload) {
-    console.log(payload);
     this.hint(dragStart, null);
 
     if (payload.action === "create") {
@@ -547,6 +575,8 @@ export class BubbleLayer extends Layer {
       });
     } else if (payload.action === "options-angleVector") {
       yield* this.optionsAngleVector(dragStart, payload.bubble);
+    } else if (payload.action === "options-link") {
+      yield* this.optionsLink(dragStart, payload.bubble);
     }
   }
 
@@ -595,10 +625,82 @@ export class BubbleLayer extends Layer {
     this.optionEditActive.angleVector = true;
     const q = p;
     while (p = yield) {
-      bubble.options.angleVector = [p[0] - q[0], p[1] - q[1]];
+      bubble.optionContext.angleVector = [p[0] - q[0], p[1] - q[1]];
       this.redraw();
     }
     this.optionEditActive.angleVector = false;
+  }
+
+  *optionsLink(p, bubble) {
+    console.log("optionsLink");
+    this.optionEditActive.link = true;
+    const q = p;
+    let drop = null;
+    while (p = yield) {
+      bubble.optionContext.link = [p[0] - q[0], p[1] - q[1]];
+      this.redraw();
+      drop = p;
+    }
+
+    if (drop) {
+      for (let i = this.bubbles.length - 1; 0 <= i; i--) {
+        const b = this.bubbles[i];
+        if (b !== bubble && b.contains(drop)) {
+          this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
+          this.redraw();
+          break;
+        }
+      }
+    }
+
+    this.optionEditActive.link = false;
+  }
+
+  uniteBubble(bubbles) {
+    let path = null;
+    for (let bubble of bubbles) {
+      const [p0, p1] = bubble.regularized();
+      const [x, y] = p0;
+      const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
+      const path2 = getPath([x, y, w, h], bubble.shape, bubble.optionContext);
+      path = path ? path.unite(path2) : path2;
+    }
+    return path;
+  }
+
+  getGroup(bubble) {
+    const group = [bubble];
+
+    let modified = true;
+    while (modified) {
+      modified = false;
+      for (let i = 0; i < group.length; i++) {
+        const b = group[i];
+        for (let j = 0; j < this.bubbles.length; j++) {
+          const b2 = this.bubbles[j];
+          if (b2.linkedTo(b) && !group.includes(b2)) {
+            group.push(b2);
+            modified = true;
+          }
+        }
+      }
+    }
+
+    return group;
+  }
+
+  regularizeGroup(g) {
+    // parent1つに集約する
+    const parent = g[0];
+    for (let i = 1; i < g.length; i++) {
+      const child = g[i];
+      child.linkTo(parent);
+    }
+  }
+
+  mergeGroup(g1, g2) {
+    const g = g1.concat(g2);
+    this.regularizeGroup(g);
   }
 
 }
