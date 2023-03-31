@@ -10,7 +10,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { tick } from 'svelte';
-  
+
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
   import verticalIcon from './assets/vertical.png';
@@ -94,6 +94,7 @@
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}}>
     <div class="title-bar variant-filled-surface rounded-container-token">
       <img class="title-image" src={bubbleIcon} alt="title"/>
+      <div class="bubble-size">{Math.round(bubble.size[0])}x{Math.round(bubble.size[1])}</div>
       {#if pinned}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <img class="pin-image" src={whitePinIcon} alt="pin" on:click={resetPin}/>
@@ -189,6 +190,14 @@
     top: 4px;
     position: absolute;
     cursor: pointer;
+  }
+  .bubble-size {
+    width: 80px;
+    height: 24px;
+    right: 32px;
+    top: 12px;
+    font-size: 12px;
+    position: absolute;
   }
   .textarea {
     flex: 1;
