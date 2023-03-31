@@ -207,6 +207,26 @@ export class FrameLayer extends Layer {
     if (border) {
       this.focusedBorder = border;
       this.redraw();
+      if (this.interactable) {
+        // TODO: 整理する
+        if (border.layout.dir === "v") {
+          if (this.slantVerticalIcon.contains(point)) {
+            this.hint(this.slantVerticalIcon.hintPosition, "傾き");
+            return;
+          } else if (this.expandVerticalIcon.contains(point)) {
+            this.hint(this.expandVerticalIcon.hintPosition, "幅を変更");
+            return;
+          }
+        } else {
+          if (this.slantHorizontalIcon.contains(point)) {
+            this.hint(this.slantHorizontalIcon.hintPosition, "傾き");
+            return;
+          } else if (this.expandHorizontalIcon.contains(point)) {
+            this.hint(this.expandHorizontalIcon.hintPosition, "幅を変更");
+            return;
+          }
+        }
+      }
       this.hint(point, null);
       return;
     } 
@@ -223,6 +243,8 @@ export class FrameLayer extends Layer {
       this.dropIcon.position = [origin[0], origin[1] + size[1] - 32];
       this.flipHorizontalIcon.position = [origin[0] + 48, origin[1] + size[1] - 32];
       this.flipVerticalIcon.position = [origin[0] + 72, origin[1] + size[1] - 32,];
+      this.redraw();
+
       if (this.interactable) {
         // TODO: 整理する
         if (this.splitHorizontalIcon.contains(point)) {
@@ -248,16 +270,14 @@ export class FrameLayer extends Layer {
             this.hint(this.flipVerticalIcon.hintPosition, "上下反転");
           }
         } else if (this.focusedLayout.element.image) {
-          this.hint(
-            [x, origin[1] + 16],
-            "ドラッグで移動、Ctrl+ドラッグでスケール"
+          this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール"
           );
         } else {
           this.hint([x, origin[1] + 16], "画像をドロップ");
         }
+      } else {
+        this.hint(point, null);
       }
-      this.hint(point, null);
-      this.redraw();
     }
   }
 
