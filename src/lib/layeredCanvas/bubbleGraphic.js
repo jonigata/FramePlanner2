@@ -1,5 +1,6 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
+//import { unifyEllipse } from "./unifyPolygon.js";
 
 export const bubbleOptionSets = {
   "rounded": {},
@@ -252,6 +253,8 @@ function drawEllipseBubble(context, seed, rect, opts) {
   }
   context.closePath();
   finishTrivialPath(context);
+
+//  unifyEllipse(context);
 }
 
 function vectorToEllipseAngle(rx, ry, vx, vy) {

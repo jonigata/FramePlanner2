@@ -7,4 +7,7 @@ export default defineConfig({
     minify: false,
   },
   plugins: [svelte()],
+  optimizeDeps: {
+    include: ['paper'],
+  },
 })
