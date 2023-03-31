@@ -1,4 +1,4 @@
-import { convertPointFromNodeToPage, convertPointFromPageToNode } from "./convertPoint";
+import { convertPointFromPageToNode } from "./convertPoint";
 
 export class LayeredCanvas {
     constructor(c, onHint) {
@@ -14,6 +14,7 @@ export class LayeredCanvas {
         this.canvas.addEventListener('dragover', this.handleDragOver.bind(this));
         this.canvas.addEventListener('drop', this.handleDrop.bind(this));
         this.canvas.addEventListener('dblclick', this.handleDoubleClick.bind(this));
+        document.addEventListener('keydown', this.handleKeyDown.bind(this));
 
         this.layers = [];
         this.onHint = onHint;
@@ -24,14 +25,6 @@ export class LayeredCanvas {
     }
 
     cleanup() {
-        // TODO: bind(this)のところがおかしい、バインドを保持しておく必要がある
-        this.canvas.removeEventListener('pointerdown', this.handlePointerDown.bind(this));
-        this.canvas.removeEventListener('pointermove', this.handlePointerMove.bind(this));
-        this.canvas.removeEventListener('pointerup', this.handlePointerUp.bind(this));
-        this.canvas.removeEventListener('pointerleave', this.handlePointerLeave.bind(this));
-        this.canvas.removeEventListener('dragover', this.handleDragOver.bind(this));
-        this.canvas.removeEventListener('drop', this.handleDrop.bind(this));
-        this.canvas.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
     }
 
     getCanvasSize() {
@@ -148,6 +141,21 @@ export class LayeredCanvas {
             }
         }
     }
+
+    handleKeyDown(event) {
+        if (!this.pointerCursor || !this.isPointerOnCanvas(this.pointerCursor)) {
+            return;
+        }
+
+        for (let i = this.layers.length - 1; i >= 0; i--) {
+            const layer = this.layers[i];
+            if (layer.keyDown(event)) {
+                event.preventDefault();
+                this.redrawIfRequired();
+                break;
+            }
+        }
+    }
       
     render() {
         for (let i = 0; i < this.layers.length; i++) {
@@ -240,4 +248,5 @@ export class Layer {
     render(ctx) {}
     dropped(image, position) { return false; }
     doubleClicked(position) { return false; }
+    keyDown(event) { return false; }
 }

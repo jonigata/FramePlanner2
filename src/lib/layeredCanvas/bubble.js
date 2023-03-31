@@ -180,4 +180,8 @@ export class Bubble {
   get center() {
     return [(this.p0[0] + this.p1[0]) / 2, (this.p0[1] + this.p1[1]) / 2];
   }
+
+  get size() {
+    return [this.p1[0] - this.p0[0], this.p1[1] - this.p0[1]];
+  }
 }

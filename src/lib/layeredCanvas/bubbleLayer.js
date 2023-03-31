@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer } from "./layeredCanvas.js";
-import { keyDownFlags } from "./keyCache.js";
+import { initializeKeyCache, keyDownFlags } from "./keyCache.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
 import { drawBubble, bubbleOptionSets } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
@@ -256,6 +256,63 @@ export class BubbleLayer extends Layer {
     }
     return false;
   }
+
+  keyDown(event) {
+    if (event.code === "KeyX" && event.ctrlKey) {
+      console.log("cut");
+      this.copyBubble();
+      this.removeBubble(this.selected);
+      return true;
+    }
+    if (event.code === "KeyC" && event.ctrlKey) {
+      console.log("copy");
+      this.copyBubble();
+      return true;
+    }
+    if (event.code === "KeyV" && event.ctrlKey) {
+      console.log("paste");
+      this.pasteBubble();
+      return true;
+    }
+    return false;
+  }
+
+  copyBubble() {
+    if (this.selected) {
+      const t = JSON.stringify(Bubble.decompile(this.getCanvasSize(), this.selected), null, 2);
+      navigator.clipboard.writeText(t).then(() => {
+        console.log("copied");
+      });
+    }
+  }
+
+  pasteBubble() {
+    navigator.clipboard.readText().then((text) => {
+      try {
+        console.log(text);
+        const b = Bubble.compile(this.getCanvasSize(), JSON.parse(text));
+        const size = b.size;
+        console.log(size);
+        const x = Math.random() * (this.canvas.width - size[0]);
+        const y = Math.random() * (this.canvas.height - size[1]);
+        b.p0 = [x, y];
+        b.p1 = [x + size[0], y + size[1]];
+        this.bubbles.push(b);
+        this.redraw();
+      }
+      catch (e) {
+        console.error(e);
+      }
+    }).catch(err => {
+      console.error('ユーザが拒否、もしくはなんらかの理由で失敗', err);
+    });
+  }
+
+  removeBubble(bubble) {
+    const index = this.bubbles.indexOf(bubble);
+    this.bubbles.splice(index, 1);
+    this.unfocus();
+  }
   
   hintOptionIcon(shape, p) {
     const options = bubbleOptionSets[shape];
@@ -469,9 +526,7 @@ export class BubbleLayer extends Layer {
       }
     } else if (payload.action === "remove") {
       const bubble = payload.bubble;
-      const index = this.bubbles.indexOf(bubble);
-      this.bubbles.splice(index, 1);
-      this.unfocus();
+      this.removeBubble(bubble);
       this.redraw();
     } else if (payload.action === "image-move") {
       const bubble = payload.bubble;
@@ -512,7 +567,7 @@ export class BubbleLayer extends Layer {
         return;
       }
     }
-    
+
     const bubble = this.defaultBubble.clone();
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
