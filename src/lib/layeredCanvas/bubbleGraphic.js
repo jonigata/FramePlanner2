@@ -12,7 +12,7 @@ export const bubbleOptionSets = {
   "double-strokes": {},
   "harsh": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "harsh-curve": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "soft": {"angleVector": {hint: "しっぽ",icon:"tail"}},
+  "soft": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "heart" : {},
   "diamond": {},
   "none": {},
@@ -77,36 +77,6 @@ function drawPoints(context, points, color, opts) {
   }
   context.stroke();
   context.restore();
-}
-
-function drawSoftBubble(context, seed, rect, opts) {
-  const bump = Math.min(rect[2], rect[3]) / 15;
-  const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, rect, 16);
-  let points;
-  if (opts?.angleVector) {
-    const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
-    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
-    const tailIndex = getNearestIndex(rawPoints, v);
-    rawPoints[tailIndex] = v;
-    points = subdividedPointsWithBump(rawPoints, -bump, tailIndex, bump);
-  } else {
-    points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
-  }
-
-  function makePath() {
-    context.moveTo(points[0][0], points[0][1]);
-    for (let i = 0; i < points.length; i += 2) {
-      const p0 = points[i];
-      const p1 = points[i + 1];
-      const p2 = points[(i + 2) % points.length];
-      context.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
-    }
-  }
-
-  context.beginPath();
-  makePath();
-  finishTrivialPath(context);
 }
 
 function subdivideSegmentWithBump(p1, p2, bump) {
@@ -362,6 +332,8 @@ export function getPath(shape, r, opts, seed) {
       return getHarshPath(r, opts, seed);
     case 'harsh-curve':
       return getHarshCurvePath(r, opts, seed);
+    case 'soft':
+      return getSoftPath(r, opts, seed);
   }
   return null;
 }
@@ -494,6 +466,35 @@ function getHarshCurvePath(r, opts, seed) {
   return path;
 }
 
+function getSoftPath(r, opts, seed) {
+  const bump = Math.min(r[2], r[3]) / 15;
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, r, 16);
+  let points;
+  if (opts?.angleVector) {
+    const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
+    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const tailIndex = getNearestIndex(rawPoints, v);
+    rawPoints[tailIndex] = v;
+    points = subdividedPointsWithBump(rawPoints, -bump, tailIndex, bump);
+  } else {
+    points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
+  }
+
+  const path = new paper.Path();
+
+  path.moveTo(points[0][0], points[0][1]);
+  for (let i = 0; i < points.length; i += 2) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const p2 = points[(i + 2) % points.length];
+    path.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+  }
+  path.closed = true;
+
+  return path;
+}
+
 function addTrivialTail(path, r, opts) {
   if (opts?.angleVector) {
     const v = opts.angleVector;
@@ -558,6 +559,11 @@ function drawHarshBubble(context, seed, rect, opts) {
 
 function drawHarshCurveBubble(context, seed, rect, opts) {
   const path = getHarshCurvePath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawSoftBubble(context, seed, rect, opts) {
+  const path = getSoftPath(rect, opts, seed);
   drawPath(context, path);
 }
 
