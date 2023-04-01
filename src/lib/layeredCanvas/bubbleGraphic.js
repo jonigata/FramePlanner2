@@ -13,8 +13,8 @@ export const bubbleOptionSets = {
   "harsh": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "harsh-curve": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "soft": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "heart" : {},
-  "diamond": {},
+  "heart" : {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "diamond": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "none": {},
 };
 
@@ -215,39 +215,6 @@ function drawStrokesBubbleAux(context, seed, rect, double) {
   }
 }
 
-function drawHeartBubble(context, seed, rect, opts) {
-  const [x0, y0, w, h] = rect
-  const [x, y] = [x0 + w*0.5, y0 + h*0.5];
-
-  const h1 = h * -0.58;
-  const h2 = h * -0.35;
-  const h3 = h * -0.1;
-  const h4 = h * 0.1;
-  const h5 = h * 0.35;
-  const h6 = h * 0.5;
-
-  context.beginPath();
-  context.moveTo(x, y + h2);
-  context.bezierCurveTo(x - 0.1 * w, y + h1, x - 0.5 * w, y + h1, x - 0.5 * w, y + h3);
-  context.bezierCurveTo(x - 0.5 * w, y + h4, x - 0.3 * w, y + h5, x, y + h6);
-  context.bezierCurveTo(x + 0.3 * w, y + h5, x + 0.5 * w, y + h4, x + 0.5 * w, y + h3);
-  context.bezierCurveTo(x + 0.5 * w, y + h1, x + 0.1 * w, y + h1, x, y + h2);
-  finishTrivialPath(context);
-}
-
-function drawDiamondBubble(context, seed, rect, opts) {
-  const [x0, y0, w, h] = rect
-  const [x, y] = [x0 + w*0.5, y0 + h*0.5];
-
-  context.beginPath();
-  context.moveTo(x, y0);
-  context.lineTo(x0, y);
-  context.lineTo(x, y0 + h);
-  context.lineTo(x0 + w, y);
-  context.closePath();
-  finishTrivialPath(context);
-}
-
 function extendLineSegment(p0, p1, extensionFactor) {
     const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
   
@@ -334,6 +301,10 @@ export function getPath(shape, r, opts, seed) {
       return getHarshCurvePath(r, opts, seed);
     case 'soft':
       return getSoftPath(r, opts, seed);
+    case 'heart':
+      return getHeartPath(r, opts, seed);
+    case 'diamond':
+      return getDiamondPath(r, opts, seed);
   }
   return null;
 }
@@ -495,6 +466,44 @@ function getSoftPath(r, opts, seed) {
   return path;
 }
 
+function getHeartPath(r, opts, seed) {
+  const [x0, y0, w, h] = r
+  const [x, y] = [x0 + w*0.5, y0 + h*0.5];
+
+  const h1 = h * -0.58;
+  const h2 = h * -0.35;
+  const h3 = h * -0.1;
+  const h4 = h * 0.1;
+  const h5 = h * 0.35;
+  const h6 = h * 0.5;
+
+  const path = new paper.Path();
+
+  path.moveTo(x, y + h2);
+  path.cubicCurveTo(x - 0.1 * w, y + h1, x - 0.5 * w, y + h1, x - 0.5 * w, y + h3);
+  path.cubicCurveTo(x - 0.5 * w, y + h4, x - 0.3 * w, y + h5, x, y + h6);
+  path.cubicCurveTo(x + 0.3 * w, y + h5, x + 0.5 * w, y + h4, x + 0.5 * w, y + h3);
+  path.cubicCurveTo(x + 0.5 * w, y + h1, x + 0.1 * w, y + h1, x, y + h2);
+  path.closed = true;
+  
+  return path;
+}
+
+function getDiamondPath(r, opts, seed) {
+  const [x0, y0, w, h] = r;
+  const [x, y] = [x0 + w*0.5, y0 + h*0.5];
+
+  const path = new paper.Path();
+
+  path.moveTo(x, y0);
+  path.lineTo(x0, y);
+  path.lineTo(x, y0 + h);
+  path.lineTo(x0 + w, y);
+  path.closed = true;
+
+  return path;
+}
+
 function addTrivialTail(path, r, opts) {
   if (opts?.angleVector) {
     const v = opts.angleVector;
@@ -564,6 +573,16 @@ function drawHarshCurveBubble(context, seed, rect, opts) {
 
 function drawSoftBubble(context, seed, rect, opts) {
   const path = getSoftPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawHeartBubble(context, seed, rect, opts) {
+  const path = getHeartPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawDiamondBubble(context, seed, rect, opts) {
+  const path = getDiamondPath(rect, opts, seed);
   drawPath(context, path);
 }
 
