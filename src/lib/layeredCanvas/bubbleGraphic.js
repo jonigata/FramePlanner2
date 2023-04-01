@@ -4,7 +4,7 @@ import * as paper from 'paper';
 
 export const bubbleOptionSets = {
   "rounded": {},
-  "square": {},
+  "square": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "ellipse": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "concentration": {},
   "polygon": {},
@@ -85,15 +85,6 @@ function drawRoundedBubble(context, seed, rect, opts) {
   context.quadraticCurveTo(x, y + h, x, y2);
   context.lineTo(x, y1);
   context.quadraticCurveTo(x, y, x1, y);
-  finishTrivialPath(context);
-}
-
-function drawSquareBubble(context, seed, rect, opts) {
-  const [x, y, w, h] = rect;
-
-  // fill
-  context.beginPath();
-  context.rect(x, y, w, h);
   finishTrivialPath(context);
 }
 
@@ -457,11 +448,13 @@ function getNearestIndex(points, v) {
 paper.setup(new paper.Size(1, 1)); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
-export function getPath(shape, [x, y, w, h], opts, seed) {
+export function getPath(shape, r, opts, seed) {
   switch (shape) {
+    case 'square':
+      return getSquarePath(r, opts, seed);
     case 'ellipse':
-      return getEllipsePath([x, y, w, h], opts, seed);
-  }
+      return getEllipsePath(r, opts, seed);
+    }
   return null;
 }
 
@@ -484,7 +477,7 @@ function getEllipsePath([x, y, w, h], opts, seed) {
   const [w2, h2] = [w / 2, h / 2];
   const [cx, cy] = [x + w2, y + h2];
 
-  let path = new paper.Path.Ellipse({center: [cx, cy], radius: [w2, h2]});
+  const path = new paper.Path.Ellipse({center: [cx, cy], radius: [w2, h2]});
 
   if (opts?.angleVector) {
     const v = opts.angleVector;
@@ -507,8 +500,51 @@ function getEllipsePath([x, y, w, h], opts, seed) {
   return path;
 }
 
+function perpendicular([x, y]) {
+  return [-y, x];
+}
+
+function normalize([x, y], n=1) {
+  const l = Math.hypot(x, y);
+  return [n * x / l, n * y / l];
+}
+
+function append([x, y], [dx, dy]) {
+  return [x + dx, y + dy];
+}
+
+function getSquarePath([x, y, w, h], opts, seed) {
+  const [w2, h2] = [w / 2, h / 2];
+  const [cx, cy] = [x + w2, y + h2];
+  const c = [cx, cy];
+
+  const path = new paper.Path.Rectangle(x, y, w, h);
+
+  if (opts?.angleVector) {
+    const v = opts.angleVector;
+    if (v[0] === 0 && v[1] === 0) {
+      // do nothing
+    } else {
+      const l = Math.hypot(v[0], v[1]);
+      const v0 = normalize(perpendicular(v), l * 0.2);
+      const v1 = normalize(perpendicular(v).map(x => -x), l * 0.2);
+      const tail = new paper.Path();
+      tail.addSegments([append(c, v0), append(c, v1), append(c, v)]);
+      tail.closed = true;
+      return path.unite(tail);
+    }
+  }
+
+  return path;
+}
+
 function drawEllipseBubble(context, seed, rect, opts) {
   const path = getEllipsePath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawSquareBubble(context, seed, rect, opts) {
+  const path = getSquarePath(rect, opts, seed);
   drawPath(context, path);
 }
 
