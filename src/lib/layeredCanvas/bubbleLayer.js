@@ -34,6 +34,8 @@ export class BubbleLayer extends Layer {
     this.zMinusIcon = new ClickableIcon("zminus.png",[0, 0],[iconSize, iconSize], "フキダシ順で奥", () => this.interactable && this.selected);
     this.removeIcon = new ClickableIcon("remove.png",[0, 0],[iconSize, iconSize], "削除", () => this.interactable && this.selected);
 
+    this.imageDropIcon = new ClickableIcon("bubble-drop.png",[0, 0],[iconSize, iconSize], "画像除去", () => this.interactable && this.selected?.image);
+
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon("tail.png",[0, 0],[iconSize, iconSize], "ドラッグでしっぽ", () => this.interactable && this.selected);
     this.optionIcons.unite = new ClickableIcon("unite.png",[0, 0],[iconSize, iconSize], "ドラッグでリンク", () => this.interactable && this.selected);
@@ -49,6 +51,8 @@ export class BubbleLayer extends Layer {
     this.zPlusIcon.render(ctx);
     this.zMinusIcon.render(ctx);
     this.removeIcon.render(ctx);
+
+    this.imageDropIcon.render(ctx);
 
     if (this.interactable && this.selected) {
       this.drawSelectedUI(ctx, this.selected);
@@ -266,6 +270,7 @@ export class BubbleLayer extends Layer {
           this.dragIcon.hintIfContains(p, this.hint) ||
           this.zMinusIcon.hintIfContains(p, this.hint) ||
           this.zPlusIcon.hintIfContains(p, this.hint) ||
+          this.imageDropIcon.hintIfContains(p, this.hint) ||
           this.hintOptionIcon(this.selected.shape, p)) {
             this.handle = null;
       } else if (this.selected.contains(p)) {
@@ -401,6 +406,8 @@ export class BubbleLayer extends Layer {
         return { action: "z-minus", bubble };
       } else if (this.zPlusIcon.contains(point)) {
         return { action: "z-plus", bubble };
+      } else if (this.imageDropIcon.contains(point)) {
+        return { action: "image-drop", bubble };
       } else {
         const icon = this.getOptionIconAt(bubble.shape, point);
         if (icon) {
@@ -574,6 +581,10 @@ export class BubbleLayer extends Layer {
       const bubble = payload.bubble;
       this.removeBubble(bubble);
       this.redraw();
+    } else if (payload.action === "image-drop") {
+      const bubble = payload.bubble;
+      bubble.image = null;
+      this.redraw();
     } else if (payload.action === "image-move") {
       const bubble = payload.bubble;
       const origin = bubble.image.translation;
@@ -636,6 +647,8 @@ export class BubbleLayer extends Layer {
     this.zPlusIcon.position = [x0 + 4, y0 + 4];
     this.zMinusIcon.position = [x0 + 4, y0 + 4 + iconSize];
     this.removeIcon.position = [x1 - 4 - iconSize, y0 + 4];
+
+    this.imageDropIcon.position = [x0 + 4, y1 - iconSize - 4]
   }
 
   *optionsAngleVector(p, bubble) {
