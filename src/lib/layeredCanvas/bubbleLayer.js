@@ -235,7 +235,6 @@ export class BubbleLayer extends Layer {
         }
       }
     }
-    console.log(this.optionEditActive.link);
     if (this.optionEditActive.link) {
       ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
       for (let b of this.bubbles) {

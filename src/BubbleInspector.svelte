@@ -10,6 +10,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { tick } from 'svelte';
+  import { SlideToggle } from '@skeletonlabs/skeleton';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -23,6 +24,8 @@
   let adjustedPosition = { x: 0, y: 0 };
   let pinned = true;
   let textarea = null;
+  let fontList = null;
+  let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -87,6 +90,20 @@
     adjustedPosition = {x: offsetX, y: offsetY};
   }
 
+  $:onChangeSearchOptions(searchOptions);
+  function onChangeSearchOptions(options) {
+    if (fontList) {
+      fontList.searchOptions = options;
+    }
+  }
+
+  function allOff() {
+    searchOptions.mincho = false;
+    searchOptions.gothic = false;
+    searchOptions.normal = false;
+    searchOptions.bold = false;
+  }
+
 </script>
 
 {#if bubble}
@@ -147,8 +164,15 @@
 <Drawer>
   <div class="drawer-content">
     <h1>Font</h1>
-    <p>Choose a font.</p>
-    <WebFontList on:choose={onChangeFont}/>
+    <div class="hbox gap my-2">
+      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.mincho}></SlideToggle>明
+      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.gothic}></SlideToggle>ゴ
+      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.normal}></SlideToggle>N
+      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.bold}></SlideToggle>B
+      <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={allOff}>すべてオフ</button>
+    </div>
+    <hr/>
+    <WebFontList on:choose={onChangeFont} bind:this={fontList}/>
   </div>
 </Drawer>
 

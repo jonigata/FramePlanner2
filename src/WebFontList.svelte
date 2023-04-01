@@ -1,3 +1,5 @@
+<svelte:options accessors={true}/>
+
 <script lang="ts">
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontDefinition, GoogleFontVariant } from "@svelte-web-fonts/google";
@@ -84,26 +86,52 @@
     "'Zen Old Mincho', serif",
   ];
 
+  export let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
+
   const normalFonts = normalFontFamilies.map((fontFamily) => {
+    const ff = parseFontFamily(fontFamily);
     const font: GoogleFontDefinition = {
-      family: parseFontFamily(fontFamily)[0],
+      family: ff[0],
       variants: ["400"],
+      distinction: ff[1],
     };
     return font;
   });
 
   const boldFonts = boldFontFamilies.map((fontFamily) => {
+    const ff = parseFontFamily(fontFamily);
     const font: GoogleFontDefinition = {
-      family: parseFontFamily(fontFamily)[0],
+      family: ff[0],
       variants: ["700"],
+      distinction: ff[1],
     };
     return font;
   });
 
   const fonts = [...normalFonts, ...boldFonts];
+  let filteredFonts = fonts;
 
   function chooseFont(event, fontFamily, fontWeight) {
     dispatch('choose', { fontFamily, fontWeight });
+  }
+
+  $:filterFonts(searchOptions);
+  function filterFonts(so) {
+    const { filterString, mincho, gothic, normal, bold } = so;
+    const ff = fonts.filter((font) => {
+      const isMincho = font.distinction === "serif";
+      const isGothic = font.distinction === "sans-serif";
+      const isNormal = font.variants.includes("400");
+      const isBold = font.variants.includes("700");
+      const isMatched = filterString === "" || font.family.includes(filterString);
+      return (
+        (mincho && isMincho) ||
+        (gothic && isGothic) ||
+        (normal && isNormal) ||
+        (bold && isBold)
+      ) && isMatched;
+    });
+    filteredFonts = ff;
   }
 </script>
 
@@ -115,16 +143,14 @@
 
 <!-- Used for illustration purposes -->
 
-<h1>
-    {#each fonts as font}
-        {#each font.variants as variant}
-            <div class="font-sample" style={getFontStyle(font.family, variant)}>
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
-            </div>
-        {/each}
+{#each filteredFonts as font}
+    {#each font.variants as variant}
+        <div class="font-sample" style={getFontStyle(font.family, variant)}>
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
+        </div>
     {/each}
-</h1>
+{/each}
 
 <style>
   .font-sample {
