@@ -225,38 +225,6 @@ function subdividedPointsWithBump(points, bump, tailIndex, tailBump) {
   return result;
 }
 
-function drawEllipseBubble(context, seed, rect, opts) {
-  const [x, y, w, h] = rect
-  const [w2, h2] = [w / 2, h / 2];
-  const [cx, cy] = [x + w2, y + h2];
-
-  let startAngle = 0;
-  let endAngle = 2 * Math.PI;
-  let tail = [0,0];
-
-  if (opts?.angleVector) {
-    const angleVector = opts.angleVector;
-    if (angleVector[0] === 0 && angleVector[1] === 0) {
-      // do nothing
-    } else {
-      const theta = vectorToEllipseAngle(w2, h2, angleVector[0], angleVector[1]);
-      startAngle = theta + Math.PI / 32;
-      endAngle = theta - Math.PI / 32;
-      tail = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
-    }
-  }
-
-  context.beginPath();
-  context.ellipse(cx, cy, w2, h2, 0, startAngle, endAngle);
-  if (opts?.angleVector) {
-    context.lineTo(...tail);
-  }
-  context.closePath();
-  finishTrivialPath(context);
-
-//  unifyEllipse(context);
-}
-
 function vectorToEllipseAngle(rx, ry, vx, vy) {
   const length = Math.sqrt(vx * vx + vy * vy);
   
@@ -489,11 +457,10 @@ function getNearestIndex(points, v) {
 paper.setup(new paper.Size(1, 1)); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
-export function getPath([x, y, w, h], shape, opts) {
-  const [cx, cy] = [x + w/2, y + h/2];
+export function getPath(shape, [x, y, w, h], opts, seed) {
   switch (shape) {
     case 'ellipse':
-      return new paper.Path.Ellipse({center: [cx, cy],radius: [w/2, h/2]});
+      return getEllipsePath([x, y, w, h], opts, seed);
   }
   return null;
 }
@@ -511,5 +478,37 @@ export function drawPath(context, unified) {
       context.clip(path);
       break;
   }
+}
+
+function getEllipsePath([x, y, w, h], opts, seed) {
+  const [w2, h2] = [w / 2, h / 2];
+  const [cx, cy] = [x + w2, y + h2];
+
+  let path = new paper.Path.Ellipse({center: [cx, cy], radius: [w2, h2]});
+
+  if (opts?.angleVector) {
+    const v = opts.angleVector;
+    if (v[0] === 0 && v[1] === 0) {
+      // do nothing
+    } else {
+      const theta = vectorToEllipseAngle(w2, h2, v[0], v[1]);
+      const theta0 = theta - Math.PI / 24;
+      const theta1 = theta + Math.PI / 24;
+      const p0 = [cx + w2 * Math.cos(theta0), cy + h2 * Math.sin(theta0)];
+      const p1 = [cx + w2 * Math.cos(theta1), cy + h2 * Math.sin(theta1)];
+      const tail = new paper.Path();
+      tail.addSegments([p0, p1, [cx + v[0], cy + v[1]]]);
+
+      tail.closed = true;
+      return path.unite(tail);
+    }
+  }
+
+  return path;
+}
+
+function drawEllipseBubble(context, seed, rect, opts) {
+  const path = getEllipsePath(rect, opts, seed);
+  drawPath(context, path);
 }
 

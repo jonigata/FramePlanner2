@@ -662,7 +662,7 @@ export class BubbleLayer extends Layer {
       const [p0, p1] = bubble.regularized();
       const [x, y] = p0;
       const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
-      const path2 = getPath([x, y, w, h], bubble.shape, bubble.optionContext);
+      const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
       path = path ? path.unite(path2) : path2;
     }
     return path;
