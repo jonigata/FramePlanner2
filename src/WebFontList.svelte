@@ -125,10 +125,8 @@
       const isBold = font.variants.includes("700");
       const isMatched = filterString === "" || font.family.includes(filterString);
       return (
-        (mincho && isMincho) ||
-        (gothic && isGothic) ||
-        (normal && isNormal) ||
-        (bold && isBold)
+        ((mincho && isMincho) || (gothic && isGothic)) &&
+        ((normal && isNormal) || (bold && isBold))
       ) && isMatched;
     });
     filteredFonts = ff;
