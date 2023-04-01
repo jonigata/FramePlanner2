@@ -681,7 +681,11 @@ export class BubbleLayer extends Layer {
         const b = this.bubbles[i];
         if (b !== bubble && b.contains(drop)) {
           if (this.getGroupMaster(bubble) === this.getGroupMaster(b)) {
-            b.parent = null;
+            if (b.parent) {
+              b.parent = null;
+            } else {
+              bubble.parent = null;
+            }
             this.redraw();
           } else {
             this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
