@@ -276,12 +276,14 @@ export class BubbleLayer extends Layer {
 
   keyDown(event) {
     if (event.code === "KeyX" && event.ctrlKey) {
+      if (!this.selected) {return false;}
       console.log("cut");
       this.copyBubble();
       this.removeBubble(this.selected);
       return true;
     }
     if (event.code === "KeyC" && event.ctrlKey) {
+      if (!this.selected) {return false;}
       console.log("copy");
       this.copyBubble();
       return true;
