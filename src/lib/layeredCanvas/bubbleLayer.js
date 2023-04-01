@@ -105,7 +105,7 @@ export class BubbleLayer extends Layer {
     this.drawBubble(ctx, 'fill', bubble);
 
     // 画像描画
-    if (bubble.image) {
+    if (bubble.image && !bubble.parent) {
       ctx.save();
       this.drawBubble(ctx, 'clip', bubble);
 
@@ -396,11 +396,12 @@ export class BubbleLayer extends Layer {
         return { action: "resize", bubble, handle };
       }
 
-      if (bubble.image && bubble.contains(point)) {
+      const gm = this.getGroupMaster(bubble);
+      if (gm.image && bubble.contains(point)) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
-          return { action: "image-scale", bubble };
+          return { action: "image-scale", bubble: gm };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
-          return { action: "image-move", bubble };
+          return { action: "image-move", bubble: gm };
         }
       }
     }
@@ -583,9 +584,9 @@ export class BubbleLayer extends Layer {
   dropped(image, position) {
     for (let bubble of this.bubbles) {
       if (bubble.contains(position)) {
-         bubble.image = { image, translation: [0,0], scale: [1,1] };
-         this.redraw();
-         return true;
+        this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1] };
+        this.redraw();
+        return true;
       }
     }
     return false;
@@ -701,6 +702,13 @@ export class BubbleLayer extends Layer {
   mergeGroup(g1, g2) {
     const g = g1.concat(g2);
     this.regularizeGroup(g);
+  }
+
+  getGroupMaster(bubble) {
+    if (bubble.parent) {
+      return this.bubbles.find((b) => b.uuid === bubble.parent);
+    }
+    return bubble;
   }
 
 }
