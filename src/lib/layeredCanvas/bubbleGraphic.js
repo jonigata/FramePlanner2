@@ -7,7 +7,7 @@ export const bubbleOptionSets = {
   "square": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "ellipse": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "concentration": {},
-  "polygon": {},
+  "polygon": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "strokes": {},
   "double-strokes": {},
   "harsh": {"angleVector": {hint: "しっぽ",icon:"tail"}},
@@ -271,24 +271,6 @@ function drawConcentrationBubble(context, seed, rect, opts) {
   }
 }
 
-function drawPolygonBubble(context, seed, rect, opts) {
-  const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, rect, 10);
-  const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
-  const points = cookedPoints.map((p) => [p.x, p.y]);
-
-  context.beginPath();
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    if (i === 0) {
-      context.moveTo(p[0], p[1]);
-    } else {
-      context.lineTo(p[0], p[1]);
-    }
-  }
-  finishTrivialPath(context);
-}
-
 function drawStrokesBubble(context, seed, rect, opts) {
     drawStrokesBubbleAux(context, seed, rect, false);
 }
@@ -454,7 +436,9 @@ export function getPath(shape, r, opts, seed) {
       return getSquarePath(r, opts, seed);
     case 'ellipse':
       return getEllipsePath(r, opts, seed);
-    }
+    case 'polygon':
+      return getPolygonPath(r, opts, seed);
+  }
   return null;
 }
 
@@ -513,29 +497,46 @@ function append([x, y], [dx, dy]) {
   return [x + dx, y + dy];
 }
 
-function getSquarePath([x, y, w, h], opts, seed) {
-  const [w2, h2] = [w / 2, h / 2];
-  const [cx, cy] = [x + w2, y + h2];
-  const c = [cx, cy];
+function getSquarePath(r, opts, seed) {
+  const path = new paper.Path.Rectangle(...r);
+  return addTrivialTail(path, r, opts);
+}
 
-  const path = new paper.Path.Rectangle(x, y, w, h);
-
+function addTrivialTail(path, r, opts) {
   if (opts?.angleVector) {
     const v = opts.angleVector;
     if (v[0] === 0 && v[1] === 0) {
       // do nothing
     } else {
-      const l = Math.hypot(v[0], v[1]);
-      const v0 = normalize(perpendicular(v), l * 0.2);
-      const v1 = normalize(perpendicular(v).map(x => -x), l * 0.2);
-      const tail = new paper.Path();
-      tail.addSegments([append(c, v0), append(c, v1), append(c, v)]);
-      tail.closed = true;
-      return path.unite(tail);
+      const c = [r[0] + r[2] / 2, r[1] + r[3] / 2];
+      return path.unite(makeTrivialTailPath(c, v));
     }
   }
 
   return path;
+}
+
+function makeTrivialTailPath(c, v) {
+  const l = Math.hypot(v[0], v[1]);
+  const v0 = normalize(perpendicular(v), l * 0.2);
+  const v1 = normalize(perpendicular(v).map(x => -x), l * 0.2);
+  const tail = new paper.Path();
+  tail.addSegments([append(c, v0), append(c, v1), append(c, v)]);
+  tail.closed = true;
+  return tail;
+}
+
+function getPolygonPath(r, opts, seed) {
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, r, 10);
+  const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
+  const points = cookedPoints.map((p) => [p.x, p.y]);
+
+  const path = new paper.Path();
+  path.addSegments(points);
+  path.closed = true;
+
+  return addTrivialTail(path, r, opts);
 }
 
 function drawEllipseBubble(context, seed, rect, opts) {
@@ -547,4 +548,10 @@ function drawSquareBubble(context, seed, rect, opts) {
   const path = getSquarePath(rect, opts, seed);
   drawPath(context, path);
 }
+
+function drawPolygonBubble(context, seed, rect, opts) {
+  const path = getPolygonPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
 
