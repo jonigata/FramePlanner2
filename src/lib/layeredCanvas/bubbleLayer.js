@@ -217,11 +217,26 @@ export class BubbleLayer extends Layer {
       ctx.lineTo(cx + bubble.optionContext.angleVector[0], cy + bubble.optionContext.angleVector[1]);
       ctx.stroke();
     }
+    if (this.selected) {
+      for (let b of this.bubbles) {
+        if (b === this.selected) {continue;}
+
+        if (this.getGroupMaster(b) === this.getGroupMaster(this.selected)) {
+          ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
+          ctx.lineWidth = 3;
+          ctx.moveTo(...b.center);
+          ctx.lineTo(...this.selected.center);
+          ctx.stroke();
+        }
+      }
+    }
     if (this.optionEditActive.link) {
       ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
       for (let b of this.bubbles) {
         if (b === this.selected) {continue;}
         if (!b.optionSet.link) {continue;}
+        if (this.getGroupMaster(b) === this.getGroupMaster(this.selected)) {continue;}
+        ctx.lineWidth = 5;
         ctx.strokeRect(...b.p0, ...b.size);
       }
 
@@ -632,6 +647,7 @@ export class BubbleLayer extends Layer {
       this.redraw();
     }
     this.optionEditActive.angleVector = false;
+    this.redraw();
   }
 
   *optionsLink(p, bubble) {
@@ -657,6 +673,7 @@ export class BubbleLayer extends Layer {
     }
 
     this.optionEditActive.link = false;
+    this.redraw();
   }
 
   uniteBubble(bubbles) {
