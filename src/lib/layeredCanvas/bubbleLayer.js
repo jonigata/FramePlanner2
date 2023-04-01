@@ -228,12 +228,14 @@ export class BubbleLayer extends Layer {
         if (this.getGroupMaster(b) === this.getGroupMaster(this.selected)) {
           ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
           ctx.lineWidth = 3;
+          ctx.beginPath();
           ctx.moveTo(...b.center);
           ctx.lineTo(...this.selected.center);
           ctx.stroke();
         }
       }
     }
+    console.log(this.optionEditActive.link);
     if (this.optionEditActive.link) {
       ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
       for (let b of this.bubbles) {

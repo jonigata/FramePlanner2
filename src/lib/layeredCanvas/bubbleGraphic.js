@@ -310,6 +310,7 @@ export function getPath(shape, r, opts, seed) {
 }
 
 export function drawPath(context, unified) {
+  context.beginPath();
   const path = new Path2D(unified.pathData);
   switch(context.bubbleDrawMethod) {
     case 'fill':
