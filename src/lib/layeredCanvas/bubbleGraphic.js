@@ -3,14 +3,14 @@ import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 
 export const bubbleOptionSets = {
-  "rounded": {},
+  "rounded": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "square": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "ellipse": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "concentration": {},
   "polygon": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "strokes": {},
   "double-strokes": {},
-  "harsh": {"angleVector": {hint: "しっぽ",icon:"tail"}},
+  "harsh": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
   "harsh-curve": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "soft": {"angleVector": {hint: "しっぽ",icon:"tail"}},
   "heart" : {},
@@ -63,58 +63,6 @@ export function drawBubble(context, seed, rect, shape, opts) {
         `Unknown bubble : ${shape}`
       );
   }
-}
-
-function drawRoundedBubble(context, seed, rect, opts) {
-  const [x, y, w, h] = rect;
-  const rw = w / 2;
-  const rh = h / 2;
-  const x1 = x + rw;
-  const x2 = x + w - rw;
-  const y1 = y + rh;
-  const y2 = y + h - rh;
-
-  // fill path and stroke frame
-  context.beginPath();
-  context.moveTo(x1, y);
-  context.lineTo(x2, y);
-  context.quadraticCurveTo(x + w, y, x + w, y1);
-  context.lineTo(x + w, y2);
-  context.quadraticCurveTo(x + w, y + h, x2, y + h);
-  context.lineTo(x1, y + h);
-  context.quadraticCurveTo(x, y + h, x, y2);
-  context.lineTo(x, y1);
-  context.quadraticCurveTo(x, y, x1, y);
-  finishTrivialPath(context);
-}
-
-function drawHarshBubble(context, seed, rect, opts) {
-  const bump = Math.min(rect[2], rect[3]) / 10;
-  const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, rect, 10);
-  const points = subdividedPointsWithBump(rawPoints, bump, -1, 0);
-  if (opts?.angleVector) {
-    const [cx, cy] = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
-    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
-    const tailIndex = getNearestIndex(points, v);
-    points[tailIndex] = v;
-  }
-
-  function makePath() {
-    for (let i = 0; i < points.length; i++) {
-      const p = points[i];
-      if (i === 0) {
-        context.moveTo(p[0], p[1]);
-      } else {
-        context.lineTo(p[0], p[1]);
-      }
-    }
-    context.lineTo(points[0][0], points[0][1]);
-  }
-
-  context.beginPath();
-  makePath();
-  finishTrivialPath(context);
 }
 
 function drawPoints(context, points, color, opts) {
@@ -438,6 +386,10 @@ export function getPath(shape, r, opts, seed) {
       return getEllipsePath(r, opts, seed);
     case 'polygon':
       return getPolygonPath(r, opts, seed);
+    case 'rounded':
+      return getRoundedPath(r, opts, seed);
+    case 'harsh':
+      return getHarshPath(r, opts, seed);
   }
   return null;
 }
@@ -502,6 +454,47 @@ function getSquarePath(r, opts, seed) {
   return addTrivialTail(path, r, opts);
 }
 
+function getRoundedPath(r, opts, seed) {
+  const [x, y, w, h] = r;
+  const [w2, h2] = [w / 2, h / 2];
+  const [x1, y1] = [x + w2, y + h2];
+  const [x2, y2] = [x + w - w2, y + h - h2];
+
+  const path = new paper.Path();
+  path.moveTo(x1, y);
+  path.lineTo(x2, y);
+  path.quadraticCurveTo(x + w, y, x + w, y1);
+  path.lineTo(x + w, y2);
+  path.quadraticCurveTo(x + w, y + h, x2, y + h);
+  path.lineTo(x1, y + h);
+  path.quadraticCurveTo(x, y + h, x, y2);
+  path.lineTo(x, y1);
+  path.quadraticCurveTo(x, y, x1, y);
+  path.closed = true;
+
+  return addTrivialTail(path, r, opts);
+}
+
+function getHarshPath(r, opts, seed) {
+  const bump = Math.min(r[2], r[3]) / 10;
+  const rng = seedrandom(seed);
+  const rawPoints = generateRandomPoints(rng, r, 10);
+  const points = subdividedPointsWithBump(rawPoints, bump, -1, 0);
+  if (opts?.angleVector) {
+    const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
+    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const tailIndex = getNearestIndex(points, v);
+    points[tailIndex] = v;
+  }
+
+  const path = new paper.Path();
+  path.addSegments(points);
+  path.closed = true;
+
+  return path;
+}
+
+
 function addTrivialTail(path, r, opts) {
   if (opts?.angleVector) {
     const v = opts.angleVector;
@@ -554,4 +547,13 @@ function drawPolygonBubble(context, seed, rect, opts) {
   drawPath(context, path);
 }
 
+function drawRoundedBubble(context, seed, rect, opts) {
+  const path = getRoundedPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawHarshBubble(context, seed, rect, opts) {
+  const path = getHarshPath(rect, opts, seed);
+  drawPath(context, path);
+}
 
