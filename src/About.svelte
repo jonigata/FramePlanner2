@@ -58,6 +58,7 @@
       <h2>AI画像SNS</h2>
       
       <p><a href="https://www.chichi-pui.com/posts/tags/FramePlanner/" target="_blank" rel="noopener noreferrer">ちちぷい</a></p>
+      <p><a href="https://twitter.com/hashtag/frameplanner?src=hashtag_click&f=live" target="_blank" rel="noopener noreferrer">#frameplanner(Twitter)</a></p>
     </div>
   </div>
 </Drawer>

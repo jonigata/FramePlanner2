@@ -1,4 +1,3 @@
-import { bubbleOptionSets } from "./bubbleGraphic";
 import { v4 as uuidv4 } from 'uuid';
 
 const minimumBubbleSize = 72;
@@ -214,4 +213,35 @@ export class Bubble {
     return bubbleOptionSets[this.shape];
   }
 
+  initOptions() {
+    const [cx,cy] = this.center;
+    const [w, h] = this.size;
+    for (const option of Object.keys(this.optionSet)) {
+      if (this.optionSet[option].init) {
+        this.optionContext[option] = this.optionSet[option].init(this);
+      }
+    }
+  }
+
 }
+
+export const bubbleOptionSets = {
+  "rounded": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "square": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "ellipse": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "concentration": {},
+  "polygon": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "strokes": {},
+  "double-strokes": {},
+  "harsh": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "harsh-curve": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "soft": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "heart" : {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "diamond": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
+  "motion-lines": {
+    focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
+    focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, Math.hypot(b.size[0]/2, b.size[1]/2) * 0.25] }
+  },
+  "none": {},
+};
+

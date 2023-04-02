@@ -2,22 +2,6 @@ import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 
-export const bubbleOptionSets = {
-  "rounded": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "square": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "ellipse": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "concentration": {},
-  "polygon": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "strokes": {},
-  "double-strokes": {},
-  "harsh": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "harsh-curve": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "soft": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "heart" : {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "diamond": {link: {hint:"結合", icon:"unite"}, angleVector: {hint: "しっぽ",icon:"tail"}},
-  "none": {},
-};
-
 export function drawBubble(context, seed, rect, shape, opts) {
   switch (shape) {
     case "rounded":
@@ -55,6 +39,9 @@ export function drawBubble(context, seed, rect, shape, opts) {
       break;
     case "diamond":
       drawDiamondBubble(context, seed, rect, opts);
+      break;
+    case "motion-lines":
+      drawMotionLinesBubble(context, seed, rect, opts);
       break;
     case "none":
       break;
@@ -215,6 +202,60 @@ function drawStrokesBubbleAux(context, seed, rect, double) {
   }
 }
 
+function drawMotionLinesBubble(context, seed, rect, opts) {
+  const [x, y, w, h] = rect;
+  const [cx, cy] = [x + w / 2, y + h / 2];
+
+  if (context.bubbleDrawMethod === "fill") {
+    const rng = seedrandom(seed);
+
+    context.save();
+
+    context.beginPath();
+    context.rect(x, y, w, h);
+    context.clip();
+
+    // context.lineWidth = 1 / Math.min(w, h);
+    context.lineWidth = 1;
+    // draw n radial line
+    const n = 200;
+    const icd = opts?.focalPoint ?? [0, 0];
+    const rangeVector = opts?.focalRange ?? [0, Math.hypot(w/2, h/2) * 0.25];
+    const range = Math.hypot(rangeVector[0], rangeVector[1]);
+    const [ox, oy, od] = [cx, cy, Math.hypot(w/2, h/2)]; // 外円
+    const [ix, iy, id] = [cx + icd[0], cy + icd[1], range]; // 内円
+
+    // グラデーション
+    const gradient = context.createRadialGradient(ix, iy, id, ox, oy, od);
+    gradient.addColorStop(0.0, "rgba(0,0,0,0)");
+    gradient.addColorStop(0.2, "rgba(0,0,0,1)");
+    gradient.addColorStop(1.0, "rgba(0,0,0,1)");
+    context.fillStyle = gradient;
+
+    // 線を描く
+    for (let i = 0; i < n; i++) {
+      const angle = (i * 2 * Math.PI) / n + (rng() - 0.5) * 0.05;
+      const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
+      const sdr = id + rng() * 40;
+      const p0 = [ix + dx * sdr, iy + dy * sdr];
+      const p1 = [ox + dx * od, oy + dy * od];
+      const length = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+      const v = [p0[0] - p1[0], p0[1] - p1[1]];
+      const [q0, q1] = [perpendicular(v, 0.005), perpendicular(v, -0.005)];
+      context.beginPath();
+      context.moveTo(p0[0], p0[1]);
+      context.lineTo(p1[0] + q0[0], p1[1] + q0[1]);
+      context.lineTo(p1[0] + q1[0], p1[1] + q1[1]);
+      context.closePath();
+      context.fill();
+    }
+
+    context.restore();
+  } else {  // stroke, clip
+    // do nothing;
+  }
+}
+
 function extendLineSegment(p0, p1, extensionFactor) {
     const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
   
@@ -352,8 +393,8 @@ function getEllipsePath([x, y, w, h], opts, seed) {
   return path;
 }
 
-function perpendicular([x, y]) {
-  return [-y, x];
+function perpendicular([x, y], n=1) {
+  return [-y*n, x*n];
 }
 
 function normalize([x, y], n=1) {
@@ -522,7 +563,7 @@ function addTrivialTail(path, r, opts) {
 function makeTrivialTailPath(c, v) {
   const l = Math.hypot(v[0], v[1]);
   const v0 = normalize(perpendicular(v), l * 0.2);
-  const v1 = normalize(perpendicular(v).map(x => -x), l * 0.2);
+  const v1 = normalize(perpendicular(v, -1), l * 0.2);
   const tail = new paper.Path();
   tail.addSegments([append(c, v0), append(c, v1), append(c, v)]);
   tail.closed = true;

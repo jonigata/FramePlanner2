@@ -1,9 +1,9 @@
 import { Layer } from "./layeredCanvas.js";
 import { keyDownFlags } from "./keyCache.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
-import { drawBubble, bubbleOptionSets, getPath, drawPath } from "./bubbleGraphic";
+import { drawBubble, getPath, drawPath } from "./bubbleGraphic";
 import { ClickableIcon } from "./clickableIcon.js";
-import { Bubble } from "./bubble.js";
+import { Bubble, bubbleOptionSets } from "./bubble.js";
 import { translate, scale } from "./pictureControl.js";
 
 const iconSize = 20;
@@ -39,6 +39,8 @@ export class BubbleLayer extends Layer {
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon("tail.png",[0, 0],[iconSize, iconSize], "ドラッグでしっぽ", () => this.interactable && this.selected);
     this.optionIcons.unite = new ClickableIcon("unite.png",[0, 0],[iconSize, iconSize], "ドラッグでリンク", () => this.interactable && this.selected);
+    this.optionIcons.circle = new ClickableIcon("circle.png",[0, 0],[iconSize, iconSize], "ドラッグで円定義", () => this.interactable && this.selected);
+    this.optionIcons.radius = new ClickableIcon("radius.png",[0, 0],[iconSize, iconSize], "ドラッグで円半径", () => this.interactable && this.selected);
   }
 
   render(ctx) {
@@ -196,6 +198,7 @@ export class BubbleLayer extends Layer {
   drawOptionHandles(ctx, bubble) {
     const optionSet = bubble.optionSet;
     const [cx,cy] = bubble.center;
+    const [w, h] = bubble.size;
     for (const option of Object.keys(optionSet)) {
       let icon;
       switch (option) {
@@ -203,10 +206,29 @@ export class BubbleLayer extends Layer {
           icon = this.optionIcons[optionSet.angleVector.icon];
           icon.position = [cx-iconSize/2, cy-iconSize/2];
           icon.render(ctx);
+          break;
         case "link":
           icon = this.optionIcons[optionSet.link.icon];
           icon.position = [cx-iconSize/2, bubble.p1[1]-iconSize];
           icon.render(ctx);
+          break;
+        case "focalPoint":
+          (() => {
+            icon = this.optionIcons[optionSet.focalPoint.icon];
+            const [px, py] = bubble.optionContext.focalPoint;
+            icon.position = [cx+px-iconSize/2, cy+py-iconSize/2];
+            icon.render(ctx);
+          })();
+          break;
+        case "focalRange":
+          (() => {
+            icon = this.optionIcons[optionSet.focalRange.icon];
+            const [px, py] = bubble.optionContext.focalPoint;
+            const [rx, ry] = bubble.optionContext.focalRange;
+            icon.position = [cx+px+rx-iconSize/2, cy+py+ry-iconSize/2];
+            icon.render(ctx);
+          })();
+          break;
       }
     }
   }
@@ -219,6 +241,15 @@ export class BubbleLayer extends Layer {
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx + bubble.optionContext.angleVector[0], cy + bubble.optionContext.angleVector[1]);
+      ctx.stroke();
+    } 
+    if (this.optionEditActive.focal) {
+      const [cx, cy] = bubble.center;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
+      ctx.beginPath();
+      ctx.moveTo(cx + bubble.optionContext.focalPoint[0], cy + bubble.optionContext.focalPoint[1]);
+      ctx.lineTo(cx + bubble.optionContext.focalRange[0], cy + bubble.optionContext.focalRange[1]);
       ctx.stroke();
     }
     if (this.selected) {
@@ -479,6 +510,7 @@ export class BubbleLayer extends Layer {
       bubble.p0 = dragStart;
       bubble.p1 = dragStart;
       bubble.text = await this.onGetDefaultText();
+      bubble.initOptions();
       this.creatingBubble = bubble;
 
       let p;
@@ -607,6 +639,10 @@ export class BubbleLayer extends Layer {
       yield* this.optionsAngleVector(dragStart, payload.bubble);
     } else if (payload.action === "options-link") {
       yield* this.optionsLink(dragStart, payload.bubble);
+    } else if (payload.action === "options-focalPoint") {
+      yield* this.optionsFocalPoint(dragStart, payload.bubble);
+    } else if (payload.action === "options-focalRange") {
+      yield* this.optionsFocalRange(dragStart, payload.bubble);
     }
   }
 
@@ -696,6 +732,32 @@ export class BubbleLayer extends Layer {
     }
 
     this.optionEditActive.link = false;
+    this.redraw();
+  }
+
+  *optionsFocalPoint(p, bubble) {
+    console.log("optionsCircle");
+    this.optionEditActive.circle = true;
+    const s = bubble.optionContext.focalPoint;
+    const q = p;
+    while (p = yield) {
+      bubble.optionContext.focalPoint = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
+      this.redraw();
+    }
+    this.optionEditActive.circle = false;
+    this.redraw();
+  }
+
+  *optionsFocalRange(p, bubble) {
+    console.log("optionsCircle");
+    this.optionEditActive.circle = true;
+    const s = bubble.optionContext.focalRange;
+    const q = p;
+    while (p = yield) {
+      bubble.optionContext.focalRange = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
+      this.redraw();
+    }
+    this.optionEditActive.circle = false;
     this.redraw();
   }
 

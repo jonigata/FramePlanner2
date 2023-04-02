@@ -74,7 +74,7 @@
   $:onChangeShape(bubble?.shape);
   function onChangeShape(shape) {
     if (bubble) {
-      bubble.options = {};
+      bubble.initOptions();
     }
   }
 
