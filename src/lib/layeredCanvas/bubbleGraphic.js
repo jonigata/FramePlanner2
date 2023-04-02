@@ -237,13 +237,14 @@ function drawMotionLinesBubble(context, seed, rect, opts) {
       const angle = (i * 2 * Math.PI) / n + (rng() - 0.5) * 0.05;
       const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
       const sdr = id + rng() * 40;
-      const p0 = [ix + dx * sdr, iy + dy * sdr];
+      const p0 = [ix, iy];
       const p1 = [ox + dx * od, oy + dy * od];
-      const length = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
-      const v = [p0[0] - p1[0], p0[1] - p1[1]];
+      const v = [p1[0] - p0[0], p1[1] - p0[1]];
+      const length = Math.hypot(...v);
+      const p2 = [p0[0] + v[0] * sdr / length, p0[1] + v[1] * sdr / length];
       const [q0, q1] = [perpendicular(v, 0.005), perpendicular(v, -0.005)];
       context.beginPath();
-      context.moveTo(p0[0], p0[1]);
+      context.moveTo(p2[0], p2[1]);
       context.lineTo(p1[0] + q0[0], p1[1] + q0[1]);
       context.lineTo(p1[0] + q1[0], p1[1] + q1[1]);
       context.closePath();
