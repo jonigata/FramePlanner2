@@ -26,6 +26,7 @@
   let textarea = null;
   let fontList = null;
   let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
+  let shape;
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -63,6 +64,7 @@
     if (b === oldBubble) {return;}
     oldBubble = b;
     if (b) {
+      shape = b.shape;
       await tick();
       textarea.focus();
       textarea.select();
@@ -71,9 +73,10 @@
     }
   }
 
-  $:onChangeShape(bubble?.shape);
-  function onChangeShape(shape) {
+  $:onChangeShape(shape);
+  function onChangeShape(s) {
     if (bubble) {
+      bubble.shape = s;
       bubble.initOptions();
     }
   }
@@ -147,7 +150,7 @@
       bind:this={textarea}/>
     <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
     <div class="template-chooser-container">
-      <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={bubble.shape} />
+      <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={shape} />
     </div>
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
