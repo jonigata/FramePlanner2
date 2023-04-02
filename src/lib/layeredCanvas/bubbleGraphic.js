@@ -206,6 +206,11 @@ function drawMotionLinesBubble(context, seed, rect, opts) {
   const [x, y, w, h] = rect;
   const [cx, cy] = [x + w / 2, y + h / 2];
 
+  function color2string(c) {
+    function f(x) { return Math.floor(x * 255); }
+    return `rgba(${f(c.red)}, ${f(c.green)}, ${f(c.blue)}, ${c.alpha})`    
+  }
+
   if (context.bubbleDrawMethod === "fill") {
     const rng = seedrandom(seed);
 
@@ -227,9 +232,12 @@ function drawMotionLinesBubble(context, seed, rect, opts) {
 
     // グラデーション
     const gradient = context.createRadialGradient(ix, iy, id, ox, oy, od);
-    gradient.addColorStop(0.0, "rgba(0,0,0,0)");
-    gradient.addColorStop(0.2, "rgba(0,0,0,1)");
-    gradient.addColorStop(1.0, "rgba(0,0,0,1)");
+    const color0 = new paper.Color(context.strokeStyle); // わざとstrokeStyleを使う
+    const color1 = new paper.Color(context.strokeStyle);
+    color0.alpha = 0;
+    gradient.addColorStop(0.0, color2string(color0));
+    gradient.addColorStop(0.2, color2string(color1));
+    gradient.addColorStop(1.0, color2string(color1));
     context.fillStyle = gradient;
 
     // 線を描く
@@ -628,4 +636,3 @@ function drawDiamondBubble(context, seed, rect, opts) {
   const path = getDiamondPath(rect, opts, seed);
   drawPath(context, path);
 }
-
