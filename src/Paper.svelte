@@ -19,6 +19,9 @@
   export let documentInput: unknown;
   export let documentOutput: unknown;
   export let editable = false;
+  export let paperColor = 'white';
+  export let frameColor = 'black';
+  export let frameWidth = 1;
 
   let canvas;
   let layeredCanvas;
@@ -85,6 +88,27 @@
     bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(canvasSize, b));
     bubbleLayer.selected = null;
 
+    layeredCanvas.redraw();
+  }
+
+  $:onChangePaperColor(paperColor);
+  function onChangePaperColor(newPaperColor) {
+    if (!frameLayer) { return; }
+    frameLayer.frameTree.bgColor = newPaperColor;
+    layeredCanvas.redraw();
+  }
+
+  $:onChangeFrameColor(frameColor);
+  function onChangeFrameColor(newFrameColor) {
+    if (!frameLayer) { return; }
+    frameLayer.frameTree.borderColor = newFrameColor;
+    layeredCanvas.redraw();
+  }
+
+  $:onChangeFrameWidth(frameWidth);
+  function onChangeFrameWidth(newFrameWidth) {
+    if (!frameLayer) { return; }
+    frameLayer.frameTree.borderWidth = newFrameWidth;
     layeredCanvas.redraw();
   }
 

@@ -141,6 +141,7 @@ export const frameExamples = [
   },
   {
     bgColor: "transparent",
+    borderWidth: 0,
   },
 /*
   {

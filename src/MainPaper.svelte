@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
   import Paper from './Paper.svelte';
-  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore';
+  import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore } from './undoStore';
   import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
 
@@ -66,7 +66,16 @@
 </script>
 
 <div class="main-paper-container">
-  <Paper width={`${$paperWidth}px`} height={`${$paperHeight}px`} documentInput={documentInput} bind:documentOutput={documentOutput} editable={true} bind:this={paper}/>
+  <Paper 
+    width={`${$paperWidth}px`} 
+    height={`${$paperHeight}px`} 
+    documentInput={documentInput} 
+    paperColor={$paperColor} 
+    frameColor={$frameColor} 
+    frameWidth={$frameWidth} 
+    editable={true} 
+    bind:documentOutput={documentOutput} 
+    bind:this={paper}/>
 </div>
 
 <style>

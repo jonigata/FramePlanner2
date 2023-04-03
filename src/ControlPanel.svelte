@@ -4,7 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { paperTemplate, paperWidth, paperHeight, saveToken, clipboardToken, importingImage } from './paperStore';
+  import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { tick } from 'svelte';
@@ -17,6 +17,7 @@
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import { useClipboard } from './clipboardStore';
   import { isJsonEditorOpen } from './jsonEditorStore';
+	import ColorPicker from 'svelte-awesome-color-picker';
 
   let max = 4096;
   let contactText = "";
@@ -125,6 +126,11 @@
       </div>  
     </div>
   </div>
+  <div class="hbox gap mx-2 paper-color-picker" style="margin-top: 16px;">
+    背景色<ColorPicker bind:hex={$paperColor} label=""/>
+    枠色<ColorPicker bind:hex={$frameColor} label="" />
+    <RangeSlider name="line" bind:value={$frameWidth} max={10} step={1} style="width:100px;"/>
+</div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
@@ -210,5 +216,15 @@
   }
   .textarea {
     resize: none;
+  }
+  .paper-color-picker :global(.container .color) {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+  }
+  .paper-color-picker :global(.container .alpha) {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
   }
 </style>

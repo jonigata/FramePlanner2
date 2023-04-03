@@ -112,9 +112,10 @@ export class FrameLayer extends Layer {
       ctx.restore();
     }
 
-    if (layout.element.bgColor !== "transparent") {
-      ctx.strokeStyle = "rgb(0,0,0)";
-      ctx.lineWidth = 1;
+    console.log(layout.element.borderColor, layout.element.borderWidth)
+    if (0 < layout.element.borderWidth) {
+      ctx.strokeStyle = layout.element.borderColor;
+      ctx.lineWidth = layout.element.borderWidth;
       ctx.stroke();
     }
   }
