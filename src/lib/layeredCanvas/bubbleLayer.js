@@ -177,9 +177,9 @@ export class BubbleLayer extends Layer {
   drawSelectedUI(ctx, bubble) {
     const [x, y, w, h] = bubble.regularizedPositionAndSize();
 
-    // ハンドル枠描画
+    // 選択枠描画
     ctx.save();
-    ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
+    ctx.strokeStyle = "rgba(0, 255, 0, 0.3)";
     ctx.strokeRect(x, y, w, h);
     ctx.restore();
 

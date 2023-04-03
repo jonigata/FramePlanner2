@@ -129,7 +129,7 @@
   <div class="hbox gap mx-2 paper-color-picker" style="margin-top: 16px;">
     背景色<ColorPicker bind:hex={$paperColor} label=""/>
     枠色<ColorPicker bind:hex={$frameColor} label="" />
-    <RangeSlider name="line" bind:value={$frameWidth} max={10} step={1} style="width:100px;"/>
+    幅<RangeSlider name="line" bind:value={$frameWidth} max={10} step={1} style="width:100px;"/>
 </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
@@ -165,7 +165,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 650px;
+    height: 680px;
     display: flex;
     flex-direction: column;
     top: 50px;

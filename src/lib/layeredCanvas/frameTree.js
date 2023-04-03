@@ -9,6 +9,7 @@ export class FrameElement {
         this.localBreadth = 0; // 交差軸サイズ
         this.divider = { spacing: 0, slant: 0 };
         this.margin = { top: 0, bottom: 0, left: 0, right: 0 };
+        this.padding = { top: -4, bottom: -4, left: -4, right: -4};
         this.translation = [0, 0];
         this.scale = [1, 1]; 
         this.reverse = [1, 1];
@@ -28,6 +29,7 @@ export class FrameElement {
         element.localBreadth = this.localBreadth;
         element.divider = { ...this.divider };
         element.margin = { ...this.margin };
+        element.padding = { ...this.padding };
         element.translation = [...this.translation];
         element.scale = [...this.scale];
         element.reverse = [...this.reverse];
@@ -46,10 +48,12 @@ export class FrameElement {
             slant: markUpElement?.divider?.slant || 0 
         };
         element.margin = {top:0, bottom:0, left:0, right:0};
+        Object.assign(element.margin, markUpElement.margin || {});
+        element.padding = {top:0.1, bottom:0.1, left:0.1, right:0.1};
+        Object.assign(element.padding, markUpElement.padding || {});
         element.bgColor = markUpElement.bgColor;
         element.borderColor = markUpElement.borderColor;
         element.borderWidth = markUpElement.borderWidth;
-        Object.assign(element.margin, markUpElement.margin || {});
 
         if (children) {
             if (markUpElement.column) {
@@ -76,7 +80,7 @@ export class FrameElement {
     }
 
     static decompileAux(element, parentDir) {
-        function cleanMargin(mm) {
+        function cleanMarginOrPadding(mm) {
             const m = {};
             if (mm.top !== 0) { m.top = mm.top; }
             if (mm.bottom !== 0) { m.bottom = mm.bottom; }
@@ -105,9 +109,13 @@ export class FrameElement {
                     markUpElement.divider.slant = element.slant;
                 }
             }
-            const margin = cleanMargin(element.margin);
+            const margin = cleanMarginOrPadding(element.margin);
             if (margin) {
                 markUpElement.margin = margin;
+            }
+            const padding = cleanMarginOrPadding(element.padding);
+            if (padding) {
+                markUpElement.padding = padding;
             }
         }
         if (parentDir == 'h') {
@@ -237,7 +245,10 @@ export function calculatePhysicalLayout(element, size, origin, context={leftSlan
     }
 }
 
-function calculatePhysicalLayoutElements(element, size, origin, context) {
+function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
+    const origin = [rawOrigin[0] + element.padding.left * rawSize[0], rawOrigin[1] + element.padding.top * rawSize[1]];
+    const size = [rawSize[0] * (1 - element.padding.left - element.padding.right), rawSize[1] * (1 - element.padding.top - element.padding.bottom)];
+
     const margin = element.margin;
     const dir = element.direction;
     const psize = element.localLength;
@@ -291,10 +302,13 @@ function calculatePhysicalLayoutElements(element, size, origin, context) {
         bottomLeft: [origin[0] + physicalMargin.left, origin[1] + size[1] - physicalMargin.bottom],
         bottomRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + size[1] - physicalMargin.bottom],
     }    
-    return { size, origin, children, element, dir, corners, physicalMargin };
+    return { size, origin, rawSize, rawOrigin, children, element, dir, corners, physicalMargin };
 }
 
-function calculatePhysicalLayoutLeaf(element, size, origin, ctx) {
+function calculatePhysicalLayoutLeaf(element, rawSize, rawOrigin, ctx) {
+    const origin = [rawOrigin[0] + element.padding.left * rawSize[0], rawOrigin[1] + element.padding.top * rawSize[1]];
+    const size = [rawSize[0] * (1 - element.padding.left - element.padding.right), rawSize[1] * (1 - element.padding.top - element.padding.bottom)];
+
     const logicalWidth = element.margin.left + element.rawSize + element.margin.right;
     const logicalHeight = element.margin.top + element.rawSize + element.margin.bottom;
     const xf = size[0] / logicalWidth;
@@ -338,7 +352,7 @@ function calculatePhysicalLayoutLeaf(element, size, origin, ctx) {
         corners.bottomRight[1] -= dy;
     }
 
-    return { size, origin, element, corners, physicalMargin };
+    return { size, origin, rawSize, rawOrigin, element, corners, physicalMargin };
 }
 
 function isPointInRect(rect, point) {

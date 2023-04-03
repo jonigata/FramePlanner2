@@ -124,6 +124,13 @@ export class FrameLayer extends Layer {
       ctx.lineWidth = borderWidth;
       ctx.stroke();
     }
+
+    // 選択枠描画
+    const p = layout.element.padding;
+    if (0 != p.top || 0 != p.right || 0 != p.bottom || 0 != p.left) {
+      ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
+      ctx.strokeRect(...layout.rawOrigin, ...layout.rawSize);
+    }
   }
 
   renderBackground(ctx, layout, inheritanceContext) {
