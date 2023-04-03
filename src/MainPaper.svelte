@@ -40,7 +40,7 @@
     console.log("onInputDocument", doc);
     if (!doc) return;
     console.log(doc);
-    documentInput = doc;
+    setDocumentInput(doc);
   }
 
   $:onOutputDocument(documentOutput);
@@ -57,7 +57,15 @@
     if (!template) return;
     documentOutput = template;
     onOutputDocument(documentOutput);
-    documentInput = template;
+    setDocumentInput(template);
+  }
+
+  function setDocumentInput(doc) {
+    console.log("setDocumentInput", doc);
+    documentInput = doc;
+    $paperColor = doc.frameTree.bgColor ?? 'white';
+    $frameColor = doc.frameTree.borderColor ?? 'black';
+    $frameWidth = doc.frameTree.borderWidth ?? 1;
   }
 
   onMount(() => {

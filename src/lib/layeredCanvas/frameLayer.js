@@ -34,11 +34,14 @@ export class FrameLayer extends Layer {
     const size = this.getCanvasSize();
 
     // fill background
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
     ctx.fillStyle = "rgb(255,255,255, 1)";
     ctx.fillRect(0, 0, ...size);
+    ctx.restore();
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
-    const inheritanceContext = { bgColor: "transparent"};
+    const inheritanceContext = { borderColor: "black", borderWidth: 1 };
     this.renderElement(ctx, layout, inheritanceContext);
     if (!this.interactable) {
       return;
@@ -73,8 +76,11 @@ export class FrameLayer extends Layer {
   }
 
   renderElement(ctx, layout, inheritanceContext) {
-    if (layout.element.bgColor) { 
-      inheritanceContext.bgColor = layout.element.bgColor;
+    if (layout.element.borderColor != null) { 
+      inheritanceContext.borderColor = layout.element.borderColor;
+    }
+    if (layout.element.borderWidth != null) {
+      inheritanceContext.borderWidth = layout.element.borderWidth;
     }
 
     if (layout.children) {
@@ -112,30 +118,21 @@ export class FrameLayer extends Layer {
       ctx.restore();
     }
 
-    console.log(layout.element.borderColor, layout.element.borderWidth)
-    if (0 < layout.element.borderWidth) {
-      ctx.strokeStyle = layout.element.borderColor;
-      ctx.lineWidth = layout.element.borderWidth;
+    const borderWidth = inheritanceContext.borderWidth;
+    if (0 < borderWidth) {
+      ctx.strokeStyle = inheritanceContext.borderColor;
+      ctx.lineWidth = borderWidth;
       ctx.stroke();
     }
   }
 
   renderBackground(ctx, layout, inheritanceContext) {
-    let bgColor = inheritanceContext.bgColor;
-
     ctx.beginPath();
+    ctx.lineJoin = "miter";
     this.trapezoidPath(ctx, layout.corners);
 
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.fillStyle = "rgb(255,255,255, 1)";
-    ctx.fill();
-    ctx.restore();
-
-    if (bgColor !== "transparent") {
-      // random color
-      // ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
-      ctx.fillStyle = bgColor;
+    if (layout.element.bgColor) {
+      ctx.fillStyle = layout.element.bgColor;
       ctx.fill();
     }
   }
@@ -146,6 +143,7 @@ export class FrameLayer extends Layer {
     ctx.lineTo(...corners.bottomRight);
     ctx.lineTo(...corners.bottomLeft);
     ctx.lineTo(...corners.topLeft);
+    ctx.closePath();
   }
 
   dropped(image, position) {

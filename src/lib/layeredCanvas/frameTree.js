@@ -14,7 +14,7 @@ export class FrameElement {
         this.reverse = [1, 1];
         this.bgColor = null;
         this.borderColor = null;
-        this.borderWidth = 1;
+        this.borderWidth = null;
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;
@@ -48,7 +48,7 @@ export class FrameElement {
         element.margin = {top:0, bottom:0, left:0, right:0};
         element.bgColor = markUpElement.bgColor;
         element.borderColor = markUpElement.borderColor;
-        element.borderWidth = markUpElement.borderWidth ?? 1;
+        element.borderWidth = markUpElement.borderWidth;
         Object.assign(element.margin, markUpElement.margin || {});
 
         if (children) {
@@ -89,7 +89,7 @@ export class FrameElement {
         const markUpElement = {};
         if (element.bgColor) { markUpElement.bgColor = element.bgColor; }
         if (element.borderColor) { markUpElement.borderColor = element.borderColor; }
-        if (element.borderWidth !== 1) { markUpElement.borderWidth = element.borderWidth; }
+        if (element.borderWidth) { markUpElement.borderWidth = element.borderWidth; }
         if (element.direction) {
             const dir = element.direction == 'h' ? 'row' : 'column';
             markUpElement[dir] = [];
