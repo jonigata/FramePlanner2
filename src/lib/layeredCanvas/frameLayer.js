@@ -3,6 +3,7 @@ import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, find
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon } from "./clickableIcon.js";
+import { cssColorToRgba, rgbaToCssColor } from "./canvasTools.js";
 
 export class FrameLayer extends Layer {
   constructor(frameTree, interactable, onCommit) {
@@ -119,23 +120,21 @@ export class FrameLayer extends Layer {
   }
 
   renderBackground(ctx, layout, inheritanceContext) {
-    const origin = layout.origin;
-    const size = layout.size;
-
     let bgColor = inheritanceContext.bgColor;
-    if (bgColor == "transparent") {
-      ctx.save();
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = "rgb(255,255,255, 1)";
-      this.trapezoidPath(ctx, layout.corners);
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.fillStyle = bgColor;
+
+    ctx.beginPath();
+    this.trapezoidPath(ctx, layout.corners);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "rgb(255,255,255, 1)";
+    ctx.fill();
+    ctx.restore();
+
+    if (bgColor !== "transparent") {
       // random color
       // ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
-      ctx.beginPath();
-      this.trapezoidPath(ctx, layout.corners);
+      ctx.fillStyle = bgColor;
       ctx.fill();
     }
   }
