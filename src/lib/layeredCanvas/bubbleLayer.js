@@ -198,7 +198,6 @@ export class BubbleLayer extends Layer {
   drawOptionHandles(ctx, bubble) {
     const optionSet = bubble.optionSet;
     const [cx,cy] = bubble.center;
-    const [w, h] = bubble.size;
     for (const option of Object.keys(optionSet)) {
       let icon;
       switch (option) {
@@ -248,8 +247,10 @@ export class BubbleLayer extends Layer {
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
       ctx.beginPath();
-      ctx.moveTo(cx + bubble.optionContext.focalPoint[0], cy + bubble.optionContext.focalPoint[1]);
-      ctx.lineTo(cx + bubble.optionContext.focalRange[0], cy + bubble.optionContext.focalRange[1]);
+      const fp = bubble.optionContext.focalPoint;
+      const [px, py] = [cx + fp[0], cy + fp[1]];
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + bubble.optionContext.focalRange[0], py + bubble.optionContext.focalRange[1]);
       ctx.stroke();
     }
     if (this.selected) {
@@ -667,6 +668,7 @@ export class BubbleLayer extends Layer {
     const bubble = this.defaultBubble.clone();
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
+    bubble.initOptions();
     this.onGetDefaultText().then((text) => {
       bubble.text = text;
       this.bubbles.push(bubble);
@@ -736,28 +738,28 @@ export class BubbleLayer extends Layer {
   }
 
   *optionsFocalPoint(p, bubble) {
-    console.log("optionsCircle");
-    this.optionEditActive.circle = true;
+    console.log("optionsFocalPoint");
+    this.optionEditActive.focal = true;
     const s = bubble.optionContext.focalPoint;
     const q = p;
     while (p = yield) {
       bubble.optionContext.focalPoint = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
       this.redraw();
     }
-    this.optionEditActive.circle = false;
+    this.optionEditActive.focal = false;
     this.redraw();
   }
 
   *optionsFocalRange(p, bubble) {
-    console.log("optionsCircle");
-    this.optionEditActive.circle = true;
+    console.log("optionsFocalRange");
+    this.optionEditActive.focal = true;
     const s = bubble.optionContext.focalRange;
     const q = p;
     while (p = yield) {
       bubble.optionContext.focalRange = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
       this.redraw();
     }
-    this.optionEditActive.circle = false;
+    this.optionEditActive.focal = false;
     this.redraw();
   }
 
