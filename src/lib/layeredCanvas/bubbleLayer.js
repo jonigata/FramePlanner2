@@ -30,8 +30,8 @@ export class BubbleLayer extends Layer {
     this.createBubbleIcon = new ClickableIcon("bubble.png",[4, 4],[iconSize, iconSize], "ドラッグで作成", () => this.interactable);
     this.dragIcon = new ClickableIcon("drag.png", [0, 0], [iconSize, iconSize], "ドラッグで移動", () => this.interactable && this.selected);
 
-    this.zPlusIcon = new ClickableIcon("zplus.png",[0, 0],[iconSize, iconSize], "フキダシ順で手前", () => this.interactable && this.selected);
-    this.zMinusIcon = new ClickableIcon("zminus.png",[0, 0],[iconSize, iconSize], "フキダシ順で奥", () => this.interactable && this.selected);
+    this.zPlusIcon = new ClickableIcon("bubble-zplus.png",[0, 0],[iconSize, iconSize], "フキダシ順で手前", () => this.interactable && this.selected);
+    this.zMinusIcon = new ClickableIcon("bubble-zminus.png",[0, 0],[iconSize, iconSize], "フキダシ順で奥", () => this.interactable && this.selected);
     this.removeIcon = new ClickableIcon("remove.png",[0, 0],[iconSize, iconSize], "削除", () => this.interactable && this.selected);
 
     this.imageDropIcon = new ClickableIcon("bubble-drop.png",[0, 0],[iconSize, iconSize], "画像除去", () => this.interactable && this.selected?.image);
