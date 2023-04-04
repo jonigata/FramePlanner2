@@ -224,8 +224,8 @@ export class FrameElement {
         }
         for (let i = 0; i < this.children.length; i++) {
             const child = this.children[i];
-            if (i < this.children.length-1) { totalLength += child.divider.spacing; }
             totalLength += child.rawSize;
+            if (i < this.children.length-1) { totalLength += child.divider.spacing; }
         }
         this.localLength = totalLength;
     }
@@ -270,7 +270,6 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
             const child = element.children[i];
             const childSize = [child.rawSize * xf, inner_height];
             const childOrigin = [origin[0] + size[0] - x * xf - childSize[0], origin[1] + y * yf];
-            console.log("h", childOrigin, childSize);
             context = {
                 leftSlant: i == element.children.length - 1 ? 0 : child.divider.slant,
                 rightSlant: i == 0 ? 0 : element.children[i-1].divider.slant,
@@ -287,8 +286,6 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
             const child = element.children[i];
             const childSize = [inner_width, child.rawSize * yf];
             const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
-            console.log("v", childOrigin, childSize);
-            if (0 < i) 
             context = {
                 topSlant: i == 0 ? 0 : element.children[i-1].divider.slant,
                 bottomSlant: i == element.children.length - 1 ? 0 : child.divider.slant,
@@ -568,9 +565,9 @@ export function makeBorderRect(layout, index) {
 function makeHorizontalBorderRect(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
-    const cox0 = prev.origin[0] + prev.size[0];
+    const cox0 = curr.origin[0] + curr.size[1];
     const coy0 = curr.origin[1];
-    const cox1 = curr.origin[0];
+    const cox1 = prev.origin[0];
     const coy1 = curr.origin[1] + curr.size[1];
     return [cox0 - BORDER_WIDTH, coy0, cox1 + BORDER_WIDTH, coy1];
 }
@@ -597,10 +594,10 @@ function makeHorizontalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
     const margin = layout.physicalMargin;
-    const cox0 = prev.origin[0] + prev.size[0];
-    const coy0 = curr.origin[1] + margin.top;
-    const cox1 = curr.origin[0];
-    const coy1 = curr.origin[1] + curr.size[1] - margin.bottom;
+    const cox0 = curr.origin[0] + curr.size[0];
+    const coy0 = curr.origin[1];
+    const cox1 = prev.origin[0];
+    const coy1 = curr.origin[1] + curr.size[1];
 
     const corners = {
         topLeft: [cox0 - BORDER_WIDTH, coy0],

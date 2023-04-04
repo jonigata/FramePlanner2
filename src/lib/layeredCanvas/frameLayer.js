@@ -43,7 +43,6 @@ export class FrameLayer extends Layer {
     ctx.restore();
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
-    console.log(layout);
     const inheritanceContext = { borderColor: "black", borderWidth: 1 };
     const deferred = [];
     this.renderElement(ctx, layout, inheritanceContext, deferred);
@@ -448,12 +447,14 @@ export class FrameLayer extends Layer {
 
     const c0 = child0.element;
     const c1 = child1.element;
-    const rawSpacing = layout.element.divider.spacing;
+    const rawSpacing = c0.divider.spacing;
     const rawSum = c0.rawSize + rawSpacing + c1.rawSize;
+    console.log(rawSpacing, rawSum);
 
     while ((p = yield)) {
       const balance = this.getBorderBalance(p, border);
       const t = balance * rawSum;
+      console.log(balance, t);
       c0.rawSize = t - rawSpacing * 0.5;
       c1.rawSize = rawSum - t - rawSpacing * 0.5;
       this.updateBorder(border);
@@ -466,14 +467,23 @@ export class FrameLayer extends Layer {
 
   *expandBorder(p, border) {
     const element = border.layout.element;
-    const rawSpacing = element.divider.spacing;
     const dir = border.layout.dir == "h" ? 0 : 1;
     const factor = border.layout.size[dir] / this.getCanvasSize()[dir];
+    const prev = border.layout.children[border.index-1].element;
+    const curr = border.layout.children[border.index].element;
+    const startSpacing = prev.divider.spacing;
     const s = p;
+    const startPrevRawSize = prev.rawSize;
+    const startCurrRawSize = curr.rawSize;
 
     while ((p = yield)) {
       const op = p[dir] - s[dir];
-      element.divider.spacing = Math.max(0, rawSpacing + op * factor * 0.1);
+      prev.divider.spacing = Math.max(0, startSpacing + op * factor * 0.1);
+      const diff = prev.divider.spacing - startSpacing;
+
+      prev.rawSize = startPrevRawSize - diff*0.5;
+      curr.rawSize = startCurrRawSize - diff*0.5;
+
       element.calculateLengthAndBreadth();
       this.updateBorder(border);
       this.constraintRecursive(border.layout);
@@ -485,13 +495,15 @@ export class FrameLayer extends Layer {
 
   *slantBorder(p, border) {
     const element = border.layout.element;
-    const rawSlant = element.divider.slant;
     const dir = border.layout.dir == "h" ? 0 : 1;
+    const prev = border.layout.children[border.index-1].element;
+    const curr = border.layout.children[border.index].element;
+    const rawSlant = prev.divider.slant;
 
     const s = p;
     while ((p = yield)) {
       const op = p[dir] - s[dir];
-      element.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
+      prev.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
       this.updateBorderTrapezoid(border);
       this.constraintRecursive(border.layout);
       this.redraw();
@@ -554,7 +566,7 @@ export class FrameLayer extends Layer {
 
     let t; // 0.0 - 1.0, 0.0: top or left of rect0, 1.0: right or bottom of rect1
     if (layout.dir == "h") {
-      t = (p[0] - rect0[0]) / (rect1[2] - rect0[0]);
+      t = 1.0 - (p[0] - rect1[0]) / (rect0[2] - rect1[0]);
     } else {
       t = (p[1] - rect0[1]) / (rect1[3] - rect0[1]);
     }
