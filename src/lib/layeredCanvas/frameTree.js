@@ -9,7 +9,7 @@ export class FrameElement {
         this.localBreadth = 0; // 交差軸サイズ
         this.divider = { spacing: 0, slant: 0 };
         this.margin = { top: 0, bottom: 0, left: 0, right: 0 };
-        this.padding = { top: -4, bottom: -4, left: -4, right: -4};
+        this.padding = { top: 0, bottom: 0, left: 0, right: 0};
         this.translation = [0, 0];
         this.scale = [1, 1]; 
         this.reverse = [1, 1];
@@ -51,7 +51,7 @@ export class FrameElement {
         };
         element.margin = {top:0, bottom:0, left:0, right:0};
         Object.assign(element.margin, markUpElement.margin || {});
-        element.padding = {top:0.1, bottom:0.1, left:0.1, right:0.1};
+        element.padding = {top:0, bottom:0, left:0, right:0};
         Object.assign(element.padding, markUpElement.padding || {});
         element.bgColor = markUpElement.bgColor;
         element.borderColor = markUpElement.borderColor;
@@ -178,7 +178,7 @@ export class FrameElement {
             if (dir === splitDirection) { 
                 console.log("same direction");
                 const index = parent.children.indexOf(target);
-                const spacing = parent.divider.spacing;
+                const spacing = target.divider.spacing;
                 const length = target.rawSize;
                 const newElement = new FrameElement((length - spacing) / 2);
                 newElement.calculateLengthAndBreadth();
@@ -224,7 +224,7 @@ export class FrameElement {
         }
         for (let i = 0; i < this.children.length; i++) {
             const child = this.children[i];
-            if (0 < i) { totalLength += this.divider.spacing; }
+            if (i < this.children.length-1) { totalLength += child.divider.spacing; }
             totalLength += child.rawSize;
         }
         this.localLength = totalLength;
@@ -261,37 +261,42 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
     const yf = dir == 'v' ? size[1] / psize : size[1] / ssize;
     const inner_width = (ssize - margin.left - margin.right) * xf;
     const inner_height = (ssize - margin.top - margin.bottom) * yf;
-    let x = margin.left;
-    let y = margin.top;
     const children = [];
     // console.log(margin, inner_width, inner_height, xf, yf, psize, ssize);
     if (dir == 'h') {
-        for (let i = element.children.length - 1 ; 0 <= i ; i--) {
+        let x = margin.right;
+        const y = margin.top;
+        for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
-            const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
             const childSize = [child.rawSize * xf, inner_height];
+            const childOrigin = [origin[0] + size[0] - x * xf - childSize[0], origin[1] + y * yf];
+            console.log("h", childOrigin, childSize);
             context = {
-                leftSlant: i == element.children.length - 1 ? 0 : element.divider.slant,
-                rightSlant: i == 0 ? 0 : element.divider.slant,
+                leftSlant: i == element.children.length - 1 ? 0 : child.divider.slant,
+                rightSlant: i == 0 ? 0 : element.children[i-1].divider.slant,
                 topSlant: 0,
                 bottomSlant: 0,
             }
             children.push(calculatePhysicalLayout(child, childSize, childOrigin, context));
-            x += child.rawSize + element.divider.spacing;
+            x += child.rawSize + child.divider.spacing;
         }
     } else {
+        const x = margin.left;
+        let y = margin.top;
         for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
-            const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
             const childSize = [inner_width, child.rawSize * yf];
+            const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
+            console.log("v", childOrigin, childSize);
+            if (0 < i) 
             context = {
-                topSlant: i == 0 ? 0 : element.divider.slant,
-                bottomSlant: i == element.children.length - 1 ? 0 : element.divider.slant,
+                topSlant: i == 0 ? 0 : element.children[i-1].divider.slant,
+                bottomSlant: i == element.children.length - 1 ? 0 : child.divider.slant,
                 leftSlant: 0,
                 rightSlant: 0,
             }
             children.push(calculatePhysicalLayout(child, childSize, childOrigin, context));
-            y += child.rawSize + element.divider.spacing;
+            y += child.rawSize + child.divider.spacing;
         }
     }
     const physicalMargin = {
@@ -606,7 +611,7 @@ function makeHorizontalBorderTrapezoid(layout, index) {
 
     const h = layout.size[1] - margin.top - margin.bottom;
     const rad = Math.PI / 180;
-    const slant = layout.element.divider.slant;
+    const slant = prev.element.divider.slant;
     if (slant != 0) {
         const dx = Math.cos(Math.PI*0.5 + slant * rad) * (h * 0.5);
         corners.topLeft[0] -= dx;
@@ -636,7 +641,7 @@ function makeVerticalBorderTrapezoid(layout, index) {
 
     const w = layout.size[0] - margin.left - margin.right;
     const rad = Math.PI / 180;
-    const slant = layout.element.divider.slant;
+    const slant = prev.element.divider.slant;
     if (slant != 0) {
         const dy = Math.sin(slant * rad) * (w * 0.5);
         corners.topRight[1] -= dy;

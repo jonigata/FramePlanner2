@@ -1,5 +1,5 @@
 export const frameExamples = [
-  {
+  { // オーソドックス
     bgColor: "white",
     height: 100,
     row: [
@@ -16,21 +16,20 @@ export const frameExamples = [
           slant: 0,
         },
         column: [
-          { height: 17 },
-          {
-            height: 25,
-            divider: {
-              spacing: 2,
-              slant: 0,
-            },
-            row: [{ width: 45 }, { width: 55 }],
+          { height: 17, divider: { spacing: 2, slant: 0 }, },
+          { height: 25, 
+            divider: { spacing: 2, slant: 0 },
+            row: [
+              { width: 45, divider: { spacing: 2, slant: 0 }, }, 
+              { width: 55 }
+            ],
           },
           { height: 17 },
         ],
       },
     ],
   },
-  {
+  { // 一コマ
     bgColor: "white",
     height: 100,
     row: [
@@ -50,7 +49,7 @@ export const frameExamples = [
       },
     ]
   },
-  {
+  { // 4コマ
     bgColor: "white",
     height: 100,
     row: [
@@ -68,13 +67,13 @@ export const frameExamples = [
         },
         column: [
           {
-            height: 8,
+            height: 8, divider: { spacing: 1, slant: 0 }, 
           },
           {
-            height: 8,
+            height: 8, divider: { spacing: 1, slant: 0 }, 
           },
           {
-            height: 8,
+            height: 8, divider: { spacing: 1, slant: 0 }, 
           },
           {
             height: 8,
@@ -83,7 +82,7 @@ export const frameExamples = [
       },
     ]
   },
-  {
+  { // オーソドックス2
     bgColor: "white",
     height: 100,
     row: [
@@ -91,37 +90,27 @@ export const frameExamples = [
         column: [
           {
             height: 60,
+            divider: { spacing: 4, slant: 0 }, 
           },
           {
-            bgColor: null,
             row: [
               {
-                bgColor: null,
                 width: 30,
+                divider: { spacing: 2, slant: 0 }, 
               },
               {
-                bgColor: null,
                 column: [
                   {
-                    bgColor: null,
                     height: 30,
+                    divider: { spacing: 2, slant: 0 }, 
                   },
                   {
-                    bgColor: null,
                     height: 30,
                   },
                 ],
-                divider: {
-                  spacing: 1,
-                  slant: 0,
-                },
                 width: 30,
               },
             ],
-            divider: {
-              spacing: 2,
-              slant: 0,
-            },
             height: 120,
           },
         ],

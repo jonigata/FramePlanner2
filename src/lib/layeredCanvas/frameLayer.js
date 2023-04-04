@@ -43,6 +43,7 @@ export class FrameLayer extends Layer {
     ctx.restore();
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
+    console.log(layout);
     const inheritanceContext = { borderColor: "black", borderWidth: 1 };
     const deferred = [];
     this.renderElement(ctx, layout, inheritanceContext, deferred);
