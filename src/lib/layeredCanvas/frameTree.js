@@ -467,6 +467,85 @@ export function makeMarginRect(layout, handle) {
     return null;
 }
 
+export function findPaddingAt(layout, position) {
+    const [x,y] = position;
+
+    const r = makePaddingBoundingRect(layout);
+    if (!isPointInRect(r, position)) {
+        return null;
+    }
+    if (layout.children) {
+        for (let i = 0; i < layout.children.length; i++) {
+            const found = findPaddingAt(layout.children[i], position);
+            if (found) { return found; }
+        }
+
+        for (let handle of ["top", "bottom", "left", "right"]) {
+            const paddingRect = makePaddingRect(layout, handle);
+            if (isPointInRect(paddingRect, [x, y])) {
+                return { layout, handle };
+            }
+        }
+    } else {
+        for (let handle of ["top", "bottom", "left", "right"]) {
+            const paddingRect = makePaddingRect(layout, handle);
+            if (isPointInRect(paddingRect, [x, y])) {
+                return { layout, handle };
+            }
+        }
+    }
+    return null;
+}
+
+function makePaddingBoundingRect(layout) {
+    const p0 = layout.origin;
+    const p1 = [p0[0] + layout.size[0], p0[1] + layout.size[1]];
+    const q0 = layout.rawOrigin;
+    const q1 = [q0[0] + layout.rawSize[0], q0[1] + layout.rawSize[1]];
+
+    const o0 = [Math.min(p0[0], q0[0]), Math.min(p0[1], q0[1])];
+    const o1 = [Math.max(p1[0], q1[0]), Math.max(p1[1], q1[1])];
+
+    return [...o0, ...o1];
+}
+
+export function makePaddingRect(layout, handle) {
+    const p0 = layout.origin;
+    const p1 = [p0[0] + layout.size[0], p0[1] + layout.size[1]];
+    const q0 = layout.rawOrigin;
+    const q1 = [q0[0] + layout.rawSize[0], q0[1] + layout.rawSize[1]];
+
+    const o0 = [Math.min(p0[0], q0[0]), Math.min(p0[1], q0[1])];
+    const o1 = [Math.max(p1[0], q1[0]), Math.max(p1[1], q1[1])];
+    const i0 = [Math.max(p0[0], q0[0]), Math.max(p0[1], q0[1])];
+    const i1 = [Math.min(p1[0], q1[0]), Math.min(p1[1], q1[1])];
+
+    const MIN_PADDING = 10;
+
+    let r;
+    switch (handle) {
+        case 'top':
+            r = [o0[0], o0[1], o1[0], i0[1]];
+            if (i0[1] - o0[1] < MIN_PADDING) {r[1] = o0[1] + MIN_PADDING;}
+            break;
+        case 'bottom':
+            r = [o0[0], i1[1], o1[0], o1[1]];
+            if (o1[1] - i1[1] < MIN_PADDING) {r[1] = o1[1] - MIN_PADDING;}
+            break;
+        case 'left':
+            r = [o0[0], o0[1], i0[0], o1[1]];
+            if (i0[0] - o0[0] < MIN_PADDING) {r[0] = o0[0] + MIN_PADDING;}
+            break;
+        case 'right':
+            r = [i1[0], o0[1], o1[0], o1[1]];
+            if (o1[0] - i1[0] < MIN_PADDING) {r[0] = o1[0] - MIN_PADDING;}
+            break;
+        default:
+            return null;
+    }
+    return r;
+}
+
 const BORDER_WIDTH = 10;
 
 export function makeBorderRect(layout, index) {

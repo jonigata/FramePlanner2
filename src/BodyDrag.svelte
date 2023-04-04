@@ -65,7 +65,7 @@
           code === "ControlLeft" || code === "ControlRight" ||
           code === "ShiftLeft" || code === "ShiftRight" ||
           code === "KeyQ" || code === "KeyW" || code === "KeyS" || 
-          code === "KeyF" || code === "KeyR" || code === "KeyD" ||
+          code === "KeyF" || code === "KeyR" || code === "KeyD" || code === "KeyB" ||
           code === "KeyT" || code === "KeyY" || 
           code === "Space";
     });

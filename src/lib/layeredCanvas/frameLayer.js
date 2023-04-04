@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, makeBorderTrapezoid, makeMarginRect, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, findPaddingAt, makeBorderTrapezoid, makeMarginRect, makePaddingRect, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon } from "./clickableIcon.js";
@@ -53,6 +53,14 @@ export class FrameLayer extends Layer {
 
       ctx.fillStyle = "rgba(0,0,200,0.7)";
       ctx.fillRect(marginRect[0],marginRect[1],marginRect[2] - marginRect[0],marginRect[3] - marginRect[1]);
+    }
+
+    if (this.focusedPadding) {
+      const newLayout = findLayoutOf(layout, this.focusedPadding.layout.element);
+      const paddingRect = makePaddingRect(newLayout, this.focusedPadding.handle);
+
+      ctx.fillStyle = "rgba(200,200,0, 0.7)";
+      ctx.fillRect(paddingRect[0],paddingRect[1],paddingRect[2] - paddingRect[0],paddingRect[3] - paddingRect[1]);
     }
 
     if (this.focusedBorder) {
@@ -177,12 +185,22 @@ export class FrameLayer extends Layer {
     );
 
     this.focusedMargin = null;
+    this.focusedPadding = null;
     this.focusedBorder = null;
     this.focusedLayout = null;
 
     if (keyDownFlags["KeyR"]) {
       this.focusedMargin = findMarginAt(layout, point);
       if (this.focusedMargin) {
+        this.redraw();
+        this.hint(point, null);
+        return;
+      }
+    }
+
+    if (keyDownFlags["KeyB"]) {
+      this.focusedPadding = findPaddingAt(layout, point);
+      if (this.focusedPadding) {
         this.redraw();
         this.hint(point, null);
         return;
@@ -245,6 +263,13 @@ export class FrameLayer extends Layer {
       const margin = findMarginAt(layout, point);
       if (margin) {
         return { margin };
+      }
+    }
+
+    if (keyDownFlags["KeyB"]) {
+      const padding = findPaddingAt(layout, point);
+      if (padding) {
+        return { padding };
       }
     }
 
@@ -360,7 +385,9 @@ export class FrameLayer extends Layer {
         });
       }
     } else if (payload.margin) {
-        yield* this.expandMargin(p, payload.margin);
+      yield* this.expandMargin(p, payload.margin);
+    } else if (payload.padding) {
+      yield* this.expandPadding(p, payload.padding);
     } else {
       if (
         keyDownFlags["ControlLeft"] ||
@@ -460,6 +487,24 @@ export class FrameLayer extends Layer {
       element.margin[margin.handle] = Math.max(0, oldLogicalMargin + physicalMarginDelta * factor);
       element.calculateLengthAndBreadth();
       this.constraintTree(margin.layout);
+      this.redraw();
+    }
+
+    this.onCommit(this.frameTree);
+  }
+
+  *expandPadding(p, padding) {
+    const element = padding.layout.element;
+    const dir = padding.handle === "top" || padding.handle === "bottom" ? 1 : 0;
+    const deltaFactor = padding.handle === "right" || padding.handle === "bottom" ? -1 : 1;
+    const rawSize = padding.layout.rawSize;
+    const s = p;
+    const initialPadding = element.padding[padding.handle] * rawSize[dir];
+
+    while ((p = yield)) {
+      const delta = p[dir] - s[dir];
+      const currentPadding = initialPadding + delta * deltaFactor;
+      element.padding[padding.handle] = currentPadding / rawSize[dir];
       this.redraw();
     }
 
