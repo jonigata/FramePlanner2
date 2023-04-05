@@ -4,18 +4,12 @@ export const frameExamples = [
     height: 100,
     row: [
       {
-        margin: {
-          top: 4,
-          bottom: 4,
-          left: 8,
-          right: 8,
-        },
+        width: 4, visibility: 0
+      },
+      {
         width: 180,
-        divider: {
-          spacing: 2,
-          slant: 0,
-        },
         column: [
+          { height: 2, visibility: 0 },
           { height: 17, divider: { spacing: 2, slant: 0 }, },
           { height: 25, 
             divider: { spacing: 2, slant: 0 },
@@ -25,7 +19,11 @@ export const frameExamples = [
             ],
           },
           { height: 17 },
+          { height: 2, visibility: 0 },
         ],
+      },
+      {
+        width: 4, visibility: 0
       },
     ],
   },
@@ -33,39 +31,33 @@ export const frameExamples = [
     bgColor: "white",
     height: 100,
     row: [
+      { width: 3, visibility: 0 },
       {
-        margin: {
-          top: 4,
-          bottom: 4,
-          left: 4,
-          right: 4,
-        },
-        width: 180,
+        width: 120,
         column: [
+          {
+            height: 3, visibility: 0 ,
+          },
           {
             height: 180,
           },
+          {
+            height: 3, visibility: 0 ,
+          },
         ],
       },
+      { width: 3, visibility: 0  },
     ]
   },
   { // 4コマ
     bgColor: "white",
     height: 100,
     row: [
+      { width: 2, visibility: 0  },
       {
-        margin: {
-          top: 1,
-          bottom: 1,
-          left: 2,
-          right: 2,
-        },
         width: 3,
-        divider: {
-          spacing: 1,
-          slant: 0,
-        },
         column: [
+          { height: 1, visibility: 0  },
           {
             height: 8, divider: { spacing: 1, slant: 0 }, 
           },
@@ -78,16 +70,20 @@ export const frameExamples = [
           {
             height: 8,
           },
+          { height: 1, visibility: 0  },
         ],
       },
+      { width: 2, visibility: 0  },
     ]
   },
   { // オーソドックス2
     bgColor: "white",
     height: 100,
     row: [
+      { width: 4, visibility: 0  },
       {
         column: [
+          { height: 4, visibility: 0  },
           {
             height: 60,
             divider: { spacing: 4, slant: 0 }, 
@@ -113,19 +109,11 @@ export const frameExamples = [
             ],
             height: 120,
           },
+          { height: 4, visibility: 0  },
         ],
-        divider: {
-          spacing: 4,
-          slant: 0,
-        },
-        margin: {
-          top: 4,
-          bottom: 4,
-          left: 4,
-          right: 4,
-        },
         height: 180,
       },
+      { height: 4, visibility: 0  },
     ]
   },
   {

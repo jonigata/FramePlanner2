@@ -48,18 +48,18 @@ export class FrameElement {
         const element = new FrameElement(markUpElement.width || markUpElement.height || markUpElement.size || 1);
         const children = markUpElement.column || markUpElement.row;
         element.divider = { 
-            spacing: markUpElement?.divider?.spacing || 0, 
-            slant: markUpElement?.divider?.slant || 0 
+            spacing: markUpElement?.divider?.spacing ?? 0, 
+            slant: markUpElement?.divider?.slant ?? 0 
         };
         element.margin = {top:0, bottom:0, left:0, right:0};
-        Object.assign(element.margin, markUpElement.margin || {});
+        Object.assign(element.margin, markUpElement.margin ?? {});
         element.padding = {top:0, bottom:0, left:0, right:0};
-        Object.assign(element.padding, markUpElement.padding || {});
+        Object.assign(element.padding, markUpElement.padding ?? {});
         element.bgColor = markUpElement.bgColor;
         element.borderColor = markUpElement.borderColor;
         element.borderWidth = markUpElement.borderWidth;
-        element.z = markUpElement.z || 0;
-        element.visibility = markUpElement.visibility || 2;
+        element.z = markUpElement.z ?? 0;
+        element.visibility = markUpElement.visibility ?? 2;
 
         if (children) {
             if (markUpElement.column) {
