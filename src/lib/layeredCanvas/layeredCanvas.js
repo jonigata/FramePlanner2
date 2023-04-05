@@ -135,6 +135,12 @@ export class LayeredCanvas {
         this.pointerCursor = this.getCanvasPosition(event);
         for (let i = this.layers.length - 1; i >= 0; i--) {
             const layer = this.layers[i];
+            if (layer.beforeDoubleClick(this.pointerCursor)) {
+                return;
+            }
+        }
+        for (let i = this.layers.length - 1; i >= 0; i--) {
+            const layer = this.layers[i];
             if (layer.doubleClicked(this.pointerCursor)) {
                 this.redrawIfRequired();
                 break;
@@ -247,6 +253,7 @@ export class Layer {
     pointerUp(point, payload) {}
     render(ctx) {}
     dropped(image, position) { return false; }
+    beforeDoubleClick(position) { return false; }
     doubleClicked(position) { return false; }
     keyDown(event) { return false; }
 }

@@ -17,6 +17,7 @@ export class FrameElement {
         this.borderColor = null;
         this.borderWidth = null;
         this.z = 0;
+        this.visibility = 2;
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;
@@ -39,6 +40,7 @@ export class FrameElement {
         element.borderWidth = this.borderWidth;
         element.image = this.image;
         element.z = this.z;
+        element.visibility = this.visibility;
         return element;
     }
 
@@ -57,6 +59,7 @@ export class FrameElement {
         element.borderColor = markUpElement.borderColor;
         element.borderWidth = markUpElement.borderWidth;
         element.z = markUpElement.z || 0;
+        element.visibility = markUpElement.visibility || 2;
 
         if (children) {
             if (markUpElement.column) {
@@ -98,6 +101,7 @@ export class FrameElement {
         if (element.borderColor) { markUpElement.borderColor = element.borderColor; }
         if (element.borderWidth) { markUpElement.borderWidth = element.borderWidth; }
         if (element.z && element.z !== 0) { markUpElement.z = element.z; }
+        if (element.visibility && element.visibility !== 2) { markUpElement.visibility = element.visibility; }
         if (element.direction) {
             const dir = element.direction == 'h' ? 'row' : 'column';
             markUpElement[dir] = [];
@@ -239,6 +243,8 @@ export class FrameElement {
             return [this.rawSize, this.rawSize];
         }
     }
+
+    static visibilityCandidates = ["none", "background", "full"];
 }
 
 export function calculatePhysicalLayout(element, size, origin, context={leftSlant: 0,rightSlant: 0,topSlant: 0,bottomSlant: 0}){
@@ -699,5 +705,6 @@ export function dealImages(frameTree, images) {
       dealImages(frameTree.children[i], images);
     }
   }
+
 }
 
