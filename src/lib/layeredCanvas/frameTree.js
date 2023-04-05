@@ -482,82 +482,55 @@ export function makeMarginRect(layout, handle) {
 export function findPaddingAt(layout, position) {
     const [x,y] = position;
 
-    const r = makePaddingBoundingRect(layout);
-    if (!isPointInRect(r, position)) {
-        return null;
-    }
     if (layout.children) {
         for (let i = 0; i < layout.children.length; i++) {
             const found = findPaddingAt(layout.children[i], position);
             if (found) { return found; }
         }
+    }
 
-        for (let handle of ["top", "bottom", "left", "right"]) {
-            const paddingRect = makePaddingRect(layout, handle);
-            if (isPointInRect(paddingRect, [x, y])) {
-                return { layout, handle };
-            }
-        }
-    } else {
-        for (let handle of ["top", "bottom", "left", "right"]) {
-            const paddingRect = makePaddingRect(layout, handle);
-            if (isPointInRect(paddingRect, [x, y])) {
-                return { layout, handle };
-            }
+    for (let handle of ["top", "bottom", "left", "right"]) {
+        const paddingTrapezoid = makePaddingTrapezoid(layout, handle);
+        if (isPointInTrapezoid([x, y], paddingTrapezoid)) {
+            return { layout, handle, trapezoid: paddingTrapezoid };
         }
     }
     return null;
 }
 
-function makePaddingBoundingRect(layout) {
-    const p0 = layout.origin;
-    const p1 = [p0[0] + layout.size[0], p0[1] + layout.size[1]];
-    const q0 = layout.rawOrigin;
-    const q1 = [q0[0] + layout.rawSize[0], q0[1] + layout.rawSize[1]];
+export function makePaddingTrapezoid(layout, handle) {
+    const PADDING_WIDTH = 20;
 
-    const o0 = [Math.min(p0[0], q0[0]), Math.min(p0[1], q0[1])];
-    const o1 = [Math.max(p1[0], q1[0]), Math.max(p1[1], q1[1])];
-
-    return [...o0, ...o1];
-}
-
-export function makePaddingRect(layout, handle) {
-    const p0 = layout.origin;
-    const p1 = [p0[0] + layout.size[0], p0[1] + layout.size[1]];
-    const q0 = layout.rawOrigin;
-    const q1 = [q0[0] + layout.rawSize[0], q0[1] + layout.rawSize[1]];
-
-    const o0 = [Math.min(p0[0], q0[0]), Math.min(p0[1], q0[1])];
-    const o1 = [Math.max(p1[0], q1[0]), Math.max(p1[1], q1[1])];
-    const i0 = [Math.max(p0[0], q0[0]), Math.max(p0[1], q0[1])];
-    const i1 = [Math.min(p1[0], q1[0]), Math.min(p1[1], q1[1])];
-    console.log("makePaddingRect", handle, o0, o1, i0, i1)
-
-    const MIN_PADDING = 10;
-
-    let r;
     switch (handle) {
         case 'top':
-            r = [o0[0], o0[1], o1[0], i0[1]];
-            if (Math.abs(i0[1] - o0[1]) < MIN_PADDING) {r[3] = o0[1] + MIN_PADDING;}
-            break;
+            return trapezoidAroundSegment(layout.corners.topLeft, layout.corners.topRight, PADDING_WIDTH);
         case 'bottom':
-            r = [o0[0], i1[1], o1[0], o1[1]];
-            if (Math.abs(o1[1] - i1[1]) < MIN_PADDING) {r[1] = o1[1] - MIN_PADDING;}
-            break;
+            return trapezoidAroundSegment(layout.corners.bottomLeft, layout.corners.bottomRight, PADDING_WIDTH);
         case 'left':
-            r = [o0[0], o0[1], i0[0], o1[1]];
-            if (Math.abs(i0[0] - o0[0]) < MIN_PADDING) {r[2] = o0[0] + MIN_PADDING;}
-            break;
+            return trapezoidAroundSegment(layout.corners.topLeft, layout.corners.bottomLeft, PADDING_WIDTH);
         case 'right':
-            r = [i1[0], o0[1], o1[0], o1[1]];
-            if (Math.abs(o1[0] - i1[0]) < MIN_PADDING) {r[0] = o1[0] - MIN_PADDING;}
-            break;
+            return trapezoidAroundSegment(layout.corners.topRight, layout.corners.bottomRight, PADDING_WIDTH);
         default:
             return null;
     }
-    console.log(handle, r);
-    return r;
+}
+
+function trapezoidAroundSegment(p0, p1, width) {
+    const [x0, y0] = p0;
+    const [x1, y1] = p1;
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    const nx = dx / d;
+    const ny = dy / d;
+    const wx = ny * width;
+    const wy = -nx * width;
+    return {
+        topLeft: [x0 - wx, y0 - wy],
+        topRight: [x0 + wx, y0 + wy],
+        bottomRight: [x1 + wx, y1 + wy],
+        bottomLeft: [x1 - wx, y1 - wy],
+    };
 }
 
 const BORDER_WIDTH = 10;

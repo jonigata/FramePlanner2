@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, findPaddingAt, makeBorderTrapezoid, makeMarginRect, makePaddingRect, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, findPaddingAt, makeBorderTrapezoid, makeMarginRect, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
@@ -76,11 +76,10 @@ export class FrameLayer extends Layer {
     }
 
     if (this.focusedPadding) {
-      const newLayout = findLayoutOf(layout, this.focusedPadding.layout.element);
-      const paddingRect = makePaddingRect(newLayout, this.focusedPadding.handle);
-
       ctx.fillStyle = "rgba(200,200,0, 0.7)";
-      ctx.fillRect(paddingRect[0],paddingRect[1],paddingRect[2] - paddingRect[0],paddingRect[3] - paddingRect[1]);
+      ctx.beginPath();
+      this.trapezoidPath(ctx, this.focusedPadding.trapezoid);
+      ctx.fill();
     }
 
     if (this.focusedBorder) {
@@ -215,6 +214,7 @@ export class FrameLayer extends Layer {
     if (keyDownFlags["KeyB"]) {
       this.focusedPadding = findPaddingAt(layout, point);
       if (this.focusedPadding) {
+        console.log(this.focusedPadding);
         this.redraw();
         this.hint(point, "ドラッグでパディング変更");
         return;
