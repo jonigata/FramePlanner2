@@ -8,7 +8,6 @@ export class FrameElement {
         this.localLength = 0; // 主軸サイズ
         this.localBreadth = 0; // 交差軸サイズ
         this.divider = { spacing: 0, slant: 0 };
-        this.margin = { top: 0, bottom: 0, left: 0, right: 0 };
         this.padding = { top: 0, bottom: 0, left: 0, right: 0};
         this.translation = [0, 0];
         this.scale = [1, 1]; 
@@ -30,7 +29,6 @@ export class FrameElement {
         element.localLength = this.localLength;
         element.localBreadth = this.localBreadth;
         element.divider = { ...this.divider };
-        element.margin = { ...this.margin };
         element.padding = { ...this.padding };
         element.translation = [...this.translation];
         element.scale = [...this.scale];
@@ -51,8 +49,6 @@ export class FrameElement {
             spacing: markUpElement?.divider?.spacing ?? 0, 
             slant: markUpElement?.divider?.slant ?? 0 
         };
-        element.margin = {top:0, bottom:0, left:0, right:0};
-        Object.assign(element.margin, markUpElement.margin ?? {});
         element.padding = {top:0, bottom:0, left:0, right:0};
         Object.assign(element.padding, markUpElement.padding ?? {});
         element.bgColor = markUpElement.bgColor;
@@ -86,7 +82,7 @@ export class FrameElement {
     }
 
     static decompileAux(element, parentDir) {
-        function cleanMarginOrPadding(mm) {
+        function cleanPadding(mm) {
             const m = {};
             if (mm.top !== 0) { m.top = mm.top; }
             if (mm.bottom !== 0) { m.bottom = mm.bottom; }
@@ -117,11 +113,7 @@ export class FrameElement {
                     markUpElement.divider.slant = element.slant;
                 }
             }
-            const margin = cleanMarginOrPadding(element.margin);
-            if (margin) {
-                markUpElement.margin = margin;
-            }
-            const padding = cleanMarginOrPadding(element.padding);
+            const padding = cleanPadding(element.padding);
             if (padding) {
                 markUpElement.padding = padding;
             }
@@ -194,7 +186,6 @@ export class FrameElement {
                 const index = parent.children.indexOf(target);
                 const newElement = new FrameElement(target.rawSize);
                 newElement.direction = splitDirection;
-                newElement.margin = JSON.parse(JSON.stringify(target.margin));
                 for (let i = 0; i < 2; i++) {
                     const newChild = new FrameElement(target.rawSize);
                     newChild.calculateLengthAndBreadth();
@@ -219,13 +210,8 @@ export class FrameElement {
 
     calculateLengthAndBreadth() {
         let totalLength = 0;
-        if (this.direction == 'v') {
-            totalLength = this.margin.top + this.margin.bottom;
-            this.localBreadth = this.margin.left + this.rawSize + this.margin.right;
-        } else if (this.direction == 'h') {
-            totalLength = this.margin.left + this.margin.right;
-            this.localBreadth = this.margin.top + this.rawSize + this.margin.bottom;
-        }
+        totalLength = 0;
+        this.localBreadth = this.rawSize;
         for (let i = 0; i < this.children.length; i++) {
             const child = this.children[i];
             totalLength += child.rawSize;
@@ -259,19 +245,17 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
     const origin = [rawOrigin[0] + element.padding.left * rawSize[0], rawOrigin[1] + element.padding.top * rawSize[1]];
     const size = [rawSize[0] * (1 - element.padding.left - element.padding.right), rawSize[1] * (1 - element.padding.top - element.padding.bottom)];
 
-    const margin = element.margin;
     const dir = element.direction;
     const psize = element.localLength;
     const ssize = element.localBreadth;
     const xf = dir == 'h' ? size[0] / psize : size[0] / ssize;
     const yf = dir == 'v' ? size[1] / psize : size[1] / ssize;
-    const inner_width = (ssize - margin.left - margin.right) * xf;
-    const inner_height = (ssize - margin.top - margin.bottom) * yf;
+    const inner_width = ssize * xf;
+    const inner_height = ssize * yf;
     const children = [];
-    // console.log(margin, inner_width, inner_height, xf, yf, psize, ssize);
     if (dir == 'h') {
-        let x = margin.right;
-        const y = margin.top;
+        let x = 0;
+        const y = 0;
         for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
             const childSize = [child.rawSize * xf, inner_height];
@@ -286,8 +270,8 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
             x += child.rawSize + child.divider.spacing;
         }
     } else {
-        const x = margin.left;
-        let y = margin.top;
+        const x = 0;
+        let y = 0;
         for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
             const childSize = [inner_width, child.rawSize * yf];
@@ -302,45 +286,32 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
             y += child.rawSize + child.divider.spacing;
         }
     }
-    const physicalMargin = {
-        top: margin.top * yf,
-        bottom: margin.bottom * yf,
-        left: margin.left * xf,
-        right: margin.right * xf,
-    };
     const corners = {
-        topLeft: [origin[0] + physicalMargin.left, origin[1] + physicalMargin.top],
-        topRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + physicalMargin.top],
-        bottomLeft: [origin[0] + physicalMargin.left, origin[1] + size[1] - physicalMargin.bottom],
-        bottomRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + size[1] - physicalMargin.bottom],
+        topLeft: [origin[0], origin[1]],
+        topRight: [origin[0] + size[0], origin[1]],
+        bottomLeft: [origin[0], origin[1] + size[1]],
+        bottomRight: [origin[0] + size[0], origin[1] + size[1]],
     }    
-    return { size, origin, rawSize, rawOrigin, children, element, dir, corners, physicalMargin };
+    return { size, origin, rawSize, rawOrigin, children, element, dir, corners };
 }
 
 function calculatePhysicalLayoutLeaf(element, rawSize, rawOrigin, ctx) {
     const origin = [rawOrigin[0] + element.padding.left * rawSize[0], rawOrigin[1] + element.padding.top * rawSize[1]];
     const size = [rawSize[0] * (1 - element.padding.left - element.padding.right), rawSize[1] * (1 - element.padding.top - element.padding.bottom)];
 
-    const logicalWidth = element.margin.left + element.rawSize + element.margin.right;
-    const logicalHeight = element.margin.top + element.rawSize + element.margin.bottom;
+    const logicalWidth = element.rawSize;
+    const logicalHeight = element.rawSize;
     const xf = size[0] / logicalWidth;
     const yf = size[1] / logicalHeight;
 
-    const physicalMargin = {
-        top: element.margin.top * yf,
-        bottom: element.margin.bottom * yf,
-        left: element.margin.left * xf,
-        right: element.margin.right * xf,
-    }
-
     const corners = {
-        topLeft: [origin[0] + physicalMargin.left, origin[1] + physicalMargin.top],
-        topRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + physicalMargin.top],
-        bottomLeft: [origin[0] + physicalMargin.left, origin[1] + size[1] - physicalMargin.bottom],
-        bottomRight: [origin[0] + size[0] - physicalMargin.right, origin[1] + size[1] - physicalMargin.bottom],
+        topLeft: [origin[0], origin[1]],
+        topRight: [origin[0] + size[0], origin[1]],
+        bottomLeft: [origin[0], origin[1] + size[1]],
+        bottomRight: [origin[0] + size[0], origin[1] + size[1]],
     }    
 
-    const [w, h] = [size[0] - physicalMargin.left - physicalMargin.right, size[1] - physicalMargin.top - physicalMargin.bottom];
+    const [w, h] = size;
 
     const rad = Math.PI / 180;
     if (ctx.leftSlant != 0) {
@@ -364,7 +335,7 @@ function calculatePhysicalLayoutLeaf(element, rawSize, rawOrigin, ctx) {
         corners.bottomRight[1] -= dy;
     }
 
-    return { size, origin, rawSize, rawOrigin, element, corners, physicalMargin };
+    return { size, origin, rawSize, rawOrigin, element, corners };
 }
 
 function isPointInRect(rect, point) {
@@ -427,54 +398,6 @@ export function findBorderAt(layout, position) {
             if (found) { return found; }
         }
         return null;
-    }
-    return null;
-}
-
-export function findMarginAt(layout, position) {
-    const [x,y] = position;
-
-    const r = rectFromPositionAndSize(layout.origin, layout.size);
-    if (!isPointInRect(r, position)) {
-        return null;
-    }
-    if (layout.children) {
-        for (let i = 0; i < layout.children.length; i++) {
-            const found = findMarginAt(layout.children[i], position);
-            if (found) { return found; }
-        }
-
-        for (let handle of ["top", "bottom", "left", "right"]) {
-            const marginRect = makeMarginRect(layout, handle);
-            if (isPointInRect(marginRect, [x, y])) {
-                return { layout, handle };
-            }
-        }
-    } else {
-        for (let handle of ["top", "bottom", "left", "right"]) {
-            const marginRect = makeMarginRect(layout, handle);
-            if (isPointInRect(marginRect, [x, y])) {
-                return { layout, handle };
-            }
-        }
-    }
-    return null;
-}
-
-export function makeMarginRect(layout, handle) {
-    const [x, y] = layout.origin;
-    const [w, h] = layout.size;
-    const margin = layout.physicalMargin;
-    const MIN_MARGIN = 10;
-    switch (handle) {
-        case 'top':
-            return [x, y, x + w, y + Math.max(margin.top, MIN_MARGIN)];
-        case 'bottom':
-            return [x, y + h - Math.max(margin.bottom, MIN_MARGIN), x + w, y + h];
-        case 'left':
-            return [x, y, x + Math.max(margin.left, MIN_MARGIN), y + h];
-        case 'right':
-            return [x + w - Math.max(margin.right, MIN_MARGIN), y, x + w, y + h];
     }
     return null;
 }
@@ -574,7 +497,6 @@ export function makeBorderTrapezoid(layout, index) {
 function makeHorizontalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
-    const margin = layout.physicalMargin;
     const cox0 = curr.origin[0] + curr.size[0];
     const coy0 = curr.origin[1];
     const cox1 = prev.origin[0];
@@ -587,7 +509,7 @@ function makeHorizontalBorderTrapezoid(layout, index) {
         bottomRight: [cox1 + BORDER_WIDTH, coy1],
     }
 
-    const h = layout.size[1] - margin.top - margin.bottom;
+    const h = layout.size[1];
     const rad = Math.PI / 180;
     const slant = prev.element.divider.slant;
     if (slant != 0) {
@@ -604,7 +526,6 @@ function makeHorizontalBorderTrapezoid(layout, index) {
 function makeVerticalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
-    const margin = layout.physicalMargin;
     const cox0 = curr.origin[0];
     const coy0 = prev.origin[1] + prev.size[1];
     const cox1 = curr.origin[0] + curr.size[0];
@@ -617,7 +538,7 @@ function makeVerticalBorderTrapezoid(layout, index) {
         bottomRight: [cox1, coy1 + BORDER_WIDTH],
     }
 
-    const w = layout.size[0] - margin.left - margin.right;
+    const w = layout.size[0];
     const rad = Math.PI / 180;
     const slant = prev.element.divider.slant;
     if (slant != 0) {

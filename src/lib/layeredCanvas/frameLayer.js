@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findMarginAt, findPaddingAt, makeBorderTrapezoid, makeMarginRect, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
@@ -58,14 +58,6 @@ export class FrameLayer extends Layer {
 
     if (!this.interactable) {
       return;
-    }
-
-    if (this.focusedMargin) {
-      const newLayout = findLayoutOf(layout, this.focusedMargin.layout.element);
-      const marginRect = makeMarginRect(newLayout, this.focusedMargin.handle);
-
-      ctx.fillStyle = "rgba(0,0,200,0.7)";
-      ctx.fillRect(marginRect[0],marginRect[1],marginRect[2] - marginRect[0],marginRect[3] - marginRect[1]);
     }
 
     if (this.focusedLayout) {
@@ -197,19 +189,9 @@ export class FrameLayer extends Layer {
       [0, 0]
     );
 
-    this.focusedMargin = null;
     this.focusedPadding = null;
     this.focusedBorder = null;
     this.focusedLayout = null;
-
-    if (keyDownFlags["KeyR"]) {
-      this.focusedMargin = findMarginAt(layout, point);
-      if (this.focusedMargin) {
-        this.redraw();
-        this.hint(point, null);
-        return;
-      }
-    }
 
     if (keyDownFlags["KeyB"]) {
       this.focusedPadding = findPaddingAt(layout, point);
@@ -277,13 +259,6 @@ export class FrameLayer extends Layer {
       this.getCanvasSize(),
       [0, 0]
     );
-
-    if (keyDownFlags["KeyR"]) {
-      const margin = findMarginAt(layout, point);
-      if (margin) {
-        return { margin };
-      }
-    }
 
     if (keyDownFlags["KeyB"]) {
       const padding = findPaddingAt(layout, point);
@@ -431,8 +406,6 @@ export class FrameLayer extends Layer {
           this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
         });
       }
-    } else if (payload.margin) {
-      yield* this.expandMargin(p, payload.margin);
     } else if (payload.padding) {
       yield* this.expandPadding(p, payload.padding);
     } else {
@@ -524,29 +497,6 @@ export class FrameLayer extends Layer {
       prev.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
       this.updateBorderTrapezoid(border);
       this.constraintRecursive(border.layout);
-      this.redraw();
-    }
-
-    this.onCommit(this.frameTree);
-  }
-
-  *expandMargin(p, margin) {
-    const element = margin.layout.element;
-    const dir = margin.handle === "top" || margin.handle === "bottom" ? 1 : 0;
-    const physicalSize = margin.layout.size[dir];
-    const logicalSize = element.getLogicalSize()[dir];
-    const factor = logicalSize / physicalSize;
-    const s = p;
-
-    const oldLogicalMargin = element.margin[margin.handle];
-
-    while ((p = yield)) {
-      let physicalMarginDelta = p[dir] - s[dir];
-      if (margin.handle === "bottom" || margin.handle === "right") { physicalMarginDelta = -physicalMarginDelta; }
-      // 比率なのでだんだん乖離していくが、一旦そのまま
-      element.margin[margin.handle] = Math.max(0, oldLogicalMargin + physicalMarginDelta * factor);
-      element.calculateLengthAndBreadth();
-      this.constraintTree(margin.layout);
       this.redraw();
     }
 
