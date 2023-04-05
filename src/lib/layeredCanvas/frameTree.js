@@ -531,6 +531,7 @@ export function makePaddingRect(layout, handle) {
     const o1 = [Math.max(p1[0], q1[0]), Math.max(p1[1], q1[1])];
     const i0 = [Math.max(p0[0], q0[0]), Math.max(p0[1], q0[1])];
     const i1 = [Math.min(p1[0], q1[0]), Math.min(p1[1], q1[1])];
+    console.log("makePaddingRect", handle, o0, o1, i0, i1)
 
     const MIN_PADDING = 10;
 
@@ -538,23 +539,24 @@ export function makePaddingRect(layout, handle) {
     switch (handle) {
         case 'top':
             r = [o0[0], o0[1], o1[0], i0[1]];
-            if (i0[1] - o0[1] < MIN_PADDING) {r[1] = o0[1] + MIN_PADDING;}
+            if (Math.abs(i0[1] - o0[1]) < MIN_PADDING) {r[3] = o0[1] + MIN_PADDING;}
             break;
         case 'bottom':
             r = [o0[0], i1[1], o1[0], o1[1]];
-            if (o1[1] - i1[1] < MIN_PADDING) {r[1] = o1[1] - MIN_PADDING;}
+            if (Math.abs(o1[1] - i1[1]) < MIN_PADDING) {r[1] = o1[1] - MIN_PADDING;}
             break;
         case 'left':
             r = [o0[0], o0[1], i0[0], o1[1]];
-            if (i0[0] - o0[0] < MIN_PADDING) {r[0] = o0[0] + MIN_PADDING;}
+            if (Math.abs(i0[0] - o0[0]) < MIN_PADDING) {r[2] = o0[0] + MIN_PADDING;}
             break;
         case 'right':
             r = [i1[0], o0[1], o1[0], o1[1]];
-            if (o1[0] - i1[0] < MIN_PADDING) {r[0] = o1[0] - MIN_PADDING;}
+            if (Math.abs(o1[0] - i1[0]) < MIN_PADDING) {r[0] = o1[0] - MIN_PADDING;}
             break;
         default:
             return null;
     }
+    console.log(handle, r);
     return r;
 }
 

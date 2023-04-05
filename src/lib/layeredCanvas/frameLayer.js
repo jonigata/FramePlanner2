@@ -216,7 +216,7 @@ export class FrameLayer extends Layer {
       this.focusedPadding = findPaddingAt(layout, point);
       if (this.focusedPadding) {
         this.redraw();
-        this.hint(point, null);
+        this.hint(point, "ドラッグでパディング変更");
         return;
       }
     }
