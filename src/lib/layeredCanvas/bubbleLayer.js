@@ -506,41 +506,9 @@ export class BubbleLayer extends Layer {
     this.hint(dragStart, null);
 
     if (payload.action === "create") {
-      this.unfocus();
-      const bubble = this.defaultBubble.clone();
-      bubble.p0 = dragStart;
-      bubble.p1 = dragStart;
-      bubble.text = await this.onGetDefaultText();
-      bubble.initOptions();
-      this.creatingBubble = bubble;
-
-      let p;
-      while ((p = yield)) {
-        bubble.p1 = p;
-        this.redraw();
-      }
-
-      this.creatingBubble = null;
-      bubble.regularize();
-      if (bubble.hasEnoughSize()) {
-        this.bubbles.push(bubble);
-        this.onCommit(this.bubbles);
-      }
+      yield* this.createBubble(dragStart);
     } else if (payload.action === "move") {
-      const bubble = payload.bubble;
-      const [dx, dy] = [dragStart[0] - bubble.p0[0], dragStart[1] - bubble.p0[1]];
-      const [w, h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
-
-      let p;
-      while ((p = yield)) {
-        bubble.p0 = [p[0] - dx, p[1] - dy];
-        bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
-        if (bubble === this.selected) {
-          this.setIconPositions();
-        }
-        this.redraw();
-      }
-      this.onCommit(this.bubbles);
+      yield* this.moveBubble(dragStart, payload.bubble);
     } else if (payload.action === "select") {
       console.log("select");
       this.unfocus();
@@ -550,51 +518,7 @@ export class BubbleLayer extends Layer {
 
       this.redraw();
     } else if (payload.action === "resize") {
-      const bubble = payload.bubble;
-      const handle = payload.handle;
-
-      const oldRect = [bubble.p0, bubble.p1];
-      let p;
-      while ((p = yield)) {
-        switch (handle) {
-          case "top-left":
-            bubble.p0 = [p[0], p[1]];
-            break;
-          case "top-right":
-            bubble.p0 = [bubble.p0[0], p[1]];
-            bubble.p1 = [p[0], bubble.p1[1]];
-            break;
-          case "bottom-left":
-            bubble.p0 = [p[0], bubble.p0[1]];
-            bubble.p1 = [bubble.p1[0], p[1]];
-            break;
-          case "bottom-right":
-            bubble.p1 = [p[0], p[1]];
-            break;
-          case "top":
-            bubble.p0 = [bubble.p0[0], p[1]];
-            break;
-          case "bottom":
-            bubble.p1 = [bubble.p1[0], p[1]];
-            break;
-          case "left":
-            bubble.p0 = [p[0], bubble.p0[1]];
-            break;
-          case "right":
-            bubble.p1 = [p[0], bubble.p1[1]];
-            break;
-        }
-
-        this.setIconPositions();
-        this.redraw();
-      }
-      bubble.regularize();
-      if (!bubble.hasEnoughSize()) {
-        bubble.p0 = oldRect[0];
-        bubble.p1 = oldRect[1];
-        this.setIconPositions();
-        this.redraw();
-      }
+      yield* this.resizeBubble(dragStart, payload.bubble, payload.handle);
     } else if (payload.action === "z-plus") {
       const bubble = payload.bubble;
       const index = this.bubbles.indexOf(bubble);
@@ -620,22 +544,9 @@ export class BubbleLayer extends Layer {
       bubble.image = null;
       this.redraw();
     } else if (payload.action === "image-move") {
-      const bubble = payload.bubble;
-      const origin = bubble.image.translation;
-
-      yield* translate(dragStart, (q) => {
-        bubble.image.translation = [origin[0] + q[0], origin[1] + q[1]];
-        this.redraw();
-      });
+      yield* this.translateImage(dragStart, payload.bubble);
     } else if (payload.action === "image-scale") {
-      const bubble = payload.bubble;
-      const origin = bubble.image.scale[0];
-
-      yield* scale(this.canvas, dragStart, (q) => {
-        const s = Math.max(q[0], q[1]);
-        bubble.image.scale = [origin * s, origin * s];
-        this.redraw();
-      });
+      yield* this.scaleImage(dragStart, payload.bubble);
     } else if (payload.action === "options-angleVector") {
       yield* this.optionsAngleVector(dragStart, payload.bubble);
     } else if (payload.action === "options-link") {
@@ -690,77 +601,245 @@ export class BubbleLayer extends Layer {
     this.imageDropIcon.position = [x0 + 4, y1 - iconSize - 4]
   }
 
+  async *createBubble(dragStart) {
+    this.unfocus();
+    const bubble = this.defaultBubble.clone();
+    bubble.p0 = dragStart;
+    bubble.p1 = dragStart;
+    bubble.text = await this.onGetDefaultText();
+    bubble.initOptions();
+    this.creatingBubble = bubble;
+
+    let p;
+    try {
+      while ((p = yield)) {
+        bubble.p1 = p;
+        this.redraw();
+      }
+
+      this.creatingBubble = null;
+      bubble.regularize();
+      if (bubble.hasEnoughSize()) {
+        this.bubbles.push(bubble);
+        this.onCommit(this.bubbles);
+      }
+    } catch (e) {
+      if (e === "cancel") {
+        this.creatingBubble = null;
+      }
+    }
+  }
+
+  *moveBubble(dragStart, bubble) {
+    const [dx, dy] = [dragStart[0] - bubble.p0[0], dragStart[1] - bubble.p0[1]];
+    const [w, h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
+
+    let p;
+    try {
+      while ((p = yield)) {
+        bubble.p0 = [p[0] - dx, p[1] - dy];
+        bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
+        if (bubble === this.selected) {
+          this.setIconPositions();
+        }
+        this.redraw();
+      }
+      this.onCommit(this.bubbles);
+    } catch (e) {
+      if (e === "cancel") {
+        // とりあえず無視
+        this.revert();
+      }
+    }
+  }
+
+  *resizeBubble(dragStart, bubble, handle) {
+    const oldRect = [bubble.p0, bubble.p1];
+    let p;
+    try {
+      while ((p = yield)) {
+        switch (handle) {
+          case "top-left":
+            bubble.p0 = [p[0], p[1]];
+            break;
+          case "top-right":
+            bubble.p0 = [bubble.p0[0], p[1]];
+            bubble.p1 = [p[0], bubble.p1[1]];
+            break;
+          case "bottom-left":
+            bubble.p0 = [p[0], bubble.p0[1]];
+            bubble.p1 = [bubble.p1[0], p[1]];
+            break;
+          case "bottom-right":
+            bubble.p1 = [p[0], p[1]];
+            break;
+          case "top":
+            bubble.p0 = [bubble.p0[0], p[1]];
+            break;
+          case "bottom":
+            bubble.p1 = [bubble.p1[0], p[1]];
+            break;
+          case "left":
+            bubble.p0 = [p[0], bubble.p0[1]];
+            break;
+          case "right":
+            bubble.p1 = [p[0], bubble.p1[1]];
+            break;
+        }
+
+        this.setIconPositions();
+        this.redraw();
+      }
+      bubble.regularize();
+      if (!bubble.hasEnoughSize()) {
+        throw "cancel";
+      }
+      this.onCommit(this.bubbles);
+    } catch (e) {
+      if (e === "cancel") {
+        bubble.p0 = oldRect[0];
+        bubble.p1 = oldRect[1];
+        this.setIconPositions();
+        this.redraw();
+
+        this.revert(); //TODO: 上は不要
+      }
+    }
+  }
+
+  *translateImage(dragStart, bubble) {
+    const origin = bubble.image.translation;
+
+    try {
+      yield* translate(dragStart, (q) => {
+        bubble.image.translation = [origin[0] + q[0], origin[1] + q[1]];
+        this.redraw();
+      });
+    } catch (e) {
+      if (e === "cancel") {
+        // とりあえず無視
+        this.revert();
+      }
+    }
+  }
+
+
+  *scaleImage(dragStart, bubble) {
+    const origin = bubble.image.scale[0];
+
+    try {
+      yield* scale(this.canvas, dragStart, (q) => {
+        const s = Math.max(q[0], q[1]);
+        bubble.image.scale = [origin * s, origin * s];
+        this.redraw();
+      });
+    } catch (e) {
+      if (e === "cancel") {
+        // とりあえず無視
+        this.revert();
+      }
+    }
+  }
+
   *optionsAngleVector(p, bubble) {
     console.log("optionsAngleVector");
-    this.optionEditActive.angleVector = true;
-    const q = p;
-    while (p = yield) {
-      bubble.optionContext.angleVector = [p[0] - q[0], p[1] - q[1]];
+    try {
+      this.optionEditActive.angleVector = true;
+      const q = p;
+      while (p = yield) {
+        bubble.optionContext.angleVector = [p[0] - q[0], p[1] - q[1]];
+        this.redraw();
+      }
+    } catch (e) {
+      console.log(e);
+      if (e === "cancel") {
+        bubble.optionContext.angleVector = [0,0];
+      }
+    } finally {
+      this.optionEditActive.angleVector = false;
       this.redraw();
     }
-    this.optionEditActive.angleVector = false;
-    this.redraw();
   }
 
   *optionsLink(p, bubble) {
     console.log("optionsLink");
-    this.optionEditActive.link = true;
-    const q = p;
-    let drop = null;
-    while (p = yield) {
-      bubble.optionContext.link = [p[0] - q[0], p[1] - q[1]];
-      this.redraw();
-      drop = p;
-    }
+    try {
+      this.optionEditActive.link = true;
+      const q = p;
+      let drop = null;
+      while (p = yield) {
+        bubble.optionContext.link = [p[0] - q[0], p[1] - q[1]];
+        this.redraw();
+        drop = p;
+      }
 
-    if (drop) {
-      for (let i = this.bubbles.length - 1; 0 <= i; i--) {
-        const b = this.bubbles[i];
-        if (b !== bubble && b.contains(drop)) {
-          if (this.getGroupMaster(bubble) === this.getGroupMaster(b)) {
-            if (b.parent) {
-              b.parent = null;
+      if (drop) {
+        for (let i = this.bubbles.length - 1; 0 <= i; i--) {
+          const b = this.bubbles[i];
+          if (b !== bubble && b.contains(drop)) {
+            if (this.getGroupMaster(bubble) === this.getGroupMaster(b)) {
+              if (b.parent) {
+                b.parent = null;
+              } else {
+                bubble.parent = null;
+              }
+              this.redraw();
             } else {
-              bubble.parent = null;
+              this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
+              this.redraw();
             }
-            this.redraw();
-          } else {
-            this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
-            this.redraw();
+            break;
           }
-          break;
         }
       }
+    } catch (e) {
+      if (e === "cancel") {
+        bubble.optionContext.link = [0,0];
+      }
+    } finally {
+      this.optionEditActive.link = false;
+      this.redraw();
     }
-
-    this.optionEditActive.link = false;
-    this.redraw();
   }
 
   *optionsFocalPoint(p, bubble) {
     console.log("optionsFocalPoint");
-    this.optionEditActive.focal = true;
     const s = bubble.optionContext.focalPoint;
-    const q = p;
-    while (p = yield) {
-      bubble.optionContext.focalPoint = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
+    try {
+      this.optionEditActive.focal = true;
+      const q = p;
+      while (p = yield) {
+        bubble.optionContext.focalPoint = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
+        this.redraw();
+      }
+      this.optionEditActive.focal = false;
       this.redraw();
+    } catch (e) {
+      if (e === "cancel") {
+        bubble.optionContext.focalPoint = s;
+        this.redraw();
+      }
     }
-    this.optionEditActive.focal = false;
-    this.redraw();
   }
 
   *optionsFocalRange(p, bubble) {
     console.log("optionsFocalRange");
-    this.optionEditActive.focal = true;
     const s = bubble.optionContext.focalRange;
-    const q = p;
-    while (p = yield) {
-      bubble.optionContext.focalRange = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
+    try {
+      this.optionEditActive.focalRange = true;
+      const q = p;
+      while (p = yield) {
+        bubble.optionContext.focalRange = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
+        this.redraw();
+      }
+      this.optionEditActive.focalRange = false;
       this.redraw();
+    } catch (e) {
+      if (e === "cancel") {
+        bubble.optionContext.focalRange = s;
+        this.redraw();
+      }
     }
-    this.optionEditActive.focal = false;
-    this.redraw();
   }
 
   uniteBubble(bubbles) {
@@ -815,6 +894,10 @@ export class BubbleLayer extends Layer {
       return this.bubbles.find((b) => b.uuid === bubble.parent);
     }
     return bubble;
+  }
+
+  revert() {
+    // TODO:
   }
 
 }

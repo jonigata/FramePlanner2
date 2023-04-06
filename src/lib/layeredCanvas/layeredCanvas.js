@@ -14,6 +14,7 @@ export class LayeredCanvas {
         this.canvas.addEventListener('dragover', this.handleDragOver.bind(this));
         this.canvas.addEventListener('drop', this.handleDrop.bind(this));
         this.canvas.addEventListener('dblclick', this.handleDoubleClick.bind(this));
+        this.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
 
         this.layers = [];
@@ -101,6 +102,15 @@ export class LayeredCanvas {
         this.onHint(null, null);
     }
 
+    handleContextMenu(event) {
+        if (this.draggingLayer) {
+            event.preventDefault();
+            this.draggingLayer.pointerCancel();
+            this.draggingLayer = null;
+            this.redrawIfRequired();
+        }
+    }
+        
     handleDragOver(event) {
         event.preventDefault();
     }
@@ -156,7 +166,7 @@ export class LayeredCanvas {
             }
         }
     }
-      
+
     render() {
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.layers[i];
@@ -215,6 +225,13 @@ let pointerSequence = { // mixin
             this.pointerHandler = null;
         }
     },
+    pointerCancel() {
+        if (this.pointerHandler) {
+            this.pointerHandler.throw('cancel');
+            this.pointerHandler = null;
+        }
+    },
+
 /*
     sample pointer handler
     *pointer(p) {
@@ -229,6 +246,7 @@ export function sequentializePointer(layerClass) {
     layerClass.prototype.pointerDown = pointerSequence.pointerDown;
     layerClass.prototype.pointerMove = pointerSequence.pointerMove;
     layerClass.prototype.pointerUp = pointerSequence.pointerUp;
+    layerClass.prototype.pointerCancel = pointerSequence.pointerCancel;
 }
 
 export class Layer {
@@ -245,6 +263,7 @@ export class Layer {
     pointerDown(point, payload) { console.log("A");}
     pointerMove(point, payload) {}
     pointerUp(point, payload) {}
+    pointerCancel() {}
     render(ctx) {}
     dropped(image, position) { return false; }
     doubleClicked(position) { return false; }
