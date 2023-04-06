@@ -726,7 +726,7 @@ export class BubbleLayer extends Layer {
     const origin = bubble.image.scale[0];
 
     try {
-      yield* scale(this.canvas, dragStart, (q) => {
+      yield* scale(this.getPaperSize(), dragStart, (q) => {
         const s = Math.max(q[0], q[1]);
         bubble.image.scale = [origin * s, origin * s];
         this.redraw();

@@ -69,7 +69,7 @@
 
   export function importImage(image) {
     console.log(frameLayer.frameTree);
-    const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getCanvasSize(), [0,0]);
+    const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     frameLayer.importImage(layout, image);
   }
 
@@ -89,8 +89,8 @@
     frameLayer.frameTree = newFrameTree;
     dealImages(newFrameTree, images);
 
-    const canvasSize = frameLayer.getCanvasSize();
-    bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(canvasSize, b));
+    const paperSize = frameLayer.getPaperSize();
+    bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(paperSize, b));
     bubbleLayer.selected = null;
 
     layeredCanvas.redraw();
@@ -119,10 +119,10 @@
 
   function outputDocument() {
     console.log("outputDocument");
-    const canvasSize = frameLayer.getCanvasSize();
+    const paperSize = frameLayer.getPaperSize();
     documentOutput = {
       frameTree: FrameElement.decompile(frameLayer.frameTree),
-      bubbles: bubbleLayer.bubbles.map(b => Bubble.decompile(canvasSize, b)),
+      bubbles: bubbleLayer.bubbles.map(b => Bubble.decompile(paperSize, b)),
     }
   }
 

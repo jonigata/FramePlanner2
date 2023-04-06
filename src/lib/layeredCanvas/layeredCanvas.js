@@ -260,7 +260,7 @@ export class Layer {
 
     constructor() {}
 
-    getCanvasSize() {return [this.canvas.width, this.canvas.height];}
+    getPaperSize() {return [this.canvas.width, this.canvas.height];}
     redraw() { this.redrawRequired = true; }
 
     pointerHover(point) {}

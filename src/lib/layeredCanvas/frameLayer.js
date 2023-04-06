@@ -42,7 +42,7 @@ export class FrameLayer extends Layer {
   }
 
   render(ctx) {
-    const size = this.getCanvasSize();
+    const size = this.getPaperSize();
 
     // fill background
     ctx.save();
@@ -171,7 +171,7 @@ export class FrameLayer extends Layer {
   dropped(image, position) {
     const layout = calculatePhysicalLayout(
       this.frameTree,
-      this.getCanvasSize(),
+      this.getPaperSize(),
       [0, 0]
     );
     let layoutlet = findLayoutAt(layout, position);
@@ -183,7 +183,7 @@ export class FrameLayer extends Layer {
   }
 
   updateFocus(point) {
-    const layout = calculatePhysicalLayout(this.frameTree, this.getCanvasSize(), [0, 0]);
+    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
     const setUpFocusedLayout = () => {
       const origin = this.focusedLayout.origin;
@@ -417,7 +417,7 @@ export class FrameLayer extends Layer {
     const origin = element.scale[0];
     const size = layout.size;
     try {
-      yield* scale(this.canvas, p, (q) => {
+      yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         element.scale = [origin * s, origin * s];
         this.constraintLeaf(layout);
@@ -480,7 +480,7 @@ export class FrameLayer extends Layer {
   *expandBorder(p, border) {
     const element = border.layout.element;
     const dir = border.layout.dir == "h" ? 0 : 1;
-    const factor = border.layout.size[dir] / this.getCanvasSize()[dir];
+    const factor = border.layout.size[dir] / this.getPaperSize()[dir];
     const prev = border.layout.children[border.index-1].element;
     const curr = border.layout.children[border.index].element;
     const startSpacing = prev.divider.spacing;
@@ -584,7 +584,7 @@ export class FrameLayer extends Layer {
   constraintAll() {
     const layout = calculatePhysicalLayout(
       this.frameTree,
-      this.getCanvasSize(),
+      this.getPaperSize(),
       [0, 0]
     );
     this.constraintRecursive(layout);
@@ -677,7 +677,7 @@ export class FrameLayer extends Layer {
   }
 
   updatePadding(padding) {
-    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getCanvasSize(),[0, 0]);
+    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
     const newLayout = findLayoutOf(rootLayout, padding.layout.element);
     padding.layout = newLayout;
     this.updatePaddingTrapezoid(padding);
@@ -689,7 +689,7 @@ export class FrameLayer extends Layer {
   }
 
   updateBorder(border) {
-    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getCanvasSize(),[0, 0]);
+    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
     const newLayout = findLayoutOf(rootLayout, border.layout.element);
     border.layout = newLayout;
     this.updateBorderTrapezoid(border);
