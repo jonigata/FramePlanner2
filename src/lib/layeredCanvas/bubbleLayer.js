@@ -14,6 +14,7 @@ export class BubbleLayer extends Layer {
     onShowInspector,
     onHideInspector,
     onCommit,
+    onRevert,
     onGetDefaultText
   ) {
     super();
@@ -22,6 +23,7 @@ export class BubbleLayer extends Layer {
     this.onShowInspector = onShowInspector;
     this.onHideInspector = onHideInspector;
     this.onCommit = onCommit;
+    this.onRevert = onRevert;
     this.onGetDefaultText = onGetDefaultText;
     this.defaultBubble = new Bubble();
     this.creatingBubble = null;
@@ -647,8 +649,8 @@ export class BubbleLayer extends Layer {
       this.onCommit(this.bubbles);
     } catch (e) {
       if (e === "cancel") {
-        // とりあえず無視
-        this.revert();
+        this.selected = null;
+        this.onRevert();
       }
     }
   }
@@ -697,12 +699,8 @@ export class BubbleLayer extends Layer {
       this.onCommit(this.bubbles);
     } catch (e) {
       if (e === "cancel") {
-        bubble.p0 = oldRect[0];
-        bubble.p1 = oldRect[1];
-        this.setIconPositions();
-        this.redraw();
-
-        this.revert(); //TODO: 上は不要
+        this.selected = null;
+        this.onRevert();
       }
     }
   }
@@ -717,8 +715,8 @@ export class BubbleLayer extends Layer {
       });
     } catch (e) {
       if (e === "cancel") {
-        // とりあえず無視
-        this.revert();
+        bubble.image.translation = origin;
+        this.redraw();
       }
     }
   }
@@ -735,8 +733,8 @@ export class BubbleLayer extends Layer {
       });
     } catch (e) {
       if (e === "cancel") {
-        // とりあえず無視
-        this.revert();
+        bubble.image.scale = [origin, origin];
+        this.redraw();
       }
     }
   }
@@ -895,10 +893,5 @@ export class BubbleLayer extends Layer {
     }
     return bubble;
   }
-
-  revert() {
-    // TODO:
-  }
-
 }
 

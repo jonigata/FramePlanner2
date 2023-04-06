@@ -6,11 +6,12 @@ import { ClickableIcon } from "./clickableIcon.js";
 import { cssColorToRgba, rgbaToCssColor } from "./canvasTools.js";
 
 export class FrameLayer extends Layer {
-  constructor(frameTree, interactable, onCommit) {
+  constructor(frameTree, interactable, onCommit, onRevert) {
     super();
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onCommit = onCommit;
+    this.onRevert = onRevert;
 
     this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32], "横に分割", () => this.interactable && this.focusedLayout && !this.pointerHandler);
     this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32], "縦に分割", () => this.interactable && this.focusedLayout && !this.pointerHandler);
@@ -370,7 +371,7 @@ export class FrameLayer extends Layer {
       });
     } catch (e) {
       if (e === "cancel") {
-        this.revert();
+        this.onRevert();
       }
     }
   }
@@ -386,7 +387,7 @@ export class FrameLayer extends Layer {
       });
     } catch (e) {
       if (e === "cancel") {
-        this.revert();
+        this.onRevert();
       }
     }
   }
@@ -415,7 +416,7 @@ export class FrameLayer extends Layer {
       }
     } catch (e) {
       if (e === 'cancel') {
-        this.revert();
+        this.onRevert();
       }
     }
     this.onCommit(this.frameTree);
@@ -439,7 +440,7 @@ export class FrameLayer extends Layer {
       }
     } catch (e) {
       if (e === 'cancel') {
-        this.revert();
+        this.onRevert();
       }
     }
 
@@ -462,7 +463,7 @@ export class FrameLayer extends Layer {
       }
     } catch (e) {
       if (e === 'cancel') {
-        this.revert();
+        this.onRevert();
       }
     }
 
@@ -632,8 +633,4 @@ export class FrameLayer extends Layer {
     this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5 - 16,bt.topLeft[1]];
     this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5 - 16,bt.bottomLeft[1] - 32];
   }
-
-  revert() {
-    // TODO:
-  }  
 }
