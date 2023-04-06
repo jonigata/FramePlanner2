@@ -410,12 +410,12 @@ export function findPaddingAt(layout, position) {
             const found = findPaddingAt(layout.children[i], position);
             if (found) { return found; }
         }
-    }
-
-    for (let handle of ["top", "bottom", "left", "right"]) {
-        const paddingTrapezoid = makePaddingTrapezoid(layout, handle);
-        if (isPointInTrapezoid([x, y], paddingTrapezoid)) {
-            return { layout, handle, trapezoid: paddingTrapezoid };
+    } else {
+        for (let handle of ["top", "bottom", "left", "right"]) {
+            const paddingTrapezoid = makePaddingTrapezoid(layout, handle);
+            if (isPointInTrapezoid([x, y], paddingTrapezoid)) {
+                return { layout, handle, trapezoid: paddingTrapezoid };
+            }
         }
     }
     return null;

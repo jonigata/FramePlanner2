@@ -6,11 +6,12 @@ import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { cssColorToRgba, rgbaToCssColor } from "./canvasTools.js";
 
 export class FrameLayer extends Layer {
-  constructor(frameTree, interactable, onCommit) {
+  constructor(frameTree, interactable, onCommit, onRevert) {
     super();
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onCommit = onCommit;
+    this.onRevert = onRevert;
 
     this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32], "横に分割", () => this.interactable && this.focusedLayout && !this.pointerHandler);
     this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32], "縦に分割", () => this.interactable && this.focusedLayout && !this.pointerHandler);
@@ -389,42 +390,58 @@ export class FrameLayer extends Layer {
       const layout = payload.layout;
       const element = layout.element;
       if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
-      this.scaleIcon.contains(p)) {
-        const origin = element.scale[0];
-        const size = layout.size;
-        yield* scale(this.canvas, p, (q) => {
-          const s = Math.max(q[0], q[1]);
-          element.scale = [origin * s, origin * s];
-          this.constraintLeaf(layout);
-          this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
-        });
+          this.scaleIcon.contains(p)) {
+        yield* this.scaleImage(p, layout);
       } else {
-        const origin = element.translation;
-        yield* translate(p, (q) => {
-          element.translation = [origin[0] + q[0], origin[1] + q[1]];
-          this.constraintLeaf(layout);
-          this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
-        });
+        yield* this.translateImage(p, layout);
       }
     } else if (payload.padding) {
       yield* this.expandPadding(p, payload.padding);
     } else {
       if (
-        keyDownFlags["ControlLeft"] ||
-        keyDownFlags["ControlRight"] ||
-        this.expandHorizontalIcon.contains(p) ||
-        this.expandVerticalIcon.contains(p)
-      ) {
+        keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] ||
+         this.expandHorizontalIcon.contains(p) ||this.expandVerticalIcon.contains(p)) {
         yield* this.expandBorder(p, payload.border);
       } else if (
-        keyDownFlags["ShiftLeft"] ||
-        keyDownFlags["ShiftRight"] ||
-        this.slantHorizontalIcon.contains(p) ||
-        this.slantVerticalIcon.contains(p)
-      ) {
+        keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"] ||
+        this.slantHorizontalIcon.contains(p) || this.slantVerticalIcon.contains(p)) {
         yield* this.slantBorder(p, payload.border);
       } else {
         yield* this.moveBorder(p, payload.border);
+      }
+    }
+  }
+
+  *scaleImage(p, layout) {
+    const element = layout.element;
+    const origin = element.scale[0];
+    const size = layout.size;
+    try {
+      yield* scale(this.canvas, p, (q) => {
+        const s = Math.max(q[0], q[1]);
+        element.scale = [origin * s, origin * s];
+        this.constraintLeaf(layout);
+        this.redraw();
+      });
+    } catch (e) {
+      if (e === "cancel") {
+        this.onRevert();
+      }
+    }
+  }
+
+  *translateImage(p, layout) {
+    const element = layout.element;
+    const origin = element.translation;
+    try {
+      yield* translate(p, (q) => {
+        element.translation = [origin[0] + q[0], origin[1] + q[1]];
+        this.constraintLeaf(layout);
+        this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
+      });
+    } catch (e) {
+      if (e === "cancel") {
+        this.onRevert();
       }
     }
   }
@@ -442,17 +459,21 @@ export class FrameLayer extends Layer {
     const rawSum = c0.rawSize + rawSpacing + c1.rawSize;
     console.log(rawSpacing, rawSum);
 
-    while ((p = yield)) {
-      const balance = this.getBorderBalance(p, border);
-      const t = balance * rawSum;
-      console.log(balance, t);
-      c0.rawSize = t - rawSpacing * 0.5;
-      c1.rawSize = rawSum - t - rawSpacing * 0.5;
-      this.updateBorder(border);
-      this.constraintRecursive(border.layout);
-      this.redraw();
+    try {
+      while ((p = yield)) {
+        const balance = this.getBorderBalance(p, border);
+        const t = balance * rawSum;
+        c0.rawSize = t - rawSpacing * 0.5;
+        c1.rawSize = rawSum - t - rawSpacing * 0.5;
+        this.updateBorder(border);
+        this.constraintRecursive(border.layout);
+        this.redraw();
+      }
+    } catch (e) {
+      if (e === 'cancel') {
+        this.onRevert();
+      }
     }
-
     this.onCommit(this.frameTree);
   }
 
@@ -467,18 +488,24 @@ export class FrameLayer extends Layer {
     const startPrevRawSize = prev.rawSize;
     const startCurrRawSize = curr.rawSize;
 
-    while ((p = yield)) {
-      const op = p[dir] - s[dir];
-      prev.divider.spacing = Math.max(0, startSpacing + op * factor * 0.1);
-      const diff = prev.divider.spacing - startSpacing;
-
-      prev.rawSize = startPrevRawSize - diff*0.5;
-      curr.rawSize = startCurrRawSize - diff*0.5;
-
-      element.calculateLengthAndBreadth();
-      this.updateBorder(border);
-      this.constraintRecursive(border.layout);
-      this.redraw();
+    try {
+      while ((p = yield)) {
+        const op = p[dir] - s[dir];
+        prev.divider.spacing = Math.max(0, startSpacing + op * factor * 0.1);
+        const diff = prev.divider.spacing - startSpacing;
+  
+        prev.rawSize = startPrevRawSize - diff*0.5;
+        curr.rawSize = startCurrRawSize - diff*0.5;
+  
+        element.calculateLengthAndBreadth();
+        this.updateBorder(border);
+        this.constraintRecursive(border.layout);
+        this.redraw();
+      }
+    } catch (e) {
+      if (e === 'cancel') {
+        this.onRevert();
+      }
     }
 
     this.onCommit(this.frameTree);
@@ -492,12 +519,18 @@ export class FrameLayer extends Layer {
     const rawSlant = prev.divider.slant;
 
     const s = p;
-    while ((p = yield)) {
-      const op = p[dir] - s[dir];
-      prev.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
-      this.updateBorderTrapezoid(border);
-      this.constraintRecursive(border.layout);
-      this.redraw();
+    try {
+      while ((p = yield)) {
+        const op = p[dir] - s[dir];
+        prev.divider.slant = Math.max(-45, Math.min(45, rawSlant + op * 0.2));
+        this.updateBorderTrapezoid(border);
+        this.constraintRecursive(border.layout);
+        this.redraw();
+      }
+    } catch (e) {
+      if (e === 'cancel') {
+        this.onRevert();
+      }
     }
 
     this.onCommit(this.frameTree);
@@ -511,12 +544,18 @@ export class FrameLayer extends Layer {
     const s = p;
     const initialPadding = element.padding[padding.handle] * rawSize[dir];
 
-    while ((p = yield)) {
-      const delta = p[dir] - s[dir];
-      const currentPadding = initialPadding + delta * deltaFactor;
-      element.padding[padding.handle] = currentPadding / rawSize[dir];
-      this.constraintTree(padding.layout);
-      this.redraw();
+    try {
+      while ((p = yield)) {
+        const delta = p[dir] - s[dir];
+        const currentPadding = initialPadding + delta * deltaFactor;
+        element.padding[padding.handle] = currentPadding / rawSize[dir];
+        this.constraintTree(padding.layout);
+        this.redraw();
+      }
+    } catch (e) {
+      if (e === 'cancel') {
+        this.revert();
+      }
     }
 
     this.onCommit(this.frameTree);

@@ -46,16 +46,21 @@
     if (historyIndex <= 1) { return; }
     historyIndex--;
     console.log("undo", historyIndex);
-    const h = history[historyIndex-1];
-    frameLayer.frameTree = h.frameTree.clone();
-    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
-    layeredCanvas.redraw(); 
+    revert();
   }
 
   export function redo() {
     console.log("redo", historyIndex);
     if (history.length <= historyIndex) { return; }
     historyIndex++;
+    const h = history[historyIndex-1];
+    frameLayer.frameTree = h.frameTree.clone();
+    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
+    layeredCanvas.redraw(); 
+  }
+
+  function revert() {
+    console.log("revert", historyIndex);
     const h = history[historyIndex-1];
     frameLayer.frameTree = h.frameTree.clone();
     bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
@@ -171,7 +176,8 @@
         console.log("commit frames");
         addHistory();
         outputDocument();
-      });
+      },
+      () => {revert();});
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);
@@ -187,6 +193,7 @@
         addHistory();
         outputDocument();
       },
+      () => {revert();},
       getDefaultText)
     layeredCanvas.addLayer(bubbleLayer);
     layeredCanvas.redraw();
