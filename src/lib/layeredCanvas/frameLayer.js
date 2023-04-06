@@ -1,9 +1,8 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, findPaddingOn, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
-import { cssColorToRgba, rgbaToCssColor } from "./canvasTools.js";
 
 export class FrameLayer extends Layer {
   constructor(frameTree, interactable, onCommit, onRevert) {
@@ -181,43 +180,10 @@ export class FrameLayer extends Layer {
     return false;
   }
 
-  pointerHover(point) {
-    if (keyDownFlags["Space"]) { return; }
+  updateFocus(point) {
+    const layout = calculatePhysicalLayout(this.frameTree, this.getCanvasSize(), [0, 0]);
 
-    const layout = calculatePhysicalLayout(
-      this.frameTree,
-      this.getCanvasSize(),
-      [0, 0]
-    );
-
-    this.focusedPadding = null;
-    this.focusedBorder = null;
-    this.focusedLayout = null;
-
-    if (keyDownFlags["KeyB"]) {
-      this.focusedPadding = findPaddingAt(layout, point);
-      if (this.focusedPadding) {
-        console.log(this.focusedPadding);
-        this.redraw();
-        this.hint(point, "ドラッグでパディング変更");
-        return;
-      }
-    }
-
-    const border = findBorderAt(layout, point);
-    if (border) {
-      this.focusedBorder = border;
-      this.updateBorderIconPositions(border);
-      this.redraw();
-
-      if (!this.hintIfContains(point, this.borderIcons)) {
-        this.hint(point, null);
-      }
-      return;
-    } 
-
-    this.focusedLayout = findLayoutAt(layout, point);
-    if (this.focusedLayout) {
+    const setUpFocusedLayout = () => {
       const origin = this.focusedLayout.origin;
       const size = this.focusedLayout.size;
       const [x, y] = [origin[0] + size[0] / 2, origin[1] + size[1] / 2];
@@ -243,41 +209,71 @@ export class FrameLayer extends Layer {
       }
       return;
     }
-    this.hint(point, null);
+
+    // focusedPaddingはfocusedLayout != nullの時しか有効にならない
+    // focusedBorderはfocusedLayerと排他的
+    // あり得る組み合わせ
+    // l, b, lp
+
+    this.focusedPadding = null;
+    this.focusedBorder = null;
+    this.focusedLayout = null;
+
+    if (keyDownFlags["KeyB"]) {
+      this.focusedLayout = findLayoutAt(layout, point);
+      if (this.focusedLayout) {
+        setUpFocusedLayout();
+        this.focusedPadding = findPaddingOn(this.focusedLayout, point);
+        if (this.focusedPadding) {
+          this.hint(point, "ドラッグでパディング変更");
+        }
+        this.redraw();
+      }
+    } else {
+      this.focusedBorder = findBorderAt(layout, point);
+      if (this.focusedBorder) {
+        this.updateBorderIconPositions(this.focusedBorder);
+        this.redraw();
+  
+        if (!this.hintIfContains(point, this.borderIcons)) {
+          this.hint(point, null);
+        }
+        return;
+      } 
+  
+      this.focusedLayout = findLayoutAt(layout, point);
+      this.hint(point, null);
+      if (this.focusedLayout) {
+        setUpFocusedLayout();
+      }
+    }
+  }
+
+  pointerHover(point) {
+    if (keyDownFlags["Space"]) { return; }
+    this.updateFocus(point);
   }
 
   accepts(point) {
-    if (!this.interactable) {
-      return null;
-    }
+    if (!this.interactable) {return null;}
+    if (keyDownFlags["Space"]) {return null;}
 
-    if (keyDownFlags["Space"]) {
-      return null;
-    }
-
-    const layout = calculatePhysicalLayout(
-      this.frameTree,
-      this.getCanvasSize(),
-      [0, 0]
-    );
+    this.updateFocus(point);
 
     if (keyDownFlags["KeyB"]) {
-      const padding = findPaddingAt(layout, point);
-      if (padding) {
-        return { padding };
+      if (this.focusedPadding) {
+        return { padding: this.focusedPadding };
       }
     }
 
-    const border = findBorderAt(layout, point);
-    this.focusedBorder = border;
-    if (border) {
-      return { border };
+    if (this.focusedBorder) {
+      return { border: this.focusedBorder };
     }
 
-    const layoutElement = findLayoutAt(layout, point);
-    if (layoutElement) {
+    const layout = this.focusedLayout;
+    if (layout) {
       if (keyDownFlags["KeyQ"]) {
-        FrameElement.eraseElement(this.frameTree, layoutElement.element);
+        FrameElement.eraseElement(this.frameTree, layout.element);
         this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
@@ -286,7 +282,7 @@ export class FrameLayer extends Layer {
       if (keyDownFlags["KeyW"]) {
         FrameElement.splitElementHorizontal(
           this.frameTree,
-          layoutElement.element
+          layout.element
         );
         this.constraintAll();
         this.onCommit(this.frameTree);
@@ -296,7 +292,7 @@ export class FrameLayer extends Layer {
       if (keyDownFlags["KeyS"]) {
         FrameElement.splitElementVertical(
           this.frameTree,
-          layoutElement.element
+          layout.element
         );
         this.constraintAll();
         this.onCommit(this.frameTree);
@@ -304,24 +300,24 @@ export class FrameLayer extends Layer {
         return null;
       }
       if (keyDownFlags["KeyD"]) {
-        layoutElement.element.image = null;
+        layout.element.image = null;
         this.redraw();
         return null;
       }
       if (keyDownFlags["KeyT"]) {
-        layoutElement.element.reverse[0] *= -1;
+        layout.element.reverse[0] *= -1;
         this.redraw();
         return null;
       }
       if (keyDownFlags["KeyY"]) {
-        layoutElement.element.reverse[1] *= -1;
+        layout.element.reverse[1] *= -1;
         this.redraw();
         return null;
       }
       if (this.splitHorizontalIcon.contains(point)) {
         FrameElement.splitElementHorizontal(
           this.frameTree,
-          layoutElement.element
+          layout.element
         );
         this.constraintAll();
         this.onCommit(this.frameTree);
@@ -332,7 +328,7 @@ export class FrameLayer extends Layer {
       if (this.splitVerticalIcon.contains(point)) {
         FrameElement.splitElementVertical(
           this.frameTree,
-          layoutElement.element
+          layout.element
         );
         this.constraintAll();
         this.onCommit(this.frameTree);
@@ -341,7 +337,7 @@ export class FrameLayer extends Layer {
         return null;
       }
       if (this.deleteIcon.contains(point)) {
-        FrameElement.eraseElement(this.frameTree, layoutElement.element);
+        FrameElement.eraseElement(this.frameTree, layout.element);
         this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
@@ -349,36 +345,36 @@ export class FrameLayer extends Layer {
         return null;
       }
       if (this.zplusIcon.contains(point)) {
-        layoutElement.element.z += 1;
+        layout.element.z += 1;
         this.onCommit(this.frameTree);
         this.redraw();
         return null;
       }
       if (this.zminusIcon.contains(point)) {
-        layoutElement.element.z -= 1;
+        layout.element.z -= 1;
         this.onCommit(this.frameTree);
         this.redraw();
         return null;
       }
       if (this.visibilityIcon.contains(point)) {
         this.visibilityIcon.increment();
-        layoutElement.element.visibility = this.visibilityIcon.index;
+        layout.element.visibility = this.visibilityIcon.index;
         this.onCommit(this.frameTree);
         this.redraw();
         return null;
       }
 
       if (this.dropIcon.contains(point)) {
-        layoutElement.element.image = null;
+        layout.element.image = null;
         this.redraw();
       } else if (this.flipHorizontalIcon.contains(point)) {
-        layoutElement.element.reverse[0] *= -1;
+        layout.element.reverse[0] *= -1;
         this.redraw();
       } else if (this.flipVerticalIcon.contains(point)) {
-        layoutElement.element.reverse[1] *= -1;
+        layout.element.reverse[1] *= -1;
         this.redraw();
       } else {
-        return { layout: layoutElement };
+        return { layout: layout };
       }
     }
 
@@ -549,6 +545,7 @@ export class FrameLayer extends Layer {
         const delta = p[dir] - s[dir];
         const currentPadding = initialPadding + delta * deltaFactor;
         element.padding[padding.handle] = currentPadding / rawSize[dir];
+        this.updatePadding(padding);
         this.constraintTree(padding.layout);
         this.redraw();
       }
@@ -673,6 +670,18 @@ export class FrameLayer extends Layer {
       }
     }
     return false;
+  }
+
+  updatePadding(padding) {
+    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getCanvasSize(),[0, 0]);
+    const newLayout = findLayoutOf(rootLayout, padding.layout.element);
+    padding.layout = newLayout;
+    this.updatePaddingTrapezoid(padding);
+  }
+
+  updatePaddingTrapezoid(padding) {
+    const pt = makePaddingTrapezoid(padding.layout, padding.handle);
+    padding.trapezoid = pt;
   }
 
   updateBorder(border) {
