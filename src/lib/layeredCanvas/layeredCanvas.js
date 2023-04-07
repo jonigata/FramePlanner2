@@ -44,9 +44,15 @@ export class LayeredCanvas {
     }
 
     getPaperPosition(event) {
+        const paper = this.canvas.paper;
+        const centering = [
+            this.canvas.width * 0.5 + paper.translate[0],
+            this.canvas.height * 0.5 + paper.translate[1],
+        ];
         const p = this.getCanvasPosition(event);
-        const x = (p[0] - this.canvas.width * 0.5) / this.canvas.paper.scale[0] - this.canvas.paper.translate[0] + this.canvas.paper.size[0] * 0.5;
-        const y = (p[1] - this.canvas.height * 0.5) / this.canvas.paper.scale[1] - this.canvas.paper.translate[1] + this.canvas.paper.size[1] * 0.5;
+        const [tx, ty] = [p[0] - centering[0], p[1] - centering[1]];
+        const [sx, sy] = [tx / paper.scale[0], ty / paper.scale[1]];
+        const [x, y] = [sx + paper.size[0] * 0.5, sy + paper.size[1] * 0.5];
         return [x, y];
     }
     
