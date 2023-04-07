@@ -227,8 +227,21 @@ export class FrameLayer extends Layer {
       return;
     }
 
+    this.focusedLayout = findLayoutAt(layout, point);
+    if (this.focusedLayout) {
+      setUpFocusedLayout();
+
+      // アイコンはボーダーに優先
+      for (let e of this.frameIcons) {
+        if (e.contains(point)) {
+          return ;
+        }
+      }
+    }
+
     this.focusedBorder = findBorderAt(layout, point);
     if (this.focusedBorder) {
+      this.focusedLayout = null;
       this.updateBorderIconPositions(this.focusedBorder);
       this.redraw();
 
@@ -238,11 +251,6 @@ export class FrameLayer extends Layer {
       return;
     } 
   
-    this.focusedLayout = findLayoutAt(layout, point);
-    this.hint(point, null);
-    if (this.focusedLayout) {
-      setUpFocusedLayout();
-    }
   }
 
   pointerHover(point) {

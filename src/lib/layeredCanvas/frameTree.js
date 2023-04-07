@@ -351,19 +351,17 @@ export function rectFromPositionAndSize(position, size) {
 }
 
 export function findLayoutAt(layout, position) {
-    const r = rectFromPositionAndSize(layout.origin, layout.size);
-    if (!isPointInRect(r, position)) {
-        return null;
-    }
     if (layout.children) {
         for (let i = 0; i < layout.children.length; i++) {
             const child = layout.children[i];
             const found = findLayoutAt(child, position);
             if (found) { return found; }
         }
-        return null;
     }
-    return layout;
+    if (isPointInTrapezoid(position, layout.corners)) {
+        return layout;
+    }
+    return null;
 }
 
 export function findLayoutOf(layout, element) {
