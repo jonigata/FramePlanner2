@@ -23,9 +23,13 @@ export class FloorLayer extends Layer {
 
   *pointer(p) {
     const dragStart = p;
+    const scale = this.canvas.paper.scale;
 
     while (p = yield) {
-      const dragOffset = [p[0] - dragStart[0], p[1] - dragStart[1]];
+      const dragOffset = [
+        (p[0] - dragStart[0]) * scale[0],
+        (p[1] - dragStart[1]) * scale[1]
+      ];
       this.canvas.paper.viewTranslate = dragOffset;
       this.redraw();
     }
