@@ -382,10 +382,6 @@ export function findLayoutOf(layout, element) {
 export function findBorderAt(layout, position) {
     const [x,y] = position;
 
-    const r = rectFromPositionAndSize(layout.origin, layout.size);
-    if (!isPointInRect(r, position)) {
-        return null;
-    }
     if (layout.children) {
         for (let i = 1; i < layout.children.length; i++) {
             const bt = makeBorderTrapezoid(layout, i);
@@ -416,7 +412,8 @@ export function findPaddingAt(layout, position) {
     }
 }
 
-export function findPaddingOn(layout, position) {
+function findPaddingOn(layout, position) {
+    if (layout.element.visibility === 0) { return null; }
     const [x,y] = position;
     for (let handle of ["top", "bottom", "left", "right"]) {
         const paddingTrapezoid = makePaddingTrapezoid(layout, handle);

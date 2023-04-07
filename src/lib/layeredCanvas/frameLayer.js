@@ -1,5 +1,5 @@
 import { Layer } from "./layeredCanvas.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, findPaddingOn, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
@@ -206,50 +206,42 @@ export class FrameLayer extends Layer {
       if (this.hintIfContains(point, this.frameIcons)) {
       } else if (this.focusedLayout.element.image) {
         this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール");
-      } else {
+      } else if (0 < this.focusedLayout.element.visibility) {
         this.hint([x, origin[1] + 48], "画像をドロップ");
+      } else {
+        this.hint([x, origin[1] + 48], null);
       }
       return;
     }
-
-    // focusedPaddingはfocusedLayout != nullの時しか有効にならない
-    // focusedBorderはfocusedLayerと排他的
-    // あり得る組み合わせ
-    // l, b, lp
 
     this.focusedPadding = null;
     this.focusedBorder = null;
     this.focusedLayout = null;
 
     if (keyDownFlags["KeyB"]) {
-      this.focusedLayout = findLayoutAt(layout, point);
-      if (this.focusedLayout) {
-        setUpFocusedLayout();
-        if (0 < this.focusedLayout.element.visibility) {
-          this.focusedPadding = findPaddingOn(this.focusedLayout, point);
-          if (this.focusedPadding) {
-            this.hint(point, "ドラッグでパディング変更");
-          }
-        }
+      this.focusedPadding = findPaddingAt(layout, point);
+      if (this.focusedPadding) {
+        this.hint(point, "ドラッグでパディング変更");
         this.redraw();
       }
-    } else {
-      this.focusedBorder = findBorderAt(layout, point);
-      if (this.focusedBorder) {
-        this.updateBorderIconPositions(this.focusedBorder);
-        this.redraw();
-  
-        if (!this.hintIfContains(point, this.borderIcons)) {
-          this.hint(point, null);
-        }
-        return;
-      } 
-  
-      this.focusedLayout = findLayoutAt(layout, point);
-      this.hint(point, null);
-      if (this.focusedLayout) {
-        setUpFocusedLayout();
+      return;
+    }
+
+    this.focusedBorder = findBorderAt(layout, point);
+    if (this.focusedBorder) {
+      this.updateBorderIconPositions(this.focusedBorder);
+      this.redraw();
+
+      if (!this.hintIfContains(point, this.borderIcons)) {
+        this.hint(point, null);
       }
+      return;
+    } 
+  
+    this.focusedLayout = findLayoutAt(layout, point);
+    this.hint(point, null);
+    if (this.focusedLayout) {
+      setUpFocusedLayout();
     }
   }
 

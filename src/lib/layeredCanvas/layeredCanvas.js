@@ -7,6 +7,7 @@ export class LayeredCanvas {
         this.canvas.paper = {};
         this.canvas.paper.size = size;
         this.canvas.paper.translate = [0, 0];
+        this.canvas.paper.viewTranslate = [0, 0];
         this.canvas.paper.scale = [1, 1];
         this.context = this.canvas.getContext('2d');
 
@@ -19,6 +20,7 @@ export class LayeredCanvas {
         this.canvas.addEventListener('drop', this.handleDrop.bind(this));
         this.canvas.addEventListener('dblclick', this.handleDoubleClick.bind(this));
         this.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+        this.canvas.addEventListener('wheel', this.handleWheel.bind(this));
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
 
         this.layers = [];
@@ -43,13 +45,8 @@ export class LayeredCanvas {
 
     getPaperPosition(event) {
         const p = this.getCanvasPosition(event);
-        const canvasSize = [this.canvas.width, this.canvas.height];
-        const paperSize = this.canvas.paper.size;
-        const canvasCentering = [(canvasSize[0] - paperSize[0]) / 2, (canvasSize[1] - paperSize[1]) / 2];
-        const paperScale = this.canvas.paper.scale;
-        const paperTranslate = this.canvas.paper.translate;
-        const x = (p[0] - canvasCentering[0] - paperTranslate[0]) / paperScale[0];
-        const y = (p[1] - canvasCentering[1] - paperTranslate[1]) / paperScale[1];
+        const x = (p[0] - this.canvas.width * 0.5) / this.canvas.paper.scale[0] - this.canvas.paper.translate[0] + this.canvas.paper.size[0] * 0.5;
+        const y = (p[1] - this.canvas.height * 0.5) / this.canvas.paper.scale[1] - this.canvas.paper.translate[1] + this.canvas.paper.size[1] * 0.5;
         return [x, y];
     }
     
@@ -183,10 +180,27 @@ export class LayeredCanvas {
         }
     }
 
+    handleWheel(event) {
+        const delta = event.deltaY;
+        const p = this.getPaperPosition(event);
+        for (let i = this.layers.length - 1; i >= 0; i--) {
+            const layer = this.layers[i];
+            if (layer.wheel(delta)) {
+                this.redrawIfRequired();
+                break;
+            }
+        }
+    }
+
     render() {
+        this.context.fillStyle = "rgb(240,240,240)";
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
         this.context.save();
         this.context.translate(this.canvas.width * 0.5, this.canvas.height * 0.5);  // 画面中央
         this.context.translate(...this.canvas.paper.translate);                     // パン
+        this.context.translate(...this.canvas.paper.viewTranslate);                 // パン(一時)
+        this.context.scale(...this.canvas.paper.scale);       // 拡大縮小
         this.context.translate(-this.canvas.paper.size[0] * 0.5, -this.canvas.paper.size[1] * 0.5); // 紙面中央
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.layers[i];
@@ -285,4 +299,5 @@ export class Layer {
     beforeDoubleClick(position) { return false; }
     doubleClicked(position) { return false; }
     keyDown(event) { return false; }
+    wheel(delta) { return false; }
 }

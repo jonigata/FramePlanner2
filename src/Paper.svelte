@@ -2,6 +2,7 @@
   import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
+  import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
@@ -173,7 +174,6 @@
     const frameJson = documentInput ? documentInput.frameTree : frameExamples[0];
     const frameTree = FrameElement.compile(frameJson);
 
-    sequentializePointer(FrameLayer);
     layeredCanvas = new LayeredCanvas(
       canvas, 
       [width, height],
@@ -185,6 +185,14 @@
           toolTipRequest.set(null);
         }
       });
+
+    sequentializePointer(FloorLayer);
+    if (editable) {
+      const floorLayer = new FloorLayer();
+      layeredCanvas.addLayer(floorLayer);
+    }
+
+    sequentializePointer(FrameLayer);
     frameLayer = new FrameLayer(
       frameTree,
       editable,
