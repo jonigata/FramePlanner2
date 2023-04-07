@@ -490,17 +490,18 @@ export class FrameLayer extends Layer {
   *expandBorder(p, border) {
     const element = border.layout.element;
     const dir = border.layout.dir == "h" ? 0 : 1;
-    const factor = border.layout.size[dir] / this.getPaperSize()[dir];
     const prev = border.layout.children[border.index-1].element;
     const curr = border.layout.children[border.index].element;
     const startSpacing = prev.divider.spacing;
     const s = p;
     const startPrevRawSize = prev.rawSize;
     const startCurrRawSize = curr.rawSize;
+    const factor = 0.005 * (startPrevRawSize + startCurrRawSize) * border.layout.size[dir] / this.getPaperSize()[dir];
 
     try {
       while ((p = yield)) {
         const op = p[dir] - s[dir];
+        console.log(op, factor, op * factor, startSpacing);
         prev.divider.spacing = Math.max(0, startSpacing + op * factor * 0.1);
         const diff = prev.divider.spacing - startSpacing;
   

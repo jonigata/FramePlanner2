@@ -37,6 +37,10 @@ export class LayeredCanvas {
     getPaperSize() {
         return this.canvas.paper.size;
     }
+
+    setPaperSize(size) {
+        this.canvas.paper.size = size;
+    }
     
     getCanvasPosition(event) {
         const p = convertPointFromPageToNode(this.canvas, event.pageX, event.pageY);

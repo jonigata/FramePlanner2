@@ -97,6 +97,13 @@
     layeredCanvas?.redraw(); 
   });
 
+  $:onChangePaperSize(width, height);
+  function onChangePaperSize(w, h) {
+    console.log("onChangePaperSize", w, h);
+    if (!layeredCanvas) { return; }
+    layeredCanvas.setPaperSize([w, h]);
+  }
+
   $:onInputDocument(documentInput);
   function onInputDocument(newDocumentInput) {
     if (!frameLayer) { return; }
