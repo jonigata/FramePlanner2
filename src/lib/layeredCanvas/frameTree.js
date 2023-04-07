@@ -158,6 +158,19 @@ export class FrameElement {
         // ルート要素は削除できない
     }
 
+    static duplicateElement(root, target) {
+        console.log('duplicateElement', root, target);
+        const parent = this.findParent(root, target);
+        if (parent) {
+            const index = parent.children.indexOf(target);
+            const newElement = target.clone();
+            newElement.calculateLengthAndBreadth();
+            parent.children.splice(index+1, 0, newElement);
+            parent.calculateLengthAndBreadth();
+        }
+        // ルート要素は複製できない(ことにしておく)
+    }
+
     static splitElementHorizontal(root, target) {
         this.splitElement(root, target, 'h');
     }

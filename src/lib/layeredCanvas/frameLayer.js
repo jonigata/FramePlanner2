@@ -17,6 +17,7 @@ export class FrameLayer extends Layer {
     this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32], "横に分割", isFrameActiveAndVisible);
     this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32], "縦に分割", isFrameActiveAndVisible);
     this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32], "削除", isFrameActive);
+    this.duplicateIcon = new ClickableIcon("duplicate.png", [0, 0], [32, 32], "複製", isFrameActive);
     this.zplusIcon = new ClickableIcon("zplus.png", [0, 0], [32, 32], "手前に", isFrameActiveAndVisible);
     this.zminusIcon = new ClickableIcon("zminus.png", [0, 0], [32, 32], "奥に", isFrameActiveAndVisible);
     this.visibilityIcon = new MultistateIcon(["visibility1.png","visibility2.png","visibility3.png"], [0, 0], [32, 32], "不可視/背景と絵/枠線も", () => this.interactable && this.focusedLayout && !this.pointerHandler);
@@ -37,7 +38,7 @@ export class FrameLayer extends Layer {
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
@@ -192,6 +193,7 @@ export class FrameLayer extends Layer {
       this.splitHorizontalIcon.position = [x + 32, y];
       this.splitVerticalIcon.position = [x, y + 32];
       this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
+      this.duplicateIcon.position = [origin[0] + size[0] - 32, origin[1]+48];
       this.zplusIcon.position = [origin[0] + 80, origin[1]];
       this.zminusIcon.position = [origin[0] + 32, origin[1]];
       this.visibilityIcon.position = [origin[0], origin[1]];
@@ -345,6 +347,14 @@ export class FrameLayer extends Layer {
         this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
+        this.redraw();
+        return null;
+      }
+      if (this.duplicateIcon.contains(point)) {
+        FrameElement.duplicateElement(this.frameTree, layout.element);
+        this.constraintAll();
+        this.onCommit(this.frameTree);
+        this.updateFocus(point);
         this.redraw();
         return null;
       }
