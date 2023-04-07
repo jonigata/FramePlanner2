@@ -251,29 +251,41 @@
     addHistory();
   });
 
-  export function save() {
-    console.log("save");
+  async function swapCanvas(f) {
+    const tmpCanvas = document.createElement("canvas");
+    tmpCanvas.width = width;
+    tmpCanvas.height = height;
+    tmpCanvas.paper = {};
+    tmpCanvas.paper.size = [width, height];
+    tmpCanvas.paper.translate = [0,0];
+    tmpCanvas.paper.viewTranslate = [0,0];
+    tmpCanvas.paper.scale = [1,1];
+    layeredCanvas.canvas = tmpCanvas;
+    layeredCanvas.context = tmpCanvas.getContext("2d");
     frameLayer.interactable = false;
     bubbleLayer.interactable = false;
     layeredCanvas.redraw();
-    const latestJson = FrameElement.decompile(frameLayer.frameTree);
-    saveCanvas(canvas, "comic.png", latestJson);
+    await f(tmpCanvas);
+    layeredCanvas.canvas = canvas;
+    layeredCanvas.context = canvas.getContext("2d");
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
     layeredCanvas.redraw();
-    console.log("save done");
+  }
+
+  export function save() {
+    console.log("save");
+    swapCanvas(async (c) => {
+      const latestJson = FrameElement.decompile(frameLayer.frameTree);
+      saveCanvas(c, "comic.png", latestJson);
+    });
   }
   
   export async function copyToClipboard() {
     console.log("copyToClipboard");
-    frameLayer.interactable = false;
-    bubbleLayer.interactable = false;
-    layeredCanvas.redraw();
-    await copyCanvasToClipboard(canvas);
-    frameLayer.interactable = true;
-    bubbleLayer.interactable = true;
-    layeredCanvas.redraw();
-    console.log("copyToClipboard done");
+    swapCanvas(async (c) => {
+      await copyCanvasToClipboard(c);
+    });
   }
 </script>
 
