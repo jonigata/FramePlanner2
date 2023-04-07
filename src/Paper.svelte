@@ -1,5 +1,5 @@
 <script type="ts">
-  import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
+  import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
@@ -13,22 +13,37 @@
   import { useClipboard } from './clipboardStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
   import { Bubble } from './lib/layeredCanvas/bubble.js'; 
+  import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
+  import { undoStore } from './undoStore';
 
-  export let width = '140px';
-  export let height = '198px';
+  export let width = 140;
+  export let height = 198;
   export let documentInput: unknown;
   export let documentOutput: unknown;
   export let editable = false;
   export let paperColor = 'white';
   export let frameColor = 'black';
   export let frameWidth = 1;
+  export let manageKeyCache = false;
 
+  let containerWidth;
+  let containerHeight;
+  let canvasWidth;
+  let canvasHeight;
   let canvas;
   let layeredCanvas;
   let frameLayer;
   let bubbleLayer;
   let history = [];
   let historyIndex = 0;
+
+  $:onChangeContainerSize(containerWidth, containerHeight);
+  function onChangeContainerSize(w, h) {
+    console.log("onChangeContainerSize", w, h);
+    if (!w || !h) return;
+    canvasWidth = w;
+    canvasHeight = h;
+  }
 
   const dispatch = createEventDispatcher();
 
@@ -154,13 +169,14 @@
     }
   }
 
-  onMount(() => {
+  onMount(async () => {
     const frameJson = documentInput ? documentInput.frameTree : frameExamples[0];
     const frameTree = FrameElement.compile(frameJson);
 
     sequentializePointer(FrameLayer);
     layeredCanvas = new LayeredCanvas(
       canvas, 
+      [width, height],
       (p, s) => {
         if (s) {
           const q = convertPointFromNodeToPage(canvas, ...p);
@@ -198,6 +214,32 @@
     layeredCanvas.addLayer(bubbleLayer);
     layeredCanvas.redraw();
 
+    if (manageKeyCache) {
+      initializeKeyCache(canvas, (code) => {
+        if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) && (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"])) {
+          console.log("ctrl+shift+z")
+          $undoStore.redo();
+          return false;
+        }
+        if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"])) {
+          console.log("ctrl+z")
+          $undoStore.undo();
+          return false;
+        }
+        return code === "AltLeft" || code === "AltRight" ||
+            code === "ControlLeft" || code === "ControlRight" ||
+            code === "ShiftLeft" || code === "ShiftRight" ||
+            code === "KeyQ" || code === "KeyW" || code === "KeyS" || 
+            code === "KeyF" || code === "KeyR" || code === "KeyD" || code === "KeyB" ||
+            code === "KeyT" || code === "KeyY" || 
+            code === "Space";
+      });
+    }
+
+    if (editable) {
+
+    }
+
     addHistory();
   });
 
@@ -229,11 +271,11 @@
 
 
 {#if editable}
-  <div class="canvas-container" style="width: {width}; height: {height};">
-    <canvas width={width} height={height} bind:this={canvas}/>
+  <div class="canvas-container fullscreen" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
+    <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
   </div>    
 {:else}
-  <div class="canvas-container" style="width: {width}; height: {height};">
+  <div class="canvas-container" style="width: {width}px; height: {height}px;">
     <canvas width={width} height={height} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
   </div>    
 {/if}
@@ -247,6 +289,13 @@
     background-size: 20px 20px;
     background-position: 0 0, 10px 10px;
     background-color: white;
+  }
+  .fullscreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
   canvas {
     position: absolute;

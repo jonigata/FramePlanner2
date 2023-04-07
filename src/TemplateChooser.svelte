@@ -4,8 +4,8 @@
   import Paper from './Paper.svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import { createEventDispatcher } from 'svelte';
-  export let paperWidth = '140px';
-  export let paperHeight = '198px';
+  export let paperWidth = 140;
+  export let paperHeight = 198;
 
   let swiper;
 

@@ -70,18 +70,22 @@
 
   onMount(() => {
     $undoStore = paper;
+
+    // move to center of parent
+    console.log(paper.canvas);
   });
 </script>
 
 <div class="main-paper-container">
   <Paper 
-    width={`${$paperWidth}px`} 
-    height={`${$paperHeight}px`} 
+    width={$paperWidth} 
+    height={$paperHeight} 
     documentInput={documentInput} 
     paperColor={$paperColor} 
     frameColor={$frameColor} 
     frameWidth={$frameWidth} 
     editable={true} 
+    manageKeyCache={true}
     bind:documentOutput={documentOutput} 
     bind:this={paper}/>
 </div>

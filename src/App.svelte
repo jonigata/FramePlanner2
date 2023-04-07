@@ -5,12 +5,16 @@
   import ControlPanel from './ControlPanel.svelte';
   import MainPaper from './MainPaper.svelte';
   import { Toast } from '@skeletonlabs/skeleton';
-  import BodyDrag from './BodyDrag.svelte';
   import PassiveToolTip from './PassiveToolTip.svelte';
   import About from './About.svelte';
   import BubbleInspector from './BubbleInspector.svelte';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
   import JsonEditor from './JsonEditor.svelte';
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    document.body.style.overflow = 'hidden'; // HACK
+  });
 </script>
 
 <style>
@@ -29,9 +33,7 @@
 
 </style>
 
-<BodyDrag>
-  <MainPaper/>
-</BodyDrag>
+<MainPaper/>
 
 <div class="control-panel-container">
   <ControlPanel />

@@ -1,11 +1,15 @@
 import { convertPointFromPageToNode } from "./convertPoint";
 
 export class LayeredCanvas {
-    constructor(c, onHint) {
+    constructor(c, size, onHint) {
         console.log("initializeLayeredCanvas");
         this.canvas = c;
+        this.canvas.paper = {};
+        this.canvas.paper.size = size;
+        this.canvas.paper.translate = [0, 0];
+        this.canvas.paper.scale = [1, 1];
         this.context = this.canvas.getContext('2d');
-        console.log([this.canvas.width, this.canvas.height]);
+
 
         this.canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this));
         this.canvas.addEventListener('pointermove', this.handlePointerMove.bind(this));
@@ -28,23 +32,29 @@ export class LayeredCanvas {
     cleanup() {
     }
 
-    getCanvasSize() {
-        return [this.canvas.width, this.canvas.height];
+    getPaperSize() {
+        return this.canvas.paper.size;
     }
     
     getCanvasPosition(event) {
-/*
-        const rect = this.canvas.getBoundingClientRect();
-        const x = Math.floor(event.clientX - rect.left);
-        const y = Math.floor(event.clientY - rect.top);
-        return [x, y];
-*/
         const p = convertPointFromPageToNode(this.canvas, event.pageX, event.pageY);
         return [Math.floor(p.x), Math.floor(p.y)];
     }
+
+    getPaperPosition(event) {
+        const p = this.getCanvasPosition(event);
+        const canvasSize = [this.canvas.width, this.canvas.height];
+        const paperSize = this.canvas.paper.size;
+        const canvasCentering = [(canvasSize[0] - paperSize[0]) / 2, (canvasSize[1] - paperSize[1]) / 2];
+        const paperScale = this.canvas.paper.scale;
+        const paperTranslate = this.canvas.paper.translate;
+        const x = (p[0] - canvasCentering[0] - paperTranslate[0]) / paperScale[0];
+        const y = (p[1] - canvasCentering[1] - paperTranslate[1]) / paperScale[1];
+        return [x, y];
+    }
     
     handlePointerDown(event) {
-        const p = this.getCanvasPosition(event);
+        const p = this.getPaperPosition(event);
         
         for (let i = this.layers.length - 1; i >= 0; i--) {
             const layer = this.layers[i];
@@ -69,14 +79,14 @@ export class LayeredCanvas {
     }
       
     handlePointerMove(event) {
-        this.pointerCursor = this.getCanvasPosition(event);
+        this.pointerCursor = this.getPaperPosition(event);
         if (this.draggingLayer) {
-            this.draggingLayer.pointerMove(this.getCanvasPosition(event), this.payload); // 念のため別の実体
+            this.draggingLayer.pointerMove(this.pointerCursor, this.payload); // 念のため別の実体
             this.redrawIfRequired();
         } else {
             for (let i = this.layers.length - 1; i >= 0; i--) {
                 const layer = this.layers[i];
-                if (layer.pointerHover(this.getCanvasPosition(event))) {
+                if (layer.pointerHover(this.pointerCursor)) {
                     break;
                 }
             }
@@ -86,7 +96,7 @@ export class LayeredCanvas {
     
     handlePointerUp(event) {
         if (this.draggingLayer) {
-            this.draggingLayer.pointerUp(this.getCanvasPosition(event), this.payload);
+            this.draggingLayer.pointerUp(this.getPaperPosition(event), this.payload);
             this.draggingLayer = null;
             this.redrawIfRequired();
         }
@@ -116,7 +126,7 @@ export class LayeredCanvas {
     }
 
     handleDrop(event) {
-        this.pointerCursor = this.getCanvasPosition(event);
+        this.pointerCursor = this.getPaperPosition(event);
         event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
         var file = event.dataTransfer.files[0];
 
@@ -142,7 +152,7 @@ export class LayeredCanvas {
     }
 
     handleDoubleClick(event) {
-        this.pointerCursor = this.getCanvasPosition(event);
+        this.pointerCursor = this.getPaperPosition(event);
         for (let i = this.layers.length - 1; i >= 0; i--) {
             const layer = this.layers[i];
             if (layer.beforeDoubleClick(this.pointerCursor)) {
@@ -174,10 +184,15 @@ export class LayeredCanvas {
     }
 
     render() {
+        this.context.save();
+        this.context.translate(this.canvas.width * 0.5, this.canvas.height * 0.5);  // 画面中央
+        this.context.translate(...this.canvas.paper.translate);                     // パン
+        this.context.translate(-this.canvas.paper.size[0] * 0.5, -this.canvas.paper.size[1] * 0.5); // 紙面中央
         for (let i = 0; i < this.layers.length; i++) {
             const layer = this.layers[i];
             layer.render(this.context);
         }
+        this.context.restore();
     }
 
     redraw() {
@@ -207,11 +222,6 @@ export class LayeredCanvas {
         const rect = this.canvas.getBoundingClientRect();
         const f = 0 <= m[0] && m[0] <= rect.width && 0 <= m[1] && m[1] <= rect.height;
         return f;
-    }
-
-    setCanvasSize(w, h) {
-        this.canvas.width = w;
-        this.canvas.height = h;
     }
 }
 
@@ -260,7 +270,7 @@ export class Layer {
 
     constructor() {}
 
-    getPaperSize() {return [this.canvas.width, this.canvas.height];}
+    getPaperSize() {return this.canvas.paper.size;}
     redraw() { this.redrawRequired = true; }
 
     pointerHover(point) {}
