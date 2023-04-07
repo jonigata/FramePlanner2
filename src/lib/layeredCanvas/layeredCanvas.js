@@ -55,6 +55,18 @@ export class LayeredCanvas {
         const [x, y] = [sx + paper.size[0] * 0.5, sy + paper.size[1] * 0.5];
         return [x, y];
     }
+
+    paperPositionToCanvasPosition(p) {
+        const paper = this.canvas.paper;
+        const centering = [
+            this.canvas.width * 0.5 + paper.translate[0],
+            this.canvas.height * 0.5 + paper.translate[1],
+        ];
+        const [sx, sy] = [p[0] - paper.size[0] * 0.5, p[1] - paper.size[1] * 0.5];
+        const [tx, ty] = [sx * paper.scale[0], sy * paper.scale[1]];
+        const [x, y] = [tx + centering[0], ty + centering[1]];
+        return [x, y];
+    }
     
     handlePointerDown(event) {
         const p = this.getPaperPosition(event);
@@ -234,7 +246,10 @@ export class LayeredCanvas {
     
     addLayer(layer) {
         layer.canvas = this.canvas;
-        layer.hint = this.onHint;
+        layer.hint = (p, s) => {
+            const q = this.paperPositionToCanvasPosition(p);
+            this.onHint(q, s);
+        }
         this.layers.push(layer);
     }
     
