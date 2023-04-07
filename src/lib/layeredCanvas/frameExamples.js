@@ -52,28 +52,34 @@ export const frameExamples = [
   { // 4コマ
     bgColor: "white",
     height: 100,
-    row: [
-      { width: 2, visibility: 0  },
+    column: [
+      { height: 2, visibility: 0  },
       {
-        width: 3,
-        column: [
-          { height: 1, visibility: 0  },
+        bgColor: "white",
+        height: 100,
+        row: [
+          { width: 2, visibility: 0  },
           {
-            height: 8, divider: { spacing: 1, slant: 0 }, 
+            width: 3,
+            column: [
+              {
+                height: 8, divider: { spacing: 1, slant: 0 }, 
+              },
+              {
+                height: 8, divider: { spacing: 1, slant: 0 }, 
+              },
+              {
+                height: 8, divider: { spacing: 1, slant: 0 }, 
+              },
+              {
+                height: 8,
+              },
+            ],
           },
-          {
-            height: 8, divider: { spacing: 1, slant: 0 }, 
-          },
-          {
-            height: 8, divider: { spacing: 1, slant: 0 }, 
-          },
-          {
-            height: 8,
-          },
-          { height: 1, visibility: 0  },
-        ],
+          { width: 2, visibility: 0  },
+        ]
       },
-      { width: 2, visibility: 0  },
+      { height: 2, visibility: 0  },
     ]
   },
   { // オーソドックス2
