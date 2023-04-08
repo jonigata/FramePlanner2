@@ -571,8 +571,8 @@ function addTrivialTail(path, r, opts) {
 
 function makeTrivialTailPath(c, v) {
   const l = Math.hypot(v[0], v[1]);
-  const v0 = normalize(perpendicular(v), l * 0.2);
-  const v1 = normalize(perpendicular(v, -1), l * 0.2);
+  const v0 = normalize(perpendicular(v), l * 0.1);
+  const v1 = normalize(perpendicular(v, -1), l * 0.1);
   const tail = new paper.Path();
   tail.addSegments([append(c, v0), append(c, v1), append(c, v)]);
   tail.closed = true;
