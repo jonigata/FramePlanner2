@@ -30,7 +30,7 @@ export class BubbleLayer extends Layer {
     this.optionEditActive = {}
 
     const unit = iconUnit;
-    this.createBubbleIcon = new ClickableIcon("bubble.png",unit,[0,1],"ドラッグで作成", () => this.interactable);
+    this.createBubbleIcon = new ClickableIcon("bubble.png",[64,64],[0,1],"ドラッグで作成", () => this.interactable);
     this.dragIcon = new ClickableIcon("drag.png",unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected);
 
     this.zPlusIcon = new ClickableIcon("bubble-zplus.png",unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected);
@@ -561,6 +561,24 @@ export class BubbleLayer extends Layer {
   }
 
   dropped(image, position) {
+    if (this.createBubbleIcon.contains(position)) {
+      const bubble = new Bubble();
+      const paperSize = this.getPaperSize();
+      const imageSize = [image.width, image.height];
+      const x = Math.random() * (paperSize[0] - imageSize[0]);
+      const y = Math.random() * (paperSize[1] - imageSize[1]);
+      bubble.p0 = [x, y];
+      bubble.p1 = [x + imageSize[0], y + imageSize[1]];
+      bubble.shape = "none";
+      bubble.initOptions();
+      bubble.text = "";
+      bubble.image = { image, translation: [0,0], scale: [1,1] };
+      this.bubbles.push(bubble);
+      this.onCommit(this.bubbles);
+      this.redraw();
+      return;
+    }
+
     for (let bubble of this.bubbles) {
       if (bubble.contains(position)) {
         this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1] };
