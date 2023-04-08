@@ -2,7 +2,7 @@ import { Layer } from "./layeredCanvas.js";
 import { keyDownFlags } from "./keyCache.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
 import { drawBubble, getPath, drawPath } from "./bubbleGraphic";
-import { ClickableIcon } from "./clickableIcon.js";
+import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { Bubble, bubbleOptionSets } from "./bubble.js";
 import { translate, scale } from "./pictureControl.js";
 
@@ -31,13 +31,15 @@ export class BubbleLayer extends Layer {
 
     const unit = iconUnit;
     this.createBubbleIcon = new ClickableIcon("bubble.png",[64,64],[0,1],"ドラッグで作成", () => this.interactable);
-    this.dragIcon = new ClickableIcon("drag.png",unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected);
 
+    this.dragIcon = new ClickableIcon("drag.png",unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected);
     this.zPlusIcon = new ClickableIcon("bubble-zplus.png",unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected);
     this.zMinusIcon = new ClickableIcon("bubble-zminus.png",unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected);
     this.removeIcon = new ClickableIcon("remove.png",unit,[1,0],"削除", () => this.interactable && this.selected);
 
-    this.imageDropIcon = new ClickableIcon("bubble-drop.png",unit,[0.5,0.5],"画像除去", () => this.interactable && this.selected?.image);
+    this.imageDropIcon = new ClickableIcon("bubble-drop.png",unit,[0,1],"画像除去", () => this.interactable && this.selected?.image);
+    this.imageScaleLockIcon = new MultistateIcon(["bubble-unlock.png","bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && this.selected?.image);
+    this.imageScaleLockIcon.index = 0;
 
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon("tail.png",unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected);
@@ -58,6 +60,7 @@ export class BubbleLayer extends Layer {
     this.removeIcon.render(ctx);
 
     this.imageDropIcon.render(ctx);
+    this.imageScaleLockIcon.render(ctx);
 
     if (this.interactable && this.selected) {
       this.drawSelectedUI(ctx, this.selected);
@@ -308,6 +311,7 @@ export class BubbleLayer extends Layer {
           this.zMinusIcon.hintIfContains(p, this.hint) ||
           this.zPlusIcon.hintIfContains(p, this.hint) ||
           this.imageDropIcon.hintIfContains(p, this.hint) ||
+          this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
           this.hintOptionIcon(this.selected.shape, p)) {
             this.handle = null;
       } else if (this.selected.contains(p)) {
@@ -444,6 +448,8 @@ export class BubbleLayer extends Layer {
         return { action: "z-plus", bubble };
       } else if (this.imageDropIcon.contains(point)) {
         return { action: "image-drop", bubble };
+      } else if (this.imageScaleLockIcon.contains(point)) {
+        return { action: "image-scale-lock", bubble };
       } else {
         const icon = this.getOptionIconAt(bubble.shape, point);
         if (icon) {
@@ -545,6 +551,12 @@ export class BubbleLayer extends Layer {
       const bubble = payload.bubble;
       bubble.image = null;
       this.redraw();
+    } else if (payload.action === "image-scale-lock") {
+      console.log("image-scale-lock");
+      const bubble = payload.bubble;
+      bubble.image.scaleLock = !bubble.image.scaleLock;
+      this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
+      this.redraw();
     } else if (payload.action === "image-move") {
       yield* this.translateImage(dragStart, payload.bubble);
     } else if (payload.action === "image-scale") {
@@ -572,7 +584,7 @@ export class BubbleLayer extends Layer {
       bubble.shape = "none";
       bubble.initOptions();
       bubble.text = "";
-      bubble.image = { image, translation: [0,0], scale: [1,1] };
+      bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
       this.bubbles.push(bubble);
       this.onCommit(this.bubbles);
       this.redraw();
@@ -581,7 +593,7 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(position)) {
-        this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1] };
+        this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1], scaleLock: false };
         this.redraw();
         return true;
       }
@@ -610,7 +622,8 @@ export class BubbleLayer extends Layer {
   }
 
   setIconPositions() {
-    const cp = (ro, ou) => ClickableIcon.calcPosition([...this.selected.p0,...this.selected.size], iconUnit, ro, ou);
+    const rect = [this.selected.p0[0] + 10, this.selected.p0[1] + 10, this.selected.size[0] - 20, this.selected.size[1] - 20];
+    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
 
     this.dragIcon.position = cp([0.5, 0], [0, 0]);
     this.zPlusIcon.position = cp([0,0], [1,0]);
@@ -618,6 +631,8 @@ export class BubbleLayer extends Layer {
     this.removeIcon.position = cp([1,0], [0, 0]);
 
     this.imageDropIcon.position = cp([0,1],[0,0]);
+    this.imageScaleLockIcon.position = cp([1,1],[0,0]);
+    this.imageScaleLockIcon.index = this.selected.image?.scaleLock ? 1 : 0;
   }
 
   async *createBubble(dragStart) {
@@ -676,36 +691,16 @@ export class BubbleLayer extends Layer {
     const oldRect = [bubble.p0, bubble.p1];
     let p;
     try {
+      const [q0, q1] = [bubble.p0, bubble.p1];
       while ((p = yield)) {
-        switch (handle) {
-          case "top-left":
-            bubble.p0 = [p[0], p[1]];
-            break;
-          case "top-right":
-            bubble.p0 = [bubble.p0[0], p[1]];
-            bubble.p1 = [p[0], bubble.p1[1]];
-            break;
-          case "bottom-left":
-            bubble.p0 = [p[0], bubble.p0[1]];
-            bubble.p1 = [bubble.p1[0], p[1]];
-            break;
-          case "bottom-right":
-            bubble.p1 = [p[0], p[1]];
-            break;
-          case "top":
-            bubble.p0 = [bubble.p0[0], p[1]];
-            break;
-          case "bottom":
-            bubble.p1 = [bubble.p1[0], p[1]];
-            break;
-          case "left":
-            bubble.p0 = [p[0], bubble.p0[1]];
-            break;
-          case "right":
-            bubble.p1 = [p[0], bubble.p1[1]];
-            break;
-        }
+        this.resizeBubbleAux(bubble, handle, q0, q1, p);
 
+        if (bubble.image?.scaleLock) {
+          // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
+          bubble.image.translation = [0,0];
+          bubble.image.scale = [bubble.size[0] / bubble.image.image.width, bubble.size[1] / bubble.image.image.height];
+        }
+  
         this.setIconPositions();
         this.redraw();
       }
@@ -713,6 +708,7 @@ export class BubbleLayer extends Layer {
       if (!bubble.hasEnoughSize()) {
         throw "cancel";
       }
+      console.log(bubble.image);
       this.onCommit(this.bubbles);
     } catch (e) {
       if (e === "cancel") {
@@ -721,6 +717,101 @@ export class BubbleLayer extends Layer {
       }
     }
   }
+
+  resizeBubbleAux(bubble, handle, q0, q1, p) {
+    if (bubble.image?.scaleLock) {
+      const [cx, cy] = [(bubble.p0[0] + bubble.p1[0]) / 2, (bubble.p0[1] + bubble.p1[1]) / 2];
+      const originalSize = [q1[0] - q0[0], q1[1] - q0[1]];
+      let w,h, scale;
+      switch (handle) {
+        case "top-left":
+          bubble.p0 = [p[0], p[1]];
+          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
+          bubble.p0 = [bubble.p1[0] - w, bubble.p1[1] - h];
+          break;
+        case "top-right":
+          bubble.p0 = [bubble.p0[0], p[1]];
+          bubble.p1 = [p[0], bubble.p1[1]];
+          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
+          bubble.p0 = [bubble.p0[0], bubble.p1[1] - h];
+          bubble.p1 = [bubble.p0[0] + w, bubble.p1[1]];
+          break;
+        case "bottom-left":
+          bubble.p0 = [p[0], bubble.p0[1]];
+          bubble.p1 = [bubble.p1[0], p[1]];
+          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
+          bubble.p0 = [bubble.p1[0] - w, bubble.p0[1]];
+          bubble.p1 = [bubble.p1[0], bubble.p0[1] + h];
+          break;
+        case "bottom-right":
+          bubble.p1 = [p[0], p[1]];
+          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
+          bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
+          break;
+        case "top":
+          bubble.p0 = [q0[0], p[1]];
+          bubble.p1 = [...q1];
+          scale = bubble.size[1] / originalSize[1];
+          [w, h] = [originalSize[0] * scale, bubble.size[1]];
+          bubble.p0 = [cx - w / 2, bubble.p1[1] - h];
+          bubble.p1 = [cx + w / 2, bubble.p1[1]];
+          break;
+        case "bottom":
+          bubble.p0 = [...q0];
+          bubble.p1 = [q1[0], p[1]];
+          scale = bubble.size[1] / originalSize[1];
+          [w, h] = [originalSize[0] * scale, bubble.size[1]];
+          bubble.p0 = [cx - w / 2, bubble.p0[1]];
+          bubble.p1 = [cx + w / 2, bubble.p0[1] + h];
+          break;
+        case "left":
+          bubble.p0 = [p[0], q0[1]];
+          bubble.p1 = [...q1];
+          scale = bubble.size[0] / originalSize[0];
+          [w, h] = [bubble.size[0], originalSize[1] * scale];
+          bubble.p0 = [bubble.p1[0] - w, cy - h / 2];
+          bubble.p1 = [bubble.p1[0], cy + h / 2];
+          break;
+        case "right":
+          bubble.p0 = [...q0];
+          bubble.p1 = [p[0], q1[1]];
+          scale = bubble.size[0] / originalSize[0];
+          [w, h] = [bubble.size[0], originalSize[1] * scale];
+          bubble.p0 = [bubble.p0[0], cy - h / 2];
+          bubble.p1 = [bubble.p0[0] + w, cy + h / 2];
+          break;
+      }    
+    } else {
+      switch (handle) {
+        case "top-left":
+          bubble.p0 = [p[0], p[1]];
+          break;
+        case "top-right":
+          bubble.p0 = [bubble.p0[0], p[1]];
+          bubble.p1 = [p[0], bubble.p1[1]];
+          break;
+        case "bottom-left":
+          bubble.p0 = [p[0], bubble.p0[1]];
+          bubble.p1 = [bubble.p1[0], p[1]];
+          break;
+        case "bottom-right":
+          bubble.p1 = [p[0], p[1]];
+          break;
+        case "top":
+          bubble.p0 = [bubble.p0[0], p[1]];
+          break;
+        case "bottom":
+          bubble.p1 = [bubble.p1[0], p[1]];
+          break;
+        case "left":
+          bubble.p0 = [p[0], bubble.p0[1]];
+          break;
+        case "right":
+          bubble.p1 = [p[0], bubble.p1[1]];
+          break;
+      }
+    }
+  }    
 
   *translateImage(dragStart, bubble) {
     const origin = bubble.image.translation;
@@ -905,6 +996,21 @@ export class BubbleLayer extends Layer {
       return this.bubbles.find((b) => b.uuid === bubble.parent);
     }
     return bubble;
+  }
+
+  resizeWithFixedAspectRatio(originalSize, newSize) {
+    const [originalWidth, originalHeight] = originalSize;
+    const [newWidth, newHeight] = newSize;
+  
+    const scaleFactorX = newWidth / originalWidth;
+    const scaleFactorY = newHeight / originalHeight;
+  
+    const dominantScaleFactor = Math.max(scaleFactorX, scaleFactorY);
+  
+    const scaledWidth = Math.round(originalWidth * dominantScaleFactor);
+    const scaledHeight = Math.round(originalHeight * dominantScaleFactor);
+  
+    return [scaledWidth, scaledHeight];
   }
 }
 

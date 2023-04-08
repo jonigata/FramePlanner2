@@ -99,7 +99,9 @@ export class MultistateIcon {
 
   contains(p) {
     if (!this.isVisible()) return false;
-    const [x,y] = this.position;
+    let [x,y] = [...this.position];
+    x -= this.pivot[0] * this.size[0];
+    y -= this.pivot[1] * this.size[1];
     const [w,h] = this.size;
     const f = x <= p[0] && p[0] <= x + w && y <= p[1] && p[1] <= y + h;
     return f;
