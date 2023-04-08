@@ -4,6 +4,7 @@ import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVer
 import { drawBubble, getPath, drawPath } from "./bubbleGraphic";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { Bubble, bubbleOptionSets } from "./bubble.js";
+import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.js";
 import { translate, scale } from "./pictureControl.js";
 
 const iconUnit = [20, 20];
@@ -42,7 +43,8 @@ export class BubbleLayer extends Layer {
     this.imageScaleLockIcon.index = 0;
 
     this.optionIcons = {};
-    this.optionIcons.tail = new ClickableIcon("tail.png",unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected);
+    this.optionIcons.tail = new ClickableIcon("tail-tip.png",unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected);
+    this.optionIcons.curve = new ClickableIcon("tail-mid.png",unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected);
     this.optionIcons.unite = new ClickableIcon("unite.png",unit,[0.5,1],"ドラッグでリンク", () => this.interactable && this.selected);
     this.optionIcons.circle = new ClickableIcon("circle.png",unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected);
     this.optionIcons.radius = new ClickableIcon("radius.png",unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected);
@@ -202,16 +204,26 @@ export class BubbleLayer extends Layer {
   }
 
   drawOptionHandles(ctx, bubble) {
-    const cp = (ro, ou) => ClickableIcon.calcPosition([...bubble.p0,...bubble.size], iconUnit, ro, ou);
-    const optionSet = bubble.optionSet;
     const [cx,cy] = bubble.center;
+    const cp = (ro, ou) => ClickableIcon.calcPosition([...bubble.p0,...bubble.size], iconUnit, ro, ou);
+    const rp = (p) => [cx + p[0], cy + p[1]];
+    const tailMidCoord = () => tailCoordToWorldCoord(bubble.center, bubble.optionContext.tailTip, bubble.optionContext.tailMid);
+
+    const optionSet = bubble.optionSet;
     for (const option of Object.keys(optionSet)) {
       let icon;
       switch (option) {
-        case "angleVector":
-          icon = this.optionIcons[optionSet.angleVector.icon];
-          icon.position = cp([0.5,0.5],[0,0]);
+        case "tailTip":
+          icon = this.optionIcons[optionSet.tailTip.icon];
+          icon.position = rp(bubble.optionContext.tailTip);
           icon.render(ctx);
+          break;
+        case "tailMid":
+          (() => {
+            icon = this.optionIcons[optionSet.tailMid.icon];
+            icon.position = tailMidCoord();
+            icon.render(ctx);
+          })();
           break;
         case "link":
           icon = this.optionIcons[optionSet.link.icon];
@@ -219,19 +231,16 @@ export class BubbleLayer extends Layer {
           icon.render(ctx);
           break;
         case "focalPoint":
-          (() => {
-            icon = this.optionIcons[optionSet.focalPoint.icon];
-            const [px, py] = bubble.optionContext.focalPoint;
-            icon.position = [cx+px, cy+py];
-            icon.render(ctx);
-          })();
+          icon = this.optionIcons[optionSet.focalPoint.icon];
+          icon.position = rp(bubble.optionContext.focalPoint);
+          icon.render(ctx);
           break;
         case "focalRange":
           (() => {
             icon = this.optionIcons[optionSet.focalRange.icon];
-            const [px, py] = bubble.optionContext.focalPoint;
+            const [px, py] = rp(bubble.optionContext.focalPoint);
             const [rx, ry] = bubble.optionContext.focalRange;
-            icon.position = [cx+px+rx, cy+py+ry];
+            icon.position = [px+rx, py+ry];
             icon.render(ctx);
           })();
           break;
@@ -240,13 +249,13 @@ export class BubbleLayer extends Layer {
   }
 
   drawOptionUI(ctx, bubble) {
-    if (this.optionEditActive.angleVector) {
+    if (this.optionEditActive.tail) {
       const [cx, cy] = bubble.center;
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + bubble.optionContext.angleVector[0], cy + bubble.optionContext.angleVector[1]);
+      ctx.lineTo(cx + bubble.optionContext.tailTip[0], cy + bubble.optionContext.tailTip[1]);
       ctx.stroke();
     } 
     if (this.optionEditActive.focal) {
@@ -558,8 +567,10 @@ export class BubbleLayer extends Layer {
       yield* this.translateImage(dragStart, payload.bubble);
     } else if (payload.action === "image-scale") {
       yield* this.scaleImage(dragStart, payload.bubble);
-    } else if (payload.action === "options-angleVector") {
-      yield* this.optionsAngleVector(dragStart, payload.bubble);
+    } else if (payload.action === "options-tailTip") {
+      yield* this.optionsTailTip(dragStart, payload.bubble);
+    } else if (payload.action === "options-tailMid") {
+      yield* this.optionsTailMid(dragStart, payload.bubble);
     } else if (payload.action === "options-link") {
       yield* this.optionsLink(dragStart, payload.bubble);
     } else if (payload.action === "options-focalPoint") {
@@ -844,21 +855,46 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *optionsAngleVector(p, bubble) {
+  *optionsTailTip(p, bubble) {
+    const s = bubble.optionContext.tailTip;
     try {
-      this.optionEditActive.angleVector = true;
+      this.optionEditActive.tail = true;
       const q = p;
       while (p = yield) {
-        bubble.optionContext.angleVector = [p[0] - q[0], p[1] - q[1]];
+        bubble.optionContext.tailTip = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
         this.redraw();
       }
     } catch (e) {
       console.log(e);
       if (e === "cancel") {
-        bubble.optionContext.angleVector = [0,0];
+        bubble.optionContext.tailTip = [0,0];
       }
     } finally {
-      this.optionEditActive.angleVector = false;
+      this.optionEditActive.tail = false;
+      this.redraw();
+    }
+  }
+
+  *optionsTailMid(p, bubble) {
+    console.log("optionsTailMid");
+    // bubble.centerを原点(O)とし、
+    // X軸: O->tailTip Y軸: O->pependicular(O->tailTip)座標系の座標
+    // この座標系をtail座標系と呼ぶ
+    const s = bubble.optionContext.tailMid;
+    try {
+      this.optionEditActive.tail = true;
+      while (p = yield) {
+        bubble.optionContext.tailMid = worldCoordToTailCoord(bubble.center, bubble.optionContext.tailTip, p);
+        this.redraw();
+      }
+    } catch (e) {
+      console.log(e);
+      if (e === "cancel") {
+        bubble.optionContext.tailMid = s;
+        this.redraw();
+      }
+    } finally {
+      this.optionEditActive.tail = false;
       this.redraw();
     }
   }
@@ -912,32 +948,34 @@ export class BubbleLayer extends Layer {
         bubble.optionContext.focalPoint = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
         this.redraw();
       }
-      this.optionEditActive.focal = false;
-      this.redraw();
     } catch (e) {
       if (e === "cancel") {
         bubble.optionContext.focalPoint = s;
         this.redraw();
       }
+    } finally {
+      this.optionEditActive.focal = false;
+      this.redraw();
     }
   }
 
   *optionsFocalRange(p, bubble) {
     const s = bubble.optionContext.focalRange;
     try {
-      this.optionEditActive.focalRange = true;
+      this.optionEditActive.focal = true;
       const q = p;
       while (p = yield) {
         bubble.optionContext.focalRange = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
         this.redraw();
       }
-      this.optionEditActive.focalRange = false;
-      this.redraw();
     } catch (e) {
       if (e === "cancel") {
         bubble.optionContext.focalRange = s;
         this.redraw();
       }
+    } finally {
+      this.optionEditActive.focal = false;
+      this.redraw();
     }
   }
 

@@ -1,6 +1,8 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
+import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.js";
+import { perpendicular2D, normalize2D } from "./geometry.js";
 
 export function drawBubble(context, seed, rect, shape, opts) {
   switch (shape) {
@@ -250,7 +252,7 @@ function drawMotionLinesBubble(context, seed, rect, opts) {
       const v = [p1[0] - p0[0], p1[1] - p0[1]];
       const length = Math.hypot(...v);
       const p2 = [p0[0] + v[0] * sdr / length, p0[1] + v[1] * sdr / length];
-      const [q0, q1] = [perpendicular(v, 0.005), perpendicular(v, -0.005)];
+      const [q0, q1] = [perpendicular2D(v, 0.005), perpendicular2D(v, -0.005)];
       context.beginPath();
       context.moveTo(p2[0], p2[1]);
       context.lineTo(p1[0] + q0[0], p1[1] + q0[1]);
@@ -381,34 +383,7 @@ function getEllipsePath([x, y, w, h], opts, seed) {
 
   const path = new paper.Path.Ellipse({center: [cx, cy], radius: [w2, h2]});
 
-  if (opts?.angleVector) {
-    const v = opts.angleVector;
-    if (v[0] === 0 && v[1] === 0) {
-      // do nothing
-    } else {
-      const theta = vectorToEllipseAngle(w2, h2, v[0], v[1]);
-      const theta0 = theta - Math.PI / 24;
-      const theta1 = theta + Math.PI / 24;
-      const p0 = [cx + w2 * Math.cos(theta0), cy + h2 * Math.sin(theta0)];
-      const p1 = [cx + w2 * Math.cos(theta1), cy + h2 * Math.sin(theta1)];
-      const tail = new paper.Path();
-      tail.addSegments([p0, p1, [cx + v[0], cy + v[1]]]);
-
-      tail.closed = true;
-      return path.unite(tail);
-    }
-  }
-
-  return path;
-}
-
-function perpendicular([x, y], n=1) {
-  return [-y*n, x*n];
-}
-
-function normalize([x, y], n=1) {
-  const l = Math.hypot(x, y);
-  return [n * x / l, n * y / l];
+  return addTrivialTail(path, [x, y, w, h], opts);
 }
 
 function append([x, y], [dx, dy]) {
@@ -446,9 +421,9 @@ function getHarshPath(r, opts, seed) {
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, r, 10);
   const points = subdividedPointsWithBump(rawPoints, bump, -1, 0);
-  if (opts?.angleVector) {
+  if (opts?.tailTip) {
     const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
-    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const v = [cx + opts.tailTip[0], cy + opts.tailTip[1]];
     const tailIndex = getNearestIndex(points, v);
     points[tailIndex] = v;
   }
@@ -465,9 +440,9 @@ function getHarshCurvePath(r, opts, seed) {
   const rng = seedrandom(seed);
   const rawPoints = generateRandomPoints(rng, r, 12);
   let points;
-  if (opts?.angleVector) {
+  if (opts?.tailTip) {
     const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
-    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
+    const v = [cx + opts.tailTip[0], cy + opts.tailTip[1]];
     const tailIndex = getNearestIndex(rawPoints, v);
     rawPoints[tailIndex] = v;
     points = subdividedPointsWithBump(rawPoints, bump, tailIndex, bump*2);
@@ -489,19 +464,11 @@ function getHarshCurvePath(r, opts, seed) {
 }
 
 function getSoftPath(r, opts, seed) {
-  const bump = Math.min(r[2], r[3]) / 15;
+  const bump = Math.min(r[2], r[3]) / 30;
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, r, 16);
+  const rawPoints = generateRandomPoints(rng, r, 12);
   let points;
-  if (opts?.angleVector) {
-    const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
-    const v = [cx + opts.angleVector[0], cy + opts.angleVector[1]];
-    const tailIndex = getNearestIndex(rawPoints, v);
-    rawPoints[tailIndex] = v;
-    points = subdividedPointsWithBump(rawPoints, -bump, tailIndex, bump);
-  } else {
-    points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
-  }
+  points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
 
   const path = new paper.Path();
 
@@ -514,7 +481,8 @@ function getSoftPath(r, opts, seed) {
   }
   path.closed = true;
 
-  return path;
+  //return path;
+  return addTrivialTail(path, r, opts);
 }
 
 function getHeartPath(r, opts, seed) {
@@ -556,25 +524,36 @@ function getDiamondPath(r, opts, seed) {
 }
 
 function addTrivialTail(path, r, opts) {
-  if (opts?.angleVector) {
-    const v = opts.angleVector;
+  if (opts?.tailTip) {
+    const v = opts.tailTip;
+    const m = opts.tailMid;
     if (v[0] === 0 && v[1] === 0) {
       // do nothing
     } else {
-      const c = [r[0] + r[2] / 2, r[1] + r[3] / 2];
-      return path.unite(makeTrivialTailPath(c, v));
+      return path.unite(makeTrivialTailPath(r, m, v));
     }
   }
 
   return path;
 }
 
-function makeTrivialTailPath(c, v) {
-  const l = Math.hypot(v[0], v[1]);
-  const v0 = normalize(perpendicular(v), l * 0.1);
-  const v1 = normalize(perpendicular(v, -1), l * 0.1);
+function makeTrivialTailPath(r, m, v) {
+  const c = [r[0] + r[2] / 2, r[1] + r[3] / 2];
+  const a = r[2] * r[3];
+  const l = Math.max(50000, Math.hypot(v[0], v[1]) ** 2);
+  const vd1 = normalize2D(perpendicular2D(v), a * 35 / l);
+  const vd2 = normalize2D(perpendicular2D(v, -1), a * 35 / l);
+  const vt1 = [v[0] - vd1[0], v[1] - vd1[1]];
+  const vt2 = [v[0] - vd2[0], v[1] - vd2[1]];
+  const v0 = append(c, v);
+  const v1 = append(c, vd1);
+  const v2 = append(c, vd2);
+  const m1 = tailCoordToWorldCoord(v1, vt1, m);
+  const m2 = tailCoordToWorldCoord(v2, vt2, m);
   const tail = new paper.Path();
-  tail.addSegments([append(c, v0), append(c, v1), append(c, v)]);
+  tail.moveTo(v1);
+  tail.curveTo(m1, v0);
+  tail.curveTo(m2, v2);
   tail.closed = true;
   return tail;
 }
