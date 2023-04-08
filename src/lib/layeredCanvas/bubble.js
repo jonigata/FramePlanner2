@@ -209,6 +209,10 @@ export class Bubble {
     return [Math.abs(this.p1[0] - this.p0[0]), Math.abs(this.p1[1] - this.p0[1])];
   }
 
+  get imageSize() {
+    return [this.image?.image.width, this.image?.image.height];
+  }  
+
   get optionSet() {
     return bubbleOptionSets[this.shape];
   }

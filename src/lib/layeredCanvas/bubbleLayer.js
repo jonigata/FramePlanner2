@@ -553,10 +553,7 @@ export class BubbleLayer extends Layer {
       this.redraw();
     } else if (payload.action === "image-scale-lock") {
       console.log("image-scale-lock");
-      const bubble = payload.bubble;
-      bubble.image.scaleLock = !bubble.image.scaleLock;
-      this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
-      this.redraw();
+      this.toggleScaleLock(payload.bubble);
     } else if (payload.action === "image-move") {
       yield* this.translateImage(dragStart, payload.bubble);
     } else if (payload.action === "image-scale") {
@@ -1011,6 +1008,20 @@ export class BubbleLayer extends Layer {
     const scaledHeight = Math.round(originalHeight * dominantScaleFactor);
   
     return [scaledWidth, scaledHeight];
+  }
+
+  toggleScaleLock(bubble) {
+    bubble.image.scaleLock = !bubble.image.scaleLock;
+    this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
+    if (bubble.image.scaleLock) {
+      const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubble.size);
+      const [cx,cy] = bubble.center;
+      bubble.p0 = [cx - w/2, cy - h/2];
+      bubble.p1 = [cx + w/2, cy + h/2];
+      bubble.image.scale = [w / bubble.imageSize[0], h / bubble.imageSize[1]];
+      this.setIconPositions();
+    }
+    this.redraw();
   }
 }
 
