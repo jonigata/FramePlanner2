@@ -355,7 +355,7 @@ export class BubbleLayer extends Layer {
 
   copyBubble() {
     if (this.selected) {
-      const t = JSON.stringify(Bubble.decompile(this.getCanvasSize(), this.selected), null, 2);
+      const t = JSON.stringify(Bubble.decompile(this.getPaperSize(), this.selected), null, 2);
       navigator.clipboard.writeText(t).then(() => {
         console.log("copied");
       });
@@ -365,10 +365,11 @@ export class BubbleLayer extends Layer {
   pasteBubble() {
     navigator.clipboard.readText().then((text) => {
       try {
-        const b = Bubble.compile(this.getCanvasSize(), JSON.parse(text));
+        const paperSize = this.getPaperSize();
+        const b = Bubble.compile(paperSize, JSON.parse(text));
         const size = b.size;
-        const x = Math.random() * (this.canvas.width - size[0]);
-        const y = Math.random() * (this.canvas.height - size[1]);
+        const x = Math.random() * (paperSize[0] - size[0]);
+        const y = Math.random() * (paperSize[1] - size[1]);
         b.p0 = [x, y];
         b.p1 = [x + size[0], y + size[1]];
         this.bubbles.push(b);
