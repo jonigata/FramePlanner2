@@ -1,8 +1,9 @@
 export class ClickableIcon {
-  constructor(src, position, size, hint, visibleConditionProvider) {
+  constructor(src, size, pivot, hint, visibleConditionProvider) {
     this.src = new URL(`../../assets/${src}`, import.meta.url).href;
-    this.position = position;
+    this.position = [0,0];
     this.size = size;
+    this.pivot = pivot;
     this.image = new Image();
     this.image.src = this.src;
     this.hint = hint;
@@ -14,13 +15,18 @@ export class ClickableIcon {
     ctx.save();
     ctx.shadowColor = "white";
     ctx.shadowBlur = 5;
-    ctx.drawImage(this.image,...this.position,...this.size);
+    const position = [...this.position];
+    position[0] -= this.pivot[0] * this.size[0];
+    position[1] -= this.pivot[1] * this.size[1];
+    ctx.drawImage(this.image,...position,...this.size);
     ctx.restore();
   }
 
   contains(p) {
     if (!this.isVisible()) return false;
-    const [x,y] = this.position;
+    let [x,y] = [...this.position];
+    x -= this.pivot[0] * this.size[0];
+    y -= this.pivot[1] * this.size[1];
     const [w,h] = this.size;
     const f = x <= p[0] && p[0] <= x + w && y <= p[1] && p[1] <= y + h;
     return f;
@@ -56,17 +62,24 @@ export class ClickableIcon {
     }
     return false;
   }
+
+  static calcPosition(rect, unit, regularizedOrigin, offsetUnit) {
+    const [x, y, w, h] = rect;
+    const origin = [x + w * regularizedOrigin[0], y + h * regularizedOrigin[1]];
+    return [origin[0] + unit[0] * offsetUnit[0], origin[1] + unit[1] * offsetUnit[1]];
+  }
 }
 
 export class MultistateIcon {
-  constructor(srcs, position, size, hint, visibleConditionProvider) {
+  constructor(srcs, size, pivot, hint, visibleConditionProvider) {
     this.images = srcs.map(src => {
         const image = new Image();
         image.src = new URL(`../../assets/${src}`, import.meta.url).href;
         return image;
     });
-    this.position = position;
+    this.position = [0,0];
     this.size = size;
+    this.pivot = pivot;
     this.hint = hint;
     this.visibleConditionProvider = visibleConditionProvider;
     this.index = 0;
@@ -77,7 +90,10 @@ export class MultistateIcon {
     ctx.save();
     ctx.shadowColor = "white";
     ctx.shadowBlur = 5;
-    ctx.drawImage(this.images[this.index], ...this.position, ...this.size);
+    const position = [...this.position];
+    position[0] -= this.pivot[0] * this.size[0];
+    position[1] -= this.pivot[1] * this.size[1];
+    ctx.drawImage(this.images[this.index], ...position, ...this.size);
     ctx.restore();
   }
 

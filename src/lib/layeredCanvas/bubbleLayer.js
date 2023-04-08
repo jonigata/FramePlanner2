@@ -6,7 +6,7 @@ import { ClickableIcon } from "./clickableIcon.js";
 import { Bubble, bubbleOptionSets } from "./bubble.js";
 import { translate, scale } from "./pictureControl.js";
 
-const iconSize = 20;
+const iconUnit = [20, 20];
 
 export class BubbleLayer extends Layer {
   constructor(
@@ -29,20 +29,21 @@ export class BubbleLayer extends Layer {
     this.creatingBubble = null;
     this.optionEditActive = {}
 
-    this.createBubbleIcon = new ClickableIcon("bubble.png",[4, 4],[iconSize, iconSize], "ドラッグで作成", () => this.interactable);
-    this.dragIcon = new ClickableIcon("drag.png", [0, 0], [iconSize, iconSize], "ドラッグで移動", () => this.interactable && this.selected);
+    const unit = iconUnit;
+    this.createBubbleIcon = new ClickableIcon("bubble.png",unit,[0,1],"ドラッグで作成", () => this.interactable);
+    this.dragIcon = new ClickableIcon("drag.png",unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected);
 
-    this.zPlusIcon = new ClickableIcon("bubble-zplus.png",[0, 0],[iconSize, iconSize], "フキダシ順で手前", () => this.interactable && this.selected);
-    this.zMinusIcon = new ClickableIcon("bubble-zminus.png",[0, 0],[iconSize, iconSize], "フキダシ順で奥", () => this.interactable && this.selected);
-    this.removeIcon = new ClickableIcon("remove.png",[0, 0],[iconSize, iconSize], "削除", () => this.interactable && this.selected);
+    this.zPlusIcon = new ClickableIcon("bubble-zplus.png",unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected);
+    this.zMinusIcon = new ClickableIcon("bubble-zminus.png",unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected);
+    this.removeIcon = new ClickableIcon("remove.png",unit,[1,0],"削除", () => this.interactable && this.selected);
 
-    this.imageDropIcon = new ClickableIcon("bubble-drop.png",[0, 0],[iconSize, iconSize], "画像除去", () => this.interactable && this.selected?.image);
+    this.imageDropIcon = new ClickableIcon("bubble-drop.png",unit,[0.5,0.5],"画像除去", () => this.interactable && this.selected?.image);
 
     this.optionIcons = {};
-    this.optionIcons.tail = new ClickableIcon("tail.png",[0, 0],[iconSize, iconSize], "ドラッグでしっぽ", () => this.interactable && this.selected);
-    this.optionIcons.unite = new ClickableIcon("unite.png",[0, 0],[iconSize, iconSize], "ドラッグでリンク", () => this.interactable && this.selected);
-    this.optionIcons.circle = new ClickableIcon("circle.png",[0, 0],[iconSize, iconSize], "ドラッグで円定義", () => this.interactable && this.selected);
-    this.optionIcons.radius = new ClickableIcon("radius.png",[0, 0],[iconSize, iconSize], "ドラッグで円半径", () => this.interactable && this.selected);
+    this.optionIcons.tail = new ClickableIcon("tail.png",unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected);
+    this.optionIcons.unite = new ClickableIcon("unite.png",unit,[0.5,1],"ドラッグでリンク", () => this.interactable && this.selected);
+    this.optionIcons.circle = new ClickableIcon("circle.png",unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected);
+    this.optionIcons.radius = new ClickableIcon("radius.png",unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected);
   }
 
   render(ctx) {
@@ -198,6 +199,7 @@ export class BubbleLayer extends Layer {
   }
 
   drawOptionHandles(ctx, bubble) {
+    const cp = (ro, ou) => ClickableIcon.calcPosition([...bubble.p0,...bubble.size], iconUnit, ro, ou);
     const optionSet = bubble.optionSet;
     const [cx,cy] = bubble.center;
     for (const option of Object.keys(optionSet)) {
@@ -205,19 +207,19 @@ export class BubbleLayer extends Layer {
       switch (option) {
         case "angleVector":
           icon = this.optionIcons[optionSet.angleVector.icon];
-          icon.position = [cx-iconSize/2, cy-iconSize/2];
+          icon.position = cp([0.5,0.5],[0,0]);
           icon.render(ctx);
           break;
         case "link":
           icon = this.optionIcons[optionSet.link.icon];
-          icon.position = [cx-iconSize/2, bubble.p1[1]-iconSize];
+          icon.position = cp([0.5,1],[0,0]);
           icon.render(ctx);
           break;
         case "focalPoint":
           (() => {
             icon = this.optionIcons[optionSet.focalPoint.icon];
             const [px, py] = bubble.optionContext.focalPoint;
-            icon.position = [cx+px-iconSize/2, cy+py-iconSize/2];
+            icon.position = [cx+px, cy+py];
             icon.render(ctx);
           })();
           break;
@@ -226,7 +228,7 @@ export class BubbleLayer extends Layer {
             icon = this.optionIcons[optionSet.focalRange.icon];
             const [px, py] = bubble.optionContext.focalPoint;
             const [rx, ry] = bubble.optionContext.focalRange;
-            icon.position = [cx+px+rx-iconSize/2, cy+py+ry-iconSize/2];
+            icon.position = [cx+px+rx, cy+py+ry];
             icon.render(ctx);
           })();
           break;
@@ -363,10 +365,8 @@ export class BubbleLayer extends Layer {
   pasteBubble() {
     navigator.clipboard.readText().then((text) => {
       try {
-        console.log(text);
         const b = Bubble.compile(this.getCanvasSize(), JSON.parse(text));
         const size = b.size;
-        console.log(size);
         const x = Math.random() * (this.canvas.width - size[0]);
         const y = Math.random() * (this.canvas.height - size[1]);
         b.p0 = [x, y];
@@ -512,7 +512,6 @@ export class BubbleLayer extends Layer {
     } else if (payload.action === "move") {
       yield* this.moveBubble(dragStart, payload.bubble);
     } else if (payload.action === "select") {
-      console.log("select");
       this.unfocus();
       this.selected = payload.bubble;
       this.setIconPositions();
@@ -592,15 +591,14 @@ export class BubbleLayer extends Layer {
   }
 
   setIconPositions() {
-    const [x0, y0] = this.selected.p0;
-    const [x1, y1] = this.selected.p1;
+    const cp = (ro, ou) => ClickableIcon.calcPosition([...this.selected.p0,...this.selected.size], iconUnit, ro, ou);
 
-    this.dragIcon.position = [(x0 + x1) / 2 - iconSize * 0.5, y0 + 4];
-    this.zPlusIcon.position = [x0 + 4, y0 + 4];
-    this.zMinusIcon.position = [x0 + 4, y0 + 4 + iconSize];
-    this.removeIcon.position = [x1 - 4 - iconSize, y0 + 4];
+    this.dragIcon.position = cp([0.5, 0], [0, 0]);
+    this.zPlusIcon.position = cp([0,0], [1,0]);
+    this.zMinusIcon.position = cp([0,0], [0,0]);
+    this.removeIcon.position = cp([1,0], [0, 0]);
 
-    this.imageDropIcon.position = [x0 + 4, y1 - iconSize - 4]
+    this.imageDropIcon.position = cp([0,1],[0,0]);
   }
 
   async *createBubble(dragStart) {
@@ -740,7 +738,6 @@ export class BubbleLayer extends Layer {
   }
 
   *optionsAngleVector(p, bubble) {
-    console.log("optionsAngleVector");
     try {
       this.optionEditActive.angleVector = true;
       const q = p;
@@ -760,7 +757,6 @@ export class BubbleLayer extends Layer {
   }
 
   *optionsLink(p, bubble) {
-    console.log("optionsLink");
     try {
       this.optionEditActive.link = true;
       const q = p;
@@ -801,7 +797,6 @@ export class BubbleLayer extends Layer {
   }
 
   *optionsFocalPoint(p, bubble) {
-    console.log("optionsFocalPoint");
     const s = bubble.optionContext.focalPoint;
     try {
       this.optionEditActive.focal = true;
@@ -821,7 +816,6 @@ export class BubbleLayer extends Layer {
   }
 
   *optionsFocalRange(p, bubble) {
-    console.log("optionsFocalRange");
     const s = bubble.optionContext.focalRange;
     try {
       this.optionEditActive.focalRange = true;

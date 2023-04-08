@@ -4,6 +4,8 @@ import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 
+const iconUnit = [32,32];
+
 export class FrameLayer extends Layer {
   constructor(frameTree, interactable, onCommit, onRevert) {
     super();
@@ -12,28 +14,29 @@ export class FrameLayer extends Layer {
     this.onCommit = onCommit;
     this.onRevert = onRevert;
 
+    const unit = iconUnit;
     const isFrameActive = () => this.interactable && this.focusedLayout && !this.pointerHandler;
     const isFrameActiveAndVisible = () => this.interactable && 0 < this.focusedLayout?.element.visibility && !this.pointerHandler;
-    this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",[0, 0],[32, 32], "横に分割", isFrameActiveAndVisible);
-    this.splitVerticalIcon = new ClickableIcon("split-vertical.png",[0, 0],[32, 32], "縦に分割", isFrameActiveAndVisible);
-    this.deleteIcon = new ClickableIcon("delete.png", [0, 0], [32, 32], "削除", isFrameActive);
-    this.duplicateIcon = new ClickableIcon("duplicate.png", [0, 0], [32, 32], "複製", isFrameActive);
-    this.zplusIcon = new ClickableIcon("zplus.png", [0, 0], [32, 32], "手前に", isFrameActiveAndVisible);
-    this.zminusIcon = new ClickableIcon("zminus.png", [0, 0], [32, 32], "奥に", isFrameActiveAndVisible);
-    this.visibilityIcon = new MultistateIcon(["visibility1.png","visibility2.png","visibility3.png"], [0, 0], [32, 32], "不可視/背景と絵/枠線も", () => this.interactable && this.focusedLayout && !this.pointerHandler);
+    this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible);
+    this.splitVerticalIcon = new ClickableIcon("split-vertical.png",unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible);
+    this.deleteIcon = new ClickableIcon("delete.png",unit,[1,0],"削除", isFrameActive);
+    this.duplicateIcon = new ClickableIcon("duplicate.png",unit,[1,0],"複製", isFrameActive);
+    this.zplusIcon = new ClickableIcon("zplus.png",unit,[0,0],"手前に", isFrameActiveAndVisible);
+    this.zminusIcon = new ClickableIcon("zminus.png",unit,[0,0],"奥に", isFrameActiveAndVisible);
+    this.visibilityIcon = new MultistateIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", () => this.interactable && this.focusedLayout && !this.pointerHandler);
     this.visibilityIcon.index = 2;
 
     const isImageActive = () => this.interactable && this.focusedLayout?.element.image && !this.pointerHandler;
-    this.scaleIcon = new ClickableIcon("scale.png", [0, 0], [32, 32], "スケール", () => this.interactable && this.focusedLayout?.element.image);
-    this.dropIcon = new ClickableIcon("drop.png", [0, 0], [32, 32], "画像除去", isImageActive);
-    this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png", [0, 0], [32, 32], "左右反転", isImageActive);
-    this.flipVerticalIcon = new ClickableIcon("flip-vertical.png", [0, 0], [32, 32], "上下反転", isImageActive);
+    this.scaleIcon = new ClickableIcon("scale.png",unit,[1,1],"スケール", () => this.interactable && this.focusedLayout?.element.image);
+    this.dropIcon = new ClickableIcon("drop.png",unit,[0,1],"画像除去", isImageActive);
+    this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png",unit,[0,1],"左右反転", isImageActive);
+    this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
 
     const isBorderActive = (dir) => this.interactable && this.focusedBorder?.layout.dir === dir;
-    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",[0, 0],[32, 32], "幅を変更", () => isBorderActive('h'));
-    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", [0, 0], [32, 32], "傾き", () => isBorderActive('h'));
-    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",[0, 0],[32, 32], "幅を変更", () => isBorderActive('v'));
-    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", [0, 0], [32, 32], "傾き", () => isBorderActive('v'));
+    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",unit,[0.5,0.5],"幅を変更", () => isBorderActive('h'));
+    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", unit,[0.5,0.5],"傾き", () => isBorderActive('h'));
+    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",unit,[0.5,0.5],"幅を変更", () => isBorderActive('v'));
+    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", unit,[0.5,0.5],"傾き", () => isBorderActive('v'));
 
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
@@ -69,7 +72,7 @@ export class FrameLayer extends Layer {
       ctx.font = '24px serif';
       ctx.fillStyle = "#86C8FF";
       const l = this.focusedLayout;
-      ctx.fillText(l.element.z, l.origin[0]+64, l.origin[1]+28);
+      ctx.fillText(l.element.z, l.origin[0]+74, l.origin[1]+38);
     }
 
     if (this.focusedPadding) {
@@ -187,24 +190,25 @@ export class FrameLayer extends Layer {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
     const setUpFocusedLayout = () => {
+      const cp = (ro, ou) => ClickableIcon.calcPosition([origin[0]+10, origin[1]+10, size[0]-20, size[1]-20],iconUnit, ro, ou);
       const origin = this.focusedLayout.origin;
       const size = this.focusedLayout.size;
-      const [x, y] = [origin[0] + size[0] / 2, origin[1] + size[1] / 2];
-      this.splitHorizontalIcon.position = [x + 32, y];
-      this.splitVerticalIcon.position = [x, y + 32];
-      this.deleteIcon.position = [origin[0] + size[0] - 32, origin[1]];
-      this.duplicateIcon.position = [origin[0] + size[0] - 32, origin[1]+48];
-      this.zplusIcon.position = [origin[0] + 80, origin[1]];
-      this.zminusIcon.position = [origin[0] + 32, origin[1]];
-      this.visibilityIcon.position = [origin[0], origin[1]];
+      this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
+      this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
+      this.deleteIcon.position = cp([1,0],[0,0]);
+      this.duplicateIcon.position = cp([1,0],[0,1]);
+      this.zplusIcon.position = cp([0,0],[2.5,0]);
+      this.zminusIcon.position = cp([0,0],[1,0]);
+      this.visibilityIcon.position = cp([0,0],[0,0]);
       this.visibilityIcon.index = this.focusedLayout.element.visibility;
 
-      this.scaleIcon.position = [origin[0] + size[0] - 32, origin[1] + size[1] - 32];
-      this.dropIcon.position = [origin[0], origin[1] + size[1] - 32];
-      this.flipHorizontalIcon.position = [origin[0] + 48, origin[1] + size[1] - 32];
-      this.flipVerticalIcon.position = [origin[0] + 72, origin[1] + size[1] - 32,];
+      this.scaleIcon.position = cp([1,1],[0,0]);
+      this.dropIcon.position = cp([0,1],[0,0]);
+      this.flipHorizontalIcon.position = cp([0,1], [2,0]);
+      this.flipVerticalIcon.position = cp([0,1], [3,0]);
       this.redraw();
 
+      const x = origin[0] + size[0] / 2;
       if (this.hintIfContains(point, this.frameIcons)) {
       } else if (this.focusedLayout.element.image) {
         this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール");
@@ -467,7 +471,6 @@ export class FrameLayer extends Layer {
     const c1 = child1.element;
     const rawSpacing = c0.divider.spacing;
     const rawSum = c0.rawSize + rawSpacing + c1.rawSize;
-    console.log(rawSpacing, rawSum);
 
     try {
       while ((p = yield)) {
@@ -501,7 +504,6 @@ export class FrameLayer extends Layer {
     try {
       while ((p = yield)) {
         const op = p[dir] - s[dir];
-        console.log(op, factor, op * factor, startSpacing);
         prev.divider.spacing = Math.max(0, startSpacing + op * factor * 0.1);
         const diff = prev.divider.spacing - startSpacing;
   
