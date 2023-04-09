@@ -238,7 +238,7 @@ export const bubbleOptionSets = {
   "strokes": {},
   "double-strokes": {},
   "harsh": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}},
-  "harsh-curve": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "harsh-curve": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}},
   "soft": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "heart" : {link: {hint:"結合", icon:"unite"} },
   "diamond": {link: {hint:"結合", icon:"unite"} },
