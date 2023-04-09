@@ -1,8 +1,9 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
-import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.js";
-import { perpendicular2D, normalize2D } from "./geometry.js";
+import { tailCoordToWorldCoord } from "./bubbleGeometry.js";
+import { add2D, perpendicular2D, normalize2D, circularAngleToEllipseAngle } from "./geometry.js";
+import { generateRandomAngles, generateSuperEllipsePoints, movePointsToRectCenter, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, rect, shape, opts) {
   switch (shape) {
@@ -29,6 +30,7 @@ export function drawBubble(context, seed, rect, shape, opts) {
       break;
     case "harsh":
       drawHarshBubble(context, seed, rect, opts);
+
       break;
     case "harsh-curve":
       drawHarshCurveBubble(context, seed, rect, opts);
@@ -52,58 +54,6 @@ export function drawBubble(context, seed, rect, shape, opts) {
         `Unknown bubble : ${shape}`
       );
   }
-}
-
-function drawPoints(context, points, color, opts) {
-  context.save();
-  context.strokeStyle = color;
-  context.beginPath();
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    // draw circle
-    context.moveTo(p[0], p[1]);
-    context.arc(p[0], p[1], 2, 0, 2 * Math.PI);
-  }
-  context.stroke();
-  context.restore();
-}
-
-function subdivideSegmentWithBump(p1, p2, bump) {
-  const q = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
-  const [dx, dy] = [p2[0] - p1[0], p2[1] - p1[1]];
-  const [nx, ny] = [-dy, dx];
-  const [mx, my] = [
-    nx / Math.sqrt(nx * nx + ny * ny),
-    ny / Math.sqrt(nx * nx + ny * ny),
-  ];
-  const [qx, qy] = [q[0] + mx * bump, q[1] + my * bump];
-  return [qx, qy];
-}
-
-function subdividedPointsWithBump(points, bump, tailIndex, tailBump) {
-  const result = [];
-  for (let i = 0; i < points.length; i++) {
-    const next = (i + 1) % points.length;
-    const p1 = points[i];
-    const p2 = points[next];
-    result.push(p1);
-    result.push(subdivideSegmentWithBump(
-      p1, p2, next === tailIndex || i === tailIndex ? tailBump : bump));
-  }
-  return result;
-}
-
-function vectorToEllipseAngle(rx, ry, vx, vy) {
-  const length = Math.sqrt(vx * vx + vy * vy);
-  
-  const normalizedVx = vx / length;
-  const normalizedVy = vy / length;
-
-  const ellipseX = rx * ry * normalizedVx / Math.sqrt(ry * ry * normalizedVx * normalizedVx + rx * rx * normalizedVy * normalizedVy);
-  const ellipseY = rx * ry * normalizedVy / Math.sqrt(ry * ry * normalizedVx * normalizedVx + rx * rx * normalizedVy * normalizedVy);
-
-  const ellipseAngle = Math.atan2(ellipseY / ry, ellipseX / rx);
-  return ellipseAngle;
 }
 
 function drawConcentrationBubble(context, seed, rect, opts) {
@@ -158,9 +108,9 @@ function drawDoubleStrokesBubble(context, seed, rect, opts) {
 
 function drawStrokesBubbleAux(context, seed, rect, double) {
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, rect, 10);
+  const rawPoints = generateSuperEllipsePoints(rect, generateRandomAngles(rng, 10));
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
-  const points = cookedPoints.map((p) => [p.x, p.y]);
+  const points = movePointsToRectCenter(cookedPoints.map((p) => [p.x, p.y]), rect);
 
   if (context.bubbleDrawMethod == "fill" || context.bubbleDrawMethod == "clip") {
     context.beginPath();
@@ -275,37 +225,6 @@ function extendLineSegment(p0, p1, extensionFactor) {
     return [q0, q1];
 }
   
-function generateRandomPoints(rng, rect, numPoints) {
-    const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
-    const hw = rect[2] / 2;
-    const hh = rect[3] / 2;
-    const r = Math.sqrt(hw ** 2 + hh ** 2);
-
-    const points = [];
-    for (let i = 0; i < numPoints; i++) {
-        const angleJitter = (rng() - 0.5) / (numPoints * 2);
-        // const angleJitter = 0;
-        const angle = (i / numPoints + angleJitter) * 2 * Math.PI;
-        
-        const x = r * Math.cos(angle);
-        const y = r * Math.sin(angle);
-
-        // calculate length to collision with left fence or right fence
-        const p = superellipsePoint(hw, hh, 3, angle);
-        points.push([c[0] + p[0], c[1] + p[1]]);
-    }
-
-    return points;
-}
-
-function superellipsePoint(a, b, n, theta) {
-    const cosTheta = Math.cos(theta);
-    const sinTheta = Math.sin(theta);
-    const x = a * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), 2 / n);
-    const y = b * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), 2 / n);
-    return [x, y];
-}
-
 function finishTrivialPath(context) {
   switch(context.bubbleDrawMethod) {
     case 'fill':
@@ -318,19 +237,6 @@ function finishTrivialPath(context) {
       context.clip();
       break;
   }
-}
-
-function getNearestIndex(points, v) {
-  let minDist = Infinity;
-  let minIndex = -1;
-  for (let i = 0; i < points.length; i++) {
-    const dist = Math.hypot(points[i][0] - v[0], points[i][1] - v[1]);
-    if (dist < minDist) {
-      minDist = dist;
-      minIndex = i;
-    }
-  }
-  return minIndex;
 }
 
 // https://github.com/paperjs/paper.js/issues/1889
@@ -386,10 +292,6 @@ function getEllipsePath([x, y, w, h], opts, seed) {
   return addTrivialTail(path, [x, y, w, h], opts);
 }
 
-function append([x, y], [dx, dy]) {
-  return [x + dx, y + dy];
-}
-
 function getSquarePath(r, opts, seed) {
   const path = new paper.Path.Rectangle(...r);
   return addTrivialTail(path, r, opts);
@@ -419,12 +321,13 @@ function getRoundedPath(r, opts, seed) {
 function getHarshPath(r, opts, seed) {
   const bump = Math.min(r[2], r[3]) / 10;
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, r, 10);
-  const points = subdividedPointsWithBump(rawPoints, bump, -1, 0);
+  const rawPoints = generateSuperEllipsePoints(r, generateRandomAngles(rng, 10));
+  const points = movePointsToRectCenter(subdividePointsWithBump(rawPoints, bump), r);
+
   if (opts?.tailTip) {
     const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
     const v = [cx + opts.tailTip[0], cy + opts.tailTip[1]];
-    const tailIndex = getNearestIndex(points, v);
+    const tailIndex = findNearestIndex(points, v);
     points[tailIndex] = v;
   }
 
@@ -438,16 +341,23 @@ function getHarshPath(r, opts, seed) {
 function getHarshCurvePath(r, opts, seed) {
   let bump = Math.min(r[2], r[3]) / 10;
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, r, 12);
   let points;
   if (opts?.tailTip) {
+    const rawAngles = generateRandomAngles(12, 0.1);
+    const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
+    // const angles = focusAnglesAroundIndex(rawAngles, focusAngle, 0.7);
+    const angles = rawAngles.map(x => circularAngleToEllipseAngle(r[2]*0.5, r[3]*0.5, x));
+    console.log("angle", rawAngles, angles);
+    const tailIndex = findNearestAngleIndex(rawAngles, focusAngle);
+    const rawPoints = generateSuperEllipsePoints(r, angles);
     const [cx, cy] = [r[0] + r[2] / 2, r[1] + r[3] / 2];
     const v = [cx + opts.tailTip[0], cy + opts.tailTip[1]];
-    const tailIndex = getNearestIndex(rawPoints, v);
     rawPoints[tailIndex] = v;
-    points = subdividedPointsWithBump(rawPoints, bump, tailIndex, bump*2);
+    points = movePointsToRectCenter(subdividePointsWithBump(rawPoints, bump), r);
   } else {
-    points = subdividedPointsWithBump(rawPoints, bump);
+    const rawAngles = generateRandomAngles(rng, 12);
+    const rawPoints = generateSuperEllipsePoints(r, rawAngles);
+    points = movePointsToRectCenter(subdividePointsWithBump(rawPoints, bump), r);
   }
 
   const path = new paper.Path();
@@ -466,12 +376,10 @@ function getHarshCurvePath(r, opts, seed) {
 function getSoftPath(r, opts, seed) {
   const bump = Math.min(r[2], r[3]) / 30;
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, r, 12);
-  let points;
-  points = subdividedPointsWithBump(rawPoints, -bump, -1, 0);
+  const rawPoints = generateSuperEllipsePoints(r, generateRandomAngles(rng, 12));
+  const points = movePointsToRectCenter(subdividePointsWithBump(rawPoints, -bump), r);
 
   const path = new paper.Path();
-
   path.moveTo(points[0][0], points[0][1]);
   for (let i = 0; i < points.length; i += 2) {
     const p0 = points[i];
@@ -545,9 +453,9 @@ function makeTrivialTailPath(r, m, v) {
   const vd2 = normalize2D(perpendicular2D(v, -1), a * 35 / l);
   const vt1 = [v[0] - vd1[0], v[1] - vd1[1]];
   const vt2 = [v[0] - vd2[0], v[1] - vd2[1]];
-  const v0 = append(c, v);
-  const v1 = append(c, vd1);
-  const v2 = append(c, vd2);
+  const v0 = add2D(c, v);
+  const v1 = add2D(c, vd1);
+  const v2 = add2D(c, vd2);
   const m1 = tailCoordToWorldCoord(v1, vt1, m);
   const m2 = tailCoordToWorldCoord(v2, vt2, m);
   const tail = new paper.Path();
@@ -560,9 +468,10 @@ function makeTrivialTailPath(r, m, v) {
 
 function getPolygonPath(r, opts, seed) {
   const rng = seedrandom(seed);
-  const rawPoints = generateRandomPoints(rng, r, 10);
+  const angles = generateRandomAngles(rng, 10);
+  const rawPoints = generateSuperEllipsePoints(r, angles);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
-  const points = cookedPoints.map((p) => [p.x, p.y]);
+  const points = movePointsToRectCenter(cookedPoints.map((p) => [p.x, p.y]), r);
 
   const path = new paper.Path();
   path.addSegments(points);
@@ -615,3 +524,18 @@ function drawDiamondBubble(context, seed, rect, opts) {
   const path = getDiamondPath(rect, opts, seed);
   drawPath(context, path);
 }
+
+function drawPoints(context, points, color, opts) {
+  context.save();
+  context.strokeStyle = color;
+  context.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    // draw circle
+    context.moveTo(p[0], p[1]);
+    context.arc(p[0], p[1], 2, 0, 2 * Math.PI);
+  }
+  context.stroke();
+  context.restore();
+}
+

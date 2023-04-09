@@ -1,3 +1,4 @@
+export function add2D([x, y], [dx, dy]) { return [x + dx, y + dy]; }
 export function dot2D(vectorA, vectorB) { return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1]; }
 export function cross2D(vectorA, vectorB) { return vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0]; }
 export function magnitude2D(vector) { return Math.sqrt(dot2D(vector, vector)); }
@@ -41,14 +42,42 @@ export function getSide(A, B, C, D) {
 }
 
 export function slerp2D(ca, cb, t) {
-    const calen = magnitude2D(ca);
-    const cblen = magnitude2D(cb);
-    const lent = calen + (cblen - calen) * t;
-    const cq = [ca[0] * lent / calen, ca[1] * lent / calen];
+  const calen = magnitude2D(ca);
+  const cblen = magnitude2D(cb);
+  const lent = calen + (cblen - calen) * t;
+  const cq = [ca[0] * lent / calen, ca[1] * lent / calen];
 
-    const angle = signedAngle(ca, cb) * t;
-    const xt = cq[0] * Math.cos(angle) - cq[1] * Math.sin(angle);
-    const yt = cq[0] * Math.sin(angle) + cq[1] * Math.cos(angle);
+  const angle = signedAngle(ca, cb) * t;
+  const xt = cq[0] * Math.cos(angle) - cq[1] * Math.sin(angle);
+  const yt = cq[0] * Math.sin(angle) + cq[1] * Math.cos(angle);
 
-    return [xt, yt];
+  return [xt, yt];
 }
+
+export function normalizedAngle(angle) {
+  return (angle + Math.PI) % (2 * Math.PI) - Math.PI;
+}
+
+export function angleDifference(angle1, angle2) {
+  const phi = Math.abs(angle1 - angle2) % (Math.PI * 2);
+  return phi > Math.PI ? Math.PI * 2 - phi : phi;
+}
+
+export function superEllipsePoint2D(a, b, n, theta) {
+  const cosTheta = Math.cos(theta);
+  const sinTheta = Math.sin(theta);
+  const x = a * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), 2 / n);
+  const y = b * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), 2 / n);
+  return [x, y];
+}
+
+export function circularAngleToEllipseAngle(rx, ry, theta) {
+  const nx = Math.cos(theta);
+  const ny = Math.sin(theta);
+
+  const ex = rx * ry * nx / Math.sqrt(ry * ry * nx * nx + rx * rx * ny * ny);
+  const ey = rx * ry * ny / Math.sqrt(ry * ry * nx * nx + rx * rx * ny * ny);
+
+  return Math.atan2(ey / ry, ex / rx);
+}
+
