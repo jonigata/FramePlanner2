@@ -386,7 +386,7 @@ export class BubbleLayer extends Layer {
         b.p0 = [x, y];
         b.p1 = [x + size[0], y + size[1]];
         this.bubbles.push(b);
-        this.redraw();
+        this.selectBubble(b);
       }
       catch (e) {
         console.error(e);
@@ -528,12 +528,7 @@ export class BubbleLayer extends Layer {
     } else if (payload.action === "move") {
       yield* this.moveBubble(dragStart, payload.bubble);
     } else if (payload.action === "select") {
-      this.unfocus();
-      this.selected = payload.bubble;
-      this.setIconPositions();
-      this.onShowInspector(this.selected);
-
-      this.redraw();
+      this.selectBubble(payload.bubble);
     } else if (payload.action === "resize") {
       yield* this.resizeBubble(dragStart, payload.bubble, payload.handle);
     } else if (payload.action === "z-plus") {
@@ -597,7 +592,7 @@ export class BubbleLayer extends Layer {
       bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
       this.bubbles.push(bubble);
       this.onCommit(this.bubbles);
-      this.redraw();
+      this.selectBubble(bubble);
       return;
     }
 
@@ -628,7 +623,7 @@ export class BubbleLayer extends Layer {
       bubble.text = text;
       this.bubbles.push(bubble);
       this.onCommit(this.bubbles);
-      this.redraw();
+      this.selectBubble(bubble);
     });
     return true;
   }
@@ -668,6 +663,7 @@ export class BubbleLayer extends Layer {
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
         this.onCommit(this.bubbles);
+        this.selectBubble(bubble);
       }
     } catch (e) {
       if (e === "cancel") {
@@ -1064,6 +1060,15 @@ export class BubbleLayer extends Layer {
       bubble.image.scale = [w / bubble.imageSize[0], h / bubble.imageSize[1]];
       this.setIconPositions();
     }
+    this.redraw();
+  }
+
+  selectBubble(bubble) {
+    this.unfocus();
+    this.selected = bubble;
+    this.setIconPositions();
+    this.onShowInspector(this.selected);
+
     this.redraw();
   }
 }

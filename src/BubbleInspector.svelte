@@ -17,6 +17,7 @@
   import verticalIcon from './assets/vertical.png';
   import whitePinIcon from './assets/pin-white.png';
   import pinIcon from './assets/pin.png';
+  import { keyDownFlags } from './lib/layeredCanvas/keyCache';
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -66,7 +67,9 @@
     if (b) {
       shape = b.shape;
       await tick();
-      textarea.focus();
+      if (!keyDownFlags["KeyF"]) { // F+ドラッグで作成したときにテキストにゴミが入るため
+        textarea.focus();
+      }
       textarea.select();
       pinned = true;
       move(b.position);
