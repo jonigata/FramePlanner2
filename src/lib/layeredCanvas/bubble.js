@@ -65,6 +65,7 @@ export class Bubble {
     b.strokeWidth = json.strokeWidth;
     b.uuid = json.uuid;
     b.parent = json.parent;
+    b.optionContext = json.optionContext;
     return b;
   }
 
@@ -85,6 +86,7 @@ export class Bubble {
       strokeWidth: b.strokeWidth,
       uuid: b.uuid,
       parent: b.parent,
+      optionContext: b.optionContext,
     };
   }
 
