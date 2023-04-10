@@ -911,9 +911,10 @@ export class BubbleLayer extends Layer {
       }
 
       if (drop) {
+        console.log("drop");
         for (let i = this.bubbles.length - 1; 0 <= i; i--) {
           const b = this.bubbles[i];
-          if (b !== bubble && b.contains(drop)) {
+          if (b !== bubble && b.contains(drop) && b.canLink()) {
             if (this.getGroupMaster(bubble) === this.getGroupMaster(b)) {
               if (b.parent) {
                 b.parent = null;

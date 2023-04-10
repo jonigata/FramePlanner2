@@ -44,6 +44,7 @@ export class Bubble {
     b.parent = null;
 
     b.image = this.image ? {...this.image} : null;
+    b.optionContext = {...this.optionContext};
     return b;
   }
 
@@ -185,6 +186,11 @@ export class Bubble {
     return [x, y, w, h];
   }
   
+  canLink() {
+    console.log(this.optionSet);
+    return !!this.optionSet.link;
+  }
+
   linkTo(b) {
     this.parent = b.uuid;
   }
