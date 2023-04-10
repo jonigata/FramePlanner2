@@ -581,6 +581,8 @@ export class BubbleLayer extends Layer {
   }
 
   dropped(image, position) {
+    if (!this.interactable) { return; }
+
     if (this.createBubbleIcon.contains(position)) {
       const bubble = new Bubble();
       const paperSize = this.getPaperSize();
@@ -610,6 +612,8 @@ export class BubbleLayer extends Layer {
   }
 
   doubleClicked(p) {
+    if (!this.interactable) { return false; }
+
     for (let bubble of this.bubbles) {
       if (bubble.contains(p)) {
         return;

@@ -173,6 +173,8 @@ export class FrameLayer extends Layer {
   }
 
   dropped(image, position) {
+    if (!this.interactable) { return; }
+
     const layout = calculatePhysicalLayout(
       this.frameTree,
       this.getPaperSize(),
