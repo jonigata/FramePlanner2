@@ -345,6 +345,8 @@ export class BubbleLayer extends Layer {
   }
 
   keyDown(event) {
+    if (!this.interactable) {return false;}
+    
     if (event.code === "KeyX" && event.ctrlKey) {
       if (!this.selected) {return false;}
       console.log("cut");
