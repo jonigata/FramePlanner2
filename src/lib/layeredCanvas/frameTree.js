@@ -246,17 +246,59 @@ export class FrameElement {
     static visibilityCandidates = ["none", "background", "full"];
 }
 
-export function calculatePhysicalLayout(element, size, origin, context={leftSlant: 0,rightSlant: 0,topSlant: 0,bottomSlant: 0}){
-    if (!element.direction) {
-        return calculatePhysicalLayoutLeaf(element, size, origin, context);
-    } else {
-        return calculatePhysicalLayoutElements(element, size, origin, context);
-    }
+export function calculatePhysicalLayout(element, size, origin){
+    const corners = {
+        topLeft: [origin[0], origin[1]],
+        topRight: [origin[0] + size[0], origin[1]],
+        bottomLeft: [origin[0], origin[1] + size[1]],
+        bottomRight: [origin[0] + size[0], origin[1] + size[1]]
+    };
+    return calculatePhysicalLayoutAux(element, size, origin, corners);
 }
 
-function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
-    const origin = [rawOrigin[0] + element.padding.left * rawSize[0], rawOrigin[1] + element.padding.top * rawSize[1]];
-    const size = [rawSize[0] * (1 - element.padding.left - element.padding.right), rawSize[1] * (1 - element.padding.top - element.padding.bottom)];
+function calculatePhysicalLayoutAux(element, size, origin, corners) {
+    if (!element.direction) {
+        return calculatePhysicalLayoutLeaf(element, size, origin, corners);
+    } else {
+        return calculatePhysicalLayoutElements(element, size, origin, corners);
+    }
+}    
+
+function line(p1, p2) {
+    // p1, p2 => y = ax + b, return [a, b]
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    const a = dy / dx;
+    const b = p1[1] - a * p1[0];
+    return [a, b];
+}
+
+function line2(p1, theta) {
+    // p1, slant(theta) => y = ax + b, return [a, b]
+    const rad = Math.PI / 180;
+    const a = Math.tan(theta*rad);
+    const b = p1[1] - a * p1[0];
+    return [a, b];
+}
+
+function intersection(line1, line2) {
+    const a1 = line1[0];
+    const b1 = line1[1];
+    const a2 = line2[0];
+    const b2 = line2[1];
+    const x = (b2 - b1) / (a1 - a2);
+    const y = a1 * x + b1;
+    return [x, y];
+}
+
+function paddedRect(rawOrigin, rawSize, padding) {
+    const origin = [rawOrigin[0] + padding.left * rawSize[0], rawOrigin[1] + padding.top * rawSize[1]];
+    const size = [rawSize[0] * (1 - padding.left - padding.right), rawSize[1] * (1 - padding.top - padding.bottom)];
+    return [origin, size];
+}
+
+function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, corners) {
+    const [origin, size] = paddedRect(rawOrigin, rawSize, element.padding);
 
     const dir = element.direction;
     const psize = element.localLength;
@@ -269,85 +311,60 @@ function calculatePhysicalLayoutElements(element, rawSize, rawOrigin, context) {
     if (dir == 'h') {
         let x = 0;
         const y = 0;
+        const leftmostLine = line(corners['topLeft'], corners['bottomLeft']);
+        const rightmostLine = line(corners['topRight'], corners['bottomRight']);
+        const topLine = line(corners['topLeft'], corners['topRight']);
+        const bottomLine = line(corners['bottomLeft'], corners['bottomRight']);
         for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
             const childSize = [child.rawSize * xf, inner_height];
             const childOrigin = [origin[0] + size[0] - x * xf - childSize[0], origin[1] + y * yf];
-            context = {
-                leftSlant: i == element.children.length - 1 ? 0 : child.divider.slant,
-                rightSlant: i == 0 ? 0 : element.children[i-1].divider.slant,
-                topSlant: 0,
-                bottomSlant: 0,
+
+            const rightCenter = [childOrigin[0] + childSize[0], childOrigin[1] + childSize[1] / 2];
+            const leftCenter = [childOrigin[0], childOrigin[1] + childSize[1] / 2];
+            const rightLine = i === 0 ? rightmostLine : line2(rightCenter, element.children[i-1].divider.slant + 90);
+            const leftLine = i === element.children.length - 1 ? leftmostLine : line2(leftCenter, child.divider.slant + 90);
+
+            const childCorners = {
+                topLeft: intersection(topLine, leftLine),
+                topRight: intersection(topLine, rightLine),
+                bottomLeft: intersection(bottomLine, leftLine),
+                bottomRight: intersection(bottomLine, rightLine),
             }
-            children.push(calculatePhysicalLayout(child, childSize, childOrigin, context));
+            children.push(calculatePhysicalLayoutAux(child, childSize, childOrigin, childCorners));
             x += child.rawSize + child.divider.spacing;
         }
     } else {
         const x = 0;
         let y = 0;
+        const topmostLine = line(corners['topLeft'], corners['topRight']);
+        const bottommostLine = line(corners['bottomLeft'], corners['bottomRight']);
+        const leftLine = line(corners['topLeft'], corners['bottomLeft']);
+        const rightLine = line(corners['topRight'], corners['bottomRight']);
         for (let i = 0; i < element.children.length; i++) {
             const child = element.children[i];
             const childSize = [inner_width, child.rawSize * yf];
             const childOrigin = [origin[0] + x * xf, origin[1] + y * yf];
-            context = {
-                topSlant: i == 0 ? 0 : element.children[i-1].divider.slant,
-                bottomSlant: i == element.children.length - 1 ? 0 : child.divider.slant,
-                leftSlant: 0,
-                rightSlant: 0,
+            const topCenter = [childOrigin[0] + childSize[0] / 2, childOrigin[1]];
+            const bottomCenter = [childOrigin[0] + childSize[0] / 2, childOrigin[1] + childSize[1]];
+            const topLine = i === 0 ? topmostLine : line2(topCenter, -element.children[i-1].divider.slant);
+            const bottomLine = i === element.children.length - 1 ? bottommostLine : line2(bottomCenter, -child.divider.slant);
+
+            const childCorners = {
+                topLeft: intersection(topLine, leftLine),
+                topRight: intersection(topLine, rightLine),
+                bottomLeft: intersection(bottomLine, leftLine),
+                bottomRight: intersection(bottomLine, rightLine),
             }
-            children.push(calculatePhysicalLayout(child, childSize, childOrigin, context));
+            children.push(calculatePhysicalLayoutAux(child, childSize, childOrigin, childCorners));
             y += child.rawSize + child.divider.spacing;
         }
     }
-    const corners = {
-        topLeft: [origin[0], origin[1]],
-        topRight: [origin[0] + size[0], origin[1]],
-        bottomLeft: [origin[0], origin[1] + size[1]],
-        bottomRight: [origin[0] + size[0], origin[1] + size[1]],
-    }    
     return { size, origin, rawSize, rawOrigin, children, element, dir, corners };
 }
 
-function calculatePhysicalLayoutLeaf(element, rawSize, rawOrigin, ctx) {
-    const origin = [rawOrigin[0] + element.padding.left * rawSize[0], rawOrigin[1] + element.padding.top * rawSize[1]];
-    const size = [rawSize[0] * (1 - element.padding.left - element.padding.right), rawSize[1] * (1 - element.padding.top - element.padding.bottom)];
-
-    const logicalWidth = element.rawSize;
-    const logicalHeight = element.rawSize;
-    const xf = size[0] / logicalWidth;
-    const yf = size[1] / logicalHeight;
-
-    const corners = {
-        topLeft: [origin[0], origin[1]],
-        topRight: [origin[0] + size[0], origin[1]],
-        bottomLeft: [origin[0], origin[1] + size[1]],
-        bottomRight: [origin[0] + size[0], origin[1] + size[1]],
-    }    
-
-    const [w, h] = size;
-
-    const rad = Math.PI / 180;
-    if (ctx.leftSlant != 0) {
-        const dx = Math.cos(Math.PI*0.5 + ctx.leftSlant * rad) * (h * 0.5);
-        corners.topLeft[0] -= dx;
-        corners.bottomLeft[0] += dx;
-    }
-    if (ctx.rightSlant != 0) {
-        const dx = Math.cos(Math.PI*0.5 + ctx.rightSlant * rad) * (h * 0.5);
-        corners.topRight[0] -= dx;
-        corners.bottomRight[0] += dx;
-    }
-    if (ctx.topSlant != 0) {
-        const dy = Math.sin(ctx.topSlant * rad) * (w * 0.5);
-        corners.topLeft[1] += dy;
-        corners.topRight[1] -= dy;
-    }
-    if (ctx.bottomSlant != 0) {
-        const dy = Math.sin(ctx.bottomSlant * rad) * (w * 0.5);
-        corners.bottomLeft[1] += dy;
-        corners.bottomRight[1] -= dy;
-    }
-
+function calculatePhysicalLayoutLeaf(element, rawSize, rawOrigin, corners) {
+    const [origin, size] = paddedRect(rawOrigin, rawSize, element.padding);
     return { size, origin, rawSize, rawOrigin, element, corners };
 }
 
