@@ -33,10 +33,10 @@ export class FrameLayer extends Layer {
     this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
 
     const isBorderActive = (dir) => this.interactable && this.focusedBorder?.layout.dir === dir;
-    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",unit,[0.5,0.5],"幅を変更", () => isBorderActive('h'));
-    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", unit,[0.5,0.5],"傾き", () => isBorderActive('h'));
-    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",unit,[0.5,0.5],"幅を変更", () => isBorderActive('v'));
-    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", unit,[0.5,0.5],"傾き", () => isBorderActive('v'));
+    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",unit,[0.5,1],"幅を変更", () => isBorderActive('h'));
+    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", unit,[0.5,0],"傾き", () => isBorderActive('h'));
+    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",unit,[1,0.5],"幅を変更", () => isBorderActive('v'));
+    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", unit,[0,0.5],"傾き", () => isBorderActive('v'));
 
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
@@ -718,10 +718,10 @@ export class FrameLayer extends Layer {
 
   updateBorderIconPositions(border) {
     const bt = border.trapezoid;
-    this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5 - 16];
-    this.expandVerticalIcon.position = [bt.topRight[0] - 32,(bt.topRight[1] + bt.bottomRight[1]) * 0.5 - 16];
-    this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5 - 16,bt.topLeft[1]];
-    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5 - 16,bt.bottomLeft[1] - 32];
+    this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
+    this.expandVerticalIcon.position = [bt.topRight[0],(bt.topRight[1] + bt.bottomRight[1]) * 0.5];
+    this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]];
+    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5,bt.bottomLeft[1]];
   }
 
   beforeDoubleClick(p) {
