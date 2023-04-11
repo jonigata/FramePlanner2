@@ -663,7 +663,7 @@ export class BubbleLayer extends Layer {
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
         this.onCommit(this.bubbles);
-        this.selectBubble(bubble);
+        // this.selectBubble(bubble);
       }
     } catch (e) {
       if (e === "cancel") {

@@ -67,9 +67,7 @@
     if (b) {
       shape = b.shape;
       await tick();
-      if (!keyDownFlags["KeyF"]) { // F+ドラッグで作成したときにテキストにゴミが入るため
-        textarea.focus();
-      }
+      textarea.focus();
       textarea.select();
       pinned = true;
       move(b.position);
