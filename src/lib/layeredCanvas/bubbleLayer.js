@@ -136,6 +136,8 @@ export class BubbleLayer extends Layer {
 
   renderBubbleForeground(ctx, bubble) {
     // shape枠描画
+    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
+    ctx.lineWidth = bubble.strokeWidth;
     this.drawBubble(ctx, 'stroke', bubble);
 
     // テキスト描画
@@ -187,6 +189,7 @@ export class BubbleLayer extends Layer {
 
     // 選択枠描画
     ctx.save();
+    ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0, 255, 0, 0.3)";
     ctx.strokeRect(x, y, w, h);
     ctx.restore();
@@ -346,7 +349,7 @@ export class BubbleLayer extends Layer {
 
   keyDown(event) {
     if (!this.interactable) {return false;}
-    
+
     if (event.code === "KeyX" && event.ctrlKey) {
       if (!this.selected) {return false;}
       console.log("cut");
