@@ -81,3 +81,26 @@ export function circularAngleToEllipseAngle(rx, ry, theta) {
   return Math.atan2(ey / ry, ex / rx);
 }
 
+export function line(p1, p2, offset=[0,0]) {
+  return [[p1[0] + offset[0], p1[1] + offset[1]], [p2[0] + offset[0], p2[1] + offset[1]]];
+}
+
+export function line2(p1, theta, offset=[0,0]) {
+  const q = [p1[0] + offset[0], p1[1] + offset[1]];
+  return [q, [q[0] + Math.cos(theta), q[1] + Math.sin(theta)]];
+}
+
+export function intersection(line1, line2) {
+  const [[x1, y1], [x2, y2]] = line1;
+  const [[x3, y3], [x4, y4]] = line2;
+
+  const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+  if (denom == 0) { return null; }
+
+  const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
+  const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
+  return [x, y];
+}
+
+export function deg2rad(deg) { return deg * Math.PI / 180; }
+export function rad2deg(rad) { return rad * 180 / Math.PI; }
