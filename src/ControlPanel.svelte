@@ -17,6 +17,7 @@
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
+  import { commitToken } from './undoStore';
 
   let max = 4096;
   let contactText = "";
@@ -77,7 +78,8 @@
     $isJsonEditorOpen = !$isJsonEditorOpen;      
   }
 
-  function downloadJson() {
+  async function downloadJson() {
+    $commitToken = true;
     $downloadJsonToken = true;
   }
 

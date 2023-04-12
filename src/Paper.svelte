@@ -54,7 +54,6 @@
       bubbles: bubbleLayer.bubbles.map(b => b.clone()),
     })
     historyIndex = history.length;
-    console.log("addHistory", historyIndex);
   }
 
   export function undo() {
@@ -72,6 +71,12 @@
     frameLayer.frameTree = h.frameTree.clone();
     bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
     layeredCanvas.redraw(); 
+  }
+
+  export function commit() {
+    console.log("commit");
+    addHistory();
+    outputDocument();
   }
 
   function revert() {
@@ -140,7 +145,6 @@
   }
 
   function outputDocument() {
-    console.log("outputDocument");
     const paperSize = frameLayer.getPaperSize();
     documentOutput = {
       frameTree: FrameElement.decompile(frameLayer.frameTree),
@@ -149,7 +153,6 @@
   }
 
   function showInspector(b) {
-    console.log('showInspector', bubble);
     const [x0, y0] = b.p0;
     const [x1, y1] = b.p1;
     const [cx, cy] = [(x0+x1)/2, (y0+y1)/2];
@@ -200,8 +203,7 @@
       editable,
       (frameTree) => {
         console.log("commit frames");
-        addHistory();
-        outputDocument();
+        commit();
       },
       () => {revert();});
     layeredCanvas.addLayer(frameLayer);
@@ -212,12 +214,10 @@
       showInspector, 
       hideInspector, 
       (bubbles) => {
-        console.log("commit bubbles");
         if ($bubble) {
           bubbleLayer.defaultBubble = $bubble.clone();
         }
-        addHistory();
-        outputDocument();
+        commit();
       },
       () => {revert();},
       getDefaultText)

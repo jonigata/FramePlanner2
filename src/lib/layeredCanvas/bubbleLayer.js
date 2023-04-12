@@ -363,7 +363,6 @@ export class BubbleLayer extends Layer {
         this.hint([(x0 + x1) / 2, y0 - 20],"Alt+ドラッグで移動、クリックで選択");
         this.lit = bubble;
         this.redraw();
-        console.log("set lit");
         return true;
       }
     }

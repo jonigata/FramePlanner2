@@ -3,7 +3,7 @@
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
   import Paper from './Paper.svelte';
   import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
-  import { undoStore } from './undoStore';
+  import { undoStore, commitToken } from './undoStore';
   import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
 
   $paperTemplate = { frameTree: frameExamples[0], bubbles:[] };
@@ -16,16 +16,16 @@
   function save(token) {
     if (!token) return;
     console.log('tokenValue', token);
-      paper.save();
-      $saveToken = false;
+    paper.save();
+    $saveToken = false;
   }
 
   $:copyToClipboard($clipboardToken);
   function copyToClipboard(token) {
     if (!token) return;
-      console.log('tokenValue', token);
-      paper.copyToClipboard();
-      $clipboardToken = false;
+    console.log('tokenValue', token);
+    paper.copyToClipboard();
+    $clipboardToken = false;
   }
 
   $:importImage($importingImage);
@@ -45,23 +45,28 @@
 
   $:onOutputDocument(documentOutput);
   function onOutputDocument(doc) {
-    console.log("onOutputDocument");
     if (!doc) return;
-    console.log(doc);
     $jsonEditorOutput = doc;
   }
 
   $:onSetPaperTemplate($paperTemplate);
   function onSetPaperTemplate(template) {
-    console.log("onSetPaperTemplate", template);
     if (!template) return;
     documentOutput = template;
     onOutputDocument(documentOutput);
     setDocumentInput(template);
   }
 
+  $:onCommitToken($commitToken);
+  async function onCommitToken(token) {
+    if (!token) return;
+    console.log('tokenValue', token);
+    paper.commit();
+    $jsonEditorOutput = documentOutput; // かなりハック、なぜかdocumentOutputのりアクティブが飛んでこないので
+    $commitToken = false;
+  }
+
   function setDocumentInput(doc) {
-    console.log("setDocumentInput", doc);
     documentInput = doc;
     $paperColor = doc.frameTree.bgColor ?? 'white';
     $frameColor = doc.frameTree.borderColor ?? 'black';
@@ -70,9 +75,6 @@
 
   onMount(() => {
     $undoStore = paper;
-
-    // move to center of parent
-    console.log(paper.canvas);
   });
 </script>
 

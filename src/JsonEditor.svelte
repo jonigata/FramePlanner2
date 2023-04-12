@@ -12,9 +12,9 @@
 
   function handleChange(updatedContent, previousContent, { contentErrors, patchResult }) {
     // content is an object { json: JSONValue } | { text: string }
-    console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
+    // console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
     if (skipJsonChange) {
-      console.log("skipJsonChange");
+      // console.log("skipJsonChange");
       return;
     }
     content = updatedContent
@@ -29,7 +29,6 @@
 
   $:onOutputJsonDocument($jsonEditorOutput);
   async function onOutputJsonDocument(jsoe) {
-    console.log("JsonEditor.onOutputJsonDocument", jsoe);
     skipJsonChange = true;
     content = { text: JSON.stringify(jsoe, null, 2) };
     await tick(); // hack
