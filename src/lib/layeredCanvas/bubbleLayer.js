@@ -30,6 +30,9 @@ export class BubbleLayer extends Layer {
     this.creatingBubble = null;
     this.optionEditActive = {}
 
+    this.selected = null;
+    this.lit = null;
+
     const unit = iconUnit;
     this.createBubbleIcon = new ClickableIcon("bubble.png",[64,64],[0,1],"ドラッグで作成", () => this.interactable);
 
@@ -63,6 +66,10 @@ export class BubbleLayer extends Layer {
 
     this.imageDropIcon.render(ctx);
     this.imageScaleLockIcon.render(ctx);
+
+    if (this.interactable && this.lit) {
+      this.drawLitUI(ctx, this.lit);
+    }
 
     if (this.interactable && this.selected) {
       this.drawSelectedUI(ctx, this.selected);
@@ -182,6 +189,17 @@ export class BubbleLayer extends Layer {
     } else if (!bubble.parent) {
       drawBubble(ctx, bubble.text, [x, y, w, h], bubble.shape, bubble.optionContext);
     }
+  }
+
+  drawLitUI(ctx, bubble) {
+    const [x, y, w, h] = bubble.regularizedPositionAndSize();
+
+    // 選択枠描画
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
+    ctx.strokeRect(x, y, w, h);
+    ctx.restore();
   }
 
   drawSelectedUI(ctx, bubble) {
@@ -311,6 +329,8 @@ export class BubbleLayer extends Layer {
       return false;
     }
 
+    this.lit = null;
+
     if (this.createBubbleIcon.hintIfContains(p, this.hint)) {
       return true;      
     }
@@ -341,6 +361,9 @@ export class BubbleLayer extends Layer {
         const [x0, y0] = bubble.p0;
         const [x1, y1] = bubble.p1;
         this.hint([(x0 + x1) / 2, y0 - 20],"Alt+ドラッグで移動、クリックで選択");
+        this.lit = bubble;
+        this.redraw();
+        console.log("set lit");
         return true;
       }
     }
