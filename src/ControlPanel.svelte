@@ -15,7 +15,7 @@
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
   import { SlideToggle } from '@skeletonlabs/skeleton';
-  import { isJsonEditorOpen } from './jsonEditorStore';
+  import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
 
   let max = 4096;
@@ -43,12 +43,28 @@
   $: uploadImage(files);
   async function uploadImage(files: FileList) {
     if (files && files.length > 0) {
-      const imageBitmap = await createImageBitmap(files[0]);
-      setDimensions(imageBitmap.width, imageBitmap.height);
-      $paperTemplate = { frameTree: {}, bubbles: [] };
-      await tick();
-      $importingImage = imageBitmap;
+      const file = files[0];
+      console.log(file.type)
+      if (file.type.startsWith("image/")) {
+        const imageBitmap = await createImageBitmap(file);
+        setDimensions(imageBitmap.width, imageBitmap.height);
+        $paperTemplate = { frameTree: {}, bubbles: [] };
+        await tick();
+        $importingImage = imageBitmap;
+      } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
+        const text = await readFileAsText(file);
+        $paperTemplate = JSON.parse(text);
+      }
     }
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file);
+    });
   }
 
   function about() {
@@ -59,6 +75,10 @@
   function toggleJsonEditor() {
     console.log("openJsonEditor");
     $isJsonEditorOpen = !$isJsonEditorOpen;      
+  }
+
+  function downloadJson() {
+    $downloadJsonToken = true;
   }
 
   async function contact() {
@@ -142,10 +162,13 @@
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={about}>
-      About FramePlanner
+      About
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={downloadJson}>
+      Download JSON
     </button>
   </div>  
 </div>

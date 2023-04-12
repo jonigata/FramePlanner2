@@ -2,9 +2,9 @@
   import { draggable } from '@neodrag/svelte';
   import { bodyDragging } from './uiStore';
   import titleBarIcon from './assets/json.png';
-  import { JSONEditor, toJSONContent } from 'svelte-jsoneditor';
+  import { JSONEditor, toJSONContent, toTextContent } from 'svelte-jsoneditor';
   import type { Content } from 'svelte-jsoneditor';
-  import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
+  import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput, downloadJsonToken } from './jsonEditorStore';
   import { tick } from 'svelte';
 
   let content = { text: "hello" };
@@ -34,7 +34,27 @@
     content = { text: JSON.stringify(jsoe, null, 2) };
     await tick(); // hack
     skipJsonChange = false;
-}
+  }
+
+  $:onDownloadJsonDocument($downloadJsonToken);
+  function onDownloadJsonDocument(t) {
+    if (!t) { return; }
+
+    const jsonString = toTextContent(content).text;
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "paper.json";
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 0);
+    $downloadJsonToken = false;
+  }
 </script>
 
 {#if $isJsonEditorOpen}
