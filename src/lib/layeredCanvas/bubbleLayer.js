@@ -381,24 +381,76 @@ export class BubbleLayer extends Layer {
   }
 
   pasteBubble() {
-    navigator.clipboard.readText().then((text) => {
-      try {
-        const paperSize = this.getPaperSize();
-        const b = Bubble.compile(paperSize, JSON.parse(text));
-        const size = b.size;
-        const x = Math.random() * (paperSize[0] - size[0]);
-        const y = Math.random() * (paperSize[1] - size[1]);
-        b.p0 = [x, y];
-        b.p1 = [x + size[0], y + size[1]];
-        this.bubbles.push(b);
-        this.selectBubble(b);
-      }
-      catch (e) {
-        console.error(e);
+    navigator.clipboard.read().then((items) => {
+      for (let item of items) {
+        for (let type of item.types) {
+          if (type === "text/plain") {
+            item.getType(type).then((blob) => {
+              blob.text().then((text) => {
+                this.createTextBubble(text);
+              });
+            });
+          } else if (type.startsWith("image/")) {
+            item.getType(type).then((blob) => {
+              const url = URL.createObjectURL(blob);
+              const image = new Image();
+              image.src = url;
+              this.createImageBubble(image);
+            });
+          }
+        }
       }
     }).catch(err => {
       console.error('ユーザが拒否、もしくはなんらかの理由で失敗', err);
     });
+  }
+
+  createTextBubble(text) {
+    try {
+      const paperSize = this.getPaperSize();
+      const b = Bubble.compile(paperSize, JSON.parse(text));
+      const size = b.size;
+      const x = Math.random() * (paperSize[0] - size[0]);
+      const y = Math.random() * (paperSize[1] - size[1]);
+      b.p0 = [x, y];
+      b.p1 = [x + size[0], y + size[1]];
+      this.bubbles.push(b);
+      this.selectBubble(b);
+    }
+    catch (e) {
+      console.log(e);
+      const paperSize = this.getPaperSize();
+      const b = this.defaultBubble.clone();
+      b.image = null;
+      const size = b.size;
+      const x = Math.random() * (paperSize[0] - size[0]);
+      const y = Math.random() * (paperSize[1] - size[1]);
+      b.p0 = [x, y];
+      b.p1 = [x + size[0], y + size[1]];
+      b.text = text;
+      b.initOptions();
+      this.bubbles.push(b);
+      this.selectBubble(b);
+    }
+  }
+
+  createImageBubble(image) {
+    const bubble = new Bubble();
+    const paperSize = this.getPaperSize();
+    const imageSize = [image.width, image.height];
+    const x = Math.random() * (paperSize[0] - imageSize[0]);
+    const y = Math.random() * (paperSize[1] - imageSize[1]);
+    bubble.p0 = [x, y];
+    bubble.p1 = [x + imageSize[0], y + imageSize[1]];
+    bubble.forceEnoughSize();
+    bubble.shape = "none";
+    bubble.initOptions();
+    bubble.text = "";
+    bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
+    this.bubbles.push(bubble);
+    this.onCommit(this.bubbles);
+    this.selectBubble(bubble);
+    console.log(bubble.p0, bubble.p1);
   }
 
   removeBubble(bubble) {
@@ -584,20 +636,7 @@ export class BubbleLayer extends Layer {
     if (!this.interactable) { return; }
 
     if (this.createBubbleIcon.contains(position)) {
-      const bubble = new Bubble();
-      const paperSize = this.getPaperSize();
-      const imageSize = [image.width, image.height];
-      const x = Math.random() * (paperSize[0] - imageSize[0]);
-      const y = Math.random() * (paperSize[1] - imageSize[1]);
-      bubble.p0 = [x, y];
-      bubble.p1 = [x + imageSize[0], y + imageSize[1]];
-      bubble.shape = "none";
-      bubble.initOptions();
-      bubble.text = "";
-      bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
-      this.bubbles.push(bubble);
-      this.onCommit(this.bubbles);
-      this.selectBubble(bubble);
+      this.createImageBubble(image);
       return;
     }
 

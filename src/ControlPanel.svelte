@@ -15,7 +15,6 @@
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
   import { SlideToggle } from '@skeletonlabs/skeleton';
-  import { useClipboard } from './clipboardStore';
   import { isJsonEditorOpen } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
 
@@ -71,13 +70,6 @@
     await postContact(contactText);
     toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
     contactText = null;
-  }
-
-  $:useClipboardChanged($useClipboard);
-  async function useClipboardChanged(useClipboard) {
-    if (useClipboard) {
-      await navigator.clipboard.readText();
-    }
   }
 
   function onDragOver(e) {
@@ -136,9 +128,6 @@
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
     </FileDropzone> 
   </div>  
-  <div class="hbox gap mx-2" style="margin-top: 12px;">
-    <SlideToggle name="slider-label" size="sm" bind:checked={$useClipboard}>セリフ作成時にクリップボードを使う</SlideToggle>
-  </div>
   <div class="hbox gap" style="margin-top: 16px;">
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
       <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
@@ -165,7 +154,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 680px;
+    height: 660px;
     display: flex;
     flex-direction: column;
     top: 50px;

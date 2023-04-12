@@ -11,7 +11,6 @@
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
-  import { useClipboard } from './clipboardStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
   import { Bubble } from './lib/layeredCanvas/bubble.js'; 
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
@@ -170,11 +169,7 @@
   }
 
   async function getDefaultText() {
-    if ($useClipboard) {
-      return await navigator.clipboard.readText()
-    } else {
-      return getHaiku();
-    }
+    return getHaiku();
   }
 
   onMount(async () => {

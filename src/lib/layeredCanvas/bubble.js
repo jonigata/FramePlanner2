@@ -97,6 +97,15 @@ export class Bubble {
     );
   }
 
+  forceEnoughSize() {
+    if (this.p1[0] - this.p0[0] < minimumBubbleSize) {
+      this.p1[0] = this.p0[0] + minimumBubbleSize;
+    }
+    if (this.p1[1] - this.p0[1] < minimumBubbleSize) {
+      this.p1[1] = this.p0[1] + minimumBubbleSize;
+    }
+  }
+
   contains(p) {
     const [px, py] = p;
     const [rx0, ry0] = this.p0;
