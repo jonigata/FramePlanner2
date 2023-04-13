@@ -11,13 +11,16 @@
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { tick } from 'svelte';
   import { SlideToggle } from '@skeletonlabs/skeleton';
+  import { keyDownFlags } from './lib/layeredCanvas/keyCache';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
   import verticalIcon from './assets/vertical.png';
   import whitePinIcon from './assets/pin-white.png';
   import pinIcon from './assets/pin.png';
-  import { keyDownFlags } from './lib/layeredCanvas/keyCache';
+  import embeddedIcon from './assets/embedded.png';
+  import unembeddedIcon from './assets/unembedded.png';
+
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -160,7 +163,13 @@
       <div class="font-bold slider-label">stroke</div>
       <ColorPicker bind:hex={bubble.strokeColor} label="" />
       <RangeSlider name="line" bind:value={bubble.strokeWidth} max={10} step={1} style="width:100px;"/>
-    </div>
+      <div class="embed hbox">
+        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+          <RadioItem bind:group={bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
+        </RadioGroup>
+      </div> 
+  </div>
   </div>
 </div>
 {/if}
@@ -256,6 +265,17 @@
   .direction :global(.radio-item) {
     padding-left: 8px;
     padding-right: 8px;
+  }
+  .embed-item {
+    width: 12px;
+    height: 12px;
+  }
+  .embed :global(.radio-item) {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .embed {
+    margin-left: 8px;
   }
   .font-color-picker :global(.container .color) {
     width: 15px;

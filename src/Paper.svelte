@@ -211,6 +211,7 @@
     sequentializePointer(BubbleLayer);
     bubbleLayer = new BubbleLayer(
       editable, 
+      frameLayer,
       showInspector, 
       hideInspector, 
       (bubbles) => {

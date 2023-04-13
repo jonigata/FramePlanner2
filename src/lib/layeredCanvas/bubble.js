@@ -9,6 +9,7 @@ export class Bubble {
     this.p1 = [128, 128];
     this.text = "empty";
     this.shape = "square";
+    this.embedded = false;
     this.fontStyle = "normal";
     this.fontWeight = "400";
     this.fontSize = 22;
@@ -31,6 +32,7 @@ export class Bubble {
     b.p1 = [...this.p1];
     b.text = this.text;
     b.shape = this.shape;
+    b.embedded = this.embedded;
     b.fontStyle = this.fontStyle;
     b.fontWeight = this.fontWeight;
     b.fontSize = this.fontSize;
@@ -54,6 +56,7 @@ export class Bubble {
     b.p1 = this.denormalizedPosition(canvasSize, json.p1);
     b.text = json.text;
     b.shape = json.shape;
+    b.embedded = json.embedded;
     b.fontStyle = json.fontStyle;
     b.fontWeight = json.fontWeight;
     b.fontSize = json.fontSize * Math.min(canvasSize[0], canvasSize[1]);
@@ -75,6 +78,7 @@ export class Bubble {
       p1: this.normalizedPosition(canvasSize, b.p1),
       text: b.text,
       shape: b.shape,
+      embedded: b.embedded,
       fontStyle: b.fontStyle,
       fontWeight: b.fontWeight,
       fontSize: b.fontSize / Math.min(canvasSize[0], canvasSize[1]),
@@ -97,12 +101,19 @@ export class Bubble {
     );
   }
 
+  static forceEnoughSize(size) {
+    return [
+      Math.max(size[0], minimumBubbleSize + 1),
+      Math.max(size[1], minimumBubbleSize + 1),
+    ];
+  }
+
   forceEnoughSize() {
-    if (this.p1[0] - this.p0[0] < minimumBubbleSize) {
-      this.p1[0] = this.p0[0] + minimumBubbleSize;
+    if (this.p1[0] - this.p0[0] < minimumBubbleSize + 1) {
+      this.p1[0] = this.p0[0] + minimumBubbleSize + 1;
     }
-    if (this.p1[1] - this.p0[1] < minimumBubbleSize) {
-      this.p1[1] = this.p0[1] + minimumBubbleSize;
+    if (this.p1[1] - this.p0[1] < minimumBubbleSize + 1) {
+      this.p1[1] = this.p0[1] + minimumBubbleSize + 1;
     }
   }
 

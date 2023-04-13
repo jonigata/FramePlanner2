@@ -6,12 +6,14 @@ import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { Bubble, bubbleOptionSets } from "./bubble.js";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.js";
 import { translate, scale } from "./pictureControl.js";
+import { FrameElement, calculatePhysicalLayout, findLayoutAt } from "./frameTree.js";
 
 const iconUnit = [20, 20];
 
 export class BubbleLayer extends Layer {
   constructor(
     interactable,
+    frameLayer,
     onShowInspector,
     onHideInspector,
     onCommit,
@@ -20,6 +22,7 @@ export class BubbleLayer extends Layer {
   ) {
     super();
     this.interactable = interactable;
+    this.frameLayer = frameLayer;
     this.bubbles = [];
     this.onShowInspector = onShowInspector;
     this.onHideInspector = onHideInspector;
@@ -54,8 +57,11 @@ export class BubbleLayer extends Layer {
   }
 
   render(ctx) {
-    // 描画
-    this.renderBubbles(ctx);
+    const size = this.getPaperSize();
+    if (!this.frameLayer.frameTree) { return; }
+    const layout = calculatePhysicalLayout(this.frameLayer.frameTree, size, [0, 0]);
+
+    this.renderBubbles(ctx, layout);
 
     this.createBubbleIcon.render(ctx);
     this.dragIcon.render(ctx);
@@ -78,7 +84,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  renderBubbles(ctx) {
+  renderBubbles(ctx, layout) {
     // 親子関係解決
     const bubbleDic = {};
     for (let bubble of this.bubbles) {
@@ -105,15 +111,42 @@ export class BubbleLayer extends Layer {
       bubbles.push(this.creatingBubble);
     }
 
-    for (let bubble of bubbles) {
-      if (!bubble) continue;
-      this.renderBubbleBackground(ctx, bubble);
+    const withMask = (bubble, func) => {
+      if (!bubble) return;
+      if (bubble.embedded) {
+        const thisLayout = findLayoutAt(layout, bubble.center);
+        if (thisLayout) {
+          const corners = thisLayout.corners;
+          ctx.save();
+          this.clipTrapezoid(ctx, corners);
+        }
+        func();
+        if (thisLayout) {
+          ctx.restore();
+        }
+      } else {
+        func();
+      }
     }
 
     for (let bubble of bubbles) {
-      if (!bubble) continue;
-      this.renderBubbleForeground(ctx, bubble);
+      withMask(bubble, () => this.renderBubbleBackground(ctx, bubble));
     }
+
+    for (let bubble of bubbles) {
+      withMask(bubble, () => this.renderBubbleForeground(ctx, bubble));
+    }
+  }
+
+  clipTrapezoid(ctx, corners) {
+    ctx.beginPath();
+    ctx.moveTo(...corners.topLeft);
+    ctx.lineTo(...corners.topRight);
+    ctx.lineTo(...corners.bottomRight);
+    ctx.lineTo(...corners.bottomLeft);
+    ctx.lineTo(...corners.topLeft);
+    ctx.closePath();
+    ctx.clip();
   }
 
   renderBubbleBackground(ctx, bubble) {
@@ -442,19 +475,33 @@ export class BubbleLayer extends Layer {
     catch (e) {
       console.log(e);
       const paperSize = this.getPaperSize();
+      let cursorX = 10;
+      let cursorY = 10;
+      let lineHeight = 0;
+      let lastBubble = null;
       for (let s of text.split(/\n\s*\n/)) {
         const size = this.calculateFitBubbleSize(s, this.defaultBubble);
         const b = this.defaultBubble.clone();
         b.image = null;
-        const x = Math.random() * (paperSize[0] - size[0]);
-        const y = Math.random() * (paperSize[1] - size[1]);
+
+        if (cursorX + size[0] > paperSize[0]) {
+          cursorX = 10;
+          cursorY += lineHeight + 10;
+          lineHeight = 0;
+        }
+        const x = cursorX;
+        const y = cursorY;
+
         b.p0 = [x, y];
         b.p1 = [x + size[0], y + size[1]];
         b.text = s;
         b.initOptions();
         this.bubbles.push(b);
-        this.selectBubble(b);
+        cursorX += size[0] + 10;
+        lineHeight = Math.max(lineHeight, size[1]);
+        lastBubble = b;
       }
+      this.selectBubble(lastBubble);
     }
   }
 
@@ -467,10 +514,12 @@ export class BubbleLayer extends Layer {
       const m = measureVerticalText(ctx,99999,s,baselineSkip,charSkip);
       size = [Math.floor(m.width*1.2), Math.floor(m.height*1.2)];
     } else {
+      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+      ctx.font = ss;
       const m = measureHorizontalText(ctx,99999,s,baselineSkip);
-      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.2)];
+      size = [Math.floor(m.width*1.4), Math.floor(m.height*1.2)];
     }
-    return size;
+    return Bubble.forceEnoughSize(size);
   }
 
   createImageBubble(image) {
