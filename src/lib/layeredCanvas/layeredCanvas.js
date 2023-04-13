@@ -250,6 +250,7 @@ export class LayeredCanvas {
     
     addLayer(layer) {
         layer.canvas = this.canvas;
+        layer.context = this.context;
         layer.hint = (p, s) => {
             const q = this.paperPositionToCanvasPosition(p);
             this.onHint(q, s);
@@ -306,6 +307,7 @@ export function sequentializePointer(layerClass) {
 
 export class Layer {
     canvas=null;
+    context=null;
 
     constructor() {}
 

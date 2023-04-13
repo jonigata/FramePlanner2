@@ -443,9 +443,9 @@ export class BubbleLayer extends Layer {
       console.log(e);
       const paperSize = this.getPaperSize();
       for (let s of text.split(/\n\s*\n/)) {
+        const size = this.calculateFitBubbleSize(s, this.defaultBubble);
         const b = this.defaultBubble.clone();
         b.image = null;
-        const size = b.size;
         const x = Math.random() * (paperSize[0] - size[0]);
         const y = Math.random() * (paperSize[1] - size[1]);
         b.p0 = [x, y];
@@ -456,6 +456,21 @@ export class BubbleLayer extends Layer {
         this.selectBubble(b);
       }
     }
+  }
+
+  calculateFitBubbleSize(s, bubble) {
+    const baselineSkip = bubble.fontSize * 1.5;
+    const charSkip = bubble.fontSize;
+    const ctx = this.context;
+    let size =[0,0];
+    if (bubble.direction == 'v') {
+      const m = measureVerticalText(ctx,99999,s,baselineSkip,charSkip);
+      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.2)];
+    } else {
+      const m = measureHorizontalText(ctx,99999,s,baselineSkip);
+      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.2)];
+    }
+    return size;
   }
 
   createImageBubble(image) {
