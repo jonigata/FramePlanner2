@@ -442,17 +442,19 @@ export class BubbleLayer extends Layer {
     catch (e) {
       console.log(e);
       const paperSize = this.getPaperSize();
-      const b = this.defaultBubble.clone();
-      b.image = null;
-      const size = b.size;
-      const x = Math.random() * (paperSize[0] - size[0]);
-      const y = Math.random() * (paperSize[1] - size[1]);
-      b.p0 = [x, y];
-      b.p1 = [x + size[0], y + size[1]];
-      b.text = text;
-      b.initOptions();
-      this.bubbles.push(b);
-      this.selectBubble(b);
+      for (let s of text.split(/\n\s*\n/)) {
+        const b = this.defaultBubble.clone();
+        b.image = null;
+        const size = b.size;
+        const x = Math.random() * (paperSize[0] - size[0]);
+        const y = Math.random() * (paperSize[1] - size[1]);
+        b.p0 = [x, y];
+        b.p1 = [x + size[0], y + size[1]];
+        b.text = s;
+        b.initOptions();
+        this.bubbles.push(b);
+        this.selectBubble(b);
+      }
     }
   }
 
