@@ -39,7 +39,6 @@
 
   $:onChangeContainerSize(containerWidth, containerHeight);
   function onChangeContainerSize(w, h) {
-    console.log("onChangeContainerSize", w, h);
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;

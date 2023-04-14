@@ -9,7 +9,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
-  import { tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import { keyDownFlags } from './lib/layeredCanvas/keyCache';
 
@@ -31,6 +31,9 @@
   let fontList = null;
   let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
   let shape;
+
+  let drawerPage = 0;
+  let localFontName;
 
   function chooseFont() {
     const settings: DrawerSettings = {
@@ -111,6 +114,15 @@
     searchOptions.bold = false;
   }
 
+  function setLocalFont() {
+    drawerStore.close();
+    if (localFontName) {
+      console.log(localFontName);
+      bubble.fontFamily = localFontName;
+      bubble.fontWeight = 400;
+    }
+  }
+
 </script>
 
 {#if bubble}
@@ -176,7 +188,13 @@
 
 <Drawer>
   <div class="drawer-content">
-    <h1>Font</h1>
+    {#if drawerPage === 0}
+    <button class="drawer-page-right px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={() => drawerPage = 1}>ローカル &gt;</button>
+    {:else}
+    <button class="drawer-page-left px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={() => drawerPage = 0}>&lt; Webフォント</button>
+    {/if}
+    <h1>フォント</h1>
+    {#if drawerPage === 0}
     <div class="hbox gap my-2">
       <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.mincho}></SlideToggle>明
       <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.gothic}></SlideToggle>ゴ
@@ -186,6 +204,11 @@
     </div>
     <hr/>
     <WebFontList on:choose={onChangeFont} bind:this={fontList}/>
+    {/if}
+    {#if drawerPage === 1}
+    <input type="text" class="input" bind:value={localFontName} placeholder="フォント名" />
+    <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={setLocalFont}>採用</button>
+    {/if}
   </div>
 </Drawer>
 
@@ -286,5 +309,18 @@
     width: 15px;
     height: 15px;
     border-radius: 4px;
+  }
+  .drawer-content {
+    position: relative;
+  }
+  .drawer-page-right {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+  }
+  .drawer-page-left {
+    position: absolute;
+    left: 16px;
+    top: 16px;
   }
 </style>
