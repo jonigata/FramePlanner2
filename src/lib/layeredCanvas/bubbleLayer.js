@@ -6,7 +6,8 @@ import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { Bubble, bubbleOptionSets } from "./bubble.js";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.js";
 import { translate, scale } from "./pictureControl.js";
-import { FrameElement, calculatePhysicalLayout, findLayoutAt } from "./frameTree.js";
+import { calculatePhysicalLayout, findLayoutAt } from "./frameTree.js";
+import { add2D } from "./geometry.js";
 
 const iconUnit = [20, 20];
 
@@ -40,6 +41,7 @@ export class BubbleLayer extends Layer {
     this.createBubbleIcon = new ClickableIcon("bubble.png",[64,64],[0,1],"ドラッグで作成", () => this.interactable);
 
     this.dragIcon = new ClickableIcon("drag.png",unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected);
+    this.offsetIcon = new ClickableIcon("bubble-offset.png",unit,[0.5,0],"ドラッグで位置調整", () => this.interactable && this.selected);
     this.zPlusIcon = new ClickableIcon("bubble-zplus.png",unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected);
     this.zMinusIcon = new ClickableIcon("bubble-zminus.png",unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected);
     this.removeIcon = new ClickableIcon("remove.png",unit,[1,0],"削除", () => this.interactable && this.selected);
@@ -65,6 +67,7 @@ export class BubbleLayer extends Layer {
 
     this.createBubbleIcon.render(ctx);
     this.dragIcon.render(ctx);
+    this.offsetIcon.render(ctx);
 
     this.zPlusIcon.render(ctx);
     this.zMinusIcon.render(ctx);
@@ -190,7 +193,7 @@ export class BubbleLayer extends Layer {
       const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
 
-      const [cx, cy] = bubble.center;
+      const [cx, cy] = [bubble.center[0] + bubble.offset[0], bubble.center[1] + bubble.offset[1]];
       const [w, h] = bubble.size;
       if (bubble.direction == 'v') {
         const textMaxHeight = h * 0.85;
@@ -372,13 +375,14 @@ export class BubbleLayer extends Layer {
       this.handle = this.selected.getHandleAt(p);
 
       if (this.removeIcon.hintIfContains(p, this.hint) ||
-          this.dragIcon.hintIfContains(p, this.hint) ||
-          this.zMinusIcon.hintIfContains(p, this.hint) ||
-          this.zPlusIcon.hintIfContains(p, this.hint) ||
-          this.imageDropIcon.hintIfContains(p, this.hint) ||
-          this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
-          this.hintOptionIcon(this.selected.shape, p)) {
-            this.handle = null;
+        this.dragIcon.hintIfContains(p, this.hint) ||
+        this.offsetIcon.hintIfContains(p, this.hint) ||
+        this.zMinusIcon.hintIfContains(p, this.hint) ||
+        this.zPlusIcon.hintIfContains(p, this.hint) ||
+        this.imageDropIcon.hintIfContains(p, this.hint) ||
+        this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
+        this.hintOptionIcon(this.selected.shape, p)) {
+        this.handle = null;
       } else if (this.selected.contains(p)) {
         this.hint(p, null);
       }
@@ -596,6 +600,8 @@ export class BubbleLayer extends Layer {
         return { action: "remove", bubble };
       } else if (this.dragIcon.contains(point)) {
         return { action: "move", bubble };
+      } else if (this.offsetIcon.contains(point)) {
+        return { action: "offset", bubble };
       } else if (this.zMinusIcon.contains(point)) {
         return { action: "z-minus", bubble };
       } else if (this.zPlusIcon.contains(point)) {
@@ -672,6 +678,8 @@ export class BubbleLayer extends Layer {
       yield* this.createBubble(dragStart);
     } else if (payload.action === "move") {
       yield* this.moveBubble(dragStart, payload.bubble);
+    } else if (payload.action === "offset") {
+      yield* this.offsetBubbleText(dragStart, payload.bubble);
     } else if (payload.action === "select") {
       this.selectBubble(payload.bubble);
     } else if (payload.action === "resize") {
@@ -765,6 +773,7 @@ export class BubbleLayer extends Layer {
     const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
 
     this.dragIcon.position = cp([0.5, 0], [0, 0]);
+    this.offsetIcon.position = add2D(cp([0.5, 0.25], [0, 0]), this.selected.offset);
     this.zPlusIcon.position = cp([0,0], [1,0]);
     this.zMinusIcon.position = cp([0,0], [0,0]);
     this.removeIcon.position = cp([1,0], [0, 0]);
@@ -813,6 +822,26 @@ export class BubbleLayer extends Layer {
       while ((p = yield)) {
         bubble.p0 = [p[0] - dx, p[1] - dy];
         bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
+        if (bubble === this.selected) {
+          this.setIconPositions();
+        }
+        this.redraw();
+      }
+      this.onCommit(this.bubbles);
+    } catch (e) {
+      if (e === "cancel") {
+        this.selected = null;
+        this.onRevert();
+      }
+    }
+  }
+
+  *offsetBubbleText(dragStart, bubble) {
+    const q = bubble.offset;
+    let p;
+    try {
+      while ((p = yield)) {
+        bubble.offset = [q[0] + p[0] - dragStart[0], q[1] + p[1] - dragStart[1]];
         if (bubble === this.selected) {
           this.setIconPositions();
         }
