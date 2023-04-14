@@ -206,8 +206,10 @@
     <WebFontList on:choose={onChangeFont} bind:this={fontList}/>
     {/if}
     {#if drawerPage === 1}
-    <input type="text" class="input" bind:value={localFontName} placeholder="フォント名" />
-    <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={setLocalFont}>採用</button>
+    <div class="custom-font-panel">
+      <input type="text" class="input px-2" bind:value={localFontName} placeholder="フォント名" />
+      <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={setLocalFont}>採用</button>
+    </div>
     {/if}
   </div>
 </Drawer>
@@ -323,4 +325,11 @@
     left: 16px;
     top: 16px;
   }
+  .custom-font-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    align-items: center;
+    padding: 32px;
+}
 </style>
