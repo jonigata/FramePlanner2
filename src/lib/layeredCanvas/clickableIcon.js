@@ -1,4 +1,7 @@
 export class ClickableIcon {
+  static tmpCanvas = null;
+  static tmpCtx = null;
+
   constructor(src, size, pivot, hint, visibleConditionProvider) {
     this.src = new URL(`../../assets/${src}`, import.meta.url).href;
     this.position = [0,0];
@@ -12,13 +15,22 @@ export class ClickableIcon {
 
   render(ctx) {
     if (!this.isVisible()) return;
+    if (!ClickableIcon.tmpCanvas) {
+      ClickableIcon.tmpCanvas = document.createElement("canvas");
+      ClickableIcon.tmpCtx = ClickableIcon.tmpCanvas.getContext("2d");
+    }
+    ClickableIcon.tmpCanvas.width = this.image.width;
+    ClickableIcon.tmpCanvas.height = this.image.height;
+
+    ClickableIcon.tmpCtx.drawImage(this.image, 0, 0);
+
     ctx.save();
-    ctx.shadowColor = "white";
-    ctx.shadowBlur = 5;
     const position = [...this.position];
     position[0] -= this.pivot[0] * this.size[0];
     position[1] -= this.pivot[1] * this.size[1];
-    ctx.drawImage(this.image,...position,...this.size);
+    ctx.shadowColor = '#404040';
+    ctx.shadowBlur = 4;
+    ctx.drawImage(ClickableIcon.tmpCanvas,...position,...this.size);
     ctx.restore();
   }
 
