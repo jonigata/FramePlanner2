@@ -15,6 +15,7 @@ export class ClickableIcon {
 
   render(ctx) {
     if (!this.isVisible()) return;
+    if (this.image.width === 0 || this.image.height === 0) return;
     if (!ClickableIcon.tmpCanvas) {
       ClickableIcon.tmpCanvas = document.createElement("canvas");
       ClickableIcon.tmpCtx = ClickableIcon.tmpCanvas.getContext("2d");
