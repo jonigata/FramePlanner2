@@ -29,7 +29,7 @@ export class ClickableIcon {
     position[0] -= this.pivot[0] * this.size[0];
     position[1] -= this.pivot[1] * this.size[1];
     ctx.shadowColor = '#404040';
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 3;
     ctx.drawImage(ClickableIcon.tmpCanvas,...position,...this.size);
     ctx.restore();
   }
