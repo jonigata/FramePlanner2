@@ -8,7 +8,7 @@ export class Bubble {
     this.p0 = [0, 0];
     this.p1 = [128, 128];
     this.offset = [0, 0];
-    this.rotation = 30;
+    this.rotation = 0;
     this.text = "empty";
     this.shape = "square";
     this.embedded = false;
