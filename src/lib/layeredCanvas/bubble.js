@@ -8,6 +8,7 @@ export class Bubble {
     this.p0 = [0, 0];
     this.p1 = [128, 128];
     this.offset = [0, 0];
+    this.rotation = 30;
     this.text = "empty";
     this.shape = "square";
     this.embedded = false;
@@ -32,6 +33,7 @@ export class Bubble {
     b.p0 = [...this.p0];
     b.p1 = [...this.p1];
     b.offset = [...this.offset];
+    b.rotation = this.rotation;
     b.text = this.text;
     b.shape = this.shape;
     b.embedded = this.embedded;
@@ -57,6 +59,7 @@ export class Bubble {
     b.p0 = this.denormalizedPosition(canvasSize, json.p0);
     b.p1 = this.denormalizedPosition(canvasSize, json.p1);
     b.offset = json.offset;
+    b.rotation = json.rotation;
     b.text = json.text;
     b.shape = json.shape;
     b.embedded = json.embedded;
@@ -80,6 +83,7 @@ export class Bubble {
       p0: this.normalizedPosition(canvasSize, b.p0),
       p1: this.normalizedPosition(canvasSize, b.p1),
       offset: b.offset,
+      rotation: b.rotation,
       text: b.text,
       shape: b.shape,
       embedded: b.embedded,
@@ -247,6 +251,11 @@ export class Bubble {
 
   get optionSet() {
     return bubbleOptionSets[this.shape];
+  }
+
+  get centeredRect() {
+    const s = this.size;
+    return [- s[0] / 2, - s[1] / 2, s[0], s[1]];
   }
 
   initOptions() {
