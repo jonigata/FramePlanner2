@@ -13,13 +13,13 @@ export class Bubble {
     this.embedded = false;
     this.fontStyle = "normal";
     this.fontWeight = "400";
-    this.fontSize = 22;
+    this.fontSize = 26;
     this.fontFamily = "Shippori Mincho";
     this.direction = 'v';
     this.fontColor = '#000000FF';
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
-    this.strokeWidth = 1;
+    this.strokeWidth = 2;
     this.uuid = uuidv4();
     this.parent = null;
 

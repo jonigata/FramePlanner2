@@ -15,6 +15,7 @@
   import { Bubble } from './lib/layeredCanvas/bubble.js'; 
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
+  import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
 
   export let width = 140;
   export let height = 198;
@@ -295,6 +296,10 @@
 {#if editable}
   <div class="canvas-container fullscreen" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
     <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
+    {#if bubbleLayer?.defaultBubble}
+    <GoogleFont fonts="{[{family: bubbleLayer.defaultBubble.fontFamily,variants: ["400"],},]}" display="swap" />
+    <p style={getFontStyle(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み -->
+    {/if}
   </div>    
 {:else}
   <div class="canvas-container" style="width: {width}px; height: {height}px;">
