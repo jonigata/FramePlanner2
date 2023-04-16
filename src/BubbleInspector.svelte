@@ -11,7 +11,7 @@
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { onMount, tick } from 'svelte';
   import { SlideToggle } from '@skeletonlabs/skeleton';
-  import { keyDownFlags } from './lib/layeredCanvas/keyCache';
+  import HistoryStorage from './HistoryStorage.svelte';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -20,6 +20,7 @@
   import pinIcon from './assets/pin.png';
   import embeddedIcon from './assets/embedded.png';
   import unembeddedIcon from './assets/unembedded.png';
+  import trash from './assets/trash.png';
 
 
   export let position = { x: 0, y: 0 };
@@ -114,15 +115,35 @@
     searchOptions.bold = false;
   }
 
+  let historyStorage;
+  let localFonts = [];
+
+  onMount(async () => {
+    await historyStorage.isReady();
+    historyStorage.getAll().onsuccess = (e) => {
+      localFonts = e.target.result;
+    };
+  });
+
   function setLocalFont() {
     drawerStore.close();
     if (localFontName) {
       console.log(localFontName);
       bubble.fontFamily = localFontName;
       bubble.fontWeight = 400;
+      addHistory(localFontName);
     }
   }
 
+  function addHistory(fontFamily) {
+    historyStorage.add(fontFamily);
+    localFonts.push(fontFamily);
+  }
+
+  function removeFromHistory(fontFamily) {
+    historyStorage.remove(fontFamily);
+    localFonts = localFonts.filter((f) => f !== fontFamily);
+  }
 </script>
 
 {#if bubble}
@@ -211,8 +232,18 @@
       <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={setLocalFont}>採用</button>
     </div>
     {/if}
+    {#each localFonts as font}
+        <div class="font-sample hbox" style="font-family: '{font}'">
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <span on:click={e=>onChangeFont({detail:{fontWeight:"400",fontFamily:font}})}>{font} 今日はいい天気ですね</span>
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
+        </div>
+    {/each}
   </div>
 </Drawer>
+
+<HistoryStorage bind:this={historyStorage}/>
 
 
 <style>
@@ -331,5 +362,9 @@
     gap: 32px;
     align-items: center;
     padding: 32px;
-}
+  }
+  .font-sample {
+    font-size: 22px;
+  }
+
 </style>

@@ -3,7 +3,7 @@
 <script lang="ts">
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontDefinition, GoogleFontVariant } from "@svelte-web-fonts/google";
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { parseFontFamily } from 'css-font-parser';
 
   const dispatch = createEventDispatcher();
@@ -131,6 +131,7 @@
     });
     filteredFonts = ff;
   }
+
 </script>
 
 <svelte:head>

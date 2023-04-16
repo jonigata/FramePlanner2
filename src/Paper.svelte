@@ -298,7 +298,7 @@
     <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
     {#if bubbleLayer?.defaultBubble}
     <GoogleFont fonts="{[{family: bubbleLayer.defaultBubble.fontFamily,variants: ["400"],},]}" display="swap" />
-    <p style={getFontStyle(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み -->
+    <p style={getFontStyle(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み、ローカルフォントだと多分エラー出る -->
     {/if}
   </div>    
 {:else}
