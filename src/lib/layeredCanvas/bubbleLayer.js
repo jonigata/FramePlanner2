@@ -1186,8 +1186,16 @@ export class BubbleLayer extends Layer {
     for (let bubble of bubbles) {
       const [x, y, w, h] = bubble.regularizedPositionAndSize();
       const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
-      path2.rotate(-bubble.rotation, bubble.center);
-      path = path ? path.unite(path2) : path2;
+      if (path2) {
+        path2.rotate(-bubble.rotation, bubble.center);
+        path = path ? path.unite(path2) : path2;
+      } else {
+        // シェイプ変更などでリンクが解けている
+        for (let b of bubbles) {
+          b.parent = null;
+        }
+        return null;
+      }
     }
     path.rotate(bubbles[0].rotation, bubbles[0].center);
     path.translate(new paper.Point(bubbles[0].center).multiply(-1));
