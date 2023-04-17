@@ -8,6 +8,7 @@ import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.j
 import { translate, scale } from "./pictureControl.js";
 import { calculatePhysicalLayout, findLayoutAt } from "./frameTree.js";
 import { add2D } from "./geometry.js";
+import { v4 as uuidv4 } from 'uuid';
 import * as paper from 'paper';
 
 const iconUnit = [20, 20];
@@ -447,8 +448,8 @@ export class BubbleLayer extends Layer {
 
   copyBubble() {
     if (this.selected) {
-      const t = JSON.stringify(Bubble.decompile(this.getPaperSize(), this.selected), null, 2);
-      navigator.clipboard.writeText(t).then(() => {
+      const t = Bubble.decompile(this.getPaperSize(), this.selected);
+      navigator.clipboard.writeText(JSON.stringify(t, null, 2)).then(() => {
         console.log("copied");
       });
     }
@@ -483,6 +484,8 @@ export class BubbleLayer extends Layer {
     try {
       const paperSize = this.getPaperSize();
       const b = Bubble.compile(paperSize, JSON.parse(text));
+      b.parent = null;
+      b.uuid = uuidv4();
       const size = b.size;
       const x = Math.random() * (paperSize[0] - size[0]);
       const y = Math.random() * (paperSize[1] - size[1]);
