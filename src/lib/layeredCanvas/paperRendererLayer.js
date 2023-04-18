@@ -190,11 +190,10 @@ export class PaperRendererLayer extends Layer {
 
     // shape背景描画
     this.drawBubble(ctx, rect, 'fill', bubble);
+    this.drawBubble(ctx, rect, 'clip', bubble);
 
     // 画像描画
     if (bubble.image && !bubble.parent) {
-      this.drawBubble(ctx, rect, 'clip', bubble);
-
       const img = bubble.image;
       let iw = img.image.width * img.scale[0];
       let ih = img.image.height * img.scale[1];
@@ -202,6 +201,12 @@ export class PaperRendererLayer extends Layer {
       let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
     }
+
+    // テキスト描画
+    if (bubble.text) {
+      this.drawText(ctx, bubble);
+    }
+
     ctx.restore();
   }
 
@@ -216,38 +221,6 @@ export class PaperRendererLayer extends Layer {
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
     ctx.lineWidth = bubble.strokeWidth;
     this.drawBubble(ctx, rect, 'stroke', bubble);
-
-    // テキスト描画
-    if (bubble.text) {
-      const baselineSkip = bubble.fontSize * 1.5;
-      const charSkip = bubble.fontSize;
-
-      // draw text
-      ctx.fillStyle = bubble.fontColor;
-      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
-      ctx.font = ss;
-
-      const [cx, cy] = bubble.offset;
-      const [w, h] = bubble.size;
-      if (bubble.direction == 'v') {
-        const textMaxHeight = h * 0.85;
-        const m = measureVerticalText(ctx,textMaxHeight,bubble.text,baselineSkip,charSkip);
-        const tw = m.width;
-        const th = m.height;
-        const tx = cx - tw * 0.5;
-        const ty = cy - th * 0.5;
-        drawVerticalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,charSkip);
-      } else {
-        const textMaxWidth = w * 0.85;
-        const m = measureHorizontalText(ctx,textMaxWidth,bubble.text,baselineSkip);
-        const tw = m.width;
-        const th = m.height;
-        const tx = cx - tw * 0.5;
-        const ty = cy - th * 0.5;
-        // ctx.strokeRect(tx, ty, tw, th);
-        drawHorizontalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,m);
-      }
-    }
 
     ctx.restore();
   }
@@ -271,6 +244,37 @@ export class PaperRendererLayer extends Layer {
     ctx.translate(-element.image.width * 0.5, -element.image.height * 0.5);
     ctx.drawImage(element.image, 0, 0);
     ctx.restore();
+  }
+
+  drawText(ctx, bubble) {
+    const baselineSkip = bubble.fontSize * 1.5;
+    const charSkip = bubble.fontSize;
+
+    // draw text
+    ctx.fillStyle = bubble.fontColor;
+    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+    ctx.font = ss;
+
+    const [cx, cy] = bubble.offset;
+    const [w, h] = bubble.size;
+    if (bubble.direction == 'v') {
+      const textMaxHeight = h * 0.85;
+      const m = measureVerticalText(ctx,textMaxHeight,bubble.text,baselineSkip,charSkip);
+      const tw = m.width;
+      const th = m.height;
+      const tx = cx - tw * 0.5;
+      const ty = cy - th * 0.5;
+      drawVerticalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,charSkip);
+    } else {
+      const textMaxWidth = w * 0.85;
+      const m = measureHorizontalText(ctx,textMaxWidth,bubble.text,baselineSkip);
+      const tw = m.width;
+      const th = m.height;
+      const tx = cx - tw * 0.5;
+      const ty = cy - th * 0.5;
+      // ctx.strokeRect(tx, ty, tw, th);
+      drawHorizontalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,m);
+    }
   }
 
   uniteBubble(bubbles) {
