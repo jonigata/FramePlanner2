@@ -3,6 +3,7 @@
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
+  import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
@@ -197,8 +198,12 @@
       layeredCanvas.addLayer(floorLayer);
     }
 
+    const paperRendererLayer = new PaperRendererLayer();
+    layeredCanvas.addLayer(paperRendererLayer);
+
     sequentializePointer(FrameLayer);
     frameLayer = new FrameLayer(
+      paperRendererLayer,
       frameTree,
       editable,
       (frameTree) => {
@@ -210,6 +215,7 @@
 
     sequentializePointer(BubbleLayer);
     bubbleLayer = new BubbleLayer(
+      paperRendererLayer,
       editable, 
       frameLayer,
       showInspector, 

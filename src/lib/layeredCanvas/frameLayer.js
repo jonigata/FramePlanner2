@@ -3,12 +3,14 @@ import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, find
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
+import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 
 const iconUnit = [32,32];
 
 export class FrameLayer extends Layer {
-  constructor(frameTree, interactable, onCommit, onRevert) {
+  constructor(renderLayer, frameTree, interactable, onCommit, onRevert) {
     super();
+    this.renderLayer = renderLayer;
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onCommit = onCommit;
@@ -45,30 +47,16 @@ export class FrameLayer extends Layer {
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
+  prerender() {
+    this.renderLayer.setFrameTree(this.frameTree);
+  }
+
   render(ctx) {
-    const size = this.getPaperSize();
-
-    // fill background
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.fillStyle = "rgb(255,255,255, 1)";
-    ctx.fillRect(0, 0, ...size);
-    ctx.restore();
-
-    const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
-    const inheritanceContext = { borderColor: "black", borderWidth: 1 };
-    const deferred = [];
-    this.renderElement(ctx, layout, inheritanceContext, deferred);
-    deferred.sort((a, b) => a.layout.element.z - b.layout.element.z);
-    for (const def of deferred) {
-      this.renderElementLeaf(ctx, def.layout, def.inheritanceContext);
-    }
-
     if (!this.interactable) {
       return;
     }
 
-    if (0 < this.focusedLayout?.element.visibility) {
+    if (0 < this.focusedLayout?.element.visibility) {  // z値を表示
       ctx.font = '24px serif';
       ctx.fillStyle = "#86C8FF";
       const l = this.focusedLayout;
@@ -78,14 +66,14 @@ export class FrameLayer extends Layer {
     if (this.focusedPadding) {
       ctx.fillStyle = "rgba(200,200,0, 0.7)";
       ctx.beginPath();
-      this.trapezoidPath(ctx, this.focusedPadding.trapezoid);
+      trapezoidPath(ctx, this.focusedPadding.trapezoid);
       ctx.fill();
     }
 
     if (this.focusedBorder) {
       ctx.fillStyle = "rgba(0,200,200,0.7)";
       ctx.beginPath();
-      this.trapezoidPath(ctx, this.focusedBorder.trapezoid);
+      trapezoidPath(ctx, this.focusedBorder.trapezoid);
       ctx.fill();
     }
 
@@ -96,80 +84,6 @@ export class FrameLayer extends Layer {
 
     this.frameIcons.forEach(icon => icon.render(ctx));
     this.borderIcons.forEach(icon => icon.render(ctx));
-  }
-
-  renderElement(ctx, layout, inheritanceContext, deferred) {
-    if (layout.element.borderColor != null) { 
-      inheritanceContext.borderColor = layout.element.borderColor;
-    }
-    if (layout.element.borderWidth != null) {
-      inheritanceContext.borderWidth = layout.element.borderWidth;
-    }
-
-    if (layout.children) {
-      this.renderBackground(ctx, layout, inheritanceContext);
-      for (let i = 0; i < layout.children.length; i++) {
-        this.renderElement(ctx, layout.children[i], inheritanceContext, deferred);
-      }
-    } else {
-      deferred.push({ layout, inheritanceContext });
-    }
-  }
-
-  renderElementLeaf(ctx, layout, inheritanceContext) {
-    this.renderBackground(ctx, layout, inheritanceContext);
-
-    const element = layout.element;
-    if (1 <= element.visibility && element.image) {
-      // clip
-      ctx.save();
-      ctx.clip();
-
-      const [x0, y0, x1, y1] = [
-        Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
-        Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
-        Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
-        Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
-      ]
-
-      ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
-      ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-      ctx.translate(-element.image.width * 0.5, -element.image.height * 0.5);
-      ctx.drawImage(element.image, 0, 0);
-
-      // unclip
-      ctx.restore();
-    }
-
-    if (element.visibility === 2) {
-      const borderWidth = inheritanceContext.borderWidth;
-      if (0 < borderWidth) {
-        ctx.strokeStyle = inheritanceContext.borderColor;
-        ctx.lineWidth = borderWidth;
-        ctx.stroke();
-      }
-    }
-  }
-
-  renderBackground(ctx, layout, inheritanceContext) {
-    if (layout.element.visibilty === 0) { return; }
-    ctx.beginPath();
-    ctx.lineJoin = "miter";
-    this.trapezoidPath(ctx, layout.corners);
-
-    if (layout.element.bgColor) {
-      ctx.fillStyle = layout.element.bgColor;
-      ctx.fill();
-    }
-  }
-
-  trapezoidPath(ctx, corners) {
-    ctx.moveTo(...corners.topLeft);
-    ctx.lineTo(...corners.topRight);
-    ctx.lineTo(...corners.bottomRight);
-    ctx.lineTo(...corners.bottomLeft);
-    ctx.lineTo(...corners.topLeft);
-    ctx.closePath();
   }
 
   dropped(image, position) {

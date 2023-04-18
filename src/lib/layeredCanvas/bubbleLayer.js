@@ -15,6 +15,7 @@ const iconUnit = [20, 20];
 
 export class BubbleLayer extends Layer {
   constructor(
+    renerLayer,
     interactable,
     frameLayer,
     onShowInspector,
@@ -24,6 +25,7 @@ export class BubbleLayer extends Layer {
     onGetDefaultText
   ) {
     super();
+    this.renderLayer = renerLayer;
     this.interactable = interactable;
     this.frameLayer = frameLayer;
     this.bubbles = [];
@@ -61,13 +63,15 @@ export class BubbleLayer extends Layer {
     this.optionIcons.radius = new ClickableIcon("radius.png",unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected);
   }
 
+  prerender(ctx) {
+    const bubbles = [...this.bubbles];
+    if (this.creatingBubble) {
+      bubbles.push(this.creatingBubble);
+    }
+    this.renderLayer.setBubbles(bubbles);
+  }
+
   render(ctx) {
-    const size = this.getPaperSize();
-    if (!this.frameLayer.frameTree) { return; }
-    const layout = calculatePhysicalLayout(this.frameLayer.frameTree, size, [0, 0]);
-
-    this.renderBubbles(ctx, layout);
-
     this.createBubbleIcon.render(ctx);
     this.dragIcon.render(ctx);
     this.offsetIcon.render(ctx);
@@ -221,157 +225,6 @@ export class BubbleLayer extends Layer {
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx + bubble.optionContext.link[0], cy + bubble.optionContext.link[1]);
       ctx.stroke();
-    }
-  }
-
-  renderBubbles(ctx, layout) {
-    // 親子関係解決
-    const bubbleDic = {};
-    for (let bubble of this.bubbles) {
-      bubble.unitedPath = null;
-      bubble.children = [];
-      bubbleDic[bubble.uuid] = bubble;
-    }
-
-    for (let bubble of this.bubbles) {
-      if (bubble.parent) {
-        bubbleDic[bubble.parent].children.push(bubble);
-      }
-    }
-
-    // 結合
-    for (let bubble of this.bubbles) {
-      if (0 < bubble.children.length) {
-        bubble.unitedPath = this.uniteBubble([bubble, ...bubble.children]);
-      }
-    }
-
-    const bubbles = [...this.bubbles];
-    if (this.creatingBubble) {
-      bubbles.push(this.creatingBubble);
-    }
-
-    const withMask = (bubble, func) => {
-      if (!bubble) return;
-      if (bubble.embedded) {
-        const thisLayout = findLayoutAt(layout, bubble.center);
-        if (thisLayout) {
-          const corners = thisLayout.corners;
-          ctx.save();
-          this.clipTrapezoid(ctx, corners);
-        }
-        func();
-        if (thisLayout) {
-          ctx.restore();
-        }
-      } else {
-        func();
-      }
-    }
-
-    for (let bubble of bubbles) {
-      withMask(bubble, () => this.renderBubbleBackground(ctx, bubble));
-    }
-
-    for (let bubble of bubbles) {
-      withMask(bubble, () => this.renderBubbleForeground(ctx, bubble));
-    }
-  }
-
-  clipTrapezoid(ctx, corners) {
-    ctx.beginPath();
-    ctx.moveTo(...corners.topLeft);
-    ctx.lineTo(...corners.topRight);
-    ctx.lineTo(...corners.bottomRight);
-    ctx.lineTo(...corners.bottomLeft);
-    ctx.lineTo(...corners.topLeft);
-    ctx.closePath();
-    ctx.clip();
-  }
-
-  renderBubbleBackground(ctx, bubble) {
-    const rect = bubble.centeredRect;
-    const [x, y, w, h] = rect;
-
-    ctx.save();
-    ctx.translate(...bubble.center);
-    ctx.rotate((-bubble.rotation * Math.PI) / 180);
-
-    // fill/stroke設定
-    ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
-    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.strokeWidth;
-
-    // shape背景描画
-    this.drawBubble(ctx, rect, 'fill', bubble);
-
-    // 画像描画
-    if (bubble.image && !bubble.parent) {
-      this.drawBubble(ctx, rect, 'clip', bubble);
-
-      const img = bubble.image;
-      let iw = img.image.width * img.scale[0];
-      let ih = img.image.height * img.scale[1];
-      let ix = x + w * 0.5 - iw * 0.5 + img.translation[0];
-      let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
-      ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
-    }
-    ctx.restore();
-  }
-
-  renderBubbleForeground(ctx, bubble) {
-    const rect = bubble.centeredRect;
-
-    ctx.save();
-    ctx.translate(...bubble.center);
-    ctx.rotate((-bubble.rotation * Math.PI) / 180);
-
-    // shape枠描画
-    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.strokeWidth;
-    this.drawBubble(ctx, rect, 'stroke', bubble);
-
-    // テキスト描画
-    if (bubble.text) {
-      const baselineSkip = bubble.fontSize * 1.5;
-      const charSkip = bubble.fontSize;
-
-      // draw text
-      ctx.fillStyle = bubble.fontColor;
-      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
-      ctx.font = ss;
-
-      const [cx, cy] = bubble.offset;
-      const [w, h] = bubble.size;
-      if (bubble.direction == 'v') {
-        const textMaxHeight = h * 0.85;
-        const m = measureVerticalText(ctx,textMaxHeight,bubble.text,baselineSkip,charSkip);
-        const tw = m.width;
-        const th = m.height;
-        const tx = cx - tw * 0.5;
-        const ty = cy - th * 0.5;
-        drawVerticalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,charSkip);
-      } else {
-        const textMaxWidth = w * 0.85;
-        const m = measureHorizontalText(ctx,textMaxWidth,bubble.text,baselineSkip);
-        const tw = m.width;
-        const th = m.height;
-        const tx = cx - tw * 0.5;
-        const ty = cy - th * 0.5;
-        // ctx.strokeRect(tx, ty, tw, th);
-        drawHorizontalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,m);
-      }
-    }
-
-    ctx.restore();
-  }
-
-  drawBubble(ctx, rect, method, bubble) {
-    ctx.bubbleDrawMethod = method; // 行儀が悪い
-    if (bubble.unitedPath) {
-      drawPath(ctx, bubble.unitedPath);
-    } else if (!bubble.parent) {
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
     }
   }
 

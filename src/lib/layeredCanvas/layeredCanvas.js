@@ -215,6 +215,10 @@ export class LayeredCanvas {
     }
 
     render() {
+        for (let layer of this.layers) {
+            layer.prerender();
+        }
+
         this.context.fillStyle = "rgb(240,240,240)";
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -224,8 +228,7 @@ export class LayeredCanvas {
         this.context.translate(...this.canvas.paper.viewTranslate);                 // パン(一時)
         this.context.scale(...this.canvas.paper.scale);       // 拡大縮小
         this.context.translate(-this.canvas.paper.size[0] * 0.5, -this.canvas.paper.size[1] * 0.5); // 紙面中央
-        for (let i = 0; i < this.layers.length; i++) {
-            const layer = this.layers[i];
+        for (let layer of this.layers) {
             layer.render(this.context);
         }
         this.context.restore();
@@ -321,6 +324,7 @@ export class Layer {
     pointerMove(point, payload) {}
     pointerUp(point, payload) {}
     pointerCancel() {}
+    prerender() {}
     render(ctx) {}
     dropped(image, position) { return false; }
     beforeDoubleClick(position) { return false; }
