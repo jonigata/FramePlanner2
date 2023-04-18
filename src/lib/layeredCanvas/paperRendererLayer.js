@@ -3,6 +3,7 @@ import { drawBubble, getPath, drawPath } from "./bubbleGraphic.js";
 import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
+import * as paper from 'paper';
 
 export class PaperRendererLayer extends Layer {
   constructor() {
@@ -141,6 +142,8 @@ export class PaperRendererLayer extends Layer {
       if (layout.bubbles) {
         for (let bubble of layout.bubbles) {
           this.renderBubbleBackground(ctx, bubble);
+        }
+        for (let bubble of layout.bubbles) {
           this.renderBubbleForeground(ctx, bubble);
         }
       }
@@ -202,11 +205,6 @@ export class PaperRendererLayer extends Layer {
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
     }
 
-    // テキスト描画
-    if (bubble.text) {
-      this.drawText(ctx, bubble);
-    }
-
     ctx.restore();
   }
 
@@ -216,6 +214,11 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate(...bubble.center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
+
+    // テキスト描画
+    if (bubble.text) {
+      this.drawText(ctx, bubble);
+    }
 
     // shape枠描画
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
