@@ -40,6 +40,8 @@ export class PaperRendererLayer extends Layer {
 
     for (let bubble of this.floatingBubbles) {
       this.renderBubbleBackground(ctx, bubble);
+    }
+    for (let bubble of this.floatingBubbles) {
       this.renderBubbleForeground(ctx, bubble);
     }
 
