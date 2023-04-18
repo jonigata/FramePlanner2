@@ -262,24 +262,22 @@ export class PaperRendererLayer extends Layer {
 
     const [cx, cy] = bubble.offset;
     const [w, h] = bubble.size;
+    const m = bubble.direction === 'v' ?
+      measureVerticalText(ctx, h * 0.85, bubble.text, baselineSkip, charSkip) :
+      measureHorizontalText(ctx, w * 0.85, bubble.text, baselineSkip);
+    const [tw, th] = [m.width, m.height];
+    const [tx, ty] = [cx - tw * 0.5, cy - th * 0.5];
+
+    // 1.外側をクリップして袋を描画
+    // 2.内側をクリップして内部を描画
+
+    console.log(window.devicePixelRatio);
     if (bubble.direction == 'v') {
-      const textMaxHeight = h * 0.85;
-      const m = measureVerticalText(ctx,textMaxHeight,bubble.text,baselineSkip,charSkip);
-      const tw = m.width;
-      const th = m.height;
-      const tx = cx - tw * 0.5;
-      const ty = cy - th * 0.5;
-      drawVerticalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,charSkip);
+      drawVerticalText(ctx, { x: tx, y: ty, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
     } else {
-      const textMaxWidth = w * 0.85;
-      const m = measureHorizontalText(ctx,textMaxWidth,bubble.text,baselineSkip);
-      const tw = m.width;
-      const th = m.height;
-      const tx = cx - tw * 0.5;
-      const ty = cy - th * 0.5;
-      // ctx.strokeRect(tx, ty, tw, th);
-      drawHorizontalText(ctx,{ x: tx, y: ty, width: tw, height: th },bubble.text,baselineSkip,m);
+      drawHorizontalText(ctx, { x: tx, y: ty, width: tw, height: th }, bubble.text, baselineSkip, m);
     }
+
   }
 
   uniteBubble(bubbles) {
