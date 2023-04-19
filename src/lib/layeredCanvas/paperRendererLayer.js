@@ -3,6 +3,7 @@ import { drawBubble, getPath, drawPath } from "./bubbleGraphic.js";
 import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
+import { multiply2D } from "./geometry.js";
 import * as paper from 'paper';
 
 export class PaperRendererLayer extends Layer {
@@ -251,14 +252,18 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  drawText(ctx, bubble) {
+  drawText(targetCtx, bubble) {
     const baselineSkip = bubble.fontSize * 1.5;
     const charSkip = bubble.fontSize;
 
-    // draw text
-    ctx.fillStyle = bubble.fontColor;
-    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
-    ctx.font = ss;
+    // TODO: キャッシュにつかえる
+    if (!bubble.tmpCanvas) {
+      bubble.tmpCanvas = document.createElement('canvas');
+      bubble.tmpCtx = bubble.tmpCanvas.getContext('2d');
+    }
+
+    const canvas = bubble.tmpCanvas;
+    const ctx = bubble.tmpCtx;
 
     const [cx, cy] = bubble.offset;
     const [w, h] = bubble.size;
@@ -268,16 +273,47 @@ export class PaperRendererLayer extends Layer {
     const [tw, th] = [m.width, m.height];
     const [tx, ty] = [cx - tw * 0.5, cy - th * 0.5];
 
-    // 1.外側をクリップして袋を描画
-    // 2.内側をクリップして内部を描画
+    const dpr = window.devicePixelRatio;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const color = new paper.Color(bubble.fontColor);
+    const alpha = color.alpha;
+    color.alpha = 1;
 
-    console.log(window.devicePixelRatio);
+    // フチ
+    const ocolor = new paper.Color(bubble.outlineColor);
+    ocolor.alpha = 1;
+    ctx.strokeStyle = ocolor.toCSS(true);
+    ctx.lineWidth = bubble.outlineWidth;
+    const oss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+    ctx.font = oss;
+    ctx.lineJoin = 'round';
+
+    const [x, y] = [w * dpr * 0.5 - tw * 0.5, h * dpr * 0.5 - th * 0.5];
+
     if (bubble.direction == 'v') {
-      drawVerticalText(ctx, { x: tx, y: ty, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
+      drawVerticalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
     } else {
-      drawHorizontalText(ctx, { x: tx, y: ty, width: tw, height: th }, bubble.text, baselineSkip, m);
+      drawHorizontalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, m);
     }
 
+    // 本体
+    //ctx.fillStyle = color.toCSS(true);
+    ctx.fillStyle = color.toCSS(true);
+    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+    ctx.font = ss;
+
+    if (bubble.direction == 'v') {
+      drawVerticalText(ctx, 'fill', { x, y, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
+    } else {
+      drawHorizontalText(ctx, 'fill', { x, y, width: tw, height: th }, bubble.text, baselineSkip, m);
+    }
+
+    // 描き戻し
+    targetCtx.save();
+    targetCtx.globalAlpha = alpha;
+    targetCtx.drawImage(canvas, w * -0.5, h * -0.5, ...bubble.size);
+    targetCtx.restore();
   }
 
   uniteBubble(bubbles) {

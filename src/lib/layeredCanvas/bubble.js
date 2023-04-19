@@ -21,6 +21,8 @@ export class Bubble {
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
     this.strokeWidth = 2;
+    this.outlineWidth = 0;
+    this.outlineColor = "#000000FF";
     this.uuid = uuidv4();
     this.parent = null;
 
@@ -46,6 +48,8 @@ export class Bubble {
     b.fillColor = this.fillColor;
     b.strokeColor = this.strokeColor;
     b.strokeWidth = this.strokeWidth;
+    b.outlineColor = this.outlineColor;
+    b.outlineWidth = this.outlineWidth;
     b.uuid = uuidv4();
     b.parent = null;
 
@@ -72,6 +76,8 @@ export class Bubble {
     b.fillColor = json.fillColor;
     b.strokeColor = json.strokeColor;
     b.strokeWidth = json.strokeWidth;
+    b.outlineColor = json.outlineColor;
+    b.outlineWidth = json.outlineWidth;
     b.uuid = json.uuid;
     b.parent = json.parent;
     b.optionContext = json.optionContext;
@@ -96,6 +102,8 @@ export class Bubble {
       fillColor: b.fillColor,
       strokeColor: b.strokeColor,
       strokeWidth: b.strokeWidth,
+      outlineColor: b.outlineColor,
+      outlineWidth: b.outlineWidth,
       uuid: b.uuid,
       parent: b.parent,
       optionContext: b.optionContext,

@@ -173,12 +173,15 @@
     </div>
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
-      <div class="font-bold slider-label">fontsize</div>
-      <RangeSlider name="fontsize" bind:value={bubble.fontSize} max={100} step={1} style="width:200px;"/>
+      <div class="font-bold slider-label">T</div>
+      <RangeSlider name="fontsize" bind:value={bubble.fontSize} max={100} step={1} style="width:130px;"/>
       <div class="text-xs slider-value-text">
         <div class="number-box"><NumberEdit bind:value={bubble.fontSize} showSlider={false}/></div>
-      </div>
+      </div>  
       <ColorPicker bind:hex={bubble.fontColor} label="" />
+      <span class="mx-2">/</span>縁
+      <RangeSlider name="outlinewidth" bind:value={bubble.outlineWidth} max={20} step={1} style="width:50px;"/>
+      <ColorPicker bind:hex={bubble.outlineColor} label="" />
     </div>
 
     <textarea
@@ -332,6 +335,9 @@
   }
   .embed {
     margin-left: 8px;
+  }
+  .font-color-picker :global(.color-picker) {
+    width: 20px;
   }
   .font-color-picker :global(.container .color) {
     width: 15px;

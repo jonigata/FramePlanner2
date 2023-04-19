@@ -1,4 +1,5 @@
 export function add2D([x, y], [dx, dy]) { return [x + dx, y + dy]; }
+export function multiply2D([x, y], [dx, dy]) { return [x * dx, y * dy]; }
 export function dot2D(vectorA, vectorB) { return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1]; }
 export function cross2D(vectorA, vectorB) { return vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0]; }
 export function magnitude2D(vector) { return Math.sqrt(dot2D(vector, vector)); }

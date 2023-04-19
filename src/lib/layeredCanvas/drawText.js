@@ -2,7 +2,7 @@ import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 
 export { drawVerticalText, measureVerticalText };
 
-export function drawHorizontalText(context, r, text, baselineSkip, m) {
+export function drawHorizontalText(context, method, r, text, baselineSkip, m) {
   if (!m) {
     m = measureHorizontalText(context, r.width, text, baselineSkip);
   }
@@ -11,7 +11,11 @@ export function drawHorizontalText(context, r, text, baselineSkip, m) {
   for (let i = 0; i < m.lines.length; i++) {
     const lineTail = m.lines[i];
     const line = text.substring(lineHead, lineTail);
-    context.fillText(line, r.x, r.y + baselineSkip * i + baselineSkip * 0.8 /* Ascentの雑な計算 */ );
+    if (method === "fill") {
+      context.fillText(line, r.x, r.y + baselineSkip * i + baselineSkip * 0.8 /* Ascentの雑な計算 */ );
+    } else if (method === "stroke") {
+      context.strokeText(line, r.x, r.y + baselineSkip * i + baselineSkip * 0.8 /* Ascentの雑な計算 */ );
+    }
     lineHead = lineTail;
   }
 }

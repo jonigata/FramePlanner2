@@ -1,4 +1,4 @@
-export function drawVerticalText(context, r, text, baselineSkip, charSkip) {
+export function drawVerticalText(context, method, r, text, baselineSkip, charSkip) {
     let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
     let index = 0;
     while (index < text.length) {
@@ -20,10 +20,17 @@ export function drawVerticalText(context, r, text, baselineSkip, charSkip) {
             function drawChar(ax, ay, colored) {
                 context.save();
                 if (colored) { context.fillStyle = 'red'; }
-                context.fillText(
-                    c, 
-                    cursorX - cw * 0.5 + cw * ax, 
-                    r.y + charSkip + lineH + charSkip * ay);
+                if (method === "fill") {
+                    context.fillText(
+                        c, 
+                        cursorX - cw * 0.5 + cw * ax, 
+                        r.y + charSkip + lineH + charSkip * ay);
+                } else if (method === "stroke") {
+                    context.strokeText(
+                        c,
+                        cursorX - cw * 0.5 + cw * ax,
+                        r.y + charSkip + lineH + charSkip * ay);
+                }
                 context.restore();
             }
 
@@ -36,7 +43,11 @@ export function drawVerticalText(context, r, text, baselineSkip, charSkip) {
                 context.translate(pivotX, pivotY);
                 context.rotate(angle * Math.PI / 180);
                 context.scale(1, xscale);
-                context.fillText(c, -cw * 0.5, charSkip * 0.5);
+                if (method === "fill") {
+                    context.fillText(c, -cw * 0.5, charSkip * 0.5);
+                } else if (method === "stroke") {
+                    context.strokeText(c, -cw * 0.5, charSkip * 0.5);
+                }
                 context.restore();
             }
 
