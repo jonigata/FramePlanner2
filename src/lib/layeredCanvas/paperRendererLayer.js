@@ -253,8 +253,12 @@ export class PaperRendererLayer extends Layer {
   }
 
   drawText(targetCtx, bubble) {
+    const [w, h] = bubble.size;
+    if (w <= 0 || h <= 0) { return; }
+
     const baselineSkip = bubble.fontSize * 1.5;
     const charSkip = bubble.fontSize;
+
 
     // TODO: キャッシュにつかえる
     if (!bubble.tmpCanvas) {
@@ -266,7 +270,6 @@ export class PaperRendererLayer extends Layer {
     const ctx = bubble.tmpCtx;
 
     const [cx, cy] = bubble.offset;
-    const [w, h] = bubble.size;
     const m = bubble.direction === 'v' ?
       measureVerticalText(ctx, h * 0.85, bubble.text, baselineSkip, charSkip) :
       measureHorizontalText(ctx, w * 0.85, bubble.text, baselineSkip);
