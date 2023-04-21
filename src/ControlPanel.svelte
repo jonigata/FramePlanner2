@@ -19,6 +19,7 @@
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
 
+  let min = 256;
   let max = 4096;
   let contactText = "";
 
@@ -89,6 +90,9 @@
       toastStore.trigger({ message: '要望を入力してください', timeout: 1500});
       return;
     }
+    if (contactText === "throw error") {
+      throw new Error("intentional error");
+    }
     await postContact(contactText);
     toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
     contactText = null;
@@ -114,7 +118,7 @@
     <div class="vbox expand">
       <div class="hbox">
         <div class="font-bold slider-label">Width</div>
-        <RangeSlider name="range-slider" bind:value={$paperWidth} max={max} step={1}/>
+        <RangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} step={1}/>
         <div class="text-xs slider-value-text">
           <div class="number-box"><NumberEdit bind:value={$paperWidth} showSlider={false}/></div>
            / {max}
@@ -122,7 +126,7 @@
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">Height</div>
-        <RangeSlider name="range-slider" bind:value={$paperHeight} max={max} step={1}/>
+        <RangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} step={1}/>
         <div class="text-xs slider-value-text">
           <div class="number-box"><NumberEdit bind:value={$paperHeight} showSlider={false}/></div>
            / {max}

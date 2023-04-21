@@ -11,6 +11,17 @@
   let paper;
   let documentInput;
   let documentOutput;
+  let width;
+  let height;
+
+  $:onChangePaperSize($paperWidth, $paperHeight);
+  function onChangePaperSize(w, h) {
+    if (!w || !h) return;
+    if (w < 256 || h < 256) return;
+    console.log('onChangePaperSize', w, h);
+    width = w;
+    height = h;
+  }
 
   $:save($saveToken);
   function save(token) {
@@ -80,8 +91,8 @@
 
 <div class="main-paper-container">
   <Paper 
-    width={$paperWidth} 
-    height={$paperHeight} 
+    bind:width={width}
+    bind:height={height}
     documentInput={documentInput} 
     paperColor={$paperColor} 
     frameColor={$frameColor} 
