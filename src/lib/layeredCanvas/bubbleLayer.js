@@ -58,7 +58,7 @@ export class BubbleLayer extends Layer {
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon("tail-tip.png",unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected);
     this.optionIcons.curve = new ClickableIcon("tail-mid.png",unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected);
-    this.optionIcons.unite = new ClickableIcon("unite.png",unit,[0.5,1],"ドラッグでリンク", () => this.interactable && this.selected);
+    this.optionIcons.unite = new ClickableIcon("unite.png",unit,[0.5,1],"ドラッグで他のフキダシと結合", () => this.interactable && this.selected);
     this.optionIcons.circle = new ClickableIcon("circle.png",unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected);
     this.optionIcons.radius = new ClickableIcon("radius.png",unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected);
   }

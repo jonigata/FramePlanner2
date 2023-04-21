@@ -53,7 +53,7 @@ export const frameExamples = [
     bgColor: "white",
     height: 100,
     column: [
-      { height: 2, visibility: 0  },
+      { height: 4, visibility: 0  },
       {
         bgColor: "white",
         height: 100,
@@ -62,6 +62,7 @@ export const frameExamples = [
           {
             width: 3,
             column: [
+              { height: 2, divider: { spacing: 1, slant: 0 }  },
               {
                 height: 8, divider: { spacing: 1, slant: 0 }, 
               },
@@ -79,8 +80,76 @@ export const frameExamples = [
           { width: 2, visibility: 0  },
         ]
       },
-      { height: 2, visibility: 0  },
+      { height: 4, visibility: 0  },
     ]
+  },
+  { // 4コマ2段
+    bgColor: "white",
+    column: [
+      { height: 4, visibility: 0  },
+      {
+        height: 100,
+        row: [
+          { width: 8, visibility: 0  },
+          {
+            bgColor: "white",
+            width: 100,
+            row: [
+              {
+                width: 3,
+                column: [
+                  {
+                    height: 2, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8,
+                  },
+                ],
+              },
+            ],
+            divider: { spacing: 8, slant: 0 }, 
+          },
+          {
+            bgColor: "white",
+            width: 100,
+            row: [
+              {
+                width: 3,
+                column: [
+                  {
+                    height: 2, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8,
+                  },
+                ],
+              },
+            ]
+          },
+
+          { width: 8, visibility: 0  }
+        ],
+      },
+      { height: 4, visibility: 0  },
+    ],
   },
   { // オーソドックス2
     bgColor: "white",

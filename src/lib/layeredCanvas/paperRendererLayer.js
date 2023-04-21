@@ -275,8 +275,9 @@ export class PaperRendererLayer extends Layer {
       measureHorizontalText(ctx, w * 0.85, bubble.text, baselineSkip);
     const [tw, th] = [m.width, m.height];
     const [tx, ty] = [cx - tw * 0.5, cy - th * 0.5];
-
     const dpr = window.devicePixelRatio;
+    const [x, y] = [w * dpr * 0.5 - tw * 0.5, h * dpr * 0.5 - th * 0.5];
+
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     const color = new paper.Color(bubble.fontColor);
@@ -284,20 +285,21 @@ export class PaperRendererLayer extends Layer {
     color.alpha = 1;
 
     // フチ
-    const ocolor = new paper.Color(bubble.outlineColor);
-    ocolor.alpha = 1;
-    ctx.strokeStyle = ocolor.toCSS(true);
-    ctx.lineWidth = bubble.outlineWidth;
-    const oss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
-    ctx.font = oss;
-    ctx.lineJoin = 'round';
+    if (0 < bubble.outlineWidth) {
+      const ocolor = new paper.Color(bubble.outlineColor);
+      ocolor.alpha = 1;
+      ctx.strokeStyle = ocolor.toCSS(true);
+      ctx.lineWidth = bubble.outlineWidth;
+      const oss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+      ctx.font = oss;
+      ctx.lineJoin = 'round';
 
-    const [x, y] = [w * dpr * 0.5 - tw * 0.5, h * dpr * 0.5 - th * 0.5];
 
-    if (bubble.direction == 'v') {
-      drawVerticalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
-    } else {
-      drawHorizontalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, m);
+      if (bubble.direction == 'v') {
+        drawVerticalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
+      } else {
+        drawHorizontalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, m);
+      }
     }
 
     // 本体

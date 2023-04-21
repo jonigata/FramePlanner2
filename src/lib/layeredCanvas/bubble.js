@@ -15,7 +15,7 @@ export class Bubble {
     this.fontStyle = "normal";
     this.fontWeight = "400";
     this.fontSize = 26;
-    this.fontFamily = "Shippori Mincho";
+    this.fontFamily = "Noto Sans JP";
     this.direction = 'v';
     this.fontColor = '#000000FF';
     this.fillColor = '#ffffffE6';
