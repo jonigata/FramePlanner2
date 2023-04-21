@@ -59,21 +59,32 @@ export const frameExamples = [
         height: 100,
         row: [
           { width: 2, visibility: 0  },
-          {
+          { 
             width: 3,
             column: [
-              { height: 2, divider: { spacing: 1, slant: 0 }  },
               {
-                height: 8, divider: { spacing: 1, slant: 0 }, 
+                height: 5,
+                column: [
+                  { height: 2, divider: { spacing: 1, slant: 0 }  },
+                ],
+                divider: { spacing: 2, slant: 0 }
               },
               {
-                height: 8, divider: { spacing: 1, slant: 0 }, 
-              },
-              {
-                height: 8, divider: { spacing: 1, slant: 0 }, 
-              },
-              {
-                height: 8,
+                height: 100,
+                column: [
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8,
+                  },
+                ],
               },
             ],
           },
@@ -85,22 +96,27 @@ export const frameExamples = [
   },
   { // 4コマ2段
     bgColor: "white",
+    height: 100,
     column: [
       { height: 4, visibility: 0  },
       {
+        bgColor: "white",
         height: 100,
         row: [
-          { width: 8, visibility: 0  },
-          {
-            bgColor: "white",
-            width: 100,
-            row: [
+          { width: 1, visibility: 0  },
+          { 
+            width: 5,
+            column: [
               {
-                width: 3,
+                height: 5,
                 column: [
-                  {
-                    height: 2, divider: { spacing: 1, slant: 0 }, 
-                  },
+                  { height: 2, divider: { spacing: 1, slant: 0 }  },
+                ],
+                divider: { spacing: 2, slant: 0 }
+              },
+              {
+                height: 100,
+                column: [
                   {
                     height: 8, divider: { spacing: 1, slant: 0 }, 
                   },
@@ -116,18 +132,21 @@ export const frameExamples = [
                 ],
               },
             ],
-            divider: { spacing: 8, slant: 0 }, 
+            divider: { spacing: 1, slant: 0 },
           },
-          {
-            bgColor: "white",
-            width: 100,
-            row: [
+          { 
+            width: 5,
+            column: [
               {
-                width: 3,
+                height: 5,
                 column: [
-                  {
-                    height: 2, divider: { spacing: 1, slant: 0 }, 
-                  },
+                  { height: 2, divider: { spacing: 1, slant: 0 }  },
+                ],
+                divider: { spacing: 2, slant: 0 }
+              },
+              {
+                height: 100,
+                column: [
                   {
                     height: 8, divider: { spacing: 1, slant: 0 }, 
                   },
@@ -142,14 +161,13 @@ export const frameExamples = [
                   },
                 ],
               },
-            ]
+            ],
           },
-
-          { width: 8, visibility: 0  }
-        ],
+          { width: 1, visibility: 0  },
+        ]
       },
       { height: 4, visibility: 0  },
-    ],
+    ]
   },
   { // オーソドックス2
     bgColor: "white",
