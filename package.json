@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@neodrag/svelte": "^2.0.3",
+    "@sentry/svelte": "^7.49.0",
     "@svelte-web-fonts/google": "^1.0.4",
     "css-font-parser": "^2.0.0",
     "firebase": "^9.18.0",
