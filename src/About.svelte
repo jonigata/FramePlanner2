@@ -15,8 +15,6 @@
 
 <Drawer open={$aboutOpen} size="600px" on:clickAway={() => $aboutOpen = false}>
   <div class="drawer-content">
-    <button >showComic</button>
-
     <h2>FramePlanner</h2>
 
     <p>
