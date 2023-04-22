@@ -23,6 +23,7 @@
   });
 
   function edit(element) {
+    console.log(element.target);
     element.target.select();
     editing = true;
   }

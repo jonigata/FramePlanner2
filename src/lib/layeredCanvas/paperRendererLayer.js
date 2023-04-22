@@ -2,7 +2,7 @@ import { Layer } from "./layeredCanvas.js";
 import { drawBubble, getPath, drawPath } from "./bubbleGraphic.js";
 import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
-import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
+import { drawText, measureText } from "./drawText.js";
 import { multiply2D } from "./geometry.js";
 import * as paper from 'paper';
 
@@ -217,6 +217,7 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate(...bubble.center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
+    this.drawBubble(ctx, rect, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text) {
@@ -262,35 +263,39 @@ export class PaperRendererLayer extends Layer {
     // TODO: キャッシュにつかえる
     if (!bubble.tmpCanvas) {
       bubble.tmpCanvas = document.createElement('canvas');
+      //bubble.tmpCanvas = document.getElementById('tmpCanvas');
       bubble.tmpCtx = bubble.tmpCanvas.getContext('2d');
     }
 
     const canvas = bubble.tmpCanvas;
     const ctx = bubble.tmpCtx;
 
-    const [cx, cy] = bubble.offset;
-    const m = bubble.direction === 'v' ?
-      measureVerticalText(ctx, h * 0.85, bubble.text, baselineSkip, charSkip) :
-      measureHorizontalText(ctx, w * 0.85, bubble.text, baselineSkip);
-    const [tw, th] = [m.width, m.height];
     const dpr = window.devicePixelRatio;
-    const [x, y] = [w * dpr * 0.5 - tw * 0.5, h * dpr * 0.5 - th * 0.5];
-    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+    const [pw, ph] = [w * dpr, h * dpr];
+    if (pw <= 0 || ph <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
+    canvas.width = pw;
+    canvas.height = ph;
 
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    if (canvas.width <= 0 || canvas.height <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
+    /*
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, pw-1, ph-1);
+    */
+
+    ctx.translate(pw * 0.5, ph * 0.5);
+    ctx.scale(dpr, dpr);
+
+    const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, bubble.text, baselineSkip, charSkip);
+    const [tw, th] = [m.width, m.height];
+    const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
+    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
 
     // 本体
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = bubble.fontColor;
     ctx.font = ss;
-
-    if (bubble.direction == 'v') {
-      drawVerticalText(ctx, 'fill', { x, y, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
-    } else {
-      drawHorizontalText(ctx, 'fill', { x, y, width: tw, height: th }, bubble.text, baselineSkip, m);
-    }
+    drawText(bubble.direction, ctx, 'fill', r, bubble.text, baselineSkip, charSkip, m);
 
     // フチ
     if (0 < bubble.outlineWidth) {
@@ -299,16 +304,12 @@ export class PaperRendererLayer extends Layer {
       ctx.lineWidth = bubble.outlineWidth;
       ctx.font = ss;
       ctx.lineJoin = 'round';
-
-      if (bubble.direction == 'v') {
-        drawVerticalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, charSkip);
-      } else {
-        drawHorizontalText(ctx, 'stroke', { x, y, width: tw, height: th }, bubble.text, baselineSkip, m);
-      }
+      drawText(bubble.direction, ctx, 'stroke', r, bubble.text, baselineSkip, charSkip, m);
     }
 
     // 描き戻し
-    targetCtx.drawImage(canvas, w * -0.5, h * -0.5, ...bubble.size);
+    const [cx, cy] = bubble.offset;
+    targetCtx.drawImage(canvas, cx - w * 0.5, cy - h * 0.5, ...bubble.size);
   }
 
   uniteBubble(bubbles) {

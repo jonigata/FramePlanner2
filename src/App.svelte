@@ -59,6 +59,7 @@
 <div class="control-panel-container">
   <ControlPanel />
   <PassiveToolTip />
+  <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
 </div>
 
 <BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
