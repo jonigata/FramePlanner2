@@ -520,28 +520,17 @@ export function makeBorderTrapezoid(layout, index) {
 function makeHorizontalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
-    const cox0 = curr.origin[0] + curr.size[0];
-    const coy0 = curr.origin[1];
-    const cox1 = prev.origin[0];
-    const coy1 = curr.origin[1] + curr.size[1];
 
     const corners = {
-        topLeft: [cox0 - BORDER_WIDTH, coy0],
-        topRight: [cox1 + BORDER_WIDTH, coy0],
-        bottomLeft: [cox0 - BORDER_WIDTH, coy1],
-        bottomRight: [cox1 + BORDER_WIDTH, coy1],
+        topLeft: curr.corners.topRight,
+        topRight: prev.corners.topLeft,
+        bottomLeft: curr.corners.bottomRight,
+        bottomRight: prev.corners.bottomLeft,
     }
-
-    const h = layout.size[1];
-    const rad = Math.PI / 180;
-    const slant = prev.element.divider.slant;
-    if (slant != 0) {
-        const dx = Math.cos(Math.PI*0.5 + slant * rad) * (h * 0.5);
-        corners.topLeft[0] -= dx;
-        corners.topRight[0] -= dx;
-        corners.bottomLeft[0] += dx;
-        corners.bottomRight[0] += dx;
-    }
+    corners.topLeft[0] -= BORDER_WIDTH;
+    corners.topRight[0] += BORDER_WIDTH;
+    corners.bottomLeft[0] -= BORDER_WIDTH;
+    corners.bottomRight[0] += BORDER_WIDTH;
 
     return corners;
 }
@@ -549,28 +538,17 @@ function makeHorizontalBorderTrapezoid(layout, index) {
 function makeVerticalBorderTrapezoid(layout, index) {
     const prev = layout.children[index - 1];
     const curr = layout.children[index];
-    const cox0 = curr.origin[0];
-    const coy0 = prev.origin[1] + prev.size[1];
-    const cox1 = curr.origin[0] + curr.size[0];
-    const coy1 = curr.origin[1];
 
     const corners = {
-        topLeft: [cox0, coy0 - BORDER_WIDTH],
-        topRight: [cox1, coy0 - BORDER_WIDTH],
-        bottomLeft: [cox0, coy1 + BORDER_WIDTH],
-        bottomRight: [cox1, coy1 + BORDER_WIDTH],
+        topLeft: prev.corners.bottomLeft,
+        topRight: prev.corners.bottomRight,
+        bottomLeft: curr.corners.topLeft,
+        bottomRight: curr.corners.topRight,
     }
-
-    const w = layout.size[0];
-    const rad = Math.PI / 180;
-    const slant = prev.element.divider.slant;
-    if (slant != 0) {
-        const dy = Math.sin(slant * rad) * (w * 0.5);
-        corners.topRight[1] -= dy;
-        corners.bottomRight[1] -= dy;
-        corners.topLeft[1] += dy;
-        corners.bottomLeft[1] += dy;
-    }
+    corners.topLeft[1] -= BORDER_WIDTH;
+    corners.topRight[1] -= BORDER_WIDTH;
+    corners.bottomLeft[1] += BORDER_WIDTH;
+    corners.bottomRight[1] += BORDER_WIDTH;
 
     return corners;
 }
