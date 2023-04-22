@@ -259,7 +259,6 @@ export class PaperRendererLayer extends Layer {
     const baselineSkip = bubble.fontSize * 1.5;
     const charSkip = bubble.fontSize;
 
-
     // TODO: キャッシュにつかえる
     if (!bubble.tmpCanvas) {
       bubble.tmpCanvas = document.createElement('canvas');
@@ -280,6 +279,7 @@ export class PaperRendererLayer extends Layer {
 
     canvas.width = w * dpr;
     canvas.height = h * dpr;
+    if (canvas.width <= 0 || canvas.height <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
 
     // 本体
     ctx.globalCompositeOperation = 'source-over';

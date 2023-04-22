@@ -148,6 +148,7 @@ export class LayeredCanvas {
         this.pointerCursor = this.getPaperPosition(event);
         event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
         var file = event.dataTransfer.files[0];
+        if (!file) return; // 選択テキストのドロップなど
 
         if (!file.type.match(/^image\/(png|jpeg|gif)$/)) return;
 
