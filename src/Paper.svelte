@@ -287,9 +287,15 @@
 
   export function save() {
     console.log("save");
+    function zeropadding(n) {
+      return n < 10 ? "0" + n : n;
+    }
+
     swapCanvas(async (c) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
-      saveCanvas(c, "comic.png", latestJson);
+      const date = new Date();
+      const filename = `comic-${date.toLocaleDateString('sv-SE')}-${zeropadding(date.getHours())}-${zeropadding(date.getMinutes())}-${zeropadding(date.getSeconds())}.png`;
+      saveCanvas(c, filename, latestJson);
     });
   }
   
