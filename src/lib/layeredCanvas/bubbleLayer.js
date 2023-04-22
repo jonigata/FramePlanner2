@@ -1101,7 +1101,8 @@ export class BubbleLayer extends Layer {
 
   getGroupMaster(bubble) {
     if (bubble.parent) {
-      return this.bubbles.find((b) => b.uuid === bubble.parent);
+      const parent =  this.bubbles.find((b) => b.uuid === bubble.parent);
+      if (parent) {return parent;}
     }
     return bubble;
   }
