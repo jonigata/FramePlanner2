@@ -25,6 +25,7 @@
     font-family: "Kosugi Maru", sans-serif;
     font-size: 22px;
     color: #FFCB44;
+    z-index: 9999;
   }
 
   .tooltip-container.active {
