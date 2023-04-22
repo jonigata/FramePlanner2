@@ -1,10 +1,22 @@
 <script type="ts">
   import Drawer from 'svelte-drawer-component';
   import { aboutOpen } from './aboutStore';
+  import { Modal, modalStore } from '@skeletonlabs/skeleton';
+  import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';    
+
+  function showComic() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'comic',
+    };
+    modalStore.trigger(d);    
+  }
 </script>
 
 <Drawer open={$aboutOpen} size="600px" on:clickAway={() => $aboutOpen = false}>
   <div class="drawer-content">
+    <button >showComic</button>
+
     <h2>FramePlanner</h2>
 
     <p>
@@ -21,6 +33,9 @@
     <p>
       紹介記事: <a href="https://blogcake.net/ai-comic/" target="_blank" rel="noopener noreferrer">AIで漫画を描く！？FramePlannerで作る漫画の作り方</a>
     </p>
+
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <p><span class="comic-link" on:click={showComic}>はじめてのFramePlanner</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)</p>
   
     <h2>チートシート</h2>
 
@@ -100,5 +115,10 @@
   }
   dd {
     margin-left: 32px;
+  }
+  .comic-link {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #0000ff;
   }
 </style>

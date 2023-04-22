@@ -11,9 +11,16 @@
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
   import JsonEditor from './JsonEditor.svelte';
   import { onMount } from 'svelte';
-
   import * as Sentry from "@sentry/svelte";
+  import { Modal, modalStore } from '@skeletonlabs/skeleton';
+  import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';   
+  import Comic from './Comic.svelte'; 
 
+  const modalComponentRegistry: Record<string, ModalComponent> = {
+    comic: {
+      ref: Comic,
+    },
+  };
 
   onMount(() => {
     document.body.style.overflow = 'hidden'; // HACK
@@ -62,3 +69,4 @@
 
 <Toast/>
 
+<Modal components={modalComponentRegistry} />
