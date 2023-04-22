@@ -71,6 +71,7 @@
     const h = history[historyIndex-1];
     frameLayer.frameTree = h.frameTree.clone();
     bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
+    bubbleLayer.selected = null;
     layeredCanvas.redraw(); 
   }
 
@@ -85,6 +86,7 @@
     const h = history[historyIndex-1];
     frameLayer.frameTree = h.frameTree.clone();
     bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
+    bubbleLayer.selected = null;
     layeredCanvas.redraw(); 
   }
 
@@ -120,6 +122,7 @@
     const paperSize = frameLayer.getPaperSize();
     bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(paperSize, b));
     bubbleLayer.selected = null;
+    commit();
 
     layeredCanvas.redraw();
   }

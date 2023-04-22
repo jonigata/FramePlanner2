@@ -318,6 +318,7 @@ export class BubbleLayer extends Layer {
     navigator.clipboard.read().then((items) => {
       for (let item of items) {
         for (let type of item.types) {
+          console.log(type);
           if (type === "text/plain") {
             item.getType(type).then((blob) => {
               blob.text().then((text) => {
