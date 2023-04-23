@@ -26,9 +26,7 @@ export class ClickableIcon {
     ClickableIcon.tmpCtx.drawImage(this.image, 0, 0);
 
     ctx.save();
-    const position = [...this.position];
-    position[0] -= this.pivot[0] * this.size[0];
-    position[1] -= this.pivot[1] * this.size[1];
+    const position = this.pivotPosition;
     ctx.shadowColor = '#404040';
     ctx.shadowBlur = 3;
     ctx.drawImage(ClickableIcon.tmpCanvas,...position,...this.size);
@@ -37,18 +35,23 @@ export class ClickableIcon {
 
   contains(p) {
     if (!this.isVisible()) return false;
-    let [x,y] = [...this.position];
-    x -= this.pivot[0] * this.size[0];
-    y -= this.pivot[1] * this.size[1];
+    let [x,y] = this.pivotPosition;
     const [w,h] = this.size;
     const f = x <= p[0] && p[0] <= x + w && y <= p[1] && p[1] <= y + h;
     return f;
   }
 
   get center() {
-    const x = this.position[0] + this.size[0] / 2;
-    const y = this.position[1] + this.size[1] / 2;
-    return [x, y];
+    let [x,y] = this.pivotPosition;
+    const [w,h] = this.size;
+    return [x + w / 2, y + h / 2];
+  }
+
+  get pivotPosition() {
+    let [x,y] = this.position;
+    x -= this.pivot[0] * this.size[0];
+    y -= this.pivot[1] * this.size[1];
+    return [x,y];
   }
 
   get hintPosition() {

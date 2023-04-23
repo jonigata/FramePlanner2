@@ -267,6 +267,7 @@ export class Bubble {
   }
 
   initOptions() {
+    console.log("initOptions");
     const [cx,cy] = this.center;
     const [w, h] = this.size;
     for (const option of Object.keys(this.optionSet)) {

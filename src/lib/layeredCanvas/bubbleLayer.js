@@ -95,7 +95,7 @@ export class BubbleLayer extends Layer {
         this.drawOptionUI(ctx, this.selected);
       }
       catch (e) {
-        console.log(e, this.selected.optionEditActive, this.selected.optionContext);
+        console.log(e, this.optionEditActive, this.selected);
         throw e;
       }
     }
@@ -200,26 +200,26 @@ export class BubbleLayer extends Layer {
       ctx.lineTo(px + bubble.optionContext.focalRange[0], py + bubble.optionContext.focalRange[1]);
       ctx.stroke();
     }
-    if (this.selected) {
-      for (let b of this.bubbles) {
-        if (b === this.selected) {continue;}
 
-        if (this.getGroupMaster(b) === this.getGroupMaster(this.selected)) {
-          ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(...b.center);
-          ctx.lineTo(...this.selected.center);
-          ctx.stroke();
-        }
+    for (let b of this.bubbles) {
+      if (b === bubble) {continue;}
+
+      if (this.getGroupMaster(b) === this.getGroupMaster(bubble)) {
+        ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(...b.center);
+        ctx.lineTo(...bubble.center);
+        ctx.stroke();
       }
     }
+
     if (this.optionEditActive.link) {
       ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
       for (let b of this.bubbles) {
-        if (b === this.selected) {continue;}
+        if (b === bubble) {continue;}
         if (!b.optionSet.link) {continue;}
-        if (this.getGroupMaster(b) === this.getGroupMaster(this.selected)) {continue;}
+        if (this.getGroupMaster(b) === this.getGroupMaster(bubble)) {continue;}
         ctx.lineWidth = 5;
         ctx.strokeRect(...b.p0, ...b.size);
       }

@@ -17,8 +17,6 @@ export function toolTip(node, message) {
     toolTipRequest.set(null);
   }
   
-  console.log("setup tooltip");
-
   node.addEventListener("mouseenter", handleMouseEnter);
   node.addEventListener("mouseleave", handleMouseLeave);
 
