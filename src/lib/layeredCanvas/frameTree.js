@@ -351,12 +351,14 @@ function calculatePhysicalLayoutLeaf(element, rawSize, rawOrigin, rawCorners) {
     const leftLine = line(rawCorners.topLeft, rawCorners.bottomLeft, [padding.left * w, 0]);
     const rightLine = line(rawCorners.topRight, rawCorners.bottomRight, [-padding.right * w, 0]);
 
+    // 長さが0のときは交点を作れない
     const corners = {
-        topLeft: intersection(topLine, leftLine),
-        topRight: intersection(topLine, rightLine),
-        bottomLeft: intersection(bottomLine, leftLine),
-        bottomRight: intersection(bottomLine, rightLine), 
+        topLeft: intersection(topLine, leftLine) || rawCorners.topLeft,
+        topRight: intersection(topLine, rightLine) || rawCorners.topRight,
+        bottomLeft: intersection(bottomLine, leftLine) || rawCorners.bottomLeft,
+        bottomRight: intersection(bottomLine, rightLine) || rawCorners.bottomRight, 
     }
+
     return { size, origin, rawSize, rawOrigin, element, corners };
 }
 
