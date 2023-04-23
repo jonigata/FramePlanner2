@@ -56,7 +56,6 @@
 <div
   class="container"
   bind:this="{container}"
-  on:click="{edit}"
 >
   <div class="edit-and-slider" style="width: {containerWidth}px;">
     <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
