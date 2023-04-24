@@ -150,7 +150,9 @@
 
   $:onChangeBubble($bubble);
   function onChangeBubble(b) {
+    // フォント読み込みが遅れるようなのでヒューリスティック
     setTimeout(() => layeredCanvas.redraw(), 2000);
+    setTimeout(() => layeredCanvas.redraw(), 5000);
   }
 
   function outputDocument() {
