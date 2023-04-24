@@ -148,6 +148,11 @@
     layeredCanvas.redraw();
   }
 
+  $:onChangeBubble($bubble);
+  function onChangeBubble(b) {
+    setTimeout(() => layeredCanvas.redraw(), 2000);
+  }
+
   function outputDocument() {
     const paperSize = frameLayer.getPaperSize();
     documentOutput = {
