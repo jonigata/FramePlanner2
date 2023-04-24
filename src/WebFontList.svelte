@@ -112,7 +112,7 @@
   let filteredFonts = fonts;
 
   function chooseFont(event, fontFamily, fontWeight) {
-    dispatch('choose', { fontFamily, fontWeight });
+    dispatch('choose', { event, fontFamily, fontWeight });
   }
 
   $:filterFonts(searchOptions);

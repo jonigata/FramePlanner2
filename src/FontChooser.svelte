@@ -24,8 +24,10 @@
   }
 
   function onChangeFont(event) {
-    $fontChooserOpen = false;
     chosenFont.set(event.detail);
+    if (!event.detail.event.ctrlKey) {
+      $fontChooserOpen = false;
+    }
   }
 
   function addHistory(fontFamily) {
