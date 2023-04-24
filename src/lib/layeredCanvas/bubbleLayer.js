@@ -1138,6 +1138,13 @@ export class BubbleLayer extends Layer {
   }
 
   selectBubble(bubble) {
+    for (let a of Object.keys(this.optionEditActive)) {
+      if (this.optionEditActive[a]) {
+        this.redraw();
+        return;
+      }
+    }
+
     this.unfocus();
     this.selected = bubble;
     this.setIconPositions();
