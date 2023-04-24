@@ -1,5 +1,7 @@
 <script lang="ts">
   import { toolTipRequest } from "./passiveToolTipStore";
+  import { fontChooserOpen } from './fontStore';
+  import { aboutOpen } from './aboutStore';
 </script>
 
 <div
@@ -8,7 +10,7 @@
   style="top: {$toolTipRequest?.position.y}px; left: {$toolTipRequest?.position.x}px"
 >
   <div class="tooltip">
-    {#if $toolTipRequest}
+    {#if $toolTipRequest && !fontChooserOpen && !aboutOpen}
       {$toolTipRequest.message}
     {/if}
   </div>

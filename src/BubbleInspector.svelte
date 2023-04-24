@@ -7,9 +7,8 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { tick } from 'svelte';
-  import { SlideToggle } from '@skeletonlabs/skeleton';
   import { toolTip } from './passiveToolTipStore';
-  import { fontChooserOpened, chosenFont } from './fontStore';
+  import { fontChooserOpen, chosenFont } from './fontStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -96,7 +95,7 @@
 
     <div class="hbox gap-x-2 expand">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpened = true}>{bubble.fontFamily}</div>
+      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{bubble.fontFamily}</div>
       <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
           <RadioItem bind:group={bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
@@ -253,28 +252,4 @@
     height: 15px;
     border-radius: 4px;
   }
-  .drawer-content {
-    position: relative;
-  }
-  .drawer-page-right {
-    position: absolute;
-    right: 16px;
-    top: 16px;
-  }
-  .drawer-page-left {
-    position: absolute;
-    left: 16px;
-    top: 16px;
-  }
-  .custom-font-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    align-items: center;
-    padding: 32px;
-  }
-  .font-sample {
-    font-size: 22px;
-  }
-
 </style>

@@ -154,6 +154,7 @@
 <style>
   .font-sample {
     font-size: 22px;
+    cursor: pointer;
   }
   span:hover {
     color: rgb(128, 93, 47);

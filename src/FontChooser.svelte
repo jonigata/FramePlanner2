@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Drawer, drawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
+  import Drawer from 'svelte-drawer-component';
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import HistoryStorage from './HistoryStorage.svelte';
   import WebFontList from './WebFontList.svelte';
-  import { fontChooserOpened, chosenFont } from './fontStore';
+  import { fontChooserOpen, chosenFont } from './fontStore';
   import trash from './assets/trash.png';
 
   let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
@@ -15,7 +15,7 @@
   let historyStorage;
 
   function setLocalFont() {
-    drawerStore.close();
+    $fontChooserOpen = false;
     if (localFontName) {
       console.log(localFontName);
       chosenFont.set({ fontFamily: localFontName, fontWeight: '400' })
@@ -24,7 +24,7 @@
   }
 
   function onChangeFont(event) {
-    drawerStore.close();
+    $fontChooserOpen = false;
     chosenFont.set(event.detail);
   }
 
@@ -45,29 +45,11 @@
     }
   }
 
-  drawerStore.subscribe((drawerSettings) => {
-    if (!drawerSettings.open) {
-      $fontChooserOpened = false;
-    }
-  });
-
   function allOff() {
     searchOptions.mincho = false;
     searchOptions.gothic = false;
     searchOptions.normal = false;
     searchOptions.bold = false;
-  }
-
-  $:chooseFont($fontChooserOpened);
-  function chooseFont(f) {
-    if (f) {
-      const settings: DrawerSettings = {
-        position: 'right',
-        width: 'w-[720px]',
-        id: 'font'
-      };
-      drawerStore.open(settings);
-    }
   }
 
   onMount(async () => {
@@ -79,7 +61,8 @@
 
 </script>
 
-<Drawer>
+<div class="drawer-outer">
+  <Drawer open={$fontChooserOpen} placement="right" size="720px" on:clickAway={() => $fontChooserOpen = false}>
   <div class="drawer-content">
     {#if drawerPage === 0}
     <button class="drawer-page-right px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={() => drawerPage = 1}>ローカル &gt;</button>
@@ -105,15 +88,51 @@
     </div>
     {/if}
     {#each localFonts as font}
-        <div class="font-sample hbox" style="font-family: '{font}'">
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <span on:click={e=>onChangeFont({detail:{fontWeight:"400",fontFamily:font}})}>{font} 今日はいい天気ですね</span>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
-        </div>
+      <div class="font-sample hbox" style="font-family: '{font}'">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <span on:click={e=>onChangeFont({detail:{fontWeight:"400",fontFamily:font}})}>{font} 今日はいい天気ですね</span>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
+      </div>
     {/each}
   </div>
 </Drawer>
+</div>
 
 <HistoryStorage bind:this={historyStorage}/>
+
+<style> 
+  .drawer-outer :global(.drawer .panel) {
+    background-color: rgb(var(--color-surface-100));
+  }
+  .drawer-content {
+    position: relative;
+  }
+  .drawer-page-right {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+  }
+  .drawer-page-left {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+  }
+  .custom-font-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    align-items: center;
+    padding: 32px;
+  }
+  .font-sample {
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .font-sample img {
+    margin-left: 8px;
+    cursor: pointer;
+  }
+
+</style>
 

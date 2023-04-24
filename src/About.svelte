@@ -13,6 +13,8 @@
   }
 </script>
 
+
+<div class="drawer-outer">
 <Drawer open={$aboutOpen} size="600px" on:clickAway={() => $aboutOpen = false}>
   <div class="drawer-content">
     <h2>FramePlanner</h2>
@@ -86,6 +88,7 @@
     
   </div>
 </Drawer>
+</div>
 
 <style>
   .drawer-content {
@@ -118,5 +121,9 @@
     cursor: pointer;
     text-decoration: underline;
     color: #0000ff;
+  }
+
+  .drawer-outer :global(.drawer .panel) {
+    background-color: rgb(var(--color-surface-100));
   }
 </style>
