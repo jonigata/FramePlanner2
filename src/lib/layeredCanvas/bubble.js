@@ -25,9 +25,14 @@ export class Bubble {
     this.outlineColor = "#000000FF";
     this.uuid = uuidv4();
     this.parent = null;
+    this.creationContext = this.getStackTrace();
 
     this.image = null;
     this.optionContext = {};
+  }
+
+  getStackTrace() {
+    return Error().stack;
   }
 
   clone() {

@@ -271,7 +271,7 @@ export class PaperRendererLayer extends Layer {
     const ctx = bubble.tmpCtx;
 
     const dpr = window.devicePixelRatio;
-    const [pw, ph] = [w * dpr, h * dpr];
+    const [pw, ph] = [Math.floor(w * dpr), Math.floor(h * dpr)];
     if (pw <= 0 || ph <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
     canvas.width = pw;
     canvas.height = ph;
