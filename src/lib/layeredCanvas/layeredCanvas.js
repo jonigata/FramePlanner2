@@ -11,7 +11,6 @@ export class LayeredCanvas {
         this.canvas.paper.scale = [1, 1];
         this.context = this.canvas.getContext('2d');
 
-
         this.canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this));
         this.canvas.addEventListener('pointermove', this.handlePointerMove.bind(this));
         this.canvas.addEventListener('pointerup', this.handlePointerUp.bind(this));
@@ -273,6 +272,7 @@ export class LayeredCanvas {
 let pointerSequence = { // mixin
     pointerDown(p, payload) {
         this.pointerHandler = this.pointer(p, payload);
+        this.pointerHandler.next(null);
     },
     pointerMove(p, payload) {
         if (this.pointerHandler) {
