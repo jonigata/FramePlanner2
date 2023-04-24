@@ -2,7 +2,7 @@
   import { draggable } from '@neodrag/svelte';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import BubbleChooser from './BubbleChooser.svelte';
+  import BubbleSample from './BubbleSample.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
@@ -17,6 +17,7 @@
   import pinIcon from './assets/pin.png';
   import embeddedIcon from './assets/embedded.png';
   import unembeddedIcon from './assets/unembedded.png';
+  import { bubbleChooserOpen } from './bubbleStore';
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -76,6 +77,10 @@
     adjustedPosition = {x: offsetX, y: offsetY};
   }
 
+  function chooseShape() {
+    $bubbleChooserOpen = true;
+  }
+
 </script>
 
 {#if bubble}
@@ -120,16 +125,16 @@
       <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={bubble.outlineColor} label="" /></span>
     </div>
 
-    <textarea
-      class="my-2 rounded-container-token textarea" 
-      bind:value={bubble.text}
-      bind:this={textarea}/>
-    <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
-    <div class="template-chooser-container">
-      <BubbleChooser paperWidth={64} paperHeight={96} bind:selectedShape={shape} />
+    <div class="hbox expand gap-2">
+      <textarea
+        class="my-2 rounded-container-token textarea" 
+        bind:value={bubble.text}
+        bind:this={textarea}/>
+      <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
+      <BubbleSample width={64} height={96} bind:pattern={shape} on:click={chooseShape}/>
     </div>
 
-    <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
+    <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="hbox" use:toolTip={"フキダシ背景色"}>
         <div class="font-bold slider-label">fill</div>
         <ColorPicker bind:hex={bubble.fillColor} label="" />
@@ -163,7 +168,7 @@
     top: 800px;
     left: 50px;
     width: 350px;
-    height: 400px;
+    height: 250px;
     display: flex;
     flex-direction: column;
     padding: 8px;
