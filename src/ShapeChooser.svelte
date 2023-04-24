@@ -1,10 +1,27 @@
 <script lang="ts">
-  import Drawer from 'svelte-drawer-component';
-  import { shapeChooserOpen, chosenShape } from './shapeStore'
-  import BubbleSample from './BubbleSample.svelte';
+  import Drawer from "svelte-drawer-component";
+  import { shapeChooserOpen, chosenShape } from "./shapeStore";
+  import BubbleSample from "./BubbleSample.svelte";
 
   export let paperWidth = 96;
   export let paperHeight = 96;
+
+  const shapes = [
+    "square",
+    "rounded",
+    "soft",
+    "harsh",
+    "harsh-curve",
+    "ellipse",
+    "concentration",
+    "polygon",
+    "strokes",
+    "double-strokes",
+    "heart",
+    "diamond",
+    "motion-lines",
+    "none",
+  ];
 
   function choose(e, s) {
     $chosenShape = s;
@@ -15,17 +32,27 @@
 </script>
 
 <div class="drawer-outer">
-  <Drawer open={$shapeChooserOpen} placement="right" size="320px" on:clickAway={() => $shapeChooserOpen = false}>
+  <Drawer
+    open={$shapeChooserOpen}
+    placement="right"
+    size="320px"
+    on:clickAway={() => ($shapeChooserOpen = false)}
+  >
     <div class="drawer-content">
       ctrlキーを押しながらクリックで閉じずに選択
-      {#each ['square', 'rounded', 'soft', 'harsh', 'harsh-curve', 'ellipse', 'concentration', 'polygon', 'strokes', 'double-strokes', 'heart', 'diamond', 'motion-lines', 'none'] as s}
-        <BubbleSample width={paperWidth} height={paperHeight} pattern={s} on:click={(e)=>choose(e, s)}/>
+      {#each shapes as s}
+        <BubbleSample
+          width={paperWidth}
+          height={paperHeight}
+          pattern={s}
+          on:click={(e) => choose(e, s)}
+        />
       {/each}
     </div>
   </Drawer>
 </div>
 
-<style> 
+<style>
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
@@ -61,6 +88,4 @@
     margin-left: 8px;
     cursor: pointer;
   }
-
 </style>
-
