@@ -1,18 +1,15 @@
 <script type="ts">
   import { draggable } from '@neodrag/svelte';
   import NumberEdit from './NumberEdit.svelte';
-  import { Drawer, drawerStore } from '@skeletonlabs/skeleton';
-  import type { DrawerSettings } from '@skeletonlabs/skeleton';
   import './box.css';
-  import WebFontList from './WebFontList.svelte';
   import BubbleChooser from './BubbleChooser.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
-  import { onMount, tick } from 'svelte';
+  import { tick } from 'svelte';
   import { SlideToggle } from '@skeletonlabs/skeleton';
-  import HistoryStorage from './HistoryStorage.svelte';
   import { toolTip } from './passiveToolTipStore';
+  import { fontChooserOpened, chosenFont } from './fontStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -21,8 +18,6 @@
   import pinIcon from './assets/pin.png';
   import embeddedIcon from './assets/embedded.png';
   import unembeddedIcon from './assets/unembedded.png';
-  import trash from './assets/trash.png';
-
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -30,27 +25,7 @@
   let adjustedPosition = { x: 0, y: 0 };
   let pinned = true;
   let textarea = null;
-  let fontList = null;
-  let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
   let shape;
-
-  let drawerPage = 0;
-  let localFontName;
-
-  function chooseFont() {
-    const settings: DrawerSettings = {
-      position: 'right',
-      width: 'w-[720px]',
-      id: 'font'
-    };
-    drawerStore.open(settings);
-  }
-
-  function onChangeFont(event) {
-    drawerStore.close();
-    bubble.fontWeight = event.detail.fontWeight;
-    bubble.fontFamily = event.detail.fontFamily;
-  }
 
   $:move(position);
   function move(p) {
@@ -90,61 +65,18 @@
     }
   }
 
-  function resetPin() {
-    pinned = false;
-  }
-
-  function setPin() {
-    pinned = true;
+  $:onChangeFont($chosenFont);
+  function onChangeFont(f) {
+    if (bubble && f) {
+      bubble.fontFamily = f.fontFamily;
+      bubble.fontWeight = f.fontWeight;
+    }
   }
 
   function onDrag({offsetX, offsetY}) {
     adjustedPosition = {x: offsetX, y: offsetY};
   }
 
-  $:onChangeSearchOptions(searchOptions);
-  function onChangeSearchOptions(options) {
-    if (fontList) {
-      fontList.searchOptions = options;
-    }
-  }
-
-  function allOff() {
-    searchOptions.mincho = false;
-    searchOptions.gothic = false;
-    searchOptions.normal = false;
-    searchOptions.bold = false;
-  }
-
-  let historyStorage;
-  let localFonts = [];
-
-  onMount(async () => {
-    await historyStorage.isReady();
-    historyStorage.getAll().onsuccess = (e) => {
-      localFonts = e.target.result;
-    };
-  });
-
-  function setLocalFont() {
-    drawerStore.close();
-    if (localFontName) {
-      console.log(localFontName);
-      bubble.fontFamily = localFontName;
-      bubble.fontWeight = 400;
-      addHistory(localFontName);
-    }
-  }
-
-  function addHistory(fontFamily) {
-    historyStorage.add(fontFamily);
-    localFonts.push(fontFamily);
-  }
-
-  function removeFromHistory(fontFamily) {
-    historyStorage.remove(fontFamily);
-    localFonts = localFonts.filter((f) => f !== fontFamily);
-  }
 </script>
 
 {#if bubble}
@@ -155,16 +87,16 @@
       <div class="bubble-size">{Math.round(bubble.size[0])}x{Math.round(bubble.size[1])}</div>
       {#if pinned}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <img class="pin-image" src={whitePinIcon} alt="pin" on:click={resetPin} use:toolTip={"場所の固定"}/>
+      <img class="pin-image" src={whitePinIcon} alt="pin" on:click={() => pinned = false} use:toolTip={"場所の固定"}/>
       {:else}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <img class="pin-image" src={pinIcon} alt="pin" on:click={setPin} use:toolTip={"場所の固定"}/>
+      <img class="pin-image" src={pinIcon} alt="pin" on:click={() => pinned = true} use:toolTip={"場所の固定"}/>
       {/if}
     </div>
 
     <div class="hbox gap-x-2 expand">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={chooseFont}>{bubble.fontFamily}</div>
+      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpened = true}>{bubble.fontFamily}</div>
       <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
           <RadioItem bind:group={bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
@@ -220,45 +152,6 @@
   </div>
 </div>
 {/if}
-
-<Drawer>
-  <div class="drawer-content">
-    {#if drawerPage === 0}
-    <button class="drawer-page-right px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={() => drawerPage = 1}>ローカル &gt;</button>
-    {:else}
-    <button class="drawer-page-left px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={() => drawerPage = 0}>&lt; Webフォント</button>
-    {/if}
-    <h1>フォント</h1>
-    {#if drawerPage === 0}
-    <div class="hbox gap my-2">
-      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.mincho}></SlideToggle>明
-      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.gothic}></SlideToggle>ゴ
-      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.normal}></SlideToggle>N
-      <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.bold}></SlideToggle>B
-      <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={allOff}>すべてオフ</button>
-    </div>
-    <hr/>
-    <WebFontList on:choose={onChangeFont} bind:this={fontList}/>
-    {/if}
-    {#if drawerPage === 1}
-    <div class="custom-font-panel">
-      <input type="text" class="input px-2" bind:value={localFontName} placeholder="フォント名" />
-      <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={setLocalFont}>採用</button>
-    </div>
-    {/if}
-    {#each localFonts as font}
-        <div class="font-sample hbox" style="font-family: '{font}'">
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <span on:click={e=>onChangeFont({detail:{fontWeight:"400",fontFamily:font}})}>{font} 今日はいい天気ですね</span>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
-        </div>
-    {/each}
-  </div>
-</Drawer>
-
-<HistoryStorage bind:this={historyStorage}/>
-
 
 <style>
   .bubble-inspector-container {
