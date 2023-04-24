@@ -17,7 +17,7 @@
   import pinIcon from './assets/pin.png';
   import embeddedIcon from './assets/embedded.png';
   import unembeddedIcon from './assets/unembedded.png';
-  import { bubbleChooserOpen } from './bubbleStore';
+  import { shapeChooserOpen, chosenShape } from './shapeStore';
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -25,7 +25,6 @@
   let adjustedPosition = { x: 0, y: 0 };
   let pinned = true;
   let textarea = null;
-  let shape;
 
   $:move(position);
   function move(p) {
@@ -48,7 +47,7 @@
     if (b === oldBubble) {return;}
     oldBubble = b;
     if (b) {
-      shape = b.shape;
+      $chosenShape = b.shape;
       await tick();
       textarea.focus();
       textarea.select();
@@ -57,9 +56,9 @@
     }
   }
 
-  $:onChangeShape(shape);
+  $:onChangeShape($chosenShape);
   function onChangeShape(s) {
-    if (bubble) {
+    if (bubble && bubble.shape !== s) {
       bubble.shape = s;
       bubble.initOptions();
     }
@@ -67,7 +66,7 @@
 
   $:onChangeFont($chosenFont);
   function onChangeFont(f) {
-    if (bubble && f) {
+    if (bubble && f !== f.fontFamily) {
       bubble.fontFamily = f.fontFamily;
       bubble.fontWeight = f.fontWeight;
     }
@@ -78,7 +77,7 @@
   }
 
   function chooseShape() {
-    $bubbleChooserOpen = true;
+    $shapeChooserOpen = true;
   }
 
 </script>
@@ -131,7 +130,7 @@
         bind:value={bubble.text}
         bind:this={textarea}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
-      <BubbleSample width={64} height={96} bind:pattern={shape} on:click={chooseShape}/>
+      <BubbleSample width={64} height={96} bind:pattern={$chosenShape} on:click={chooseShape}/>
     </div>
 
     <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">
@@ -168,7 +167,7 @@
     top: 800px;
     left: 50px;
     width: 350px;
-    height: 250px;
+    height: 285px;
     display: flex;
     flex-direction: column;
     padding: 8px;
@@ -212,6 +211,7 @@
     box-sizing: border-box;
     line-height: 1.1;
     resize: none;
+    height: 120px;
   }
   .number-box {
     width: 35px;

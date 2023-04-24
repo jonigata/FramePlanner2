@@ -24,9 +24,9 @@
     drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], pattern);
   });
 
-  function click() {
+  function click(e) {
     console.log('click');
-    dispatch('click');
+    dispatch('click', e);
   }
 
 </script>

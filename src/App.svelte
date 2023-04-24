@@ -16,7 +16,7 @@
   import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';   
   import Comic from './Comic.svelte'; 
   import FontChooser from './FontChooser.svelte';
-  import BubbleChooser2 from './BubbleChooser2.svelte';
+  import ShapeChooser from './ShapeChooser.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -66,7 +66,7 @@
 
 <BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
 <FontChooser/>
-<BubbleChooser2 paperWidth={64} paperHeight={96}/>
+<ShapeChooser paperWidth={64} paperHeight={96}/>
 
 <JsonEditor/>
 
