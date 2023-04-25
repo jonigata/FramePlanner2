@@ -12,21 +12,26 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    // render
-    const ctx = canvas.getContext("2d");
-    // fill white
-    ctx.fillStyle = "white";
-    // stroke black
-    ctx.strokeStyle = "black";
-    ctx.bubbleDrawMethod = "fill";
-    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], pattern);
-    ctx.bubbleDrawMethod = "stroke";
-    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], pattern);
+    redraw(pattern);
   });
 
   function click(e) {
     console.log('click');
     dispatch('click', e);
+  }
+
+  $: redraw(pattern);
+  function redraw(p) {
+    if (!canvas) return;
+    console.log('redraw', p);
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.bubbleDrawMethod = "fill";
+    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p);
+    ctx.bubbleDrawMethod = "stroke";
+    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p);
   }
 
 </script>
