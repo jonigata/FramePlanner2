@@ -2,7 +2,7 @@ import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex } from "./bubbleGeometry.js";
-import { add2D, perpendicular2D, normalize2D, circularAngleToEllipseAngle } from "./geometry.js";
+import { reverse2D, add2D, perpendicular2D, normalize2D, circularAngleToEllipseAngle } from "./geometry.js";
 import { generateRandomAngles, generateSuperEllipsePoints, movePointsToRectCenter, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, rect, shape, opts) {
@@ -46,6 +46,15 @@ export function drawBubble(context, seed, rect, shape, opts) {
       break;
     case "motion-lines":
       drawMotionLinesBubble(context, seed, rect, opts);
+      break;
+    case "ellipse-mind":
+      drawEllipseMindBubble(context, seed, rect, opts);
+      break;
+    case "soft-mind":
+      drawSoftMindBubble(context, seed, rect, opts);
+      break;
+    case "rounded-mind":
+      drawRoundedMindBubble(context, seed, rect, opts);
       break;
     case "none":
       break;
@@ -263,6 +272,12 @@ export function getPath(shape, r, opts, seed) {
       return getHeartPath(r, opts, seed);
     case 'diamond':
       return getDiamondPath(r, opts, seed);
+    case 'ellipse-mind':
+      return getEllipseMindPath(r, opts, seed);
+    case 'soft-mind':
+      return getSoftMindPath(r, opts, seed);
+    case 'rounded-mind':
+      return getRoundedMindPath(r, opts, seed);
   }
   return null;
 }
@@ -354,7 +369,6 @@ function getHarshCurvePath(r, opts, seed) {
     const rawAngles = generateRandomAngles(rng, 12, 0.2);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
     const angles = rawAngles.map(x => circularAngleToEllipseAngle(r[2]*0.5, r[3]*0.5, x));
-    console.log("angle", rawAngles, angles);
     const tailIndex = findNearestAngleIndex(rawAngles, focusAngle);
     const rawPoints = generateSuperEllipsePoints(r, angles);
     points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.7, tailIndex * 2);
@@ -436,6 +450,33 @@ function getDiamondPath(r, opts, seed) {
   path.closed = true;
 
   return path;
+}
+
+function getEllipseMindPath(r, opts, seed) {
+  const newOpts = {...opts};
+  newOpts.tailTip = [0,0];
+  newOpts.tailMid = [0.5,0];
+  const path = getEllipsePath(r, newOpts, seed);
+  const path2 = addMind(path, seed, r, opts, newOpts);
+  return path2;
+}
+
+function getSoftMindPath(r, opts, seed) {
+  const newOpts = {...opts};
+  newOpts.tailTip = [0,0];
+  newOpts.tailMid = [0.5,0];
+  const path = getSoftPath(r, newOpts, seed);
+  const path2 = addMind(path, seed, r, opts, newOpts);
+  return path2;
+}
+
+function getRoundedMindPath(r, opts, seed) {
+  const newOpts = {...opts};
+  newOpts.tailTip = [0,0];
+  newOpts.tailMid = [0.5,0];
+  const path = getRoundedPath(r, newOpts, seed);
+  const path2 = addMind(path, seed, r, opts, newOpts);
+  return path2;
 }
 
 function addTrivialTail(path, r, opts) {
@@ -532,6 +573,21 @@ function drawDiamondBubble(context, seed, rect, opts) {
   drawPath(context, path);
 }
 
+function drawEllipseMindBubble(context, seed, rect, opts) {
+  const path = getEllipseMindPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawSoftMindBubble(context, seed, rect, opts) {
+  const path = getSoftMindPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
+function drawRoundedMindBubble(context, seed, rect, opts) {
+  const path = getRoundedMindPath(rect, opts, seed);
+  drawPath(context, path);
+}
+
 function drawPoints(context, points, color) {
   context.save();
   context.strokeStyle = color;
@@ -544,5 +600,22 @@ function drawPoints(context, points, color) {
   }
   context.stroke();
   context.restore();
+}
+
+function addMind(path, seed, rect, opts, newOpts) {
+  const trail = [[0.97, 0.04], [0.8, 0.05], [0.6, 0.08], [0.3, 0.12]];
+  const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
+  const m = tailCoordToWorldCoord(c, opts.tailTip, opts.tailMid);
+  const s = [c[0] + opts.tailTip[0], c[1] + opts.tailTip[1]];
+  const v = [s[0] - m[0], s[1] - m[1]];
+  const r = Math.min(rect[2], rect[3]) * 0.5;
+  for (let t of trail) {
+    const p = [m[0] + t[0] * v[0], m[1] + t[0] * v[1]];
+    const rt = r * t[1];
+    const rr = [p[0] - rt, p[1] - rt, rt * 2, rt * 2];
+    const path2 = getSoftPath(rr, newOpts, seed);
+    path = path.unite(path2);
+  }
+  return path;
 }
 

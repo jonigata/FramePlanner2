@@ -20,6 +20,9 @@
     "heart",
     "diamond",
     "motion-lines",
+    "ellipse-mind",
+    "soft-mind",
+    "rounded-mind",
     "none",
   ];
 
@@ -44,7 +47,7 @@
         <BubbleSample
           width={paperWidth}
           height={paperHeight}
-          pattern={s}
+          shape={s}
           on:click={(e) => choose(e, s)}
         />
       {/each}

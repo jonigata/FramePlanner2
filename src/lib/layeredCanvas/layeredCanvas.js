@@ -321,7 +321,7 @@ export class Layer {
     pointerHover(point) {}
     accepts(point) { return null; }
     unfocus() {}
-    pointerDown(point, payload) { console.log("A");}
+    pointerDown(point, payload) {}
     pointerMove(point, payload) {}
     pointerUp(point, payload) {}
     pointerCancel() {}

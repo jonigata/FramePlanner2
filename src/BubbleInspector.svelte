@@ -130,7 +130,7 @@
         bind:value={bubble.text}
         bind:this={textarea}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
-      <BubbleSample width={64} height={96} bind:pattern={$chosenShape} on:click={chooseShape}/>
+      <BubbleSample width={64} height={96} bind:shape={$chosenShape} on:click={chooseShape}/>
     </div>
 
     <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">

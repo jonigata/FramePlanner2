@@ -217,12 +217,15 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate(...bubble.center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
+
+    ctx.save();
     this.drawBubble(ctx, rect, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text) {
       this.drawText(ctx, bubble);
     }
+    ctx.restore();
 
     // shape枠描画
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";

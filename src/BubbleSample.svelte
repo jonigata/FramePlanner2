@@ -5,14 +5,14 @@
 
   export let width = 64;
   export let height = 96;
-  export let pattern = 'rounded';
+  export let shape = 'rounded';
 
   let canvas;
 
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    redraw(pattern);
+    redraw(shape);
   });
 
   function click(e) {
@@ -20,18 +20,23 @@
     dispatch('click', e);
   }
 
-  $: redraw(pattern);
+  $: redraw(shape);
   function redraw(p) {
     if (!canvas) return;
-    console.log('redraw', p);
+
+    const opts = {
+      tailTip: [-width*0.5, height*0.4],
+      tailMid: [0.5, 0],
+    }
+
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     ctx.bubbleDrawMethod = "fill";
-    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p);
+    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p, opts);
     ctx.bubbleDrawMethod = "stroke";
-    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p);
+    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p, opts);
   }
 
 </script>

@@ -20,7 +20,7 @@ export class Bubble {
     this.fontColor = '#000000FF';
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
-    this.strokeWidth = 2;
+    this.strokeWidth = 1;
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
     this.uuid = uuidv4();
@@ -300,5 +300,8 @@ export const bubbleOptionSets = {
     focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
     focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, Math.hypot(b.size[0]/2, b.size[1]/2) * 0.25] }
   },
+  "ellipse-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "soft-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "rounded-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "none": {},
 };
