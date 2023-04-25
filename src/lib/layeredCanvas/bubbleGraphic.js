@@ -547,8 +547,8 @@ function drawEllipseMindBubble(context, seed, rect, opts) {
   newOpts.tailTip = [0,0];
   newOpts.tailMid = [0.5,0];
   const path = getEllipsePath(rect, newOpts, seed);
-  drawMind(context, seed, rect, opts);
-  drawPath(context, path);
+  const path2 = addMind(path, seed, rect, opts, newOpts);
+  drawPath(context, path2);
 }
 
 function drawSoftMindBubble(context, seed, rect, opts) {
@@ -556,8 +556,8 @@ function drawSoftMindBubble(context, seed, rect, opts) {
   newOpts.tailTip = [0,0];
   newOpts.tailMid = [0.5,0];
   const path = getSoftPath(rect, newOpts, seed);
-  drawMind(context, seed, rect, opts);
-  drawPath(context, path);
+  const path2 = addMind(path, seed, rect, opts, newOpts);
+  drawPath(context, path2);
 }
 
 function drawPoints(context, points, color) {
@@ -577,7 +577,7 @@ function drawPoints(context, points, color) {
 function drawMind(context, seed, rect, opts) {
   if (context.bubbleDrawMethod !== 'fill') { return; }
   console.log("drawing mind");
-  const trail = [[0.95, 0.1], [0.85, 0.15]];
+  const trail = [[0.95, 0.07], [0.85, 0.09], [0.75, 0.11], [0.65, 0.13]];
   const v = opts.tailTip;
   const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
   const r = Math.min(rect[2], rect[3]) * 0.5;
@@ -591,5 +591,18 @@ function drawMind(context, seed, rect, opts) {
     context.stroke();
   }
   context.beginPath();
+}
+
+function addMind(path, seed, rect, opts, newOpts) {
+  const trail = [[0.95, 0.04], [0.85, 0.05], [0.75, 0.08], [0.60, 0.12]];
+  const v = opts.tailTip;
+  const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
+  const r = Math.min(rect[2], rect[3]) * 0.5;
+  for (let t of trail) {
+    const p = [c[0] + t[0] * v[0], c[1] + t[0] * v[1]];
+    const path2 = getSoftPath([p[0] - r * t[1], p[1] - r * t[1], r * t[1] * 2, r * t[1] * 2], newOpts, seed);
+    path = path.unite(path2);
+  }
+  return path;
 }
 
