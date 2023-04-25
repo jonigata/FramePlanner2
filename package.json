@@ -35,7 +35,6 @@
     "firebase": "^9.18.0",
     "paper": "^0.12.17",
     "seedrandom": "^3.0.5",
-    "svelte-drawer-component": "^1.2.2",
     "svelte-jsoneditor": "^0.16.1",
     "swiper": "^9.1.1",
     "uuid": "^9.0.0",

@@ -186,7 +186,7 @@
     height: 660px;
     display: flex;
     flex-direction: column;
-    top: 50px;
+    top: 20px;
     left: 20px;
   }
   .title-bar {
