@@ -10,7 +10,7 @@
   style="top: {$toolTipRequest?.position.y}px; left: {$toolTipRequest?.position.x}px"
 >
   <div class="tooltip">
-    {#if $toolTipRequest && !fontChooserOpen && !aboutOpen}
+    {#if $toolTipRequest && !$fontChooserOpen && !$aboutOpen}
       {$toolTipRequest.message}
     {/if}
   </div>
