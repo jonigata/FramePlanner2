@@ -50,6 +50,9 @@ export function drawBubble(context, seed, rect, shape, opts) {
     case "ellipse-mind":
       drawEllipseMindBubble(context, seed, rect, opts);
       break;
+    case "soft-mind":
+      drawSoftMindBubble(context, seed, rect, opts);
+      break;
     case "none":
       break;
     default:
@@ -267,6 +270,8 @@ export function getPath(shape, r, opts, seed) {
     case 'diamond':
       return getDiamondPath(r, opts, seed);
     case 'ellipse-mind':
+      return getEllipsePath(r, opts, seed);
+    case 'soft-mind':
       return getEllipsePath(r, opts, seed);
   }
   return null;
@@ -542,8 +547,17 @@ function drawEllipseMindBubble(context, seed, rect, opts) {
   newOpts.tailTip = [0,0];
   newOpts.tailMid = [0.5,0];
   const path = getEllipsePath(rect, newOpts, seed);
-  drawPath(context, path);
   drawMind(context, seed, rect, opts);
+  drawPath(context, path);
+}
+
+function drawSoftMindBubble(context, seed, rect, opts) {
+  const newOpts = {...opts};
+  newOpts.tailTip = [0,0];
+  newOpts.tailMid = [0.5,0];
+  const path = getSoftPath(rect, newOpts, seed);
+  drawMind(context, seed, rect, opts);
+  drawPath(context, path);
 }
 
 function drawPoints(context, points, color) {
@@ -561,26 +575,21 @@ function drawPoints(context, points, color) {
 }
 
 function drawMind(context, seed, rect, opts) {
-  const trail = [0.95, 0.85];
+  if (context.bubbleDrawMethod !== 'fill') { return; }
+  console.log("drawing mind");
+  const trail = [[0.95, 0.1], [0.85, 0.15]];
   const v = opts.tailTip;
   const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
-  const r = Math.min(rect[2], rect[3]) * 0.25;
+  const r = Math.min(rect[2], rect[3]) * 0.5;
   for (let t of trail) {
-    const p = [c[0] + t * v[0], c[1] + t * v[1]];
+    const p = [c[0] + t[0] * v[0], c[1] + t[0] * v[1]];
     context.beginPath();
-    context.arc(p[0], p[1], r * (1-t), 0, 2 * Math.PI);
-    context.closePath();
-    switch(context.bubbleDrawMethod) {
-      case 'fill':
-        context.fill();
-        break;
-      case 'stroke':
-        context.stroke();
-        break;
-      case 'clip':
-        //context.clip();
-        break;
-    }
+    context.arc(p[0], p[1], r * t[1], 0, 2 * Math.PI);
+    //context.closePath();
+
+    context.fill();
+    context.stroke();
   }
+  context.beginPath();
 }
 

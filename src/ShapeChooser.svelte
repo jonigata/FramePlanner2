@@ -21,6 +21,7 @@
     "diamond",
     "motion-lines",
     "ellipse-mind",
+    "soft-mind",
     "none",
   ];
 

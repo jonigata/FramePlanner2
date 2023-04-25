@@ -23,6 +23,7 @@ export class PaperRendererLayer extends Layer {
   }
 
   render(ctx) {
+    console.log("render");
     const size = this.getPaperSize();
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
 
@@ -217,12 +218,15 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate(...bubble.center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
+
+    ctx.save();
     this.drawBubble(ctx, rect, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text) {
       this.drawText(ctx, bubble);
     }
+    ctx.restore();
 
     // shape枠描画
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
@@ -244,6 +248,7 @@ export class PaperRendererLayer extends Layer {
   drawImage(ctx, layout) {
     const element = layout.element;
     const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+    console.log("drawImage", x1 - x0, y1 - y0, element.image.width * element.scale[0] * element.reverse[0], element.image.height * element.scale[1] * element.reverse[1]);
 
     ctx.save();
     ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
