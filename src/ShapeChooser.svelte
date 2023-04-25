@@ -22,6 +22,7 @@
     "motion-lines",
     "ellipse-mind",
     "soft-mind",
+    "rounded-mind",
     "none",
   ];
 

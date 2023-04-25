@@ -302,5 +302,6 @@ export const bubbleOptionSets = {
   },
   "ellipse-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "soft-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "rounded-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "none": {},
 };

@@ -13,7 +13,7 @@
 
   onMount(() => {
     const opts = {
-      tailTip: [-width*0.5, height*0.25],
+      tailTip: [-width*0.5, height*0.4],
       tailMid: [0.5, 0],
     }
 
