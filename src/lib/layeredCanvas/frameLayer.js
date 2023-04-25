@@ -549,6 +549,7 @@ export class FrameLayer extends Layer {
       Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
     ]
     const [w, h] = [x1 - x0, y1 - y0];
+    console.log(x0, y0, x1, y1, w, h);
 
     let scale = element.scale[0];
     if (element.image.width * scale < w) {
@@ -563,20 +564,25 @@ export class FrameLayer extends Layer {
       element.image.width * scale,
       element.image.height * scale,
     ];
+    console.log("scaled image size", rw, rh, element.reverse[0], element.reverse[1]);
     const x = (x0 + x1) * 0.5 + element.translation[0];
     const y = (y0 + y1) * 0.5 + element.translation[1];
 
     if (x0 < x - rw / 2) {
       element.translation[0] = - (w - rw) / 2;
+      console.log("left", - (w - rw) / 2);
     }
     if (x + rw / 2 < x1) {
       element.translation[0] = (w - rw) / 2;
+      console.log("right", (w - rw) / 2);
     }
     if (y0 < y - rh / 2) {
       element.translation[1] = - (h - rh) / 2;
+      console.log("top", - (h - rh) / 2);
     }
     if (y1 > y + rh / 2) {
       element.translation[1] = (h - rh) / 2;
+      console.log("bottom", (h - rh) / 2);
     }
 
   }

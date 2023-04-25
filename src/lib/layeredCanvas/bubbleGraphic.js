@@ -2,7 +2,7 @@ import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex } from "./bubbleGeometry.js";
-import { add2D, perpendicular2D, normalize2D, circularAngleToEllipseAngle } from "./geometry.js";
+import { reverse2D, add2D, perpendicular2D, normalize2D, circularAngleToEllipseAngle } from "./geometry.js";
 import { generateRandomAngles, generateSuperEllipsePoints, movePointsToRectCenter, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, rect, shape, opts) {
@@ -46,6 +46,9 @@ export function drawBubble(context, seed, rect, shape, opts) {
       break;
     case "motion-lines":
       drawMotionLinesBubble(context, seed, rect, opts);
+      break;
+    case "ellipse-mind":
+      drawEllipseMindBubble(context, seed, rect, opts);
       break;
     case "none":
       break;
@@ -263,6 +266,8 @@ export function getPath(shape, r, opts, seed) {
       return getHeartPath(r, opts, seed);
     case 'diamond':
       return getDiamondPath(r, opts, seed);
+    case 'ellipse-mind':
+      return getEllipsePath(r, opts, seed);
   }
   return null;
 }
@@ -532,6 +537,15 @@ function drawDiamondBubble(context, seed, rect, opts) {
   drawPath(context, path);
 }
 
+function drawEllipseMindBubble(context, seed, rect, opts) {
+  const newOpts = {...opts};
+  newOpts.tailTip = [0,0];
+  newOpts.tailMid = [0.5,0];
+  const path = getEllipsePath(rect, newOpts, seed);
+  drawPath(context, path);
+  drawMind(context, seed, rect, opts);
+}
+
 function drawPoints(context, points, color) {
   context.save();
   context.strokeStyle = color;
@@ -544,5 +558,29 @@ function drawPoints(context, points, color) {
   }
   context.stroke();
   context.restore();
+}
+
+function drawMind(context, seed, rect, opts) {
+  const trail = [0.95, 0.85];
+  const v = opts.tailTip;
+  const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
+  const r = Math.min(rect[2], rect[3]) * 0.25;
+  for (let t of trail) {
+    const p = [c[0] + t * v[0], c[1] + t * v[1]];
+    context.beginPath();
+    context.arc(p[0], p[1], r * (1-t), 0, 2 * Math.PI);
+    context.closePath();
+    switch(context.bubbleDrawMethod) {
+      case 'fill':
+        context.fill();
+        break;
+      case 'stroke':
+        context.stroke();
+        break;
+      case 'clip':
+        //context.clip();
+        break;
+    }
+  }
 }
 

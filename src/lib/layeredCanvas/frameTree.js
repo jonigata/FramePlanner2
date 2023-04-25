@@ -524,10 +524,10 @@ function makeHorizontalBorderTrapezoid(layout, index) {
     const curr = layout.children[index];
 
     const corners = {
-        topLeft: curr.corners.topRight,
-        topRight: prev.corners.topLeft,
-        bottomLeft: curr.corners.bottomRight,
-        bottomRight: prev.corners.bottomLeft,
+        topLeft: [...curr.corners.topRight],
+        topRight: [...prev.corners.topLeft],
+        bottomLeft: [...curr.corners.bottomRight],
+        bottomRight: [...prev.corners.bottomLeft],
     }
     corners.topLeft[0] -= BORDER_WIDTH;
     corners.topRight[0] += BORDER_WIDTH;
@@ -542,10 +542,10 @@ function makeVerticalBorderTrapezoid(layout, index) {
     const curr = layout.children[index];
 
     const corners = {
-        topLeft: prev.corners.bottomLeft,
-        topRight: prev.corners.bottomRight,
-        bottomLeft: curr.corners.topLeft,
-        bottomRight: curr.corners.topRight,
+        topLeft: [...prev.corners.bottomLeft],
+        topRight: [...prev.corners.bottomRight],
+        bottomLeft: [...curr.corners.topLeft],
+        bottomRight: [...curr.corners.topRight],
     }
     corners.topLeft[1] -= BORDER_WIDTH;
     corners.topRight[1] -= BORDER_WIDTH;
