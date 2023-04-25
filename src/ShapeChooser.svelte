@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Drawer from "svelte-drawer-component";
+  import Drawer from './Drawer.svelte'
   import { shapeChooserOpen, chosenShape } from "./shapeStore";
   import BubbleSample from "./BubbleSample.svelte";
 

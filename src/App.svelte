@@ -43,6 +43,8 @@
 <style>
   :global(body) {
     overflow: hidden;
+    height: 100vh;
+    max-height: 100vh;
   }
 
   .control-panel-container {

@@ -49,7 +49,7 @@
     if (b) {
       $chosenShape = b.shape;
       await tick();
-      textarea.focus();
+      textarea.focus({preventScroll: true});
       textarea.select();
       pinned = true;
       move(b.position);
@@ -164,7 +164,7 @@
   }
   .bubble-inspector {
     position: absolute;
-    top: 800px;
+    top: 710px;
     left: 50px;
     width: 350px;
     height: 285px;

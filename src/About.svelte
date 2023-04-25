@@ -1,5 +1,5 @@
 <script type="ts">
-  import Drawer from 'svelte-drawer-component';
+  import Drawer from './Drawer.svelte'
   import { aboutOpen } from './aboutStore';
   import { Modal, modalStore } from '@skeletonlabs/skeleton';
   import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';    
