@@ -34,8 +34,8 @@ export function generateRandomAngles(rng, numPoints, jitterFactor=0.5) {
   return angles;
 }
 
-export function generateSuperEllipsePoints(rect, angles) {
-  return angles.map(angle => superEllipsePoint2D(rect[2] / 2, rect[3] / 2, 3, angle));
+export function generateSuperEllipsePoints(rect, angles, n = 3) {
+  return angles.map(angle => superEllipsePoint2D(rect[2] / 2, rect[3] / 2, n, angle));
 }
 
 export function movePointsToRectCenter(points, rect) {

@@ -479,6 +479,26 @@ function getRoundedMindPath(r, opts, seed) {
   return path2;
 }
 
+function getCloudPath(r, opts, seed, vertexCount, superEllipseN, bumpFactor) {
+  const bump = Math.min(r[2], r[3]) * bumpFactor;
+  const rng = seedrandom(seed);
+  const rawPoints = generateSuperEllipsePoints(r, generateRandomAngles(rng, vertexCount), superEllipseN);
+  const points = movePointsToRectCenter(subdividePointsWithBump(rawPoints, -bump), r);
+
+  const path = new paper.Path();
+  path.moveTo(points[0][0], points[0][1]);
+  for (let i = 0; i < points.length; i += 2) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const p2 = points[(i + 2) % points.length];
+    path.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+  }
+  path.closed = true;
+
+  //return path;
+  return addTrivialTail(path, r, opts);
+}
+
 function addTrivialTail(path, r, opts) {
   if (opts?.tailTip) {
     const v = opts.tailTip;
@@ -613,7 +633,7 @@ function addMind(path, seed, rect, opts, newOpts) {
     const p = [m[0] + t[0] * v[0], m[1] + t[0] * v[1]];
     const rt = r * t[1];
     const rr = [p[0] - rt, p[1] - rt, rt * 2, rt * 2];
-    const path2 = getSoftPath(rr, newOpts, seed);
+    const path2 = getCloudPath(rr, newOpts, seed, 6, 2, 0.15);
     path = path.unite(path2);
   }
   return path;
