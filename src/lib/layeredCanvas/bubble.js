@@ -67,25 +67,25 @@ export class Bubble {
     const b = new Bubble();
     b.p0 = this.denormalizedPosition(canvasSize, json.p0);
     b.p1 = this.denormalizedPosition(canvasSize, json.p1);
-    b.offset = json.offset;
-    b.rotation = json.rotation;
-    b.text = json.text;
-    b.shape = json.shape;
-    b.embedded = json.embedded;
-    b.fontStyle = json.fontStyle;
-    b.fontWeight = json.fontWeight;
-    b.fontSize = json.fontSize * Math.min(canvasSize[0], canvasSize[1]);
-    b.fontFamily = json.fontFamily;
-    b.direction = json.direction;
-    b.fontColor = json.fontColor;
-    b.fillColor = json.fillColor;
-    b.strokeColor = json.strokeColor;
-    b.strokeWidth = json.strokeWidth;
-    b.outlineColor = json.outlineColor;
-    b.outlineWidth = json.outlineWidth;
-    b.uuid = json.uuid;
+    b.offset = json.offset ?? [0,0];
+    b.rotation = json.rotation ?? 0;
+    b.text = json.text ?? "";
+    b.shape = json.shape ?? "square";
+    b.embedded = json.embedded ?? false;
+    b.fontStyle = json.fontStyle ?? "normal";
+    b.fontWeight = json.fontWeight ?? "400";
+    b.fontSize = json.fontSize ? json.fontSize * Math.min(canvasSize[0], canvasSize[1]) : 26;
+    b.fontFamily = json.fontFamily ?? "Noto Sans JP";
+    b.direction = json.direction ?? 'v';
+    b.fontColor = json.fontColor ?? '#000000FF';
+    b.fillColor = json.fillColor ?? '#ffffffE6';
+    b.strokeColor = json.strokeColor ?? "#000000FF";
+    b.strokeWidth = json.strokeWidth ?? 1;
+    b.outlineColor = json.outlineColor ?? "#000000FF";
+    b.outlineWidth = json.outlineWidth ?? 0;
+    b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
-    b.optionContext = json.optionContext;
+    b.optionContext = json.optionContext ?? Bubble.getInitialOptions(b.shape);
     return b;
   }
 
@@ -93,25 +93,25 @@ export class Bubble {
     return {
       p0: this.normalizedPosition(canvasSize, b.p0),
       p1: this.normalizedPosition(canvasSize, b.p1),
-      offset: b.offset,
-      rotation: b.rotation,
-      text: b.text,
-      shape: b.shape,
-      embedded: b.embedded,
-      fontStyle: b.fontStyle,
-      fontWeight: b.fontWeight,
-      fontSize: b.fontSize / Math.min(canvasSize[0], canvasSize[1]),
-      fontFamily: b.fontFamily,
-      direction: b.direction,
-      fontColor: b.fontColor,
-      fillColor: b.fillColor,
-      strokeColor: b.strokeColor,
-      strokeWidth: b.strokeWidth,
-      outlineColor: b.outlineColor,
-      outlineWidth: b.outlineWidth,
+      offset: b.offset[0] == 0 && b.offset[1] == 0 ? undefined : b.offset,
+      rotation: b.rotation == 0 ? undefined : b.rotation,
+      text: b.text == "" ? undefined : b.text,
+      shape: b.shape == "square" ? undefined : b.shape,
+      embedded: b.embedded == false ? undefined : b.embedded,
+      fontStyle: b.fontStyle == "normal" ? undefined : b.fontStyle,
+      fontWeight: b.fontWeight == "400" ? undefined : b.fontWeight,
+      fontSize: b.fontSize == 26 ? undefined : b.fontSize / Math.min(canvasSize[0], canvasSize[1]),
+      fontFamily: b.fontFamily == "Noto Sans JP" ? undefined : b.fontFamily,
+      direction: b.direction == 'v' ? undefined : b.direction,
+      fontColor: b.fontColor == '#000000FF' ? undefined : b.fontColor,
+      fillColor: b.fillColor == '#ffffffE6' ? undefined : b.fillColor,
+      strokeColor: b.strokeColor == "#000000FF" ? undefined : b.strokeColor,
+      strokeWidth: b.strokeWidth == 1 ? undefined : b.strokeWidth,
+      outlineColor: b.outlineColor == "#000000FF" ? undefined : b.outlineColor,
+      outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
       uuid: b.uuid,
-      parent: b.parent,
-      optionContext: b.optionContext,
+      parent: b.parent ? b.parent.uuid : undefined,
+      optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b.shape)) ? undefined : b.optionContext,
     };
   }
 
@@ -272,13 +272,18 @@ export class Bubble {
   }
 
   initOptions() {
-    const [cx,cy] = this.center;
-    const [w, h] = this.size;
-    for (const option of Object.keys(this.optionSet)) {
-      if (this.optionSet[option].init) {
-        this.optionContext[option] = this.optionSet[option].init(this);
+    this.optionContext = Bubble.getInitialOptions(this.shape);
+  }
+
+  static getInitialOptions(shape) {
+    const optionSet = bubbleOptionSets[shape];
+    const options = {};
+    for (const option of Object.keys(optionSet)) {
+      if (optionSet[option].init) {
+        options[option] = optionSet[option].init();
       }
     }
+    return options;
   }
 
 }
