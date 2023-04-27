@@ -85,7 +85,7 @@ export class Bubble {
     b.outlineWidth = json.outlineWidth ?? 0;
     b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
-    b.optionContext = json.optionContext ?? Bubble.getInitialOptions(b.shape);
+    b.optionContext = json.optionContext ?? Bubble.getInitialOptions(b);
     return b;
   }
 
@@ -111,7 +111,7 @@ export class Bubble {
       outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
       uuid: b.uuid,
       parent: b.parent ? b.parent.uuid : undefined,
-      optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b.shape)) ? undefined : b.optionContext,
+      optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
     };
   }
 
@@ -272,15 +272,15 @@ export class Bubble {
   }
 
   initOptions() {
-    this.optionContext = Bubble.getInitialOptions(this.shape);
+    this.optionContext = Bubble.getInitialOptions(this);
   }
 
-  static getInitialOptions(shape) {
-    const optionSet = bubbleOptionSets[shape];
+  static getInitialOptions(b) {
+    const optionSet = bubbleOptionSets[b.shape];
     const options = {};
     for (const option of Object.keys(optionSet)) {
       if (optionSet[option].init) {
-        options[option] = optionSet[option].init();
+        options[option] = optionSet[option].init(b);
       }
     }
     return options;

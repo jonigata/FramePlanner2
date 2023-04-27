@@ -106,18 +106,18 @@ export class FrameElement {
             for (let i = 0; i < element.children.length; i++) {
                 markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
             }
-            if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
-                markUpElement.divider = {};
-                if (element.divider.spacing !== 0) {
-                    markUpElement.divider.spacing = element.spacing;
-                }
-                if (element.divider.slant !== 0) {
-                    markUpElement.divider.slant = element.slant;
-                }
-            }
             const padding = cleanPadding(element.padding);
             if (padding) {
                 markUpElement.padding = padding;
+            }
+        }
+        if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
+            markUpElement.divider = {};
+            if (element.divider.spacing !== 0) {
+                markUpElement.divider.spacing = element.divider.spacing;
+            }
+            if (element.divider.slant !== 0) {
+                markUpElement.divider.slant = element.divider.slant;
             }
         }
         if (parentDir == 'h') {
