@@ -103,7 +103,7 @@ export class PaperRendererLayer extends Layer {
 
   resolveLinkages(bubbles) {
     // 親子関係解決
-    // ちょっとお行儀が悪く、unitedPathやchildrenを書き換えている
+    // ちょっとお行儀が悪く、path, unitedPath, childrenを書き換えている
     const bubbleDic = {};
     for (let bubble of bubbles) {
       bubble.unitedPath = null;
@@ -117,10 +117,24 @@ export class PaperRendererLayer extends Layer {
       }
     }
 
+    // パス作成
+    for (let bubble of bubbles) {
+      const r = bubble.regularizedPositionAndSize();
+      bubble.path = getPath(bubble.shape, r, bubble.optionContext, bubble.text);
+      bubble.path.rotate(-bubble.rotation, bubble.center);
+    }
+
     // 結合
     for (let bubble of bubbles) {
-      if (0 < bubble.children.length) {
-        bubble.unitedPath = this.uniteBubble([bubble, ...bubble.children]);
+      if (bubble.parent) {
+        bubble.unitedPath = null;
+      } else {
+        bubble.unitedPath = bubble.path;
+        for (let child of bubble.children) {
+          bubble.unitedPath = bubble.unitedPath.unite(child.path);
+        }
+        bubble.unitedPath.rotate(bubble.rotation, bubble.center);
+        bubble.unitedPath.translate(new paper.Point(bubble.center).multiply(-1));
       }
     }
   }
@@ -314,19 +328,6 @@ export class PaperRendererLayer extends Layer {
     // 描き戻し
     const [cx, cy] = bubble.offset;
     targetCtx.drawImage(canvas, cx - w * 0.5, cy - h * 0.5, ...bubble.size);
-  }
-
-  uniteBubble(bubbles) {
-    let path = null;
-    for (let bubble of bubbles) {
-      const [x, y, w, h] = bubble.regularizedPositionAndSize();
-      const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
-      path2.rotate(-bubble.rotation, bubble.center);
-      path = path ? path.unite(path2) : path2;
-    }
-    path.rotate(bubbles[0].rotation, bubbles[0].center);
-    path.translate(new paper.Point(bubbles[0].center).multiply(-1));
-    return path;
   }
 
   setBubbles(bubbles) {
