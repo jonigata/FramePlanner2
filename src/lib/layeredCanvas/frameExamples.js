@@ -55,7 +55,6 @@ export const frameExamples = [
     column: [
       { height: 4, visibility: 0  },
       {
-        bgColor: "white",
         height: 100,
         row: [
           { width: 2, visibility: 0  },
@@ -100,7 +99,6 @@ export const frameExamples = [
     column: [
       { height: 4, visibility: 0  },
       {
-        bgColor: "white",
         height: 100,
         row: [
           { width: 1, visibility: 0  },
@@ -170,8 +168,8 @@ export const frameExamples = [
     ]
   },
   { // オーソドックス2
-    bgColor: "white",
     height: 100,
+    bgColor: "white",
     row: [
       { width: 4, visibility: 0  },
       {

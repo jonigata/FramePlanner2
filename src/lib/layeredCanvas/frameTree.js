@@ -99,7 +99,7 @@ export class FrameElement {
         if (element.borderColor) { markUpElement.borderColor = element.borderColor; }
         if (element.borderWidth) { markUpElement.borderWidth = element.borderWidth; }
         if (element.z && element.z !== 0) { markUpElement.z = element.z; }
-        if (element.visibility && element.visibility !== 2) { markUpElement.visibility = element.visibility; }
+        if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
         if (element.direction) {
             const dir = element.direction == 'h' ? 'row' : 'column';
             markUpElement[dir] = [];
