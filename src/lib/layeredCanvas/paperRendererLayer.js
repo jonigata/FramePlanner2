@@ -313,7 +313,13 @@ export class PaperRendererLayer extends Layer {
 
     // 描き戻し
     const [cx, cy] = bubble.offset;
-    targetCtx.drawImage(canvas, cx - w * 0.5, cy - h * 0.5, ...bubble.size);
+    try {
+      targetCtx.drawImage(canvas, cx - w * 0.5, cy - h * 0.5, ...bubble.size);
+    }
+    catch (e) {
+      console.log(pw, ph, canvas.width, canvas.height, bubble.size);
+      throw e;
+    }
   }
 
   uniteBubble(bubbles) {
