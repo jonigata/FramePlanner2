@@ -15,7 +15,7 @@
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
   import { SlideToggle } from '@skeletonlabs/skeleton';
-  import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
+  import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
 
@@ -39,6 +39,7 @@
   function copyToClipboard() {
     $clipboardToken = true;
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+
   }
 
   let files: FileList;
@@ -82,6 +83,11 @@
   async function downloadJson() {
     $commitToken = true;
     $downloadJsonToken = true;
+  }
+
+  async function shareJson() {
+    $commitToken = true;
+    $shareJsonToken = true;
   }
 
   async function contact() {
@@ -173,8 +179,13 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
     </button>
+  </div>  
+  <div class="hbox gap mx-2" style="margin-top: 16px;">
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={downloadJson}>
       Download JSON
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
+      Share
     </button>
   </div>  
 </div>
@@ -183,7 +194,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 660px;
+    height: 690px;
     display: flex;
     flex-direction: column;
     top: 20px;
