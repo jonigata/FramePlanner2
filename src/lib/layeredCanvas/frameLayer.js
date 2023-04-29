@@ -8,13 +8,14 @@ import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 const iconUnit = [32,32];
 
 export class FrameLayer extends Layer {
-  constructor(renderLayer, frameTree, interactable, onCommit, onRevert) {
+  constructor(renderLayer, frameTree, interactable, onCommit, onRevert, onGenerate) {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
+    this.onGenerate = onGenerate;
 
     const unit = iconUnit;
     const isFrameActive = () => this.interactable && this.focusedLayout && !this.pointerHandler;
@@ -33,6 +34,7 @@ export class FrameLayer extends Layer {
     this.dropIcon = new ClickableIcon("drop.png",unit,[0,1],"画像除去", isImageActive);
     this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png",unit,[0,1],"左右反転", isImageActive);
     this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
+    this.generateIcon = new ClickableIcon("generate-image.png",unit,[0,1],"画像生成", isFrameActiveAndVisible);
 
     const isBorderActive = (dir) => this.interactable && this.focusedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",unit,[0.5,1],"幅を変更", () => isBorderActive('h'));
@@ -43,7 +45,7 @@ export class FrameLayer extends Layer {
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.generateIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
@@ -122,6 +124,7 @@ export class FrameLayer extends Layer {
       this.dropIcon.position = cp([0,1],[0,0]);
       this.flipHorizontalIcon.position = cp([0,1], [2,0]);
       this.flipVerticalIcon.position = cp([0,1], [3,0]);
+      this.generateIcon.position = cp([0,1], [0,-2]);
       this.redraw();
 
       const x = origin[0] + size[0] / 2;
@@ -307,6 +310,8 @@ export class FrameLayer extends Layer {
       } else if (this.flipVerticalIcon.contains(point)) {
         layout.element.reverse[1] *= -1;
         this.redraw();
+      } else if (this.generateIcon.contains(point)) {
+        this.onGenerate(layout.element);
       } else {
         return { layout: layout };
       }

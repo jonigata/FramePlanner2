@@ -19,6 +19,7 @@
   import ShapeChooser from './ShapeChooser.svelte';
   import { paperTemplate } from './paperStore';
   import { loadTemplate } from './firebase';
+  import ImageGenerator from './ImageGenerator.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -85,6 +86,7 @@
 <BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
 <FontChooser/>
 <ShapeChooser paperWidth={64} paperHeight={96}/>
+<ImageGenerator/>
 
 <JsonEditor/>
 

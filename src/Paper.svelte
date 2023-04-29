@@ -17,6 +17,7 @@
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
+  import { imageGeneratorOpen } from "./imageGeneratorStore";
 
   export let width = 140;
   export let height = 198;
@@ -94,6 +95,11 @@
     console.log(frameLayer.frameTree);
     const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     frameLayer.importImage(layout, image);
+  }
+
+  function generate(frameTreeElement) {
+    console.log("generateImages");
+    $imageGeneratorOpen = true;
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -220,7 +226,8 @@
         console.log("commit frames");
         commit();
       },
-      () => {revert();});
+      () => {revert();},
+      (frameTreeElement) => {generate(frameTreeElement);});
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);

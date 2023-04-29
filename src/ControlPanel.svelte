@@ -18,6 +18,7 @@
   import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
+  import { generateImages } from './sdwebui'
 
   let min = 256;
   let max = 4096;
@@ -113,6 +114,10 @@
     files = e.dataTransfer.files;
   }
 
+  async function callSdWebUi() {
+    await generateImages();
+  }
+
 </script>
 
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
@@ -179,13 +184,16 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
     </button>
-  </div>  
-  <div class="hbox gap mx-2" style="margin-top: 16px;">
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={downloadJson}>
       Download JSON
     </button>
+  </div>  
+  <div class="hbox gap mx-2" style="margin-top: 16px;">
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
       Share
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={callSdWebUi}>
+      SDWebUI
     </button>
   </div>  
 </div>
