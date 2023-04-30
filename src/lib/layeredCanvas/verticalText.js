@@ -97,12 +97,16 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
         let lineH = 0;
         const lineHead = index;
         while (index < text.length) {
-            const c = text.charAt(index);
+            let c = text.charAt(index);
 
             if (c === "\n") {
                 index++;
                 break;
             }
+
+            if (/[0-9!?]/.test(c) && index + 1 < text.length && /[0-9!?]/.test(text.charAt(index + 1))) {
+                c += text.charAt(index + 1);
+            }            
 
             lineH += charSkip;
             lineH += limitedKerning(text, index) * charSkip;
@@ -111,7 +115,7 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
                 break;
             }
 
-            index++;
+            index += c.length;
         }
 
         if (index == lineHead) { break; }
