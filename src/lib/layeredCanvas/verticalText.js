@@ -5,7 +5,7 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
         let lineH = 0;
         const lineHead = index;
         while (index < text.length) {
-            const c = text.charAt(index);
+            let c = text.charAt(index);
             const m = context.measureText(c);
             const cw = m.width;
 
@@ -23,12 +23,12 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
                 if (method === "fill") {
                     context.fillText(
                         c, 
-                        cursorX - cw * 0.5 + cw * ax, 
+                        cursorX - cw * c.length * 0.5 + cw * ax, 
                         r.y + charSkip + lineH + charSkip * ay);
                 } else if (method === "stroke") {
                     context.strokeText(
                         c,
-                        cursorX - cw * 0.5 + cw * ax,
+                        cursorX - cw * c.length * 0.5 + cw * ax,
                         r.y + charSkip + lineH + charSkip * ay);
                 }
                 context.restore();
@@ -64,6 +64,16 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
                 case /[ー]/.test(c):
                     drawRotatedChar(87, -0.2, -0.35, -1);
                     break;
+                case /[0-9!?]/.test(c):
+                    if (index + 1 < text.length && /[0-9!?]/.test(text.charAt(index + 1))) {
+                        c += text.charAt(index + 1);
+                    }
+                    if (c == '!?') {
+                        drawChar(-0.2, 0);
+                    } else {
+                        drawChar(0, 0);
+                    }
+                    break;
                 default:
                     drawChar(0, 0);
                     break;
@@ -72,7 +82,7 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
             lineH += charSkip;
             lineH += limitedKerning(text, index) * charSkip;
 
-            index++;
+            index += c.length;
         }
         if (index == lineHead) { break; }
         cursorX -= baselineSkip;
