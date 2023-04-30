@@ -40,7 +40,10 @@ export class PaperRendererLayer extends Layer {
     }
 
     for (let bubble of this.floatingBubbles) {
-      this.renderBubbleBackground(ctx, bubble);
+      this.renderBubbleUnitedBackground(ctx, bubble);
+    }
+    for (let bubble of this.floatingBubbles) {
+      this.renderBubbleSingleBackground(ctx, bubble);
       this.renderBubbleForeground(ctx, bubble);
     }
 
@@ -142,7 +145,10 @@ export class PaperRendererLayer extends Layer {
 
       if (layout.bubbles) {
         for (let bubble of layout.bubbles) {
-          this.renderBubbleBackground(ctx, bubble);
+          this.renderBubbleUnitedBackground(ctx, bubble);
+        }
+        for (let bubble of layout.bubbles) {
+          this.renderBubbleSingleBackground(ctx, bubble);
           this.renderBubbleForeground(ctx, bubble);
         }
       }
@@ -177,7 +183,33 @@ export class PaperRendererLayer extends Layer {
     ctx.fill();
   }
 
-  renderBubbleBackground(ctx, bubble) {
+  renderBubbleUnitedBackground(ctx, bubble) {
+    if (!bubble.unitedPath) { return; }
+
+    const rect = bubble.centeredRect;
+    const [x, y, w, h] = rect;
+
+    ctx.save();
+    ctx.translate(...bubble.center); // TODO: この辺設計次第で削除できるはず
+    ctx.rotate((-bubble.rotation * Math.PI) / 180);
+
+    // fill/stroke設定
+    ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
+    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
+    ctx.lineWidth = bubble.strokeWidth;
+
+    // shape背景描画
+    ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
+    drawPath(ctx, bubble.unitedPath);
+    ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
+    drawPath(ctx, bubble.unitedPath); // TODO: ２回やる必要あるっけ？
+
+    ctx.restore();
+  }
+
+  renderBubbleSingleBackground(ctx, bubble) {
+    if (bubble.unitedPath) { return; }
+
     const rect = bubble.centeredRect;
     const [x, y, w, h] = rect;
 
@@ -191,8 +223,12 @@ export class PaperRendererLayer extends Layer {
     ctx.lineWidth = bubble.strokeWidth;
 
     // shape背景描画
-    this.drawBubble(ctx, rect, 'fill', bubble);
-    this.drawBubble(ctx, rect, 'clip', bubble);
+    if (!bubble.parent) {
+      ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
+      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+      ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
+      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+    }
 
     // 画像描画
     if (bubble.image && !bubble.parent) {
