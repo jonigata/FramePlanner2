@@ -41,8 +41,6 @@ export class PaperRendererLayer extends Layer {
 
     for (let bubble of this.floatingBubbles) {
       this.renderBubbleBackground(ctx, bubble);
-    }
-    for (let bubble of this.floatingBubbles) {
       this.renderBubbleForeground(ctx, bubble);
     }
 
@@ -145,8 +143,6 @@ export class PaperRendererLayer extends Layer {
       if (layout.bubbles) {
         for (let bubble of layout.bubbles) {
           this.renderBubbleBackground(ctx, bubble);
-        }
-        for (let bubble of layout.bubbles) {
           this.renderBubbleForeground(ctx, bubble);
         }
       }
