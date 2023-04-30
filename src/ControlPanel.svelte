@@ -130,16 +130,16 @@
       <div class="hbox">
         <div class="font-bold slider-label">Width</div>
         <RangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} step={1}/>
-        <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$paperWidth} showSlider={false}/></div>
-           / {max}
+        <div class="text-xs slider-value-text hbox gap-0.5">
+          <div class="number-box"><NumberEdit bind:value={$paperWidth}/></div>
+          / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">Height</div>
         <RangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} step={1}/>
-        <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$paperHeight} showSlider={false}/></div>
+        <div class="text-xs slider-value-text hbox gap-0.5">
+          <div class="number-box"><NumberEdit bind:value={$paperHeight}/></div>
            / {max}
         </div>
       </div>
@@ -228,7 +228,7 @@
     width: 55px;
   }
   .slider-value-text {
-    width: 80px;
+    width: 76px;
     text-align: right;
   }
   .canvas-size-container {
