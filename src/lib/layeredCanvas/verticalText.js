@@ -74,6 +74,10 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
                         drawChar(0, 0);
                     }
                     break;
+                case isEmojiAt(text, index):
+                    c = getEmojiAt(text, index);
+                    drawChar((c.length-1)*0.3, 0);
+                    break;
                 default:
                     drawChar(0, 0);
                     break;
@@ -107,6 +111,9 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
             if (/[0-9!?]/.test(c) && index + 1 < text.length && /[0-9!?]/.test(text.charAt(index + 1))) {
                 c += text.charAt(index + 1);
             }            
+            if (isEmojiAt(text, index)) {
+                c = getEmojiAt(text, index);
+            }
 
             lineH += charSkip;
             lineH += limitedKerning(text, index) * charSkip;
@@ -144,3 +151,18 @@ function limitedKerning(s, index) {
     return 0;
 }
 
+function isEmojiAt(str, index) {
+    const codePoint = String.fromCodePoint(str.codePointAt(index));
+    const regex = /\p{Emoji}/u;
+
+    return regex.test(codePoint);
+}
+
+function getEmojiAt(str, index) {
+    let endIndex = index + 1;
+    if (str.codePointAt(index) > 0xFFFF) {
+        // This is a surrogate pair, so the emoji is 2 characters long
+        endIndex++;
+    }
+    return str.slice(index, endIndex);
+}
