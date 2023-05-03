@@ -1,5 +1,6 @@
 import { Layer } from "./layeredCanvas.js";
 import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
+import { constraintRecursive, constraintTree, constraintLeaf } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
@@ -355,7 +356,7 @@ export class FrameLayer extends Layer {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         element.scale = [origin * s, origin * s];
-        this.constraintLeaf(layout);
+        constraintLeaf(layout);
         this.redraw();
       });
     } catch (e) {
@@ -371,7 +372,7 @@ export class FrameLayer extends Layer {
     try {
       yield* translate(p, (q) => {
         element.translation = [origin[0] + q[0], origin[1] + q[1]];
-        this.constraintLeaf(layout);
+        constraintLeaf(layout);
         this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
       });
     } catch (e) {
@@ -400,7 +401,7 @@ export class FrameLayer extends Layer {
         c0.rawSize = t - rawSpacing * 0.5;
         c1.rawSize = rawSum - t - rawSpacing * 0.5;
         this.updateBorder(border);
-        this.constraintRecursive(border.layout);
+        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -433,7 +434,7 @@ export class FrameLayer extends Layer {
   
         element.calculateLengthAndBreadth();
         this.updateBorder(border);
-        this.constraintRecursive(border.layout);
+        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -458,7 +459,7 @@ export class FrameLayer extends Layer {
         const op = p[dir] - s[dir];
         prev.divider.slant = Math.max(-42, Math.min(42, rawSlant + op * 0.2));
         this.updateBorder(border);
-        this.constraintRecursive(border.layout);
+        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -484,7 +485,7 @@ export class FrameLayer extends Layer {
         const currentPadding = initialPadding + delta * deltaFactor;
         element.padding[padding.handle] = currentPadding / rawSize[dir];
         this.updatePadding(padding);
-        this.constraintTree(padding.layout);
+        constraintTree(padding.layout);
         this.redraw();
       }
     } catch (e) {
@@ -521,70 +522,7 @@ export class FrameLayer extends Layer {
       this.getPaperSize(),
       [0, 0]
     );
-    this.constraintRecursive(layout);
-  }
-
-  constraintTree(layout) {
-    const newLayout = calculatePhysicalLayout(
-      layout.element,
-      layout.size,
-      layout.origin
-    );
-    this.constraintRecursive(newLayout);
-  }
-
-  constraintRecursive(layout) {
-    if (layout.children) {
-      for (const child of layout.children) {
-        this.constraintRecursive(child);
-      }
-    } else if (layout.element && layout.element.image) {
-      this.constraintLeaf(layout);
-    }
-  }
-
-  constraintLeaf(layout) {
-    if (!layout.corners) {return; }
-    if (!layout.element.image) { return; }
-    const element = layout.element;
-    const [x0, y0, x1, y1] = [
-      Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
-      Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
-      Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
-      Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
-    ]
-    const [w, h] = [x1 - x0, y1 - y0];
-    const [iw, ih] = [element.image.naturalWidth, element.image.naturalHeight];
-
-    let scale = element.scale[0];
-    if (iw * scale < w) {
-      scale = w / iw;
-    }
-    if (ih * scale < h) {
-      scale = h / ih;
-    }
-    element.scale = [scale, scale];
-
-    const [rw, rh] = [
-      iw * scale,
-      ih * scale,
-    ];
-    const x = (x0 + x1) * 0.5 + element.translation[0];
-    const y = (y0 + y1) * 0.5 + element.translation[1];
-
-    if (x0 < x - rw / 2) {
-      element.translation[0] = - (w - rw) / 2;
-    }
-    if (x + rw / 2 < x1) {
-      element.translation[0] = (w - rw) / 2;
-    }
-    if (y0 < y - rh / 2) {
-      element.translation[1] = - (h - rh) / 2;
-    }
-    if (y1 > y + rh / 2) {
-      element.translation[1] = (h - rh) / 2;
-    }
-
+    constraintRecursive(layout);
   }
 
   importImage(layoutlet, image) {
@@ -598,7 +536,7 @@ export class FrameLayer extends Layer {
     layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
-    this.constraintLeaf(layoutlet);
+    constraintLeaf(layoutlet);
     this.redraw();
   }
 

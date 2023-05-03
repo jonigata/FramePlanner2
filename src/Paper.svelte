@@ -17,7 +17,7 @@
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
-  import { frameImageGeneratorTarget, frameImageGeneratorRedrawToken } from "./frameImageGeneratorStore";
+  import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
   import FrameImageGenerator from './FrameImageGenerator.svelte';
 
   export let width = 140;
@@ -48,12 +48,13 @@
     canvasHeight = h;
   }
 
-  $:onRedrawFrameImage($frameImageGeneratorRedrawToken);
-  function onRedrawFrameImage(token) {
+  $:onFrameImageConstraint($frameImageConstraintToken);
+  function onFrameImageConstraint(token) {
     if (!token) return;
-    console.log("onRedrawFrameImage");
+    console.log("onFrameImageConstraint", token);
+    frameLayer.constraintAll();
     layeredCanvas.redraw();
-    $frameImageGeneratorRedrawToken = false;
+    $frameImageConstraintToken = false;
   }
 
   const dispatch = createEventDispatcher();

@@ -8,10 +8,6 @@
   import KeyValueStorage from "./KeyValueStorage.svelte";
   import { tick, onMount } from "svelte";
 
-  import i1 from "./assets/bubble-drop.png";
-  import i2 from "./assets/bubble-lock.png";
-  import i3 from "./assets/bubble-offset.png";
-
   let url: string = "http://192.168.68.111:7867";
   let images: HTMLImageElement[] = [];
   let imageRequest = {

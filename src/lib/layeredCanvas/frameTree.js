@@ -606,6 +606,55 @@ export function dealImages(frameTree, images) {
       dealImages(frameTree.children[i], images);
     }
   }
-
 }
+
+export function constraintTree(layout) {
+  const newLayout = calculatePhysicalLayout(
+    layout.element,
+    layout.size,
+    layout.origin
+  );
+  constraintRecursive(newLayout);
+}
+
+export function constraintRecursive(layout) {
+  if (layout.children) {
+    for (const child of layout.children) {
+      constraintRecursive(child);
+    }
+  } else if (layout.element && layout.element.image) {
+    constraintLeaf(layout);
+  }
+}
+
+export function constraintLeaf(layout) {
+  if (!layout.corners) {return; }
+  if (!layout.element.image) { return; }
+
+  const element = layout.element;
+  const [x0, y0, x1, y1] = [
+    Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
+    Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
+    Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
+    Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
+  ]
+  const [w, h] = [x1 - x0, y1 - y0];
+  const [iw, ih] = [element.image.naturalWidth, element.image.naturalHeight];
+
+  let scale = element.scale[0];
+  if (iw * scale < w) { scale = w / iw; }
+  if (ih * scale < h) { scale = h / ih; }
+  element.scale = [scale, scale];
+
+  const [rw, rh] = [iw * scale, ih * scale];
+  const x = (x0 + x1) * 0.5 + element.translation[0];
+  const y = (y0 + y1) * 0.5 + element.translation[1];
+
+  if (x0 < x - rw / 2) { element.translation[0] = - (w - rw) / 2; }
+  if (x + rw / 2 < x1) { element.translation[0] = (w - rw) / 2; }
+  if (y0 < y - rh / 2) { element.translation[1] = - (h - rh) / 2; }
+  if (y1 > y + rh / 2) { element.translation[1] = (h - rh) / 2; }
+}
+
+
 

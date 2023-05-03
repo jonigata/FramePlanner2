@@ -1,6 +1,6 @@
 <script lang="ts">
   import { imageGeneratorOpen, imageGeneratorPrompt, imageGeneratorGallery, imageGeneratorChosen } from "./imageGeneratorStore";
-  import { frameImageGeneratorTarget } from "./frameImageGeneratorStore";
+  import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
 
   frameImageGeneratorTarget.subscribe(
     (target) => {
@@ -16,6 +16,7 @@
       if (chosen) {
         imageGeneratorOpen.set(false);
         $frameImageGeneratorTarget.image = chosen;
+        $frameImageConstraintToken = true;
       }
     });
 </script>
