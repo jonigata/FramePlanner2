@@ -17,7 +17,8 @@
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
-  import { imageGeneratorOpen } from "./imageGeneratorStore";
+  import { frameImageGeneratorTarget, frameImageGeneratorRedrawToken } from "./frameImageGeneratorStore";
+  import FrameImageGenerator from './FrameImageGenerator.svelte';
 
   export let width = 140;
   export let height = 198;
@@ -45,6 +46,14 @@
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;
+  }
+
+  $:onRedrawFrameImage($frameImageGeneratorRedrawToken);
+  function onRedrawFrameImage(token) {
+    if (!token) return;
+    console.log("onRedrawFrameImage");
+    layeredCanvas.redraw();
+    $frameImageGeneratorRedrawToken = false;
   }
 
   const dispatch = createEventDispatcher();
@@ -99,7 +108,7 @@
 
   function generate(frameTreeElement) {
     console.log("generateImages");
-    $imageGeneratorOpen = true;
+    $frameImageGeneratorTarget = frameTreeElement;
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -336,6 +345,7 @@
   </div>    
 {/if}
 
+<FrameImageGenerator/>
 
 <style>
   .canvas-container {

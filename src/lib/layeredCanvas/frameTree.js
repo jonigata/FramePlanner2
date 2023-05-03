@@ -19,6 +19,8 @@ export class FrameElement {
         this.borderWidth = null;
         this.z = 0;
         this.visibility = 2;
+        this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+        this.gallery = [];
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;

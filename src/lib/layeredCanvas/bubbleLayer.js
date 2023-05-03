@@ -407,7 +407,7 @@ export class BubbleLayer extends Layer {
   createImageBubble(image) {
     const bubble = new Bubble();
     const paperSize = this.getPaperSize();
-    const imageSize = [image.width, image.height];
+    const imageSize = [image.naturalWidth, image.naturalHeight];
     const x = Math.random() * (paperSize[0] - imageSize[0]);
     const y = Math.random() * (paperSize[1] - imageSize[1]);
     bubble.p0 = [x, y];
@@ -770,7 +770,7 @@ export class BubbleLayer extends Layer {
         if (bubble.image?.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
           bubble.image.translation = [0,0];
-          bubble.image.scale = [bubble.size[0] / bubble.image.image.width, bubble.size[1] / bubble.image.image.height];
+          bubble.image.scale = [bubble.size[0] / bubble.image.image.naturalWidth, bubble.size[1] / bubble.image.image.naturalHeight];
         }
   
         this.setIconPositions();

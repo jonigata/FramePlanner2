@@ -209,6 +209,7 @@ export class PaperRendererLayer extends Layer {
 
   renderBubbleSingleBackground(ctx, bubble) {
     if (bubble.unitedPath) { return; }
+    if (bubble.parent) { return; }
 
     const rect = bubble.centeredRect;
     const [x, y, w, h] = rect;
@@ -223,18 +224,16 @@ export class PaperRendererLayer extends Layer {
     ctx.lineWidth = bubble.strokeWidth;
 
     // shape背景描画
-    if (!bubble.parent) {
-      ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
-      ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
-    }
+    ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
+    drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+    ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
+    drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
 
     // 画像描画
-    if (bubble.image && !bubble.parent) {
+    if (bubble.image) {
       const img = bubble.image;
-      let iw = img.image.width * img.scale[0];
-      let ih = img.image.height * img.scale[1];
+      let iw = img.image.naturalWidth * img.scale[0];
+      let ih = img.image.naturalHeight * img.scale[1];
       let ix = x + w * 0.5 - iw * 0.5 + img.translation[0];
       let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
@@ -283,7 +282,7 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
     ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-    ctx.translate(-element.image.width * 0.5, -element.image.height * 0.5);
+    ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
     ctx.drawImage(element.image, 0, 0);
     ctx.restore();
   }
