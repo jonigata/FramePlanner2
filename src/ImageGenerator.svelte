@@ -87,6 +87,11 @@
     }
   });
 
+  function onClickAway() {
+    if (calling) { return; }
+    $imageGeneratorOpen = false;
+  }
+
 </script>
 
 <div class="drawer-outer">
@@ -94,7 +99,7 @@
     open={$imageGeneratorOpen}
     placement="right"
     size="720px"
-    on:clickAway={() => ($imageGeneratorOpen = false)}
+    on:clickAway={onClickAway}
   >
     <div class="drawer-content">
       <p>URL</p>
