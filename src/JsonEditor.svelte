@@ -4,8 +4,10 @@
   import titleBarIcon from './assets/json.png';
   import { JSONEditor, toJSONContent, toTextContent } from 'svelte-jsoneditor';
   import type { Content } from 'svelte-jsoneditor';
-  import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput, downloadJsonToken } from './jsonEditorStore';
+  import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
   import { tick } from 'svelte';
+  import { shareTemplate } from './firebase';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
@@ -53,6 +55,23 @@
       URL.revokeObjectURL(url);
     }, 0);
     $downloadJsonToken = false;
+  }
+
+  $:onShareJsonDocument($shareJsonToken);
+  async function onShareJsonDocument(t) {
+    if (!t) { return; }
+
+    console.log("onShareJsonDocument");
+    const jsonString = toTextContent(content).text;
+    const key = await shareTemplate(jsonString);
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    params.set('key', key);
+    url.search = params.toString();
+    const shareUrl = url.toString();
+    navigator.clipboard.writeText(shareUrl);
+    toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
+    $shareJsonToken = false;
   }
 </script>
 

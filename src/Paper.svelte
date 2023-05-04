@@ -17,6 +17,8 @@
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
+  import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
+  import FrameImageGenerator from './FrameImageGenerator.svelte';
 
   export let width = 140;
   export let height = 198;
@@ -44,6 +46,15 @@
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;
+  }
+
+  $:onFrameImageConstraint($frameImageConstraintToken);
+  function onFrameImageConstraint(token) {
+    if (!token) return;
+    console.log("onFrameImageConstraint", token);
+    frameLayer.constraintAll();
+    layeredCanvas.redraw();
+    $frameImageConstraintToken = false;
   }
 
   const dispatch = createEventDispatcher();
@@ -94,6 +105,11 @@
     console.log(frameLayer.frameTree);
     const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     frameLayer.importImage(layout, image);
+  }
+
+  function generate(frameTreeElement) {
+    console.log("generateImages");
+    $frameImageGeneratorTarget = frameTreeElement;
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -220,7 +236,8 @@
         console.log("commit frames");
         commit();
       },
-      () => {revert();});
+      () => {revert();},
+      (frameTreeElement) => {generate(frameTreeElement);});
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);
@@ -329,6 +346,7 @@
   </div>    
 {/if}
 
+<FrameImageGenerator/>
 
 <style>
   .canvas-container {

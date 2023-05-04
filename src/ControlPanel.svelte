@@ -15,9 +15,10 @@
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
   import { SlideToggle } from '@skeletonlabs/skeleton';
-  import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
+  import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
+  import { generateImages } from './sdwebui'
 
   let min = 256;
   let max = 4096;
@@ -39,6 +40,7 @@
   function copyToClipboard() {
     $clipboardToken = true;
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+
   }
 
   let files: FileList;
@@ -84,6 +86,11 @@
     $downloadJsonToken = true;
   }
 
+  async function shareJson() {
+    $commitToken = true;
+    $shareJsonToken = true;
+  }
+
   async function contact() {
     console.log(contactText);
     if (contactText == null || contactText == "") {
@@ -107,6 +114,10 @@
     files = e.dataTransfer.files;
   }
 
+  async function callSdWebUi() {
+    await generateImages();
+  }
+
 </script>
 
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
@@ -119,16 +130,16 @@
       <div class="hbox">
         <div class="font-bold slider-label">Width</div>
         <RangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} step={1}/>
-        <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$paperWidth} showSlider={false}/></div>
-           / {max}
+        <div class="text-xs slider-value-text hbox gap-0.5">
+          <div class="number-box"><NumberEdit bind:value={$paperWidth}/></div>
+          / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">Height</div>
         <RangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} step={1}/>
-        <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$paperHeight} showSlider={false}/></div>
+        <div class="text-xs slider-value-text hbox gap-0.5">
+          <div class="number-box"><NumberEdit bind:value={$paperHeight}/></div>
            / {max}
         </div>
       </div>
@@ -177,13 +188,21 @@
       Download JSON
     </button>
   </div>  
+  <div class="hbox gap mx-2" style="margin-top: 16px;">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
+      Share
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={callSdWebUi}>
+      SDWebUI
+    </button>
+  </div>  
 </div>
 
 <style>
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 660px;
+    height: 690px;
     display: flex;
     flex-direction: column;
     top: 20px;
@@ -209,7 +228,7 @@
     width: 55px;
   }
   .slider-value-text {
-    width: 80px;
+    width: 76px;
     text-align: right;
   }
   .canvas-size-container {

@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { getDatabase, ref, push, set } from "firebase/database";
+import { getDatabase, ref, push, set, get } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
@@ -30,5 +30,27 @@ export async function postContact(s) {
     await set(newContactRef, {
         value: s,
         author: userId
-    })
+    });
+}
+
+export async function shareTemplate(doc) {
+  const auth = getAuth(app);
+  const userCredential = await signInAnonymously(auth);
+
+  const userId = userCredential.user.uid;
+  const database = getDatabase(app);
+  const sharesRef = ref(database, 'shares');
+  const newShareRef = push(sharesRef);
+  await set(newShareRef, {
+      value: doc,
+      author: userId
+  });
+  return newShareRef.key;
+}
+
+export async function loadTemplate(key) {
+  const database = getDatabase(app);
+  const docRef = ref(database, `shares/${key}`);
+  const snapshot = await get(docRef);
+  return snapshot.val();
 }

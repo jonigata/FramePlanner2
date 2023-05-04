@@ -17,6 +17,9 @@
   import Comic from './Comic.svelte'; 
   import FontChooser from './FontChooser.svelte';
   import ShapeChooser from './ShapeChooser.svelte';
+  import { paperTemplate } from './paperStore';
+  import { loadTemplate } from './firebase';
+  import ImageGenerator from './ImageGenerator.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -24,7 +27,7 @@
     },
   };
 
-  onMount(() => {
+  onMount(async () => {
     document.body.style.overflow = 'hidden'; // HACK
 
     // Initialize the Sentry SDK here
@@ -37,6 +40,20 @@
 
       integrations: [new Sentry.Replay()],
     });
+
+    // 現在のURLのパラメータを取得する
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // 'myParam' という名前のパラメータを取得する
+    if (urlParams.has('key')) {
+      const key = urlParams.get('key');
+
+      // パラメータの値をコンソールに出力
+      console.log("key", key);
+      const paper = await loadTemplate(key);
+      console.log(paper);
+      $paperTemplate = JSON.parse(paper.value);
+    }
   });
 </script>
 
@@ -69,6 +86,7 @@
 <BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
 <FontChooser/>
 <ShapeChooser paperWidth={64} paperHeight={96}/>
+<ImageGenerator/>
 
 <JsonEditor/>
 

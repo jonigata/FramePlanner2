@@ -407,7 +407,7 @@ export class BubbleLayer extends Layer {
   createImageBubble(image) {
     const bubble = new Bubble();
     const paperSize = this.getPaperSize();
-    const imageSize = [image.width, image.height];
+    const imageSize = [image.naturalWidth, image.naturalHeight];
     const x = Math.random() * (paperSize[0] - imageSize[0]);
     const y = Math.random() * (paperSize[1] - imageSize[1]);
     bubble.p0 = [x, y];
@@ -770,7 +770,7 @@ export class BubbleLayer extends Layer {
         if (bubble.image?.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
           bubble.image.translation = [0,0];
-          bubble.image.scale = [bubble.size[0] / bubble.image.image.width, bubble.size[1] / bubble.image.image.height];
+          bubble.image.scale = [bubble.size[0] / bubble.image.image.naturalWidth, bubble.size[1] / bubble.image.image.naturalHeight];
         }
   
         this.setIconPositions();
@@ -922,9 +922,9 @@ export class BubbleLayer extends Layer {
   *optionsTailTip(p, bubble) {
     const s = bubble.optionContext.tailTip;
     try {
-      this.optionEditActive.tail = true;
       const q = p;
       while (p = yield) {
+        this.optionEditActive.tail = true;
         bubble.optionContext.tailTip = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
         this.redraw();
       }
@@ -946,8 +946,8 @@ export class BubbleLayer extends Layer {
     // この座標系をtail座標系と呼ぶ
     const s = bubble.optionContext.tailMid;
     try {
-      this.optionEditActive.tail = true;
       while (p = yield) {
+        this.optionEditActive.tail = true;
         bubble.optionContext.tailMid = worldCoordToTailCoord(bubble.center, bubble.optionContext.tailTip, p);
         this.redraw();
       }
@@ -965,10 +965,10 @@ export class BubbleLayer extends Layer {
 
   *optionsLink(p, bubble) {
     try {
-      this.optionEditActive.link = true;
       const q = p;
       let drop = null;
       while (p = yield) {
+        this.optionEditActive.link = true;
         bubble.optionContext.link = [p[0] - q[0], p[1] - q[1]];
         this.redraw();
         drop = p;
@@ -1007,9 +1007,9 @@ export class BubbleLayer extends Layer {
   *optionsFocalPoint(p, bubble) {
     const s = bubble.optionContext.focalPoint;
     try {
-      this.optionEditActive.focal = true;
       const q = p;
       while (p = yield) {
+        this.optionEditActive.focal = true;
         bubble.optionContext.focalPoint = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
         this.redraw();
       }
@@ -1027,9 +1027,9 @@ export class BubbleLayer extends Layer {
   *optionsFocalRange(p, bubble) {
     const s = bubble.optionContext.focalRange;
     try {
-      this.optionEditActive.focal = true;
       const q = p;
       while (p = yield) {
+        this.optionEditActive.focal = true;
         bubble.optionContext.focalRange = [s[0] + p[0] - q[0], s[1] + p[1] - q[1]];
         this.redraw();
       }
