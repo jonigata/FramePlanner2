@@ -49,8 +49,6 @@
       const data = await getProgression(url);
       if (calling) {
         progress = data.progress;
-      } else {
-        progress = 1;
       }
 
       // getPorgression呼び出しが1秒を超えると嫌なので
@@ -69,6 +67,7 @@
     const newImages = await generateImages(url, imageRequest);
     images.splice(images.length, 0, ...newImages);
     images = images;
+    progress = 1;
     calling = false;
   }
 
