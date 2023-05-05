@@ -5,6 +5,7 @@
   import BubbleSample from './BubbleSample.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
+  import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { tick } from 'svelte';
   import { toolTip } from './passiveToolTipStore';
@@ -112,7 +113,7 @@
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">T</div>
       <div class="hbox" use:toolTip={"フォントサイズ"}>
-        <RangeSlider name="fontsize" bind:value={bubble.fontSize} max={100} step={1} style="width:130px;"/>
+        <ExponentialRangeSlider name="fontsize" bind:value={bubble.fontSize} exponentialMin={100} exponentialRange={20} step={1} style="width:130px;"/>
         <div class="text-xs slider-value-text">
           <div class="number-box"><NumberEdit bind:value={bubble.fontSize} showSlider={false}/></div>
         </div>  
