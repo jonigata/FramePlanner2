@@ -3,7 +3,7 @@ import { drawBubble, getPath, drawPath } from "./bubbleGraphic.js";
 import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawText, measureText } from "./drawText.js";
-import { multiply2D } from "./geometry.js";
+import { multiply2D, reverse2D } from "./geometry.js";
 import * as paper from 'paper';
 
 export class PaperRendererLayer extends Layer {
@@ -133,20 +133,23 @@ export class PaperRendererLayer extends Layer {
       */
 
       bubble.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
-      bubble.path.rotate(-bubble.rotation, bubble.center);
+      bubble.path?.rotate(-bubble.rotation);
     }
 
     // 結合
     for (let bubble of bubbles) {
       if (bubble.parent) {
         bubble.unitedPath = null;
-      } else {
-        bubble.unitedPath = bubble.path;
+      } else if (bubble.path) {
+        bubble.unitedPath = bubble.path.clone();
+        bubble.unitedPath.translate(new paper.Point(bubble.center));
         for (let child of bubble.children) {
-          bubble.unitedPath = bubble.unitedPath.unite(child.path);
+          const path2 = child.path.clone();
+          path2.translate(child.center);
+          bubble.unitedPath = bubble.unitedPath.unite(path2);
         }
         bubble.unitedPath.rotate(bubble.rotation, bubble.center);
-        bubble.unitedPath.translate(new paper.Point(bubble.center).multiply(-1));
+        bubble.unitedPath.translate(reverse2D(bubble.center));
       }
     }
   }
@@ -236,8 +239,8 @@ export class PaperRendererLayer extends Layer {
     if (bubble.unitedPath) { return; }
     if (bubble.parent) { return; }
 
-    const rect = bubble.centeredRect;
-    const [x, y, w, h] = rect;
+    const size = bubble.size;
+    const [w,h] = size;
 
     ctx.save();
     ctx.translate(...bubble.center);
@@ -250,17 +253,17 @@ export class PaperRendererLayer extends Layer {
 
     // shape背景描画
     ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
-    drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+    drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
     ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
-    drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+    drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
 
     // 画像描画
     if (bubble.image) {
       const img = bubble.image;
       let iw = img.image.naturalWidth * img.scale[0];
       let ih = img.image.naturalHeight * img.scale[1];
-      let ix = x + w * 0.5 - iw * 0.5 + img.translation[0];
-      let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
+      let ix = w * 0.5 - iw * 0.5 + img.translation[0];
+      let iy = h * 0.5 - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
     }
 
@@ -268,14 +271,14 @@ export class PaperRendererLayer extends Layer {
   }
 
   renderBubbleForeground(ctx, bubble) {
-    const rect = bubble.centeredRect;
+    const size = bubble.size;
 
     ctx.save();
     ctx.translate(...bubble.center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
     ctx.save();
-    this.drawBubble(ctx, rect, 'clip', bubble);
+    this.drawBubble(ctx, size, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text) {
@@ -286,17 +289,17 @@ export class PaperRendererLayer extends Layer {
     // shape枠描画
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
     ctx.lineWidth = bubble.strokeWidth;
-    this.drawBubble(ctx, rect, 'stroke', bubble);
+    this.drawBubble(ctx, size, 'stroke', bubble);
 
     ctx.restore();
   }
 
-  drawBubble(ctx, rect, method, bubble) {
+  drawBubble(ctx, size, method, bubble) {
     ctx.bubbleDrawMethod = method; // 行儀が悪い
     if (bubble.unitedPath) {
       drawPath(ctx, bubble.unitedPath);
     } else if (!bubble.parent) {
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+      drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
     }
   }
 
@@ -334,13 +337,6 @@ export class PaperRendererLayer extends Layer {
     if (pw <= 0 || ph <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
     canvas.width = pw;
     canvas.height = ph;
-
-    /*
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, pw-1, ph-1);
-    */
 
     ctx.translate(pw * 0.5, ph * 0.5);
     ctx.scale(dpr, dpr);
