@@ -1,4 +1,7 @@
-export function drawVerticalText(context, method, r, text, baselineSkip, charSkip) {
+export function drawVerticalText(context, method, r, text, baselineSkip, charSkip, autoNewline) {
+    console.log("drawVerticalText", autoNewline);
+    let rHeight = autoNewline ? r.height : Infinity;
+
     let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
     let index = 0;
     while (index < text.length) {
@@ -13,7 +16,7 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
                 index++;
                 break;
             }
-            if (r.height < lineH + charSkip) {
+            if (rHeight < lineH + charSkip) {
                 break;
             }
 
@@ -93,7 +96,9 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
     }
 }
 
-export function measureVerticalText(context, maxHeight, text, baselineSkip, charSkip) {
+export function measureVerticalText(context, maxHeight, text, baselineSkip, charSkip, autoNewline) {
+    if (!autoNewline) { maxHeight = Infinity; }
+
     let height = 0;
     let lines = 0;
     let index = 0;

@@ -106,6 +106,7 @@
           <RadioItem bind:group={bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
         </RadioGroup>
       </div>
+      <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={bubble.autoNewline}/>
     </div>
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
