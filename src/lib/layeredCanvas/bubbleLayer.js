@@ -88,9 +88,9 @@ export class BubbleLayer extends Layer {
     }
 
     if (this.interactable && this.selected) {
-      this.drawSelectedUI(ctx, this.selected);
-      this.drawOptionHandles(ctx, this.selected);
       try {
+        this.drawSelectedUI(ctx, this.selected);
+        this.drawOptionHandles(ctx, this.selected);
         this.drawOptionUI(ctx, this.selected);
       }
       catch (e) {
