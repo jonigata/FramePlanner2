@@ -1,12 +1,11 @@
 import { Layer } from "./layeredCanvas.js";
 import { keyDownFlags } from "./keyCache.js";
-import { drawHorizontalText, measureHorizontalText, drawVerticalText, measureVerticalText } from "./drawText.js";
-import { drawBubble, getPath, drawPath } from "./bubbleGraphic";
+import { measureHorizontalText, measureVerticalText } from "./drawText.js";
+import { getPath } from "./bubbleGraphic";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { Bubble, bubbleOptionSets } from "./bubble.js";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.js";
 import { translate, scale } from "./pictureControl.js";
-import { calculatePhysicalLayout, findLayoutAt } from "./frameTree.js";
 import { add2D } from "./geometry.js";
 import { v4 as uuidv4 } from 'uuid';
 import * as paper from 'paper';
@@ -89,9 +88,9 @@ export class BubbleLayer extends Layer {
     }
 
     if (this.interactable && this.selected) {
-      this.drawSelectedUI(ctx, this.selected);
-      this.drawOptionHandles(ctx, this.selected);
       try {
+        this.drawSelectedUI(ctx, this.selected);
+        this.drawOptionHandles(ctx, this.selected);
         this.drawOptionUI(ctx, this.selected);
       }
       catch (e) {
@@ -393,12 +392,12 @@ export class BubbleLayer extends Layer {
     const ctx = this.context;
     let size =[0,0];
     if (bubble.direction == 'v') {
-      const m = measureVerticalText(ctx,99999,s,baselineSkip,charSkip);
+      const m = measureVerticalText(ctx, Infinity, s, baselineSkip, charSkip, false);
       size = [Math.floor(m.width*1.2), Math.floor(m.height*1.2)];
     } else {
       const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
-      const m = measureHorizontalText(ctx,99999,s,baselineSkip);
+      const m = measureHorizontalText(ctx, Infinity, s, baselineSkip, false);
       size = [Math.floor(m.width*1.4), Math.floor(m.height*1.2)];
     }
     return Bubble.forceEnoughSize(size);

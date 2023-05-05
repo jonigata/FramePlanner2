@@ -348,14 +348,14 @@ export class PaperRendererLayer extends Layer {
     const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
     ctx.font = ss; // horizontal measureより先にないとだめ
 
-    const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, bubble.text, baselineSkip, charSkip);
+    const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, bubble.text, baselineSkip, charSkip, bubble.autoNewline);
     const [tw, th] = [m.width, m.height];
     const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
 
     // 本体
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = bubble.fontColor;
-    drawText(bubble.direction, ctx, 'fill', r, bubble.text, baselineSkip, charSkip, m);
+    drawText(bubble.direction, ctx, 'fill', r, bubble.text, baselineSkip, charSkip, m, bubble.autoNewline);
 
     // フチ
     if (0 < bubble.outlineWidth) {
@@ -364,7 +364,7 @@ export class PaperRendererLayer extends Layer {
       ctx.lineWidth = bubble.outlineWidth;
       ctx.font = ss;
       ctx.lineJoin = 'round';
-      drawText(bubble.direction, ctx, 'stroke', r, bubble.text, baselineSkip, charSkip, m);
+      drawText(bubble.direction, ctx, 'stroke', r, bubble.text, baselineSkip, charSkip, m, bubble.autoNewline);
     }
 
     // 描き戻し

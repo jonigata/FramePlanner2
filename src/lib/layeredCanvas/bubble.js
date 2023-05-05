@@ -5,11 +5,21 @@ const threshold = 10;
 
 export class Bubble {
   constructor() {
+    this.reset();
     this.p0 = [0, 0];
     this.p1 = [128, 128];
+    this.text = "empty";
+    this.uuid = uuidv4();
+    this.parent = null;
+    this.creationContext = this.getStackTrace();
+
+    this.image = null;
+    this.optionContext = {};
+  }
+
+  reset() {
     this.offset = [0, 0];
     this.rotation = 0;
-    this.text = "empty";
     this.shape = "square";
     this.embedded = false;
     this.fontStyle = "normal";
@@ -23,12 +33,7 @@ export class Bubble {
     this.strokeWidth = 1;
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
-    this.uuid = uuidv4();
-    this.parent = null;
-    this.creationContext = this.getStackTrace();
-
-    this.image = null;
-    this.optionContext = {};
+    this.autoNewline = true;
   }
 
   getStackTrace() {
@@ -55,6 +60,7 @@ export class Bubble {
     b.strokeWidth = this.strokeWidth;
     b.outlineColor = this.outlineColor;
     b.outlineWidth = this.outlineWidth;
+    b.autoNewline = this.autoNewline;
     b.uuid = uuidv4();
     b.parent = null;
 
@@ -83,6 +89,7 @@ export class Bubble {
     b.strokeWidth = json.strokeWidth ?? 1;
     b.outlineColor = json.outlineColor ?? "#000000FF";
     b.outlineWidth = json.outlineWidth ?? 0;
+    b.autoNewline = json.autoNewline ?? true;
     b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
     b.optionContext = json.optionContext ?? Bubble.getInitialOptions(b);
@@ -109,6 +116,7 @@ export class Bubble {
       strokeWidth: b.strokeWidth == 1 ? undefined : b.strokeWidth,
       outlineColor: b.outlineColor == "#000000FF" ? undefined : b.outlineColor,
       outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
+      autoNewline: b.autoNewline ? undefined : b.autoNewline,
       uuid: b.uuid,
       parent: b.parent ? b.parent.uuid : undefined,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,

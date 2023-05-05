@@ -9,6 +9,7 @@
   import { tick } from 'svelte';
   import { toolTip } from './passiveToolTipStore';
   import { fontChooserOpen, chosenFont } from './fontStore';
+  import { shapeChooserOpen, chosenShape } from './shapeStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -17,7 +18,8 @@
   import pinIcon from './assets/pin.png';
   import embeddedIcon from './assets/embedded.png';
   import unembeddedIcon from './assets/unembedded.png';
-  import { shapeChooserOpen, chosenShape } from './shapeStore';
+  import resetIcon from './assets/reset.png';
+
 
   export let position = { x: 0, y: 0 };
   export let bubble = null;
@@ -80,6 +82,11 @@
     $shapeChooserOpen = true;
   }
 
+  function reset() {
+    bubble?.reset();
+    bubble = bubble;    
+  }
+
 </script>
 
 {#if bubble}
@@ -106,6 +113,7 @@
           <RadioItem bind:group={bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
         </RadioGroup>
       </div>
+      <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={bubble.autoNewline}/>
     </div>
 
     <div class="hbox px-1 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
@@ -152,7 +160,9 @@
           <RadioItem bind:group={bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
         </RadioGroup>
       </div> 
-  </div>
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
+    </div>
   </div>
 </div>
 {/if}
@@ -258,5 +268,11 @@
     width: 15px;
     height: 15px;
     border-radius: 4px;
+  }
+  .reset-image {
+    width: 24px;
+    height: 24px;
+    margin-left: 4px;
+    cursor: pointer;
   }
 </style>
