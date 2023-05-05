@@ -1,5 +1,4 @@
 export function drawVerticalText(context, method, r, text, baselineSkip, charSkip, autoNewline) {
-    console.log("drawVerticalText", autoNewline);
     let rHeight = autoNewline ? r.height : Infinity;
 
     let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text

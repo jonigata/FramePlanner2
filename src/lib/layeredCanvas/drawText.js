@@ -3,7 +3,6 @@ import { drawVerticalText, measureVerticalText } from "./verticalText.js";
 export { drawVerticalText, measureVerticalText };
 
 export function drawText(dir, ctx, method, r, text, baselineSkip, charSkip, m, autoNewline) {
-  console.log("drawText", autoNewline);
   if (dir === 'v') {
     drawVerticalText(ctx, method, r, text, baselineSkip, charSkip, autoNewline);
   } else {

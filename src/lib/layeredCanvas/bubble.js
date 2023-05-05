@@ -5,11 +5,21 @@ const threshold = 10;
 
 export class Bubble {
   constructor() {
+    this.reset();
     this.p0 = [0, 0];
     this.p1 = [128, 128];
+    this.text = "empty";
+    this.uuid = uuidv4();
+    this.parent = null;
+    this.creationContext = this.getStackTrace();
+
+    this.image = null;
+    this.optionContext = {};
+  }
+
+  reset() {
     this.offset = [0, 0];
     this.rotation = 0;
-    this.text = "empty";
     this.shape = "square";
     this.embedded = false;
     this.fontStyle = "normal";
@@ -24,12 +34,6 @@ export class Bubble {
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
     this.autoNewline = true;
-    this.uuid = uuidv4();
-    this.parent = null;
-    this.creationContext = this.getStackTrace();
-
-    this.image = null;
-    this.optionContext = {};
   }
 
   getStackTrace() {
