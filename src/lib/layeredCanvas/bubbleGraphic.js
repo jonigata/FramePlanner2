@@ -253,33 +253,40 @@ paper.setup(new paper.Size(1, 1)); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
 export function getPath(shape, r, opts, seed) {
-  switch (shape) {
-    case 'square':
-      return getSquarePath(r, opts, seed);
-    case 'ellipse':
-      return getEllipsePath(r, opts, seed);
-    case 'polygon':
-      return getPolygonPath(r, opts, seed);
-    case 'rounded':
-      return getRoundedPath(r, opts, seed);
-    case 'harsh':
-      return getHarshPath(r, opts, seed);
-    case 'harsh-curve':
-      return getHarshCurvePath(r, opts, seed);
-    case 'soft':
-      return getSoftPath(r, opts, seed);
-    case 'heart':
-      return getHeartPath(r, opts, seed);
-    case 'diamond':
-      return getDiamondPath(r, opts, seed);
-    case 'ellipse-mind':
-      return getEllipseMindPath(r, opts, seed);
-    case 'soft-mind':
-      return getSoftMindPath(r, opts, seed);
-    case 'rounded-mind':
-      return getRoundedMindPath(r, opts, seed);
+  const startTime = performance.now();
+  try {
+    switch (shape) {
+      case 'square':
+        return getSquarePath(r, opts, seed);
+      case 'ellipse':
+        return getEllipsePath(r, opts, seed);
+      case 'polygon':
+        return getPolygonPath(r, opts, seed);
+      case 'rounded':
+        return getRoundedPath(r, opts, seed);
+      case 'harsh':
+        return getHarshPath(r, opts, seed);
+      case 'harsh-curve':
+        return getHarshCurvePath(r, opts, seed);
+      case 'soft':
+        return getSoftPath(r, opts, seed);
+      case 'heart':
+        return getHeartPath(r, opts, seed);
+      case 'diamond':
+        return getDiamondPath(r, opts, seed);
+      case 'ellipse-mind':
+        return getEllipseMindPath(r, opts, seed);
+      case 'soft-mind':
+        return getSoftMindPath(r, opts, seed);
+      case 'rounded-mind':
+        return getRoundedMindPath(r, opts, seed);
+    }
+
+    return null;
   }
-  return null;
+  finally {
+    // console.log(`getPath(${shape}, ${r}, ${opts}) took ${performance.now() - startTime} ms`);
+  }
 }
 
 export function drawPath(context, unified) {
