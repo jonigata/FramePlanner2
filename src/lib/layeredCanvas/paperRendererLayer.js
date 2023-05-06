@@ -120,20 +120,23 @@ export class PaperRendererLayer extends Layer {
 
     // パス作成
     for (let bubble of bubbles) {
-      /*
-      const startTime = performance.now();
       const c = {
         shape: bubble.shape,
         size: bubble.size,
         optionContext: bubble.optionContext,
         seed: bubble.seed,
+        rotation: bubble.rotation,
       }
       const json = JSON.stringify(c);
-      console.log(`${c} took ${performance.now() - startTime} ms, ${json.length} bytes`);
-      */
-
-      bubble.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
-      bubble.path?.rotate(-bubble.rotation);
+      // console.log(`${c} took ${performance.now() - startTime} ms, ${json.length} bytes`);
+      if (bubble.pathJson != json) {
+        // 変更が起きたときのみ
+        // const startTime = performance.now();
+        bubble.pathJson = json;
+        bubble.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
+        bubble.path?.rotate(-bubble.rotation);
+        // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
+    }
     }
 
     // 結合
