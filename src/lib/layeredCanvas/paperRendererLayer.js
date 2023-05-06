@@ -142,7 +142,7 @@ export class PaperRendererLayer extends Layer {
         bubble.unitedPath = null;
       } else if (bubble.path) {
         bubble.unitedPath = bubble.path.clone();
-        bubble.unitedPath.translate(new paper.Point(bubble.center));
+        bubble.unitedPath.translate(bubble.center);
         for (let child of bubble.children) {
           const path2 = child.path.clone();
           path2.translate(child.center);

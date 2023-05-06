@@ -247,7 +247,7 @@ function finishTrivialPath(context) {
 }
 
 // https://github.com/paperjs/paper.js/issues/1889
-paper.setup(new paper.Size(1, 1)); // creates a virtual canvas
+paper.setup([1,1]); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
 export function getPath(shape, size, opts, seed) {
@@ -627,9 +627,9 @@ function addMind(path, seed, size, opts, newOpts) {
   const r = Math.min(size[0], size[1]) * 0.5;
   for (let t of trail) {
     const p = [m[0] + t[0] * v[0], m[1] + t[0] * v[1]];
-    const rt = r * t[1];
-    const rr = [p[0] - rt, p[1] - rt, rt * 2, rt * 2];
-    const path2 = getCloudPath(rr, newOpts, seed, 6, 2, 0.15);
+    const rt = r * t[1] * 2;
+    const path2 = getCloudPath([rt,rt], newOpts, seed, 6, 2, 0.15);
+    path2.translate(p);
     path = path.unite(path2);
   }
   return path;
