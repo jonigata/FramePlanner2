@@ -21,6 +21,8 @@ export class FrameElement {
         this.visibility = 2;
         this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
         this.gallery = [];
+        this.semantics = null;
+        this.prompt = null;
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;
@@ -43,6 +45,8 @@ export class FrameElement {
         element.image = this.image;
         element.z = this.z;
         element.visibility = this.visibility;
+        element.semantics = this.semantics;
+        element.prompt = this.prompt;
         return element;
     }
 
@@ -60,6 +64,8 @@ export class FrameElement {
         element.borderWidth = markUpElement.borderWidth;
         element.z = markUpElement.z ?? 0;
         element.visibility = markUpElement.visibility ?? 2;
+        element.semantics = markUpElement.semantics;
+        element.prompt = markUpElement.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
 
         if (children) {
             if (markUpElement.column) {
@@ -102,6 +108,8 @@ export class FrameElement {
         if (element.borderWidth) { markUpElement.borderWidth = element.borderWidth; }
         if (element.z && element.z !== 0) { markUpElement.z = element.z; }
         if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
+        if (element.semantics) { markUpElement.semantics = element.semantics; }
+        if (element.prompt) { markUpElement.prompt = element.prompt; }
         if (element.direction) {
             const dir = element.direction == 'h' ? 'row' : 'column';
             markUpElement[dir] = [];
