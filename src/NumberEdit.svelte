@@ -1,13 +1,8 @@
 <!-- SliderEdit.svelte -->
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
-  import { RangeSlider } from '@skeletonlabs/skeleton';
 
   export let value;
-  export let required = true;
-  export let min=10;
-  export let max=100;
-  export let showSlider=true;
 
   const dispatch = createEventDispatcher();
   let editing = false;
@@ -62,7 +57,7 @@
   }
   
   function handleBlur(event) {
-    if (event.relatedTarget && event.relatedTarget.closest('.edit-and-slider')) {
+    if (event.relatedTarget) {
       return;
     }
     submit();
@@ -75,59 +70,42 @@
   class="container"
   bind:this="{container}"
 >
-  <div class="edit-and-slider" style="width: {containerWidth}px;">
-    <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
-      <input
-        bind:value={textValue}
-        on:focus="{edit}"
-        on:keydown="{keydown}"
-        on:blur="{handleBlur}"
-        {required}
-        class="input"
-      />
-    </div>
-  {#if editing}
-    {#if showSlider}
-      <RangeSlider
-        bind:value
-        on:change="{submit}"
-        min={min}
-        max={max}
-        step={1}
-        style="width: {containerWidth * 4}px; z-index:9999;"
-      />
-    {/if}
-  {/if}
-    </div>
+  <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
+    <input
+      bind:value={textValue}
+      on:focus="{edit}"
+      on:keydown="{keydown}"
+      on:blur="{handleBlur}"
+      class="input"
+    />
+  </div>
 </div>
 
 <style>
   .container {
-    display: inline-block;
+    display: flex;
     position: relative;
     width: 100%;
     height: 100%;
+    align-items: center;
   }
   input {
-    background: none;
+    background: white;
     font-size: inherit;
     color: inherit;
     font-weight: inherit;
     text-align: inherit;
     box-shadow: none;
     box-sizing: content-box;
-  }
-  input:not(:focus) {
+    border-radius: 2px;
+    padding-right: 2px;
     border: none;
-  }
-  .edit-and-slider {
-    position: absolute;
-    width: 100%;
-    height: 80px;
   }
   .edit-box {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
   }
 </style>

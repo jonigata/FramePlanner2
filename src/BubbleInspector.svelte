@@ -69,7 +69,7 @@
 
   $:onChangeFont($chosenFont);
   function onChangeFont(f) {
-    if (bubble && f !== f.fontFamily) {
+    if (bubble && f && (bubble.fontFamily !== f.fontFamily || bubble.fontWeight !== f.fontWeight)) {
       bubble.fontFamily = f.fontFamily;
       bubble.fontWeight = f.fontWeight;
     }
@@ -119,18 +119,19 @@
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">T</div>
-      <div class="hbox" use:toolTip={"フォントサイズ"}>
+      <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
         <ExponentialRangeSlider name="fontsize" bind:value={bubble.fontSize} exponentialMin={100} exponentialRange={20} step={1} style="width:130px;"/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={bubble.fontSize} showSlider={false}/></div>
+          <div class="number-box"><NumberEdit bind:value={bubble.fontSize}/></div>
         </div>  
+        <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={bubble.fontColor} label="" /></span>
       </div>
-      <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={bubble.fontColor} label="" /></span>
-      <span class="mx-2">/</span>フチ
-      <div class="hbox" use:toolTip={"フチの太さ"}>
+      <span class="mx-2">/</span>
+      <div class="hbox gap-0.5" use:toolTip={"フチの太さ"}>
+        <span>フチ</span>
         <RangeSlider name="outlinewidth" bind:value={bubble.outlineWidth} max={20} step={1} style="width:50px;"/>
+        <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={bubble.outlineColor} label="" /></span>
       </div>
-      <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={bubble.outlineColor} label="" /></span>
     </div>
 
     <div class="hbox expand gap-2">
@@ -225,9 +226,10 @@
     height: 120px;
   }
   .number-box {
-    width: 35px;
+    width: 30px;
     height: 20px;
     display: inline-block;
+    text-align: right;
   }
   .selected-font:hover {
     color: rgb(128, 93, 47);
@@ -273,5 +275,9 @@
     height: 24px;
     margin-left: 4px;
     cursor: pointer;
+  }
+  .slider-label {
+    margin-left: 4px;
+    margin-right: 2px;
   }
 </style>

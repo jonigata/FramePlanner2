@@ -30,13 +30,16 @@
     }
 
     const ctx = canvas.getContext("2d");
+    ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(width * 0.5, height * 0.5);
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     ctx.bubbleDrawMethod = "fill";
-    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p, opts);
+    drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
     ctx.bubbleDrawMethod = "stroke";
-    drawBubble(ctx, 'sample', [8, 8, canvas.width - 16, canvas.height - 16], p, opts);
+    drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    ctx.restore();
   }
 
 </script>

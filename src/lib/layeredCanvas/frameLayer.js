@@ -1,5 +1,6 @@
 import { Layer } from "./layeredCanvas.js";
 import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
+import { constraintRecursive, constraintTree, constraintLeaf } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
@@ -8,13 +9,14 @@ import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 const iconUnit = [32,32];
 
 export class FrameLayer extends Layer {
-  constructor(renderLayer, frameTree, interactable, onCommit, onRevert) {
+  constructor(renderLayer, frameTree, interactable, onCommit, onRevert, onGenerate) {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
     this.interactable = interactable;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
+    this.onGenerate = onGenerate;
 
     const unit = iconUnit;
     const isFrameActive = () => this.interactable && this.focusedLayout && !this.pointerHandler;
@@ -33,6 +35,7 @@ export class FrameLayer extends Layer {
     this.dropIcon = new ClickableIcon("drop.png",unit,[0,1],"画像除去", isImageActive);
     this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png",unit,[0,1],"左右反転", isImageActive);
     this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
+    this.generateIcon = new ClickableIcon("generate-image.png",unit,[0,1],"画像生成", isFrameActiveAndVisible);
 
     const isBorderActive = (dir) => this.interactable && this.focusedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",unit,[0.5,1],"幅を変更", () => isBorderActive('h'));
@@ -43,7 +46,7 @@ export class FrameLayer extends Layer {
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.generateIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
@@ -122,6 +125,7 @@ export class FrameLayer extends Layer {
       this.dropIcon.position = cp([0,1],[0,0]);
       this.flipHorizontalIcon.position = cp([0,1], [2,0]);
       this.flipVerticalIcon.position = cp([0,1], [3,0]);
+      this.generateIcon.position = cp([0,1], [0,-2]);
       this.redraw();
 
       const x = origin[0] + size[0] / 2;
@@ -307,6 +311,8 @@ export class FrameLayer extends Layer {
       } else if (this.flipVerticalIcon.contains(point)) {
         layout.element.reverse[1] *= -1;
         this.redraw();
+      } else if (this.generateIcon.contains(point)) {
+        this.onGenerate(layout.element);
       } else {
         return { layout: layout };
       }
@@ -350,7 +356,7 @@ export class FrameLayer extends Layer {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         element.scale = [origin * s, origin * s];
-        this.constraintLeaf(layout);
+        constraintLeaf(layout);
         this.redraw();
       });
     } catch (e) {
@@ -366,7 +372,7 @@ export class FrameLayer extends Layer {
     try {
       yield* translate(p, (q) => {
         element.translation = [origin[0] + q[0], origin[1] + q[1]];
-        this.constraintLeaf(layout);
+        constraintLeaf(layout);
         this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
       });
     } catch (e) {
@@ -395,7 +401,7 @@ export class FrameLayer extends Layer {
         c0.rawSize = t - rawSpacing * 0.5;
         c1.rawSize = rawSum - t - rawSpacing * 0.5;
         this.updateBorder(border);
-        this.constraintRecursive(border.layout);
+        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -428,7 +434,7 @@ export class FrameLayer extends Layer {
   
         element.calculateLengthAndBreadth();
         this.updateBorder(border);
-        this.constraintRecursive(border.layout);
+        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -453,7 +459,7 @@ export class FrameLayer extends Layer {
         const op = p[dir] - s[dir];
         prev.divider.slant = Math.max(-42, Math.min(42, rawSlant + op * 0.2));
         this.updateBorder(border);
-        this.constraintRecursive(border.layout);
+        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -479,7 +485,7 @@ export class FrameLayer extends Layer {
         const currentPadding = initialPadding + delta * deltaFactor;
         element.padding[padding.handle] = currentPadding / rawSize[dir];
         this.updatePadding(padding);
-        this.constraintTree(padding.layout);
+        constraintTree(padding.layout);
         this.redraw();
       }
     } catch (e) {
@@ -516,79 +522,11 @@ export class FrameLayer extends Layer {
       this.getPaperSize(),
       [0, 0]
     );
-    this.constraintRecursive(layout);
-  }
-
-  constraintTree(layout) {
-    const newLayout = calculatePhysicalLayout(
-      layout.element,
-      layout.size,
-      layout.origin
-    );
-    this.constraintRecursive(newLayout);
-  }
-
-  constraintRecursive(layout) {
-    if (layout.children) {
-      for (const child of layout.children) {
-        this.constraintRecursive(child);
-      }
-    } else if (layout.element && layout.element.image) {
-      this.constraintLeaf(layout);
-    }
-  }
-
-  constraintLeaf(layout) {
-    if (!layout.corners) {return; }
-    if (!layout.element.image) { return; }
-    const element = layout.element;
-    const [x0, y0, x1, y1] = [
-      Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
-      Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
-      Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
-      Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
-    ]
-    const [w, h] = [x1 - x0, y1 - y0];
-    console.log(x0, y0, x1, y1, w, h);
-
-    let scale = element.scale[0];
-    if (element.image.width * scale < w) {
-      scale = w / element.image.width;
-    }
-    if (element.image.height * scale < h) {
-      scale = h / element.image.height;
-    }
-    element.scale = [scale, scale];
-
-    const [rw, rh] = [
-      element.image.width * scale,
-      element.image.height * scale,
-    ];
-    console.log("scaled image size", rw, rh, element.reverse[0], element.reverse[1]);
-    const x = (x0 + x1) * 0.5 + element.translation[0];
-    const y = (y0 + y1) * 0.5 + element.translation[1];
-
-    if (x0 < x - rw / 2) {
-      element.translation[0] = - (w - rw) / 2;
-      console.log("left", - (w - rw) / 2);
-    }
-    if (x + rw / 2 < x1) {
-      element.translation[0] = (w - rw) / 2;
-      console.log("right", (w - rw) / 2);
-    }
-    if (y0 < y - rh / 2) {
-      element.translation[1] = - (h - rh) / 2;
-      console.log("top", - (h - rh) / 2);
-    }
-    if (y1 > y + rh / 2) {
-      element.translation[1] = (h - rh) / 2;
-      console.log("bottom", (h - rh) / 2);
-    }
-
+    constraintRecursive(layout);
   }
 
   importImage(layoutlet, image) {
-    const size = [image.width, image.height];
+    const size = [image.naturalWidth, image.naturalHeight];
     // calc expansion to longer size
     const scale = Math.max(
       layoutlet.size[0] / size[0],
@@ -598,7 +536,7 @@ export class FrameLayer extends Layer {
     layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
-    this.constraintLeaf(layoutlet);
+    constraintLeaf(layoutlet);
     this.redraw();
   }
 

@@ -29,10 +29,17 @@
     }
   }
 
+  function replacer(key, value) {
+    if (typeof value === 'number' && !Number.isInteger(value)) {
+      return parseFloat(value.toFixed(2)); // 小数点以下2桁に制限
+    }
+    return value;
+  }
+
   $:onOutputJsonDocument($jsonEditorOutput);
-  async function onOutputJsonDocument(jsoe) {
+  async function onOutputJsonDocument(json) {
     skipJsonChange = true;
-    content = { text: JSON.stringify(jsoe, null, 2) };
+    content = { text: JSON.stringify(json, replacer, 2) };
     await tick(); // hack
     skipJsonChange = false;
   }

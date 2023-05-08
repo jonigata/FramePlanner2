@@ -34,14 +34,8 @@ export function generateRandomAngles(rng, numPoints, jitterFactor=0.5) {
   return angles;
 }
 
-export function generateSuperEllipsePoints(rect, angles, n = 3) {
-  return angles.map(angle => superEllipsePoint2D(rect[2] / 2, rect[3] / 2, n, angle));
-}
-
-export function movePointsToRectCenter(points, rect) {
-  const c = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2];
-  const points2 = points.map(p => [p[0] + c[0], p[1] + c[1]]);
-  return points2;
+export function generateSuperEllipsePoints(size, angles, n = 3) {
+  return angles.map(angle => superEllipsePoint2D(size[0] / 2, size[1] / 2, n, angle));
 }
 
 export function focusAnglesAroundIndex(angles, focusAngle, basicFocusFactor) {

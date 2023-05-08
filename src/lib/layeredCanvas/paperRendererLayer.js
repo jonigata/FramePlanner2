@@ -3,7 +3,7 @@ import { drawBubble, getPath, drawPath } from "./bubbleGraphic.js";
 import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawText, measureText } from "./drawText.js";
-import { multiply2D } from "./geometry.js";
+import { multiply2D, reverse2D } from "./geometry.js";
 import * as paper from 'paper';
 
 export class PaperRendererLayer extends Layer {
@@ -104,7 +104,7 @@ export class PaperRendererLayer extends Layer {
 
   resolveLinkages(bubbles) {
     // 親子関係解決
-    // ちょっとお行儀が悪く、unitedPathやchildrenを書き換えている
+    // ちょっとお行儀が悪く、path, unitedPath, childrenを書き換えている
     const bubbleDic = {};
     for (let bubble of bubbles) {
       bubble.unitedPath = null;
@@ -118,10 +118,41 @@ export class PaperRendererLayer extends Layer {
       }
     }
 
+    // パス作成
+    for (let bubble of bubbles) {
+      const c = {
+        shape: bubble.shape,
+        size: bubble.size,
+        optionContext: bubble.optionContext,
+        seed: bubble.seed,
+        rotation: bubble.rotation,
+      }
+      const json = JSON.stringify(c);
+      // console.log(`${c} took ${performance.now() - startTime} ms, ${json.length} bytes`);
+      if (bubble.pathJson != json) {
+        // 変更が起きたときのみ
+        // const startTime = performance.now();
+        bubble.pathJson = json;
+        bubble.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
+        bubble.path?.rotate(-bubble.rotation);
+        // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
+    }
+    }
+
     // 結合
     for (let bubble of bubbles) {
-      if (0 < bubble.children.length) {
-        bubble.unitedPath = this.uniteBubble([bubble, ...bubble.children]);
+      if (bubble.parent) {
+        bubble.unitedPath = null;
+      } else if (bubble.path) {
+        bubble.unitedPath = bubble.path.clone();
+        bubble.unitedPath.translate(bubble.center);
+        for (let child of bubble.children) {
+          const path2 = child.path.clone();
+          path2.translate(child.center);
+          bubble.unitedPath = bubble.unitedPath.unite(path2);
+        }
+        bubble.unitedPath.rotate(bubble.rotation, bubble.center);
+        bubble.unitedPath.translate(reverse2D(bubble.center));
       }
     }
   }
@@ -209,9 +240,10 @@ export class PaperRendererLayer extends Layer {
 
   renderBubbleSingleBackground(ctx, bubble) {
     if (bubble.unitedPath) { return; }
+    if (bubble.parent) { return; }
 
-    const rect = bubble.centeredRect;
-    const [x, y, w, h] = rect;
+    const size = bubble.size;
+    const [w,h] = size;
 
     ctx.save();
     ctx.translate(...bubble.center);
@@ -223,20 +255,18 @@ export class PaperRendererLayer extends Layer {
     ctx.lineWidth = bubble.strokeWidth;
 
     // shape背景描画
-    if (!bubble.parent) {
-      ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
-      ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
-    }
+    ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
+    drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
+    ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
+    drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
 
     // 画像描画
-    if (bubble.image && !bubble.parent) {
+    if (bubble.image) {
       const img = bubble.image;
-      let iw = img.image.width * img.scale[0];
-      let ih = img.image.height * img.scale[1];
-      let ix = x + w * 0.5 - iw * 0.5 + img.translation[0];
-      let iy = y + h * 0.5 - ih * 0.5 + img.translation[1];
+      let iw = img.image.naturalWidth * img.scale[0];
+      let ih = img.image.naturalHeight * img.scale[1];
+      let ix = w * 0.5 - iw * 0.5 + img.translation[0];
+      let iy = h * 0.5 - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
     }
 
@@ -244,14 +274,14 @@ export class PaperRendererLayer extends Layer {
   }
 
   renderBubbleForeground(ctx, bubble) {
-    const rect = bubble.centeredRect;
+    const size = bubble.size;
 
     ctx.save();
     ctx.translate(...bubble.center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
     ctx.save();
-    this.drawBubble(ctx, rect, 'clip', bubble);
+    this.drawBubble(ctx, size, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text) {
@@ -262,17 +292,17 @@ export class PaperRendererLayer extends Layer {
     // shape枠描画
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
     ctx.lineWidth = bubble.strokeWidth;
-    this.drawBubble(ctx, rect, 'stroke', bubble);
+    this.drawBubble(ctx, size, 'stroke', bubble);
 
     ctx.restore();
   }
 
-  drawBubble(ctx, rect, method, bubble) {
+  drawBubble(ctx, size, method, bubble) {
     ctx.bubbleDrawMethod = method; // 行儀が悪い
     if (bubble.unitedPath) {
       drawPath(ctx, bubble.unitedPath);
     } else if (!bubble.parent) {
-      drawBubble(ctx, bubble.text, rect, bubble.shape, bubble.optionContext);
+      drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
     }
   }
 
@@ -283,7 +313,7 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
     ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-    ctx.translate(-element.image.width * 0.5, -element.image.height * 0.5);
+    ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
     ctx.drawImage(element.image, 0, 0);
     ctx.restore();
   }
@@ -310,13 +340,6 @@ export class PaperRendererLayer extends Layer {
     if (pw <= 0 || ph <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
     canvas.width = pw;
     canvas.height = ph;
-
-    /*
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, pw-1, ph-1);
-    */
 
     ctx.translate(pw * 0.5, ph * 0.5);
     ctx.scale(dpr, dpr);
@@ -352,19 +375,6 @@ export class PaperRendererLayer extends Layer {
       console.log(pw, ph, canvas.width, canvas.height, bubble.size);
       throw e;
     }
-  }
-
-  uniteBubble(bubbles) {
-    let path = null;
-    for (let bubble of bubbles) {
-      const [x, y, w, h] = bubble.regularizedPositionAndSize();
-      const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
-      path2.rotate(-bubble.rotation, bubble.center);
-      path = path ? path.unite(path2) : path2;
-    }
-    path.rotate(bubbles[0].rotation, bubbles[0].center);
-    path.translate(new paper.Point(bubbles[0].center).multiply(-1));
-    return path;
   }
 
   setBubbles(bubbles) {

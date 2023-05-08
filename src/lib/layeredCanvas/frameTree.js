@@ -19,6 +19,10 @@ export class FrameElement {
         this.borderWidth = null;
         this.z = 0;
         this.visibility = 2;
+        this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+        this.gallery = [];
+        this.semantics = null;
+        this.prompt = null;
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;
@@ -41,6 +45,8 @@ export class FrameElement {
         element.image = this.image;
         element.z = this.z;
         element.visibility = this.visibility;
+        element.semantics = this.semantics;
+        element.prompt = this.prompt;
         return element;
     }
 
@@ -58,6 +64,8 @@ export class FrameElement {
         element.borderWidth = markUpElement.borderWidth;
         element.z = markUpElement.z ?? 0;
         element.visibility = markUpElement.visibility ?? 2;
+        element.semantics = markUpElement.semantics;
+        element.prompt = markUpElement.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
 
         if (children) {
             if (markUpElement.column) {
@@ -100,6 +108,8 @@ export class FrameElement {
         if (element.borderWidth) { markUpElement.borderWidth = element.borderWidth; }
         if (element.z && element.z !== 0) { markUpElement.z = element.z; }
         if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
+        if (element.semantics) { markUpElement.semantics = element.semantics; }
+        if (element.prompt) { markUpElement.prompt = element.prompt; }
         if (element.direction) {
             const dir = element.direction == 'h' ? 'row' : 'column';
             markUpElement[dir] = [];
@@ -604,6 +614,55 @@ export function dealImages(frameTree, images) {
       dealImages(frameTree.children[i], images);
     }
   }
-
 }
+
+export function constraintTree(layout) {
+  const newLayout = calculatePhysicalLayout(
+    layout.element,
+    layout.size,
+    layout.origin
+  );
+  constraintRecursive(newLayout);
+}
+
+export function constraintRecursive(layout) {
+  if (layout.children) {
+    for (const child of layout.children) {
+      constraintRecursive(child);
+    }
+  } else if (layout.element && layout.element.image) {
+    constraintLeaf(layout);
+  }
+}
+
+export function constraintLeaf(layout) {
+  if (!layout.corners) {return; }
+  if (!layout.element.image) { return; }
+
+  const element = layout.element;
+  const [x0, y0, x1, y1] = [
+    Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
+    Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
+    Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
+    Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
+  ]
+  const [w, h] = [x1 - x0, y1 - y0];
+  const [iw, ih] = [element.image.naturalWidth, element.image.naturalHeight];
+
+  let scale = element.scale[0];
+  if (iw * scale < w) { scale = w / iw; }
+  if (ih * scale < h) { scale = h / ih; }
+  element.scale = [scale, scale];
+
+  const [rw, rh] = [iw * scale, ih * scale];
+  const x = (x0 + x1) * 0.5 + element.translation[0];
+  const y = (y0 + y1) * 0.5 + element.translation[1];
+
+  if (x0 < x - rw / 2) { element.translation[0] = - (w - rw) / 2; }
+  if (x + rw / 2 < x1) { element.translation[0] = (w - rw) / 2; }
+  if (y0 < y - rh / 2) { element.translation[1] = - (h - rh) / 2; }
+  if (y1 > y + rh / 2) { element.translation[1] = (h - rh) / 2; }
+}
+
+
 
