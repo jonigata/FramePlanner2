@@ -7,8 +7,9 @@
   import Drawer from './Drawer.svelte';
   import KeyValueStorage from "./KeyValueStorage.svelte";
   import { tick, onMount } from "svelte";
+  import { toastStore } from '@skeletonlabs/skeleton';
 
-  let url: string = "http://192.168.68.111:7867";
+  let url: string = "http://localhost:7860";
   let images: HTMLImageElement[] = [];
   let imageRequest = {
      "positive": "1 cat",
@@ -64,10 +65,16 @@
 
     calling = true;
     f();
-    const newImages = await generateImages(url, imageRequest);
-    images.splice(images.length, 0, ...newImages);
-    images = images;
-    progress = 1;
+    try {
+      const newImages = await generateImages(url, imageRequest);
+      images.splice(images.length, 0, ...newImages);
+      images = images;
+      progress = 1;
+    } catch (e) {
+      console.log(e);
+      toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
+      progress = 0;
+    }
     calling = false;
   }
 
@@ -80,7 +87,7 @@
   onMount(async () => {
     await storage.isReady();
     const data = await storage.get("imageRequest");
-    url = await storage.get("url");
+    url = await storage.get("url") ?? url;
     if (data) {
       imageRequest = JSON.parse(data);
     }

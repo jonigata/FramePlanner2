@@ -17,6 +17,9 @@ export async function generateImages(url, imageRequest) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     });
+    if (!response.ok) {
+      throw `${url}: ${response.status} ${response.statusText}`;
+    }
 
     const data = await response.json();
     console.log(data);
@@ -36,6 +39,7 @@ export async function generateImages(url, imageRequest) {
     return imgs;
   } catch (error) {
     console.error('Error:', error);
+    throw error;
   }
 }
 

@@ -77,6 +77,12 @@
     <p>Shift+ドラッグ: 傾き</p>
     <p>※傾かせすぎに関しては自己責任でお願いします</p>
 
+    <h3>sdwebui連携</h3>
+    <ol>
+      <li>sdwebui起動時に、COMMANDLINE_ARGSに'--cors-allow-origins https://frameplanner-e5569.web.app'を指定する</li>
+      <li>各コマの「<img style="display: inline;" width="18" height="18" src='./src/assets/generate-image.png' alt="generate"/>画像生成」   ボタンを押し、「URL」にsdwebuiのURLを入力する</li>
+    </ol>
+
     <h2>Q&A</h2>
     <dl>
       <dt>Q.「クリップボードを使う」をブロックしてしまったが、使いたい</dt>
@@ -127,6 +133,16 @@
   }
   ul {
     margin-left: 32px;
+  }
+  ol {
+    margin-left: 32px;
+  }
+  ol li {
+    list-style-type: none;
+    counter-increment: cnt;
+  }
+  ol li::before {
+    content: counter(cnt)". ";
   }
   .comic-link {
     cursor: pointer;
