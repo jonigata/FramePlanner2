@@ -94,7 +94,7 @@ export class BubbleLayer extends Layer {
         this.drawOptionUI(ctx, this.selected);
       }
       catch (e) {
-        console.log(e, this.optionEditActive, this.selected);
+        console.log(e, this.optionEditActive, this.selected, this.selected?.optionContext);
         throw e;
       }
     }
