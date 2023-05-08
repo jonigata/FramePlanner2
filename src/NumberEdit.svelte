@@ -15,11 +15,29 @@
   let container;
   let containerWidth = 0;
   let containerHeight = 0;
+  let textValue = '';
+
+  $: onChangeValue(value);
+  function onChangeValue(value) {
+    const n = parseInt(textValue, 10);
+    if (value != n) {
+      textValue = value.toString();
+    }
+  }
+
+  $: onChangeTextValue(textValue);
+  function onChangeTextValue(textValue) {
+    const n = parseInt(textValue, 10);
+    if (value != n) {
+      value = n;
+    }
+  }
 
   onMount(() => {
     original = value;
     containerWidth = container.offsetWidth;
     containerHeight = container.offsetHeight;
+    textValue = value.toString();
   });
 
   function edit(element) {
@@ -60,7 +78,7 @@
   <div class="edit-and-slider" style="width: {containerWidth}px;">
     <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
       <input
-        bind:value
+        bind:value={textValue}
         on:focus="{edit}"
         on:keydown="{keydown}"
         on:blur="{handleBlur}"
