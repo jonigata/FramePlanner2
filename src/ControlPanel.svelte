@@ -50,11 +50,18 @@
       const file = files[0];
       console.log(file.type)
       if (file.type.startsWith("image/")) {
-        const imageBitmap = await createImageBitmap(file);
-        setDimensions(imageBitmap.width, imageBitmap.height);
+        const imageURL = URL.createObjectURL(file);
+        const image = new Image();
+
+        const imageLoaded = new Promise((resolve) => image.onload = resolve);          
+        image.src = imageURL;
+        await imageLoaded;
+
+        setDimensions(image.naturalWidth, image.naturalHeight);
         $paperTemplate = { frameTree: {}, bubbles: [] };
         await tick();
-        $importingImage = imageBitmap;
+        $importingImage = image;
+        URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
       } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
         const text = await readFileAsText(file);
         $paperTemplate = JSON.parse(text);
