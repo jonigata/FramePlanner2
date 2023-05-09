@@ -393,7 +393,7 @@ export class BubbleLayer extends Layer {
     let size =[0,0];
     if (bubble.direction == 'v') {
       const m = measureVerticalText(ctx, Infinity, s, baselineSkip, charSkip, false);
-      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.2)];
+      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
     } else {
       const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
@@ -632,6 +632,7 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(p)) {
+        bubble.size = this.calculateFitBubbleSize(bubble.text, bubble);
         return;
       }
     }

@@ -266,6 +266,12 @@ export class Bubble {
     return [Math.abs(this.p1[0] - this.p0[0]), Math.abs(this.p1[1] - this.p0[1])];
   }
 
+  set size(s) {
+    const center = this.center;
+    this.p0 = [center[0] - s[0] / 2, center[1] - s[1] / 2];
+    this.p1 = [center[0] + s[0] / 2, center[1] + s[1] / 2];
+  }
+
   get imageSize() {
     return [this.image?.image.width, this.image?.image.height];
   }  
