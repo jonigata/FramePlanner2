@@ -730,18 +730,22 @@ export class BubbleLayer extends Layer {
       while (p = yield) {
         last = p;
         this.lit = null;
-        for (let b of this.bubbles) {
+        for (let i = this.bubbles.length - 1; 0 <= i; i--) {
+          const b = this.bubbles[i];
           if (b.contains(last)) {
             this.lit = b;
+            break;
           }
         }  
         this.redraw();
       }
       this.lit = null;
-      for (let b of this.bubbles) {
+      for (let i = this.bubbles.length - 1; 0 <= i; i--) {
+        const b = this.bubbles[i];
         if (b.contains(last)) {
           b.copyStyleFrom(bubble);
           this.onCommit(this.bubbles);
+          break;
         }
       }  
     } catch (e) {
