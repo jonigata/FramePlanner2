@@ -633,6 +633,7 @@ export class BubbleLayer extends Layer {
     for (let bubble of this.bubbles) {
       if (bubble.contains(p)) {
         bubble.size = this.calculateFitBubbleSize(bubble.text, bubble);
+        this.onCommit(this.bubbles);
         return;
       }
     }
