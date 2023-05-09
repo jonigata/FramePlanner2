@@ -313,6 +313,7 @@ export class PaperRendererLayer extends Layer {
 
     ctx.translate(pw * 0.5, ph * 0.5);
     ctx.scale(dpr, dpr);
+    ctx.translate(...bubble.offset);
 
     const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
     ctx.font = ss; // horizontal measureより先にないとだめ
@@ -337,9 +338,8 @@ export class PaperRendererLayer extends Layer {
     }
 
     // 描き戻し
-    const [cx, cy] = bubble.offset;
     try {
-      targetCtx.drawImage(canvas, cx - w * 0.5, cy - h * 0.5, ...bubble.size);
+      targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5, ...bubble.size);
     }
     catch (e) {
       console.log(pw, ph, canvas.width, canvas.height, bubble.size);
