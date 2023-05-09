@@ -79,7 +79,7 @@
 
     <h3>sdwebui連携</h3>
     <ol>
-      <li>sdwebui起動時に、COMMANDLINE_ARGSに'--cors-allow-origins https://frameplanner-e5569.web.app'を指定する</li>
+      <li>sdwebui起動時に、COMMANDLINE_ARGSに'--api --cors-allow-origins https://frameplanner-e5569.web.app'を指定する</li>
       <li>各コマの「<img style="display: inline;" width="18" height="18" src='./src/assets/generate-image.png' alt="generate"/>画像生成」   ボタンを押し、「URL」にsdwebuiのURLを入力する</li>
     </ol>
 

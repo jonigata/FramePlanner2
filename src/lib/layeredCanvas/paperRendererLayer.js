@@ -40,10 +40,7 @@ export class PaperRendererLayer extends Layer {
     }
 
     for (let bubble of this.floatingBubbles) {
-      this.renderBubbleUnitedBackground(ctx, bubble);
-    }
-    for (let bubble of this.floatingBubbles) {
-      this.renderBubbleSingleBackground(ctx, bubble);
+      this.renderBubbleBackground(ctx, bubble);
       this.renderBubbleForeground(ctx, bubble);
     }
 
@@ -176,10 +173,7 @@ export class PaperRendererLayer extends Layer {
 
       if (layout.bubbles) {
         for (let bubble of layout.bubbles) {
-          this.renderBubbleUnitedBackground(ctx, bubble);
-        }
-        for (let bubble of layout.bubbles) {
-          this.renderBubbleSingleBackground(ctx, bubble);
+          this.renderBubbleBackground(ctx, bubble);
           this.renderBubbleForeground(ctx, bubble);
         }
       }
@@ -214,36 +208,8 @@ export class PaperRendererLayer extends Layer {
     ctx.fill();
   }
 
-  renderBubbleUnitedBackground(ctx, bubble) {
-    if (!bubble.unitedPath) { return; }
-
-    const rect = bubble.centeredRect;
-    const [x, y, w, h] = rect;
-
-    ctx.save();
-    ctx.translate(...bubble.center); // TODO: この辺設計次第で削除できるはず
-    ctx.rotate((-bubble.rotation * Math.PI) / 180);
-
-    // fill/stroke設定
-    ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
-    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.strokeWidth;
-
-    // shape背景描画
-    ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
-    drawPath(ctx, bubble.unitedPath);
-    ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
-    drawPath(ctx, bubble.unitedPath); // TODO: ２回やる必要あるっけ？
-
-    ctx.restore();
-  }
-
-  renderBubbleSingleBackground(ctx, bubble) {
-    if (bubble.unitedPath) { return; }
-    if (bubble.parent) { return; }
-
+  renderBubbleBackground(ctx, bubble) {
     const size = bubble.size;
-    const [w,h] = size;
 
     ctx.save();
     ctx.translate(...bubble.center);
@@ -256,12 +222,12 @@ export class PaperRendererLayer extends Layer {
 
     // shape背景描画
     ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
-    drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
-    ctx.bubbleDrawMethod = 'clip'; // 行儀が悪い
-    drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
+    this.drawBubble(ctx, size, 'fill', bubble);
+    this.drawBubble(ctx, size, 'clip', bubble);
 
     // 画像描画
     if (bubble.image) {
+      const [w,h] = size;
       const img = bubble.image;
       let iw = img.image.naturalWidth * img.scale[0];
       let ih = img.image.naturalHeight * img.scale[1];
@@ -302,7 +268,11 @@ export class PaperRendererLayer extends Layer {
     if (bubble.unitedPath) {
       drawPath(ctx, bubble.unitedPath);
     } else if (!bubble.parent) {
-      drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
+      if (bubble.path) {
+        drawPath(ctx, bubble.path);
+      } else {
+        drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
+      }
     }
   }
 
