@@ -2,7 +2,7 @@ import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex } from "./bubbleGeometry.js";
-import { reverse2D, add2D, perpendicular2D, normalize2D, circularAngleToEllipseAngle } from "./geometry.js";
+import { clamp, add2D, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D, circularAngleToEllipseAngle } from "./geometry.js";
 import { generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, size, shape, opts) {
@@ -47,8 +47,11 @@ export function drawBubble(context, seed, size, shape, opts) {
     case "motion-lines":
       drawMotionLinesBubble(context, seed, size, opts);
       break;
+    case "speed-lines":
+      drawSpeedLinesBubble(context, seed, size, opts);
+      break;
     case "ellipse-mind":
-      drawEllipseMindBubble(context, seed, size, opts);
+    drawEllipseMindBubble(context, seed, size, opts);
       break;
     case "soft-mind":
       drawSoftMindBubble(context, seed, size, opts);
@@ -181,7 +184,7 @@ function drawMotionLinesBubble(context, seed, size, opts) {
 
     // context.lineWidth = 1 / Math.min(w, h);
     context.lineWidth = 1;
-    // draw n radial line
+    // draw n parallel line
     const n = 200;
     const icd = opts?.focalPoint ?? [0, 0];
     const rangeVector = opts?.focalRange ?? [0, Math.hypot(w/2, h/2) * 0.25];
@@ -214,6 +217,74 @@ function drawMotionLinesBubble(context, seed, size, opts) {
       context.moveTo(p2[0], p2[1]);
       context.lineTo(p1[0] + q0[0], p1[1] + q0[1]);
       context.lineTo(p1[0] + q1[0], p1[1] + q1[1]);
+      context.closePath();
+      context.fill();
+    }
+
+    context.restore();
+  } else {  // stroke, clip
+    // do nothing;
+  }
+}
+
+function drawSpeedLinesBubble(context, seed, size, opts) {
+  const [x, y, w, h] = sizeToRect(size);
+
+  function color2string(c) {
+    function f(x) { return Math.floor(x * 255); }
+    return `rgba(${f(c.red)}, ${f(c.green)}, ${f(c.blue)}, ${c.alpha})`    
+  }
+
+  if (context.bubbleDrawMethod === "fill") {
+    const rng = seedrandom(seed);
+
+    context.save();
+
+    context.beginPath();
+    context.rect(x, y, w, h);
+    context.clip();
+
+    const tailTip = opts?.tailTip ?? [0, 0];
+    const tailMid = tailCoordToWorldCoord([0,0], tailTip, opts?.tailMid ?? [0, 0]);
+  
+    const length = Math.hypot(w, h);
+    const angle = Math.atan2(tailTip[1], tailTip[0]);
+    context.rotate(angle);
+
+    function calculateNormalizedPosition([fx,fy]) {
+      const v0 = [length*0.5, 0];
+      const [nx, ny] = rotate2D(v0, angle);
+      const psf = 0.5 - projectionScalingFactor2D([fx, fy], [nx, ny]) * 0.5;
+      return clamp(psf);
+    }
+
+    const psf0 = clamp(0.5 - magnitude2D(tailTip) / length);
+    const psf1 = calculateNormalizedPosition(tailMid);
+
+    context.lineWidth = 1;
+    // draw n radial line
+    const n = 70;
+
+    // グラデーション
+    const gradient = context.createLinearGradient(length*0.5, 0, -length*0.5, 0);
+    const color0 = new paper.Color(context.strokeStyle); // わざとstrokeStyleを使う
+    const color1 = new paper.Color(context.strokeStyle);
+    color0.alpha = 0;
+    gradient.addColorStop(psf0, color2string(color0));
+    gradient.addColorStop(psf1, color2string(color1));
+    gradient.addColorStop(1.0, color2string(color1));
+    context.fillStyle = gradient;
+
+    // 線を描く
+    for (let i = 0; i < n; i++) {
+      const y = (i + 0.5) / n * length - length/2 + rng() * length * 0.05;
+      const lx = - length * 0.5 + rng() * w * 0.1;
+      const lw = h * 0.002 * (rng() + 0.5);
+
+      context.beginPath();
+      context.moveTo(lx, y-lw);
+      context.lineTo(lx+length, y);
+      context.lineTo(lx, y+lw);
       context.closePath();
       context.fill();
     }

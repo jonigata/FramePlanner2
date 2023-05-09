@@ -105,3 +105,13 @@ export function intersection(line1, line2) {
 
 export function deg2rad(deg) { return deg * Math.PI / 180; }
 export function rad2deg(rad) { return rad * 180 / Math.PI; }
+
+export function rotate2D([x, y], theta) {
+  const cosTheta = Math.cos(theta);
+  const sinTheta = Math.sin(theta);
+  return [x * cosTheta - y * sinTheta, x * sinTheta + y * cosTheta];
+}
+
+export function clamp(x, min=0, max=1) {
+  return Math.max(min, Math.min(max, x));
+}

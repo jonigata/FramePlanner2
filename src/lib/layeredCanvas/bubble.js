@@ -313,6 +313,10 @@ export const bubbleOptionSets = {
     focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
     focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, Math.hypot(b.size[0]/2, b.size[1]/2) * 0.25] }
   },
+  "speed-lines": {
+    tailTip: {hint: "流線の先端",icon:"tail", init: (b) => [b.size[0]*0.4,0]},
+    tailMid: {hint: "流線の途中",icon:"curve", init: (b) => [0.5,0]}
+  },
   "ellipse-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "soft-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "rounded-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},

@@ -20,6 +20,7 @@
     "heart",
     "diamond",
     "motion-lines",
+    "speed-lines",
     "ellipse-mind",
     "soft-mind",
     "rounded-mind",
