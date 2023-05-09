@@ -69,6 +69,24 @@ export class Bubble {
     return b;
   }
 
+  copyStyleFrom(c) {
+    this.shape = c.shape;
+    this.embedded = c.embedded;
+    this.fontStyle = c.fontStyle;
+    this.fontWeight = c.fontWeight;
+    this.fontSize = c.fontSize;
+    this.fontFamily = c.fontFamily;
+    this.direction = c.direction;
+    this.fontColor = c.fontColor;
+    this.fillColor = c.fillColor;
+    this.strokeColor = c.strokeColor;
+    this.strokeWidth = c.strokeWidth;
+    this.outlineColor = c.outlineColor;
+    this.outlineWidth = c.outlineWidth;
+    this.autoNewline = c.autoNewline;
+    this.optionContext = {...c.optionContext};
+  }
+
   static compile(canvasSize, json) {
     const b = new Bubble();
     b.p0 = this.denormalizedPosition(canvasSize, json.p0);

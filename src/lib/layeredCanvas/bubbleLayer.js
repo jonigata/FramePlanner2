@@ -105,8 +105,8 @@ export class BubbleLayer extends Layer {
 
     // 選択枠描画
     ctx.save();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255, 0, 255, 0.7)";
     ctx.strokeRect(x, y, w, h);
     ctx.restore();
   }
@@ -517,6 +517,8 @@ export class BubbleLayer extends Layer {
           return { action: "remove", bubble };
         } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
           return { action: "move", bubble };
+        } else if (keyDownFlags["KeyS"]) {
+          return { action: "copy-style", bubble };
         } else {
           return { action: "select", bubble };
         }
@@ -580,8 +582,10 @@ export class BubbleLayer extends Layer {
         this.redraw();
       }
     } else if (payload.action === "remove") {
-      const bubble = payload.bubble;
-      this.removeBubble(bubble);
+      this.removeBubble(payload.bubble);
+      this.redraw();
+    } else if (payload.action === "copy-style") {
+      yield* this.copyStyle(dragStart, payload.bubble);
       this.redraw();
     } else if (payload.action === "rotate") {
       yield* this.rotateBubble(dragStart, payload.bubble);
@@ -716,6 +720,32 @@ export class BubbleLayer extends Layer {
       if (e === "cancel") {
         this.selected = null;
         this.onRevert();
+      }
+    }
+  }
+
+  *copyStyle(dragStart, bubble) {
+    let p, last;
+    try {
+      while (p = yield) {
+        last = p;
+        this.lit = null;
+        for (let b of this.bubbles) {
+          if (b.contains(last)) {
+            this.lit = b;
+          }
+        }  
+        this.redraw();
+      }
+      this.lit = null;
+      for (let b of this.bubbles) {
+        if (b.contains(last)) {
+          b.copyStyleFrom(bubble);
+          this.onCommit(this.bubbles);
+        }
+      }  
+    } catch (e) {
+      if (e === "cancel") {
       }
     }
   }
