@@ -85,6 +85,7 @@
 
   function reset() {
     bubble?.reset();
+    bubble?.initOptions();
     bubble = bubble;    
   }
 
