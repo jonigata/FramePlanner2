@@ -19,6 +19,7 @@
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
   import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
   import FrameImageGenerator from './FrameImageGenerator.svelte';
+  import { makeWhiteImage } from './imageUtil';
 
   export let width = 140;
   export let height = 198;
@@ -110,6 +111,15 @@
   function generate(frameTreeElement) {
     console.log("generateImages");
     $frameImageGeneratorTarget = frameTreeElement;
+  }
+
+  async function scribble(frameTreeElement) {
+    console.log("scribble");
+    if (!frameTreeElement.image) { 
+      frameTreeElement.image = await makeWhiteImage(512, 512);
+      frameTreeElement.gallery.push(frameTreeElement.image);
+      return; 
+    }
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -237,7 +247,9 @@
         commit();
       },
       () => {revert();},
-      (frameTreeElement) => {generate(frameTreeElement);});
+      (frameTreeElement) => {generate(frameTreeElement);},
+      (frameTreeElement) => {scribble(frameTreeElement);}
+      );
     layeredCanvas.addLayer(frameLayer);
 
     sequentializePointer(BubbleLayer);

@@ -8,6 +8,7 @@
   import KeyValueStorage from "./KeyValueStorage.svelte";
   import { tick, onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { makeWhiteImage } from "./imageUtil";
 
   let url: string = "http://localhost:7860";
   let images: HTMLImageElement[] = [];
@@ -99,15 +100,7 @@
   }
 
   async function generateWhiteImage() {
-    const canvas = document.createElement("canvas");
-    canvas.width = imageRequest.width;
-    canvas.height = imageRequest.height;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const img = new Image();
-    img.src = canvas.toDataURL();
-    await img.decode();
+    const img = await makeWhiteImage(imageRequest.width, imageRequest.height);
     images.push(img);
     images = images;
   }
