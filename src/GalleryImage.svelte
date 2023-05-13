@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
+  import { imageGeneratorOpen } from "./imageGeneratorStore";
   import drop from './assets/drop.png';
 
   export let image = null;
@@ -23,8 +24,11 @@
   }
 
   onMount(() => {
-    image.width = width;
-    image.height = getHeight();
+    console.log("change image size", image.width, image.height, $imageGeneratorOpen);
+    if ($imageGeneratorOpen) {
+      image.width = width;
+      image.height = getHeight();
+    }
     container.appendChild(image);
   });
 </script>

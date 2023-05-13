@@ -15,6 +15,7 @@
     (chosen) => {
       if (chosen) {
         imageGeneratorOpen.set(false);
+        imageGeneratorChosen.set(null);
         $frameImageGeneratorTarget.image = chosen;
         $frameImageConstraintToken = true;
       }

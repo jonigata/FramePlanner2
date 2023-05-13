@@ -284,7 +284,7 @@ export class PaperRendererLayer extends Layer {
     ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
     ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
     ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
-    ctx.drawImage(element.image, 0, 0);
+    ctx.drawImage(element.image, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
     ctx.restore();
   }
 

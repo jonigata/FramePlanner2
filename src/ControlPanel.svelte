@@ -144,16 +144,20 @@
   <div class="hbox space-around canvas-size-container">
     <div class="vbox expand">
       <div class="hbox">
-        <div class="font-bold slider-label">Width</div>
-        <RangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} step={1}/>
+        <div class="font-bold slider-label">W</div>
+        <div style="width: 140px;">
+          <RangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} step={1}/>
+        </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
           <div class="number-box"><NumberEdit bind:value={$paperWidth}/></div>
           / {max}
         </div>
       </div>
       <div class="hbox">
-        <div class="font-bold slider-label">Height</div>
-        <RangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} step={1}/>
+        <div class="font-bold slider-label">H</div>
+        <div style="width: 140px;">
+          <RangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} step={1}/>
+        </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
           <div class="number-box"><NumberEdit bind:value={$paperHeight}/></div>
            / {max}
@@ -161,11 +165,13 @@
       </div>
     </div>
     <div class="vbox space-around" style="width: 90px; height: 52px;">
-      <div class="hbox gap">
+      <div class="hbox gap-0.5">
+        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1024, 1024)}>S2</button>
         <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1680, 2376)}>A3</button>
         <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1456, 2056)}>B4</button>
       </div>
-      <div class="hbox gap">
+      <div class="hbox gap-0.5">
+        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(512, 512)}>S1</button>
         <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(840, 1188)}>A4</button>
         <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
       </div>  
@@ -241,7 +247,7 @@
     gap: 4px;
   }
   .slider-label {
-    width: 55px;
+    width: 20px;
   }
   .slider-value-text {
     width: 76px;

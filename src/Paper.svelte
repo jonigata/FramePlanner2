@@ -1,7 +1,8 @@
 <script type="ts">
   import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
-  import { FrameElement, calculatePhysicalLayout, collectImages, dealImages } from './lib/layeredCanvas/frameTree.js';
+  import { FrameElement, calculatePhysicalLayout, collectImages, constraintLeaf, dealImages, findLayoutOf } from './lib/layeredCanvas/frameTree.js';
+  import { trapezoidBoundingRect } from "./lib/layeredCanvas/trapezoid.js";
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
@@ -20,6 +21,7 @@
   import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
+  import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
 
   export let width = 140;
   export let height = 198;
@@ -39,6 +41,7 @@
   let layeredCanvas;
   let frameLayer;
   let bubbleLayer;
+  let inlinePainterLayer;
   let history = [];
   let historyIndex = 0;
 
@@ -113,13 +116,26 @@
     $frameImageGeneratorTarget = frameTreeElement;
   }
 
-  async function scribble(frameTreeElement) {
+  async function scribble(element) {
     console.log("scribble");
-    if (!frameTreeElement.image) { 
-      frameTreeElement.image = await makeWhiteImage(512, 512);
-      frameTreeElement.gallery.push(frameTreeElement.image);
-      return; 
+    if (!element.image) { 
+      element.image = await makeWhiteImage(500, 500);
+      element.gallery.push(element.image);
     }
+
+    const paperLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
+    const layout = findLayoutOf(paperLayout, element);
+    constraintLeaf(layout);
+    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+    const translation = [
+      (x0 + x1) * 0.5 + element.translation[0], 
+      (y0 + y1) * 0.5 + element.translation[1]
+    ];
+    const scale = [
+      element.scale[0] * element.reverse[0],
+      element.scale[1] * element.reverse[1]
+    ]
+    inlinePainterLayer.setImage(element.image, translation, scale);
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -268,6 +284,11 @@
       () => {revert();},
       getDefaultText)
     layeredCanvas.addLayer(bubbleLayer);
+
+    sequentializePointer(InlinePainterLayer);
+    inlinePainterLayer = new InlinePainterLayer();
+    layeredCanvas.addLayer(inlinePainterLayer);
+
     layeredCanvas.redraw();
 
     if (manageKeyCache) {
