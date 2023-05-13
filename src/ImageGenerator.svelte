@@ -98,6 +98,20 @@
     $imageGeneratorOpen = false;
   }
 
+  async function generateWhiteImage() {
+    const canvas = document.createElement("canvas");
+    canvas.width = imageRequest.width;
+    canvas.height = imageRequest.height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const img = new Image();
+    img.src = canvas.toDataURL();
+    await img.decode();
+    images.push(img);
+    images = images;
+  }
+
 </script>
 
 <div class="drawer-outer">
@@ -132,9 +146,15 @@
         <SliderEdit label="CFG Scale" bind:value={imageRequest.cfgScale} min={1} max={30} step={0.5}/>
       </div>
 
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
-        Generate
-      </button>
+      <div class="hbox gap-5">
+        <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
+          Generate
+        </button>
+
+        <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generateWhiteImage}>
+          White Image
+        </button>
+      </div>
 
       <ProgressBar label="Progress Bar" value={progress} max={1} />
       <Gallery columnWidth={220} bind:images={images} on:commit={onChooseImage}/>

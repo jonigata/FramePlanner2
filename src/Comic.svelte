@@ -2,7 +2,7 @@
   import comic1 from './assets/comics/aiai61555228/intro1.jpg';
   import comic2 from './assets/comics/aiai61555228/intro2.jpg';
   import comic3 from './assets/comics/aiai61555228/intro3.jpg';
-  import { Modal, modalStore } from '@skeletonlabs/skeleton';
+  import { modalStore } from '@skeletonlabs/skeleton';
 </script>
 
 <div class="page-container">

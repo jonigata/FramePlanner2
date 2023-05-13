@@ -49,6 +49,16 @@ export const frameExamples = [
       { width: 3, visibility: 0  },
     ]
   },
+  { // 一コマ(マージンなし)
+    bgColor: "white",
+    height: 100,
+    column: [
+      {
+        visibility: 1,
+        height: 100,
+      },
+    ],
+  },
   { // 4コマ
     bgColor: "white",
     height: 100,

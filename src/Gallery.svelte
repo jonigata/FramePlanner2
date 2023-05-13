@@ -12,11 +12,15 @@
   function onCommit(e) {
     dispatch("commit", e.detail);
   }
+
+  function onDelete(e) {
+    images.splice(images.indexOf(e.detail), 1);
+  }
 </script>
 
 <div>
   {#each images as image}
-    <GalleryImage bind:chosen={chosen} width={columnWidth} image={image} on:commit={onCommit}/>
+    <GalleryImage bind:chosen={chosen} width={columnWidth} image={image} on:commit={onCommit} on:delete={onDelete}/>
   {/each}
 </div>
 

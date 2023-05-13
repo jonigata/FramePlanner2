@@ -14,11 +14,11 @@
   import titleBarIcon from './assets/title-control-panel.png';
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
-  import { SlideToggle } from '@skeletonlabs/skeleton';
   import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
   import { generateImages } from './sdwebui'
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   let min = 256;
   let max = 4096;
@@ -42,6 +42,15 @@
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
 
   }
+
+  function openPainter() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'paint',
+    };
+    modalStore.trigger(d);    
+  }
+
 
   let files: FileList;
   $: uploadImage(files);
@@ -198,6 +207,9 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
       Share
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={openPainter}>
+      Painter
     </button>
   </div>  
 </div>

@@ -12,9 +12,9 @@
   import JsonEditor from './JsonEditor.svelte';
   import { onMount } from 'svelte';
   import * as Sentry from "@sentry/svelte";
-  import { Modal, modalStore } from '@skeletonlabs/skeleton';
-  import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';   
+  import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
   import Comic from './Comic.svelte'; 
+  import Painter from './Painter.svelte';
   import FontChooser from './FontChooser.svelte';
   import ShapeChooser from './ShapeChooser.svelte';
   import { paperTemplate } from './paperStore';
@@ -24,6 +24,9 @@
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
       ref: Comic,
+    },
+    paint: {
+      ref: Painter,
     },
   };
 

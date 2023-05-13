@@ -1,8 +1,7 @@
 <script type="ts">
   import Drawer from './Drawer.svelte'
   import { aboutOpen } from './aboutStore';
-  import { Modal, modalStore } from '@skeletonlabs/skeleton';
-  import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';    
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   function showComic() {
     const d: ModalSettings = {
