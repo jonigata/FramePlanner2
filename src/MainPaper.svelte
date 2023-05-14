@@ -13,6 +13,7 @@
   let documentOutput;
   let width;
   let height;
+  let painterActive = false;
 
   $:onChangePaperSize($paperWidth, $paperHeight);
   function onChangePaperSize(w, h) {
@@ -84,6 +85,17 @@
     $frameWidth = doc.frameTree.borderWidth ?? 1;
   }
 
+  function onPainterActive(e) {
+    console.log('onPainterActive', e.detail);
+    painterActive = e.detail;
+  }
+
+  function onScribbleDone() {
+    console.log('onScribbleDone');
+    paper.scribbleDone();
+    painterActive = false;
+  }
+
   onMount(() => {
     $undoStore = paper;
   });
@@ -100,8 +112,13 @@
     editable={true} 
     manageKeyCache={true}
     bind:documentOutput={documentOutput} 
-    bind:this={paper}/>
+    bind:this={paper}
+    on:painterActive={onPainterActive}/>
 </div>
+
+{#if painterActive}
+  <button class="done-button btn variant-filled-tertiary px-2 py-2" on:click={onScribbleDone}>done</button>
+{/if}
 
 <style>
   .main-paper-container {
@@ -110,5 +127,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .done-button {
+    position: fixed;
+    width: 240px;
+    height: 80px;
+    font-size: 32px;
+    color: white;
+    right: 32px;
+    bottom: 32px;
   }
 </style>

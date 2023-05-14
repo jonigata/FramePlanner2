@@ -32,6 +32,7 @@
   export let frameColor = 'black';
   export let frameWidth = 1;
   export let manageKeyCache = false;
+  export let painterActive = false;
 
   let containerWidth;
   let containerHeight;
@@ -136,6 +137,14 @@
       element.scale[1] * element.reverse[1]
     ]
     inlinePainterLayer.setImage(element.image, translation, scale);
+    painterActive = true;
+    dispatch('painterActive', painterActive);
+  }
+
+  export function scribbleDone() {
+    console.log("scribbleDone");
+    painterActive = false;
+    inlinePainterLayer.setImage(null);
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する

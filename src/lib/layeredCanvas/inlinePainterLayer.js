@@ -86,13 +86,15 @@ export class InlinePainterLayer extends Layer {
   }
 
   setImage(img, translation, scale) {
-    console.log("setImage", translation, scale, [img.width, img.height], [img.naturalWidth, img.naturalHeight]);
     this.image = img;
-    this.translation = translation;
-    this.scale = scale;
-    this.offscreenCanvas.width = img.naturalWidth;
-    this.offscreenCanvas.height = img.naturalHeight;
-    this.offscreenContext.drawImage(this.image, 0, 0, img.naturalWidth, img.naturalHeight);
+    if (img) {
+      console.log("setImage", translation, scale, [img.width, img.height], [img.naturalWidth, img.naturalHeight]);
+      this.translation = translation;
+      this.scale = scale;
+      this.offscreenCanvas.width = img.naturalWidth;
+      this.offscreenCanvas.height = img.naturalHeight;
+      this.offscreenContext.drawImage(this.image, 0, 0, img.naturalWidth, img.naturalHeight);
+    }
     this.redraw();
   }
 }
