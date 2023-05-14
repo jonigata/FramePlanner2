@@ -26,6 +26,7 @@ export class FrameElement {
 
         // リーフ要素の場合は絵がある可能性がある
         this.image = null;
+        this.focused = false;
     }
 
     clone() {

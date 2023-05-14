@@ -124,27 +124,19 @@
       element.gallery.push(element.image);
     }
 
-    const paperLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
-    const layout = findLayoutOf(paperLayout, element);
-    constraintLeaf(layout);
-    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
-    const translation = [
-      (x0 + x1) * 0.5 + element.translation[0], 
-      (y0 + y1) * 0.5 + element.translation[1]
-    ];
-    const scale = [
-      element.scale[0] * element.reverse[0],
-      element.scale[1] * element.reverse[1]
-    ]
-    inlinePainterLayer.setImage(element.image, translation, scale);
+    inlinePainterLayer.setElement(element);
     painterActive = true;
+    frameLayer.interactable = false;
+    bubbleLayer.interactable = false;
     dispatch('painterActive', painterActive);
   }
 
   export function scribbleDone() {
     console.log("scribbleDone");
     painterActive = false;
-    inlinePainterLayer.setImage(null);
+    inlinePainterLayer.setElement(null);
+    frameLayer.interactable = true;
+    bubbleLayer.interactable = true;
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -295,7 +287,7 @@
     layeredCanvas.addLayer(bubbleLayer);
 
     sequentializePointer(InlinePainterLayer);
-    inlinePainterLayer = new InlinePainterLayer();
+    inlinePainterLayer = new InlinePainterLayer(frameLayer);
     layeredCanvas.addLayer(inlinePainterLayer);
 
     layeredCanvas.redraw();

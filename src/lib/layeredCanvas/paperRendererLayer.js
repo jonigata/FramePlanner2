@@ -3,8 +3,7 @@ import { drawBubble, getPath, drawPath } from "./bubbleGraphic.js";
 import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawText, measureText } from "./drawText.js";
-import { multiply2D, reverse2D } from "./geometry.js";
-import * as paper from 'paper';
+import { reverse2D } from "./geometry.js";
 
 export class PaperRendererLayer extends Layer {
   constructor() {
@@ -165,10 +164,15 @@ export class PaperRendererLayer extends Layer {
     if (element.image || 0 < layout.bubbles?.length) {
       // clip
       ctx.save();
-      ctx.clip();
+      if (!element.focused) {
+        ctx.clip();
+      }
 
       if (element.image) {
         this.drawImage(ctx, layout);
+        if (element.focused) {
+          this.drawImageFrame(ctx, layout);
+        }
       }
 
       if (layout.bubbles) {
@@ -287,6 +291,23 @@ export class PaperRendererLayer extends Layer {
     ctx.drawImage(element.image, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
     ctx.restore();
   }
+
+  drawImageFrame(ctx, layout) {
+    const element = layout.element;
+    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+
+    ctx.save();
+    ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
+    ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
+    ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
+    ctx.beginPath();
+    ctx.rect(0, 0, element.image.naturalWidth, element.image.naturalHeight);
+    ctx.strokeStyle = "rgb(0, 0, 255)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
 
   drawText(targetCtx, bubble) {
     const [w, h] = bubble.size;
