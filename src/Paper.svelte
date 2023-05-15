@@ -139,6 +139,11 @@
     bubbleLayer.interactable = true;
   }
 
+  export function chooseTool(tool) {
+    console.log("chooseTool", tool);
+    inlinePainterLayer.currentBrush = tool;
+  }
+
   function handleClick() { // 非interactableの場合はボタンとして機能する
     dispatch('click');
   }

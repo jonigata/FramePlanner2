@@ -7,7 +7,7 @@ export class InlinePainterLayer extends Layer {
   constructor(frameLayer) {
     super();
     this.frameLayer = frameLayer;
-    this.currentPen = { strokeStyle: "black", lineWidth: 5 };
+    this.currentBrush = { strokeStyle: "black", lineWidth: 5 };
     this.element = null;
     this.translation = [0, 0];
     this.scale = [1,1];
@@ -31,7 +31,7 @@ export class InlinePainterLayer extends Layer {
 
 
     if (this.path) {
-      this.applyCurrentPen(ctx);
+      this.applyCurrentBrush(ctx);
       ctx.stroke(new Path2D(this.path.pathData));
     }
   }
@@ -77,7 +77,7 @@ export class InlinePainterLayer extends Layer {
       ctx.translate(this.image.naturalWidth * 0.5, this.image.naturalHeight * 0.5);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
-      this.applyCurrentPen(ctx);
+      this.applyCurrentBrush(ctx);
       ctx.stroke(new Path2D(this.path.pathData));
       ctx.restore();
     }
@@ -86,25 +86,12 @@ export class InlinePainterLayer extends Layer {
     await this.image.decode();
   }
 
-  applyCurrentPen(ctx) {
+  applyCurrentBrush(ctx) {
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    for (let key in this.currentPen) {
-      ctx[key] = this.currentPen[key];
+    for (let key in this.currentBrush) {
+      ctx[key] = this.currentBrush[key];
     }
-  }
-
-  setImage(img, translation, scale) {
-    this.image = img;
-    if (img) {
-      console.log("setImage", translation, scale, [img.width, img.height], [img.naturalWidth, img.naturalHeight]);
-      this.translation = translation;
-      this.scale = scale;
-      this.offscreenCanvas.width = img.naturalWidth;
-      this.offscreenCanvas.height = img.naturalHeight;
-      this.offscreenContext.drawImage(this.image, 0, 0, img.naturalWidth, img.naturalHeight);
-    }
-    this.redraw();
   }
 
   setElement(element) {

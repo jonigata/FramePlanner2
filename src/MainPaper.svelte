@@ -5,6 +5,7 @@
   import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
   import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
+  import PainterToolBox from './PainterToolBox.svelte';
 
   $paperTemplate = { frameTree: frameExamples[0], bubbles:[] };
 
@@ -96,6 +97,11 @@
     painterActive = false;
   }
 
+  function onChooseTool(e) {
+    console.log('onChooseTool', e.detail);
+    paper.chooseTool(e.detail);
+  }
+
   onMount(() => {
     $undoStore = paper;
   });
@@ -117,7 +123,7 @@
 </div>
 
 {#if painterActive}
-  <button class="done-button btn variant-filled-tertiary px-2 py-2" on:click={onScribbleDone}>done</button>
+  <PainterToolBox on:choose={onChooseTool} on:done={onScribbleDone}/>
 {/if}
 
 <style>
