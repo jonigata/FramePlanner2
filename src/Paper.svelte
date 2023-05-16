@@ -149,6 +149,7 @@
     inlinePainterLayer.setElement(null);
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
+    commit();
   }
 
   export function chooseTool(tool) {
