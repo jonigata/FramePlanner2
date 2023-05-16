@@ -73,22 +73,34 @@
     historyIndex = history.length;
   }
 
+  function isPainting() {
+    return painterActive;
+  }
+
   export function undo() {
-    if (historyIndex <= 1) { return; }
-    historyIndex--;
-    console.log("undo", historyIndex);
-    revert();
+    if (isPainting()) {
+      inlinePainterLayer.undo();
+    } else {
+      console.log("undo", historyIndex);
+      if (historyIndex <= 1) { return; }
+      historyIndex--;
+      revert();
+    }
   }
 
   export function redo() {
-    console.log("redo", historyIndex);
-    if (history.length <= historyIndex) { return; }
-    historyIndex++;
-    const h = history[historyIndex-1];
-    frameLayer.frameTree = h.frameTree.clone();
-    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
-    bubbleLayer.selected = null;
-    layeredCanvas.redraw(); 
+    if (isPainting()) {
+      inlinePainterLayer.redo();
+    } else {
+      console.log("redo", historyIndex);
+      if (history.length <= historyIndex) { return; }
+      historyIndex++;
+      const h = history[historyIndex-1];
+      frameLayer.frameTree = h.frameTree.clone();
+      bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
+      bubbleLayer.selected = null;
+      layeredCanvas.redraw(); 
+    }
   }
 
   export function commit() {

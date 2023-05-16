@@ -12,6 +12,8 @@ export class InlinePainterLayer extends Layer {
     this.translation = [0, 0];
     this.scale = [1,1];
     this.maskPath = null;
+    this.history = [];
+    this.historyIndex = 0;
 
     this.offscreenCanvas = document.createElement('canvas');
     this.offscreenContext = this.offscreenCanvas.getContext('2d');
@@ -83,6 +85,10 @@ export class InlinePainterLayer extends Layer {
     }
 
     this.image.src = canvas.toDataURL();
+    this.history.length = this.historyIndex;
+    this.history.push(this.image.src);
+    this.historyIndex++;
+    console.log("snapshot", this.historyIndex, this.history.length);
     await this.image.decode();
   }
 
@@ -136,11 +142,31 @@ export class InlinePainterLayer extends Layer {
       this.maskPath = paperPath.subtract(windowPath);
       // this.maskPath = paperPath;
       console.log(this.maskPath.pathData);
+      this.history=[this.image.src];
+      this.historyIndex = 1;
     }
     this.redraw();
   }
 
   get image() {
     return this.element?.image;
+  }
+
+  undo() {
+    console.log("inlinePainterLayer.undo", this.historyIndex, this.history.length)
+    if (this.historyIndex <= 1) { return; }
+
+    this.historyIndex--;
+    this.image.src = this.history[this.historyIndex - 1];
+    this.redraw();
+  }
+
+  redo() {
+    console.log("inlinePainterLayer.redo", this.historyIndex, this.history.length)
+    if (this.history.length <= this.historyIndex) { return; }
+
+    this.historyIndex++;
+    this.image.src = this.history[this.historyIndex - 1];
+    this.redraw();
   }
 }
