@@ -134,6 +134,7 @@
     if (!element.image) { 
       element.image = await makeWhiteImage(500, 500);
       element.gallery.push(element.image);
+      constraintElement(element);
     }
 
     inlinePainterLayer.setElement(element);
@@ -141,6 +142,13 @@
     frameLayer.interactable = false;
     bubbleLayer.interactable = false;
     dispatch('painterActive', painterActive);
+  }
+
+  function constraintElement(element) {
+    const pageLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
+    const layout = findLayoutOf(pageLayout, element);
+    if (!layout) { return; }
+    constraintLeaf(layout);
   }
 
   export function scribbleDone() {
