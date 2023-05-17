@@ -1,6 +1,6 @@
 export async function generateImages(url, imageRequest) {
   try {
-    const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount } = imageRequest;
+    const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount, alwayson_scripts } = imageRequest;
     const payload = {
       prompt: positive,
       negative_prompt: negative,
@@ -9,7 +9,8 @@ export async function generateImages(url, imageRequest) {
       batch_size: batchSize,
       n_iter: batchCount,
       width: width,
-      height: height
+      height: height,
+      alwayson_scripts: alwayson_scripts      
     };
   
     const response = await fetch(`${url}/sdapi/v1/txt2img`, {
@@ -22,7 +23,9 @@ export async function generateImages(url, imageRequest) {
     }
 
     const data = await response.json();
+    console.log("===== data");
     console.log(data);
+    console.log(data.info);
     const images = data.images;
 
     const imgs = [];

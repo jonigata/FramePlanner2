@@ -164,3 +164,14 @@ export async function copyCanvasToClipboard(canvas) {
     console.error("Failed to copy canvas content to clipboard:", err);
   }
 }
+
+export function imageToBase64(imgElement) {
+    let canvas = document.createElement("canvas");
+    canvas.width = imgElement.naturalWidth;
+    canvas.height = imgElement.naturalHeight;
+    canvas.getContext("2d").drawImage(imgElement, 0, 0);
+
+    let base64Image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    console.log(base64Image); // base64エンコードされた画像データ    
+    return base64Image;
+}

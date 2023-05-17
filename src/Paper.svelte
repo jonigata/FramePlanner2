@@ -119,7 +119,6 @@
   }
 
   export function importImage(image) {
-    console.log(frameLayer.frameTree);
     const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     frameLayer.importImage(layout, image);
   }

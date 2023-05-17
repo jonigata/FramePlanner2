@@ -6,6 +6,7 @@
   export let columnWidth = 220;
 
   export let chosen = null;
+  export let refered = null;
 
   const dispatch = createEventDispatcher();
 
@@ -15,12 +16,17 @@
 
   function onDelete(e) {
     images.splice(images.indexOf(e.detail), 1);
+    images = images;
+  }
+
+  function onRefer(e) {
+    refered = e.detail;
   }
 </script>
 
 <div>
   {#each images as image}
-    <GalleryImage bind:chosen={chosen} width={columnWidth} image={image} on:commit={onCommit} on:delete={onDelete}/>
+    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} image={image} on:commit={onCommit} on:delete={onDelete} on:refer={onRefer}/>
   {/each}
 </div>
 

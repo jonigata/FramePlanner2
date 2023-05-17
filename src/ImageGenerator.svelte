@@ -9,6 +9,7 @@
   import { tick, onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeWhiteImage } from "./imageUtil";
+  import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 
   let url: string = "http://localhost:7860";
   let images: HTMLImageElement[] = [];
@@ -25,6 +26,7 @@
   let calling;
   let progress = 0;
   let storage;
+  let refered;
 
 /*
   const x = [new Image(), new Image(), new Image()];
@@ -105,6 +107,53 @@
     images = images;
   }
 
+  async function scribble() {
+    let f = null;
+    f = async () => {
+      storage.set("imageRequest", JSON.stringify(imageRequest));
+      storage.set("url", url);
+      const data = await getProgression(url);
+      if (calling) {
+        progress = data.progress;
+      }
+
+      // getPorgression呼び出しが1秒を超えると嫌なので
+      // setIntervalは使わない
+      setTimeout(() => {if (calling) {f();}},1000);
+    };
+
+    calling = true;
+    f();
+    try {
+      const encoded_image = imageToBase64(refered);
+
+      const alwayson_scripts = {
+        controlNet: {
+          args: [
+            {
+              input_image: encoded_image,
+              module: "canny",
+              model: "control_v11p_sd15_canny [d14c016b]",
+            }
+          ]
+        }
+      };
+      console.log(alwayson_scripts);
+
+      const req = { ...imageRequest, alwayson_scripts };
+      const newImages = await generateImages(url, req);
+      images.splice(images.length, 0, ...newImages);
+      images = images;
+      progress = 1;
+    } catch (e) {
+      console.log(e);
+      toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
+      progress = 0;
+    }
+    calling = false;
+
+  }
+
 </script>
 
 <div class="drawer-outer">
@@ -147,10 +196,14 @@
         <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generateWhiteImage}>
           White Image
         </button>
+
+        <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={scribble}>
+          Scribble
+        </button>
       </div>
 
       <ProgressBar label="Progress Bar" value={progress} max={1} />
-      <Gallery columnWidth={220} bind:images={images} on:commit={onChooseImage}/>
+      <Gallery columnWidth={220} bind:images={images} on:commit={onChooseImage} bind:refered={refered}/>
     </div>
   </Drawer>
 </div>
