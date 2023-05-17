@@ -1,6 +1,6 @@
 import { Layer } from "./layeredCanvas.js";
 import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
-import { constraintRecursive, constraintTree, constraintLeaf } from "./frameTree.js";
+import { constraintRecursive, constraintLeaf } from "./frameTree.js";
 import { translate, scale } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
@@ -36,6 +36,7 @@ export class FrameLayer extends Layer {
     this.dropIcon = new ClickableIcon("drop.png",unit,[0,1],"画像除去", isImageActive);
     this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png",unit,[0,1],"左右反転", isImageActive);
     this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
+    this.fitIcon = new ClickableIcon("fit.png",unit,[0,1],"フィット", isImageActive);
     this.generateIcon = new ClickableIcon("generate-image.png",unit,[0,1],"画像生成", isFrameActiveAndVisible);
     this.scribbleIcon = new ClickableIcon("scribble.png",unit,[0,1],"落書き", isFrameActiveAndVisible);
 
@@ -48,7 +49,7 @@ export class FrameLayer extends Layer {
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.generateIcon, this.scribbleIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
@@ -127,6 +128,7 @@ export class FrameLayer extends Layer {
       this.dropIcon.position = cp([0,1],[0,0]);
       this.flipHorizontalIcon.position = cp([0,1], [2,0]);
       this.flipVerticalIcon.position = cp([0,1], [3,0]);
+      this.fitIcon.position = cp([0,1], [4,0]);
       this.generateIcon.position = cp([0,1], [0,-2]);
       this.scribbleIcon.position = cp([0,1], [0,-3]);
       this.redraw();
@@ -207,7 +209,6 @@ export class FrameLayer extends Layer {
     if (layout) {
       if (keyDownFlags["KeyQ"]) {
         FrameElement.eraseElement(this.frameTree, layout.element);
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
         return null;
@@ -217,7 +218,6 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
         return null;
@@ -227,7 +227,6 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.redraw();
         return null;
@@ -247,12 +246,16 @@ export class FrameLayer extends Layer {
         this.redraw();
         return null;
       }
+      if (keyDownFlags["KeyE"]) {
+        constraintLeaf(layout);
+        this.redraw();
+        return null;
+      }
       if (this.splitHorizontalIcon.contains(point)) {
         FrameElement.splitElementHorizontal(
           this.frameTree,
           layout.element
         );
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
@@ -263,7 +266,6 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
@@ -271,7 +273,6 @@ export class FrameLayer extends Layer {
       }
       if (this.deleteIcon.contains(point)) {
         FrameElement.eraseElement(this.frameTree, layout.element);
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.focusedLayout = null;
         this.redraw();
@@ -279,7 +280,6 @@ export class FrameLayer extends Layer {
       }
       if (this.duplicateIcon.contains(point)) {
         FrameElement.duplicateElement(this.frameTree, layout.element);
-        this.constraintAll();
         this.onCommit(this.frameTree);
         this.updateFocus(point);
         this.redraw();
@@ -313,6 +313,9 @@ export class FrameLayer extends Layer {
         this.redraw();
       } else if (this.flipVerticalIcon.contains(point)) {
         layout.element.reverse[1] *= -1;
+        this.redraw();
+      } else if (this.fitIcon.contains(point)) {
+        constraintLeaf(layout);
         this.redraw();
       } else if (this.generateIcon.contains(point)) {
         this.onGenerate(layout.element);
@@ -361,7 +364,6 @@ export class FrameLayer extends Layer {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         element.scale = [origin * s, origin * s];
-        constraintLeaf(layout);
         this.redraw();
       });
     } catch (e) {
@@ -377,7 +379,6 @@ export class FrameLayer extends Layer {
     try {
       yield* translate(p, (q) => {
         element.translation = [origin[0] + q[0], origin[1] + q[1]];
-        constraintLeaf(layout);
         this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
       });
     } catch (e) {
@@ -406,7 +407,6 @@ export class FrameLayer extends Layer {
         c0.rawSize = t - rawSpacing * 0.5;
         c1.rawSize = rawSum - t - rawSpacing * 0.5;
         this.updateBorder(border);
-        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -439,7 +439,6 @@ export class FrameLayer extends Layer {
   
         element.calculateLengthAndBreadth();
         this.updateBorder(border);
-        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -464,7 +463,6 @@ export class FrameLayer extends Layer {
         const op = p[dir] - s[dir];
         prev.divider.slant = Math.max(-42, Math.min(42, rawSlant + op * 0.2));
         this.updateBorder(border);
-        constraintRecursive(border.layout);
         this.redraw();
       }
     } catch (e) {
@@ -490,7 +488,6 @@ export class FrameLayer extends Layer {
         const currentPadding = initialPadding + delta * deltaFactor;
         element.padding[padding.handle] = currentPadding / rawSize[dir];
         this.updatePadding(padding);
-        constraintTree(padding.layout);
         this.redraw();
       }
     } catch (e) {
