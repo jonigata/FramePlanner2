@@ -164,3 +164,13 @@ export async function copyCanvasToClipboard(canvas) {
     console.error("Failed to copy canvas content to clipboard:", err);
   }
 }
+
+export function makeFilename(ext) {
+  function zeropadding(n) {
+    return n < 10 ? "0" + n : n;
+  }
+
+  const date = new Date();
+  const filename = `comic-${date.toLocaleDateString('sv-SE')}-${zeropadding(date.getHours())}-${zeropadding(date.getMinutes())}-${zeropadding(date.getSeconds())}.${ext}`;
+  return filename;
+}
