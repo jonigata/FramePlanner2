@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, tick } from "svelte";
   import GalleryImage from "./GalleryImage.svelte";
 
   export let images: HTMLImageElement[] = [];
@@ -14,9 +14,13 @@
     dispatch("commit", e.detail);
   }
 
-  function onDelete(e) {
+  async function onDelete(e) {
+    console.log(images.indexOf(e.detail));
     images.splice(images.indexOf(e.detail), 1);
-    images = images;
+    const newImages = images;
+    images = [];
+    await tick();
+    images = newImages;
   }
 
   function onRefer(e) {
