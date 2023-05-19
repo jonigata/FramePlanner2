@@ -10,6 +10,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeWhiteImage } from "./imageUtil";
   import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
+  import { ref } from "firebase/database";
 
   let url: string = "http://localhost:7860";
   let images: HTMLImageElement[] = [];
@@ -108,6 +109,11 @@
   }
 
   async function scribble() {
+    if (!refered) {
+      toastStore.trigger({ message: `参照画像を選択してください`, timeout: 3000});
+      return;
+    } 
+
     let f = null;
     f = async () => {
       storage.set("imageRequest", JSON.stringify(imageRequest));
