@@ -59,3 +59,11 @@ export async function getProgression(url) {
     console.error('Error:', error);
   }
 }
+
+export async function getControlNetModuleList(url) {
+
+}
+
+export async function getControlNetModelList(url) {
+  
+}

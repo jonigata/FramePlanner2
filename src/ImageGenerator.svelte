@@ -132,8 +132,11 @@
           args: [
             {
               input_image: encoded_image,
-              module: "canny",
-              model: "control_v11p_sd15_canny [d14c016b]",
+              module: "scribble_xdog",
+              model: "control_v11p_sd15_scribble [d4ba51ff]",
+              weight: 0.75,
+              resize_mode: 0,
+              threshold_a: 32,
             }
           ]
         }

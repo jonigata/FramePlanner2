@@ -130,10 +130,6 @@
     files = e.dataTransfer.files;
   }
 
-  async function callSdWebUi() {
-    await generateImages();
-  }
-
 </script>
 
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">

@@ -2,14 +2,13 @@
   import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, constraintLeaf, dealImages, findLayoutOf } from './lib/layeredCanvas/frameTree.js';
-  import { trapezoidBoundingRect } from "./lib/layeredCanvas/trapezoid.js";
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
-  import { saveCanvas, copyCanvasToClipboard } from './lib/layeredCanvas/saveCanvas.js';
+  import { saveCanvas, copyCanvasToClipboard, makeFilename } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
@@ -376,9 +375,7 @@
 
     swapCanvas(async (c) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
-      const date = new Date();
-      const filename = `comic-${date.toLocaleDateString('sv-SE')}-${zeropadding(date.getHours())}-${zeropadding(date.getMinutes())}-${zeropadding(date.getSeconds())}.png`;
-      saveCanvas(c, filename, latestJson);
+      saveCanvas(c, makeFilename("png"), latestJson);
     });
   }
   

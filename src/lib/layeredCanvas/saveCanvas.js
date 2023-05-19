@@ -175,3 +175,13 @@ export function imageToBase64(imgElement) {
     console.log(base64Image); // base64エンコードされた画像データ    
     return base64Image;
 }
+
+export function makeFilename(ext) {
+  function zeropadding(n) {
+    return n < 10 ? "0" + n : n;
+  }
+
+  const date = new Date();
+  const filename = `comic-${date.toLocaleDateString('sv-SE')}-${zeropadding(date.getHours())}-${zeropadding(date.getMinutes())}-${zeropadding(date.getSeconds())}.${ext}`;
+  return filename;
+}

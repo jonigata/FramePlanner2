@@ -3,11 +3,11 @@
   import { bodyDragging } from './uiStore';
   import titleBarIcon from './assets/json.png';
   import { JSONEditor, toJSONContent, toTextContent } from 'svelte-jsoneditor';
-  import type { Content } from 'svelte-jsoneditor';
   import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
   import { tick } from 'svelte';
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
@@ -53,7 +53,7 @@
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = "paper.json";
+    link.download = makeFilename('json');
     document.body.appendChild(link);
     link.click();
 
