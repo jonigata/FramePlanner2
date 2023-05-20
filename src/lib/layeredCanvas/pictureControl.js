@@ -17,3 +17,14 @@ export function *scale([w, h], p, f) {
         f([xScale, yScale]);
     }
 }
+
+export function *rotate(p, f) {
+    let dragStart = p;
+
+    while (p = yield) {
+        const dragOffset = p[0] - dragStart[0];
+        f(dragOffset);
+    }
+}
+
+

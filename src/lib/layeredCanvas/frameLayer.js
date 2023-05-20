@@ -1,7 +1,7 @@
 import { Layer } from "./layeredCanvas.js";
 import { FrameElement, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromPositionAndSize } from "./frameTree.js";
 import { constraintRecursive, constraintLeaf } from "./frameTree.js";
-import { translate, scale } from "./pictureControl.js";
+import { translate, scale, rotate } from "./pictureControl.js";
 import { keyDownFlags } from "./keyCache.js";
 import { ClickableIcon, MultistateIcon } from "./clickableIcon.js";
 import { trapezoidPath } from "./trapezoid.js";
@@ -33,6 +33,7 @@ export class FrameLayer extends Layer {
 
     const isImageActive = () => this.interactable && this.focusedLayout?.element.image && !this.pointerHandler;
     this.scaleIcon = new ClickableIcon("scale.png",unit,[1,1],"スケール", () => this.interactable && this.focusedLayout?.element.image);
+    this.rotateIcon = new ClickableIcon("rotate.png",unit,[1,1],"回転", () => this.interactable && this.focusedLayout?.element.image);
     this.dropIcon = new ClickableIcon("drop.png",unit,[0,1],"画像除去", isImageActive);
     this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png",unit,[0,1],"左右反転", isImageActive);
     this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
@@ -49,7 +50,7 @@ export class FrameLayer extends Layer {
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
@@ -125,6 +126,7 @@ export class FrameLayer extends Layer {
       this.visibilityIcon.index = this.focusedLayout.element.visibility;
 
       this.scaleIcon.position = cp([1,1],[0,0]);
+      this.rotateIcon.position = cp([1,1],[-1,0]);
       this.dropIcon.position = cp([0,1],[0,0]);
       this.flipHorizontalIcon.position = cp([0,1], [2,0]);
       this.flipVerticalIcon.position = cp([0,1], [3,0]);
@@ -136,7 +138,7 @@ export class FrameLayer extends Layer {
       const x = origin[0] + size[0] / 2;
       if (this.hintIfContains(point, this.frameIcons)) {
       } else if (this.focusedLayout.element.image) {
-        this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール");
+        this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール、Alt+ドラッグで回転");
       } else if (0 < this.focusedLayout.element.visibility) {
         this.hint([x, origin[1] + 48], "画像をドロップ");
       } else {
@@ -336,6 +338,9 @@ export class FrameLayer extends Layer {
       if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
           this.scaleIcon.contains(p)) {
         yield* this.scaleImage(p, layout);
+      } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] ||
+                 this.rotateIcon.contains(p)) {
+        yield* this.rotateImage(p, layout);
       } else {
         yield* this.translateImage(p, layout);
       }
@@ -364,6 +369,26 @@ export class FrameLayer extends Layer {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         element.scale = [origin * s, origin * s];
+        if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
+          constraintLeaf(layout);
+        }
+        this.redraw();
+      });
+    } catch (e) {
+      if (e === "cancel") {
+        this.onRevert();
+      }
+    }
+  }
+
+  *rotateImage(p, layout) {
+    console.log("rotate");
+    const element = layout.element;
+    const originalRotation = element.rotation;
+    try {
+      yield* rotate(p, (q) => {
+        element.rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
+        console.log("rotate: ", element.rotation);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(layout);
         }

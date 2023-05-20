@@ -13,6 +13,7 @@ export class FrameElement {
         this.padding = { top: 0, bottom: 0, left: 0, right: 0};
         this.translation = [0, 0];
         this.scale = [1, 1]; 
+        this.rotation = 0;
         this.reverse = [1, 1];
         this.bgColor = null;
         this.borderColor = null;
@@ -39,6 +40,7 @@ export class FrameElement {
         element.padding = { ...this.padding };
         element.translation = [...this.translation];
         element.scale = [...this.scale];
+        element.rotation = this.rotation;
         element.reverse = [...this.reverse];
         element.bgColor = this.bgColor;
         element.borderColor = this.borderColor;
@@ -83,6 +85,7 @@ export class FrameElement {
             // leaf
             element.translation = [0, 0];
             element.scale = [1, 1]; 
+            element.rotation = 0;
             element.reverse = [1, 1];
         }
         return element;
@@ -221,6 +224,7 @@ export class FrameElement {
                     newElement.children[0].image = target.image;
                     newElement.children[0].translation = target.translation;
                     newElement.children[0].scale = target.scale;
+                    newElement.children[0].rotation = target.rotation;
                 }
                 newElement.calculateLengthAndBreadth();
                 parent.children[index] = newElement;
@@ -589,8 +593,9 @@ export function collectImages(frameTree) {
   if (!frameTree.children || frameTree.children.length === 0) {
     images.push({
       image: frameTree.image,
-      scale: frameTree.scale,
       translation: frameTree.translation,
+      scale: frameTree.scale,
+      rotation: frameTree.rotation,
     });
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
@@ -606,10 +611,11 @@ export function dealImages(frameTree, images) {
     if (images.length === 0) {
       return;
     }
-    const { image, scale, translation } = images.shift();
+    const { image, scale, translation, rotation } = images.shift();
     frameTree.image = image;
-    frameTree.scale = scale;
     frameTree.translation = translation;
+    frameTree.scale = scale;
+    frameTree.rotation = rotation;
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
       dealImages(frameTree.children[i], images);
