@@ -364,6 +364,9 @@ export class FrameLayer extends Layer {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         element.scale = [origin * s, origin * s];
+        if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
+          constraintLeaf(layout);
+        }
         this.redraw();
       });
     } catch (e) {
@@ -379,7 +382,10 @@ export class FrameLayer extends Layer {
     try {
       yield* translate(p, (q) => {
         element.translation = [origin[0] + q[0], origin[1] + q[1]];
-        this.redraw(); // TODO: できれば、移動した要素だけ再描画したい
+        if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
+          constraintLeaf(layout);
+        }
+        this.redraw();
       });
     } catch (e) {
       if (e === "cancel") {
