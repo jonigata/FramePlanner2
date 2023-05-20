@@ -121,7 +121,7 @@
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">T</div>
       <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
-        <ExponentialRangeSlider name="fontsize" bind:value={bubble.fontSize} exponentialMin={100} exponentialRange={20} step={1} style="width:130px;"/>
+        <ExponentialRangeSlider name="fontsize" bind:value={bubble.fontSize} exponentialMin={100} step={1}/>
         <div class="text-xs slider-value-text">
           <div class="number-box"><NumberEdit bind:value={bubble.fontSize}/></div>
         </div>  

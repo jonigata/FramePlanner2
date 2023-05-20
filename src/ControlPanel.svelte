@@ -17,11 +17,12 @@
   import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
-  import { generateImages } from './sdwebui'
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
 
   let min = 256;
-  let max = 4096;
+  let exponentialMin = 4096;
+  let max = 9410;
   let contactText = "";
 
   function setDimensions(w: number, h: number) {
@@ -142,7 +143,7 @@
       <div class="hbox">
         <div class="font-bold slider-label">W</div>
         <div style="width: 140px;">
-          <RangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
           <div class="number-box"><NumberEdit bind:value={$paperWidth}/></div>
@@ -152,7 +153,7 @@
       <div class="hbox">
         <div class="font-bold slider-label">H</div>
         <div style="width: 140px;">
-          <RangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
           <div class="number-box"><NumberEdit bind:value={$paperHeight}/></div>

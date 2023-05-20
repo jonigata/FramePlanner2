@@ -5,6 +5,7 @@
   export let name;
   export let value = 1;
   export let min = 1;
+  export let max = null;
   export let step = 1;
   export let exponentialMin = 100;
   export let exponentialRegion = 20;
@@ -24,6 +25,9 @@
       value = rawValue;
     } else {
       value = Math.pow(exponentialMin, 1 + (rawValue - exponentialMin) * powPerStep);
+      if (max != null && max < value) {
+        value = max;
+      }
     }
   }
 
