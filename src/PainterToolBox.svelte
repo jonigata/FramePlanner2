@@ -8,8 +8,8 @@
   let tools = [
     { id: 0, name: "pen", strokeStyle: '#000000', lineWidth: 2, selected: true },
     { id: 1, name: "pen", strokeStyle: '#000000', lineWidth: 5, selected: false  },
-    { id: 2, name: "green", strokeStyle: '#00f000', lineWidth: 5, selected: false  },
-    { id: 3, name: "blue", strokeStyle: '#0000f0', lineWidth: 5, selected: false  },
+    { id: 2, name: "green", strokeStyle: '#31CC00', lineWidth: 5, selected: false  },
+    { id: 3, name: "blue", strokeStyle: '#1600B9', lineWidth: 5, selected: false  },
     { id: 4, name: "eraser", strokeStyle: '#ffffff', lineWidth: 80, selected: false  },
   ];
 
