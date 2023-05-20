@@ -78,15 +78,27 @@
     <p>※傾かせすぎに関しては自己責任でお願いします</p>
 
     <h3>sdwebui連携</h3>
-    <ol>
-      <li>sdwebui起動時に、COMMANDLINE_ARGSに'--api --cors-allow-origins https://frameplanner-e5569.web.app'を指定する</li>
-      <li>各コマの「<img style="display: inline;" width="18" height="18" src='./src/assets/generate-image.png' alt="generate"/>画像生成」   ボタンを押し、「URL」にsdwebuiのURLを入力する</li>
-    </ol>
+    <dl>
+      <dt>API有効化、CORS対応</dt>
+      <dd>sdwebui起動時に、COMMANDLINE_ARGSに'--api --cors-allow-origins https://frameplanner-e5569.web.app'を指定する</dd>
+      <dt>Mixed contet対応</dt>
+      <dd>以下のどれかを行う
+        <ol>
+          <li>sdwebuiをhttpsでホスト</li>
+          <li>sdwebuiでngrokなどを使う</li>
+          <li><a href="https://t.co/m48tNsHWzB">ブラウザのセキュリティを緩める</a></li>
+        </ol>
+      </dd>
+      <dt>URL入力</dt>
+      <dd>各コマの「<img style="display: inline;" width="18" height="18" src='./src/assets/generate-image.png' alt="generate"/>画像生成」   ボタンを押し、「URL」にsdwebuiのURLを入力する</dd>
+      <dt>scribble</dt>
+      <dd><a href="https://twitter.com/jonigata_ai/status/1659567680695992320">動画(Twitter)</a></dd>
+    </dl>
 
     <h2>Q&A</h2>
     <dl>
       <dt>Q.「クリップボードを使う」をブロックしてしまったが、使いたい</dt>
-      <dd>A.ブラウザの設定のサイトごとのセキュリティで「許可」してください</dd>
+      <dd>A.ブラウザの設定のサイトごとのセキュリティで「許可」してください。ブラウザのURL欄の鍵アイコンでできるみたいです。</dd>
       <dt>Q.フキダシの透明度を変えたい</dt>
       <dd>A.フキダシインスペクタの下の方に色設定があるので、そこをクリックしてカラーピッカーを開いたら右端の透明度スライダーを操作してください</dd>
     </dl>
@@ -94,12 +106,7 @@
     <h2>注意</h2>
     <ul>
       <li>Share機能で作ったドキュメントは突然予告もなく消すことがあります</li>
-
     </ul>
-
-
-
-    
   </div>
 </Drawer>
 </div>
