@@ -158,8 +158,8 @@
     commit();
   }
 
-  export function chooseTool(tool) {
-    console.log("chooseTool", tool);
+  export function setTool(tool) {
+    console.log("setTool", tool);
     inlinePainterLayer.currentBrush = tool;
   }
 

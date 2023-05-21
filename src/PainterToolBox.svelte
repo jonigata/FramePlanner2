@@ -1,7 +1,7 @@
 <script type="ts">
   import { draggable } from '@neodrag/svelte';
   import PainterTool from './PainterTool.svelte';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -13,6 +13,11 @@
     { id: 4, name: "eraser", strokeStyle: '#ffffff', lineWidth: 80, selected: false  },
   ];
 
+  function reset() {
+    console.log("reset");
+    tools.forEach(tool => tool.selected = tool.id === 0);
+  }
+
   function onChoose(e) {
     console.log(e.detail);
     tools = tools.map(tool => ({ ...tool, selected: false }));
@@ -21,13 +26,28 @@
     const chosenTool = tools.find(tool => tool.id === e.detail.id);
     chosenTool.selected = true;
 
-    dispatch('choose', e.detail);
+    dispatch('setTool', e.detail);
+  }
+
+  function onChange(e) {
+    const targetTool = tools.find(tool => tool.id === e.detail.id);
+    targetTool.strokeStyle = e.detail.strokeStyle;
+    targetTool.lineWidth = e.detail.lineWidth;
+    if (targetTool.selected) {
+      dispatch('setTool', targetTool);
+    }
   }
 
   function onDone() {
     console.log("onDone");
     dispatch('done');
   }
+
+  onMount(() => {
+    console.log("onMount");
+    reset();
+    dispatch('setTool', tools[0]);
+  });
 </script>
 
 <div class="control-panel variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }}>
@@ -35,7 +55,7 @@
   <div class="inner expand hbox gap-0.5">
     {#each tools as tool}
     <!-- いまのところtoolにはbrushしかない -->
-    <PainterTool brush={tool} label={tool.name} on:choose={onChoose}/>
+    <PainterTool brush={tool} label={tool.name} on:choose={onChoose} on:change={onChange}/>
     {/each}
     <span style="width:20px;"></span>
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>

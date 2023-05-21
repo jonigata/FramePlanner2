@@ -1,5 +1,5 @@
 <script type="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples';
   import Paper from './Paper.svelte';
   import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
@@ -15,6 +15,7 @@
   let width;
   let height;
   let painterActive = false;
+  let toolBox = null;
 
   $:onChangePaperSize($paperWidth, $paperHeight);
   function onChangePaperSize(w, h) {
@@ -86,7 +87,7 @@
     $frameWidth = doc.frameTree.borderWidth ?? 1;
   }
 
-  function onPainterActive(e) {
+  async function onPainterActive(e) {
     console.log('onPainterActive', e.detail);
     painterActive = e.detail;
   }
@@ -97,9 +98,9 @@
     painterActive = false;
   }
 
-  function onChooseTool(e) {
-    console.log('onChooseTool', e.detail);
-    paper.chooseTool(e.detail);
+  function onSetTool(e) {
+    console.log('onSetTool', e.detail);
+    paper.setTool(e.detail);
   }
 
   onMount(() => {
@@ -123,7 +124,7 @@
 </div>
 
 {#if painterActive}
-  <PainterToolBox on:choose={onChooseTool} on:done={onScribbleDone}/>
+  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone} bind:this={toolBox}/>
 {/if}
 
 <style>
