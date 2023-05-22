@@ -14,7 +14,7 @@ const iconUnit = [20, 20];
 
 export class BubbleLayer extends Layer {
   constructor(
-    renerLayer,
+    renderLayer,
     interactable,
     frameLayer,
     onShowInspector,
@@ -24,7 +24,7 @@ export class BubbleLayer extends Layer {
     onGetDefaultText
   ) {
     super();
-    this.renderLayer = renerLayer;
+    this.renderLayer = renderLayer;
     this.interactable = interactable;
     this.frameLayer = frameLayer;
     this.bubbles = [];
@@ -436,7 +436,9 @@ export class BubbleLayer extends Layer {
   hintOptionIcon(shape, p) {
     const optionSet = bubbleOptionSets[shape];
     for (const option of Object.keys(optionSet)) {
-      if (this.optionIcons[optionSet[option].icon].hintIfContains(p, this.hint)) {
+      const icon = this.optionIcons[optionSet[option].icon];
+      if (!icon) { continue; }
+      if (icon.hintIfContains(p, this.hint)) {
         return true;
       }
     }
@@ -536,6 +538,7 @@ export class BubbleLayer extends Layer {
     const optionSet = bubbleOptionSets[shape];
     for (const option of Object.keys(optionSet)) {
       const icon = this.optionIcons[optionSet[option].icon];
+      if (!icon) { continue; }
       if (icon.contains(p)) {
         return option;
       }

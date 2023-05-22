@@ -11,6 +11,7 @@
   import { toolTip } from './passiveToolTipStore';
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
+  import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -28,6 +29,7 @@
   let adjustedPosition = { x: 0, y: 0 };
   let pinned = true;
   let textarea = null;
+  let appendix = null;
 
   $:move(position);
   function move(p) {
@@ -50,6 +52,7 @@
     if (b === oldBubble) {return;}
     oldBubble = b;
     if (b) {
+      console.log(b.optionSet);
       $chosenShape = b.shape;
       await tick();
       textarea.focus({preventScroll: true});
@@ -165,6 +168,7 @@
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
+    <BubbleInspectorAppendix bubble={bubble} bind:this={appendix}/>
   </div>
 </div>
 {/if}
@@ -180,7 +184,6 @@
     top: 710px;
     left: 50px;
     width: 350px;
-    height: 285px;
     display: flex;
     flex-direction: column;
     padding: 8px;

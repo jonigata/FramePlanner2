@@ -241,11 +241,13 @@
       height: y1 - y0,
       offset
     };
+    b.redraw = () => layeredCanvas.redraw();
     $bubble = b;
   }
 
   function hideInspector() {
     console.log('hideInspector');
+    $bubble.redraw = null; // 一応
     $bubble = null;
   }
 

@@ -467,7 +467,8 @@ function getHarshCurvePath(size, opts, seed) {
 }
 
 function getSoftPath(size, opts, seed) {
-  const bump = Math.min(size[0], size[1]) / 30;
+  console.log("bump:", opts.bump);
+  const bump = Math.min(size[0], size[1]) * opts.bump;
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, 12));
   const points = subdividePointsWithBump(rawPoints, -bump);

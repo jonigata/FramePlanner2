@@ -1,8 +1,9 @@
 <!-- SliderEdit.svelte -->
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
 
   export let value;
+  export let allowDecimal = false;
 
   const dispatch = createEventDispatcher();
   let editing = false;
@@ -14,15 +15,15 @@
 
   $: onChangeValue(value);
   function onChangeValue(value) {
-    const n = parseInt(textValue, 10);
-    if (value != n) {
-      textValue = value.toString();
+    let s = allowDecimal ? value.toFixed(2) : value.toString();
+    if (textValue != s) {
+      textValue = s;
     }
   }
 
   $: onChangeTextValue(textValue);
   function onChangeTextValue(textValue) {
-    const n = parseInt(textValue, 10);
+    let n = allowDecimal ? parseFloat(textValue) : parseInt(textValue, 10);
     if (value != n) {
       value = n;
     }
@@ -99,6 +100,8 @@
     box-sizing: content-box;
     border-radius: 2px;
     padding-right: 2px;
+    width: 100%;
+    height: 100%;
     border: none;
   }
   .edit-box {
