@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { drawBubble } from "./lib/layeredCanvas/bubbleGraphic.js";
   import { createEventDispatcher } from 'svelte';
+  import { Bubble } from "./lib/layeredCanvas/bubble.js";
 
   export let width = 64;
   export let height = 96;
@@ -24,10 +25,10 @@
   function redraw(p) {
     if (!canvas) return;
 
-    const opts = {
-      tailTip: [-width*0.5, height*0.4],
-      tailMid: [0.5, 0],
-    }
+    const opts = Bubble.getInitialOptions({ shape, size: [width, height] });
+
+    opts.tailTip = [-width*0.5, height*0.4];
+    opts.tailMid = [0.5, 0];
 
     const ctx = canvas.getContext("2d");
     ctx.save();

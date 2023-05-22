@@ -334,7 +334,9 @@ export const bubbleOptionSets = {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    bump: { label: "でこぼこ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
+    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
+    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
+    jitter: { label: "ジッター", type: "number", min: 0.1, max: 1.0, step: 0.1, init: b => 0.5 },
   },
   "heart" : {link: {hint:"結合", icon:"unite"} },
   "diamond": {link: {hint:"結合", icon:"unite"} },
@@ -347,7 +349,14 @@ export const bubbleOptionSets = {
     tailMid: {hint: "流線の途中",icon:"curve", init: (b) => [0.5,0]}
   },
   "ellipse-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
-  "soft-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "soft-mind": {
+    link: {hint:"結合", icon:"unite"}, 
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
+    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
+    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
+    jitter: { label: "ジッター", type: "number", min: 0.1, max: 1.0, step: 0.1, init: b => 0.5 },
+  },
   "rounded-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "none": {},
 };

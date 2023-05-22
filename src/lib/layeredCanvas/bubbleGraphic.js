@@ -467,10 +467,10 @@ function getHarshCurvePath(size, opts, seed) {
 }
 
 function getSoftPath(size, opts, seed) {
-  console.log("bump:", opts.bump);
-  const bump = Math.min(size[0], size[1]) * opts.bump;
+  console.log("bump:", opts.bumpDepth, opts.bumpCount, opts.jitter);
+  const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
-  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, 12));
+  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.jitter));
   const points = subdividePointsWithBump(rawPoints, -bump);
 
   const path = new paper.Path();
