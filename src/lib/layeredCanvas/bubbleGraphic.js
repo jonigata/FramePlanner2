@@ -78,9 +78,9 @@ function drawConcentrationBubble(context, seed, size, opts) {
 
     context.lineWidth = 1 / Math.min(w, h);
     // draw n radial line
-    const n = 200;
+    const n = opts.lineCount;
     context.save();
-    const gradient = context.createRadialGradient(0, 0, 1, 0, 0, 1.15);
+    const gradient = context.createRadialGradient(0, 0, 1, 0, 0, opts.lineLength);
     gradient.addColorStop(0.0, "rgba(0,0,0,1)");
     gradient.addColorStop(1.0, "rgba(0,0,0,0)");
     context.strokeStyle = gradient;
@@ -88,7 +88,7 @@ function drawConcentrationBubble(context, seed, size, opts) {
     for (let i = 0; i < n; i++) {
       const angle = (i * 2 * Math.PI) / n;
       const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
-      const [lx, ly] = [dx * 1.15, dy * 1.15];
+      const [lx, ly] = [dx * opts.lineLength, dy * opts.lineLength];
       context.moveTo(dx, dy);
       context.lineTo(lx, ly);
     }

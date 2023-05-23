@@ -328,9 +328,20 @@ export const bubbleOptionSets = {
     xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
   },
-  "square": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
-  "ellipse": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
-  "concentration": {},
+  "square": {
+    link: {hint:"結合", icon:"unite"}, 
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}
+  },
+  "ellipse": {
+    link: {hint:"結合", icon:"unite"}, 
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}
+  },
+  "concentration": {
+    lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
+    lineLength: { label: "線の長さ", type: "number", min: 1.05, max: 1.50, step: 0.01, init: b => 1.15 },
+  },
   "polygon": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "strokes": {},
   "double-strokes": {},
