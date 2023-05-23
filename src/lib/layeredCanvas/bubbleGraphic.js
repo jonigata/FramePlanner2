@@ -474,7 +474,6 @@ function getHarshCurvePath(size, opts, seed) {
 }
 
 function getSoftPath(size, opts, seed) {
-  console.log("bump:", opts.bumpDepth, opts.bumpCount, opts.jitter);
   const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.jitter));
@@ -612,7 +611,7 @@ function makeTrivialTailPath(size, m, v) {
 
 function getPolygonPath(size, opts, seed) {
   const rng = seedrandom(seed);
-  const angles = generateRandomAngles(rng, 10);
+  const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
   const rawPoints = generateSuperEllipsePoints(size, angles);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
   const points = cookedPoints.map((p) => [p.x, p.y]);
