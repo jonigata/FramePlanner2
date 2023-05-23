@@ -38,6 +38,20 @@ export function generateSuperEllipsePoints(size, angles, n = 3) {
   return angles.map(angle => superEllipsePoint2D(size[0] / 2, size[1] / 2, n, angle));
 }
 
+export function jitterDistances(rng, points, jitter) {
+  // 原点からの距離をjitterに応じてランダムに変化させる
+  const newPoints = [];
+  for (let i = 0; i < points.length; i++) {
+    const [x, y] = points[i];
+    const dist = Math.hypot(x, y);
+    const factor = (1 + (rng() - 0.5) * jitter) ** 3;
+    const newDist = dist * factor;
+    const [nx, ny] = [x * newDist / dist, y * newDist / dist];
+    newPoints.push([nx, ny]);
+  }
+  return newPoints;
+}
+
 export function focusAnglesAroundIndex(angles, focusAngle, basicFocusFactor) {
   const focusedAngles = angles.map(angle => {
     const angleDiff = angleDifference(angle, focusAngle);

@@ -1,7 +1,7 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
-import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex } from "./bubbleGeometry.js";
+import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex, jitterDistances } from "./bubbleGeometry.js";
 import { clamp, add2D, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D, circularAngleToEllipseAngle } from "./geometry.js";
 import { generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
@@ -396,13 +396,18 @@ function getRoundedPath(size, opts, seed) {
   const [x0, y0, w, h] = sizeToRect(size);
   const [x1, y1] = [0, 0];
   const [x2, y2] = [x0 + w, y0 + h];
+  const [sx, sy] = [opts.xStraight * w * 0.5, opts.yStraight * h * 0.5];
 
   const path = new paper.Path();
-  path.moveTo(x1, y0);
-  path.quadraticCurveTo(x0, y0, x0, y1);
-  path.quadraticCurveTo(x0, y2, x1, y2);
-  path.quadraticCurveTo(x2, y2, x2, y1);
-  path.quadraticCurveTo(x2, y0, x1, y0);
+  path.moveTo([x1 + sx, y0]);
+  path.lineTo([x1 - sx, y0]);
+  path.quadraticCurveTo([x0, y0], [x0, y1-sy]);
+  path.lineTo([x0, y1+sy]);
+  path.quadraticCurveTo([x0, y2], [x1-sx, y2]);
+  path.lineTo([x1+sx, y2]);
+  path.quadraticCurveTo([x2, y2], [x2, y1+sy]);
+  path.lineTo([x2, y1-sy]);
+  path.quadraticCurveTo([x2, y0], [x1+sx, y0]);
   path.closed = true;
 
   return addTrivialTail(path, size, opts);
@@ -436,20 +441,22 @@ function getHarshPath(size, opts, seed) {
 }
 
 function getHarshCurvePath(size, opts, seed) {
-  const bump = Math.min(size[0], size[1]) / 10;
+  const bump = Math.min(size[0], size[1]) * opts.bumpSharp;
   const rng = seedrandom(seed);
   let points;
   if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
-    const rawAngles = generateRandomAngles(rng, 12, 0.2);
+    const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
     const angles = rawAngles.map(x => circularAngleToEllipseAngle(size[0]*0.5, size[1]*0.5, x));
     const tailIndex = findNearestAngleIndex(rawAngles, focusAngle);
-    const rawPoints = generateSuperEllipsePoints(size, angles);
+    let rawPoints = generateSuperEllipsePoints(size, angles);
+    rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
     points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.7, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
-    const rawAngles = generateRandomAngles(rng, 12, 0.2);
-    const rawPoints = generateSuperEllipsePoints(size, rawAngles);
+    const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+    let rawPoints = generateSuperEllipsePoints(size, rawAngles);
+    rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
     points = subdividePointsWithBump(rawPoints, bump);
   }
 

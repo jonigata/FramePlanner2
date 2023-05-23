@@ -321,7 +321,13 @@ export class Bubble {
 }
 
 export const bubbleOptionSets = {
-  "rounded": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "rounded": {
+    link: {hint:"結合", icon:"unite"}, 
+    tailTip: {hint: "しっぽの先端", icon:"tail", init: (b) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中", icon:"curve", init: (b) => [0.5,0]},
+    xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
+    yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
+  },
   "square": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "ellipse": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
   "concentration": {},
@@ -329,14 +335,21 @@ export const bubbleOptionSets = {
   "strokes": {},
   "double-strokes": {},
   "harsh": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}},
-  "harsh-curve": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}},
+  "harsh-curve": {
+    link: {hint:"結合", icon:"unite"},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]},
+    bumpSharp: { label: "でっぱりの鋭さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.1 },
+    bumpCount: { label: "でっぱりの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.2 },
+    depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0 },
+  },
   "soft": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
-    jitter: { label: "ジッター", type: "number", min: 0.1, max: 1.0, step: 0.1, init: b => 0.5 },
+    jitter: { label: "ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
   },
   "heart" : {link: {hint:"結合", icon:"unite"} },
   "diamond": {link: {hint:"結合", icon:"unite"} },
