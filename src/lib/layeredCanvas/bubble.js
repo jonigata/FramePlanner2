@@ -346,11 +346,20 @@ export const bubbleOptionSets = {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
+    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
   },
-  "strokes": {},
-  "double-strokes": {},
+  "strokes": {
+    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
+    overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: b => 1.18 },
+  },
+  "double-strokes": {
+    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
+    overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: b => 1.18 },
+    interval: { label: "間隔", type: "number", min: 0.01, max: 1.0, step: 0.01, init: b => 0.02 },
+  },
   "harsh": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}},
   "harsh-curve": {
     link: {hint:"結合", icon:"unite"},

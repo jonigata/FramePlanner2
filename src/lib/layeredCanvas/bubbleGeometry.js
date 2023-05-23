@@ -131,4 +131,7 @@ export function debumpPointsAroundIndex(points, bumpFactor, index) {
   return newPoints;
 }
 
-
+export function color2string(c) {
+  function f(x) { return Math.floor(x * 255); }
+  return `rgba(${f(c.red)}, ${f(c.green)}, ${f(c.blue)}, ${c.alpha})`    
+}

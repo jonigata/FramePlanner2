@@ -3,7 +3,7 @@ import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex, jitterDistances } from "./bubbleGeometry.js";
 import { clamp, add2D, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D, circularAngleToEllipseAngle } from "./geometry.js";
-import { generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
+import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, size, shape, opts) {
   switch (shape) {
@@ -109,17 +109,17 @@ function drawConcentrationBubble(context, seed, size, opts) {
   }
 }
 
-function drawStrokesBubble(context, seed, rect, opts) {
-    drawStrokesBubbleAux(context, seed, rect, false);
+function drawStrokesBubble(context, seed, size, opts) {
+    drawStrokesBubbleAux(context, seed, size, opts, false);
 }
 
-function drawDoubleStrokesBubble(context, seed, rect, opts) {
-    drawStrokesBubbleAux(context, seed, rect, true);
+function drawDoubleStrokesBubble(context, seed, size, opts) {
+    drawStrokesBubbleAux(context, seed, size, opts, true);
 }
 
-function drawStrokesBubbleAux(context, seed, rect, double) {
+function drawStrokesBubbleAux(context, seed, size, opts, double) {
   const rng = seedrandom(seed);
-  const rawPoints = generateSuperEllipsePoints(rect, generateRandomAngles(rng, 10));
+  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.vertexCount, opts.angleJitter));
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
   const points = cookedPoints.map((p) => [p.x, p.y]);
 
@@ -135,43 +135,48 @@ function drawStrokesBubbleAux(context, seed, rect, double) {
     }
     finishTrivialPath(context);
   } else {
-    const dist = Math.min(rect[2], rect[3]) / 60;
-
-    context.beginPath();
     for (let i = 0; i < points.length; i++) {
+      context.beginPath();
       const p0 = points[i];
       const p1 = points[(i + 1) % points.length];
 
-      const [q0, q1] = extendLineSegment(p0, p1, 1.1);
+      const [q0, q1] = extendLineSegment(p0, p1, opts.overRun);
+
+      const gradient = context.createLinearGradient(...q0, ...q1);
+      const color0 = new paper.Color(context.strokeStyle); // わざとstrokeStyleを使う
+      const color1 = new paper.Color(context.strokeStyle);
+      color0.alpha = 0;
+      gradient.addColorStop(0, color2string(color0));
+      gradient.addColorStop(0.15, color2string(color1));
+      gradient.addColorStop(0.85, color2string(color1));
+      gradient.addColorStop(1, color2string(color0));
+      context.strokeStyle = gradient;
 
       context.moveTo(q0[0], q0[1]);
       context.lineTo(q1[0], q1[1]);
 
       if (double) {
-          const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
-          const [nx, ny] = [-dy, dx];
-          const [mx, my] = [
+        const dist = Math.min(size[0], size[1]) * opts.interval;
+
+        const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
+        const [nx, ny] = [-dy, dx];
+        const [mx, my] = [
           nx / Math.sqrt(nx * nx + ny * ny),
           ny / Math.sqrt(nx * nx + ny * ny),
-          ];
-          const [qx, qy] = [q0[0] + mx * dist, q0[1] + my * dist];
-          const [rx, ry] = [q1[0] + mx * dist, q1[1] + my * dist];
+        ];
+        const [qx, qy] = [q0[0] + mx * dist, q0[1] + my * dist];
+        const [rx, ry] = [q1[0] + mx * dist, q1[1] + my * dist];
 
-          context.moveTo(qx, qy);
-          context.lineTo(rx, ry);
+        context.moveTo(qx, qy);
+        context.lineTo(rx, ry);
       }
+      context.stroke();
     }
-    context.stroke();
   }
 }
 
 function drawMotionLinesBubble(context, seed, size, opts) {
   const [x, y, w, h] = sizeToRect(size);
-
-  function color2string(c) {
-    function f(x) { return Math.floor(x * 255); }
-    return `rgba(${f(c.red)}, ${f(c.green)}, ${f(c.blue)}, ${c.alpha})`    
-  }
 
   if (context.bubbleDrawMethod === "fill") {
     const rng = seedrandom(seed);
@@ -229,11 +234,6 @@ function drawMotionLinesBubble(context, seed, size, opts) {
 
 function drawSpeedLinesBubble(context, seed, size, opts) {
   const [x, y, w, h] = sizeToRect(size);
-
-  function color2string(c) {
-    function f(x) { return Math.floor(x * 255); }
-    return `rgba(${f(c.red)}, ${f(c.green)}, ${f(c.blue)}, ${c.alpha})`    
-  }
 
   if (context.bubbleDrawMethod === "fill") {
     const rng = seedrandom(seed);
@@ -611,7 +611,7 @@ function makeTrivialTailPath(size, m, v) {
 
 function getPolygonPath(size, opts, seed) {
   const rng = seedrandom(seed);
-  const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+  const angles = generateRandomAngles(rng, opts.vertexCount, opts.angleJitter);
   const rawPoints = generateSuperEllipsePoints(size, angles);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
   const points = cookedPoints.map((p) => [p.x, p.y]);
