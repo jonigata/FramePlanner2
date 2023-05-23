@@ -187,10 +187,9 @@ function drawMotionLinesBubble(context, seed, size, opts) {
     context.rect(x, y, w, h);
     context.clip();
 
-    // context.lineWidth = 1 / Math.min(w, h);
     context.lineWidth = 1;
     // draw n parallel line
-    const n = 200;
+    const n = opts.lineCount;
     const icd = opts?.focalPoint ?? [0, 0];
     const rangeVector = opts?.focalRange ?? [0, Math.hypot(w/2, h/2) * 0.25];
     const range = Math.hypot(rangeVector[0], rangeVector[1]);
@@ -209,15 +208,17 @@ function drawMotionLinesBubble(context, seed, size, opts) {
 
     // 線を描く
     for (let i = 0; i < n; i++) {
-      const angle = (i * 2 * Math.PI) / n + (rng() - 0.5) * 0.05;
+      const angle = (i * 2 * Math.PI) / n + (rng() - 0.5) * opts.angleJitter;
       const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
-      const sdr = id + rng() * 40;
+      const sdr = id * (1 + rng() * opts.startJitter);
+      //const sdr = id + rng() * 40;
       const p0 = [ix, iy];
       const p1 = [ox + dx * od, oy + dy * od];
       const v = [p1[0] - p0[0], p1[1] - p0[1]];
       const length = Math.hypot(...v);
       const p2 = [p0[0] + v[0] * sdr / length, p0[1] + v[1] * sdr / length];
-      const [q0, q1] = [perpendicular2D(v, 0.005), perpendicular2D(v, -0.005)];
+      const lw = opts.lineWidth * 0.1;
+      const [q0, q1] = [perpendicular2D(v, lw), perpendicular2D(v, -lw)];
       context.beginPath();
       context.moveTo(p2[0], p2[1]);
       context.lineTo(p1[0] + q0[0], p1[1] + q0[1]);

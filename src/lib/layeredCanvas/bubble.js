@@ -381,7 +381,11 @@ export const bubbleOptionSets = {
   "diamond": {link: {hint:"結合", icon:"unite"} },
   "motion-lines": {
     focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
-    focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, Math.hypot(b.size[0]/2, b.size[1]/2) * 0.25] }
+    focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, Math.hypot(b.size[0]/2, b.size[1]/2) * 0.25] },
+    lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
+    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 0.1, step: 0.01, init: b => 0.05 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0.05 },
+    startJitter: { label: "起点ジッター", type: "number", min: 0, max: 1.0, step: 0.01, init: b => 0.05 },
   },
   "speed-lines": {
     tailTip: {hint: "流線の先端",icon:"tail", init: (b) => [b.size[0]*0.4,0]},
