@@ -451,7 +451,7 @@ function getHarshCurvePath(size, opts, seed) {
     const tailIndex = findNearestAngleIndex(rawAngles, focusAngle);
     let rawPoints = generateSuperEllipsePoints(size, angles);
     rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
-    points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.7, tailIndex * 2);
+    points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.4, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
