@@ -52,17 +52,6 @@ export function jitterDistances(rng, points, jitter) {
   return newPoints;
 }
 
-export function focusAnglesAroundIndex(angles, focusAngle, basicFocusFactor) {
-  const focusedAngles = angles.map(angle => {
-    const angleDiff = angleDifference(angle, focusAngle);
-    const focusFactor = basicFocusFactor * (1 - angleDiff / Math.PI); 
-    const focusedAngle = angle - focusFactor * angleDiff;
-    return normalizedAngle(focusedAngle);
-  });
-
-  return focusedAngles;
-}
-
 export function findNearestIndex(points, v) {
   let minDist = Infinity;
   let minIndex = -1;

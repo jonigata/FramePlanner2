@@ -1,7 +1,7 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
-import { debumpPointsAroundIndex, tailCoordToWorldCoord, focusAnglesAroundIndex, jitterDistances } from "./bubbleGeometry.js";
+import { debumpPointsAroundIndex, tailCoordToWorldCoord, jitterDistances } from "./bubbleGeometry.js";
 import { clamp, add2D, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D, circularAngleToEllipseAngle } from "./geometry.js";
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
@@ -118,6 +118,9 @@ function drawDoubleStrokesBubble(context, seed, size, opts) {
 }
 
 function drawStrokesBubbleAux(context, seed, size, opts, double) {
+  if (opts.randomSeed) {
+    seed += opts.randomSeed;
+  }
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.vertexCount, opts.angleJitter));
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
@@ -176,6 +179,10 @@ function drawStrokesBubbleAux(context, seed, size, opts, double) {
 }
 
 function drawMotionLinesBubble(context, seed, size, opts) {
+  if (opts.randomSeed) {
+    seed += opts.randomSeed;
+  }
+
   const [x, y, w, h] = sizeToRect(size);
 
   if (context.bubbleDrawMethod === "fill") {
@@ -234,6 +241,10 @@ function drawMotionLinesBubble(context, seed, size, opts) {
 }
 
 function drawSpeedLinesBubble(context, seed, size, opts) {
+  if (opts.randomSeed) {
+    seed += opts.randomSeed;
+  }
+
   const [x, y, w, h] = sizeToRect(size);
 
   if (context.bubbleDrawMethod === "fill") {
@@ -322,6 +333,10 @@ paper.setup([1,1]); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
 export function getPath(shape, size, opts, seed) {
+  if (opts.randomSeed) {
+    seed += opts.randomSeed;
+  }
+
   const startTime = performance.now();
   try {
     switch (shape) {
@@ -414,21 +429,21 @@ function getRoundedPath(size, opts, seed) {
 }
 
 function getHarshPath(size, opts, seed) {
-  const bump = Math.min(size[0], size[1]) / 10;
+  const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
 
   let points;
   if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
-    let angles = generateRandomAngles(rng, 10);
+    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
-    angles = focusAnglesAroundIndex(angles, focusAngle, 0.7);
     const rawPoints = generateSuperEllipsePoints(size, angles);
     points = subdividePointsWithBump(rawPoints, bump);
     const v = [opts.tailTip[0], opts.tailTip[1]];
     const tailIndex = findNearestIndex(points, v);
     points[tailIndex] = v;
   } else {
-    let angles = generateRandomAngles(rng, 10);
+
+    let angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const rawPoints = generateSuperEllipsePoints(size, angles);
     points = subdividePointsWithBump(rawPoints, bump);
   }
