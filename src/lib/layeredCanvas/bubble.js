@@ -375,7 +375,7 @@ export const bubbleOptionSets = {
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
-    jitter: { label: "ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
   },
   "heart" : {link: {hint:"結合", icon:"unite"} },
   "diamond": {link: {hint:"結合", icon:"unite"} },
@@ -389,17 +389,31 @@ export const bubbleOptionSets = {
   },
   "speed-lines": {
     tailTip: {hint: "流線の先端",icon:"tail", init: (b) => [b.size[0]*0.4,0]},
-    tailMid: {hint: "流線の途中",icon:"curve", init: (b) => [0.5,0]}
+    tailMid: {hint: "流線の途中",icon:"curve", init: (b) => [0.5,0]},
+    lineCount: { label: "線の本数", type: "number", min: 10, max: 200, step: 1, init: b => 70 },
+    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 1.0, step: 0.01, init: b => 0.2 },
+    laneJitter: { label: "間隔ジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0.05 },
+    startJitter: { label: "起点ジッター", type: "number", min: 0, max: 0.5, step: 0.01, init: b => 0.1 },
   },
-  "ellipse-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "ellipse-mind": {
+    link: {hint:"結合", icon:"unite"}, 
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}
+  },
   "soft-mind": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
-    jitter: { label: "ジッター", type: "number", min: 0.1, max: 1.0, step: 0.1, init: b => 0.5 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
   },
-  "rounded-mind": {link: {hint:"結合", icon:"unite"}, tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}},
+  "rounded-mind": {
+    link: {hint:"結合", icon:"unite"}, 
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
+    xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
+    yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
+  },
   "none": {},
 };

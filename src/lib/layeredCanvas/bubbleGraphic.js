@@ -259,28 +259,27 @@ function drawSpeedLinesBubble(context, seed, size, opts) {
       return clamp(psf);
     }
 
+    context.lineWidth = 1;
+    const n = opts.lineCount;
+
     const psf0 = clamp(0.5 - magnitude2D(tailTip) / length);
     const psf1 = calculateNormalizedPosition(tailMid);
 
-    context.lineWidth = 1;
-    // draw n radial line
-    const n = 70;
-
-    // グラデーション
-    const gradient = context.createLinearGradient(length*0.5, 0, -length*0.5, 0);
-    const color0 = new paper.Color(context.strokeStyle); // わざとstrokeStyleを使う
-    const color1 = new paper.Color(context.strokeStyle);
-    color0.alpha = 0;
-    gradient.addColorStop(psf0, color2string(color0));
-    gradient.addColorStop(psf1, color2string(color1));
-    gradient.addColorStop(1.0, color2string(color1));
-    context.fillStyle = gradient;
-
     // 線を描く
     for (let i = 0; i < n; i++) {
-      const y = (i + 0.5) / n * length - length/2 + rng() * length * 0.05;
-      const lx = - length * 0.5 + rng() * w * 0.1;
-      const lw = h * 0.002 * (rng() + 0.5);
+      const y = (i + 0.5) / n * length - length/2 + rng() * length * opts.laneJitter;
+      const lx = - length * 0.5 + (rng() - 0.5) * w * opts.startJitter;
+      const lw = h * opts.lineWidth * 0.01 * (rng() + 0.5);
+
+      // グラデーション
+      const gradient = context.createLinearGradient(lx+length, y, lx, y);
+      const color0 = new paper.Color(context.strokeStyle); // わざとstrokeStyleを使う
+      const color1 = new paper.Color(context.strokeStyle);
+      color0.alpha = 0;
+      gradient.addColorStop(psf0, color2string(color0));
+      gradient.addColorStop(psf1, color2string(color1));
+      gradient.addColorStop(1.0, color2string(color1));
+      context.fillStyle = gradient;
 
       context.beginPath();
       context.moveTo(lx, y-lw);
@@ -477,15 +476,15 @@ function getHarshCurvePath(size, opts, seed) {
 function getSoftPath(size, opts, seed) {
   const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
-  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.jitter));
+  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.angleJitter));
   const points = subdividePointsWithBump(rawPoints, -bump);
 
   const path = new paper.Path();
-  path.moveTo(points[0][0], points[0][1]);
+  path.moveTo(points[0]);
   for (let i = 0; i < points.length; i += 2) {
     const p1 = points[i + 1];
     const p2 = points[(i + 2) % points.length];
-    path.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+    path.quadraticCurveTo(p1, p2);
   }
   path.closed = true;
 
@@ -505,11 +504,11 @@ function getHeartPath(size, opts, seed) {
 
   const path = new paper.Path();
 
-  path.moveTo(x, y + h2);
-  path.cubicCurveTo(- 0.1 * w, h1, - 0.5 * w, h1, - 0.5 * w, h3);
-  path.cubicCurveTo(- 0.5 * w, h4, - 0.3 * w, h5,   0,       h6);
-  path.cubicCurveTo(  0.3 * w, h5,   0.5 * w, h4,   0.5 * w, h3);
-  path.cubicCurveTo(  0.5 * w, h1,   0.1 * w, h1,   0,       h2);
+  path.moveTo([x, y + h2]);
+  path.cubicCurveTo([- 0.1 * w, h1], [- 0.5 * w, h1], [- 0.5 * w, h3]);
+  path.cubicCurveTo([- 0.5 * w, h4], [- 0.3 * w, h5], [  0,       h6]);
+  path.cubicCurveTo([  0.3 * w, h5], [  0.5 * w, h4], [  0.5 * w, h3]);
+  path.cubicCurveTo([  0.5 * w, h1], [  0.1 * w, h1], [  0,       h2]);
   path.closed = true;
   
   return path;
@@ -520,10 +519,10 @@ function getDiamondPath(size, opts, seed) {
 
   const path = new paper.Path();
 
-  path.moveTo(0, y0);
-  path.lineTo(x0, 0);
-  path.lineTo(0, y0 + h);
-  path.lineTo(x0 + w, 0);
+  path.moveTo([0, y0]);
+  path.lineTo([x0, 0]);
+  path.lineTo([0, y0 + h]);
+  path.lineTo([x0 + w, 0]);
   path.closed = true;
 
   return path;
