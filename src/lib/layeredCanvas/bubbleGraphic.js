@@ -122,7 +122,7 @@ function drawStrokesBubbleAux(context, seed, size, opts, double) {
     seed += opts.randomSeed;
   }
   const rng = seedrandom(seed);
-  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.vertexCount, opts.angleJitter));
+  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.vertexCount, opts.angleJitter), opts.superEllipse);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
   const points = cookedPoints.map((p) => [p.x, p.y]);
 
@@ -436,7 +436,7 @@ function getHarshPath(size, opts, seed) {
   if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
-    const rawPoints = generateSuperEllipsePoints(size, angles);
+    const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
     points = subdividePointsWithBump(rawPoints, bump);
     const v = [opts.tailTip[0], opts.tailTip[1]];
     const tailIndex = findNearestIndex(points, v);
@@ -444,7 +444,7 @@ function getHarshPath(size, opts, seed) {
   } else {
 
     let angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    const rawPoints = generateSuperEllipsePoints(size, angles);
+    const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
     points = subdividePointsWithBump(rawPoints, bump);
   }
 
@@ -464,13 +464,13 @@ function getHarshCurvePath(size, opts, seed) {
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
     const angles = rawAngles.map(x => circularAngleToEllipseAngle(size[0]*0.5, size[1]*0.5, x));
     const tailIndex = findNearestAngleIndex(rawAngles, focusAngle);
-    let rawPoints = generateSuperEllipsePoints(size, angles);
+    let rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
     rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
     points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.4, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    let rawPoints = generateSuperEllipsePoints(size, rawAngles);
+    let rawPoints = generateSuperEllipsePoints(size, rawAngles, opts.superEllipse);
     rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
     points = subdividePointsWithBump(rawPoints, bump);
   }
@@ -491,7 +491,7 @@ function getHarshCurvePath(size, opts, seed) {
 function getSoftPath(size, opts, seed) {
   const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
-  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.angleJitter));
+  const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.angleJitter), opts.superEllipse);
   const points = subdividePointsWithBump(rawPoints, -bump);
 
   const path = new paper.Path();
@@ -627,7 +627,7 @@ function makeTrivialTailPath(size, m, v) {
 function getPolygonPath(size, opts, seed) {
   const rng = seedrandom(seed);
   const angles = generateRandomAngles(rng, opts.vertexCount, opts.angleJitter);
-  const rawPoints = generateSuperEllipsePoints(size, angles);
+  const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
   const points = cookedPoints.map((p) => [p.x, p.y]);
 
