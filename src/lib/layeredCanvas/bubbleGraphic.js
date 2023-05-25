@@ -472,10 +472,10 @@ function getHarshCurvePath(size, opts, seed) {
     points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.4, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
-    const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    let rawPoints = generateSuperEllipsePoints(size, rawAngles, opts.superEllipse);
-    rawPoints = jitterDistances(rng, rawPoints, 0, opts.depthJitter);
-    points = subdividePointsWithBump(rawPoints, bump);
+    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
+    points = jitterDistances(rng, points, 0, opts.depthJitter);
+    points = subdividePointsWithBump(points, bump);
   }
 
   const path = new paper.Path();
