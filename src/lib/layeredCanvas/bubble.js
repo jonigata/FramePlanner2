@@ -387,6 +387,16 @@ export const bubbleOptionSets = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
     depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0.04 },
   },
+  "shout": {
+    link: {hint:"結合", icon:"unite"},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
+    bumpSharp: { label: "でっぱりの鋭さ", type: "number", min: 0.01, max: 0.7, step: 0.01, init: b => 0.2 },
+    bumpCount: { label: "でっぱりの数", type: "number", min: 4, max: 20, step: 1, init: b => 12 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
+    depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 1.5, step: 0.01, init: b => 0.5 },
+  },
   "soft": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 

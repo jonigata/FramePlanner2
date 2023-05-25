@@ -12,6 +12,7 @@
     "soft",
     "harsh",
     "harsh-curve",
+    "shout",
     "ellipse",
     "concentration",
     "polygon",

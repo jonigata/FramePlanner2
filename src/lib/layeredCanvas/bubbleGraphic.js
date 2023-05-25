@@ -2,7 +2,7 @@ import seedrandom from "seedrandom";
 import { QuickHull } from "./quickHull.js"
 import * as paper from 'paper';
 import { debumpPointsAroundIndex, tailCoordToWorldCoord, jitterDistances } from "./bubbleGeometry.js";
-import { clamp, add2D, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D, circularAngleToEllipseAngle } from "./geometry.js";
+import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D } from "./geometry.js";
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, size, shape, opts) {
@@ -30,10 +30,12 @@ export function drawBubble(context, seed, size, shape, opts) {
       break;
     case "harsh":
       drawHarshBubble(context, seed, size, opts);
-
       break;
     case "harsh-curve":
       drawHarshCurveBubble(context, seed, size, opts);
+      break;
+    case "shout":
+      drawShoutBubble(context, seed, size, opts);
       break;
     case "soft":
       drawSoftBubble(context, seed, size, opts);
@@ -352,6 +354,8 @@ export function getPath(shape, size, opts, seed) {
         return getHarshPath(size, opts, seed);
       case 'harsh-curve':
         return getHarshCurvePath(size, opts, seed);
+      case 'shout':
+        return getShoutPath(size, opts, seed);
       case 'soft':
         return getSoftPath(size, opts, seed);
       case 'heart':
@@ -460,28 +464,59 @@ function getHarshCurvePath(size, opts, seed) {
   const rng = seedrandom(seed);
   let points;
   if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
-    const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
-    const angles = rawAngles.map(x => circularAngleToEllipseAngle(size[0]*0.5, size[1]*0.5, x));
-    const tailIndex = findNearestAngleIndex(rawAngles, focusAngle);
+    const tailIndex = findNearestAngleIndex(angles, focusAngle);
     let rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
+    rawPoints = jitterDistances(rng, rawPoints, 0, opts.depthJitter);
     points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.4, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const rawAngles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     let rawPoints = generateSuperEllipsePoints(size, rawAngles, opts.superEllipse);
-    rawPoints = jitterDistances(rng, rawPoints, opts.depthJitter);
+    rawPoints = jitterDistances(rng, rawPoints, 0, opts.depthJitter);
     points = subdividePointsWithBump(rawPoints, bump);
   }
 
   const path = new paper.Path();
-  path.moveTo(points[0][0], points[0][1]);
+  path.moveTo(points[0]);
   for (let i = 0; i < points.length; i += 2) {
     const p0 = points[i];
     const p1 = points[i + 1];
     const p2 = points[(i + 2) % points.length];
-    path.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+    path.quadraticCurveTo(p1, p2);
+  }
+  path.closed = true;
+
+  return path;
+}
+
+function getShoutPath(size, opts, seed) {
+  const bump = opts.bumpSharp;
+  const rng = seedrandom(seed);
+  let points;
+  if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
+    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+    const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
+    const tailIndex = findNearestAngleIndex(angles, focusAngle);
+    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
+    points = subdividePointsWithBump(points, bump * 80);
+    points = jitterDistances(rng, points, bump, opts.depthJitter);
+    points[tailIndex * 2] = opts.tailTip;
+  } else {
+    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
+    points = subdividePointsWithBump(points, bump * 80);
+    points = jitterDistances(rng, points, bump, opts.depthJitter);
+  }
+
+  const path = new paper.Path();
+  path.moveTo(points[0]);
+  for (let i = 0; i < points.length; i += 2) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const p2 = points[(i + 2) % points.length];
+    path.quadraticCurveTo(p1, p2);
   }
   path.closed = true;
 
@@ -665,6 +700,11 @@ function drawHarshBubble(context, seed, size, opts) {
 
 function drawHarshCurveBubble(context, seed, size, opts) {
   const path = getHarshCurvePath(size, opts, seed);
+  drawPath(context, path);
+}
+
+function drawShoutBubble(context, seed, size, opts) {
+  const path = getShoutPath(size, opts, seed);
   drawPath(context, path);
 }
 
