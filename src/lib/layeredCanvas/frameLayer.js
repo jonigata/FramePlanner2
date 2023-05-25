@@ -187,6 +187,10 @@ export class FrameLayer extends Layer {
   }
 
   pointerHover(point) {
+    if(!point) {
+      this.focusedLayout = null;
+      return false;
+    }
     if (keyDownFlags["Space"]) { return; }
     this.updateFocus(point);
   }

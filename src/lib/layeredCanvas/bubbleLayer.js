@@ -234,9 +234,8 @@ export class BubbleLayer extends Layer {
   }
 
   pointerHover(p) {
-    if (keyDownFlags["Space"]) {
-      return false;
-    }
+    if (!p) { return false; }
+    if (keyDownFlags["Space"]) {return false;}
 
     this.lit = null;
 

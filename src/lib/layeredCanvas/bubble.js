@@ -110,7 +110,8 @@ export class Bubble {
     b.autoNewline = json.autoNewline ?? true;
     b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
-    b.optionContext = json.optionContext ?? Bubble.getInitialOptions(b);
+    b.optionContext = Bubble.getInitialOptions(b);
+    Object.assign(b.optionContext, json.optionContext ?? {});
     return b;
   }
 

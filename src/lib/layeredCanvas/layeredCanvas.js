@@ -102,10 +102,11 @@ export class LayeredCanvas {
             this.draggingLayer.pointerMove(this.pointerCursor, this.payload); // 念のため別の実体
             this.redrawIfRequired();
         } else {
+            let p = this.pointerCursor;
             for (let i = this.layers.length - 1; i >= 0; i--) {
                 const layer = this.layers[i];
-                if (layer.pointerHover(this.pointerCursor)) {
-                    break;
+                if (layer.pointerHover(p)) {
+                    p = null;
                 }
             }
             this.redrawIfRequired();
