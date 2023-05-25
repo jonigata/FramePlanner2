@@ -426,7 +426,6 @@ function getRoundedPath(size, opts, seed) {
 }
 
 function getHarshPath(size, opts, seed) {
-  const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
 
   let points;
@@ -434,7 +433,7 @@ function getHarshPath(size, opts, seed) {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
     const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(rawPoints, bump);
+    points = subdividePointsWithBump(size, rawPoints, opts.bumpDepth);
     const v = [opts.tailTip[0], opts.tailTip[1]];
     const tailIndex = findNearestIndex(points, v);
     points[tailIndex] = v;
@@ -442,7 +441,7 @@ function getHarshPath(size, opts, seed) {
 
     let angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(rawPoints, bump);
+    points = subdividePointsWithBump(size, rawPoints, opts.bumpDepth);
   }
 
   const path = new paper.Path();
@@ -453,7 +452,6 @@ function getHarshPath(size, opts, seed) {
 }
 
 function getHarshCurvePath(size, opts, seed) {
-  const bump = Math.min(size[0], size[1]) * opts.bumpSharp;
   const rng = seedrandom(seed);
   let points;
   if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
@@ -462,14 +460,14 @@ function getHarshCurvePath(size, opts, seed) {
     const tailIndex = findNearestAngleIndex(angles, focusAngle);
     points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
     points = jitterDistances(rng, points, 0, opts.depthJitter);
-    points = subdividePointsWithBump(points, bump);
+    points = subdividePointsWithBump(size, points, opts.bumpSharp);
     points = debumpPointsAroundIndex(points, 1.2, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
     points = jitterDistances(rng, points, 0, opts.depthJitter);
-    points = subdividePointsWithBump(points, bump);
+    points = subdividePointsWithBump(size, points, opts.bumpSharp);
   }
 
   const path = new paper.Path();
@@ -494,14 +492,14 @@ function getShoutPath(size, opts, seed) {
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
     const tailIndex = findNearestAngleIndex(angles, focusAngle);
     points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(points, bump * 80);
+    points = subdividePointsWithBump(size, points, bump);
     points = jitterDistances(rng, points, bump, opts.depthJitter);
-    points = debumpPointsAroundIndex(points, 1.4 - bump * 1.2 , tailIndex * 2);
+    // points = debumpPointsAroundIndex(points, 1.4 - bump * 1.2 , tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(points, bump * 80);
+    points = subdividePointsWithBump(size, points, bump);
     points = jitterDistances(rng, points, bump, opts.depthJitter);
   }
 
@@ -519,10 +517,9 @@ function getShoutPath(size, opts, seed) {
 }
 
 function getSoftPath(size, opts, seed) {
-  const bump = Math.min(size[0], size[1]) * opts.bumpDepth;
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.angleJitter), opts.superEllipse);
-  const points = subdividePointsWithBump(rawPoints, -bump);
+  const points = subdividePointsWithBump(size, rawPoints, -opts.bumpDepth);
 
   const path = new paper.Path();
   path.moveTo(points[0]);
@@ -601,18 +598,17 @@ function getRoundedMindPath(size, opts, seed) {
 }
 
 function getCloudPath(size, opts, seed, vertexCount, superEllipseN, bumpFactor) {
-  const bump = Math.min(size[0], size[1]) * bumpFactor;
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, vertexCount), superEllipseN);
-  const points = subdividePointsWithBump(rawPoints, -bump);
+  const points = subdividePointsWithBump(size, rawPoints, -bumpFactor);
 
   const path = new paper.Path();
-  path.moveTo(points[0][0], points[0][1]);
+  path.moveTo(points[0]);
   for (let i = 0; i < points.length; i += 2) {
     const p0 = points[i];
     const p1 = points[i + 1];
     const p2 = points[(i + 2) % points.length];
-    path.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
+    path.quadraticCurveTo(p1, p2);
   }
   path.closed = true;
 

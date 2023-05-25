@@ -1,4 +1,4 @@
-import { projectionScalingFactor2D, normalizedAngle, angleDifference, superEllipsePoint2D } from "./geometry.js";
+import { add2D, projectionScalingFactor2D, center2D, subtract2D, perpendicular2D, angleDifference, superEllipsePoint2D, normalize2D } from "./geometry.js";
 
 export function tailCoordToWorldCoord(center, tailTip, tailMid) {
   // bubble.centerを原点(O)とし、
@@ -83,18 +83,16 @@ export function findNearestAngleIndex(angles, angle) {
 }
 
 export function subdivideSegmentWithBump(p1, p2, bump) {
-  const q = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
-  const [dx, dy] = [p2[0] - p1[0], p2[1] - p1[1]];
-  const [nx, ny] = [-dy, dx];
-  const [mx, my] = [
-    nx / Math.sqrt(nx * nx + ny * ny),
-    ny / Math.sqrt(nx * nx + ny * ny),
-  ];
-  const [qx, qy] = [q[0] + mx * bump, q[1] + my * bump];
-  return [qx, qy];
+  const c = center2D(p1, p2);
+  const d = subtract2D(p2, p1);
+  const n = perpendicular2D(d);
+  const m = normalize2D(n, bump);
+  const q = add2D(c, m);
+  return q;
 }
 
-export function subdividePointsWithBump(points, bump) {
+export function subdividePointsWithBump(size, points, bumpFactor) {
+  const bump = Math.min(size[0], size[1]) * bumpFactor;
   const result = [];
   for (let i = 0; i < points.length; i++) {
     const next = (i + 1) % points.length;

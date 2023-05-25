@@ -1,11 +1,13 @@
-export function add2D([x, y], [dx, dy]) { return [x + dx, y + dy]; }
+export function add2D(v0, v1) { return [v0[0] + v1[0], v0[1] + v1[1]]; }
+export function subtract2D([x, y], [dx, dy]) { return [x - dx, y - dy]; }
 export function multiply2D([x, y], [dx, dy]) { return [x * dx, y * dy]; }
 export function dot2D(vectorA, vectorB) { return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1]; }
 export function cross2D(vectorA, vectorB) { return vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0]; }
 export function magnitude2D(vector) { return Math.sqrt(dot2D(vector, vector)); }
-export function perpendicular2D([x, y], n=1) { return [-y*n, x*n]; }
+export function perpendicular2D(v, n=1) { const [x, y] = v; return [-y*n, x*n]; }
 export function reverse2D(v) { return [-v[0], -v[1]]; }
-export function normalize2D([x, y], n=1) {
+export function normalize2D(v, n=1) {
+  const [x, y] = v;
   const l = Math.hypot(x, y);
   if (l < 0.0001) { return [0.0, 0.0]; }
   return [n * x / l, n * y / l];
@@ -72,16 +74,6 @@ export function superEllipsePoint2D(a, b, n, theta) {
   return [x, y];
 }
 
-export function circularAngleToEllipseAngle(rx, ry, theta) {
-  const nx = Math.cos(theta);
-  const ny = Math.sin(theta);
-
-  const ex = rx * ry * nx / Math.sqrt(ry * ry * nx * nx + rx * rx * ny * ny);
-  const ey = rx * ry * ny / Math.sqrt(ry * ry * nx * nx + rx * rx * ny * ny);
-
-  return Math.atan2(ey / ry, ex / rx);
-}
-
 export function line(p1, p2, offset=[0,0]) {
   return [[p1[0] + offset[0], p1[1] + offset[1]], [p2[0] + offset[0], p2[1] + offset[1]]];
 }
@@ -114,4 +106,8 @@ export function rotate2D([x, y], theta) {
 
 export function clamp(x, min=0, max=1) {
   return Math.max(min, Math.min(max, x));
+}
+
+export function center2D(p0, p1) {
+  return [(p0[0] + p1[0]) * 0.5, (p0[1] + p1[1]) * 0.5];
 }
