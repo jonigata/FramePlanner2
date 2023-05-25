@@ -6,6 +6,10 @@ import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionS
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, size, shape, opts) {
+  if (opts.randomSeed) {
+    seed += opts.randomSeed;
+  }
+
   switch (shape) {
     case "rounded":
       drawRoundedBubble(context, seed, size, opts);
@@ -120,9 +124,6 @@ function drawDoubleStrokesBubble(context, seed, size, opts) {
 }
 
 function drawStrokesBubbleAux(context, seed, size, opts, double) {
-  if (opts.randomSeed) {
-    seed += opts.randomSeed;
-  }
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.vertexCount, opts.angleJitter), opts.superEllipse);
   const cookedPoints = QuickHull(rawPoints.map((p) => ({ x: p[0], y: p[1] })));
@@ -181,10 +182,6 @@ function drawStrokesBubbleAux(context, seed, size, opts, double) {
 }
 
 function drawMotionLinesBubble(context, seed, size, opts) {
-  if (opts.randomSeed) {
-    seed += opts.randomSeed;
-  }
-
   const [x, y, w, h] = sizeToRect(size);
 
   if (context.bubbleDrawMethod === "fill") {
@@ -243,10 +240,6 @@ function drawMotionLinesBubble(context, seed, size, opts) {
 }
 
 function drawSpeedLinesBubble(context, seed, size, opts) {
-  if (opts.randomSeed) {
-    seed += opts.randomSeed;
-  }
-
   const [x, y, w, h] = sizeToRect(size);
 
   if (context.bubbleDrawMethod === "fill") {
@@ -467,9 +460,10 @@ function getHarshCurvePath(size, opts, seed) {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
     const tailIndex = findNearestAngleIndex(angles, focusAngle);
-    let rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    rawPoints = jitterDistances(rng, rawPoints, 0, opts.depthJitter);
-    points = debumpPointsAroundIndex(subdividePointsWithBump(rawPoints, bump), 1.4, tailIndex * 2);
+    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
+    points = jitterDistances(rng, points, 0, opts.depthJitter);
+    points = subdividePointsWithBump(points, bump);
+    points = debumpPointsAroundIndex(points, 1.2, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
@@ -502,6 +496,7 @@ function getShoutPath(size, opts, seed) {
     points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
     points = subdividePointsWithBump(points, bump * 80);
     points = jitterDistances(rng, points, bump, opts.depthJitter);
+    points = debumpPointsAroundIndex(points, 1.4 - bump * 1.2 , tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
   } else {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);

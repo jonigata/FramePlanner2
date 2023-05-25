@@ -25,7 +25,7 @@
   function redraw(p) {
     if (!canvas) return;
 
-    const opts = Bubble.getInitialOptions({ shape, size: [width, height] });
+    const opts = Bubble.getInitialOptions({ shape, size: [width, height] }, true);
 
     opts.tailTip = [-width*0.5, height*0.4];
     opts.tailMid = [0.5, 0];
