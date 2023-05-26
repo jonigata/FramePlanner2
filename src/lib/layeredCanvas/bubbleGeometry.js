@@ -1,4 +1,4 @@
-import { add2D, projectionScalingFactor2D, center2D, subtract2D, perpendicular2D, angleDifference, superEllipsePoint2D, normalize2D } from "./geometry.js";
+import { add2D, lerp2D, multiply2D, projectionScalingFactor2D, center2D, subtract2D, perpendicular2D, angleDifference, superEllipsePoint2D, normalize2D, intersection, magnitude2D } from "./geometry.js";
 
 export function tailCoordToWorldCoord(center, tailTip, tailMid) {
   // bubble.centerを原点(O)とし、
@@ -105,20 +105,22 @@ export function subdividePointsWithBump(size, points, bumpFactor) {
 }
 
 export function debumpPointsAroundIndex(points, bumpFactor, index) {
-  const [prev, next] = [(index + points.length - 1) % points.length, (index + 1) % points.length];
-  const p = [points[prev], points[index], points[next]];
-  // p0, p1, p2いずれも原点からのベクトル
-  // p0, p1, p2の長さの平均から、p1が突出している量だけp0,p2をp1の逆方向に押す
-  const l = p.map(p => Math.hypot(p[0], p[1]));
-  const lAvg = (l[0] + l[1] + l[2]) / 3;
-  const diff = (l[1] - lAvg) * bumpFactor;
-  const [x,y] = p[1];
-  const [dx, dy] = [diff * x / l[1], diff * y / l[1]];
-  p[0] = [p[0][0] - dx, p[0][1] - dy];
-  p[2] = [p[2][0] - dx, p[2][1] - dy];
+  const indices = [
+    (index + points.length - 2),
+    (index + points.length - 1),
+    index,
+    (index + 1),
+    (index + 2),
+  ].map(x => x % points.length);
+  const p = indices.map(x => points[x]);
+
+  const bf = [bumpFactor, bumpFactor];
+  const q0 = multiply2D(lerp2D(p[2], p[0], 0.5), bf);
+  const q1 = multiply2D(lerp2D(p[2], p[4], 0.5), bf);
+
   const newPoints = [...points];
-  newPoints[prev] = p[0];
-  newPoints[next] = p[2];
+  newPoints[indices[1]] = q0;
+  newPoints[indices[3]] = q1;
   return newPoints;
 }
 

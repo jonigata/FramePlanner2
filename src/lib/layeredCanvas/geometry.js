@@ -1,9 +1,10 @@
 export function add2D(v0, v1) { return [v0[0] + v1[0], v0[1] + v1[1]]; }
 export function subtract2D([x, y], [dx, dy]) { return [x - dx, y - dy]; }
-export function multiply2D([x, y], [dx, dy]) { return [x * dx, y * dy]; }
+export function multiply2D(v0, v1) { return [v0[0] * v1[0], v0[1] * v1[1]]; }
 export function dot2D(vectorA, vectorB) { return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1]; }
 export function cross2D(vectorA, vectorB) { return vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0]; }
-export function magnitude2D(vector) { return Math.sqrt(dot2D(vector, vector)); }
+export function magnitude2D(vector) { return Math.hypot(...vector); }
+export function distance2D(v0, v1) { return magnitude2D(subtract2D(v0, v1)); }
 export function perpendicular2D(v, n=1) { const [x, y] = v; return [-y*n, x*n]; }
 export function reverse2D(v) { return [-v[0], -v[1]]; }
 export function normalize2D(v, n=1) {
@@ -55,6 +56,10 @@ export function slerp2D(ca, cb, t) {
   const yt = cq[0] * Math.sin(angle) + cq[1] * Math.cos(angle);
 
   return [xt, yt];
+}
+
+export function lerp2D(ca, cb, t) {
+  return [ca[0] + (cb[0] - ca[0]) * t, ca[1] + (cb[1] - ca[1]) * t];
 }
 
 export function normalizedAngle(angle) {
