@@ -142,6 +142,20 @@
     dispatch('painterActive', painterActive);
   }
 
+  function insert(frameTreeElement) {
+    console.log("insert", frameTreeElement);
+    const images = collectImages(frameLayer.frameTree);
+    dealImages(frameLayer.frameTree, images, frameTreeElement, null);
+    commit();
+  }
+
+  function splice(frameTreeElement) {
+    console.log("splice", frameTreeElement);
+    const images = collectImages(frameLayer.frameTree);
+    dealImages(frameLayer.frameTree, images, null, frameTreeElement);
+    commit();
+  }
+
   function constraintElement(element) {
     const pageLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     const layout = findLayoutOf(pageLayout, element);
@@ -291,7 +305,9 @@
       },
       () => {revert();},
       (frameTreeElement) => {generate(frameTreeElement);},
-      (frameTreeElement) => {scribble(frameTreeElement);}
+      (frameTreeElement) => {scribble(frameTreeElement);},
+      (frameTreeElement) => {insert(frameTreeElement);},
+      (frameTreeElement) => {splice(frameTreeElement);},
       );
     layeredCanvas.addLayer(frameLayer);
 

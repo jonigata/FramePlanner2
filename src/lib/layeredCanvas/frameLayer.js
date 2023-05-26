@@ -9,7 +9,7 @@ import { trapezoidPath } from "./trapezoid.js";
 const iconUnit = [32,32];
 
 export class FrameLayer extends Layer {
-  constructor(renderLayer, frameTree, interactable, onCommit, onRevert, onGenerate, onScribble) {
+  constructor(renderLayer, frameTree, interactable, onCommit, onRevert, onGenerate, onScribble, onInsert, onSplice) {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
@@ -18,6 +18,8 @@ export class FrameLayer extends Layer {
     this.onRevert = onRevert;
     this.onGenerate = onGenerate;
     this.onScribble = onScribble;
+    this.onInsert = onInsert;
+    this.onSplice = onSplice;
 
     const unit = iconUnit;
     const isFrameActive = () => this.interactable && this.focusedLayout && !this.pointerHandler;
@@ -26,6 +28,8 @@ export class FrameLayer extends Layer {
     this.splitVerticalIcon = new ClickableIcon("split-vertical.png",unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible);
     this.deleteIcon = new ClickableIcon("delete.png",unit,[1,0],"削除", isFrameActive);
     this.duplicateIcon = new ClickableIcon("duplicate.png",unit,[1,0],"複製", isFrameActive);
+    this.insertIcon = new ClickableIcon("insert.png",unit,[1,0],"画像のシフト", isFrameActive);
+    this.spliceIcon = new ClickableIcon("splice.png",unit,[1,0],"画像のアンシフト", isFrameActive);
     this.zplusIcon = new ClickableIcon("zplus.png",unit,[0,0],"手前に", isFrameActiveAndVisible);
     this.zminusIcon = new ClickableIcon("zminus.png",unit,[0,0],"奥に", isFrameActiveAndVisible);
     this.visibilityIcon = new MultistateIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", () => this.interactable && this.focusedLayout && !this.pointerHandler);
@@ -50,7 +54,7 @@ export class FrameLayer extends Layer {
     this.transparentPattern = new Image();
     this.transparentPattern.src = new URL("../../assets/transparent.png",import.meta.url).href;
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
   }
 
@@ -120,6 +124,8 @@ export class FrameLayer extends Layer {
       this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
       this.deleteIcon.position = cp([1,0],[0,0]);
       this.duplicateIcon.position = cp([1,0],[0,1]);
+      this.insertIcon.position = cp([1,0],[0,2]);
+      this.spliceIcon.position = cp([1,0],[0,3]);
       this.zplusIcon.position = cp([0,0],[2.5,0]);
       this.zminusIcon.position = cp([0,0],[1,0]);
       this.visibilityIcon.position = cp([0,0],[0,0]);
@@ -288,6 +294,16 @@ export class FrameLayer extends Layer {
         FrameElement.duplicateElement(this.frameTree, layout.element);
         this.onCommit(this.frameTree);
         this.updateFocus(point);
+        this.redraw();
+        return null;
+      }
+      if (this.insertIcon.contains(point)) {
+        this.onInsert(layout.element);
+        this.redraw();
+        return null;
+      }
+      if (this.spliceIcon.contains(point)) {
+        this.onSplice(layout.element);
         this.redraw();
         return null;
       }
