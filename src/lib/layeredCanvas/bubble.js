@@ -95,6 +95,7 @@ export class Bubble {
     b.rotation = json.rotation ?? 0;
     b.text = json.text ?? "";
     b.shape = json.shape ?? "square";
+    if (b.shape == "harsh-curve") b.shape = "shout";
     b.embedded = json.embedded ?? false;
     b.fontStyle = json.fontStyle ?? "normal";
     b.fontWeight = json.fontWeight ?? "400";
@@ -380,16 +381,6 @@ export const bubbleOptionSets = {
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.07 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 15 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.1 },
-  },
-  "harsh-curve": {
-    link: {hint:"結合", icon:"unite"},
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    bumpSharp: { label: "でっぱりの鋭さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.19 },
-    bumpCount: { label: "でっぱりの数", type: "number", min: 4, max: 20, step: 1, init: b => 16 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
-    depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0.04 },
   },
   "shout": {
     link: {hint:"結合", icon:"unite"},

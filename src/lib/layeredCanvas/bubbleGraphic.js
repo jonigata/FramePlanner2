@@ -35,9 +35,6 @@ export function drawBubble(context, seed, size, shape, opts) {
     case "harsh":
       drawHarshBubble(context, seed, size, opts);
       break;
-    case "harsh-curve":
-      drawHarshCurveBubble(context, seed, size, opts);
-      break;
     case "shout":
       drawShoutBubble(context, seed, size, opts);
       break;
@@ -345,8 +342,6 @@ export function getPath(shape, size, opts, seed) {
         return getRoundedPath(size, opts, seed);
       case 'harsh':
         return getHarshPath(size, opts, seed);
-      case 'harsh-curve':
-        return getHarshCurvePath(size, opts, seed);
       case 'shout':
         return getShoutPath(size, opts, seed);
       case 'soft':
@@ -446,38 +441,6 @@ function getHarshPath(size, opts, seed) {
 
   const path = new paper.Path();
   path.addSegments(points);
-  path.closed = true;
-
-  return path;
-}
-
-function getHarshCurvePath(size, opts, seed) {
-  const rng = seedrandom(seed);
-  let points;
-  if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
-    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
-    const tailIndex = findNearestAngleIndex(angles, focusAngle);
-    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = jitterDistances(rng, points, 0, opts.depthJitter);
-    points = subdividePointsWithBump(size, points, opts.bumpSharp);
-    points = debumpPointsAroundIndex(points, 1.2, tailIndex * 2);
-    points[tailIndex * 2] = opts.tailTip;
-  } else {
-    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = jitterDistances(rng, points, 0, opts.depthJitter);
-    points = subdividePointsWithBump(size, points, opts.bumpSharp);
-  }
-
-  const path = new paper.Path();
-  path.moveTo(points[0]);
-  for (let i = 0; i < points.length; i += 2) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const p2 = points[(i + 2) % points.length];
-    path.quadraticCurveTo(p1, p2);
-  }
   path.closed = true;
 
   return path;
@@ -688,11 +651,6 @@ function drawRoundedBubble(context, seed, size, opts) {
 
 function drawHarshBubble(context, seed, size, opts) {
   const path = getHarshPath(size, opts, seed);
-  drawPath(context, path);
-}
-
-function drawHarshCurveBubble(context, seed, size, opts) {
-  const path = getHarshCurvePath(size, opts, seed);
   drawPath(context, path);
 }
 
