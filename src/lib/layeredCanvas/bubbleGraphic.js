@@ -138,6 +138,7 @@ function drawStrokesBubbleAux(context, seed, size, opts, double) {
     }
     finishTrivialPath(context);
   } else {
+    const color = context.strokeStyle;
     for (let i = 0; i < points.length; i++) {
       context.beginPath();
       const p0 = points[i];
@@ -146,8 +147,8 @@ function drawStrokesBubbleAux(context, seed, size, opts, double) {
       const [q0, q1] = extendLineSegment(p0, p1, opts.overRun);
 
       const gradient = context.createLinearGradient(...q0, ...q1);
-      const color0 = new paper.Color(context.strokeStyle); // わざとstrokeStyleを使う
-      const color1 = new paper.Color(context.strokeStyle);
+      const color0 = new paper.Color(color); // わざとstrokeStyleを使う
+      const color1 = new paper.Color(color);
       color0.alpha = 0;
       gradient.addColorStop(0, color2string(color0));
       gradient.addColorStop(0.15, color2string(color1));
