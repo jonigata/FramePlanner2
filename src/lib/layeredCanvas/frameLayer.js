@@ -106,11 +106,13 @@ export class FrameLayer extends Layer {
       [0, 0]
     );
     let layoutlet = findLayoutAt(layout, position);
-    if (layoutlet) {
-      this.importImage(layoutlet, image);
-      return true;
+    if (!layoutlet) {
+      return false;
     }
-    return false;
+
+    this.importImage(layoutlet, image);
+    this.onCommit(layoutlet.element);
+    return true;
   }
 
   updateFocus(point) {
