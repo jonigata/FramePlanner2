@@ -337,12 +337,12 @@
     if (manageKeyCache) {
       initializeKeyCache(canvas, (code) => {
         if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) && (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"])) {
-          console.log("ctrl+shift+z")
+          console.log("paper ctrl+shift+z")
           $undoStore.redo();
           return false;
         }
         if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"])) {
-          console.log("ctrl+z")
+          console.log("paper ctrl+z")
           $undoStore.undo();
           return false;
         }

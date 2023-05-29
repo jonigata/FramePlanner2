@@ -13,6 +13,8 @@
   let containerHeight = 0;
   let textValue = '';
 
+  let key = 0; // undo防止
+
   $: onChangeValue(value);
   function onChangeValue(value) {
     let s = allowDecimal ? value.toFixed(2) : value.toString();
@@ -62,6 +64,7 @@
       return;
     }
     submit();
+    key++; // undo防止
   }
 
 </script>
@@ -72,6 +75,7 @@
   bind:this="{container}"
 >
   <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
+    {#key key}
     <input
       bind:value={textValue}
       on:focus="{edit}"
@@ -79,6 +83,7 @@
       on:blur="{handleBlur}"
       class="input"
     />
+    {/key}
   </div>
 </div>
 
