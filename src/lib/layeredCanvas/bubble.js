@@ -324,6 +324,12 @@ export class Bubble {
     return options;
   }
 
+  move(p) {
+    const size = this.size;
+    this.p0 = [p[0] - size[0] / 2, p[1] - size[1] / 2];
+    this.p1 = [p[0] + size[0] / 2, p[1] + size[1] / 2];
+  }
+
 }
 
 export const bubbleOptionSets = {

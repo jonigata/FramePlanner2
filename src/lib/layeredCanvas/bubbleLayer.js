@@ -351,6 +351,7 @@ export class BubbleLayer extends Layer {
       b.p1 = [x + size[0], y + size[1]];
       this.bubbles.push(b);
       this.selectBubble(b);
+      return [b];
     }
     catch (e) {
       console.log(e);
@@ -359,6 +360,7 @@ export class BubbleLayer extends Layer {
       let cursorY = 10;
       let lineHeight = 0;
       let lastBubble = null;
+      const bubbles = [];
       for (let s of text.split(/\n\s*\n/)) {
         const size = this.calculateFitBubbleSize(s, this.defaultBubble);
         const b = this.defaultBubble.clone();
@@ -376,12 +378,14 @@ export class BubbleLayer extends Layer {
         b.p1 = [x + size[0], y + size[1]];
         b.text = s;
         b.initOptions();
+        bubbles.push(b);        
         this.bubbles.push(b);
         cursorX += size[0] + 10;
         lineHeight = Math.max(lineHeight, size[1]);
         lastBubble = b;
       }
       this.selectBubble(lastBubble);
+      return bubbles;
     }
   }
 

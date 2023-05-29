@@ -635,6 +635,21 @@ export function dealImages(frameTree, images, insertElement, spliceElement) {
   }
 }
 
+export function collectLeaves(frameTree) {
+  const leaves = [];
+  if (!frameTree.children || frameTree.children.length === 0) {
+    if (0 < frameTree.visibility) {
+      leaves.push(frameTree);
+    }
+  } else {
+    for (let i = 0; i < frameTree.children.length; i++) {
+      const childLeaves = collectLeaves(frameTree.children[i]);
+      leaves.push(...childLeaves);
+    }
+  }
+  return leaves;
+}
+
 export function constraintTree(layout) {
   const newLayout = calculatePhysicalLayout(
     layout.element,
@@ -654,17 +669,21 @@ export function constraintRecursive(layout) {
   }
 }
 
+export function makeTrapezoidRect(t) {
+  return [
+    Math.min(t.topLeft[0], t.bottomLeft[0]),
+    Math.min(t.topLeft[1], t.topRight[1]),
+    Math.max(t.topRight[0], t.bottomRight[0]),
+    Math.max(t.bottomLeft[1], t.bottomRight[1]),
+  ];
+}
+
 export function constraintLeaf(layout) {
   if (!layout.corners) {return; }
   if (!layout.element.image) { return; }
 
   const element = layout.element;
-  const [x0, y0, x1, y1] = [
-    Math.min(layout.corners.topLeft[0], layout.corners.bottomLeft[0]),
-    Math.min(layout.corners.topLeft[1], layout.corners.topRight[1]),
-    Math.max(layout.corners.topRight[0], layout.corners.bottomRight[0]),
-    Math.max(layout.corners.bottomLeft[1], layout.corners.bottomRight[1]),
-  ]
+  const [x0, y0, x1, y1] = makeTrapezoidRect(layout.corners);
   const [w, h] = [x1 - x0, y1 - y0];
   const [iw, ih] = [element.image.naturalWidth, element.image.naturalHeight];
 

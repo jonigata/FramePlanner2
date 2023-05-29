@@ -66,9 +66,13 @@
   $:onSetPaperTemplate($paperTemplate);
   function onSetPaperTemplate(template) {
     if (!template) return;
-    documentOutput = template;
-    onOutputDocument(documentOutput);
-    setDocumentInput(template);
+    if (template.characters && template.scenes) {
+      pourScenario(template);
+    } else {
+      documentOutput = template;
+      onOutputDocument(documentOutput);
+      setDocumentInput(template);
+    }
   }
 
   $:onCommitToken($commitToken);
@@ -78,6 +82,11 @@
     paper.commit();
     $jsonEditorOutput = documentOutput; // かなりハック、なぜかdocumentOutputのりアクティブが飛んでこないので
     $commitToken = false;
+  }
+
+
+  function pourScenario(s) {
+    paper.pourScenario(s);
   }
 
   function setDocumentInput(doc) {

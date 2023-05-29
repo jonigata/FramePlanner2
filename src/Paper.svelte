@@ -1,7 +1,7 @@
 <script type="ts">
   import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
-  import { FrameElement, calculatePhysicalLayout, collectImages, constraintLeaf, dealImages, findLayoutOf } from './lib/layeredCanvas/frameTree.js';
+  import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
@@ -401,6 +401,25 @@
     console.log("copyToClipboard");
     swapCanvas(async (c) => {
       await copyCanvasToClipboard(c);
+    });
+  }
+
+  export function pourScenario(s) {
+    const paperLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
+    const leaves = collectLeaves(frameLayer.frameTree);
+    s.scenes.forEach((scene, index) => {
+      const leaf = leaves[index];
+      leaf.prompt = scene.description;
+
+      const layout = findLayoutOf(paperLayout, leaf);
+      const r = makeTrapezoidRect(layout.corners);
+      const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+      scene.bubbles.forEach(b => {
+        const bubbles = bubbleLayer.createTextBubble(b[1]);
+        bubbles[0].shape = "rounded";
+        bubbles[0].initOptions();
+        bubbles[0].move(c);
+      })
     });
   }
 </script>
