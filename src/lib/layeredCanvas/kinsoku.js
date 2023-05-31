@@ -19,14 +19,12 @@ const maxBurasageDepth = 2;
 const maxMochikoshiDepth = 2;
 
 function* kinsokuGenerator(overflowDetector, getNext) {
-  let currentLine = '';  
-  let buffered = '';
+  let currentLine = [];  
+  let buffered = [];
 
   function get() {
     if (0 < buffered.length) {
-      const c = buffered[0];
-      buffered = buffered.substring(1);
-      return c;
+      return buffered.shift();
     } else {
       return getNext();
     }
@@ -35,44 +33,38 @@ function* kinsokuGenerator(overflowDetector, getNext) {
   while (true) {
     const c = get();
     if (c == null) {
-      yield currentLine;
+      yield currentLine.join('');
       if (c == null) { break; }
     } else {
-      const s = currentLine + c;
-      if (!overflowDetector(s)) {
-        currentLine = s;
+      currentLine.push(c);
+      if (!overflowDetector(currentLine)) {
+        // do nothing
       } else {
         // 持ち越し処理
-        let length = currentLine.length;
-        let back = 0;
-        while (back < maxMochikoshiDepth && back < length - 1 &&
-               gyoumatuKinsokuTable.has(currentLine[length - 1 - back])) {
-          back++;
-        }
+        currentLine.pop();
+        const a = currentLine.slice(-maxMochikoshiDepth).reverse();
+        const back = Math.max(0, a.findIndex(c => !gyoutouKinsokuTable.has(c)));
 
-        length -= back;
-        buffered = currentLine.substring(length) + c + buffered;
-        currentLine = currentLine.substring(0, length);
+        const oldLength = currentLine.length;
+        const length = oldLength - back;
+
+        buffered = [...currentLine.splice(length), c, ...buffered];
 
         // ぶら下げ処理
-        if (back == 0) {
-          let burasageDepth = maxBurasageDepth;
-          while (0 < burasageDepth) {
+        if (back === 0) {
+          for (let depth = 0 ; depth < maxBurasageDepth ; depth++) {
             const c = get();
-            if (c == null) {
-              break;
-            }
+            if (c == null) { break; }
             if (!gyoutouKinsokuTable.has(c)) {
-              buffered = c + buffered;
+              buffered.unshift(c);
               break;
             }
 
-            currentLine += c;
-            burasageDepth--;
+            currentLine.push(c);
           }
         }
-        yield currentLine; // + `(${back},${buffered})`;
-        currentLine = "";
+        yield currentLine.join(''); // + `(${back},${buffered})`;
+        currentLine = [];
       }
     }
   }
