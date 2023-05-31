@@ -22,19 +22,13 @@ function* kinsokuGenerator(overflowDetector, getNext) {
   let currentLine = [];  
   let buffered = [];
 
-  function get() {
-    if (0 < buffered.length) {
-      return buffered.shift();
-    } else {
-      return getNext();
-    }
-  }
+  const get = () => buffered.shift() ?? getNext();
 
   while (true) {
     const c = get();
     if (c == null) {
       yield currentLine.join('');
-      if (c == null) { break; }
+      break;
     } else {
       currentLine.push(c);
       if (!overflowDetector(currentLine)) {
