@@ -74,6 +74,7 @@ export function kinsoku(overflowDetector, ss) {
   return a;
 }
 
+/*
 const exampleSentences = [
   "彼女は元気に挨拶した。「こんにちは！」｛長い間会っていなかった友人に｝",
   "インターネットを開いて最新のニュースを見た｛彼は驚いた表情で｝",
@@ -91,3 +92,5 @@ exampleSentences.forEach((s) => {
   console.log(s);
   console.log(kinsoku((s) => 5 < s.length, s));
 });
+*/
+
