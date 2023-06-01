@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "deploy": "firebase deploy --only hosting"
+    "deploy": "firebase deploy --only hosting",
+    "vitest": "vitest"
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "^1.0.0",
@@ -16,6 +17,7 @@
     "@tsconfig/svelte": "^3.0.0",
     "@types/webfontloader": "^1.6.35",
     "autoprefixer": "^10.4.7",
+    "jsdom": "^22.1.0",
     "postcss": "^8.4.14",
     "postcss-load-config": "^4.0.1",
     "svelte": "^3.55.1",
@@ -38,6 +40,7 @@
     "svelte-jsoneditor": "^0.16.1",
     "swiper": "^9.1.1",
     "uuid": "^9.0.0",
+    "vitest": "^0.31.3",
     "webfontloader": "^1.6.28"
   }
 }

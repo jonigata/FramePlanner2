@@ -2,7 +2,7 @@ function makeTable(chars) {
   return new Set(chars.trim().replace(/\n/g, "").split(''));
 }
 
-const gyoutouKinsokuTable = makeTable(`
+const leaderTable = makeTable(`
 、。，．・：；？！ー”）〕］｝〉》」』】
 ヽヾゝゞ々
 ぁぃぅぇぉっゃゅょゎ
@@ -10,13 +10,13 @@ const gyoutouKinsokuTable = makeTable(`
 ,.:;?!-\" ')]}
 `);
 
-const gyoumatsuKinsokuTable = makeTable(`
+const trailerTable = makeTable(`
 ‘“（〔［｛〈《「『【
 ([{
 `);
 
 const maxBurasageDepth = 2;
-const maxMochikoshiDepth = 2;
+const maxOidashiDepth = 2;
 
 function* kinsokuGenerator(overflowDetector, getNext) {
   let currentLine = [];  
@@ -26,25 +26,32 @@ function* kinsokuGenerator(overflowDetector, getNext) {
 
   while (true) {
     const c = get();
-    if (c == null) { yield currentLine.join(''); break; }
+    if (c == null) { 
+      if (currentLine.length > 0) {
+        yield currentLine.join(''); 
+      }
+      break;
+    }
 
     currentLine.push(c);
     if (!overflowDetector(currentLine)) { continue; }
 
     // 折りたたみ
 
-    // 持ち越し処理
+    // 追い出し処理
     buffered.unshift(currentLine.pop());
-    const a = currentLine.slice(-maxMochikoshiDepth).reverse();
-    let back = a.findIndex(c => !gyoumatsuKinsokuTable.has(c));
-    if (back < 0) { back = a.length; }
+    let back = 0;
+    while (back < maxOidashiDepth && 
+           trailerTable.has(currentLine.at(-back-1))) {
+      back++;
+    }
 
     if (back === 0) {
       // ぶら下げ処理
       for (let depth = 0 ; depth < maxBurasageDepth ; depth++) {
         const c = get();
         if (c == null) { break; }
-        if (!gyoutouKinsokuTable.has(c)) { buffered.unshift(c); break; }
+        if (!leaderTable.has(c)) { buffered.unshift(c); break; }
         currentLine.push(c);
       }
     } else {
@@ -65,24 +72,3 @@ export function kinsoku(overflowDetector, ss) {
   }
   return a;
 }
-
-
-const exampleSentences = [
-  "彼女は元気に挨拶した。「こんにちは！」｛長い間会っていなかった友人に｝",
-  "インターネットを開いて最新のニュースを見た｛彼は驚いた表情で｝",
-  "彼はパーティーに参加することを楽しみにしている。｛友人たちと一緒に｝",
-  "驚きと喜びが入り混じるニュースを聞いて、\n彼は目を丸くした。「本当に！？」",
-  "彼が尋ねた。「これはどう使うのかな？」｛興味津々な顔で｝",
-  "雨が降ってきて、彼女はびしょ\n濡れになった。「なんてこった！」",
-  "サッカーチームは\n必勝を信じ、練習に励んでいる。「優勝するぞ！」と監督が叫んだ。",
-  "彼は敵を巧妙な動きで翻弄した。「こんなに速くて強いのか！」",
-  "友人たちは言った。「おめでとう！成功を祝福するよ」",
-  "彼の言葉には深い感動が込められていた。「君がここにいてくれて本当に嬉しい」",
-];
-
-exampleSentences.forEach((s) => {
-  console.log(s);
-  console.log(kinsoku((s) => 5 < s.length, s));
-});
-
-
