@@ -61,7 +61,7 @@ export function kinsoku(overflowDetector, ss) {
   for (let s of ss.split('\n')) {
     let i = 0;
     const getNext = () => i < s.length ? s[i++] : null;
-    a = a.concat(Array.from(kinsokuGenerator(overflowDetector, getNext)));
+    a.push(...kinsokuGenerator(overflowDetector, getNext));
   }
   return a;
 }
