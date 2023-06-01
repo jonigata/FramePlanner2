@@ -10,7 +10,7 @@ const gyoutouKinsokuTable = makeTable(`
 ,.:;?!-\" ')]}
 `);
 
-const gyoumatuKinsokuTable = makeTable(`
+const gyoumatsuKinsokuTable = makeTable(`
 ‘“（〔［｛〈《「『【
 ([{
 `);
@@ -26,41 +26,33 @@ function* kinsokuGenerator(overflowDetector, getNext) {
 
   while (true) {
     const c = get();
-    if (c == null) {
-      yield currentLine.join('');
-      break;
-    } else {
-      currentLine.push(c);
-      if (!overflowDetector(currentLine)) {
-        // do nothing
-      } else {
-        // 持ち越し処理
-        currentLine.pop();
-        const a = currentLine.slice(-maxMochikoshiDepth).reverse();
-        const back = Math.max(0, a.findIndex(c => !gyoutouKinsokuTable.has(c)));
+    if (c == null) { yield currentLine.join(''); break; }
 
-        const oldLength = currentLine.length;
-        const length = oldLength - back;
+    currentLine.push(c);
+    if (!overflowDetector(currentLine)) { continue; }
 
-        buffered = [...currentLine.splice(length), c, ...buffered];
+    // 折りたたみ
 
-        // ぶら下げ処理
-        if (back === 0) {
-          for (let depth = 0 ; depth < maxBurasageDepth ; depth++) {
-            const c = get();
-            if (c == null) { break; }
-            if (!gyoutouKinsokuTable.has(c)) {
-              buffered.unshift(c);
-              break;
-            }
+    // 持ち越し処理
+    buffered.unshift(currentLine.pop());
+    const a = currentLine.slice(-maxMochikoshiDepth).reverse();
+    let back = a.findIndex(c => !gyoumatsuKinsokuTable.has(c));
+    if (back < 0) { back = a.length; }
 
-            currentLine.push(c);
-          }
-        }
-        yield currentLine.join(''); // + `(${back},${buffered})`;
-        currentLine = [];
+    if (back === 0) {
+      // ぶら下げ処理
+      for (let depth = 0 ; depth < maxBurasageDepth ; depth++) {
+        const c = get();
+        if (c == null) { break; }
+        if (!gyoutouKinsokuTable.has(c)) { buffered.unshift(c); break; }
+        currentLine.push(c);
       }
+    } else {
+      buffered = [...currentLine.splice(-back), ...buffered];
     }
+
+    yield currentLine.join(''); // + `(${back},${buffered})`;
+    currentLine = [];
   }
 }
 
@@ -74,7 +66,7 @@ export function kinsoku(overflowDetector, ss) {
   return a;
 }
 
-/*
+
 const exampleSentences = [
   "彼女は元気に挨拶した。「こんにちは！」｛長い間会っていなかった友人に｝",
   "インターネットを開いて最新のニュースを見た｛彼は驚いた表情で｝",
@@ -92,5 +84,5 @@ exampleSentences.forEach((s) => {
   console.log(s);
   console.log(kinsoku((s) => 5 < s.length, s));
 });
-*/
+
 
