@@ -46,6 +46,8 @@ export function measureHorizontalText(
     maxWidth = Infinity;
   }
 
+
+
   let width = 0;
   let lines = [];
   let index = 0;
