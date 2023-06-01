@@ -48,7 +48,7 @@ function* kinsokuGenerator(overflowDetector, getNext) {
         currentLine.push(c);
       }
     } else {
-      buffered = [...currentLine.splice(-back), ...buffered];
+      buffered.unshift(...currentLine.splice(-back));
     }
 
     yield currentLine.join(''); // + `(${back},${buffered})`;
