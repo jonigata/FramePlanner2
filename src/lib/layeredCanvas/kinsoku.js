@@ -2,7 +2,12 @@ function makeTable(chars) {
   return new Set(chars.trim().replace(/\n/g, "").split(''));
 }
 
-const leaderTable = makeTable(`
+const leaderChars = makeTable(`
+‘“（〔［｛〈《「『【
+([{
+`);
+
+const trailerChars = makeTable(`
 、。，．・：；？！ー”）〕］｝〉》」』】
 ヽヾゝゞ々
 ぁぃぅぇぉっゃゅょゎ
@@ -10,56 +15,54 @@ const leaderTable = makeTable(`
 ,.:;?!-\" ')]}
 `);
 
-const trailerTable = makeTable(`
-‘“（〔［｛〈《「『【
-([{
-`);
-
 const maxBurasageDepth = 2;
 const maxOidashiDepth = 2;
 
 function* kinsokuGenerator(overflowDetector, getNext) {
-  let currentLine = [];  
-  let buffered = [];
+  const buffer = [];
+  let cursor = 0;
 
-  const get = () => buffered.shift() ?? getNext();
+  function peek() {
+    if (cursor < buffer.length) { return buffer[cursor]; }
+    const next = getNext();
+    if (next != null) { buffer.push(next); }
+    return next;
+  }
+
+  function countOidashi() {
+    for (let back = 0 ; back < maxOidashiDepth ; back++) {
+      // index<0のときはundefinedなのでhas(index)=false
+      if (!leaderChars.has(buffer[cursor-1-back])) { return back; }
+    }
+    return maxOidashiDepth;
+  }
 
   while (true) {
-    const c = get();
-    if (c == null) { 
-      if (currentLine.length > 0) {
-        yield currentLine.join(''); 
-      }
-      break;
-    }
-
-    currentLine.push(c);
-    if (!overflowDetector(currentLine)) { continue; }
+    const c = peek();
+    if (c == null) { break; }
+    if (!overflowDetector(buffer.slice(0, cursor+1))) { cursor++; continue; }
 
     // 折りたたみ
 
     // 追い出し処理
-    buffered.unshift(currentLine.pop());
-    let back = 0;
-    while (back < maxOidashiDepth && 
-           trailerTable.has(currentLine.at(-back-1))) {
-      back++;
-    }
-
+    let back = countOidashi();
     if (back === 0) {
       // ぶら下げ処理
       for (let depth = 0 ; depth < maxBurasageDepth ; depth++) {
-        const c = get();
-        if (c == null) { break; }
-        if (!leaderTable.has(c)) { buffered.unshift(c); break; }
-        currentLine.push(c);
+        const c = peek();
+        if (!trailerChars.has(c)) { break; }
+        cursor++;
       }
     } else {
-      buffered.unshift(...currentLine.splice(-back));
+      cursor -= back;
     }
 
-    yield currentLine.join(''); // + `(${back},${buffered})`;
-    currentLine = [];
+    yield buffer.splice(0, cursor).join(''); // + `(${back},${buffered})`;
+    cursor = 0;
+  }
+
+  if (0 < buffer.length) {
+    yield buffer.join(''); 
   }
 }
 
