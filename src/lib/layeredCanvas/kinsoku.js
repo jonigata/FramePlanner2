@@ -79,9 +79,35 @@ export function kinsoku(wrapDetector, wrapSize, ss) {
   let startIndex = 0;
   for (let s of ss.split('\n')) {
     let i = 0;
-    const getNext = () => i < s.length ? s[i++] : null;
+    function getNext() {
+      if (s.length <= i) { return null; }
+      if (isEmojiAt(s, i)) { const c = getEmojiAt(s, i); i+=c.length; return c; }
+      return s.charAt(i++);
+    }
     a.push(...kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex));
     startIndex += s.length + 1;
   }
   return a;
 }
+
+export function isEmojiAt(str, index) {
+  const codePoint = String.fromCodePoint(str.codePointAt(index));
+  const regex = /\p{Emoji}/u;
+
+  return regex.test(codePoint);
+}
+
+export function getEmojiAt(str, index) {
+  let endIndex = index + 1;
+  if (str.codePointAt(index) > 0xFFFF) {
+      // This is a surrogate pair, so the emoji is 2 characters long
+      endIndex++;
+  }
+  return str.slice(index, endIndex);
+}
+
+/*
+const a = kinsoku(s=> {
+  return ({ size: s.length, wrap: 5 < s.length })
+}, 5, "♫⏯😥♫⏯");
+*/
