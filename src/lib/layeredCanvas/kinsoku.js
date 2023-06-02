@@ -44,8 +44,13 @@ function* kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex) {
     const c = peek();
     if (c == null) { break; }
 
-    const { size, wrap } = wrapDetector(buffer.slice(0, cursor+1));
-    if (!wrap) { lineSize = size; cursor++; continue; }
+    if (cursor === 0) { 
+      cursor = 1;
+      continue;
+    } else {
+      const { size, wrap } = wrapDetector(buffer.slice(0, cursor+1));
+      if (!wrap) { lineSize = size; cursor++; continue; }
+    }
 
     // 折りたたみ
     if (wrapSize != null) { lineSize = wrapSize; }
