@@ -104,16 +104,9 @@ const exampleSentences = {
 describe('禁則処理', () => {
   it('禁則処理', () => {
     Object.entries(exampleSentences).forEach(([k, v]) => {
-<<<<<<< HEAD
       const a = kinsoku(s => ({ size: s.length, wrap: 5 < s.length }), 5, k);
       expect(a).toStrictEqual(v);
     });
     expect(kinsoku(s=> ({ size: s.length, wrap: 1 < s.length }), 1, "「")).toStrictEqual([{ index: 0, text: '「', wrap: false, size: 1 }]);
-=======
-      const a = kinsoku(s => 5 < s.length, k);
-      expect(a).toStrictEqual(v);
-    });
-    expect(kinsoku(s=>1<s.length, "「")).toStrictEqual(["「"]);
->>>>>>> be929a8f5546fd3c62a932534f502b06c5045f2d
   });
 });
