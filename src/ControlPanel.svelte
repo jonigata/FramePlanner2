@@ -19,6 +19,7 @@
   import { commitToken } from './undoStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
+  import { fileManagerOpen } from './fileManagerStore';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -96,6 +97,11 @@
   function toggleJsonEditor() {
     console.log("openJsonEditor");
     $isJsonEditorOpen = !$isJsonEditorOpen;      
+  }
+
+  function toggleFileManager() {
+    console.log("openFileManager");
+    $fileManagerOpen = !$fileManagerOpen;
   }
 
   async function downloadJson() {
@@ -210,6 +216,9 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
       Share
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleFileManager}>
+      FileMan
     </button>
   </div>  
 </div>

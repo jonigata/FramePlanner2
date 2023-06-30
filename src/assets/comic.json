@@ -1,0 +1,33 @@
+{
+  "characters": {
+    "Alice": "girl",
+    "Bob": "man",
+    "Charlie": "boy"
+  },
+  "scenes": [
+    {
+      "description": "A family relaxing in the living room with the sound of a TV in the background.",
+      "bubbles": [
+        ["Alice", "あ、そうだ！\n掃除機かけなきゃ！"]
+      ]
+    },
+    {
+      "description": "Character A takes out a new high-performance vacuum cleaner.",
+      "bubbles": [
+        ["Alice", "この新しい掃除機は\nとっても強力だってさ！"]
+      ]
+    },
+    {
+      "description": "Character A turns on the vacuum cleaner and starts cleaning the living room floor. The vacuum cleaner is sucking up dirt with incredible force.",
+      "bubbles": [
+        ["Bob", "すごいね！\nこんなに綺麗に\nなるなんて！"]
+      ]
+    },
+    {
+      "description": "Character A gets carried away and uses the vacuum cleaner on furniture, curtains, and even the family's heads.",
+      "bubbles": [
+        ["Charlie", "ちょっと！\n髪まで\n吸い取られちゃうよ！"]
+      ]
+    }
+  ]
+}

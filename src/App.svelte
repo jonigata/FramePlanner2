@@ -20,6 +20,7 @@
   import { paperTemplate } from './paperStore';
   import { loadTemplate } from './firebase';
   import ImageGenerator from './ImageGenerator.svelte';
+  import FileManager from './FileManager.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -90,6 +91,7 @@
 <FontChooser/>
 <ShapeChooser paperWidth={64} paperHeight={96}/>
 <ImageGenerator/>
+<FileManager/>
 
 <JsonEditor/>
 
