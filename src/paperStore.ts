@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import type { an } from "vitest/dist/types-fe79687a";
 
 export const paperTemplate = writable(null);
 export const paperWidth = writable(840);
@@ -9,3 +10,9 @@ export const importingImage = writable(null);
 export const paperColor = writable('#ffffff');
 export const frameColor = writable('#000000');
 export const frameWidth = writable(1);
+
+export type Page = {
+  revision: number;
+  frameTree: any,
+  bubbles: any,
+}
