@@ -3,28 +3,33 @@
   import { bodyDragging } from './uiStore';
   import titleBarIcon from './assets/json.png';
   import { JSONEditor, toJSONContent, toTextContent } from 'svelte-jsoneditor';
-  import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
+  import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
   import { tick } from 'svelte';
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
+  import { type Page, mainPage } from './pageStore';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
+  let pageRevision = 0;
 
   function handleChange(updatedContent, previousContent, { contentErrors, patchResult }) {
     // content is an object { json: JSONValue } | { text: string }
     // console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
     if (skipJsonChange) {
-      // console.log("skipJsonChange");
+      console.log("skipJsonChange");
       return;
     }
     content = updatedContent
     try {
-      $jsonEditorInput = toJSONContent(updatedContent).json;
+      const page = toJSONContent(updatedContent).json as Page;
+      pageRevision++;
+      page.revision = pageRevision;
+      $mainPage = page;
     }
     catch (e) {
-      // 握りつぶす
+      // ユーザーの入力したJSONが不正な場合、握りつぶす
       console.log("invalid json", e);
     }
   }
@@ -36,10 +41,14 @@
     return value;
   }
 
-  $:onOutputJsonDocument($jsonEditorOutput);
-  async function onOutputJsonDocument(json) {
+  $:onUpdateOuterPage($mainPage);
+  async function onUpdateOuterPage(page) {
+    console.log("onUpdateOuterPage", page);
     skipJsonChange = true;
-    content = { text: JSON.stringify(json, replacer, 2) };
+    pageRevision = page.revision;
+    const displayPage = { ...page }; 
+    displayPage.revision = undefined;
+    content = { text: JSON.stringify(displayPage, replacer, 2) };
     await tick(); // hack
     skipJsonChange = false;
   }
@@ -86,7 +95,7 @@
 <div class="control-panel variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token expand"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="inner expand">
-    <JSONEditor {content} mode="text" onChange="{handleChange}"/>
+    <JSONEditor {content} mode="text" onChange={handleChange}/>
   </div>
 </div>
 {/if}

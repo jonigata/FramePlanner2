@@ -10,9 +10,3 @@ export const importingImage = writable(null);
 export const paperColor = writable('#ffffff');
 export const frameColor = writable('#000000');
 export const frameWidth = writable(1);
-
-export type Page = {
-  revision: number;
-  frameTree: any,
-  bubbles: any,
-}
