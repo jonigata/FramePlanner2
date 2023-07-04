@@ -5,13 +5,14 @@
   import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
   import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
+  import { mainPage } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
 
   $paperTemplate = { frameTree: frameExamples[0], bubbles:[] };
 
   let paper;
-  let documentInput;
-  let documentOutput;
+  let page; // 子のPaperが持ってるmodelの参照
+  let pageRevision = 0;
   let width;
   let height;
   let painterActive = false;
@@ -49,18 +50,20 @@
     $importingImage = null;
   }
 
-  $:onInputDocument($jsonEditorInput);
-  function onInputDocument(doc) {
-    console.log("onInputDocument", doc);
-    if (!doc) return;
-    console.log(doc);
-    setDocumentInput(doc);
+  $:onUpdateOuterPage($mainPage);
+  function onUpdateOuterPage(newPage) {
+    console.log("onUpdateOuterPage", newPage);
+    if (!newPage) return;
+    if (newPage.revision <= pageRevision) return;
+    setPage(newPage);
   }
 
-  $:onOutputDocument(documentOutput);
-  function onOutputDocument(doc) {
-    if (!doc) return;
-    $jsonEditorOutput = doc;
+  $:onUpdateInnerPage(page);
+  function onUpdateInnerPage(newPage) {
+    console.log("onUpdateInnerPage", newPage);
+    if (!newPage) return;
+    if (newPage.revision <= pageRevision) return;
+    $mainPage = newPage;
   }
 
   $:onSetPaperTemplate($paperTemplate);
@@ -69,9 +72,10 @@
     if (template.characters && template.scenes) {
       pourScenario(template);
     } else {
-      documentOutput = template;
-      onOutputDocument(documentOutput);
-      setDocumentInput(template);
+      pageRevision++;
+      page = {...template, revision: pageRevision};
+      $mainPage = page;
+      setPage(page);
     }
   }
 
@@ -80,7 +84,8 @@
     if (!token) return;
     console.log('tokenValue', token);
     paper.commit();
-    $jsonEditorOutput = documentOutput; // かなりハック、なぜかdocumentOutputのりアクティブが飛んでこないので
+    // $jsonEditorOutput = documentOutput; // かなりハック、なぜかdocumentOutputのりアクティブが飛んでこないので // TODO: ここ注意
+    $mainPage = page;
     $commitToken = false;
   }
 
@@ -89,11 +94,12 @@
     paper.pourScenario(s);
   }
 
-  function setDocumentInput(doc) {
-    documentInput = doc;
-    $paperColor = doc.frameTree.bgColor ?? 'white';
-    $frameColor = doc.frameTree.borderColor ?? 'black';
-    $frameWidth = doc.frameTree.borderWidth ?? 1;
+  function setPage(newPage) {
+    // TODO: 最終的にpaperColor/frameColor/frameWidthはPageに含めればこの関数不要では
+    page = newPage;
+    $paperColor = page.frameTree.bgColor ?? 'white';
+    $frameColor = page.frameTree.borderColor ?? 'black';
+    $frameWidth = page.frameTree.borderWidth ?? 1;
   }
 
   async function onPainterActive(e) {
@@ -121,13 +127,12 @@
   <Paper 
     bind:width={width}
     bind:height={height}
-    documentInput={documentInput} 
     paperColor={$paperColor} 
     frameColor={$frameColor} 
     frameWidth={$frameWidth} 
     editable={true} 
     manageKeyCache={true}
-    bind:documentOutput={documentOutput} 
+    bind:page={page} 
     bind:this={paper}
     on:painterActive={onPainterActive}/>
 </div>
@@ -143,14 +148,5 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  .done-button {
-    position: fixed;
-    width: 240px;
-    height: 80px;
-    font-size: 32px;
-    color: white;
-    right: 32px;
-    bottom: 32px;
   }
 </style>

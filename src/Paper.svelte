@@ -21,11 +21,11 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
+  import type { Page } from './paperStore';
 
   export let width = 140;
   export let height = 198;
-  export let documentInput: unknown;
-  export let documentOutput: unknown;
+  export let page: Page;
   export let editable = false;
   export let paperColor = 'white';
   export let frameColor = 'black';
@@ -44,6 +44,11 @@
   let inlinePainterLayer;
   let history = [];
   let historyIndex = 0;
+  let pageRevision = 0;
+
+  interface CustomCanvasElement extends HTMLCanvasElement {
+    paper: any;
+  }
 
   $:onChangeContainerSize(containerWidth, containerHeight);
   function onChangeContainerSize(w, h) {
@@ -105,7 +110,7 @@
   export function commit() {
     console.log("commit");
     addHistory();
-    outputDocument();
+    outputPage();
   }
 
   function revert() {
@@ -192,16 +197,18 @@
     layeredCanvas.setPaperSize([w, h]);
   }
 
-  $:onInputDocument(documentInput);
-  function onInputDocument(newDocumentInput) {
+  $:onInputPage(page);
+  function onInputPage(newPage) {
     if (!frameLayer) { return; }
+    if (newPage.revision === pageRevision) { return; }
+
     const images = collectImages(frameLayer.frameTree);
-    const newFrameTree = FrameElement.compile(newDocumentInput.frameTree);
+    const newFrameTree = FrameElement.compile(newPage.frameTree);
     frameLayer.frameTree = newFrameTree;
     dealImages(newFrameTree, images);
 
     const paperSize = frameLayer.getPaperSize();
-    bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(paperSize, b));
+    bubbleLayer.bubbles = newPage.bubbles.map(b => Bubble.compile(paperSize, b));
     bubbleLayer.selected = null;
     commit();
 
@@ -236,9 +243,11 @@
     setTimeout(() => layeredCanvas.redraw(), 5000);
   }
 
-  function outputDocument() {
+  function outputPage() {
     const paperSize = frameLayer.getPaperSize();
-    documentOutput = {
+    pageRevision++;
+    page = {
+      revision: pageRevision,
       frameTree: FrameElement.decompile(frameLayer.frameTree),
       bubbles: bubbleLayer.bubbles.map(b => Bubble.decompile(paperSize, b)),
     }
@@ -270,7 +279,7 @@
   }
 
   onMount(async () => {
-    const frameJson = documentInput ? documentInput.frameTree : frameExamples[0];
+    const frameJson = page ? page : frameExamples[0];
     const frameTree = FrameElement.compile(frameJson);
 
     layeredCanvas = new LayeredCanvas(
@@ -359,12 +368,13 @@
     if (editable) {
 
     }
+    
 
     addHistory();
   });
 
   async function swapCanvas(f) {
-    const tmpCanvas = document.createElement("canvas");
+    const tmpCanvas = document.createElement("canvas") as CustomCanvasElement;
     tmpCanvas.width = width;
     tmpCanvas.height = height;
     tmpCanvas.paper = {};

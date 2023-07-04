@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import type { an } from "vitest/dist/types-fe79687a";
 
 export const paperTemplate = writable(null);
 export const paperWidth = writable(840);
