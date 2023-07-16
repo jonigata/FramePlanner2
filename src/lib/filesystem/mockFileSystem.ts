@@ -1,10 +1,40 @@
-import { Node, Folder, File } from './fileSystem';
+import { Node, File, Folder, FileSystem } from './fileSystem';
+import { ulid } from 'ulid';
+
+type NodeId = string & { _NodeId: never };
+
+export class MockFileSystem extends FileSystem {
+  root = new MockFolder('/');
+
+  constructor() {
+    super();
+  }
+
+  async createFile(): Promise<File> {
+    const id = ulid();
+    const file = new MockFile(id);
+    await file.write('');
+    return file;
+  }
+
+  async createFolder(): Promise<Folder> {
+    const id = ulid();
+    const folder = new MockFolder(id);
+    return folder;
+  }
+
+  async getRoot(): Promise<Folder> {
+    return this.root;
+  }
+}
 
 export class MockFile extends File {
+  id: NodeId;
   content: string;
 
-  constructor(name) {
-    super(name);
+  constructor(id) {
+    super();
+    this.id = id;
   }
 
   async read(): Promise<string> {
@@ -17,49 +47,33 @@ export class MockFile extends File {
 }
 
 export class MockFolder extends Folder {
-  files: Node[] = [];
+  id: NodeId;
+  children: [string, Node][] = [];
 
-  constructor(name) {
-    super(name);
+  getType() { return 'folder'; }
+  asFolder() { return this; }
+
+  constructor(id) {
+    super();
+    this.id = id;
   }
 
-  async list() {
-    return this.files;
+  async list(): Promise<[string, Node][]> {
+    return this.children;
   }
 
-  async createFile(name) {
-    const file = new MockFile(name);
-    this.files.push(file);
-    return file;
+  async link(name, Node): Promise<void> {
+    this.children.push([name, Node]);
   }
 
-  async createFolder(name) {
-    const folder = new MockFolder(name);
-    this.files.push(folder);
-    return folder;
+  async unlink(name): Promise<void> {
+    this.children = this.children.filter(([n, _]) => n !== name);
   }
 
-  async deleteChild(name) {
-    this.files = this.files.filter(file => file.name !== name);
+  async get(name): Promise<Node> {
+    console.log("get", name, this.children);
+    const child = this.children.find(([n, _]) => n === name);
+    return child ? child[1] : null;
   }
 
-  async getChild(name): Promise<Folder> {
-    return this.files.find(file => file.name === name).asFolder();
-  }
-
-  async copyChildTo(name: any, dest: Node): Promise<void> {
-    const node = this.files.find(file => file.name === name);
-    if (node.getType() === 'file') {
-      const srcFile = node.asFile();
-      const destFolder = dest.asFolder();
-      const newFile = await destFolder.createFile(srcFile.name);
-      newFile.write(await srcFile.read());
-    } else {
-      const srcFolder = node.asFolder();
-      const destFolder = await dest.asFolder().createFolder(name);
-      for (const node of await srcFolder.list()) {
-        await srcFolder.copyChildTo(node.name, destFolder);
-      }
-    }
-  }
 }

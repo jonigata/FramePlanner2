@@ -1,24 +1,44 @@
-import type {Folder} from './fileSystem';
-import {MockFolder} from './mockFileSystem';
+import type { FileSystem } from './fileSystem';
+import { MockFileSystem } from './mockFileSystem';
 
-export async function makeSample(): Promise<Folder> {
-  const root = new MockFolder('/');
-  await root.createFolder('デスクトップ');
-  const cabinet = await root.createFolder('キャビネット');
-  const comic1 = await cabinet.createFolder('ギャンブルレーサー');
-  await comic1.createFile('page1');
-  await comic1.createFile('page2');
-  await comic1.createFile('page3');
-  const comic2 = await cabinet.createFolder('ハンターハンター');
-  await comic2.createFile('page1');
-  await comic2.createFile('page2');
-  const comic3 = await cabinet.createFolder('へうげもの');
-  await comic3.createFile('page1');
-  const comic4 = await cabinet.createFolder('絶対☆霊域');
-  await comic4.createFile('page1');
-  await comic4.createFile('page2');
-  const comic5 = await cabinet.createFolder('異世界のんびり農家');
-  await comic5.createFile('page1');
-  await root.createFolder('ごみ箱');
-  return root;
+export async function makeSample(): Promise<FileSystem> {
+  const fs = new MockFileSystem();
+  const root = await fs.getRoot();
+
+  const desktop = await fs.createFolder();
+  await root.link('デスクトップ', desktop);
+
+  const cabinet = await fs.createFolder();
+  await root.link('キャビネット', cabinet);
+
+  const trash = await fs.createFolder();
+  await root.link('ごみ箱', trash);
+
+  const templates = await fs.createFolder();
+  await root.link('テンプレート', templates);
+
+  const comic1 = await fs.createFolder();
+  await cabinet.link('ギャンブルレーサー', comic1);
+  await comic1.link('page01', await fs.createFile());
+  await comic1.link('page02', await fs.createFile());
+  await comic1.link('page03', await fs.createFile());
+
+  const comic2 = await fs.createFolder();
+  await cabinet.link('HUNTER x HUNTER', comic2);
+  await comic2.link('page01', await fs.createFile());
+  await comic2.link('page02', await fs.createFile());
+
+  const comic3 = await fs.createFolder();
+  await cabinet.link('へうげもの', comic3);
+  await comic3.link('page01', await fs.createFile());
+
+  const comic4 = await fs.createFolder();
+  await cabinet.link('絶対☆霊域', comic3);
+  await comic4.link('page01', await fs.createFile());
+  await comic4.link('page02', await fs.createFile());
+
+  const comic5 = await fs.createFolder();
+  await comic5.link('page01', await fs.createFile());
+
+  return fs;
 }

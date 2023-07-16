@@ -1,47 +1,79 @@
 <script lang="ts">
-  import type { Folder } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, Folder } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher } from 'svelte';
+  import { trashUpdateToken } from "./fileManagerStore";
 
-  export let node: Folder = null;
-  export let trash: Folder = null;
+  export let fileSystem: FileSystem;
+  export let name: string;
+  export let node: Folder;
+  export let isTrash = false;
+  export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
+  export let spawnability = "spawnable"; // "spawnable" | "unspawnable"
 
   const dispatch = createEventDispatcher();
 
   async function addFolder() {
-    await node.createFolder("new folder");
+    console.log(fileSystem);
+    const nf = await fileSystem.createFolder();
+    await node.link("new folder", nf);
     node = node;
   }
 
   async function removeFolder() {
-    dispatch('remove', node);
+    dispatch('remove', name);
   }
 
   async function removeChild(e) {
-    await node.copyChildTo(e.detail.name, trash);
-    await node.deleteChild(e.detail.name);
+    const childName = e.detail;
+    const childNode = await node.get(e.detail);
+    if (!isTrash) {
+      const trash = (await (await fileSystem.getRoot()).get("ごみ箱")).asFolder();
+      await trash.link(childName, childNode);
+      $trashUpdateToken = true;
+    }
+    await node.unlink(childName);
     node = node;
+  }
+
+  $:onUpdate(isTrash && $trashUpdateToken);
+  function onUpdate(token) {
+    if (token) {
+      $trashUpdateToken = false;
+      node = node;
+    }
+  }
+
+  function getChildRemovability() {
+    if (removability === "unremovable-deep") {
+      return "unremovable-deep";
+    }
+    return "removable";
   }
 </script>
 
 {#if node != null}
 <div class="folder">
   <div class="folder-title">
-    {node.name}
+    {name}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="btn variant-filled add-folder-button" on:click={addFolder}>+</div>
+    {#if spawnability === "spawnable"}
+      <div class="btn variant-filled add-folder-button" on:click={addFolder}>+</div>
+    {/if}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="btn variant-filled remove-folder-button" on:click={removeFolder}>-</div>
+    {#if removability === "removable"}
+      <div class="btn variant-filled remove-folder-button" on:click={removeFolder}>-</div>
+    {/if}
   </div>
   <div class="folder-contents">
     {#await node.list()}
       <div>loading...</div>
     {:then children}
-      {#each children as child}
-        {#if child.getType() === 'folder'}
-          <svelte:self node={child.asFolder()} on:remove={removeChild}/>
-        {:else if child.getType() === 'file'}
-          <FileManagerFile node={child.asFile()}/>
+      {#each children as [name, node]}
+        {#if node.getType() === 'folder'}
+          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} node={node.asFolder()} on:remove={removeChild}/>
+        {:else if node.getType() === 'file'}
+          <FileManagerFile removability={getChildRemovability()} name={name} node={node.asFile()}/>
         {/if}
       {/each}
     {:catch error}

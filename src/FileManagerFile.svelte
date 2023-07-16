@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { File } from "./lib/filesystem/fileSystem";
 
-  export let node: File = null;
+  export let name: string;
+  export let node: File;
+  export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
 </script>
 
-<div class="file-title">{node.name}</div>
+<div class="file-title">{name}</div>
 
 <style>
   .file-title {

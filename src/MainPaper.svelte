@@ -4,7 +4,6 @@
   import Paper from './Paper.svelte';
   import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
-  import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
   import { mainPage } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
 

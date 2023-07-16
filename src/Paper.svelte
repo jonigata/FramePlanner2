@@ -21,7 +21,7 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
-  import type { Page } from './paperStore';
+  import type { Page } from './pageStore';
 
   export let width = 140;
   export let height = 198;
@@ -286,11 +286,13 @@
       canvas, 
       [width, height],
       (p, s) => {
-        if (s) {
-          const q = convertPointFromNodeToPage(canvas, ...p);
-          toolTipRequest.set({ message: s, position: q });
-        } else {
-          toolTipRequest.set(null);
+        if (editable) {
+          if (s) {
+            const q = convertPointFromNodeToPage(canvas, ...p);
+            toolTipRequest.set({ message: s, position: q });
+          } else {
+            toolTipRequest.set(null);
+          }
         }
       });
 
@@ -319,6 +321,7 @@
       (frameTreeElement) => {splice(frameTreeElement);},
       );
     layeredCanvas.addLayer(frameLayer);
+    frameLayer.frameTree = FrameElement.compile(page.frameTree);
 
     sequentializePointer(BubbleLayer);
     bubbleLayer = new BubbleLayer(

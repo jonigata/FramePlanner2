@@ -27,7 +27,9 @@
 <div class="template-selector rounded-container-token">
   <swiper-container style="{style}" navigation="true" pagination="true" slides-per-view="2" centered-slides="true" grab-cursor="true" bind:this={swiper}>
     {#each frameExamples as frame}
-      <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;"><Paper width={paperWidth} height={paperHeight} documentInput={{frameTree:frame, bubbles:[]}} on:click={()=>handleClick(frame)}/></swiper-slide>
+      <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;">
+        <Paper width={paperWidth} height={paperHeight} page={{frameTree:frame, bubbles:[], revision:3}} on:click={()=>handleClick(frame)}/>
+      </swiper-slide>
     {/each}
   </swiper-container>
 </div>
