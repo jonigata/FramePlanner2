@@ -591,6 +591,7 @@ export class FrameLayer extends Layer {
     layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
+    layoutlet.element.rotation = 0;
     layoutlet.element.gallery.push(image);
       
     constraintLeaf(layoutlet);

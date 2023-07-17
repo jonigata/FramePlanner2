@@ -14,7 +14,7 @@
   const dispatch = createEventDispatcher();
 
   async function addFolder() {
-    console.log(fileSystem);
+    // console.log(fileSystem);
     const nf = await fileSystem.createFolder();
     await node.link("new folder", nf);
     node = node;

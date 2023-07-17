@@ -2,14 +2,16 @@
   import { draggable } from '@neodrag/svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import Paper from './Paper.svelte';
+  import { newRevision } from './pageStore';
+  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
 
   let paperWidth = 140;
   let paperHeight = 198;
   let position = { x: 0, y: 0 };
   let pages = [
-    {frameTree:frameExamples[2], bubbles:[], revision:3},
-    {frameTree:frameExamples[1], bubbles:[], revision:3},
-    {frameTree:frameExamples[0], bubbles:[], revision:3},
+    {frameTree:FrameElement.compile(frameExamples[2]), bubbles:[], revision: {id:'desktop', revision:1}, paperSize: [140, 198] },
+    {frameTree:FrameElement.compile(frameExamples[1]), bubbles:[], revision: {id:'desktop', revision:1}, paperSize: [140, 198] },
+    {frameTree:FrameElement.compile(frameExamples[0]), bubbles:[], revision: {id:'desktop', revision:1}, paperSize: [140, 198] }
   ]
 </script>
 

@@ -71,7 +71,7 @@ export class MockFolder extends Folder {
   }
 
   async get(name): Promise<Node> {
-    console.log("get", name, this.children);
+    // console.log("get", name, this.children);
     const child = this.children.find(([n, _]) => n === name);
     return child ? child[1] : null;
   }

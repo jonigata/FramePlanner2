@@ -6,7 +6,6 @@
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
-  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard, makeFilename } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
@@ -21,15 +20,10 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
-  import type { Page } from './pageStore';
+  import { type Page, type Revision, setRevision, getIncrementedRevision, revisionEqual } from './pageStore';
 
-  export let width = 140;
-  export let height = 198;
   export let page: Page;
   export let editable = false;
-  export let paperColor = 'white';
-  export let frameColor = 'black';
-  export let frameWidth = 1;
   export let manageKeyCache = false;
   export let painterActive = false;
 
@@ -44,7 +38,7 @@
   let inlinePainterLayer;
   let history = [];
   let historyIndex = 0;
-  let pageRevision = 0;
+  let pageRevision: Revision | null = null;
 
   interface CustomCanvasElement extends HTMLCanvasElement {
     paper: any;
@@ -190,49 +184,27 @@
     layeredCanvas?.redraw(); 
   });
 
-  $:onChangePaperSize(width, height);
-  function onChangePaperSize(w, h) {
-    console.log("onChangePaperSize", w, h);
-    if (!layeredCanvas) { return; }
-    layeredCanvas.setPaperSize([w, h]);
-  }
-
   $:onInputPage(page);
   function onInputPage(newPage) {
+    console.log("onInputPage");
     if (!frameLayer) { return; }
-    if (newPage.revision === pageRevision) { return; }
-
-    const images = collectImages(frameLayer.frameTree);
-    const newFrameTree = FrameElement.compile(newPage.frameTree);
-    frameLayer.frameTree = newFrameTree;
-    dealImages(newFrameTree, images);
+    if (revisionEqual(newPage.revision, pageRevision)) { 
+      console.log("same rivision")
+      return; 
+    }
 
     const paperSize = frameLayer.getPaperSize();
-    bubbleLayer.bubbles = newPage.bubbles.map(b => Bubble.compile(paperSize, b));
+    bubbleLayer.bubbles = newPage.bubbles;
     bubbleLayer.selected = null;
+
+    frameLayer.frameTree = newPage.frameTree;
+    frameLayer.frameTree.bgColor = page.paperColor;
+    frameLayer.frameTree.borderColor = page.frameColor;
+    frameLayer.frameTree.borderWidth = page.frameWidth;
+
     commit();
 
-    layeredCanvas.redraw();
-  }
-
-  $:onChangePaperColor(paperColor);
-  function onChangePaperColor(newPaperColor) {
-    if (!frameLayer) { return; }
-    frameLayer.frameTree.bgColor = newPaperColor;
-    layeredCanvas.redraw();
-  }
-
-  $:onChangeFrameColor(frameColor);
-  function onChangeFrameColor(newFrameColor) {
-    if (!frameLayer) { return; }
-    frameLayer.frameTree.borderColor = newFrameColor;
-    layeredCanvas.redraw();
-  }
-
-  $:onChangeFrameWidth(frameWidth);
-  function onChangeFrameWidth(newFrameWidth) {
-    if (!frameLayer) { return; }
-    frameLayer.frameTree.borderWidth = newFrameWidth;
+    layeredCanvas.setPaperSize(page.paperSize);
     layeredCanvas.redraw();
   }
 
@@ -245,12 +217,10 @@
 
   function outputPage() {
     const paperSize = frameLayer.getPaperSize();
-    pageRevision++;
-    page = {
-      revision: pageRevision,
-      frameTree: FrameElement.decompile(frameLayer.frameTree),
-      bubbles: bubbleLayer.bubbles.map(b => Bubble.decompile(paperSize, b)),
-    }
+    const newPage = {...page};
+    pageRevision = getIncrementedRevision(page);
+    setRevision(newPage, pageRevision);
+    page = newPage;
   }
 
   function showInspector(b) {
@@ -279,12 +249,9 @@
   }
 
   onMount(async () => {
-    const frameJson = page ? page : frameExamples[0];
-    const frameTree = FrameElement.compile(frameJson);
-
     layeredCanvas = new LayeredCanvas(
       canvas, 
-      [width, height],
+      page.paperSize,
       (p, s) => {
         if (editable) {
           if (s) {
@@ -308,7 +275,7 @@
     sequentializePointer(FrameLayer);
     frameLayer = new FrameLayer(
       paperRendererLayer,
-      frameTree,
+      page.frameTree,
       editable,
       (frameTree) => {
         console.log("commit frames");
@@ -321,7 +288,6 @@
       (frameTreeElement) => {splice(frameTreeElement);},
       );
     layeredCanvas.addLayer(frameLayer);
-    frameLayer.frameTree = FrameElement.compile(page.frameTree);
 
     sequentializePointer(BubbleLayer);
     bubbleLayer = new BubbleLayer(
@@ -368,20 +334,15 @@
       });
     }
 
-    if (editable) {
-
-    }
-    
-
     addHistory();
   });
 
   async function swapCanvas(f) {
     const tmpCanvas = document.createElement("canvas") as CustomCanvasElement;
-    tmpCanvas.width = width;
-    tmpCanvas.height = height;
+    tmpCanvas.width = page.paperSize[0]
+    tmpCanvas.height = page.paperSize[1]
     tmpCanvas.paper = {};
-    tmpCanvas.paper.size = [width, height];
+    tmpCanvas.paper.size = page.paperSize;
     tmpCanvas.paper.translate = [0,0];
     tmpCanvas.paper.viewTranslate = [0,0];
     tmpCanvas.paper.scale = [1,1];
@@ -400,10 +361,6 @@
 
   export function save() {
     console.log("save");
-    function zeropadding(n) {
-      return n < 10 ? "0" + n : n;
-    }
-
     swapCanvas(async (c) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       saveCanvas(c, makeFilename("png"), latestJson);
@@ -435,6 +392,7 @@
       })
     });
   }
+
 </script>
 
 
@@ -447,8 +405,8 @@
     {/if}
   </div>    
 {:else}
-  <div class="canvas-container" style="width: {width}px; height: {height}px;">
-    <canvas width={width} height={height} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
+  <div class="canvas-container" style="width: {page.paperSize[0]}px; height: {page.paperSize[1]}px;">
+    <canvas width={page.paperSize[0]} height={page.paperSize[1]} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
   </div>    
 {/if}
 

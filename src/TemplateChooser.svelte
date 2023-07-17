@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { register } from 'swiper/element/bundle';
   import Paper from './Paper.svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import { createEventDispatcher } from 'svelte';
-  export let paperWidth = 140;
-  export let paperHeight = 198;
+  import { type Page, newRevision } from './pageStore'
+  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
 
   let swiper;
 
@@ -15,6 +15,18 @@
 
   function handleClick(frame) {
     dispatch('apply', frame);
+  }
+
+  function makePage(frame): Page {
+    return {
+      revision: newRevision(),
+      frameTree: FrameElement.compile(frame),
+      bubbles: [],
+      paperSize: [140, 198],
+      paperColor: '#888888',
+      frameColor: '#444400',
+      frameWidth: 1,
+    };    
   }
 
   let style;
@@ -28,7 +40,7 @@
   <swiper-container style="{style}" navigation="true" pagination="true" slides-per-view="2" centered-slides="true" grab-cursor="true" bind:this={swiper}>
     {#each frameExamples as frame}
       <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;">
-        <Paper width={paperWidth} height={paperHeight} page={{frameTree:frame, bubbles:[], revision:3}} on:click={()=>handleClick(frame)}/>
+        <Paper page={makePage(frame)} on:click={()=>handleClick(frame)}/>
       </swiper-slide>
     {/each}
   </swiper-container>

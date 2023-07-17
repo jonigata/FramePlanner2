@@ -4,7 +4,8 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
+  import { mainPage } from './pageStore';
+  import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { tick } from 'svelte';
@@ -20,6 +21,8 @@
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
   import { fileManagerOpen } from './fileManagerStore';
+  import { FrameElement } from './lib/layeredCanvas/frameTree';
+  import { Bubble } from './lib/layeredCanvas/bubble';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -27,12 +30,14 @@
   let contactText = "";
 
   function setDimensions(w: number, h: number) {
-    $paperWidth = w;
-    $paperHeight = h;
+    $mainPage.paperSize = [w,h];
   }
 
   function applyTemplate(event) {
-    $paperTemplate = { frameTree: event.detail, bubbles: [] };
+    const page = {...$mainPage};
+    page.frameTree = FrameElement.compile(event.detail);
+    page.bubbles = [];
+    $mainPage = page;
   }
 
   function save() {
@@ -69,21 +74,24 @@
         await imageLoaded;
 
         setDimensions(image.naturalWidth, image.naturalHeight);
-        $paperTemplate = { frameTree: {}, bubbles: [] };
+        $mainPage.frameTree = FrameElement.compile({});
+        $mainPage.bubbles = [];
         await tick();
         $importingImage = image;
         URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
       } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
         const text = await readFileAsText(file);
-        $paperTemplate = JSON.parse(text);
+        const json = JSON.parse(text);
+        $mainPage.frameTree = FrameElement.compile(json.frameTree);
+        $mainPage.bubbles = json.bubbles.map(b => Bubble.compile($mainPage.paperSize, b));
       }
     }
   }
 
-  function readFileAsText(file) {
+  function readFileAsText(file): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(reader.error);
       reader.readAsText(file);
     });
@@ -149,20 +157,20 @@
       <div class="hbox">
         <div class="font-bold slider-label">W</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={$mainPage.paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$paperWidth}/></div>
+          <div class="number-box"><NumberEdit bind:value={$mainPage.paperSize[0]}/></div>
           / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">H</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={$mainPage.paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$paperHeight}/></div>
+          <div class="number-box"><NumberEdit bind:value={$mainPage.paperSize[1]}/></div>
            / {max}
         </div>
       </div>
@@ -181,9 +189,9 @@
     </div>
   </div>
   <div class="hbox gap mx-2 paper-color-picker" style="margin-top: 16px;">
-    背景色<ColorPicker bind:hex={$paperColor} label=""/>
-    枠色<ColorPicker bind:hex={$frameColor} label="" />
-    幅<RangeSlider name="line" bind:value={$frameWidth} max={10} step={1} style="width:100px;"/>
+    背景色<ColorPicker bind:hex={$mainPage.paperColor} label=""/>
+    枠色<ColorPicker bind:hex={$mainPage.frameColor} label="" />
+    幅<RangeSlider name="line" bind:value={$mainPage.frameWidth} max={10} step={1} style="width:100px;"/>
 </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>

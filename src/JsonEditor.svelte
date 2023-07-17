@@ -8,24 +8,24 @@
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
-  import { type Page, mainPage } from './pageStore';
+  import { type Page, type Revision, mainPage, getRevision, incrementRevision, setRevision } from './pageStore';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
-  let pageRevision = 0;
+  let pageRevision: Revision | null = null;
 
   function handleChange(updatedContent, previousContent, { contentErrors, patchResult }) {
     // content is an object { json: JSONValue } | { text: string }
     // console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
     if (skipJsonChange) {
-      console.log("skipJsonChange");
+      // console.log("skipJsonChange");
       return;
     }
     content = updatedContent
     try {
       const page = toJSONContent(updatedContent).json as Page;
-      pageRevision++;
-      page.revision = pageRevision;
+      pageRevision = incrementRevision(pageRevision);
+      setRevision(page, pageRevision);
       $mainPage = page;
     }
     catch (e) {
@@ -43,9 +43,9 @@
 
   $:onUpdateOuterPage($mainPage);
   async function onUpdateOuterPage(page) {
-    console.log("onUpdateOuterPage", page);
+    // console.log("onUpdateOuterPage", page);
     skipJsonChange = true;
-    pageRevision = page.revision;
+    pageRevision = getRevision(page);
     const displayPage = { ...page }; 
     displayPage.revision = undefined;
     content = { text: JSON.stringify(displayPage, replacer, 2) };
