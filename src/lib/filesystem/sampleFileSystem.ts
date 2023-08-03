@@ -1,5 +1,11 @@
 import type { FileSystem } from './fileSystem';
 import { MockFileSystem } from './mockFileSystem';
+import { frameExamples } from '../layeredCanvas/frameExamples.js';
+import { FrameElement } from "../layeredCanvas/frameTree";
+import { savePageTo } from "../../fileManagerStore";
+import type { Page } from "../../pageStore";
+
+// TODO: ファイルの置き場所がおかしい感じ？
 
 export async function makeSample(): Promise<FileSystem> {
   const fs = new MockFileSystem();
@@ -17,28 +23,43 @@ export async function makeSample(): Promise<FileSystem> {
   const templates = await fs.createFolder();
   await root.link('テンプレート', templates);
 
-  const comic1 = await fs.createFolder();
-  await cabinet.link('ギャンブルレーサー', comic1);
-  await comic1.link('page01', await fs.createFile());
-  await comic1.link('page02', await fs.createFile());
-  await comic1.link('page03', await fs.createFile());
+  const images = await fs.createFolder();
+  await root.link('画像', images);
 
-  const comic2 = await fs.createFolder();
-  await cabinet.link('HUNTER x HUNTER', comic2);
-  await comic2.link('page01', await fs.createFile());
-  await comic2.link('page02', await fs.createFile());
-
-  const comic3 = await fs.createFolder();
-  await cabinet.link('へうげもの', comic3);
-  await comic3.link('page01', await fs.createFile());
-
-  const comic4 = await fs.createFolder();
-  await cabinet.link('絶対☆霊域', comic3);
-  await comic4.link('page01', await fs.createFile());
-  await comic4.link('page02', await fs.createFile());
-
-  const comic5 = await fs.createFolder();
-  await comic5.link('page01', await fs.createFile());
+  await addFolder(fs, cabinet, 'キャプテン', 1);
+  await addFolder(fs, cabinet, 'ギャンブルレーサー', 3);
+  await addFolder(fs, cabinet, 'HUNTER x HUNTER', 2);
+  await addFolder(fs, cabinet, 'へうげもの', 2);
+  const f = await addFolder(fs, cabinet, '絶対☆霊域', 2);
+  await addFile(fs, f, `page0`);
 
   return fs;
 }
+
+async function addFolder(fs, parent, name, count) {
+  const folder = await fs.createFolder();
+  await parent.link(name, folder);
+  for (let i = 0; i < count; i++) {
+    await addFile(fs, folder, `page0${i + 1}`);
+  }
+  return folder;
+}
+
+let index = 0;
+
+async function addFile(fs, folder, name) {
+  const page: Page = {
+    frameTree: FrameElement.compile(frameExamples[index++ % frameExamples.length]),
+    bubbles:[], 
+    revision: {id:'dummy', revision:1}, 
+    paperSize: [840, 1188],
+    paperColor: '#ffffff',
+    frameColor: '#000000',
+    frameWidth: 2,
+  }
+
+  const file = await fs.createFile();
+  await savePageTo(page, fs, file);
+  await folder.link(name, file);
+}
+

@@ -1,8 +1,6 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import { type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
-
-type NodeId = string & { _NodeId: never };
+import { type NodeId, type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
 
 export class IndexedDBFileSystem extends FileSystem {
   dbPromise: Promise<IDBPDatabase>;
@@ -51,12 +49,10 @@ export class IndexedDBFileSystem extends FileSystem {
 
 export class IndexedDBFile extends File {
   db: IDBPDatabase;
-  id: NodeId;
 
   constructor(db, id) {
-    super();
+    super(id);
     this.db = db;
-    this.id = id;
   }
 
   async read() {
@@ -71,13 +67,11 @@ export class IndexedDBFile extends File {
 
 export class IndexedDBFolder extends Folder {
   db: IDBPDatabase;
-  id: NodeId;
   children: Array<[string, NodeType, NodeId]>; // NodeType冗長だがないとlistが遅くなるので
 
   constructor(db, id) {
-    super();
+    super(id);
     this.db = db;
-    this.id = id;
     this.children = [];
   }
 

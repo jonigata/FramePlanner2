@@ -12,7 +12,6 @@
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
-  import { Bubble } from './lib/layeredCanvas/bubble.js'; 
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
@@ -189,7 +188,7 @@
     console.log("onInputPage");
     if (!frameLayer) { return; }
     if (revisionEqual(newPage.revision, pageRevision)) { 
-      console.log("same rivision")
+      console.log("same revision")
       return; 
     }
 

@@ -171,7 +171,7 @@ export function imageToBase64(imgElement) {
     canvas.height = imgElement.naturalHeight;
     canvas.getContext("2d").drawImage(imgElement, 0, 0);
 
-    let base64Image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    let base64Image = canvas.toDataURL("image/png");
     console.log(base64Image); // base64エンコードされた画像データ    
     return base64Image;
 }

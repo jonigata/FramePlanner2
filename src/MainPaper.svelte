@@ -3,10 +3,12 @@
   import Paper from './Paper.svelte';
   import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
-  import { mainPage } from './pageStore';
+  import { mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
 
   let paper;
+  let page = $mainPage;
+  let currentRevision = $mainPage.revision;
   let painterActive = false;
   let toolBox = null;
 
@@ -57,6 +59,30 @@
     paper.setTool(e.detail);
   }
 
+  $:onInnerPageUpdate(page);
+  function onInnerPageUpdate(p) {
+    console.log("MainPaper.onPageUpdate")
+    if (revisionEqual(p.revision, currentRevision)) {
+      console.log("skip notification");
+      return;
+    }
+
+    currentRevision = {...p.revision};
+    $mainPage = p;
+  }
+
+  $:onOuterPageUpdate($mainPage);
+  function onOuterPageUpdate(p) {
+    console.log("MainPaper.onOuterPageUpdate")
+    if (revisionEqual(p.revision, currentRevision)) {
+      console.log("skip notification");
+      return;
+    }
+
+    currentRevision = {...p.revision};
+    page = p;
+  }
+
   onMount(() => {
     $undoStore = paper;
   });
@@ -66,7 +92,7 @@
   <Paper 
     editable={true} 
     manageKeyCache={true}
-    page={$mainPage} 
+    bind:page={page} 
     bind:this={paper}
     on:painterActive={onPainterActive}/>
 </div>

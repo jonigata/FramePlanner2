@@ -4,7 +4,7 @@
   import Paper from './Paper.svelte';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import { createEventDispatcher } from 'svelte';
-  import { type Page, newRevision } from './pageStore'
+  import type { Page } from './pageStore'
   import { FrameElement } from './lib/layeredCanvas/frameTree.js';
 
   let swiper;
@@ -19,7 +19,7 @@
 
   function makePage(frame): Page {
     return {
-      revision: newRevision(),
+      revision: { id: "template", revision: 1 },
       frameTree: FrameElement.compile(frame),
       bubbles: [],
       paperSize: [140, 198],

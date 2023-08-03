@@ -1,16 +1,20 @@
+export type NodeType = 'file' | 'folder';
+export type NodeId = string & { _NodeId: never };
+
 export class FileSystem {
   async createFile(): Promise<File> {return null;}
   async createFolder(): Promise<Folder> {return null;}
 
+  async getNode(id: NodeId): Promise<Node> {return null;}
+
   async getRoot(): Promise<Folder> { return null; }
 }
 
-export type NodeType = 'file' | 'folder';
-
 export class Node {
-  constructor() {}
+  id: NodeId
 
-  getType() { return null; }
+  constructor(id) { this.id = id; }
+  getType(): NodeType { return null; }
   asFile(): File { return null; }
   asFolder() : Folder { return null; }
 
@@ -25,17 +29,17 @@ export class Node {
 }
 
 export class File extends Node {
-  getType() { return 'file'; }
+  getType(): NodeType { return 'file'; }
   asFile() { return this; }
   async read(): Promise<string> {return null;}
-  async write(data): Promise<void> {}
+  async write(data: string): Promise<void> {}
 }
 
 export class Folder extends Node {
-  getType() { return 'folder'; }
+  getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
   async list(): Promise<[string, Node][]> {return [];}
-  async link(name, Node): Promise<void> {}
-  async unlink(name): Promise<void> {}
-  async get(name): Promise<Node> {return null;}
+  async link(name: string, node: Node): Promise<void> {}
+  async unlink(name: string): Promise<void> {}
+  async get(name: string): Promise<Node> {return null;}
 }

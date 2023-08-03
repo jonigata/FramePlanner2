@@ -2,11 +2,17 @@
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import FileManagerDesktop from "./FileManagerDesktop.svelte";
-  import { fileManagerOpen } from "./fileManagerStore";
+  import { fileManagerOpen, savePageTo } from "./fileManagerStore";
   import type { FileSystem } from './lib/filesystem/fileSystem';
-  import { makeSample } from './lib/filesystem/sampleFileSystem';
+  import { mainPage, revisionEqual } from './pageStore';
+  import { onMount } from 'svelte';
+  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+  import { FrameElement } from "./lib/layeredCanvas/frameTree";
+  import type { Page } from "./pageStore";
 
   export let fileSystem: FileSystem;
+
+  let currentRevision = null;
 
   async function getSystemFolders() {
     const cabinet = await (await fileSystem.getRoot()).get("キャビネット");
@@ -15,6 +21,53 @@
     console.log(cabinet, trash, templates);
     return { cabinet, trash, templates };
   }
+
+  $:onUpdateOuterPage($mainPage);
+  async function onUpdateOuterPage(page) {
+    console.log("saving: ", page.revision);
+    if (revisionEqual(page.revision, currentRevision)) {
+      console.log("skip saving");
+      return;
+    }
+
+    if (page.revision.id === "bootstrap") { 
+      const file = await fileSystem.createFile();
+      await savePageTo(page, fileSystem, file);
+      currentRevision = { id: file.id, revision: 1 };
+      $mainPage = { ...page, revision: {...currentRevision} };
+    } else {
+      const file = await fileSystem.getNode(page.revision.id);
+      await savePageTo(page, fileSystem, file.asFile());
+      currentRevision = {...page.revision};
+    }
+  }
+
+  onMount(async () => {
+    const root = await fileSystem.getRoot();
+    const desktop = (await root.get("デスクトップ")).asFolder();
+    let files = await desktop.asFolder().list();
+    if (files.length === 0) {
+      // TODO: createPageを適当な場所に置く
+      const page: Page = {
+        frameTree: FrameElement.compile(frameExamples[0]),
+        bubbles:[], 
+        revision: {id:'dummy', revision:1}, 
+        paperSize: [840, 1188],
+        paperColor: '#ffffff',
+        frameColor: '#000000',
+        frameWidth: 2,
+      }
+
+      const file = await fileSystem.createFile();
+      await savePageTo(page, fileSystem, file);
+      currentRevision = { id: file.id, revision: 1 };
+      page.revision = {...currentRevision};
+      await desktop.link("おためし", file);
+      files = await desktop.asFolder().list();
+      $mainPage = page;
+    } else {
+    }
+  });
 </script>
 
 <div class="drawer-outer">

@@ -1,9 +1,8 @@
-import { Node, File, Folder, FileSystem } from './fileSystem';
+import { type NodeId, type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
 import { ulid } from 'ulid';
 
-type NodeId = string & { _NodeId: never };
-
 export class MockFileSystem extends FileSystem {
+  files = {}
   root = new MockFolder('/');
 
   constructor() {
@@ -14,13 +13,22 @@ export class MockFileSystem extends FileSystem {
     const id = ulid();
     const file = new MockFile(id);
     await file.write('');
+    this.files[id] = file;
     return file;
   }
 
   async createFolder(): Promise<Folder> {
     const id = ulid();
     const folder = new MockFolder(id);
+    this.files[id] = folder;
     return folder;
+  }
+
+  async getNode(id: NodeId): Promise<Node> {
+    console.log(id);
+    console.log(this.files);
+    console.log(this.files[id]);
+    return this.files[id];
   }
 
   async getRoot(): Promise<Folder> {
@@ -29,13 +37,14 @@ export class MockFileSystem extends FileSystem {
 }
 
 export class MockFile extends File {
-  id: NodeId;
   content: string;
 
   constructor(id) {
-    super();
-    this.id = id;
+    super(id);
   }
+
+  getType(): NodeType { return 'file'; }
+  asFile() { return this; }
 
   async read(): Promise<string> {
     return this.content
@@ -47,15 +56,13 @@ export class MockFile extends File {
 }
 
 export class MockFolder extends Folder {
-  id: NodeId;
   children: [string, Node][] = [];
 
-  getType() { return 'folder'; }
+  getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
 
   constructor(id) {
-    super();
-    this.id = id;
+    super(id);
   }
 
   async list(): Promise<[string, Node][]> {

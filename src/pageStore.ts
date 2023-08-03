@@ -21,7 +21,7 @@ export type Page = {
 
 export const mainPage = writable<Page>(
   {
-    revision: newRevision(),
+    revision: { id: "bootstrap", revision: 1 },
     frameTree: FrameElement.compile(frameExamples[2]),
     bubbles: [],
     paperSize: [840, 1188],
@@ -30,10 +30,6 @@ export const mainPage = writable<Page>(
     frameWidth: 2,
   }
 );
-
-export function newRevision(): Revision {
-  return {id: ulid(), revision: 1};
-}
 
 export function getRevision(page: Page): Revision {
   return {...page.revision};

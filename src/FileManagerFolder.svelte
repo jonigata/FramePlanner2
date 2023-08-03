@@ -50,6 +50,7 @@
     }
     return "removable";
   }
+
 </script>
 
 {#if node != null}
@@ -73,7 +74,7 @@
         {#if node.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} node={node.asFolder()} on:remove={removeChild}/>
         {:else if node.getType() === 'file'}
-          <FileManagerFile removability={getChildRemovability()} name={name} node={node.asFile()}/>
+          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} node={node.asFile()}/>
         {/if}
       {/each}
     {:catch error}

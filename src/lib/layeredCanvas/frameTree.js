@@ -54,41 +54,43 @@ export class FrameElement {
     return element;
   }
 
-  static compile(markUpElement) {
-    const element = new FrameElement(markUpElement.width || markUpElement.height || markUpElement.size || 1);
-    const children = markUpElement.column || markUpElement.row;
-    element.divider = { 
-      spacing: markUpElement?.divider?.spacing ?? 0, 
-      slant: markUpElement?.divider?.slant ?? 0 
-    };
-    element.padding = {top:0, bottom:0, left:0, right:0};
-    Object.assign(element.padding, markUpElement.padding ?? {});
-    element.bgColor = markUpElement.bgColor;
-    element.borderColor = markUpElement.borderColor;
-    element.borderWidth = markUpElement.borderWidth;
-    element.z = markUpElement.z ?? 0;
-    element.visibility = markUpElement.visibility ?? 2;
-    element.semantics = markUpElement.semantics;
-    element.prompt = markUpElement.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+  static compile(markUp) {
+    const element = FrameElement.compileNode(markUp);
 
+    const children = markUp.column || markUp.row;
     if (children) {
-      if (markUpElement.column) {
-        element.direction = 'v';
-      } else if (markUpElement.row) {
-        element.direction = 'h';
-      }
-      for (let i = 0; i < children.length; i++) {
-        const childElement = this.compile(children[i]);
-        element.children.push(childElement);
-      }
+      element.direction = markUp.column ? 'v' : 'h';
+      element.children = children.map(child => this.compile(child));
       element.calculateLengthAndBreadth();
-    } else {
-      // leaf
+    }
+
+    return element;
+  }
+
+  static compileNode(markUp) {
+    const element = new FrameElement(markUp.width ?? markUp.height ?? markUp.size ?? 1);
+    element.divider = { 
+      spacing: markUp.divider?.spacing ?? 0, 
+      slant: markUp.divider?.slant ?? 0 
+    };
+    element.padding = { top:0, bottom:0, left:0, right:0 };
+    Object.assign(element.padding, markUp.padding ?? {});
+    element.bgColor = markUp.bgColor;
+    element.borderColor = markUp.borderColor;
+    element.borderWidth = markUp.borderWidth;
+    element.z = markUp.z ?? 0;
+    element.visibility = markUp.visibility ?? 2;
+    element.semantics = markUp.semantics;
+    element.prompt = markUp.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+
+    const children = markUp.column ?? markUp.row;
+    if (!children) {
       element.translation = [0, 0];
       element.scale = [1, 1]; 
       element.rotation = 0;
       element.reverse = [1, 1];
     }
+
     return element;
   }
 
@@ -97,13 +99,25 @@ export class FrameElement {
   }
 
   static decompileAux(element, parentDir) {
+    const markUpElement = this.decompileNode(element, parentDir);
+    if (element.direction) {
+      const dir = element.direction == 'h' ? 'row' : 'column';
+      markUpElement[dir] = [];
+      for (let i = 0; i < element.children.length; i++) {
+        markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
+      }
+    }
+    return markUpElement;
+  }
+
+  static decompileNode(element, parentDir) {
     function cleanPadding(mm) {
       const m = {};
       if (mm.top !== 0) { m.top = mm.top; }
       if (mm.bottom !== 0) { m.bottom = mm.bottom; }
       if (mm.left !== 0) { m.left = mm.left; }
       if (mm.right !== 0) { m.right = mm.right; }
-      if (Object.keys(m).length === 0) { return null; }
+      if (Object.keys(m).length === 0) { return undefined; }
       return m;
     }
 
@@ -115,17 +129,6 @@ export class FrameElement {
     if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
     if (element.semantics) { markUpElement.semantics = element.semantics; }
     if (element.prompt) { markUpElement.prompt = element.prompt; }
-    if (element.direction) {
-      const dir = element.direction == 'h' ? 'row' : 'column';
-      markUpElement[dir] = [];
-      for (let i = 0; i < element.children.length; i++) {
-        markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
-      }
-      const padding = cleanPadding(element.padding);
-      if (padding) {
-        markUpElement.padding = padding;
-      }
-    }
     if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
       markUpElement.divider = {};
       if (element.divider.spacing !== 0) {
@@ -139,6 +142,9 @@ export class FrameElement {
       markUpElement.width = element.rawSize;
     } else {
       markUpElement.height = element.rawSize;
+    }
+    if (element.direction) {
+      markUpElement.padding = cleanPadding(element.padding);
     }
 
     return markUpElement;
