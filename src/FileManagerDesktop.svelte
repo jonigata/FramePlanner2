@@ -1,40 +1,24 @@
 <script lang="ts">
-  import { draggable } from '@neodrag/svelte';
-  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-  import Paper from './Paper.svelte';
-  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
-  import { type Page, mainPage } from './pageStore';
+  import FileManagerDesktopPaper from './FileManagerDesktopPaper.svelte';
+  import type { FileSystem, Folder } from "./lib/filesystem/fileSystem";
 
-  let position = { x: 0, y: 0 };
-  let pages = [
-    makePage(2),
-    makePage(1),
-    makePage(0),
-  ]
+  export let fileSystem: FileSystem;
+  export let node: Folder;
 
-  function makePage(n): Page {
-    return {
-      frameTree: FrameElement.compile(frameExamples[n]), 
-      bubbles:[], 
-      revision: {id:'desktop', revision:1}, 
-      paperSize: [140, 198],
-      paperColor: '#ffffff',
-      frameColor: '#000000',
-      frameWidth: 2,
-    };
-  }
-
-  function onDoubleClick(page) {
-    $mainPage = page;
-  }
 </script>
 
 <div class="desktop">
-  {#each pages as page}
-    <div class="desktop-paper" use:draggable={{ position: position }} on:dblclick={() => onDoubleClick(page)}>
-      <Paper page={page}/>
-    </div>
-  {/each}
+  {#if node != null}
+    {#await node.list()}
+      <div>loading...</div>
+    {:then children}
+      {#each children as [name, node]}
+        <FileManagerDesktopPaper fileSystem={fileSystem} node={node.asFile()}/>
+      {/each}
+    {:catch error}
+      <div>error: {error.message}</div>
+    {/await}
+  {/if}
   <button class="btn btn-sm variant-filled add-document-button" >+</button>
 </div>
 

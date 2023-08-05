@@ -1,8 +1,7 @@
 <script lang="ts">
   import { loadPageFrom } from "./fileManagerStore";
   import type { FileSystem, File } from "./lib/filesystem/fileSystem";
-  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
-  import { type Page, mainPage } from './pageStore';
+  import { mainPage } from './pageStore';
 
   export let fileSystem: FileSystem;
   export let name: string;
