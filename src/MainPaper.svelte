@@ -28,10 +28,17 @@
 
   $:save($saveToken);
   function save(token) {
+    console.log('MainPaper.save', token);
     if (!token) return;
-    console.log('tokenValue', token);
-    paper.save();
-    $saveToken = false;
+    switch (token) {
+      case 'download':
+        paper.save();
+        break;
+      case 'aipictors':
+        paper.postToAIPictors();
+        break;
+    }
+    $saveToken = null;
   }
 
   $:copyToClipboard($clipboardToken);

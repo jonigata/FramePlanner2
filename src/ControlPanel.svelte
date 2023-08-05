@@ -19,6 +19,7 @@
   import { commitToken } from './undoStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
+  import aiPictorsIcon from './assets/aipictors_logo_0.png'
 
   let min = 256;
   let exponentialMin = 4096;
@@ -35,7 +36,11 @@
   }
 
   function save() {
-    $saveToken = true;
+    $saveToken = "download";
+  }
+
+  function postAIPictors() {
+    $saveToken = "aipictors";
   }
 
   function copyToClipboard() {
@@ -211,6 +216,9 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
       Share
     </button>
+    <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 logo-button hbox" on:click={postAIPictors}>
+      <img width="85%" src={aiPictorsIcon} alt="aipictors"/>
+    </button>
   </div>  
 </div>
 
@@ -279,5 +287,8 @@
     width: 15px;
     height: 15px;
     border-radius: 4px;
+  }
+  .logo-button {
+    width: 160px;
   }
 </style>

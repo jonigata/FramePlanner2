@@ -8,7 +8,7 @@
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
-  import { saveCanvas, copyCanvasToClipboard, makeFilename } from './lib/layeredCanvas/saveCanvas.js';
+  import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
@@ -394,6 +394,17 @@
     swapCanvas(async (c) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       saveCanvas(c, makeFilename("png"), latestJson);
+    });
+  }
+
+  export function postToAIPictors() {
+    console.log("postToAIPictors");
+    swapCanvas(async (c) => {
+      const latestJson = FrameElement.decompile(frameLayer.frameTree);
+      const url = canvasToUrl(c, latestJson);
+      const postUrl = "https://www.aipictors.com/post/#" + url.substring(5) + "&collabotype=9835N8UoVOpup-yAUqXQV";
+      console.log(postUrl);
+      window.open(postUrl, "_blank");
     });
   }
   

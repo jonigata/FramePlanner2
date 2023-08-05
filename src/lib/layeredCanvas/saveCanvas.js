@@ -147,6 +147,12 @@ export function saveCanvas(canvas, filename, jsonData) {
     createEl.remove();
 }
 
+export function canvasToUrl(canvas, jsonData) {
+    const url = canvas.toDataURL();
+    console.log(url);
+    return url;
+}
+
 export async function copyCanvasToClipboard(canvas) {
   try {
     // CanvasをBlobとして取得する
