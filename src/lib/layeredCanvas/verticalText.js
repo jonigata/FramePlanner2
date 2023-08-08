@@ -64,8 +64,8 @@ export function drawVerticalText(context, method, r, text, baselineSkip, m, char
           c0 += c1; j++;
           if (c0 == '!?') { drawChar(-0.2, 0); } else { drawChar(0, 0); }
           break;
-        case isEmojiAt(text, j):
-          c0 = getEmojiAt(text, j);
+        case isEmojiAt(line.text, j):
+          c0 = getEmojiAt(line.text, j);
           drawChar((c0.length-1)*0.3, 0); 
           j+=c0.length-1;
           break;

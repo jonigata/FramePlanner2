@@ -20,6 +20,7 @@
   import { commitToken } from './undoStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
+  import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { fileManagerOpen } from './fileManagerStore';
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
@@ -41,7 +42,11 @@
   }
 
   function save() {
-    $saveToken = true;
+    $saveToken = "download";
+  }
+
+  function postAIPictors() {
+    $saveToken = "aipictors";
   }
 
   function copyToClipboard() {
@@ -198,31 +203,37 @@
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
     </FileDropzone> 
   </div>  
-  <div class="hbox gap" style="margin-top: 16px;">
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
-      <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
-    </button>
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
-      <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
-    </button>
+  <div class="variant-soft-tertiary mt-2 mx-2 p-2 pt-0 rounded-container-token">
+    出版！
+    <div class="hbox mx-2 gap">
+      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
+        <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
+      </button>
+      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
+        <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
+      </button>
+      <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 download-button hbox" on:click={save}>
+        <img width="95%" src={aiPictorsIcon} alt="aipictors"/>
+      </button>
+    </div>
   </div>
   <div class="hbox mx-2" style="margin-top: 4px;">
     <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
     <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
   </div>
-  <div class="hbox gap mx-2" style="margin-top: 16px;">
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={about}>
+  <div class="hbox gap mx-2" style="margin-top: 0px;">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
       About
     </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleJsonEditor}>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
     </button>
   </div>  
-  <div class="hbox gap mx-2" style="margin-top: 16px;">
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={downloadJson}>
+  <div class="hbox gap mx-2" style="margin-top: 8px;">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
       Download JSON
     </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={shareJson}>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareJson}>
       Share
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button hbox" on:click={toggleFileManager}>
@@ -278,7 +289,8 @@
     height: 20px;
   }
   .download-button {
-    width: 160px;
+    width: 125px;
+    height: 35px;
   }
   .button-icon {
     width: 32px;
@@ -296,5 +308,8 @@
     width: 15px;
     height: 15px;
     border-radius: 4px;
+  }
+  .function-button {
+    width: 125px;
   }
 </style>

@@ -2,6 +2,7 @@
   import Drawer from './Drawer.svelte'
   import { aboutOpen } from './aboutStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import aiPictorsIcon from './assets/aipictors_logo_0.png'
 
   function showComic() {
     const d: ModalSettings = {
@@ -18,23 +19,29 @@
   <div class="drawer-content">
     <h2>FramePlanner</h2>
 
+    <h3>紹介・入門記事</h3>
+    <p>
+      <a href="https://blogcake.net/ai-comic/" target="_blank" rel="noopener noreferrer">AIで漫画を描く！？FramePlannerで作る漫画の作り方</a>
+    </p>
+    <p><span class="comic-link" on:click={showComic}>はじめてのFramePlanner（まんが入門！）</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)</p>
+
+    <h3>ギャラリー</h3>
+    <p class="inline-elements">
+      <a href="https://www.aipictors.com/search/?tag=frameplanner" target="_blank" rel="noopener noreferrer">
+        <img width=110 src={aiPictorsIcon} alt="aipictors"/>
+      </a>
+      <a href="https://www.chichi-pui.com/posts/tags/FramePlanner/" target="_blank" rel="noopener noreferrer">ちちぷい</a>
+      <a href="https://twitter.com/hashtag/frameplanner?src=hashtag_click&f=live" target="_blank" rel="noopener noreferrer">#frameplanner(Twitter)</a>
+    </p>
+
+    <h3>資料</h3>
     <p>
       <a href="https://github.com/jonigata/FramePlanner2" target="_blank" rel="noopener noreferrer">github</a>
       <a href="https://twitter.com/jonigata_ai" target="_blank" rel="noopener noreferrer">twitter</a>
       <a href="https://t.co/UC3jJOJJtS" target="_blank" rel="noopener noreferrer">anonymous request</a>
     </p>
 
-    <p>
-      <a href="https://www.chichi-pui.com/posts/tags/FramePlanner/" target="_blank" rel="noopener noreferrer">ちちぷい</a>
-      <a href="https://twitter.com/hashtag/frameplanner?src=hashtag_click&f=live" target="_blank" rel="noopener noreferrer">#frameplanner(Twitter)</a>
-    </p>
-
-    <p>
-      紹介記事: <a href="https://blogcake.net/ai-comic/" target="_blank" rel="noopener noreferrer">AIで漫画を描く！？FramePlannerで作る漫画の作り方</a>
-    </p>
-
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <p><span class="comic-link" on:click={showComic}>はじめてのFramePlanner</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)</p>
   
     <h2>チートシート</h2>
 
@@ -158,8 +165,11 @@
     text-decoration: underline;
     color: #0000ff;
   }
-
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
+  .inline-elements * {
+    display: inline-block;
+    vertical-align: middle;
+  }  
 </style>
