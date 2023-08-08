@@ -22,12 +22,12 @@
     <h3>紹介・入門記事</h3>
     <p>
       <a href="https://blogcake.net/ai-comic/" target="_blank" rel="noopener noreferrer">AIで漫画を描く！？FramePlannerで作る漫画の作り方</a>
-      <span class="comic-link" on:click={showComic}>はじめてのFramePlanner（まんが入門！）</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)
     </p>
+    <p><span class="comic-link" on:click={showComic}>はじめてのFramePlanner（まんが入門！）</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)</p>
 
     <h3>ギャラリー</h3>
     <p class="inline-elements">
-      <a href="https://www.aipictors.com/search/?query=%7B%22keyword%22%3A%22FramePlanner%22%2C%22options%22%3A%7B%22age%22%3A%5B%220%22%2C%223%22%5D%2C%22posttype%22%3A%5B%22image%22%2C%22novel%22%5D%2C%22target%22%3A%5B%22category%22%2C%22title%22%2C%22explanation%22%2C%22prompt%22%2C%22owner%22%5D%2C%22service%22%3A%22%22%2C%22model%22%3A%22%22%2C%22prompt%22%3A%5B%220%22%2C%221%22%5D%2C%22follow%22%3A%5B%220%22%2C%221%22%5D%2C%22subject%22%3A%5B%220%22%2C%221%22%5D%2C%22taste%22%3A%5B%221%22%2C%222%22%2C%223%22%5D%2C%22post-since%22%3A%22%22%2C%22post-until%22%3A%22%22%2C%22collabid%22%3A%22%22%2C%22order%22%3A%22new%22%2C%22limit%22%3A%22100%22%7D%7D" target="_blank" rel="noopener noreferrer">
+      <a href="https://www.aipictors.com/search/?tag=frameplanner" target="_blank" rel="noopener noreferrer">
         <img width=110 src={aiPictorsIcon} alt="aipictors"/>
       </a>
       <a href="https://www.chichi-pui.com/posts/tags/FramePlanner/" target="_blank" rel="noopener noreferrer">ちちぷい</a>

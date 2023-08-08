@@ -199,7 +199,7 @@
         <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
       </button>
       <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 download-button hbox" on:click={save}>
-        <img width="85%" src={aiPictorsIcon} alt="aipictors"/>
+        <img width="95%" src={aiPictorsIcon} alt="aipictors"/>
       </button>
     </div>
   </div>
