@@ -92,6 +92,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
 
 
 export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<Page> {
+  console.log("*********** loadPageFrom");
   const content = await file.read();
   const serializedPage = JSON.parse(content);
 

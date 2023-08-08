@@ -1,7 +1,6 @@
 import { writable } from "svelte/store";
 import type { Bubble } from './lib/layeredCanvas/bubble.js';
 import { FrameElement } from './lib/layeredCanvas/frameTree.js';
-import { ulid } from "ulid";
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
 
 export type Revision = {
@@ -17,6 +16,7 @@ export type Page = {
   paperColor: string,
   frameColor: string,
   frameWidth: number,
+  desktopPosition: [number, number],
 }
 
 export const mainPage = writable<Page>(
@@ -28,6 +28,7 @@ export const mainPage = writable<Page>(
     paperColor: '#ffffff',
     frameColor: '#000000',
     frameWidth: 2,
+    desktopPosition: [0, 0],
   }
 );
 

@@ -56,6 +56,7 @@ async function addFile(fs, folder, name) {
     paperColor: '#ffffff',
     frameColor: '#000000',
     frameWidth: 2,
+    desktopPosition: [0, 0],
   }
 
   const file = await fs.createFile();

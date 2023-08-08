@@ -10,26 +10,36 @@
   export let node: File;
   export let position = { x: 0, y: 0 };
 
-  let page = null;
+  let page;
 
-  function onDoubleClick(page) {
+  function onDoubleClick() {
     $mainPage = page;
   }
 
-  onMount(async () => {
-    const p = await loadPageFrom(fileSystem, node);
+  function makePage(p) {
+    console.log(p);
     page = {
       ...p,
       paperSize: [Math.ceil(p.paperSize[0] / 10), Math.ceil(p.paperSize[1] / 10)],
     };
-  });
+    return page;
+  }
 </script>
 
-<div class="desktop-paper" use:draggable={{ position: position }} on:dblclick={() => onDoubleClick(page)}>
-  {#await page}
-  <div>loading...</div>
+<div class="desktop-paper" 
+  use:draggable={{
+    position: position,
+    onDragEnd: ({ offsetX, offsetY, rootNode, currentNode }) => {
+      console.log(offsetX, offsetY);
+      page.desktopPosition = [offsetX, offsetY];
+      position = { x: offsetX, y: offsetY };
+    },
+  }}
+  on:dblclick={onDoubleClick}>
+  {#await loadPageFrom(fileSystem, node)}
+    <div>loading...</div> 
   {:then p}
-  <Paper page={p}/>
+    <Paper page={makePage(p)}/>
   {/await}
 </div>
 

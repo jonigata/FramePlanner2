@@ -1,9 +1,31 @@
 <script lang="ts">
   import FileManagerDesktopPaper from './FileManagerDesktopPaper.svelte';
   import type { FileSystem, Folder } from "./lib/filesystem/fileSystem";
+  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
+  import type { Page } from './pageStore';
+  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+  import { savePageTo } from "./fileManagerStore";
 
   export let fileSystem: FileSystem;
   export let node: Folder;
+
+  async function createNewFile() {
+    const page: Page = {
+      frameTree: FrameElement.compile(frameExamples[2]),
+      bubbles:[], 
+      revision: {id:'dummy', revision:1}, 
+      paperSize: [840, 1188],
+      paperColor: '#ffffff',
+      frameColor: '#000000',
+      frameWidth: 2,
+      desktopPosition: [0, 0],
+    }
+
+    const file = await fileSystem.createFile();
+    await savePageTo(page, fileSystem, file);
+    await node.link("new file", file);
+    node = node;
+  }
 
 </script>
 
@@ -19,7 +41,7 @@
       <div>error: {error.message}</div>
     {/await}
   {/if}
-  <button class="btn btn-sm variant-filled add-document-button" >+</button>
+  <button class="btn btn-sm variant-filled add-document-button" on:click={createNewFile} >+</button>
 </div>
 
 <style>

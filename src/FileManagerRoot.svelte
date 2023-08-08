@@ -12,6 +12,7 @@
 
   export let fileSystem: FileSystem;
 
+  let desktopPromise = null;
   let currentRevision = null;
 
   async function getSystemFolders() {
@@ -44,7 +45,8 @@
 
   onMount(async () => {
     const root = await fileSystem.getRoot();
-    const desktop = (await root.get("デスクトップ")).asFolder();
+    desktopPromise = root.get("デスクトップ");
+    let desktop = (await desktopPromise).asFolder();
     let files = await desktop.asFolder().list();
     if (files.length === 0) {
       // TODO: createPageを適当な場所に置く
@@ -78,11 +80,15 @@
     on:clickAway={() => ($fileManagerOpen = false)}
   >
     <div class="drawer-content">
-      <div class="desktop">
-        <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
-          <FileManagerDesktop/>
+      {#await desktopPromise}
+        <div>loading...</div>
+      {:then desktop}
+        <div class="desktop">
+          <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
+              <FileManagerDesktop fileSystem={fileSystem} node={desktop}/>
+          </div>
         </div>
-      </div>
+      {/await}
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#await getSystemFolders()}
           <div>loading...</div>
