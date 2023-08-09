@@ -212,7 +212,7 @@
       <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
         <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
       </button>
-      <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 download-button hbox" on:click={save}>
+      <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 download-button hbox" on:click={postAIPictors}>
         <img width="95%" src={aiPictorsIcon} alt="aipictors"/>
       </button>
     </div>
