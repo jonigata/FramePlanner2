@@ -121,10 +121,6 @@ export class FrameElement {
       for (let i = 0; i < element.children.length; i++) {
         markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
       }
-      const padding = cleanPadding(element.padding);
-      if (padding) {
-        markUpElement.padding = padding;
-      }
     }
     if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
       markUpElement.divider = {};
@@ -134,6 +130,10 @@ export class FrameElement {
       if (element.divider.slant !== 0) {
         markUpElement.divider.slant = element.divider.slant;
       }
+    }
+    const padding = cleanPadding(element.padding);
+    if (padding) {
+      markUpElement.padding = padding;
     }
     if (parentDir == 'h') {
       markUpElement.width = element.rawSize;
