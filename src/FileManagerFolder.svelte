@@ -1,15 +1,18 @@
 <script lang="ts">
   import type { FileSystem, File, Folder, NodeId, BindId } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { trashUpdateToken, fileManagerRefreshKey } from "./fileManagerStore";
 
   export let fileSystem: FileSystem;
   export let name: string;
-  export let node: Folder;
+  export let bindId: BindId;
+  export let parent: Folder;
   export let isTrash = false;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let spawnability = "spawnable"; // "spawnable" | "unspawnable"
+
+  let node;
 
   const dispatch = createEventDispatcher();
 
@@ -60,7 +63,7 @@
     const bindId = e.dataTransfer.getData("bindId") as string as BindId;
 
     const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
-    const mover = await sourceParent.get(bindId);
+    const mover = await sourceParent.getEntry(bindId);
 
     await sourceParent.unlink(bindId);
     await node.link(mover[1], mover[2]);
@@ -70,10 +73,14 @@
     e.preventDefault();
   }
 
+  onMount(async () => {
+    node = await parent.getNode(bindId) as Folder;
+  });
+
 </script>
 
 {#if node != null}
-<div class="folder" on:dragover={onDragOver} on:drop={onDrop}>
+<div class="folder" draggable={true} on:dragover={onDragOver} on:drop={onDrop}>
   <div class="folder-title">
     {name}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -91,7 +98,7 @@
     {:then children}
       {#each children as [bindId, name, childNode]}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} node={childNode.asFolder()} on:remove={removeChild}/>
+          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} on:remove={removeChild}/>
         {:else if childNode.getType() === 'file'}
           <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node}/>
         {/if}

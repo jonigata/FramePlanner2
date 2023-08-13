@@ -12,16 +12,12 @@
 
   export let fileSystem: FileSystem;
 
-  let desktopPromise = null;
+  let root = null;
+  let desktop = null;
+  let cabinet = null;
+  let trash = null;
+  let templates = null;
   let currentRevision = null;
-
-  async function getSystemFolders() {
-    const cabinet = await (await fileSystem.getRoot()).find("キャビネット");
-    const trash = await (await fileSystem.getRoot()).find("ごみ箱");
-    const templates = await (await fileSystem.getRoot()).find("テンプレート");
-    console.log(cabinet, trash, templates);
-    return { cabinet, trash, templates };
-  }
 
   $:onUpdateOuterPage($mainPage);
   async function onUpdateOuterPage(page) {
@@ -44,9 +40,12 @@
   }
 
   onMount(async () => {
-    const root = await fileSystem.getRoot();
-    desktopPromise = root.find("デスクトップ");
-    let desktop = (await desktopPromise).asFolder();
+    root = await fileSystem.getRoot();
+    desktop = await root.getNodeByName("デスクトップ");
+    cabinet = await root.getEntryByName("キャビネット");
+    trash = await root.getEntryByName("ゴミ箱");
+    templates = await root.getEntryByName("テンプレート");
+
     let files = await desktop.asFolder().list();
     if (files.length === 0) {
       // TODO: createPageを適当な場所に置く
@@ -82,35 +81,27 @@
 
     {#key $fileManagerRefreshKey}
       <div class="drawer-content">
-        {#await desktopPromise}
-          <div>loading...</div>
-        {:then desktop}
+        {#if desktop}
           <div class="desktop">
             <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
                 <FileManagerDesktop fileSystem={fileSystem} node={desktop}/>
             </div>
           </div>
-        {/await}
+        {/if}
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
-          {#await getSystemFolders()}
-            <div>loading...</div>
-          {:then h}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"spawnable"} name={"キャビネット"} node={h.cabinet.asFolder()}/>
-          {/await}
+          {#if cabinet}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"spawnable"} name={"キャビネット"} bindId={cabinet[0]} parent={root}/>
+          {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
-          {#await getSystemFolders()}
-            <div>loading...</div>
-          {:then h}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-deep"} spawnability={"unspawnable"} name={"ごみ箱"} node={h.trash.asFolder()} isTrash={true}/>
-          {/await}
+          {#if trash}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-deep"} spawnability={"unspawnable"} name={"ごみ箱"} bindId={trash[0]} parent={root} isTrash={true}/>
+          {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
-          {#await getSystemFolders()}
-            <div>loading...</div>
-          {:then h}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"unspawnable"} name={"テンプレート"} node={h.templates.asFolder()} isTrash={true}/>
-          {/await}
+          {#if templates}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} isTrash={true}/>
+          {/if}
         </div>
       </div>
     {/key}

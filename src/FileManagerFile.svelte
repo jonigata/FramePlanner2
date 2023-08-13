@@ -15,7 +15,7 @@
     $mainPage = page;
   }
 
-	export function onDragStart (ev) {
+	function onDragStart (ev) {
 		ev.dataTransfer.setData("bindId", bindId);
 		ev.dataTransfer.setData("parent", parent.id);
 	}

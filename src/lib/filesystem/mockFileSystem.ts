@@ -81,14 +81,18 @@ export class MockFolder extends Folder {
     this.children = this.children.filter(([b, _, __]) => b !== bindId);
   }
 
-  async get(bindId: BindId): Promise<[BindId, string, Node]> {
+  async getEntry(bindId: BindId): Promise<[BindId, string, Node]> {
     // console.log("get", name, this.children);
     return this.children.find(([b, _, __]) => b === bindId);
   }
 
-  async find(name: string): Promise<Node> {
-    // console.log("getByName", name, this.children);
-    const child = this.children.find(([_, n, __]) => n === name);
-    return child ? child[2] : null;
+  async getEntryByName(name: string): Promise<[BindId, string, Node]> {
+    // console.log("get", name, this.children);
+    return this.children.find(([_, n, __]) => n === name);
+  }
+
+  async getEntriesByName(name: string): Promise<[BindId, string, Node][]> {
+    // console.log("get", name, this.children);
+    return this.children.filter(([_, n, __]) => n === name);
   }
 }

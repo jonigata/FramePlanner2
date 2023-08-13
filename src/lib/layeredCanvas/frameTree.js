@@ -129,6 +129,13 @@ export class FrameElement {
     if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
     if (element.semantics) { markUpElement.semantics = element.semantics; }
     if (element.prompt) { markUpElement.prompt = element.prompt; }
+    if (element.direction) {
+      const dir = element.direction == 'h' ? 'row' : 'column';
+      markUpElement[dir] = [];
+      for (let i = 0; i < element.children.length; i++) {
+        markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
+      }
+    }
     if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
       markUpElement.divider = {};
       if (element.divider.spacing !== 0) {
@@ -137,6 +144,10 @@ export class FrameElement {
       if (element.divider.slant !== 0) {
         markUpElement.divider.slant = element.divider.slant;
       }
+    }
+    const padding = cleanPadding(element.padding);
+    if (padding) {
+      markUpElement.padding = padding;
     }
     if (parentDir == 'h') {
       markUpElement.width = element.rawSize;
@@ -213,6 +224,7 @@ export class FrameElement {
         const spacing = target.divider.spacing;
         const length = target.rawSize;
         const newElement = new FrameElement((length - spacing) / 2);
+        newElement.divider = {...target.divider};
         newElement.calculateLengthAndBreadth();
         target.rawSize = newElement.rawSize;
         parent.children.splice(index+1, 0, newElement);
@@ -233,6 +245,7 @@ export class FrameElement {
           newElement.children[0].scale = target.scale;
           newElement.children[0].rotation = target.rotation;
         }
+        newElement.divider = {...target.divider};
         newElement.calculateLengthAndBreadth();
         parent.children[index] = newElement;
       } 

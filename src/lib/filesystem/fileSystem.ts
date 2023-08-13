@@ -42,8 +42,11 @@ export class Folder extends Node {
   async list(): Promise<[BindId, string, Node][]> {return [];}
   async link(name: string, node: Node): Promise<BindId> { return null;}
   async unlink(bindId: BindId): Promise<void> {}
-  async get(bindId: BindId): Promise<[BindId, string, Node]> { return null; }
-  async find(name: string): Promise<Node> { return null; }
+  async getEntry(bindId: BindId): Promise<[BindId, string, Node]> { return null; }
+  async getEntryByName(name: string): Promise<[BindId, string, Node]> { return null; }
+  async getEntriesByName(name: string): Promise<[BindId, string, Node][]> { return []; }
 
-  async getNode(bindId: BindId): Promise<Node> { return (await this.get(bindId))[2]; }
+  async getNode(bindId: BindId): Promise<Node> { return (await this.getEntry(bindId))[2]; }
+  async getNodeByName(name: string): Promise<Node> { return (await this.getEntryByName(name))[2]; }
+  async getNodesByName(name: string): Promise<Node[]> { return (await this.getEntriesByName(name)).map(e => e[2]); }
 }

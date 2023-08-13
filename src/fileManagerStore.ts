@@ -25,7 +25,7 @@ export async function savePageTo(page: Page, fileSystem: FileSystem, file: File)
   console.log("*********** savePageTo");
 
   const root = await fileSystem.getRoot();
-  const imageFolder = await root.get('画像') as Folder;
+  const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
 
   const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
   const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder);
@@ -100,7 +100,7 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
   const serializedPage = JSON.parse(content);
 
   const root = await fileSystem.getRoot();
-  const imageFolder = await root.get('images') as Folder;
+  const imageFolder = await root.getNodeByName('画像') as Folder;
 
   const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem, imageFolder, 'v');
   const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, imageFolder);
