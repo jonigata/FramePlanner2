@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FileSystem, File, Folder, NodeId } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, File, Folder, NodeId, BindId } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher } from 'svelte';
   import { trashUpdateToken, fileManagerRefreshKey } from "./fileManagerStore";
@@ -26,9 +26,9 @@
 
   async function removeChild(e) {
     const childName = e.detail;
-    const childNode = await node.get(e.detail);
+    const childNode = await node.find(e.detail);
     if (!isTrash) {
-      const trash = (await (await fileSystem.getRoot()).get("ごみ箱")).asFolder();
+      const trash = (await (await fileSystem.getRoot()).find("ごみ箱")).asFolder();
       await trash.link(childName, childNode);
       $trashUpdateToken = true;
     }
@@ -57,16 +57,13 @@
 
   async function onDrop(e) {
 		const sourceParentId = e.dataTransfer.getData("parent") as string as NodeId;
-    const moverId = e.dataTransfer.getData("node") as string as NodeId;
-
-    // TODO: 同じ名前のファイルがある場合の処理
+    const bindId = e.dataTransfer.getData("bindId") as string as BindId;
 
     const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
-    const mover = await sourceParent.getById(moverId);
+    const mover = await sourceParent.get(bindId);
 
-    await sourceParent.unlink(mover[0]);
-
-    await node.link(...mover);
+    await sourceParent.unlink(bindId);
+    await node.link(mover[1], mover[2]);
     $fileManagerRefreshKey++;
     console.log("move done");
 
@@ -92,11 +89,11 @@
     {#await node.list()}
       <div>loading...</div>
     {:then children}
-      {#each children as [name, childNode]}
+      {#each children as [bindId, name, childNode]}
         {#if childNode.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} node={childNode.asFolder()} on:remove={removeChild}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} node={childNode.asFile()} parent={node}/>
+          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node}/>
         {/if}
       {/each}
     {:catch error}

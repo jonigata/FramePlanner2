@@ -1,4 +1,4 @@
-import { type NodeId, type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
+import { type NodeId, type NodeType, type BindId, Node, File, Folder, FileSystem } from './fileSystem';
 import { ulid } from 'ulid';
 
 export class MockFileSystem extends FileSystem {
@@ -56,7 +56,7 @@ export class MockFile extends File {
 }
 
 export class MockFolder extends Folder {
-  children: [string, Node][] = [];
+  children: [BindId, string, Node][] = [];
 
   getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
@@ -65,22 +65,30 @@ export class MockFolder extends Folder {
     super(id);
   }
 
-  async list(): Promise<[string, Node][]> {
+  async list(): Promise<[BindId, string, Node][]> {
     return this.children;
   }
 
-  async link(name, Node): Promise<void> {
-    this.children.push([name, Node]);
+  async link(name, Node): Promise<BindId> {
+    console.log("link", name, Node);
+    const bindId = ulid() as BindId;
+    this.children.push([bindId, name, Node]);
+    return bindId;
   }
 
-  async unlink(name): Promise<void> {
-    this.children = this.children.filter(([n, _]) => n !== name);
+  async unlink(bindId: BindId): Promise<void> {
+    console.log("unlink", bindId);
+    this.children = this.children.filter(([b, _, __]) => b !== bindId);
   }
 
-  async get(name): Promise<Node> {
+  async get(bindId: BindId): Promise<[BindId, string, Node]> {
     // console.log("get", name, this.children);
-    const child = this.children.find(([n, _]) => n === name);
-    return child ? child[1] : null;
+    return this.children.find(([b, _, __]) => b === bindId);
   }
 
+  async find(name: string): Promise<Node> {
+    // console.log("getByName", name, this.children);
+    const child = this.children.find(([_, n, __]) => n === name);
+    return child ? child[2] : null;
+  }
 }

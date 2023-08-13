@@ -16,9 +16,9 @@
   let currentRevision = null;
 
   async function getSystemFolders() {
-    const cabinet = await (await fileSystem.getRoot()).get("キャビネット");
-    const trash = await (await fileSystem.getRoot()).get("ごみ箱");
-    const templates = await (await fileSystem.getRoot()).get("テンプレート");
+    const cabinet = await (await fileSystem.getRoot()).find("キャビネット");
+    const trash = await (await fileSystem.getRoot()).find("ごみ箱");
+    const templates = await (await fileSystem.getRoot()).find("テンプレート");
     console.log(cabinet, trash, templates);
     return { cabinet, trash, templates };
   }
@@ -45,7 +45,7 @@
 
   onMount(async () => {
     const root = await fileSystem.getRoot();
-    desktopPromise = root.get("デスクトップ");
+    desktopPromise = root.find("デスクトップ");
     let desktop = (await desktopPromise).asFolder();
     let files = await desktop.asFolder().list();
     if (files.length === 0) {

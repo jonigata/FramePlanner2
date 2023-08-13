@@ -130,7 +130,6 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
     frameTree.image = image;
   }
 
-  console.log("*** markUp ", markUp)
   const children = markUp.column ?? markUp.row;
   console.log(children);
   if (children) {

@@ -34,7 +34,7 @@
     {#await node.list()}
       <div>loading...</div>
     {:then children}
-      {#each children as [name, node]}
+      {#each children as [bindId, name, node]}
         <FileManagerDesktopPaper fileSystem={fileSystem} node={node.asFile()}/>
       {/each}
     {:catch error}

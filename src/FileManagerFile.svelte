@@ -1,21 +1,22 @@
 <script lang="ts">
   import { loadPageFrom } from "./fileManagerStore";
-  import type { FileSystem, File, Folder } from "./lib/filesystem/fileSystem";
+  import type { BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
   import { mainPage } from './pageStore';
 
   export let fileSystem: FileSystem;
   export let name: string;
-  export let node: File;
+  export let bindId: BindId;
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
 
   async function onDoubleClick() {
-    const page = await loadPageFrom(fileSystem, node);
+    const file = await parent.get(bindId) as File;
+    const page = await loadPageFrom(fileSystem, file);
     $mainPage = page;
   }
 
 	export function onDragStart (ev) {
-		ev.dataTransfer.setData("node", node.id);
+		ev.dataTransfer.setData("bindId", bindId);
 		ev.dataTransfer.setData("parent", parent.id);
 	}
 </script>

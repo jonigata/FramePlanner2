@@ -1,5 +1,6 @@
 export type NodeType = 'file' | 'folder';
 export type NodeId = string & { _NodeId: never };
+export type BindId = string & { _BindId: never };
 
 export class FileSystem {
   async createFile(): Promise<File> {return null;}
@@ -38,17 +39,11 @@ export class File extends Node {
 export class Folder extends Node {
   getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
-  async list(): Promise<[string, Node][]> {return [];}
-  async link(name: string, node: Node): Promise<void> {}
-  async unlink(name: string): Promise<void> {}
-  async get(name: string): Promise<Node> {return null;}
-  async getById(id: NodeId): Promise<[string, Node]> {
-    const list = await this.list();
-    for (const [name, node] of list) {
-      if (node.id === id) {
-        return [name, node];
-      }
-    }
-    return null;
-  }
+  async list(): Promise<[BindId, string, Node][]> {return [];}
+  async link(name: string, node: Node): Promise<BindId> { return null;}
+  async unlink(bindId: BindId): Promise<void> {}
+  async get(bindId: BindId): Promise<[BindId, string, Node]> { return null; }
+  async find(name: string): Promise<Node> { return null; }
+
+  async getNode(bindId: BindId): Promise<Node> { return (await this.get(bindId))[2]; }
 }
