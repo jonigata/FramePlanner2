@@ -25,9 +25,6 @@ export class MockFileSystem extends FileSystem {
   }
 
   async getNode(id: NodeId): Promise<Node> {
-    console.log(id);
-    console.log(this.files);
-    console.log(this.files[id]);
     return this.files[id];
   }
 

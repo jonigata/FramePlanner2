@@ -27,6 +27,7 @@ export async function makeSample(): Promise<FileSystem> {
   await root.link('画像', images);
 
   await addFolder(fs, cabinet, 'キャプテン', 1);
+
   await addFolder(fs, cabinet, 'ギャンブルレーサー', 3);
   await addFolder(fs, cabinet, 'HUNTER x HUNTER', 2);
   await addFolder(fs, cabinet, 'へうげもの', 2);

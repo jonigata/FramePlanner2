@@ -62,6 +62,8 @@
 		const sourceParentId = e.dataTransfer.getData("parent") as string as NodeId;
     const bindId = e.dataTransfer.getData("bindId") as string as BindId;
 
+    console.log(sourceParentId, bindId, node.id);
+
     const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
     const mover = await sourceParent.getEntry(bindId);
 
@@ -73,14 +75,22 @@
     e.preventDefault();
   }
 
+  let entry;
   onMount(async () => {
+    entry = await parent.getEntry(bindId)
     node = await parent.getNode(bindId) as Folder;
   });
 
+  function onDragStart(ev) {
+    ev.dataTransfer.setData("bindId", bindId);
+    ev.dataTransfer.setData("parent", parent.id);
+    ev.stopPropagation();
+  }
+
 </script>
 
-{#if node != null}
-<div class="folder" draggable={true} on:dragover={onDragOver} on:drop={onDrop}>
+{#if node}
+<div class="folder" draggable={true} on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
   <div class="folder-title">
     {name}
     <!-- svelte-ignore a11y-click-events-have-key-events -->

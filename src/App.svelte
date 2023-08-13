@@ -35,6 +35,7 @@
     document.body.style.overflow = 'hidden'; // HACK
 
     // Initialize the Sentry SDK here
+/*
     Sentry.init({
       dsn: "https://d1b647c536ab49979532e731e8bebaaa@o4505054668062721.ingest.sentry.io/4505054670159872",
       replaysSessionSampleRate: 0.1,
@@ -44,6 +45,7 @@
 
       integrations: [new Sentry.Replay()],
     });
+*/
 
     // 現在のURLのパラメータを取得する
     const urlParams = new URLSearchParams(window.location.search);
