@@ -5,6 +5,7 @@
   import { draggable } from '@neodrag/svelte';
   import { mainPage } from './pageStore';
   import Paper from './Paper.svelte';
+  import { savePageTo } from "./fileManagerStore";
 
   export let fileSystem: FileSystem;
   export let node: File;
@@ -12,8 +13,10 @@
 
   let page;
 
-  function onDoubleClick() {
-    $mainPage = page;
+  async function onDoubleClick() {
+    const file = (await fileSystem.getNode(page.revision.id)).asFile();
+    const filePage = await loadPageFrom(fileSystem, file);
+    $mainPage = filePage;
   }
 
   function makePage(p) {
@@ -22,6 +25,10 @@
       ...p,
       paperSize: [Math.ceil(p.paperSize[0] / 10), Math.ceil(p.paperSize[1] / 10)],
     };
+    const desktopPosition = p.desktopPosition;
+    if (desktopPosition) {
+      position = { x: desktopPosition[0], y: desktopPosition[1] };
+    }
     return page;
   }
 </script>
@@ -29,10 +36,13 @@
 <div class="desktop-paper" 
   use:draggable={{
     position: position,
-    onDragEnd: ({ offsetX, offsetY, rootNode, currentNode }) => {
-      console.log(offsetX, offsetY);
-      page.desktopPosition = [offsetX, offsetY];
+    onDragEnd: async ({ offsetX, offsetY, rootNode, currentNode }) => {
+      console.log(page);
       position = { x: offsetX, y: offsetY };
+      const file = (await fileSystem.getNode(page.revision.id)).asFile();
+      const filePage = await loadPageFrom(fileSystem, file);
+      filePage.desktopPosition = [offsetX, offsetY];
+      await savePageTo(filePage, fileSystem, file);
     },
   }}
   on:dblclick={onDoubleClick}>
@@ -48,5 +58,6 @@
     position: absolute;
     left: 50%;
     top: 50%;
+		box-shadow: 0 0.25rem 1rem 0 rgba(0,0,0,0.5);
   }
 </style>

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { FileSystem, Folder } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, File, Folder, NodeId } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher } from 'svelte';
-  import { trashUpdateToken } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey } from "./fileManagerStore";
 
   export let fileSystem: FileSystem;
   export let name: string;
@@ -51,10 +51,32 @@
     return "removable";
   }
 
+	export function onDragOver (ev) {
+		ev.preventDefault();
+	}
+
+  async function onDrop(e) {
+		const sourceParentId = e.dataTransfer.getData("parent") as string as NodeId;
+    const moverId = e.dataTransfer.getData("node") as string as NodeId;
+
+    // TODO: 同じ名前のファイルがある場合の処理
+
+    const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
+    const mover = await sourceParent.getById(moverId);
+
+    await sourceParent.unlink(mover[0]);
+
+    await node.link(...mover);
+    $fileManagerRefreshKey++;
+    console.log("move done");
+
+    e.preventDefault();
+  }
+
 </script>
 
 {#if node != null}
-<div class="folder">
+<div class="folder" on:dragover={onDragOver} on:drop={onDrop}>
   <div class="folder-title">
     {name}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -70,11 +92,11 @@
     {#await node.list()}
       <div>loading...</div>
     {:then children}
-      {#each children as [name, node]}
-        {#if node.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} node={node.asFolder()} on:remove={removeChild}/>
-        {:else if node.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} node={node.asFile()}/>
+      {#each children as [name, childNode]}
+        {#if childNode.getType() === 'folder'}
+          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} node={childNode.asFolder()} on:remove={removeChild}/>
+        {:else if childNode.getType() === 'file'}
+          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} node={childNode.asFile()} parent={node}/>
         {/if}
       {/each}
     {:catch error}

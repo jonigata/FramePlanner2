@@ -42,4 +42,13 @@ export class Folder extends Node {
   async link(name: string, node: Node): Promise<void> {}
   async unlink(name: string): Promise<void> {}
   async get(name: string): Promise<Node> {return null;}
+  async getById(id: NodeId): Promise<[string, Node]> {
+    const list = await this.list();
+    for (const [name, node] of list) {
+      if (node.id === id) {
+        return [name, node];
+      }
+    }
+    return null;
+  }
 }

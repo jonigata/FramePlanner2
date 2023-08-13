@@ -2,7 +2,7 @@
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import FileManagerDesktop from "./FileManagerDesktop.svelte";
-  import { fileManagerOpen, savePageTo } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo } from "./fileManagerStore";
   import type { FileSystem } from './lib/filesystem/fileSystem';
   import { mainPage, revisionEqual } from './pageStore';
   import { onMount } from 'svelte';
@@ -79,38 +79,41 @@
     size="640px"
     on:clickAway={() => ($fileManagerOpen = false)}
   >
-    <div class="drawer-content">
-      {#await desktopPromise}
-        <div>loading...</div>
-      {:then desktop}
-        <div class="desktop">
-          <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
-              <FileManagerDesktop fileSystem={fileSystem} node={desktop}/>
+
+    {#key $fileManagerRefreshKey}
+      <div class="drawer-content">
+        {#await desktopPromise}
+          <div>loading...</div>
+        {:then desktop}
+          <div class="desktop">
+            <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
+                <FileManagerDesktop fileSystem={fileSystem} node={desktop}/>
+            </div>
           </div>
+        {/await}
+        <div class="cabinet variant-ghost-tertiary rounded-container-token">
+          {#await getSystemFolders()}
+            <div>loading...</div>
+          {:then h}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"spawnable"} name={"キャビネット"} node={h.cabinet.asFolder()}/>
+          {/await}
         </div>
-      {/await}
-      <div class="cabinet variant-ghost-tertiary rounded-container-token">
-        {#await getSystemFolders()}
-          <div>loading...</div>
-        {:then h}
-          <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"spawnable"} name={"キャビネット"} node={h.cabinet.asFolder()}/>
-        {/await}
+        <div class="cabinet variant-ghost-secondary rounded-container-token">
+          {#await getSystemFolders()}
+            <div>loading...</div>
+          {:then h}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-deep"} spawnability={"unspawnable"} name={"ごみ箱"} node={h.trash.asFolder()} isTrash={true}/>
+          {/await}
+        </div>
+        <div class="cabinet variant-ghost-secondary rounded-container-token">
+          {#await getSystemFolders()}
+            <div>loading...</div>
+          {:then h}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"unspawnable"} name={"テンプレート"} node={h.templates.asFolder()} isTrash={true}/>
+          {/await}
+        </div>
       </div>
-      <div class="cabinet variant-ghost-secondary rounded-container-token">
-        {#await getSystemFolders()}
-          <div>loading...</div>
-        {:then h}
-          <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-deep"} spawnability={"unspawnable"} name={"ごみ箱"} node={h.trash.asFolder()} isTrash={true}/>
-        {/await}
-      </div>
-      <div class="cabinet variant-ghost-secondary rounded-container-token">
-        {#await getSystemFolders()}
-          <div>loading...</div>
-        {:then h}
-          <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"unspawnable"} name={"テンプレート"} node={h.templates.asFolder()} isTrash={true}/>
-        {/await}
-      </div>
-    </div>
+    {/key}
   </Drawer>
 </div>
 

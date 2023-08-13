@@ -16,7 +16,7 @@ export type Page = {
   paperColor: string,
   frameColor: string,
   frameWidth: number,
-  desktopPosition: [number, number],
+  desktopPosition?: [number, number],
 }
 
 export const mainPage = writable<Page>(

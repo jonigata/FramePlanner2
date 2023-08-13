@@ -8,6 +8,7 @@ import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 export const fileManagerOpen = writable(false);
 export const fileSystem: FileSystem = null;
 export const trashUpdateToken = writable(false);
+export const fileManagerRefreshKey = writable(0);
 
 type SerializedPage = {
   revision: {id: string, revision: number},
@@ -17,6 +18,7 @@ type SerializedPage = {
   paperColor: string,
   frameColor: string,
   frameWidth: number,
+  desktopPosition?: [number, number],
 }
 
 export async function savePageTo(page: Page, fileSystem: FileSystem, file: File): Promise<void> {
@@ -36,6 +38,7 @@ export async function savePageTo(page: Page, fileSystem: FileSystem, file: File)
     paperColor: page.paperColor,
     frameColor: page.frameColor,
     frameWidth: page.frameWidth,
+    desktopPosition: page.desktopPosition
   }
   const json = JSON.stringify(serializedPage);
   await file.write(json);
@@ -110,6 +113,7 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
     paperColor: serializedPage.paperColor,
     frameColor: serializedPage.frameColor,
     frameWidth: serializedPage.frameWidth,
+    desktopPosition: serializedPage.desktopPosition,
   };
 
   return page;
