@@ -90,7 +90,7 @@
 </script>
 
 {#if node}
-<div class="folder" draggable={true} on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
+<div class="folder" draggable={removability === "removable"} on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
   <div class="folder-title">
     {name}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
