@@ -10,7 +10,7 @@
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
 
   async function onDoubleClick() {
-    const file = await parent.get(bindId) as File;
+    const file = await parent.getNode(bindId) as File;
     const page = await loadPageFrom(fileSystem, file);
     $mainPage = page;
   }
