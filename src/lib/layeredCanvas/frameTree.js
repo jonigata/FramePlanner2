@@ -207,6 +207,7 @@ export class FrameElement {
         const spacing = target.divider.spacing;
         const length = target.rawSize;
         const newElement = new FrameElement((length - spacing) / 2);
+        newElement.divider = {...target.divider};
         newElement.calculateLengthAndBreadth();
         target.rawSize = newElement.rawSize;
         parent.children.splice(index+1, 0, newElement);
@@ -227,6 +228,7 @@ export class FrameElement {
           newElement.children[0].scale = target.scale;
           newElement.children[0].rotation = target.rotation;
         }
+        newElement.divider = {...target.divider};
         newElement.calculateLengthAndBreadth();
         parent.children[index] = newElement;
       } 
