@@ -9,6 +9,7 @@ export const fileManagerOpen = writable(false);
 export const fileSystem: FileSystem = null;
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
+export const fileManagerDragging = writable(false);
 
 type SerializedPage = {
   revision: {id: string, revision: number},
@@ -131,7 +132,6 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
   }
 
   const children = markUp.column ?? markUp.row;
-  console.log(children);
   if (children) {
     frameTree.direction = markUp.column ? 'v' : 'h';
     frameTree.children = [];

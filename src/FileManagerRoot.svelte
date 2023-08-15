@@ -21,9 +21,7 @@
 
   $:onUpdateOuterPage($mainPage);
   async function onUpdateOuterPage(page) {
-    console.log("saving: ", page.revision);
     if (revisionEqual(page.revision, currentRevision)) {
-      console.log("skip saving");
       return;
     }
 

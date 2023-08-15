@@ -42,6 +42,7 @@ export class Folder extends Node {
   async list(): Promise<[BindId, string, Node][]> {return [];}
   async link(name: string, node: Node): Promise<BindId> { return null;}
   async unlink(bindId: BindId): Promise<void> {}
+  async insert(name: string, node: Node, index: number): Promise<BindId> { return null; }
   async getEntry(bindId: BindId): Promise<[BindId, string, Node]> { return null; }
   async getEntryByName(name: string): Promise<[BindId, string, Node]> { return null; }
   async getEntriesByName(name: string): Promise<[BindId, string, Node][]> { return []; }

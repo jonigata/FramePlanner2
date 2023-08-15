@@ -2,7 +2,8 @@
   import type { FileSystem, File, Folder, NodeId, BindId } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging } from "./fileManagerStore";
+  import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
 
   export let fileSystem: FileSystem;
   export let name: string;
@@ -73,6 +74,7 @@
     console.log("move done");
 
     e.preventDefault();
+    $fileManagerDragging = false;
   }
 
   let entry;
@@ -82,16 +84,35 @@
   });
 
   function onDragStart(ev) {
+    console.log("folder drag start");
     ev.dataTransfer.setData("bindId", bindId);
     ev.dataTransfer.setData("parent", parent.id);
     ev.stopPropagation();
   }
 
+  async function onInsert(e) {
+    console.log("++++++++++++ insert", e.detail);
+
+    const { dataTransfer, index } = e.detail;
+
+    const sourceParentId = dataTransfer.getData("parent") as string as NodeId;
+    const bindId = dataTransfer.getData("bindId") as string as BindId;
+
+    console.log("insert", sourceParentId, bindId, node.id, "index=", index);
+
+    const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
+    const mover = await sourceParent.getEntry(bindId);
+
+    await sourceParent.unlink(bindId);
+    await node.insert(mover[1], mover[2], index);
+    $fileManagerRefreshKey++;
+    console.log("insert done");
+  }
 </script>
 
 {#if node}
-<div class="folder" draggable={removability === "removable"} on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
-  <div class="folder-title">
+<div class="folder" on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
+  <div class="folder-title" draggable={removability === "removable"}>
     {name}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     {#if spawnability === "spawnable"}
@@ -106,13 +127,14 @@
     {#await node.list()}
       <div>loading...</div>
     {:then children}
-      {#each children as [bindId, name, childNode]}
+      {#each children as [bindId, name, childNode], index}
         {#if childNode.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} on:remove={removeChild}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node}/>
+          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert}/>
         {/if}
       {/each}
+      <FileManagerFolderTail index={children.length} on:insert={onInsert}/>
     {:catch error}
       <div>error: {error.message}</div>
     {/await}

@@ -185,7 +185,6 @@
 
   $:onInputPage(page);
   function onInputPage(newPage) {
-    console.log("onInputPage");
     if (!frameLayer) { return; }
     if (revisionEqual(newPage.revision, pageRevision)) { 
       console.log("same revision")

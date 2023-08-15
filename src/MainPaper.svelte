@@ -14,7 +14,6 @@
 
   $:save($saveToken);
   function save(token) {
-    console.log('MainPaper.save', token);
     if (!token) return;
     switch (token) {
       case 'download':
@@ -30,7 +29,6 @@
   $:copyToClipboard($clipboardToken);
   function copyToClipboard(token) {
     if (!token) return;
-    console.log('tokenValue', token);
     paper.copyToClipboard();
     $clipboardToken = false;
   }
@@ -45,32 +43,26 @@
   $:onCommitToken($commitToken);
   async function onCommitToken(token) {
     if (!token) return;
-    console.log('tokenValue', token);
     paper.commit();
     $commitToken = false;
   }
 
   async function onPainterActive(e) {
-    console.log('onPainterActive', e.detail);
     painterActive = e.detail;
   }
 
   function onScribbleDone() {
-    console.log('onScribbleDone');
     paper.scribbleDone();
     painterActive = false;
   }
 
   function onSetTool(e) {
-    console.log('onSetTool', e.detail);
     paper.setTool(e.detail);
   }
 
   $:onInnerPageUpdate(page);
   function onInnerPageUpdate(p) {
-    console.log("MainPaper.onPageUpdate")
     if (revisionEqual(p.revision, currentRevision)) {
-      console.log("skip notification");
       return;
     }
 
@@ -80,9 +72,7 @@
 
   $:onOuterPageUpdate($mainPage);
   function onOuterPageUpdate(p) {
-    console.log("MainPaper.onOuterPageUpdate")
     if (revisionEqual(p.revision, currentRevision)) {
-      console.log("skip notification");
       return;
     }
 

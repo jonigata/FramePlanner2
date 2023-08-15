@@ -67,15 +67,19 @@ export class MockFolder extends Folder {
   }
 
   async link(name, Node): Promise<BindId> {
-    console.log("link", name, Node);
     const bindId = ulid() as BindId;
     this.children.push([bindId, name, Node]);
     return bindId;
   }
 
   async unlink(bindId: BindId): Promise<void> {
-    console.log("unlink", bindId);
     this.children = this.children.filter(([b, _, __]) => b !== bindId);
+  }
+
+  async insert(name: string, node: Node, index: number): Promise<BindId> { 
+    const bindId = ulid() as BindId;
+    this.children.splice(index, 0, [bindId, name, node]);
+    return bindId;
   }
 
   async getEntry(bindId: BindId): Promise<[BindId, string, Node]> {
