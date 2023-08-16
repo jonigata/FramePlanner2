@@ -12,6 +12,7 @@
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
+  export let depth;
 
   let isDraggingOver = false;
 
@@ -66,6 +67,7 @@
     on:dragover={onDragOver}
     on:dragleave={onDragLeave}
     on:drop={onDrop}
+    style="z-index: {depth}"
   >
     <div
       class="insert-line"

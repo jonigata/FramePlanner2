@@ -12,6 +12,7 @@
   export let isTrash = false;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let spawnability = "spawnable"; // "spawnable" | "unspawnable"
+  export let depth;
 
   let node;
 
@@ -88,6 +89,10 @@
     ev.dataTransfer.setData("bindId", bindId);
     ev.dataTransfer.setData("parent", parent.id);
     ev.stopPropagation();
+    setTimeout(() => {
+      // こうしないとなぜかdragendが即時発火してしまう
+      $fileManagerDragging = true;
+    }, 0);
   }
 
   async function onInsert(e) {
@@ -129,12 +134,12 @@
     {:then children}
       {#each children as [bindId, name, childNode], index}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} on:remove={removeChild}/>
+          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} on:remove={removeChild} depth={depth+1}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert}/>
+          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} depth={depth+1}/>
         {/if}
       {/each}
-      <FileManagerFolderTail index={children.length} on:insert={onInsert}/>
+      <FileManagerFolderTail index={children.length} on:insert={onInsert} depth={depth+1}/>
     {:catch error}
       <div>error: {error.message}</div>
     {/await}

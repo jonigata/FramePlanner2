@@ -28,11 +28,13 @@ export async function makeSample(): Promise<FileSystem> {
 
   await addFolder(fs, cabinet, 'キャプテン', 1);
 
-  await addFolder(fs, cabinet, 'ギャンブルレーサー', 3);
+  await addFolder(fs, cabinet, 'ギャンブルレーサー', 1);
+/*
   await addFolder(fs, cabinet, 'HUNTER x HUNTER', 2);
   await addFolder(fs, cabinet, 'へうげもの', 2);
   const f = await addFolder(fs, cabinet, '絶対☆霊域', 2);
   await addFile(fs, f, `page0`);
+*/
 
   return fs;
 }
