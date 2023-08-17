@@ -22,6 +22,7 @@
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
   import { postToAiPictors } from './postToAiPictors'
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   export let width = 140;
   export let height = 198;
@@ -403,7 +404,13 @@
     swapCanvas(async (c) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       const url = canvasToUrl(c, latestJson);
-      await postToAiPictors(url, e => {console.log(e);})
+      await postToAiPictors(
+        url, 
+        e => {
+          console.log(e);
+          toastStore.trigger({ message: e, timeout: 1500});
+        }
+      );
     });
   }
   
