@@ -12,7 +12,7 @@
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
-  export let depth;
+  export let path;
 
   let isDraggingOver = false;
 
@@ -39,7 +39,10 @@
     $fileManagerDragging = false;
   }
 
-  function onDragOver(event) {
+  async function onDragOver(ev) {
+    const bindId = ev.dataTransfer.getData("bindId") as string as BindId;
+    if (path.includes(bindId)) { return; }
+
     event.preventDefault();
     isDraggingOver = true;
   }
@@ -67,7 +70,7 @@
     on:dragover={onDragOver}
     on:dragleave={onDragLeave}
     on:drop={onDrop}
-    style="z-index: {depth}"
+    style="z-index: {path.length}"
   >
     <div
       class="insert-line"
