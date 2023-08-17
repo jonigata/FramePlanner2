@@ -21,6 +21,7 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
+  import { postToAiPictors } from './postToAiPictors'
 
   export let width = 140;
   export let height = 198;
@@ -397,14 +398,12 @@
     });
   }
 
-  export function postToAIPictors() {
-    console.log("postToAIPictors");
+  export function postToSNS() {
+    console.log("postToSNS");
     swapCanvas(async (c) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       const url = canvasToUrl(c, latestJson);
-      const postUrl = "https://www.aipictors.com/post/#" + url.substring(5) + "&collabotype=9835N8UoVOpup-yAUqXQV";
-      console.log(postUrl);
-      window.open(postUrl, "_blank");
+      await postToAiPictors(url, e => {console.log(e);})
     });
   }
   

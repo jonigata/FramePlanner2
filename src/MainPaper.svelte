@@ -35,7 +35,7 @@
         paper.save();
         break;
       case 'aipictors':
-        paper.postToAIPictors();
+        paper.postToSNS();
         break;
     }
     $saveToken = null;

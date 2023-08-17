@@ -149,7 +149,6 @@ export function saveCanvas(canvas, filename, jsonData) {
 
 export function canvasToUrl(canvas, jsonData) {
     const url = canvas.toDataURL();
-    console.log(url);
     return url;
 }
 
