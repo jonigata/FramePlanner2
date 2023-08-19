@@ -4,7 +4,7 @@
   import { mainPage } from './pageStore';
   import { createEventDispatcher, tick } from 'svelte'
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher();
 
   export let fileSystem: FileSystem;
   export let name: string;
@@ -15,6 +15,15 @@
   export let path;
 
   let isDraggingOver = false;
+  let acceptable = false;
+
+  $: ondrag($fileManagerDragging);
+  function ondrag(dragging) {
+    if (dragging) {
+      console.log("file ondrag", path, dragging.bindId);
+    }
+    acceptable = dragging && !path.includes(dragging.bindId);
+  }
 
   async function onDoubleClick() {
     const file = await parent.getNode(bindId) as File;
@@ -29,14 +38,14 @@
     ev.stopPropagation();
     setTimeout(() => {
       // こうしないとなぜかdragendが即時発火してしまう
-      $fileManagerDragging = true;
+      $fileManagerDragging = { bindId, parent: parent.id };
     }, 0);
 	}
 
   function onDragEnd(ev) {
     console.log("file dragend")
     ev.stopPropagation();
-    $fileManagerDragging = false;
+    $fileManagerDragging = null;
   }
 
   async function onDragOver(ev) {
@@ -57,7 +66,7 @@
     const detail = { dataTransfer: ev.dataTransfer, index };
     dispatch('insert', detail);
     ev.stopPropagation();
-    $fileManagerDragging = false;
+    $fileManagerDragging = null;
   }
   
 </script>
@@ -66,7 +75,7 @@
   {name}
   <div 
     class="drop-zone"
-    class:dragging={$fileManagerDragging}
+    class:dragging={acceptable}
     on:dragover={onDragOver}
     on:dragleave={onDragLeave}
     on:drop={onDrop}

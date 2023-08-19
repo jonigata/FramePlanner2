@@ -9,7 +9,7 @@ export const fileManagerOpen = writable(false);
 export const fileSystem: FileSystem = null;
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
-export const fileManagerDragging = writable(false);
+export const fileManagerDragging = writable(null);
 
 type SerializedPage = {
   revision: {id: string, revision: number},

@@ -9,6 +9,15 @@
   export let path;
 
   let isDraggingOver = false;
+  let acceptable = false;
+
+  $: ondrag($fileManagerDragging);
+  function ondrag(dragging) {
+    if (dragging) {
+      console.log("file ondrag", path, dragging.bindId);
+    }
+    acceptable = dragging && !path.includes(dragging.bindId);
+  }
 
   function onDragOver(ev) {
     const bindId = ev.dataTransfer.getData("bindId") as string as BindId;
@@ -30,7 +39,7 @@
     const detail = { dataTransfer: ev.dataTransfer, index };
     dispatch('insert', detail);
     ev.stopPropagation();
-    $fileManagerDragging = false;
+    $fileManagerDragging = null;
   }
 
 </script>
@@ -38,7 +47,7 @@
 <div class="tail">
   <div 
     class="drop-zone"
-    class:dragging={$fileManagerDragging}
+    class:dragging={acceptable}
     on:dragover={onDragOver}
     on:dragleave={onDragLeave}
     on:drop={onDrop}

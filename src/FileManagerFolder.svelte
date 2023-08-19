@@ -61,21 +61,8 @@
 	}
 
   async function onDrop(e) {
-		const sourceParentId = e.dataTransfer.getData("parent") as string as NodeId;
-    const bindId = e.dataTransfer.getData("bindId") as string as BindId;
-
-    console.log(sourceParentId, bindId, node.id);
-
-    const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
-    const mover = await sourceParent.getEntry(bindId);
-
-    await sourceParent.unlink(bindId);
-    await node.link(mover[1], mover[2]);
-    $fileManagerRefreshKey++;
-    console.log("move done");
-
-    e.preventDefault();
-    $fileManagerDragging = false;
+    await moveToHere(e.dataTransfer, 0);
+    $fileManagerDragging = null;
   }
 
   let entry;
@@ -91,14 +78,16 @@
     ev.stopPropagation();
     setTimeout(() => {
       // こうしないとなぜかdragendが即時発火してしまう
-      $fileManagerDragging = true;
+      $fileManagerDragging = { bindId, parent: parent.id };
     }, 0);
   }
 
   async function onInsert(e) {
-    console.log("++++++++++++ insert", e.detail);
+    await moveToHere(e.detail.dataTransfer, e.detail.index);
+  }
 
-    const { dataTransfer, index } = e.detail;
+  async function moveToHere(dataTransfer, index) {
+    console.log("++++++++++++ moveToHere", dataTransfer, index);
 
     const sourceParentId = dataTransfer.getData("parent") as string as NodeId;
     const bindId = dataTransfer.getData("bindId") as string as BindId;
@@ -118,7 +107,7 @@
 {#if node}
 <div class="folder" on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
   <div class="folder-title" draggable={removability === "removable"}>
-    {name}
+    {name}/{bindId}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     {#if spawnability === "spawnable"}
       <div class="btn variant-filled add-folder-button" on:click={addFolder}>+</div>
