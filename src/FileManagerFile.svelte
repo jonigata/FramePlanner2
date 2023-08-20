@@ -49,10 +49,7 @@
   }
 
   async function onDragOver(ev) {
-    const bindId = ev.dataTransfer.getData("bindId") as string as BindId;
-    if (path.includes(bindId)) { return; }
-
-    event.preventDefault();
+    ev.preventDefault();
     isDraggingOver = true;
   }
 
@@ -75,7 +72,7 @@
   {name}
   <div 
     class="drop-zone"
-    class:dragging={acceptable}
+    class:acceptable={acceptable}
     on:dragover={onDragOver}
     on:dragleave={onDragLeave}
     on:drop={onDrop}
@@ -111,7 +108,7 @@
     display: none;
   }
 
-  .drop-zone.dragging {
+  .drop-zone.acceptable {
     display: block;
   }
 

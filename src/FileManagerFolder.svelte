@@ -15,8 +15,25 @@
   export let path;
 
   let node;
+  let acceptable;
+  let isDraggingOver;
 
   const dispatch = createEventDispatcher();
+
+  $: ondrag($fileManagerDragging);
+  function ondrag(dragging) {
+    acceptable = dragging && !path.includes(dragging.bindId);
+  }
+
+  async function onDragOver(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    isDraggingOver = true;
+  }
+
+  function onDragLeave() {
+    isDraggingOver = false;
+  }
 
   async function addFolder() {
     // console.log(fileSystem);
@@ -56,13 +73,13 @@
     return "removable";
   }
 
-	export function onDragOver (ev) {
-		ev.preventDefault();
-	}
-
   async function onDrop(e) {
-    await moveToHere(e.dataTransfer, 0);
-    $fileManagerDragging = null;
+    if (acceptable) {
+      await moveToHere(e.dataTransfer, null);
+      $fileManagerDragging = null;
+      e.stopPropagation();
+      e.preventDefault();
+    }
   }
 
   let entry;
@@ -92,10 +109,14 @@
     const sourceParentId = dataTransfer.getData("parent") as string as NodeId;
     const bindId = dataTransfer.getData("bindId") as string as BindId;
 
-    console.log("insert", sourceParentId, bindId, node.id, "index=", index);
-
     const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
     const mover = await sourceParent.getEntry(bindId);
+
+    if (index === null) {
+      index = (await node.list()).length;      
+    }
+
+    console.log("insert", sourceParentId, bindId, node.id, "index=", index);
 
     await sourceParent.unlink(bindId);
     await node.insert(mover[1], mover[2], index);
@@ -105,7 +126,12 @@
 </script>
 
 {#if node}
-<div class="folder" on:dragover={onDragOver} on:drop={onDrop} on:dragstart={onDragStart}>
+<div class="folder"
+  class:acceptable={isDraggingOver && acceptable}
+  on:dragover={onDragOver} 
+  on:drop={onDrop} 
+  on:dragstart={onDragStart}
+  on:dragleave={onDragLeave}>
   <div class="folder-title" draggable={removability === "removable"}>
     {name}/{bindId}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -139,6 +165,12 @@
 <style>
   .folder {
     text-align: left;
+    box-sizing: border-box;
+    border: 2px dashed transparent; /* 初期状態では透明にしておく */
+  }
+  .folder.acceptable {
+    background-color: #ee84;
+    border: 2px dashed #444;
   }
   .folder-title {
     font-size: 16px;
