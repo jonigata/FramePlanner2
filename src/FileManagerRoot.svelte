@@ -88,17 +88,17 @@
         {/if}
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
           {#if cabinet}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"spawnable"} name={"キャビネット"} bindId={cabinet[0]} parent={root} path={[cabinet[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"spawnable"} name={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
           {#if trash}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-deep"} spawnability={"unspawnable"} name={"ごみ箱"} bindId={trash[0]} parent={root} isTrash={true} path={[trash[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-deep"} spawnability={"unspawnable"} name={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
           {#if templates}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} isTrash={true} path={[templates[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable-shallow"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} index={2} isTrash={true} path={[templates[0]]}/>
           {/if}
         </div>
       </div>

@@ -3,6 +3,7 @@
   import type { BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
   import { mainPage } from './pageStore';
   import { createEventDispatcher, tick } from 'svelte'
+  import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -48,20 +49,11 @@
     $fileManagerDragging = null;
   }
 
-  async function onDragOver(ev) {
-    ev.preventDefault();
-    isDraggingOver = true;
-  }
-
-  function onDragLeave() {
-    isDraggingOver = false;
-  }
-
   function onDrop(ev) {
-    ev.preventDefault();
     isDraggingOver = false;
-    const detail = { dataTransfer: ev.dataTransfer, index };
+    const detail = { dataTransfer: ev.detail, index };
     dispatch('insert', detail);
+    ev.preventDefault();
     ev.stopPropagation();
     $fileManagerDragging = null;
   }
@@ -70,21 +62,7 @@
 
 <div class="file-title" draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   {name}
-  <div 
-    class="drop-zone"
-    class:acceptable={acceptable}
-    on:dragover={onDragOver}
-    on:dragleave={onDragLeave}
-    on:drop={onDrop}
-    style="z-index: {path.length}"
-  >
-    <div
-      class="insert-line"
-      class:dragging={isDraggingOver}
-    >
-
-    </div>
-  </div>
+  <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
 </div>
 
 <style>
@@ -94,38 +72,4 @@
     user-select: none;
     position: relative;
   }
-
-  .drop-zone {
-    background-color: #eee;
-    border: 1px dashed #ccc;
-    position: absolute;
-    top: -50%; /* 親の高さの半分だけ上に移動 */
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    display: none;
-  }
-
-  .drop-zone.acceptable {
-    display: block;
-  }
-
-  .insert-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: black;
-    transform: translateY(-50%);  /* 縦中央に配置 */
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .dragging {
-    opacity: 1;
-  }
-
 </style>

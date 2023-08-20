@@ -4,6 +4,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging } from "./fileManagerStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
+  import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
 
   export let fileSystem: FileSystem;
   export let name: string;
@@ -12,6 +13,7 @@
   export let isTrash = false;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let spawnability = "spawnable"; // "spawnable" | "unspawnable"
+  export let index: number;
   export let path;
 
   let node;
@@ -35,8 +37,18 @@
     isDraggingOver = false;
   }
 
+  async function onDropHere(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (acceptable) {
+      console.log(ev);
+      await moveToHere(ev.dataTransfer, 0);
+    } else {
+      console.log("not acceptable");
+    }
+  }
+
   async function addFolder() {
-    // console.log(fileSystem);
     const nf = await fileSystem.createFolder();
     await node.link("new folder", nf);
     node = node;
@@ -73,13 +85,14 @@
     return "removable";
   }
 
-  async function onDrop(e) {
-    if (acceptable) {
-      await moveToHere(e.dataTransfer, null);
-      $fileManagerDragging = null;
-      e.stopPropagation();
-      e.preventDefault();
-    }
+  function onInsertToParent(ev) {
+    console.log("insert to parent", ev.detail);
+    isDraggingOver = false;
+    const detail = { dataTransfer: ev.detail, index };
+    dispatch('insert', detail);
+    ev.preventDefault();
+    ev.stopPropagation();
+    $fileManagerDragging = null;
   }
 
   let entry;
@@ -100,6 +113,7 @@
   }
 
   async function onInsert(e) {
+    console.log("insert", e.detail);
     await moveToHere(e.detail.dataTransfer, e.detail.index);
   }
 
@@ -127,11 +141,11 @@
 
 {#if node}
 <div class="folder"
-  class:acceptable={isDraggingOver && acceptable}
   on:dragover={onDragOver} 
-  on:drop={onDrop} 
   on:dragstart={onDragStart}
-  on:dragleave={onDragLeave}>
+  on:dragleave={onDragLeave}
+  on:drop={onDropHere}
+>
   <div class="folder-title" draggable={removability === "removable"}>
     {name}/{bindId}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -142,19 +156,22 @@
     {#if removability === "removable"}
       <div class="btn variant-filled remove-folder-button" on:click={removeFolder}>-</div>
     {/if}
+    <FileManagerInsertZone on:drop={onInsertToParent} bind:acceptable={acceptable} depth={path.length}/>
   </div>
-  <div class="folder-contents">
+  <div class="folder-contents"
+    class:acceptable={isDraggingOver && acceptable}
+  >
     {#await node.list()}
       <div>loading...</div>
     {:then children}
       {#each children as [bindId, name, childNode], index}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} on:remove={removeChild} path={[...path, bindId]}/>
+          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
         {:else if childNode.getType() === 'file'}
           <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]}/>
         {/if}
       {/each}
-      <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, bindId]}/>
+      <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
     {:catch error}
       <div>error: {error.message}</div>
     {/await}
@@ -165,12 +182,6 @@
 <style>
   .folder {
     text-align: left;
-    box-sizing: border-box;
-    border: 2px dashed transparent; /* 初期状態では透明にしておく */
-  }
-  .folder.acceptable {
-    background-color: #ee84;
-    border: 2px dashed #444;
   }
   .folder-title {
     font-size: 16px;
@@ -178,9 +189,16 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    position: relative;
   }
   .folder-contents {
     padding-left: 16px;
+    box-sizing: border-box;
+    border: 2px dashed transparent; /* 初期状態では透明にしておく */
+  }
+  .folder-contents.acceptable {
+    background-color: #ee84;
+    border: 2px dashed #444;
   }
   .add-folder-button {
     width: 12px;
