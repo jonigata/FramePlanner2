@@ -5,13 +5,16 @@
   import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging } from "./fileManagerStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
+  import newFileIcon from './assets/fileManager/new-file.png';
+  import newFolderIcon from './assets/fileManager/new-folder.png';
+  import trashIcon from './assets/fileManager/trash.png';
 
   export let fileSystem: FileSystem;
   export let name: string;
   export let bindId: BindId;
   export let parent: Folder;
   export let isTrash = false;
-  export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
+  export let removability = "removeable"; // "removable" | "unremovable"
   export let spawnability = "spawnable"; // "spawnable" | "unspawnable"
   export let index: number;
   export let path;
@@ -19,6 +22,7 @@
   let node;
   let acceptable;
   let isDraggingOver;
+  let isDiscardable = false;
 
   const dispatch = createEventDispatcher();
 
@@ -49,24 +53,32 @@
   }
 
   async function addFolder() {
+    console.log("add folder");
+    const nf = await fileSystem.createFolder();
+    await node.link("new folder", nf);
+    node = node;
+  }
+
+  async function addFile() {
+    console.log("add file");
     const nf = await fileSystem.createFolder();
     await node.link("new folder", nf);
     node = node;
   }
 
   async function removeFolder() {
-    dispatch('remove', name);
+    dispatch('remove', bindId);
   }
 
   async function removeChild(e) {
-    const childName = e.detail;
-    const childNode = await node.find(e.detail);
+    const childBindId = e.detail as BindId;
+    const childEntry = await node.getEntry(childBindId);
     if (!isTrash) {
-      const trash = (await (await fileSystem.getRoot()).find("ごみ箱")).asFolder();
-      await trash.link(childName, childNode);
+      const trash = (await (await fileSystem.getRoot()).getNodeByName("ごみ箱")).asFolder();
+      await trash.link(childEntry[1], childEntry[2]);
       $trashUpdateToken = true;
     }
-    await node.unlink(childName);
+    await node.unlink(childBindId);
     node = node;
   }
 
@@ -76,13 +88,6 @@
       $trashUpdateToken = false;
       node = node;
     }
-  }
-
-  function getChildRemovability() {
-    if (removability === "unremovable-deep") {
-      return "unremovable-deep";
-    }
-    return "removable";
   }
 
   function onInsertToParent(ev) {
@@ -98,7 +103,12 @@
   let entry;
   onMount(async () => {
     entry = await parent.getEntry(bindId)
-    node = await parent.getNode(bindId) as Folder;
+    node = entry[2] as Folder;
+
+    const root = await fileSystem.getRoot();
+    const trash = await root.getEntryByName("ごみ箱");
+    isDiscardable = removability === "removable" && !path.includes(trash[0]);
+    console.log(entry, path, trash[0]);
   });
 
   function onDragStart(ev) {
@@ -148,14 +158,18 @@
 >
   <div class="folder-title" draggable={removability === "removable"}>
     {name}/{bindId}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    {#if spawnability === "spawnable"}
-      <div class="btn variant-filled add-folder-button" on:click={addFolder}>+</div>
-    {/if}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    {#if removability === "removable"}
-      <div class="btn variant-filled remove-folder-button" on:click={removeFolder}>-</div>
-    {/if}
+    <div class="buttons">
+      {#if spawnability === "spawnable"}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <img class="button" src={newFileIcon} alt="new file" on:click={addFile}/>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
+      {/if}
+      {#if isDiscardable}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} />
+      {/if}
+    </div>
     <FileManagerInsertZone on:drop={onInsertToParent} bind:acceptable={acceptable} depth={path.length}/>
   </div>
   <div class="folder-contents"
@@ -166,9 +180,9 @@
     {:then children}
       {#each children as [bindId, name, childNode], index}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={getChildRemovability()} spawnability={spawnability} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
+          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={getChildRemovability()} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
@@ -213,5 +227,14 @@
     margin-left: 8px;
     padding: 10px;
     border-radius: 6px;
+  }
+  .buttons {
+    width: 80px;
+    padding-left: 8px;
+  }
+  .button {
+    width: 20px;
+    height: 20px;
+    display: inline;
   }
 </style>

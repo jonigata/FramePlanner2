@@ -2,8 +2,9 @@
   import { loadPageFrom, fileManagerDragging } from "./fileManagerStore";
   import type { BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
   import { mainPage } from './pageStore';
-  import { createEventDispatcher, tick } from 'svelte'
+  import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
+  import trashIcon from './assets/fileManager/trash.png';
 
   const dispatch = createEventDispatcher();
 
@@ -17,6 +18,7 @@
 
   let isDraggingOver = false;
   let acceptable = false;
+  let isDiscardable = false;
 
   $: ondrag($fileManagerDragging);
   function ondrag(dragging) {
@@ -49,6 +51,10 @@
     $fileManagerDragging = null;
   }
 
+  function removeFile() {
+
+  }
+
   function onDrop(ev) {
     isDraggingOver = false;
     const detail = { dataTransfer: ev.detail, index };
@@ -57,12 +63,22 @@
     ev.stopPropagation();
     $fileManagerDragging = null;
   }
+
+  onMount(async () => {
+    const root = await fileSystem.getRoot();
+    const trash = await root.getEntryByName("ごみ箱");
+    isDiscardable = removability === "removable" && !path.includes(trash[0]);
+  });
   
 </script>
 
 <div class="file-title" draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   {name}
-  <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
+  {#if isDiscardable}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
+  {/if}
+<FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
 </div>
 
 <style>
@@ -71,5 +87,10 @@
     font-weight: 700;
     user-select: none;
     position: relative;
+  }
+  .button {
+    width: 20px;
+    height: 20px;
+    display: inline;
   }
 </style>
