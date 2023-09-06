@@ -2,12 +2,14 @@
   import type { FileSystem, File, Folder, NodeId, BindId } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile } from "./fileManagerStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
+
   import newFileIcon from './assets/fileManager/new-file.png';
   import newFolderIcon from './assets/fileManager/new-folder.png';
   import trashIcon from './assets/fileManager/trash.png';
+  import folderIcon from './assets/fileManager/folder.png';
 
   export let fileSystem: FileSystem;
   export let name: string;
@@ -15,7 +17,7 @@
   export let parent: Folder;
   export let isTrash = false;
   export let removability = "removeable"; // "removable" | "unremovable"
-  export let spawnability = "spawnable"; // "spawnable" | "unspawnable"
+  export let spawnability = "unspawnable"; // "file-spawnable" | "folder-spawnable" | "unspawnable"
   export let index: number;
   export let path;
 
@@ -61,8 +63,7 @@
 
   async function addFile() {
     console.log("add file");
-    const nf = await fileSystem.createFolder();
-    await node.link("new folder", nf);
+    await newFile(fileSystem, node, "new file");
     node = node;
   }
 
@@ -71,6 +72,7 @@
   }
 
   async function removeChild(e) {
+    console.log("remove child", e.detail);
     const childBindId = e.detail as BindId;
     const childEntry = await node.getEntry(childBindId);
     if (!isTrash) {
@@ -156,12 +158,19 @@
   on:dragleave={onDragLeave}
   on:drop={onDropHere}
 >
-  <div class="folder-title" draggable={removability === "removable"}>
-    {name}/{bindId}
+  <div
+    class="folder-title" 
+    class:no-select={removability === "unremovable"}
+    draggable={removability === "removable"}
+  >
+    <img class="button" src={folderIcon} alt="symbol"/>
+    {name}
     <div class="buttons">
-      {#if spawnability === "spawnable"}
+      {#if spawnability === "file-spawnable"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <img class="button" src={newFileIcon} alt="new file" on:click={addFile}/>
+      {/if}
+      {#if spawnability === "folder-spawnable"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
       {/if}
@@ -170,7 +179,9 @@
         <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} />
       {/if}
     </div>
-    <FileManagerInsertZone on:drop={onInsertToParent} bind:acceptable={acceptable} depth={path.length}/>
+    {#if removability === 'removable'}
+      <FileManagerInsertZone on:drop={onInsertToParent} bind:acceptable={acceptable} depth={path.length}/>
+    {/if}
   </div>
   <div class="folder-contents"
     class:acceptable={isDraggingOver && acceptable}
@@ -182,7 +193,7 @@
         {#if childNode.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
@@ -204,6 +215,9 @@
     flex-direction: row;
     align-items: center;
     position: relative;
+    font-family: 'Zen Maru Gothic';
+    font-weight: 700;
+    font-style: normal;
   }
   .folder-contents {
     padding-left: 16px;
@@ -233,8 +247,14 @@
     padding-left: 8px;
   }
   .button {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     display: inline;
+  }
+  .no-select {
+      user-select: none; /* 標準のCSS */
+      -webkit-user-select: none; /* Chrome, Safari */
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE/Edge */
   }
 </style>

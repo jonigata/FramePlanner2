@@ -39,7 +39,7 @@
 
   onMount(async () => {
     root = await fileSystem.getRoot();
-    desktop = await root.getNodeByName("デスクトップ");
+    desktop = await root.getEntryByName("デスクトップ");
     cabinet = await root.getEntryByName("キャビネット");
     trash = await root.getEntryByName("ごみ箱");
     templates = await root.getEntryByName("テンプレート");
@@ -79,6 +79,7 @@
 
     {#key $fileManagerRefreshKey}
       <div class="drawer-content">
+<!--
         {#if desktop}
           <div class="desktop">
             <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
@@ -86,9 +87,15 @@
             </div>
           </div>
         {/if}
+-->
+        <div class="cabinet variant-ghost-tertiary rounded-container-token">
+          {#if desktop}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} name={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]}/>
+          {/if}
+        </div>
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
           {#if cabinet}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"spawnable"} name={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} name={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
@@ -96,11 +103,13 @@
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} name={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
           {/if}
         </div>
+<!--
         <div class="cabinet variant-ghost-secondary rounded-container-token">
           {#if templates}
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} index={2} isTrash={true} path={[templates[0]]}/>
           {/if}
         </div>
+-->
       </div>
     {/key}
   </Drawer>

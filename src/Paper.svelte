@@ -191,7 +191,6 @@
       return; 
     }
 
-    const paperSize = frameLayer.getPaperSize();
     bubbleLayer.bubbles = newPage.bubbles;
     bubbleLayer.selected = null;
 

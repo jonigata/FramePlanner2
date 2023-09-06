@@ -4,7 +4,9 @@
   import { mainPage } from './pageStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
+
   import trashIcon from './assets/fileManager/trash.png';
+  import fileIcon from './assets/fileManager/file.png';
 
   const dispatch = createEventDispatcher();
 
@@ -52,7 +54,7 @@
   }
 
   function removeFile() {
-
+    dispatch('remove', bindId);
   }
 
   function onDrop(ev) {
@@ -73,12 +75,13 @@
 </script>
 
 <div class="file-title" draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
+  <img class="button" src={fileIcon} alt="symbol"/>
   {name}
   {#if isDiscardable}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
   {/if}
-<FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
+  <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
 </div>
 
 <style>
@@ -89,8 +92,8 @@
     position: relative;
   }
   .button {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     display: inline;
   }
 </style>

@@ -1,9 +1,7 @@
 import type { FileSystem } from './fileSystem';
 import { MockFileSystem } from './mockFileSystem';
 import { frameExamples } from '../layeredCanvas/frameExamples.js';
-import { FrameElement } from "../layeredCanvas/frameTree";
-import { savePageTo } from "../../fileManagerStore";
-import type { Page } from "../../pageStore";
+import { newFile } from "../../fileManagerStore";
 
 // TODO: ファイルの置き場所がおかしい感じ？
 
@@ -51,19 +49,5 @@ async function addFolder(fs, parent, name, count) {
 let index = 0;
 
 async function addFile(fs, folder, name) {
-  const page: Page = {
-    frameTree: FrameElement.compile(frameExamples[index++ % frameExamples.length]),
-    bubbles:[], 
-    revision: {id:'dummy', revision:1}, 
-    paperSize: [840, 1188],
-    paperColor: '#ffffff',
-    frameColor: '#000000',
-    frameWidth: 2,
-    desktopPosition: [0, 0],
-  }
-
-  const file = await fs.createFile();
-  await savePageTo(page, fs, file);
-  await folder.link(name, file);
+  await newFile(fs, folder, name, index++ % frameExamples.length);
 }
-

@@ -4,6 +4,8 @@ import type { Page, Revision } from "./pageStore";
 import { FrameElement } from "./lib/layeredCanvas/frameTree";
 import type { Bubble } from "./lib/layeredCanvas/bubble";
 import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
+import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+import { ulid } from "ulid";
 
 export const fileManagerOpen = writable(false);
 export const fileSystem: FileSystem = null;
@@ -160,3 +162,19 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, imageF
   return unpackedBubbles;
 }
 
+export async function newFile(fs: FileSystem, folder: Folder, name: string, index: number = 2) {
+  const page: Page = {
+    frameTree: FrameElement.compile(frameExamples[index]),
+    bubbles:[], 
+    revision: {id:ulid(), revision:1}, 
+    paperSize: [840, 1188],
+    paperColor: '#ffffff',
+    frameColor: '#000000',
+    frameWidth: 2,
+    desktopPosition: [0, 0],
+  }
+
+  const file = await fs.createFile();
+  await savePageTo(page, fs, file);
+  await folder.link(name, file);
+}

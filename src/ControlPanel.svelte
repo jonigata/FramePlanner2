@@ -4,7 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { mainPage } from './pageStore';
+  import { incrementRevision, mainPage } from './pageStore';
   import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
@@ -30,8 +30,18 @@
   let max = 9410;
   let contactText = "";
 
+  $:onUpdateSize($mainPage.paperSize);
+  function onUpdateSize(size) {
+    console.log("onUpdateSize", size);
+    $mainPage.revision = incrementRevision($mainPage.revision);
+  }
+
   function setDimensions(w: number, h: number) {
-    $mainPage.paperSize = [w,h];
+    console.log("setDimensions", w, h)
+    // 入れ物ごと交換するとbindが崩れる模様
+    $mainPage.paperSize[0] = w;
+    $mainPage.paperSize[1] = h;
+    console.log("setDimensions, done");
   }
 
   function applyTemplate(event) {
