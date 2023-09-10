@@ -110,7 +110,6 @@
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
     isDiscardable = removability === "removable" && !path.includes(trash[0]);
-    console.log(entry, path, trash[0]);
   });
 
   function onDragStart(ev) {

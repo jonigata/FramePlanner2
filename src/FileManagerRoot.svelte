@@ -44,7 +44,7 @@
     trash = await root.getEntryByName("ごみ箱");
     templates = await root.getEntryByName("テンプレート");
 
-    let files = await desktop.asFolder().list();
+    let files = await desktop[2].asFolder().list();
     if (files.length === 0) {
       // TODO: createPageを適当な場所に置く
       const page: Page = {
@@ -55,14 +55,16 @@
         paperColor: '#ffffff',
         frameColor: '#000000',
         frameWidth: 2,
+        history: [],
+        historyIndex: 0,
       }
 
       const file = await fileSystem.createFile();
       await savePageTo(page, fileSystem, file);
       currentRevision = { id: file.id, revision: 1 };
       page.revision = {...currentRevision};
-      await desktop.link("おためし", file);
-      files = await desktop.asFolder().list();
+      await desktop[2].link("おためし", file);
+      files = await desktop[2].asFolder().list();
       $mainPage = page;
     } else {
     }

@@ -19,7 +19,7 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
-  import { type Page, type Revision, setRevision, getIncrementedRevision, revisionEqual } from './pageStore';
+  import { type Page, type Revision, setRevision, getIncrementedRevision, revisionEqual, addHistory, undoPageHistory, redoPageHistory } from './pageStore';
 
   export let page: Page;
   export let editable = false;
@@ -35,8 +35,6 @@
   let frameLayer;
   let bubbleLayer;
   let inlinePainterLayer;
-  let history = [];
-  let historyIndex = 0;
   let pageRevision: Revision | null = null;
 
   interface CustomCanvasElement extends HTMLCanvasElement {
@@ -61,15 +59,6 @@
 
   const dispatch = createEventDispatcher();
 
-  function addHistory() {
-    history.length = historyIndex;
-    history.push({
-      frameTree: frameLayer.frameTree.clone(),
-      bubbles: bubbleLayer.bubbles.map(b => b.clone()),
-    })
-    historyIndex = history.length;
-  }
-
   function isPainting() {
     return painterActive;
   }
@@ -78,9 +67,7 @@
     if (isPainting()) {
       inlinePainterLayer.undo();
     } else {
-      console.log("undo", historyIndex);
-      if (historyIndex <= 1) { return; }
-      historyIndex--;
+      undoPageHistory(page);
       revert();
     }
   }
@@ -89,26 +76,21 @@
     if (isPainting()) {
       inlinePainterLayer.redo();
     } else {
-      console.log("redo", historyIndex);
-      if (history.length <= historyIndex) { return; }
-      historyIndex++;
-      const h = history[historyIndex-1];
-      frameLayer.frameTree = h.frameTree.clone();
-      bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
-      bubbleLayer.selected = null;
-      layeredCanvas.redraw(); 
+      redoPageHistory(page);
+      revert();
     }
   }
 
   export function commit() {
     console.log("commit");
-    addHistory();
+    console.log(page.revision, [...page.history], page.historyIndex)
+    addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
     outputPage();
   }
 
   function revert() {
-    console.log("revert", historyIndex);
-    const h = history[historyIndex-1];
+    console.log("revert", page.historyIndex);
+    const h = page.history[page.historyIndex-1];
     frameLayer.frameTree = h.frameTree.clone();
     bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
     bubbleLayer.selected = null;
@@ -331,7 +313,11 @@
       });
     }
 
-    addHistory();
+    if (editable) {
+      console.log("before", page.revision, [...page.history], page.historyIndex)
+      addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
+      console.log("after", page.revision, [...page.history], page.historyIndex)
+    }
   });
 
   async function swapCanvas(f) {

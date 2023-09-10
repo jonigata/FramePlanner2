@@ -22,6 +22,8 @@ type SerializedPage = {
   frameColor: string,
   frameWidth: number,
   desktopPosition?: [number, number],
+  history: any[],
+  historyIndex: number;
 }
 
 export async function savePageTo(page: Page, fileSystem: FileSystem, file: File): Promise<void> {
@@ -33,6 +35,14 @@ export async function savePageTo(page: Page, fileSystem: FileSystem, file: File)
   const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
   const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder);
 
+  console.log(page.history);
+  const history = [];
+  for (const entry of page.history) {
+    const markUp = await packFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
+    const bubbles = await packBubbleImages(entry.bubbles, fileSystem, imageFolder);
+    history.push({frameTree: markUp, bubbles: bubbles});
+  }
+
   const serializedPage: SerializedPage = {
     revision: {id: file.id, revision: page.revision.revision},
     frameTree: markUp,
@@ -41,7 +51,9 @@ export async function savePageTo(page: Page, fileSystem: FileSystem, file: File)
     paperColor: page.paperColor,
     frameColor: page.frameColor,
     frameWidth: page.frameWidth,
-    desktopPosition: page.desktopPosition
+    desktopPosition: page.desktopPosition,
+    history: history,
+    historyIndex: page.historyIndex,
   }
   const json = JSON.stringify(serializedPage);
   await file.write(json);
@@ -108,6 +120,13 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
   const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem, imageFolder, 'v');
   const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, imageFolder);
 
+  const history = [];
+  for (const entry of serializedPage.history) {
+    const frameTree = await unpackFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
+    const bubbles = await unpackBubbleImages(entry.bubbles, fileSystem, imageFolder);
+    history.push({frameTree, bubbles});
+  }
+
   const page: Page = {
     revision: serializedPage.revision,
     frameTree: frameTree,
@@ -117,6 +136,8 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
     frameColor: serializedPage.frameColor,
     frameWidth: serializedPage.frameWidth,
     desktopPosition: serializedPage.desktopPosition,
+    history: history,
+    historyIndex: serializedPage.historyIndex,
   };
 
   return page;
@@ -130,6 +151,7 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
     const content = await file.read();
     const image = new Image();
     image.src = content;
+    image.fileId = markUp.image;
     frameTree.image = image;
   }
 
@@ -155,6 +177,7 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, imageF
       const content = await file.read();
       const image = new Image();
       image.src = content;
+      image.fileId = imageId;
       bubble.image = image;
     }
     unpackedBubbles.push(bubble);
@@ -172,6 +195,8 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, inde
     frameColor: '#000000',
     frameWidth: 2,
     desktopPosition: [0, 0],
+    history: [],
+    historyIndex: 0,
   }
 
   const file = await fs.createFile();

@@ -8,6 +8,11 @@ export type Revision = {
   revision: number;
 }
 
+export type HistoryEntry = {
+  frameTree: FrameElement;
+  bubbles: Bubble[];
+}
+
 export type Page = {
   revision: Revision;
   frameTree: FrameElement,
@@ -17,6 +22,8 @@ export type Page = {
   frameColor: string,
   frameWidth: number,
   desktopPosition?: [number, number],
+  history: HistoryEntry[],
+  historyIndex: number;
 }
 
 export const mainPage = writable<Page>(
@@ -29,6 +36,8 @@ export const mainPage = writable<Page>(
     frameColor: '#000000',
     frameWidth: 2,
     desktopPosition: [0, 0],
+    history: [],
+    historyIndex: 0,
   }
 );
 
@@ -52,3 +61,26 @@ export function revisionEqual(a: Revision, b: Revision): boolean {
   if (!a || !b) return false;
   return a.id === b.id && a.revision === b.revision;
 }
+
+export function addHistory(page: Page, frameTree, bubbles) {
+  console.log(page.history.length, page.historyIndex);
+  page.history.length = page.historyIndex;
+  page.history.push({
+    frameTree: frameTree.clone(),
+    bubbles: bubbles.map(b => b.clone()),
+  })
+  page.historyIndex = page.history.length;
+}
+
+export function undoPageHistory(page) {
+  console.log("undo", page.historyIndex);
+  if (page.historyIndex <= 1) { return; }
+  page.historyIndex--;
+}
+
+export function redoPageHistory(page) {
+  console.log("redo", page.historyIndex);
+  if (page.history.length <= page.historyIndex) { return; }
+  page.historyIndex++;
+}
+
