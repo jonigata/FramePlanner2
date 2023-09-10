@@ -76,7 +76,7 @@
 
 <div class="file-title" draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   <img class="button" src={fileIcon} alt="symbol"/>
-  {name}
+  {`Page ${( '00' + (index+1) ).slice( -2 )}`}
   {#if isDiscardable}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />

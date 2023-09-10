@@ -21,6 +21,7 @@
   import { loadTemplate } from './firebase';
   import ImageGenerator from './ImageGenerator.svelte';
   import FileManager from './FileManager.svelte';
+  import CabinetButton from './CabinetButton.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -63,6 +64,29 @@
   });
 </script>
 
+<MainPaper/>
+
+<div class="control-panel-container">
+  <ControlPanel />
+  <PassiveToolTip />
+  <CabinetButton />
+  <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
+</div>
+
+<BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
+<FontChooser/>
+<ShapeChooser paperWidth={64} paperHeight={96}/>
+<ImageGenerator/>
+<FileManager/>
+
+<JsonEditor/>
+
+<About/>
+
+<Toast/>
+
+<Modal components={modalComponentRegistry} />
+
 <style>
   :global(body) {
     overflow: hidden;
@@ -81,24 +105,3 @@
 
 </style>
 
-<MainPaper/>
-
-<div class="control-panel-container">
-  <ControlPanel />
-  <PassiveToolTip />
-  <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
-</div>
-
-<BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
-<FontChooser/>
-<ShapeChooser paperWidth={64} paperHeight={96}/>
-<ImageGenerator/>
-<FileManager/>
-
-<JsonEditor/>
-
-<About/>
-
-<Toast/>
-
-<Modal components={modalComponentRegistry} />

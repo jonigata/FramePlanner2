@@ -274,10 +274,6 @@
     width: 32px;
     height: 32px;
   }
-  .labeled-component {
-    display: flex;
-    gap: 4px;
-  }
   .slider-label {
     width: 20px;
   }
