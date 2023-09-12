@@ -32,16 +32,13 @@
 
   $:onUpdateSize($mainPage.paperSize);
   function onUpdateSize(size) {
-    console.log("onUpdateSize", size);
     $mainPage.revision = incrementRevision($mainPage.revision);
   }
 
   function setDimensions(w: number, h: number) {
-    console.log("setDimensions", w, h)
     // 入れ物ごと交換するとbindが崩れる模様
     $mainPage.paperSize[0] = w;
     $mainPage.paperSize[1] = h;
-    console.log("setDimensions, done");
   }
 
   function applyTemplate(event) {

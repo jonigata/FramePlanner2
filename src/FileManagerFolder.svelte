@@ -63,7 +63,7 @@
 
   async function addFile() {
     console.log("add file");
-    await newFile(fileSystem, node, "new file");
+    await newFile(fileSystem, node, "new file", "add-");
     node = node;
   }
 

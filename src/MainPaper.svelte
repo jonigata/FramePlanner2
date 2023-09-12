@@ -73,10 +73,11 @@
   $:onOuterPageUpdate($mainPage);
   function onOuterPageUpdate(p) {
     if (revisionEqual(p.revision, currentRevision)) {
-      console.log("revision equal");
+      // console.log("revision equal");
       return;
     }
 
+    console.log("onOuterPageUpdate");
     currentRevision = {...p.revision};
     page = p;
   }

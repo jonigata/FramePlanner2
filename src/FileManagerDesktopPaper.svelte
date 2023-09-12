@@ -42,6 +42,7 @@
       const file = (await fileSystem.getNode(page.revision.id)).asFile();
       const filePage = await loadPageFrom(fileSystem, file);
       filePage.desktopPosition = [offsetX, offsetY];
+      console.log("*********** savePageTo from FileManagerDesktopPaper");
       await savePageTo(filePage, fileSystem, file);
     },
   }}

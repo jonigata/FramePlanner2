@@ -13,7 +13,7 @@
     const page: Page = {
       frameTree: FrameElement.compile(frameExamples[2]),
       bubbles:[], 
-      revision: {id:'dummy', revision:1}, 
+      revision: { id:'dummy', revision:1, prefix: 'dummy' }, 
       paperSize: [840, 1188],
       paperColor: '#ffffff',
       frameColor: '#000000',
@@ -22,6 +22,7 @@
     }
 
     const file = await fileSystem.createFile();
+    console.log("*********** savePageTo from createNewFile");
     await savePageTo(page, fileSystem, file);
     await node.link("new file", file);
     node = node;

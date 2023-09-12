@@ -82,8 +82,8 @@
   }
 
   export function commit() {
-    console.log("commit");
-    console.log(page.revision, [...page.history], page.historyIndex)
+    console.log("commit", page.revision, [...page.history], page.historyIndex)
+    console.trace();
     addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
     outputPage();
   }
@@ -165,13 +165,14 @@
     layeredCanvas?.redraw(); 
   });
 
-  $:onInputPage(page);
-  function onInputPage(newPage) {
+  $:onUpdatePage(page);
+  function onUpdatePage(newPage) {
     if (!frameLayer) { return; }
     if (revisionEqual(newPage.revision, pageRevision)) { 
-      console.log("same revision")
+      // console.log("same revision")
       return; 
     }
+    console.log("different revision", newPage.revision, pageRevision);
 
     bubbleLayer.bubbles = newPage.bubbles;
     bubbleLayer.selected = null;
@@ -181,7 +182,10 @@
     frameLayer.frameTree.borderColor = page.frameColor;
     frameLayer.frameTree.borderWidth = page.frameWidth;
 
-    commit();
+    if (pageRevision) {
+      commit();
+    }
+    pageRevision = {...newPage.revision};
 
     layeredCanvas.setPaperSize(page.paperSize);
     layeredCanvas.redraw();
@@ -314,9 +318,7 @@
     }
 
     if (editable) {
-      console.log("before", page.revision, [...page.history], page.historyIndex)
       addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
-      console.log("after", page.revision, [...page.history], page.historyIndex)
     }
   });
 

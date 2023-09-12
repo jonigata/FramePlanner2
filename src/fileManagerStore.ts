@@ -14,7 +14,7 @@ export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging = writable(null);
 
 type SerializedPage = {
-  revision: {id: string, revision: number},
+  revision: {id: string, revision: number, prefix: string},
   frameTree: any,
   bubbles: any[],
   paperSize: [number, number],
@@ -27,15 +27,12 @@ type SerializedPage = {
 }
 
 export async function savePageTo(page: Page, fileSystem: FileSystem, file: File): Promise<void> {
-  console.log("*********** savePageTo");
-
   const root = await fileSystem.getRoot();
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
 
   const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
   const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder);
 
-  console.log(page.history);
   const history = [];
   for (const entry of page.history) {
     const markUp = await packFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
@@ -44,7 +41,7 @@ export async function savePageTo(page: Page, fileSystem: FileSystem, file: File)
   }
 
   const serializedPage: SerializedPage = {
-    revision: {id: file.id, revision: page.revision.revision},
+    revision: { ...page.revision, id: file.id },
     frameTree: markUp,
     bubbles: bubbles,
     paperSize: page.paperSize,
@@ -185,11 +182,13 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, imageF
   return unpackedBubbles;
 }
 
-export async function newFile(fs: FileSystem, folder: Folder, name: string, index: number = 2) {
+export async function newFile(fs: FileSystem, folder: Folder, name: string, prefix: string, index: number = 2): Promise<{file: File, page: Page}> {
+  const file = await fs.createFile();
+
   const page: Page = {
     frameTree: FrameElement.compile(frameExamples[index]),
     bubbles:[], 
-    revision: {id:ulid(), revision:1}, 
+    revision: {id: file.id, revision:1, prefix }, 
     paperSize: [840, 1188],
     paperColor: '#ffffff',
     frameColor: '#000000',
@@ -199,7 +198,9 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, inde
     historyIndex: 0,
   }
 
-  const file = await fs.createFile();
+  console.log("*********** savePageTo from newFile");
+  // console.trace();
   await savePageTo(page, fs, file);
   await folder.link(name, file);
+  return { file, page };
 }

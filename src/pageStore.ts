@@ -6,6 +6,7 @@ import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
 export type Revision = {
   id: string;
   revision: number;
+  prefix: string;
 }
 
 export type HistoryEntry = {
@@ -28,7 +29,7 @@ export type Page = {
 
 export const mainPage = writable<Page>(
   {
-    revision: { id: "bootstrap", revision: 1 },
+    revision: { id: "bootstrap", revision: 1, prefix: "bootstrap" },
     frameTree: FrameElement.compile(frameExamples[2]),
     bubbles: [],
     paperSize: [840, 1188],
@@ -63,7 +64,6 @@ export function revisionEqual(a: Revision, b: Revision): boolean {
 }
 
 export function addHistory(page: Page, frameTree, bubbles) {
-  console.log(page.history.length, page.historyIndex);
   page.history.length = page.historyIndex;
   page.history.push({
     frameTree: frameTree.clone(),

@@ -49,5 +49,5 @@ async function addFolder(fs, parent, name, count) {
 let index = 0;
 
 async function addFile(fs, folder, name) {
-  await newFile(fs, folder, name, index++ % frameExamples.length);
+  await newFile(fs, folder, name, "sample-", index++ % frameExamples.length);
 }

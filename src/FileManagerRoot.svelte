@@ -1,14 +1,11 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import FileManagerDesktop from "./FileManagerDesktop.svelte";
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom } from "./fileManagerStore";
   import type { FileSystem } from './lib/filesystem/fileSystem';
   import { mainPage, revisionEqual } from './pageStore';
   import { onMount } from 'svelte';
-  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-  import { FrameElement } from "./lib/layeredCanvas/frameTree";
-  import type { Page } from "./pageStore";
+  import type { Revision } from "./pageStore";
 
   export let fileSystem: FileSystem;
 
@@ -17,21 +14,34 @@
   let cabinet = null;
   let trash = null;
   let templates = null;
-  let currentRevision = null;
+  let currentRevision: Revision = null;
 
-  $:onUpdateOuterPage($mainPage);
-  async function onUpdateOuterPage(page) {
+  $:onUpdatePage($mainPage);
+  async function onUpdatePage(page) {
     if (revisionEqual(page.revision, currentRevision)) {
       return;
     }
 
     if (page.revision.id === "bootstrap") { 
-      const file = await fileSystem.createFile();
-      await savePageTo(page, fileSystem, file);
-      currentRevision = { id: file.id, revision: 1 };
-      $mainPage = { ...page, revision: {...currentRevision} };
+      // 初期化
+      const desktop = await (await fileSystem.getRoot()).getNodeByName("デスクトップ");
+      const files = await desktop.asFolder().list();
+      if (files.length === 0) {
+        // デスクトップにファイルが存在していない場合、仮ファイルをセーブする
+        const file = await fileSystem.createFile();
+        console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
+        await savePageTo(page, fileSystem, file);
+        currentRevision = { id: file.id, revision: 1, prefix: "bootstrap2" };
+        $mainPage = { ...page, revision: {...currentRevision} };
+      } else {
+        const file = files[0][2].asFile();
+        const page = await loadPageFrom(fileSystem, file);
+        currentRevision = {...page.revision};
+        $mainPage = page;
+      }
     } else {
       const file = await fileSystem.getNode(page.revision.id);
+      console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
       currentRevision = {...page.revision};
     }
@@ -43,31 +53,6 @@
     cabinet = await root.getEntryByName("キャビネット");
     trash = await root.getEntryByName("ごみ箱");
     templates = await root.getEntryByName("テンプレート");
-
-    let files = await desktop[2].asFolder().list();
-    if (files.length === 0) {
-      // TODO: createPageを適当な場所に置く
-      const page: Page = {
-        frameTree: FrameElement.compile(frameExamples[0]),
-        bubbles:[], 
-        revision: {id:'dummy', revision:1}, 
-        paperSize: [840, 1188],
-        paperColor: '#ffffff',
-        frameColor: '#000000',
-        frameWidth: 2,
-        history: [],
-        historyIndex: 0,
-      }
-
-      const file = await fileSystem.createFile();
-      await savePageTo(page, fileSystem, file);
-      currentRevision = { id: file.id, revision: 1 };
-      page.revision = {...currentRevision};
-      await desktop[2].link("おためし", file);
-      files = await desktop[2].asFolder().list();
-      $mainPage = page;
-    } else {
-    }
   });
 </script>
 

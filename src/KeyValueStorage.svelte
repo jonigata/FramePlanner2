@@ -12,13 +12,11 @@
     const openRequest = indexedDB.open(dbName, 1);
 
     openRequest.onupgradeneeded = (event) => {
-      console.log('onupgradeneeded', event);
       const db = event.target.result;
       db.createObjectStore(storeName);
     };
 
     openRequest.onsuccess = (event) => {
-      console.log('onsuccess', event);
       db = event.target.result;
     };
   });
