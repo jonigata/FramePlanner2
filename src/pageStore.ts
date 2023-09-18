@@ -30,7 +30,7 @@ export type Page = {
 export const mainPage = writable<Page>(
   {
     revision: { id: "bootstrap", revision: 1, prefix: "bootstrap" },
-    frameTree: FrameElement.compile(frameExamples[2]),
+    frameTree: FrameElement.compile(frameExamples[0]),
     bubbles: [],
     paperSize: [840, 1188],
     paperColor: '#ffffff',

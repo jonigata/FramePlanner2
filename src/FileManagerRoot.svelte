@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo } from "./fileManagerStore";
   import type { FileSystem } from './lib/filesystem/fileSystem';
   import { mainPage, revisionEqual } from './pageStore';
   import { onMount } from 'svelte';
@@ -23,22 +23,15 @@
     }
 
     if (page.revision.id === "bootstrap") { 
-      // 初期化
+      // 初期化時は仮ファイルをセーブする
       const desktop = await (await fileSystem.getRoot()).getNodeByName("デスクトップ");
-      const files = await desktop.asFolder().list();
-      if (files.length === 0) {
-        // デスクトップにファイルが存在していない場合、仮ファイルをセーブする
-        const file = await fileSystem.createFile();
-        console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
-        await savePageTo(page, fileSystem, file);
-        currentRevision = { id: file.id, revision: 1, prefix: "bootstrap2" };
-        $mainPage = { ...page, revision: {...currentRevision} };
-      } else {
-        const file = files[0][2].asFile();
-        const page = await loadPageFrom(fileSystem, file);
-        currentRevision = {...page.revision};
-        $mainPage = page;
-      }
+      const file = await fileSystem.createFile();
+      console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
+      await savePageTo(page, fileSystem, file);
+      await desktop.asFolder().link("bootstrap", file);
+      currentRevision = { id: file.id, revision: 1, prefix: "bootstrap2" };
+      $mainPage = { ...page, revision: {...currentRevision} };
+      $fileManagerRefreshKey++;
     } else {
       const file = await fileSystem.getNode(page.revision.id);
       console.log("*********** savePageTo from FileManagerRoot(2)");

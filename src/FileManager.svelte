@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { makeSample } from './lib/filesystem/sampleFileSystem';
   import FileManagerRoot from './FileManagerRoot.svelte';
+  import { buildFileSystem } from './developmentFileSystem';
 
-  let fileSystemPromise = makeSample();
-
+  let fileSystemPromise = buildFileSystem();
 </script>
 
 {#await fileSystemPromise}

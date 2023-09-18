@@ -1,49 +1,66 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import { type NodeId, type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
+import { type BindId, type NodeId, type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
 
 export class IndexedDBFileSystem extends FileSystem {
-  dbPromise: Promise<IDBPDatabase>;
-  db: IDBPDatabase;
+  private db: IDBPDatabase<unknown>;
 
   constructor() {
     super();
-    this.init();
   }
 
-  async ready() {
-    await this.dbPromise;
-  }
-
-  async init() {
-    this.dbPromise = openDB('fileSystem', 1, {
+  async open() {
+    this.db = await openDB('FileSystemDB', 1, {
       upgrade(db) {
+        db.createObjectStore('nodes', { keyPath: 'id' });
         db.createObjectStore('files', { keyPath: 'id' });
         db.createObjectStore('folders', { keyPath: 'id' });
-      },
+      }
     });
-    this.db = await this.dbPromise;
   }
 
-  async createFile() {
-    await this.ready();
+  async createFile(): Promise<File> {
     const id = ulid();
-    const file = new IndexedDBFile(this.db, id);
+    const file = new IndexedDBFile(id, this.db);
     await file.write('');
+    const transaction = this.db.transaction("nodes", "readwrite");
+    const store = transaction.objectStore("nodes");
+    store.add({ id, type: 'file', content: '' });
+    await transaction.done;
     return file;
   }
 
-  async createFolder() {
-    await this.ready();
+  async createFolder(): Promise<Folder> {
     const id = ulid();
-    const folder = new IndexedDBFolder(this.db, id);
-    await folder.write();
+    const folder = new IndexedDBFolder(id, this.db);
+    const transaction = this.db.transaction("nodes", "readwrite");
+    const store = transaction.objectStore("nodes");
+    store.add({ id, type: 'folder', children: [] });
+    await transaction.done;
     return folder;
   }
 
-  async getRoot() {
-    await this.ready();
-    return new IndexedDBFolder(this.db, '/');
+  async getNode(id: NodeId): Promise<Node> {
+    const transaction = this.db.transaction("nodes", "readonly");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(id);
+    
+    if (value) {
+      if (value.type === 'file') {
+        const file = new IndexedDBFile(value.id, this.db); // Assuming IndexedDBFile class exists
+        return file;
+      } else if (value.type === 'folder') {
+        const folder = new IndexedDBFolder(value.id, this.db); // Assuming IndexedDBFolder class exists
+        return folder;
+      }
+    }
+    return null;
+  }
+
+  async getRoot(): Promise<Folder> {
+    // Assuming root folder ID is known or is a constant
+    const rootId = "root" as NodeId;
+    return this.getNode(rootId) as Promise<Folder>;
   }
 }
 
@@ -66,58 +83,95 @@ export class IndexedDBFile extends File {
 }
 
 export class IndexedDBFolder extends Folder {
-  db: IDBPDatabase;
-  children: Array<[string, NodeType, NodeId]>; // NodeType冗長だがないとlistが遅くなるので
+  private db: IDBPDatabase<unknown>;
 
-  constructor(db, id) {
+  constructor(id: NodeId, db: IDBPDatabase<unknown>) {
     super(id);
     this.db = db;
-    this.children = [];
   }
 
-  async list(): Promise<[string, Node][]> {
-    await this.read();
-    return this.children.map(c => this.getRef(c));
+  getType(): NodeType {
+    return 'folder';
   }
 
-  async link(name, node) {
-    await this.read();
-    this.children.push([name, node.getType(), node.id]);
-    await this.write();
+  asFolder() {
+    return this;
   }
 
-  async unlink(name) {
-    await this.read();
-    this.children = this.children.filter(([childName,,]) => childName !== name);
-    await this.write();
-    // TODO: reference counting
+  async list(): Promise<[BindId, string, Node][]> {
+    const transaction = this.db.transaction("nodes", "readonly");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
+
+    return value ? value.children : [];
   }
 
-  async get(name) {
-    await this.read();
-    const child = this.children.find(([childName,,]) => childName === name);
-    if (!child) {
-      throw new Error(`Node with name ${name} does not exist`);
+  async link(name: string, Node: Node): Promise<BindId> {
+    const bindId = ulid() as BindId;
+
+    const transaction = this.db.transaction("nodes", "readwrite");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
+
+    if (value && Array.isArray(value.children)) {
+      value.children.push([bindId, name, Node]);
+      store.put(value);
     }
-    return this.getRef(child)[1];
+
+    await transaction.done;
+    return bindId;
   }
 
-  async read() {
-    const folder = await this.db.get('folders', this.id);
-    this.children = folder ? folder.children : [];
-  }
+  async unlink(bindId: BindId): Promise<void> {
+    const transaction = this.db.transaction("nodes", "readwrite");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
 
-  async write() {
-    await this.db.put('folders', { id: this.id, children: this.children });
-  }
-
-  getRef([name, nodeType, nodeId]): [string, Node] {
-    if (nodeType === 'file') {
-      return [name, new IndexedDBFile(this.db, nodeId)];
-    } else if (nodeType === 'folder') {
-      return [name, new IndexedDBFolder(this.db, nodeId)];
-    } else {
-      throw new Error(`Unknown node type ${nodeType}`);
+    if (value && Array.isArray(value.children)) {
+      value.children = value.children.filter(([b, _, __]) => b !== bindId);
+      store.put(value);
     }
+
+    await transaction.done;
+  }
+
+  async insert(name: string, node: Node, index: number): Promise<BindId> {
+    const bindId = ulid() as BindId;
+
+    const transaction = this.db.transaction("nodes", "readwrite");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
+
+    if (value && Array.isArray(value.children)) {
+      value.children.splice(index, 0, [bindId, name, node]);
+      store.put(value);
+    }
+
+    await transaction.done;
+    return bindId;
+  }
+
+  async getEntry(bindId: BindId): Promise<[BindId, string, Node]> {
+    const transaction = this.db.transaction("nodes", "readonly");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
+
+    return value ? value.children.find(([b, _, __]) => b === bindId) : null;
+  }
+
+  async getEntryByName(name: string): Promise<[BindId, string, Node]> {
+    const transaction = this.db.transaction("nodes", "readonly");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
+
+    return value ? value.children.find(([_, n, __]) => n === name) : null;
+  }
+
+  async getEntriesByName(name: string): Promise<[BindId, string, Node][]> {
+    const transaction = this.db.transaction("nodes", "readonly");
+    const store = transaction.objectStore("nodes");
+    const value = await store.get(this.id);
+
+    return value ? value.children.filter(([_, n, __]) => n === name) : [];
   }
 }
