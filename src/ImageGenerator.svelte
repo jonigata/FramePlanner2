@@ -10,7 +10,6 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeWhiteImage } from "./imageUtil";
   import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
-  import { ref } from "firebase/database";
 
   let url: string = "http://localhost:7860";
   let images: HTMLImageElement[] = [];
@@ -24,10 +23,10 @@
      "samplingSteps": 20,
      "cfgScale": 7,
   }
-  let calling;
+  let calling: boolean;
   let progress = 0;
-  let storage;
-  let refered;
+  let storage: KeyValueStorage = null;
+  let refered: HTMLImageElement = null;
 
 /*
   const x = [new Image(), new Image(), new Image()];
@@ -38,7 +37,7 @@
 
   $: imageRequest.positive = $imageGeneratorPrompt;
   $: onChangeGallery($imageGeneratorGallery);
-  async function onChangeGallery(gallery) {
+  async function onChangeGallery(gallery: HTMLImageElement[]) {
     if (gallery) {
       images = [];
       await tick(); // HACK: なんかこうしないとHTMLが更新されない

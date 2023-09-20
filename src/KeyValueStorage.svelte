@@ -27,7 +27,7 @@
     store.put(value, key);
   }
 
-  export function get(key: string) {
+  export function get(key: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(storeName, 'readonly');
       const store = transaction.objectStore(storeName);
