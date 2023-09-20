@@ -1,7 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import PaintCanvas from './painter/PaintCanvas.svelte';
-  import { onMount } from 'svelte';
 
   let pen = { strokeStyle: "black", lineWidth: 5 };
 
