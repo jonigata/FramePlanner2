@@ -5,45 +5,45 @@
   export let dbName: string;
   export let storeName: string;
 
-  let db;
+  let db: IDBDatabase;
 
   // IndexedDBを開く
   onMount(() => {
     const openRequest = indexedDB.open(dbName, 1);
 
-    openRequest.onupgradeneeded = (event) => {
-      const db = event.target.result;
+    openRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+      const db = (event.target as IDBOpenDBRequest).result;
       db.createObjectStore(storeName);
     };
 
-    openRequest.onsuccess = (event) => {
-      db = event.target.result;
+    openRequest.onsuccess = (event: Event) => {
+      db = (event.target as IDBOpenDBRequest).result;
     };
   });
 
-  export function set(key, value) {
+  export function set(key: string, value: string) {
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     store.put(value, key);
   }
 
-  export function get(key) {
+  export function get(key: string) {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(storeName, 'readonly');
       const store = transaction.objectStore(storeName);
       const objectStoreRequest = store.get(key);
       
-      objectStoreRequest.onsuccess = (event) => {
+      objectStoreRequest.onsuccess = (_event: Event) => {
         resolve(objectStoreRequest.result);
       };
 
-      objectStoreRequest.onerror = (event) => {
+      objectStoreRequest.onerror = (event: any) => {
         reject(event.error);
       };
     });
   };
 
-  export function remove(key) {
+  export function remove(key: string) {
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     store.delete(key);

@@ -3,17 +3,16 @@
   import Paper from './Paper.svelte';
   import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
-  import { mainPage, revisionEqual } from './pageStore';
+  import { type Page, mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
 
-  let paper;
+  let paper: Paper;
   let page = $mainPage;
   let currentRevision = $mainPage.revision;
   let painterActive = false;
-  let toolBox = null;
 
   $:save($saveToken);
-  function save(token) {
+  function save(token: string) {
     if (!token) return;
     switch (token) {
       case 'download':
@@ -27,27 +26,27 @@
   }
 
   $:copyToClipboard($clipboardToken);
-  function copyToClipboard(token) {
+  function copyToClipboard(token: boolean) {
     if (!token) return;
     paper.copyToClipboard();
     $clipboardToken = false;
   }
 
   $:importImage($importingImage);
-  function importImage(image) {
+  function importImage(image: HTMLImageElement) {
     if (!image) return;
     paper.importImage(image);
     $importingImage = null;
   }
 
   $:onCommitToken($commitToken);
-  async function onCommitToken(token) {
+  async function onCommitToken(token: boolean) {
     if (!token) return;
     paper.commit();
     $commitToken = false;
   }
 
-  async function onPainterActive(e) {
+  async function onPainterActive(e: CustomEvent<boolean>) {
     painterActive = e.detail;
   }
 
@@ -56,12 +55,12 @@
     painterActive = false;
   }
 
-  function onSetTool(e) {
+  function onSetTool(e: CustomEvent<any>) {
     paper.setTool(e.detail);
   }
 
   $:onInnerPageUpdate(page);
-  function onInnerPageUpdate(p) {
+  function onInnerPageUpdate(p: Page) {
     if (revisionEqual(p.revision, currentRevision)) {
       return;
     }
@@ -71,7 +70,7 @@
   }
 
   $:onOuterPageUpdate($mainPage);
-  function onOuterPageUpdate(p) {
+  function onOuterPageUpdate(p: Page) {
     if (revisionEqual(p.revision, currentRevision)) {
       // console.log("revision equal");
       return;
@@ -97,7 +96,7 @@
 </div>
 
 {#if painterActive}
-  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone} bind:this={toolBox}/>
+  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone}/>
 {/if}
 
 <style>
