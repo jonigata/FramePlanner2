@@ -29,7 +29,7 @@
     store.delete(fontname);
   }
 
-  export function getAll() {
+  export function getAll(): IDBRequest<string[]> {
     const transaction = db.transaction(storeName, 'readonly');
     const store = transaction.objectStore(storeName);
     return store.getAll();

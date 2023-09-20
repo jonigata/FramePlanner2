@@ -5,6 +5,7 @@
   import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { createEventDispatcher } from 'svelte';
   import { parseFontFamily } from 'css-font-parser';
+  import type { SearchOptions } from './fontStore';
 
   type FontDefinition = GoogleFontDefinition & { distinction: string };
 
@@ -88,8 +89,7 @@
     "'Zen Old Mincho', serif",
   ];
 
-  type SearchOptions = { filterString: string, mincho: boolean, gothic: boolean, normal: boolean, bold: boolean }
-  export let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
+  export let searchOptions: SearchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
 
   const normalFonts = normalFontFamilies.map((fontFamily) => {
     const ff = parseFontFamily(fontFamily);
