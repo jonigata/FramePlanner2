@@ -27,7 +27,8 @@
     "none",
   ];
 
-  function choose(e, s) {
+  function choose(e: CustomEvent<MouseEvent>, s: string) {
+    console.log(e);
     $chosenShape = s;
     if (!e.detail.ctrlKey) {
       $shapeChooserOpen = false;
@@ -66,30 +67,5 @@
     flex-wrap: wrap;
     gap: 10px;
     margin: 16px;
-  }
-  .drawer-page-right {
-    position: absolute;
-    right: 16px;
-    top: 16px;
-  }
-  .drawer-page-left {
-    position: absolute;
-    left: 16px;
-    top: 16px;
-  }
-  .custom-font-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    align-items: center;
-    padding: 32px;
-  }
-  .font-sample {
-    font-size: 22px;
-    cursor: pointer;
-  }
-  .font-sample img {
-    margin-left: 8px;
-    cursor: pointer;
   }
 </style>

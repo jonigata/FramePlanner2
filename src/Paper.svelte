@@ -1,11 +1,12 @@
 <script type="ts">
-  import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
+  import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
+  import type { Bubble } from './lib/layeredCanvas/bubble.js';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
@@ -14,7 +15,8 @@
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
-  import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
+  import { getFontStyle } from "@svelte-web-fonts/google";
+  import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
@@ -26,15 +28,15 @@
   export let manageKeyCache = false;
   export let painterActive = false;
 
-  let containerWidth;
-  let containerHeight;
-  let canvasWidth;
-  let canvasHeight;
-  let canvas;
-  let layeredCanvas;
-  let frameLayer;
-  let bubbleLayer;
-  let inlinePainterLayer;
+  let containerWidth: number;
+  let containerHeight: number;
+  let canvasWidth: number;
+  let canvasHeight: number;
+  let canvas: HTMLCanvasElement;
+  let layeredCanvas: LayeredCanvas;
+  let frameLayer: FrameLayer;
+  let bubbleLayer: BubbleLayer;
+  let inlinePainterLayer: InlinePainterLayer;
   let pageRevision: Revision | null = null;
 
   interface CustomCanvasElement extends HTMLCanvasElement {
@@ -42,14 +44,14 @@
   }
 
   $:onChangeContainerSize(containerWidth, containerHeight);
-  function onChangeContainerSize(w, h) {
+  function onChangeContainerSize(w: number, h: number) {
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;
   }
 
   $:onFrameImageConstraint($frameImageConstraintToken);
-  function onFrameImageConstraint(token) {
+  function onFrameImageConstraint(token: boolean) {
     if (!token) return;
     console.log("onFrameImageConstraint", token);
     frameLayer.constraintAll();
@@ -97,17 +99,17 @@
     layeredCanvas.redraw(); 
   }
 
-  export function importImage(image) {
+  export function importImage(image: HTMLImageElement) {
     const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     frameLayer.importImage(layout, image);
   }
 
-  function generate(frameTreeElement) {
+  function generate(element: FrameElement) {
     console.log("generateImages");
-    $frameImageGeneratorTarget = frameTreeElement;
+    $frameImageGeneratorTarget = element;
   }
 
-  async function scribble(element) {
+  async function scribble(element: FrameElement) {
     console.log("scribble");
     if (!element.image) { 
       element.image = await makeWhiteImage(500, 500);
@@ -122,21 +124,21 @@
     dispatch('painterActive', painterActive);
   }
 
-  function insert(frameTreeElement) {
-    console.log("insert", frameTreeElement);
+  function insert(element: FrameElement) {
+    console.log("insert", element);
     const images = collectImages(frameLayer.frameTree);
-    dealImages(frameLayer.frameTree, images, frameTreeElement, null);
+    dealImages(frameLayer.frameTree, images, element, null);
     commit();
   }
 
-  function splice(frameTreeElement) {
-    console.log("splice", frameTreeElement);
+  function splice(element: FrameElement) {
+    console.log("splice", element);
     const images = collectImages(frameLayer.frameTree);
-    dealImages(frameLayer.frameTree, images, null, frameTreeElement);
+    dealImages(frameLayer.frameTree, images, null, element);
     commit();
   }
 
-  function constraintElement(element) {
+  function constraintElement(element: FrameElement) {
     const pageLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     const layout = findLayoutOf(pageLayout, element);
     if (!layout) { return; }
@@ -152,7 +154,7 @@
     commit();
   }
 
-  export function setTool(tool) {
+  export function setTool(tool: any) {
     console.log("setTool", tool);
     inlinePainterLayer.currentBrush = tool;
   }
@@ -166,7 +168,7 @@
   });
 
   $:onUpdatePage(page);
-  function onUpdatePage(newPage) {
+  function onUpdatePage(newPage: Page) {
     if (!frameLayer) { return; }
     if (revisionEqual(newPage.revision, pageRevision)) { 
       // console.log("same revision")
@@ -192,14 +194,13 @@
   }
 
   $:onChangeBubble($bubble);
-  function onChangeBubble(b) {
+  function onChangeBubble(_b: Bubble) {
     // フォント読み込みが遅れるようなのでヒューリスティック
     setTimeout(() => layeredCanvas.redraw(), 2000);
     setTimeout(() => layeredCanvas.redraw(), 5000);
   }
 
   function outputPage() {
-    const paperSize = frameLayer.getPaperSize();
     const newPage = {...page};
     pageRevision = getIncrementedRevision(page);
     setRevision(newPage, pageRevision);
@@ -235,7 +236,7 @@
     layeredCanvas = new LayeredCanvas(
       canvas, 
       page.paperSize,
-      (p, s) => {
+      (p: [number, number], s: String) => {
         if (editable) {
           if (s) {
             const q = convertPointFromNodeToPage(canvas, ...p);
@@ -260,15 +261,15 @@
       paperRendererLayer,
       page.frameTree,
       editable,
-      (frameTree) => {
+      (_frameTree: FrameElement) => {
         console.log("commit frames");
         commit();
       },
       () => {revert();},
-      (frameTreeElement) => {generate(frameTreeElement);},
-      (frameTreeElement) => {scribble(frameTreeElement);},
-      (frameTreeElement) => {insert(frameTreeElement);},
-      (frameTreeElement) => {splice(frameTreeElement);},
+      (frameElement: FrameElement) => {generate(frameElement);},
+      (frameElement: FrameElement) => {scribble(frameElement);},
+      (frameElement: FrameElement) => {insert(frameElement);},
+      (frameElement: FrameElement) => {splice(frameElement);},
       );
     layeredCanvas.addLayer(frameLayer);
 
@@ -279,7 +280,7 @@
       frameLayer,
       showInspector, 
       hideInspector, 
-      (bubbles) => {
+      (_bubbles: Bubble[]) => {
         if ($bubble) {
           bubbleLayer.defaultBubble = $bubble.clone();
         }
@@ -296,7 +297,7 @@
     layeredCanvas.redraw();
 
     if (manageKeyCache) {
-      initializeKeyCache(canvas, (code) => {
+      initializeKeyCache(canvas, (code: string) => {
         if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) && (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"])) {
           console.log("paper ctrl+shift+z")
           $undoStore.redo();
@@ -322,7 +323,7 @@
     }
   });
 
-  async function swapCanvas(f) {
+  async function swapCanvas(f: (c: CustomCanvasElement) => Promise<void>) {
     const tmpCanvas = document.createElement("canvas") as CustomCanvasElement;
     tmpCanvas.width = page.paperSize[0]
     tmpCanvas.height = page.paperSize[1]
@@ -346,7 +347,7 @@
 
   export function save() {
     console.log("save");
-    swapCanvas(async (c) => {
+    swapCanvas(async (c: CustomCanvasElement) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       saveCanvas(c, makeFilename("png"), latestJson);
     });
@@ -354,7 +355,7 @@
 
   export function postToAIPictors() {
     console.log("postToAIPictors");
-    swapCanvas(async (c) => {
+    swapCanvas(async (c: CustomCanvasElement) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       const url = canvasToUrl(c, latestJson);
       const postUrl = "https://www.aipictors.com/post/#" + url.substring(5) + "&collabotype=9835N8UoVOpup-yAUqXQV";
@@ -365,22 +366,22 @@
   
   export async function copyToClipboard() {
     console.log("copyToClipboard");
-    swapCanvas(async (c) => {
+    swapCanvas(async (c: CustomCanvasElement) => {
       await copyCanvasToClipboard(c);
     });
   }
 
-  export function pourScenario(s) {
+  export function pourScenario(s: any) { // TODO: 型が雑
     const paperLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     const leaves = collectLeaves(frameLayer.frameTree);
-    s.scenes.forEach((scene, index) => {
+    s.scenes.forEach((scene: any, index: number) => {
       const leaf = leaves[index];
       leaf.prompt = scene.description;
 
       const layout = findLayoutOf(paperLayout, leaf);
       const r = makeTrapezoidRect(layout.corners);
       const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
-      scene.bubbles.forEach(b => {
+      scene.bubbles.forEach((b:any) => {
         const bubbles = bubbleLayer.createTextBubble(b[1]);
         bubbles[0].shape = "rounded";
         bubbles[0].initOptions();
@@ -389,6 +390,9 @@
     });
   }
 
+  function getFontStyle2(fontFamily: string, fontWeight: string): string {
+    return getFontStyle(fontFamily as GoogleFontFamily, fontWeight as GoogleFontVariant);
+  }
 </script>
 
 
@@ -396,8 +400,7 @@
   <div class="canvas-container fullscreen" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
     <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
     {#if bubbleLayer?.defaultBubble}
-    <GoogleFont fonts="{[{family: bubbleLayer.defaultBubble.fontFamily,variants: ["400"],},]}" display="swap" />
-    <p style={getFontStyle(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み、ローカルフォントだと多分エラー出る -->
+    <p style={getFontStyle2(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み、ローカルフォントだと多分エラー出る -->
     {/if}
   </div>    
 {:else}
