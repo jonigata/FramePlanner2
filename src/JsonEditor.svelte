@@ -2,7 +2,7 @@
   import { draggable } from '@neodrag/svelte';
   import { bodyDragging } from './uiStore';
   import titleBarIcon from './assets/json.png';
-  import { JSONEditor, toJSONContent, toTextContent } from 'svelte-jsoneditor';
+  import { JSONEditor, toJSONContent, toTextContent, Mode } from 'svelte-jsoneditor';
   import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
   import { tick } from 'svelte';
   import { shareTemplate } from './firebase';
@@ -14,7 +14,7 @@
   let skipJsonChange = false;
   let pageRevision: Revision | null = null;
 
-  function handleChange(updatedContent, previousContent, { contentErrors, patchResult }) {
+  function handleChange(updatedContent: any /*, previousContent, { contentErrors, patchResult }*/) {
     // content is an object { json: JSONValue } | { text: string }
     // console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
     if (skipJsonChange) {
@@ -23,7 +23,7 @@
     }
     content = updatedContent
     try {
-      const page = toJSONContent(updatedContent).json as Page;
+      const page = toJSONContent(updatedContent).json as unknown as Page;
       pageRevision = incrementRevision(pageRevision);
       setRevision(page, pageRevision);
       $mainPage = page;
@@ -34,7 +34,7 @@
     }
   }
 
-  function replacer(key, value) {
+  function replacer(_key: string, value: number) {
     if (typeof value === 'number' && !Number.isInteger(value)) {
       return parseFloat(value.toFixed(2)); // 小数点以下2桁に制限
     }
@@ -42,7 +42,7 @@
   }
 
   $:onUpdateOuterPage($mainPage);
-  async function onUpdateOuterPage(page) {
+  async function onUpdateOuterPage(page: Page) {
     // console.log("onUpdateOuterPage", page);
     skipJsonChange = true;
     pageRevision = getRevision(page);
@@ -54,7 +54,7 @@
   }
 
   $:onDownloadJsonDocument($downloadJsonToken);
-  function onDownloadJsonDocument(t) {
+  function onDownloadJsonDocument(t: boolean) {
     if (!t) { return; }
 
     const jsonString = toTextContent(content).text;
@@ -74,7 +74,7 @@
   }
 
   $:onShareJsonDocument($shareJsonToken);
-  async function onShareJsonDocument(t) {
+  async function onShareJsonDocument(t: boolean) {
     if (!t) { return; }
 
     console.log("onShareJsonDocument");
@@ -95,7 +95,7 @@
 <div class="control-panel variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token expand"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="inner expand">
-    <JSONEditor {content} mode="text" onChange={handleChange}/>
+    <JSONEditor {content} mode={Mode.text} onChange={handleChange}/>
   </div>
 </div>
 {/if}
