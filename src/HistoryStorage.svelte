@@ -3,27 +3,27 @@
   const dbName = 'fontHistoryDB';
   const storeName = 'fontHistory';
 
-  let db;
+  let db: IDBDatabase;
 
   // IndexedDBを開く
   const openRequest = indexedDB.open(dbName, 1);
 
-  openRequest.onupgradeneeded = (event) => {
-    const db = event.target.result;
+  openRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+    const db = (event.target as IDBOpenDBRequest).result;
     db.createObjectStore(storeName);
   };
 
-  openRequest.onsuccess = (event) => {
-    db = event.target.result;
+  openRequest.onsuccess = (event: Event) => {
+    db = (event.target as IDBOpenDBRequest).result;
   };
 
-  export function add(fontname) {
+  export function add(fontname: string) {
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     store.put(fontname, fontname);
   }
 
-  export function remove(fontname) {
+  export function remove(fontname: string) {
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     store.delete(fontname);
