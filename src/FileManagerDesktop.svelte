@@ -19,6 +19,8 @@
       frameColor: '#000000',
       frameWidth: 2,
       desktopPosition: [0, 0],
+      history: [],
+      historyIndex: 0,
     }
 
     const file = await fileSystem.createFile();
@@ -35,7 +37,7 @@
     {#await node.list()}
       <div>loading...</div>
     {:then children}
-      {#each children as [bindId, name, node]}
+      {#each children as [_bindId, _name, node]}
         <FileManagerDesktopPaper fileSystem={fileSystem} node={node.asFile()}/>
       {/each}
     {:catch error}
@@ -50,11 +52,6 @@
     width: 100%;
     height: 100%;
     position: relative;
-  }
-  .desktop-paper {
-    position: absolute;
-    left: 50%;
-    top: 50%;
   }
   .add-document-button {
     position: absolute;

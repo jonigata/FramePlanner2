@@ -3,12 +3,12 @@
 
   const dispatch = createEventDispatcher();
 
-  export let acceptable;
-  export let depth;
+  export let acceptable: boolean;
+  export let depth: number;
 
   let isDraggingOver = false;
 
-  async function onDragOver(ev) {
+  async function onDragOver(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
     isDraggingOver = true;
@@ -18,7 +18,7 @@
     isDraggingOver = false;
   }
 
-  function onDrop(ev) {
+  function onDrop(ev: DragEvent) {
     isDraggingOver = false;
     dispatch('drop', ev.dataTransfer);
     ev.preventDefault();

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { FileSystem, File, Folder, NodeId, BindId } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, Folder, NodeId, BindId, Node } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging } from "./fileManagerStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
 
@@ -19,21 +19,21 @@
   export let removability = "removeable"; // "removable" | "unremovable"
   export let spawnability = "unspawnable"; // "file-spawnable" | "folder-spawnable" | "unspawnable"
   export let index: number;
-  export let path;
+  export let path: string[];
 
-  let node;
-  let acceptable;
-  let isDraggingOver;
+  let node: Folder;
+  let acceptable: boolean;
+  let isDraggingOver: boolean;
   let isDiscardable = false;
 
   const dispatch = createEventDispatcher();
 
   $: ondrag($fileManagerDragging);
-  function ondrag(dragging) {
+  function ondrag(dragging: Dragging) {
     acceptable = dragging && !path.includes(dragging.bindId);
   }
 
-  async function onDragOver(ev) {
+  async function onDragOver(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
     isDraggingOver = true;
@@ -43,7 +43,7 @@
     isDraggingOver = false;
   }
 
-  async function onDropHere(ev) {
+  async function onDropHere(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
     if (acceptable) {
@@ -71,7 +71,7 @@
     dispatch('remove', bindId);
   }
 
-  async function removeChild(e) {
+  async function removeChild(e: CustomEvent<BindId>) {
     console.log("remove child", e.detail);
     const childBindId = e.detail as BindId;
     const childEntry = await node.getEntry(childBindId);
@@ -85,14 +85,14 @@
   }
 
   $:onUpdate(isTrash && $trashUpdateToken);
-  function onUpdate(token) {
+  function onUpdate(token: boolean) {
     if (token) {
       $trashUpdateToken = false;
       node = node;
     }
   }
 
-  function onInsertToParent(ev) {
+  function onInsertToParent(ev: CustomEvent<DataTransfer>) {
     console.log("insert to parent", ev.detail);
     isDraggingOver = false;
     const detail = { dataTransfer: ev.detail, index };
@@ -102,7 +102,7 @@
     $fileManagerDragging = null;
   }
 
-  let entry;
+  let entry: [BindId, string, Node];
   onMount(async () => {
     entry = await parent.getEntry(bindId)
     node = entry[2] as Folder;
@@ -112,7 +112,7 @@
     isDiscardable = removability === "removable" && !path.includes(trash[0]);
   });
 
-  function onDragStart(ev) {
+  function onDragStart(ev: DragEvent) {
     console.log("folder drag start", bindId, parent.id);
     ev.dataTransfer.setData("bindId", bindId);
     ev.dataTransfer.setData("parent", parent.id);
@@ -123,12 +123,12 @@
     }, 0);
   }
 
-  async function onInsert(e) {
+  async function onInsert(e: CustomEvent<{ dataTransfer: DataTransfer, index: number }>) {
     console.log("insert", e.detail);
     await moveToHere(e.detail.dataTransfer, e.detail.index);
   }
 
-  async function moveToHere(dataTransfer, index) {
+  async function moveToHere(dataTransfer: DataTransfer, index: number) {
     console.log("++++++++++++ moveToHere", dataTransfer, index);
 
     const sourceParentId = dataTransfer.getData("parent") as string as NodeId;
@@ -226,20 +226,6 @@
   .folder-contents.acceptable {
     background-color: #ee84;
     border: 2px dashed #444;
-  }
-  .add-folder-button {
-    width: 12px;
-    height: 12px;
-    margin-left: 8px;
-    padding: 10px;
-    border-radius: 6px;
-  }
-  .remove-folder-button {
-    width: 12px;
-    height: 12px;
-    margin-left: 8px;
-    padding: 10px;
-    border-radius: 6px;
   }
   .buttons {
     width: 80px;

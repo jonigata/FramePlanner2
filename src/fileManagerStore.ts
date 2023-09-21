@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId } from "./lib/filesystem/fileSystem";
 import type { Page, Revision } from "./pageStore";
 import { FrameElement } from "./lib/layeredCanvas/frameTree";
@@ -7,11 +7,16 @@ import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
 import { ulid } from "ulid";
 
+export type Dragging = {
+  bindId: string;
+  parent: string;
+}
+
 export const fileManagerOpen = writable(false);
 export const fileSystem: FileSystem = null;
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
-export const fileManagerDragging = writable(null);
+export const fileManagerDragging: Writable<Dragging> = writable(null);
 
 type SerializedPage = {
   revision: {id: string, revision: number, prefix: string},

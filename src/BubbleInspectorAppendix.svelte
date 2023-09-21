@@ -1,17 +1,18 @@
 <script lang="ts">
   import { RangeSlider } from '@skeletonlabs/skeleton';
+  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
   import NumberEdit from './NumberEdit.svelte';
 
-  export let bubble;
+  export let bubble: Bubble;
 
   $: onOptionChanged(bubble.optionContext);
-  function onOptionChanged(oc) {
+  function onOptionChanged(_oc: {}) {
     bubble.redraw();
   }
 </script>
 
 <div class="container">
-  {#each Object.entries(bubble.optionSet) as [key, value], index (key)}
+  {#each Object.entries(bubble.optionSet) as [key, value], _ (key)}
     {#if value["type"] === "number"}
       <div class="row">
         <div class="label">{value["label"]}</div>

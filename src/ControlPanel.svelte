@@ -18,7 +18,6 @@
   import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { fileManagerOpen } from './fileManagerStore';
@@ -31,7 +30,7 @@
   let contactText = "";
 
   $:onUpdateSize($mainPage.paperSize);
-  function onUpdateSize(size) {
+  function onUpdateSize(_size: [number, number]) {
     $mainPage.revision = incrementRevision($mainPage.revision);
   }
 
@@ -41,7 +40,7 @@
     $mainPage.paperSize[1] = h;
   }
 
-  function applyTemplate(event) {
+  function applyTemplate(event: CustomEvent<any>) {
     const page = {...$mainPage};
     page.frameTree = FrameElement.compile(event.detail);
     page.bubbles = [];
@@ -62,6 +61,7 @@
 
   }
 
+/*
   function openPainter() {
     const d: ModalSettings = {
       type: 'component',
@@ -69,7 +69,7 @@
     };
     modalStore.trigger(d);    
   }
-
+*/
 
   let files: FileList;
   $: uploadImage(files);
@@ -95,12 +95,12 @@
         const text = await readFileAsText(file);
         const json = JSON.parse(text);
         $mainPage.frameTree = FrameElement.compile(json.frameTree);
-        $mainPage.bubbles = json.bubbles.map(b => Bubble.compile($mainPage.paperSize, b));
+        $mainPage.bubbles = json.bubbles.map((b: Bubble) => Bubble.compile($mainPage.paperSize, b));
       }
     }
   }
 
-  function readFileAsText(file): Promise<string> {
+  function readFileAsText(file: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -148,11 +148,11 @@
     contactText = null;
   }
 
-  function onDragOver(e) {
+  function onDragOver(e: DragEvent) {
     e.preventDefault();
   }
 
-  function onDrop(e) {
+  function onDrop(e: DragEvent) {
     e.preventDefault();
     files = e.dataTransfer.files;
   }

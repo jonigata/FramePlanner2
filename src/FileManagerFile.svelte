@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { loadPageFrom, fileManagerDragging } from "./fileManagerStore";
+  import { loadPageFrom, fileManagerDragging, type Dragging } from "./fileManagerStore";
   import type { BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
   import { mainPage } from './pageStore';
   import { createEventDispatcher, onMount } from 'svelte'
@@ -16,14 +16,13 @@
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
-  export let path;
+  export let path: string[];
 
-  let isDraggingOver = false;
   let acceptable = false;
   let isDiscardable = false;
 
   $: ondrag($fileManagerDragging);
-  function ondrag(dragging) {
+  function ondrag(dragging: Dragging) {
     if (dragging) {
       console.log("file ondrag", path, dragging.bindId);
     }
@@ -36,7 +35,7 @@
     $mainPage = page;
   }
 
-	async function onDragStart (ev) {
+	async function onDragStart (ev: DragEvent) {
     console.log("file dragstart");
 		ev.dataTransfer.setData("bindId", bindId);
 		ev.dataTransfer.setData("parent", parent.id);
@@ -47,7 +46,7 @@
     }, 0);
 	}
 
-  function onDragEnd(ev) {
+  function onDragEnd(ev: DragEvent) {
     console.log("file dragend")
     ev.stopPropagation();
     $fileManagerDragging = null;
@@ -57,8 +56,7 @@
     dispatch('remove', bindId);
   }
 
-  function onDrop(ev) {
-    isDraggingOver = false;
+  function onDrop(ev: CustomEvent<DataTransfer>) {
     const detail = { dataTransfer: ev.detail, index };
     dispatch('insert', detail);
     ev.preventDefault();

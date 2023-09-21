@@ -2,8 +2,8 @@
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { fileManagerOpen, fileManagerRefreshKey, savePageTo } from "./fileManagerStore";
-  import type { FileSystem } from './lib/filesystem/fileSystem';
-  import { mainPage, revisionEqual } from './pageStore';
+  import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
+  import { type Page, mainPage, revisionEqual } from './pageStore';
   import { onMount } from 'svelte';
   import type { Revision } from "./pageStore";
 
@@ -13,11 +13,11 @@
   let desktop = null;
   let cabinet = null;
   let trash = null;
-  let templates = null;
+  // let templates: [BindId, string, Node] = null;
   let currentRevision: Revision = null;
 
   $:onUpdatePage($mainPage);
-  async function onUpdatePage(page) {
+  async function onUpdatePage(page: Page) {
     if (revisionEqual(page.revision, currentRevision)) {
       return;
     }
@@ -33,7 +33,7 @@
       $mainPage = { ...page, revision: {...currentRevision} };
       $fileManagerRefreshKey++;
     } else {
-      const file = await fileSystem.getNode(page.revision.id);
+      const file = await fileSystem.getNode(page.revision.id as NodeId);
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
       currentRevision = {...page.revision};
@@ -45,7 +45,7 @@
     desktop = await root.getEntryByName("デスクトップ");
     cabinet = await root.getEntryByName("キャビネット");
     trash = await root.getEntryByName("ごみ箱");
-    templates = await root.getEntryByName("テンプレート");
+    // templates = await root.getEntryByName("テンプレート");
   });
 </script>
 
@@ -96,13 +96,6 @@
 </div>
 
 <style>
-  .desktop {
-    padding: 8px;
-  }
-  .desktop-sheet {
-    width: 100%;
-    height: 480px;
-  }
   .cabinet {
     margin: 8px;
     padding: 8px;

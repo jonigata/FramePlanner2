@@ -114,8 +114,8 @@
   const fonts = [...normalFonts, ...boldFonts];
   let filteredFonts = fonts;
 
-  function chooseFont(event: MouseEvent, fontFamily: string, fontWeight: string) {
-    dispatch('choose', { event, fontFamily, fontWeight });
+  function chooseFont(mouseEvent: MouseEvent, fontFamily: string, fontWeight: string) {
+    dispatch('choose', { mouseEvent, fontFamily, fontWeight });
   }
 
   $:filterFonts(searchOptions);

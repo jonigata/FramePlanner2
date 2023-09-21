@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { loadPageFrom } from "./fileManagerStore";
-  import type { FileSystem, File } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, File, NodeId } from "./lib/filesystem/fileSystem";
   import { draggable } from '@neodrag/svelte';
-  import { mainPage } from './pageStore';
+  import { mainPage, type Page } from './pageStore';
   import Paper from './Paper.svelte';
   import { savePageTo } from "./fileManagerStore";
 
@@ -11,15 +10,15 @@
   export let node: File;
   export let position = { x: 0, y: 0 };
 
-  let page;
+  let page: Page = null;
 
   async function onDoubleClick() {
-    const file = (await fileSystem.getNode(page.revision.id)).asFile();
+    const file = (await fileSystem.getNode(page.revision.id as NodeId)).asFile();
     const filePage = await loadPageFrom(fileSystem, file);
     $mainPage = filePage;
   }
 
-  function makePage(p) {
+  function makePage(p: Page) {
     console.log(p);
     page = {
       ...p,
@@ -31,15 +30,19 @@
     }
     return page;
   }
+
+  function getNode(nodeId: string) {
+    return fileSystem.getNode(nodeId as NodeId);
+  }
 </script>
 
 <div class="desktop-paper" 
   use:draggable={{
     position: position,
-    onDragEnd: async ({ offsetX, offsetY, rootNode, currentNode }) => {
+    onDragEnd: async ({ offsetX, offsetY }) => {
       console.log(page);
       position = { x: offsetX, y: offsetY };
-      const file = (await fileSystem.getNode(page.revision.id)).asFile();
+      const file = (await getNode(page.revision.id)).asFile();
       const filePage = await loadPageFrom(fileSystem, file);
       filePage.desktopPosition = [offsetX, offsetY];
       console.log("*********** savePageTo from FileManagerDesktopPaper");

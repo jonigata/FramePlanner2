@@ -1,26 +1,24 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
-  import { fileManagerDragging } from "./fileManagerStore";
+  import { fileManagerDragging, type Dragging } from "./fileManagerStore";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
 
   const dispatch = createEventDispatcher()
 
   export let index: number;
-  export let path;
+  export let path: string[];
 
-  let isDraggingOver = false;
   let acceptable = false;
 
   $: ondrag($fileManagerDragging);
-  function ondrag(dragging) {
+  function ondrag(dragging: Dragging) {
     if (dragging) {
       console.log("tail ondrag", path, dragging.bindId);
     }
     acceptable = dragging && !path.includes(dragging.bindId);
   }
 
-  function onDrop(ev) {
-    isDraggingOver = false;
+  function onDrop(ev: CustomEvent<DataTransfer>) {
     const detail = { dataTransfer: ev.detail, index };
     dispatch('insert', detail);
     ev.preventDefault();
