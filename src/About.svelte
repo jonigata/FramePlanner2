@@ -23,7 +23,10 @@
     <p>
       <a href="https://blogcake.net/ai-comic/" target="_blank" rel="noopener noreferrer">AIで漫画を描く！？FramePlannerで作る漫画の作り方</a>
     </p>
-    <p><span class="comic-link" on:click={showComic}>はじめてのFramePlanner（まんが入門！）</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)</p>
+    <p>
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <span class="comic-link" on:click={showComic}>はじめてのFramePlanner（まんが入門！）</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)
+    </p>
 
     <h3>ギャラリー</h3>
     <p class="inline-elements">
