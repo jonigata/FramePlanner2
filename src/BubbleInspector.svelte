@@ -167,7 +167,7 @@
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
-    <BubbleInspectorAppendix bubble={bubble}/>
+    <BubbleInspectorAppendix bind:bubble={bubble}/>
   </div>
 </div>
 {/if}

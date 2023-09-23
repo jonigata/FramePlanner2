@@ -4,11 +4,6 @@
   import NumberEdit from './NumberEdit.svelte';
 
   export let bubble: Bubble;
-
-  $: onOptionChanged(bubble.optionContext);
-  function onOptionChanged(_oc: {}) {
-    bubble.redraw();
-  }
 </script>
 
 <div class="container">
