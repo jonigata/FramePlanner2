@@ -12,6 +12,7 @@
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
+  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -47,7 +48,7 @@
   }
 
   $:onChangeBubble(bubble);
-  async function onChangeBubble(b) {
+  async function onChangeBubble(b: Bubble) {
     if (b === oldBubble) {return;}
     oldBubble = b;
     if (b) {
@@ -57,7 +58,6 @@
       textarea.focus({preventScroll: true});
       textarea.select();
       pinned = true;
-      move(b.position);
     }
   }
 

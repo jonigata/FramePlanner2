@@ -207,7 +207,7 @@
     page = newPage;
   }
 
-  function showInspector(b) {
+  function showInspector(b: Bubble) {
     const [x0, y0] = b.p0;
     const [x1, y1] = b.p1;
     const [cx, cy] = [(x0+x1)/2, (y0+y1)/2];
@@ -218,7 +218,6 @@
       height: y1 - y0,
       offset
     };
-    b.redraw = () => layeredCanvas.redraw();
     $bubble = b;
   }
 
