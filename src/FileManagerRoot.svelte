@@ -28,7 +28,7 @@
       const file = await fileSystem.createFile();
       console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
       await savePageTo(page, fileSystem, file);
-      await desktop.asFolder().link("bootstrap", file);
+      await desktop.asFolder().link("bootstrap", file.id);
       currentRevision = { id: file.id, revision: 1, prefix: "bootstrap2" };
       $mainPage = { ...page, revision: {...currentRevision} };
       $fileManagerRefreshKey++;

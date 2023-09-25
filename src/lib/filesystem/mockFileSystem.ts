@@ -1,25 +1,26 @@
-import { type NodeId, type NodeType, type BindId, Node, File, Folder, FileSystem } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
+import { Node, File, Folder, FileSystem } from './fileSystem';
 import { ulid } from 'ulid';
 
 export class MockFileSystem extends FileSystem {
   files = {}
-  root = new MockFolder('/');
+  root = new MockFolder(this, '/' as NodeId);
 
   constructor() {
     super();
   }
 
   async createFile(): Promise<File> {
-    const id = ulid();
-    const file = new MockFile(id);
+    const id = ulid() as NodeId;
+    const file = new MockFile(this, id);
     await file.write('');
     this.files[id] = file;
     return file;
   }
 
   async createFolder(): Promise<Folder> {
-    const id = ulid();
-    const folder = new MockFolder(id);
+    const id = ulid() as NodeId;
+    const folder = new MockFolder(this, id);
     this.files[id] = folder;
     return folder;
   }
@@ -36,8 +37,8 @@ export class MockFileSystem extends FileSystem {
 export class MockFile extends File {
   content: string;
 
-  constructor(id) {
-    super(id);
+  constructor(fileSystem: FileSystem, id: NodeId) {
+    super(fileSystem, id);
   }
 
   getType(): NodeType { return 'file'; }
@@ -53,22 +54,22 @@ export class MockFile extends File {
 }
 
 export class MockFolder extends Folder {
-  children: [BindId, string, Node][] = [];
+  children: Entry[] = [];
 
   getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
 
-  constructor(id) {
-    super(id);
+  constructor(fileSystem: FileSystem, id: NodeId) {
+    super(fileSystem, id);
   }
 
-  async list(): Promise<[BindId, string, Node][]> {
+  async list(): Promise<Entry[]> {
     return this.children;
   }
 
-  async link(name, Node): Promise<BindId> {
+  async link(name: string, nodeId: NodeId): Promise<BindId> {
     const bindId = ulid() as BindId;
-    this.children.push([bindId, name, Node]);
+    this.children.push([bindId, name, nodeId]);
     return bindId;
   }
 
@@ -76,23 +77,23 @@ export class MockFolder extends Folder {
     this.children = this.children.filter(([b, _, __]) => b !== bindId);
   }
 
-  async insert(name: string, node: Node, index: number): Promise<BindId> { 
+  async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> { 
     const bindId = ulid() as BindId;
-    this.children.splice(index, 0, [bindId, name, node]);
+    this.children.splice(index, 0, [bindId, name, nodeId]);
     return bindId;
   }
 
-  async getEntry(bindId: BindId): Promise<[BindId, string, Node]> {
+  async getEntry(bindId: BindId): Promise<Entry> {
     // console.log("get", name, this.children);
     return this.children.find(([b, _, __]) => b === bindId);
   }
 
-  async getEntryByName(name: string): Promise<[BindId, string, Node]> {
+  async getEntryByName(name: string): Promise<Entry> {
     // console.log("get", name, this.children);
     return this.children.find(([_, n, __]) => n === name);
   }
 
-  async getEntriesByName(name: string): Promise<[BindId, string, Node][]> {
+  async getEntriesByName(name: string): Promise<Entry[]> {
     // console.log("get", name, this.children);
     return this.children.filter(([_, n, __]) => n === name);
   }

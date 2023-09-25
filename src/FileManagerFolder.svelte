@@ -57,7 +57,7 @@
   async function addFolder() {
     console.log("add folder");
     const nf = await fileSystem.createFolder();
-    await node.link("new folder", nf);
+    await node.link("new folder", nf.id);
     node = node;
   }
 
@@ -104,7 +104,7 @@
 
   let entry: [BindId, string, Node];
   onMount(async () => {
-    entry = await parent.getEntry(bindId)
+    entry = await parent.getEmbodiedEntry(bindId)
     node = entry[2] as Folder;
 
     const root = await fileSystem.getRoot();
@@ -148,6 +148,7 @@
     $fileManagerRefreshKey++;
     console.log("insert done");
   }
+
 </script>
 
 {#if node}
@@ -185,7 +186,7 @@
   <div class="folder-contents"
     class:acceptable={isDraggingOver && acceptable}
   >
-    {#await node.list()}
+    {#await node.listEmbodied()}
       <div>loading...</div>
     {:then children}
       {#each children as [bindId, name, childNode], index}

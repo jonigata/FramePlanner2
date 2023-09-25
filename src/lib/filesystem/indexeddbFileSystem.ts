@@ -1,6 +1,7 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import { type BindId, type NodeId, type NodeType, Node, File, Folder, FileSystem } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
+import { Node, File, Folder, FileSystem } from './fileSystem';
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;
@@ -20,8 +21,8 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async createFile(): Promise<File> {
-    const id = ulid();
-    const file = new IndexedDBFile(id, this.db);
+    const id = ulid() as NodeId;
+    const file = new IndexedDBFile(this, id, this.db);
     await file.write('');
     const transaction = this.db.transaction("nodes", "readwrite");
     const store = transaction.objectStore("nodes");
@@ -31,8 +32,8 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async createFolder(): Promise<Folder> {
-    const id = ulid();
-    const folder = new IndexedDBFolder(id, this.db);
+    const id = ulid() as NodeId;
+    const folder = new IndexedDBFolder(this, id, this.db);
     const transaction = this.db.transaction("nodes", "readwrite");
     const store = transaction.objectStore("nodes");
     store.add({ id, type: 'folder', children: [] });
@@ -47,10 +48,10 @@ export class IndexedDBFileSystem extends FileSystem {
     
     if (value) {
       if (value.type === 'file') {
-        const file = new IndexedDBFile(value.id, this.db); // Assuming IndexedDBFile class exists
+        const file = new IndexedDBFile(this, value.id, this.db); // Assuming IndexedDBFile class exists
         return file;
       } else if (value.type === 'folder') {
-        const folder = new IndexedDBFolder(value.id, this.db); // Assuming IndexedDBFolder class exists
+        const folder = new IndexedDBFolder(this,value.id, this.db); // Assuming IndexedDBFolder class exists
         return folder;
       }
     }
@@ -67,8 +68,8 @@ export class IndexedDBFileSystem extends FileSystem {
 export class IndexedDBFile extends File {
   db: IDBPDatabase;
 
-  constructor(db, id) {
-    super(id);
+  constructor(fileSystem: FileSystem, id: NodeId, db: IDBPDatabase) {
+    super(fileSystem, id);
     this.db = db;
   }
 
@@ -85,8 +86,8 @@ export class IndexedDBFile extends File {
 export class IndexedDBFolder extends Folder {
   private db: IDBPDatabase<unknown>;
 
-  constructor(id: NodeId, db: IDBPDatabase<unknown>) {
-    super(id);
+  constructor(fileSystem: FileSystem, id: NodeId, db: IDBPDatabase) {
+    super(fileSystem, id);
     this.db = db;
   }
 
@@ -98,7 +99,7 @@ export class IndexedDBFolder extends Folder {
     return this;
   }
 
-  async list(): Promise<[BindId, string, Node][]> {
+  async list(): Promise<Entry[]> {
     const transaction = this.db.transaction("nodes", "readonly");
     const store = transaction.objectStore("nodes");
     const value = await store.get(this.id);
@@ -106,7 +107,7 @@ export class IndexedDBFolder extends Folder {
     return value ? value.children : [];
   }
 
-  async link(name: string, Node: Node): Promise<BindId> {
+  async link(name: string, nodeId: NodeId): Promise<BindId> {
     const bindId = ulid() as BindId;
 
     const transaction = this.db.transaction("nodes", "readwrite");
@@ -114,7 +115,7 @@ export class IndexedDBFolder extends Folder {
     const value = await store.get(this.id);
 
     if (value && Array.isArray(value.children)) {
-      value.children.push([bindId, name, Node]);
+      value.children.push([bindId, name, nodeId]);
       store.put(value);
     }
 
@@ -135,7 +136,7 @@ export class IndexedDBFolder extends Folder {
     await transaction.done;
   }
 
-  async insert(name: string, node: Node, index: number): Promise<BindId> {
+  async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> {
     const bindId = ulid() as BindId;
 
     const transaction = this.db.transaction("nodes", "readwrite");
@@ -143,7 +144,7 @@ export class IndexedDBFolder extends Folder {
     const value = await store.get(this.id);
 
     if (value && Array.isArray(value.children)) {
-      value.children.splice(index, 0, [bindId, name, node]);
+      value.children.splice(index, 0, [bindId, name, nodeId]);
       store.put(value);
     }
 
@@ -151,7 +152,7 @@ export class IndexedDBFolder extends Folder {
     return bindId;
   }
 
-  async getEntry(bindId: BindId): Promise<[BindId, string, Node]> {
+  async getEntry(bindId: BindId): Promise<Entry> {
     const transaction = this.db.transaction("nodes", "readonly");
     const store = transaction.objectStore("nodes");
     const value = await store.get(this.id);
@@ -159,7 +160,7 @@ export class IndexedDBFolder extends Folder {
     return value ? value.children.find(([b, _, __]) => b === bindId) : null;
   }
 
-  async getEntryByName(name: string): Promise<[BindId, string, Node]> {
+  async getEntryByName(name: string): Promise<Entry> {
     const transaction = this.db.transaction("nodes", "readonly");
     const store = transaction.objectStore("nodes");
     const value = await store.get(this.id);
@@ -167,7 +168,7 @@ export class IndexedDBFolder extends Folder {
     return value ? value.children.find(([_, n, __]) => n === name) : null;
   }
 
-  async getEntriesByName(name: string): Promise<[BindId, string, Node][]> {
+  async getEntriesByName(name: string): Promise<Entry[]> {
     const transaction = this.db.transaction("nodes", "readonly");
     const store = transaction.objectStore("nodes");
     const value = await store.get(this.id);

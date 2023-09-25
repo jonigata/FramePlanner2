@@ -71,7 +71,7 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
     if (!image.fileId) {
       const file = await fileSystem.createFile();
       await file.write(imageToBase64(image));
-      imageFolder.link(file.id, file);
+      imageFolder.link(file.id, file.id);
       image.fileId = file.id;
     }
     markUp.image = image.fileId;
@@ -98,7 +98,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
     if (image && !image.fileId) {
       const file = await fileSystem.createFile();
       await file.write(imageToBase64(image));
-      imageFolder.link(file.id, file);
+      imageFolder.link(file.id, file.id);
       image.fileId = file.id;
     }
     const b = {
@@ -206,6 +206,6 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, pref
   console.log("*********** savePageTo from newFile");
   // console.trace();
   await savePageTo(page, fs, file);
-  await folder.link(name, file);
+  await folder.link(name, file.id);
   return { file, page };
 }

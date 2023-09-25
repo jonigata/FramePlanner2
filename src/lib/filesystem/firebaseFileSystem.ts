@@ -1,3 +1,4 @@
+/*
 import { Node, File, Folder } from './fileSystem';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { getDatabase, ref, push, set, get, child, remove, type DatabaseReference } from "firebase/database";
@@ -71,3 +72,4 @@ export function getFileSystemRoot(): Folder {
   const rootRef = ref(database, `users/${uid}/files`);
   return new FirebaseFolder(rootRef);
 }
+*/

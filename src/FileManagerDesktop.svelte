@@ -26,7 +26,7 @@
     const file = await fileSystem.createFile();
     console.log("*********** savePageTo from createNewFile");
     await savePageTo(page, fileSystem, file);
-    await node.link("new file", file);
+    await node.link("new file", file.id);
     node = node;
   }
 
@@ -34,7 +34,7 @@
 
 <div class="desktop">
   {#if node != null}
-    {#await node.list()}
+    {#await node.listEmbodied()}
       <div>loading...</div>
     {:then children}
       {#each children as [_bindId, _name, node]}
