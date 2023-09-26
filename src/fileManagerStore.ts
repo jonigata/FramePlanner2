@@ -153,7 +153,7 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
     const content = await file.read();
     const image = new Image();
     image.src = content;
-    image.fileId = markUp.image;
+    image["fileId"] = markUp.image;
     frameTree.image = image;
   }
 
@@ -179,7 +179,7 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, imageF
       const content = await file.read();
       const image = new Image();
       image.src = content;
-      image.fileId = imageId;
+      image["fileId"] = imageId;
       bubble.image = image;
     }
     unpackedBubbles.push(bubble);

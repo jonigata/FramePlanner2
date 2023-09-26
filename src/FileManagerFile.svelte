@@ -11,7 +11,7 @@
   const dispatch = createEventDispatcher();
 
   export let fileSystem: FileSystem;
-  export let name: string = '';
+  export const name: string = '';
   export let bindId: BindId;
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
