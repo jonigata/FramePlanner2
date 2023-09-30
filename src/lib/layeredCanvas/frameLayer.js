@@ -401,6 +401,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
+    this.onCommit(this.frameTree);
   }
 
   *rotateImage(p, layout) {
@@ -421,6 +422,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
+    this.onCommit(this.frameTree);
   }
 
   *translateImage(p, layout) {
@@ -439,6 +441,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
+    this.onCommit(this.frameTree);
   }
 
   *moveBorder(p, border) {

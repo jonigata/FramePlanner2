@@ -26,6 +26,9 @@ export class MockFileSystem extends FileSystem {
   }
 
   async getNode(id: NodeId): Promise<Node> {
+    if (!this.files[id]) {
+      throw new Error(`Node ${id} not found`);
+    }
     return this.files[id];
   }
 

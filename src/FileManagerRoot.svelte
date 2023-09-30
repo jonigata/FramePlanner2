@@ -18,13 +18,16 @@
 
   $:onUpdatePage($mainPage);
   async function onUpdatePage(page: Page) {
+    console.log("onUpdatePage");
     if (revisionEqual(page.revision, currentRevision)) {
       return;
     }
 
+    console.log(page.revision.id);
     if (page.revision.id === "bootstrap") { 
       // 初期化時は仮ファイルをセーブする
-      const desktop = await (await fileSystem.getRoot()).getNodeByName("デスクトップ");
+      const root = await fileSystem.getRoot();
+      const desktop = await root.getNodeByName("デスクトップ");
       const file = await fileSystem.createFile();
       console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
       await savePageTo(page, fileSystem, file);
@@ -36,6 +39,7 @@
       const file = await fileSystem.getNode(page.revision.id as NodeId);
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
+      console.log(page.revision);
       currentRevision = {...page.revision};
     }
   }

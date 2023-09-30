@@ -12,38 +12,45 @@ export class IndexedDBFileSystem extends FileSystem {
 
   async open() {
     this.db = await openDB('FileSystemDB', 1, {
-      upgrade(db) {
-        db.createObjectStore('nodes', { keyPath: 'id' });
-        db.createObjectStore('files', { keyPath: 'id' });
-        db.createObjectStore('folders', { keyPath: 'id' });
+      async upgrade(db, oldVersion, newVersion, transaction) {
+        const store = db.createObjectStore('nodes', { keyPath: 'id' });
+        
+        const rootId = "/" as NodeId;
+        await store.add({ id: rootId, type: 'folder', children: [] });
+    
+        await transaction.done;
       }
     });
   }
 
   async createFile(): Promise<File> {
-    const id = ulid() as NodeId;
-    const file = new IndexedDBFile(this, id, this.db);
-    await file.write('');
-    const transaction = this.db.transaction("nodes", "readwrite");
-    const store = transaction.objectStore("nodes");
-    store.add({ id, type: 'file', content: '' });
-    await transaction.done;
-    return file;
+    try {
+      const id = ulid() as NodeId;
+      const file = new IndexedDBFile(this, id, this.db);
+      const tx = this.db.transaction("nodes", "readwrite");
+      const store = tx.store;
+      await store.add({ id, type: 'file', content: '' });
+      await tx.done;
+      return file;
+    } catch (e) {
+      throw e;
+    }
   }
 
   async createFolder(): Promise<Folder> {
     const id = ulid() as NodeId;
+    console.log("*********** createFolder", id);
     const folder = new IndexedDBFolder(this, id, this.db);
-    const transaction = this.db.transaction("nodes", "readwrite");
-    const store = transaction.objectStore("nodes");
-    store.add({ id, type: 'folder', children: [] });
-    await transaction.done;
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
+    await store.add({ id, type: 'folder', children: [] });
+    await tx.done;
     return folder;
   }
 
   async getNode(id: NodeId): Promise<Node> {
-    const transaction = this.db.transaction("nodes", "readonly");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
     const value = await store.get(id);
     
     if (value) {
@@ -60,7 +67,7 @@ export class IndexedDBFileSystem extends FileSystem {
 
   async getRoot(): Promise<Folder> {
     // Assuming root folder ID is known or is a constant
-    const rootId = "root" as NodeId;
+    const rootId = "/" as NodeId;
     return this.getNode(rootId) as Promise<Folder>;
   }
 }
@@ -74,12 +81,12 @@ export class IndexedDBFile extends File {
   }
 
   async read() {
-    const data = await this.db.get('files', this.id);
+    const data = await this.db.get('nodes', this.id);
     return data ? data.content : null;
   }
 
   async write(data) {
-    await this.db.put('files', { id: this.id, content: data });
+    await this.db.put('nodes', { id: this.id, type: 'file', content: data });
   }
 }
 
@@ -100,8 +107,8 @@ export class IndexedDBFolder extends Folder {
   }
 
   async list(): Promise<Entry[]> {
-    const transaction = this.db.transaction("nodes", "readonly");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     return value ? value.children : [];
@@ -110,8 +117,8 @@ export class IndexedDBFolder extends Folder {
   async link(name: string, nodeId: NodeId): Promise<BindId> {
     const bindId = ulid() as BindId;
 
-    const transaction = this.db.transaction("nodes", "readwrite");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     if (value && Array.isArray(value.children)) {
@@ -119,13 +126,13 @@ export class IndexedDBFolder extends Folder {
       store.put(value);
     }
 
-    await transaction.done;
+    await tx.done;
     return bindId;
   }
 
   async unlink(bindId: BindId): Promise<void> {
-    const transaction = this.db.transaction("nodes", "readwrite");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     if (value && Array.isArray(value.children)) {
@@ -133,14 +140,14 @@ export class IndexedDBFolder extends Folder {
       store.put(value);
     }
 
-    await transaction.done;
+    await tx.done;
   }
 
   async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> {
     const bindId = ulid() as BindId;
 
-    const transaction = this.db.transaction("nodes", "readwrite");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     if (value && Array.isArray(value.children)) {
@@ -148,29 +155,29 @@ export class IndexedDBFolder extends Folder {
       store.put(value);
     }
 
-    await transaction.done;
+    await tx.done;
     return bindId;
   }
 
   async getEntry(bindId: BindId): Promise<Entry> {
-    const transaction = this.db.transaction("nodes", "readonly");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     return value ? value.children.find(([b, _, __]) => b === bindId) : null;
   }
 
   async getEntryByName(name: string): Promise<Entry> {
-    const transaction = this.db.transaction("nodes", "readonly");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     return value ? value.children.find(([_, n, __]) => n === name) : null;
   }
 
   async getEntriesByName(name: string): Promise<Entry[]> {
-    const transaction = this.db.transaction("nodes", "readonly");
-    const store = transaction.objectStore("nodes");
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
     const value = await store.get(this.id);
 
     return value ? value.children.filter(([_, n, __]) => n === name) : [];

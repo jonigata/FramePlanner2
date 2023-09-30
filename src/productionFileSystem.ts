@@ -6,20 +6,16 @@ export async function buildFileSystem(): Promise<FileSystem> {
   await fs.open();
   const root = await fs.getRoot();
 
-  const desktop = await fs.createFolder();
-  await root.link('デスクトップ', desktop.id);
+  const specialFolders = ['デスクトップ', 'キャビネット', 'ごみ箱', 'テンプレート', '画像'];
 
-  const cabinet = await fs.createFolder();
-  await root.link('キャビネット', cabinet.id);
-
-  const trash = await fs.createFolder();
-  await root.link('ごみ箱', trash.id);
-
-  const templates = await fs.createFolder();
-  await root.link('テンプレート', templates.id);
-
-  const images = await fs.createFolder();
-  await root.link('画像', images.id);
+  const children = await root.list();
+  for (const f of specialFolders) {
+    const found = children.find((c) => c[1] === f);
+    if (!found) {
+      const folder = await fs.createFolder();
+      await root.link(f, folder.id);
+    }
+  }
 
   return fs;
 }

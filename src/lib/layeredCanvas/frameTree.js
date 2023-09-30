@@ -85,10 +85,10 @@ export class FrameElement {
 
     const children = markUp.column ?? markUp.row;
     if (!children) {
-      element.translation = [0, 0];
-      element.scale = [1, 1]; 
-      element.rotation = 0;
-      element.reverse = [1, 1];
+      element.translation = markUp.translation ?? [0, 0];
+      element.scale = markUp.scale ?? [1, 1]; 
+      element.rotation = markUp.rotation ?? 0;
+      element.reverse = markUp.reverse ?? [1, 1];
     }
 
     return element;
@@ -134,6 +134,19 @@ export class FrameElement {
       markUpElement[dir] = [];
       for (let i = 0; i < element.children.length; i++) {
         markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
+      }
+    } else {
+      if (element.translation[0] !== 0 || element.translation[1] !== 0) {
+        markUpElement.translation = element.translation;
+      }
+      if (element.scale[0] !== 1 || element.scale[1] !== 1) {
+        markUpElement.scale = element.scale;
+      }
+      if (element.rotation !== 0) {
+        markUpElement.rotation = element.rotation;
+      }
+      if (element.reverse[0] !== 1 || element.reverse[1] !== 1) {
+        markUpElement.reverse = element.reverse;
       }
     }
     if (element.divider.spacing !== 0 || element.divider.slant !== 0) {

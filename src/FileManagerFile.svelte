@@ -1,7 +1,7 @@
 <script lang="ts">
   import { loadPageFrom, fileManagerDragging, type Dragging } from "./fileManagerStore";
-  import type { BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
-  import { mainPage } from './pageStore';
+  import type { NodeId, BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
+  import { type Page, mainPage } from './pageStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
 
@@ -11,7 +11,7 @@
   const dispatch = createEventDispatcher();
 
   export let fileSystem: FileSystem;
-  export const name: string = '';
+  export let nodeId: NodeId;
   export let bindId: BindId;
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
@@ -20,6 +20,12 @@
 
   let acceptable = false;
   let isDiscardable = false;
+  let selected = false;
+
+  $: onSelectionChanged($mainPage);
+  function onSelectionChanged(page: Page) {
+    selected = page.revision.id === nodeId;
+  }
 
   $: ondrag($fileManagerDragging);
   function ondrag(dragging: Dragging) {
@@ -72,7 +78,8 @@
   
 </script>
 
-<div class="file-title" draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
+<div class="file-title" class:selected={selected}
+  draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   <img class="button" src={fileIcon} alt="symbol"/>
   {`Page ${( '00' + (index+1) ).slice( -2 )}`}
   {#if isDiscardable}
@@ -93,5 +100,8 @@
     width: 16px;
     height: 16px;
     display: inline;
+  }
+  .selected {
+    background-color: #ccc;
   }
 </style>

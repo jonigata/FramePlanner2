@@ -3,8 +3,6 @@ import { MockFileSystem } from './lib/filesystem/mockFileSystem';
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
 import { newFile } from "./fileManagerStore";
 
-// TODO: ファイルの置き場所がおかしい感じ？
-
 export async function buildFileSystem(): Promise<FileSystem> {
   const fs = new MockFileSystem();
   const root = await fs.getRoot();
