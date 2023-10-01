@@ -5,7 +5,6 @@ import { FrameElement } from "./lib/layeredCanvas/frameTree";
 import type { Bubble } from "./lib/layeredCanvas/bubble";
 import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-import { ulid } from "ulid";
 
 export type Dragging = {
   bindId: string;
@@ -17,6 +16,8 @@ export const fileSystem: FileSystem = null;
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
+
+let imageCache = {};
 
 type SerializedPage = {
   revision: {id: string, revision: number, prefix: string},
@@ -68,13 +69,10 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
 
   if (image) {
-    if (!image.fileId) {
-      const file = await fileSystem.createFile();
-      await file.write(imageToBase64(image));
-      imageFolder.link(file.id, file.id);
-      image.fileId = file.id;
-    }
-    markUp.image = image.fileId;
+    await saveImage(fileSystem, image);
+    const fileId = image["fileId"];
+    await imageFolder.link(fileId, fileId);
+    markUp.image = fileId;
   }
 
   const children = [];
@@ -95,11 +93,10 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
   const packedBubbles = [];
   for (const bubble of bubbles) {
     const image = bubble.image;
-    if (image && !image.fileId) {
-      const file = await fileSystem.createFile();
-      await file.write(imageToBase64(image));
-      imageFolder.link(file.id, file.id);
-      image.fileId = file.id;
+    if (image) {
+      await saveImage(fileSystem, image);
+      const fileId = image["fileId"];
+      await imageFolder.link(fileId, fileId);
     }
     const b = {
       ...bubble,
@@ -149,12 +146,7 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
   const frameTree = FrameElement.compileNode(markUp);
 
   if (markUp.image) {
-    const file = (await fileSystem.getNode(markUp.image as NodeId)).asFile();
-    const content = await file.read();
-    const image = new Image();
-    image.src = content;
-    image["fileId"] = markUp.image;
-    frameTree.image = image;
+    frameTree.image = await loadImage(fileSystem, markUp.image);
   }
 
   const children = markUp.column ?? markUp.row;
@@ -175,12 +167,7 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, imageF
   for (const bubble of bubbles) {
     const imageId = bubble.image;
     if (imageId) {
-      const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
-      const content = await file.read();
-      const image = new Image();
-      image.src = content;
-      image["fileId"] = imageId;
-      bubble.image = image;
+      bubble.image = await loadImage(fileSystem, imageId);
     }
     unpackedBubbles.push(bubble);
   }
@@ -208,4 +195,29 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, pref
   await savePageTo(page, fs, file);
   await folder.link(name, file.id);
   return { file, page };
+}
+
+async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLImageElement> {
+  if (imageCache[imageId]) {
+    return imageCache[imageId];
+  } else {
+    const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
+    const content = await file.read();
+    const image = new Image();
+    image.src = content;
+    image["fileId"] = imageId;
+    imageCache[imageId] = image;
+    return image;
+  }
+}
+
+async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<string> {
+  const fileId = image["fileId"];
+  if (imageCache[fileId]) {
+    // TODO: 画像のピクセル更新
+    return imageCache[fileId];
+  }
+  const file = await fileSystem.createFile();
+  await file.write(imageToBase64(image));
+  image["fileId"] = file.id;
 }
