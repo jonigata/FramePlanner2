@@ -65,6 +65,7 @@ export function revisionEqual(a: Revision, b: Revision): boolean {
 
 export function addHistory(page: Page, frameTree, bubbles) {
   page.history.length = page.historyIndex;
+  console.log(bubbles);
   page.history.push({
     frameTree: frameTree.clone(),
     bubbles: bubbles.map(b => b.clone()),

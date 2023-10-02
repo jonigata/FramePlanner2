@@ -84,8 +84,7 @@
   }
 
   export function commit() {
-    console.log("commit", page.revision, [...page.history], page.historyIndex)
-    console.trace();
+    // console.log("commit", page.revision, [...page.history], page.historyIndex)
     addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
     outputPage();
   }

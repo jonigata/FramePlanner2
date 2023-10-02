@@ -1,8 +1,8 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId } from "./lib/filesystem/fileSystem";
-import type { Page, Revision } from "./pageStore";
+import type { Page } from "./pageStore";
 import { FrameElement } from "./lib/layeredCanvas/frameTree";
-import type { Bubble } from "./lib/layeredCanvas/bubble";
+import { Bubble } from "./lib/layeredCanvas/bubble";
 import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
 
@@ -37,12 +37,12 @@ export async function savePageTo(page: Page, fileSystem: FileSystem, file: File)
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
 
   const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
-  const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder);
+  const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
 
   const history = [];
   for (const entry of page.history) {
     const markUp = await packFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
-    const bubbles = await packBubbleImages(entry.bubbles, fileSystem, imageFolder);
+    const bubbles = await packBubbleImages(entry.bubbles, fileSystem, imageFolder, page.paperSize);
     history.push({frameTree: markUp, bubbles: bubbles});
   }
 
@@ -89,20 +89,18 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   return markUp;
 }
 
-async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder): Promise<any[]> {
+async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, paperSize: [number, number]): Promise<any[]> {
   const packedBubbles = [];
-  for (const bubble of bubbles) {
-    const image = bubble.image;
+  for (const src of bubbles) {
+    const image = src.image;
+    const bubble = Bubble.decompile(paperSize, src);
     if (image) {
       await saveImage(fileSystem, image);
       const fileId = image["fileId"];
       await imageFolder.link(fileId, fileId);
+      bubble.image = fileId;
     }
-    const b = {
-      ...bubble,
-      image: image ? image.fileId : undefined,
-    };
-    packedBubbles.push(b);
+    packedBubbles.push(bubble);
   }
   return packedBubbles;
 }
@@ -116,13 +114,13 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
   const root = await fileSystem.getRoot();
   const imageFolder = await root.getNodeByName('画像') as Folder;
 
-  const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem, imageFolder, 'v');
-  const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, imageFolder);
+  const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
+  const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
 
   const history = [];
   for (const entry of serializedPage.history) {
-    const frameTree = await unpackFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
-    const bubbles = await unpackBubbleImages(entry.bubbles, fileSystem, imageFolder);
+    const frameTree = await unpackFrameImages(entry.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(entry.bubbles, fileSystem, serializedPage.paperSize);
     history.push({frameTree, bubbles});
   }
 
@@ -142,7 +140,7 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
   return page;
 }
 
-async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<FrameElement> {
+async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
   if (markUp.image) {
@@ -154,7 +152,7 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
     frameTree.direction = markUp.column ? 'v' : 'h';
     frameTree.children = [];
     for (let child of children) {
-      frameTree.children.push(await unpackFrameImages(child, fileSystem, imageFolder, frameTree.direction));
+      frameTree.children.push(await unpackFrameImages(child, fileSystem));
     }
     frameTree.calculateLengthAndBreadth();
   }
@@ -162,10 +160,12 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem, imageFolde
   return frameTree;
 }
 
-async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, imageFolder: Folder): Promise<Bubble[]> {
+async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperSize: [number, number]): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
-  for (const bubble of bubbles) {
-    const imageId = bubble.image;
+  for (const src of bubbles) {
+    console.log(src);
+    const imageId = src.image;
+    const bubble: Bubble = Bubble.compile(paperSize, src);
     if (imageId) {
       bubble.image = await loadImage(fileSystem, imageId);
     }
