@@ -3,7 +3,7 @@
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { fileManagerOpen, fileManagerRefreshKey, savePageTo } from "./fileManagerStore";
   import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
-  import { type Page, mainPage, revisionEqual } from './pageStore';
+  import { type Page, mainPage, revisionEqual, commitPage } from './pageStore';
   import { onMount } from 'svelte';
   import type { Revision } from "./pageStore";
 
@@ -31,8 +31,10 @@
       console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
       await savePageTo(page, fileSystem, file);
       await desktop.asFolder().link("bootstrap", file.id);
-      currentRevision = { id: file.id, revision: 1, prefix: "bootstrap2" };
-      $mainPage = { ...page, revision: {...currentRevision} };
+      currentRevision = { id: file.id, revision: 1, prefix: "standard" };
+      const newPage = { ...page, revision: {...currentRevision} };
+      commitPage(newPage, page.frameTree, page.bubbles);
+      $mainPage = newPage;
       $fileManagerRefreshKey++;
     } else {
       const file = await fileSystem.getNode(page.revision.id as NodeId);
