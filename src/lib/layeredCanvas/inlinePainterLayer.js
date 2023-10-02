@@ -39,7 +39,6 @@ export class InlinePainterLayer extends Layer {
   }
 
   accepts(point) {
-    console.log("accepts", point);    
     if (!this.image) {return null;}
     return {};
   }

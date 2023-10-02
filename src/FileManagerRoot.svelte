@@ -23,7 +23,6 @@
       return;
     }
 
-    console.log(page.revision.id);
     if (page.revision.id === "bootstrap") { 
       // 初期化時は仮ファイルをセーブする
       const root = await fileSystem.getRoot();
@@ -39,7 +38,6 @@
       const file = await fileSystem.getNode(page.revision.id as NodeId);
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
-      console.log(page.revision);
       currentRevision = {...page.revision};
     }
   }

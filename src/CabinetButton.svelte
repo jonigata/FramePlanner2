@@ -3,7 +3,6 @@
   import { fileManagerOpen } from './fileManagerStore';
   
   function openFileManager() {
-    console.log("openFileManager");
     $fileManagerOpen = !$fileManagerOpen;
   }
 </script>

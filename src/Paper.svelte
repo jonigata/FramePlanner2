@@ -21,7 +21,7 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
-  import { type Page, type Revision, setRevision, getIncrementedRevision, revisionEqual, addHistory, undoPageHistory, redoPageHistory } from './pageStore';
+  import { type Page, type Revision, commitPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
 
   export let page: Page;
   export let editable = false;
@@ -85,8 +85,9 @@
 
   export function commit() {
     // console.log("commit", page.revision, [...page.history], page.historyIndex)
-    addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
-    outputPage();
+    const newPage = commitPage(page, frameLayer.frameTree, bubbleLayer.bubbles);
+    pageRevision = newPage.revision;
+    page = newPage;
   }
 
   function revert() {
@@ -170,10 +171,10 @@
   function onUpdatePage(newPage: Page) {
     if (!frameLayer) { return; }
     if (revisionEqual(newPage.revision, pageRevision)) { 
-      // console.log("same revision")
+      console.log("%csame revision", "color:white; background-color:purple; padding:2px 4px; border-radius:4px;")
       return; 
     }
-    console.log("different revision", newPage.revision, pageRevision);
+    console.log("%cdifferent revision", "color:white; background-color:purple; padding:2px 4px; border-radius:4px;", newPage.revision, pageRevision);
 
     bubbleLayer.bubbles = newPage.bubbles;
     bubbleLayer.selected = null;
@@ -183,9 +184,6 @@
     frameLayer.frameTree.borderColor = page.frameColor;
     frameLayer.frameTree.borderWidth = page.frameWidth;
 
-    if (pageRevision) {
-      commit();
-    }
     pageRevision = {...newPage.revision};
 
     layeredCanvas.setPaperSize(page.paperSize);
@@ -197,13 +195,6 @@
     // フォント読み込みが遅れるようなのでヒューリスティック
     setTimeout(() => layeredCanvas.redraw(), 2000);
     setTimeout(() => layeredCanvas.redraw(), 5000);
-  }
-
-  function outputPage() {
-    const newPage = {...page};
-    pageRevision = getIncrementedRevision(page);
-    setRevision(newPage, pageRevision);
-    page = newPage;
   }
 
   function showInspector(b: Bubble) {
@@ -314,10 +305,6 @@
             code === "KeyT" || code === "KeyY" || code === "KeyE" ||
             code === "Space";
       });
-    }
-
-    if (editable) {
-      addHistory(page, frameLayer.frameTree, bubbleLayer.bubbles);
     }
   });
 

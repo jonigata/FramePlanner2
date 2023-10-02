@@ -65,11 +65,11 @@ export function revisionEqual(a: Revision, b: Revision): boolean {
 
 export function addHistory(page: Page, frameTree, bubbles) {
   page.history.length = page.historyIndex;
-  console.log(bubbles);
   page.history.push({
     frameTree: frameTree.clone(),
     bubbles: bubbles.map(b => b.clone()),
   })
+  console.log("page history length", page.history.length);
   page.historyIndex = page.history.length;
 }
 
@@ -85,3 +85,11 @@ export function redoPageHistory(page) {
   page.historyIndex++;
 }
 
+export function commitPage(page: Page, frameTree: FrameElement, bubbles: Bubble[]) {
+  console.log("commitPage", page.revision, [...page.history], page.historyIndex)
+  addHistory(page, frameTree, bubbles);
+  const newPage = {...page};
+  const pageRevision = getIncrementedRevision(page);
+  setRevision(newPage, pageRevision);
+  return page;
+}

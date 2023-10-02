@@ -114,6 +114,7 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
   const root = await fileSystem.getRoot();
   const imageFolder = await root.getNodeByName('画像') as Folder;
 
+  console.log("bubble count", serializedPage.bubbles.length);
   const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
   const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
 
@@ -167,7 +168,10 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperS
     const imageId = src.image;
     const bubble: Bubble = Bubble.compile(paperSize, src);
     if (imageId) {
+      console.log("imageId", imageId);
       bubble.image = await loadImage(fileSystem, imageId);
+    } else {
+      console.log("no imageId");
     }
     unpackedBubbles.push(bubble);
   }

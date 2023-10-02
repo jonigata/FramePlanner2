@@ -39,7 +39,6 @@ export class IndexedDBFileSystem extends FileSystem {
 
   async createFolder(): Promise<Folder> {
     const id = ulid() as NodeId;
-    console.log("*********** createFolder", id);
     const folder = new IndexedDBFolder(this, id, this.db);
     const tx = this.db.transaction("nodes", "readwrite");
     const store = tx.store;

@@ -119,11 +119,6 @@
     $isJsonEditorOpen = !$isJsonEditorOpen;      
   }
 
-  function toggleFileManager() {
-    console.log("openFileManager");
-    $fileManagerOpen = !$fileManagerOpen;
-  }
-
   async function downloadJson() {
     $commitToken = true;
     $downloadJsonToken = true;

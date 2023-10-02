@@ -76,7 +76,6 @@
       return;
     }
 
-    console.log("onOuterPageUpdate");
     currentRevision = {...p.revision};
     page = p;
   }

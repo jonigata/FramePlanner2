@@ -8,7 +8,7 @@
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
-  import { type Page, type Revision, mainPage, getRevision, incrementRevision, setRevision } from './pageStore';
+  import { type Page, type Revision, mainPage, getRevision, incrementRevision, setRevision, commitPage } from './pageStore';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
@@ -23,10 +23,9 @@
     }
     content = updatedContent
     try {
-      const page = toJSONContent(updatedContent).json as unknown as Page;
-      pageRevision = incrementRevision(pageRevision);
-      setRevision(page, pageRevision);
-      $mainPage = page;
+      const jsonPage = toJSONContent(updatedContent).json as unknown as Page;
+      const newPage = commitPage($mainPage, jsonPage.frameTree, jsonPage.bubbles);
+      $mainPage = newPage;
     }
     catch (e) {
       // ユーザーの入力したJSONが不正な場合、握りつぶす
