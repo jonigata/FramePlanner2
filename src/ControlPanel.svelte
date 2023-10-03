@@ -4,7 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { incrementRevision, mainPage } from './pageStore';
+  import { type Page, incrementRevision, mainPage } from './pageStore';
   import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
@@ -20,7 +20,6 @@
   import { commitToken } from './undoStore';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
-  import { fileManagerOpen } from './fileManagerStore';
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
 
@@ -28,22 +27,36 @@
   let exponentialMin = 4096;
   let max = 9410;
   let contactText = "";
+  let paperSize: [number, number] = [0, 0];
 
-  $:onUpdateSize($mainPage.paperSize);
-  function onUpdateSize(_size: [number, number]) {
+  $:onUpdateMainPage($mainPage);
+  function onUpdateMainPage(page: Page) {
+    paperSize[0] = page.paperSize[0];
+    paperSize[1] = page.paperSize[1];
+  }
+
+  $:onUpdateSize(paperSize);
+  function onUpdateSize(size: [number, number]) {
+    console.log("ControlPanel.onUpdateSize");
+    if ($mainPage.paperSize[0] === size[0] && $mainPage.paperSize[1] === size[1]) {
+      return;
+    }
+    $mainPage.paperSize[0] = size[0];
+    $mainPage.paperSize[1] = size[1];
     $mainPage.revision = incrementRevision($mainPage.revision);
   }
 
   function setDimensions(w: number, h: number) {
     // 入れ物ごと交換するとbindが崩れる模様
-    $mainPage.paperSize[0] = w;
-    $mainPage.paperSize[1] = h;
+    paperSize[0] = w;
+    paperSize[1] = h;
   }
 
   function applyTemplate(event: CustomEvent<any>) {
     const page = {...$mainPage};
     page.frameTree = FrameElement.compile(event.detail);
     page.bubbles = [];
+    page.revision = incrementRevision(page.revision);
     $mainPage = page;
   }
 
@@ -164,20 +177,20 @@
       <div class="hbox">
         <div class="font-bold slider-label">W</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$mainPage.paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$mainPage.paperSize[0]}/></div>
+          <div class="number-box"><NumberEdit bind:value={paperSize[0]}/></div>
           / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">H</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$mainPage.paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$mainPage.paperSize[1]}/></div>
+          <div class="number-box"><NumberEdit bind:value={paperSize[1]}/></div>
            / {max}
         </div>
       </div>

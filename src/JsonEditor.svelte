@@ -8,7 +8,9 @@
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
-  import { type Page, type Revision, mainPage, getRevision, incrementRevision, setRevision, commitPage } from './pageStore';
+  import { type Page, type Revision, mainPage, getRevision, revisionEqual, commitPage } from './pageStore';
+  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
+  import { Bubble } from './lib/layeredCanvas/bubble.js';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
@@ -16,7 +18,7 @@
 
   function handleChange(updatedContent: any /*, previousContent, { contentErrors, patchResult }*/) {
     // content is an object { json: JSONValue } | { text: string }
-    // console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
+    console.log('Json/handleChange')
     if (skipJsonChange) {
       // console.log("skipJsonChange");
       return;
@@ -24,7 +26,12 @@
     content = updatedContent
     try {
       const jsonPage = toJSONContent(updatedContent).json as unknown as Page;
-      const newPage = commitPage($mainPage, jsonPage.frameTree, jsonPage.bubbles);
+      const newPage = commitPage($mainPage, 
+        FrameElement.compile(jsonPage.frameTree), 
+        jsonPage.bubbles.map(b => Bubble.compile($mainPage.paperSize, b)));
+      console.log({...newPage});
+      pageRevision = getRevision(newPage);
+      console.log("pageRevision = ", pageRevision);
       $mainPage = newPage;
     }
     catch (e) {
@@ -42,7 +49,13 @@
 
   $:onUpdateOuterPage($mainPage);
   async function onUpdateOuterPage(page: Page) {
-    // console.log("onUpdateOuterPage", page);
+    console.log("Json/onUpdateOuterPage", page);
+    if (revisionEqual(page.revision, pageRevision)) { 
+      console.log("%csame revision", "color:white; background-color:orange; padding:2px 4px; border-radius:4px;")
+      return; 
+    }
+    console.log("%cdifferent revision", "color:white; background-color:orange; padding:2px 4px; border-radius:4px;", page.revision, pageRevision)
+
     skipJsonChange = true;
     pageRevision = getRevision(page);
     const displayPage = { ...page }; 
