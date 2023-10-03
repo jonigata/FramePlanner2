@@ -6,7 +6,7 @@
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
-  import type { Bubble } from './lib/layeredCanvas/bubble.js';
+  import { Bubble } from './lib/layeredCanvas/bubble.js';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
@@ -38,6 +38,7 @@
   let bubbleLayer: BubbleLayer;
   let inlinePainterLayer: InlinePainterLayer;
   let pageRevision: Revision | null = null;
+  let bubbleSnapshot: string = null;
 
   interface CustomCanvasElement extends HTMLCanvasElement {
     paper: any;
@@ -84,10 +85,20 @@
   }
 
   export function commit() {
-    // console.log("commit", page.revision, [...page.history], page.historyIndex)
+    console.log("%ccommit", "color:white; background-color:cyan; padding:2px 4px; border-radius:4px;", page.revision, [...page.history], page.historyIndex)
     const newPage = commitPage(page, frameLayer.frameTree, bubbleLayer.bubbles);
+    bubbleSnapshot = $bubble ? JSON.stringify(Bubble.decompile(page.paperSize, $bubble)) : null;
     pageRevision = newPage.revision;
     page = newPage;
+  }
+
+  export function commitIfDirty() {
+    if (!bubbleSnapshot || !$bubble) { return; }
+    const newBubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, $bubble));
+    if (bubbleSnapshot !== newBubbleSnapshot) {
+      console.log("%ccommitIfDirty", "color:white; background-color:cyan; padding:2px 4px; border-radius:4px;", bubbleSnapshot, newBubbleSnapshot);
+      commit();
+    }
   }
 
   function revert() {
@@ -191,18 +202,26 @@
   }
 
   $:onChangeBubble($bubble);
-  function onChangeBubble(_b: Bubble) {
+  function onChangeBubble(b: Bubble) {
+    if (!b) { return; }
+    // TODO: クリックしただけで8回も呼ばれるのでなんとかしたい
+    // showInspectorで$bubble = bとするだけで8回呼ばれる
+    // BubbleInspectorの参照している場所各部で変更したことになってるのか？
+    // 全ての参照箇所だとすると逆に8じゃ少ないので、いくつかのコンポーネントが怪しい
+
     // フォント読み込みが遅れるようなのでヒューリスティック
     setTimeout(() => layeredCanvas.redraw(), 2000);
     setTimeout(() => layeredCanvas.redraw(), 5000);
   }
 
   function showInspector(b: Bubble) {
+    console.log("showInspector");
     const [x0, y0] = b.p0;
     const [x1, y1] = b.p1;
     const [cx, cy] = [(x0+x1)/2, (y0+y1)/2];
     const offset = canvas.height / 2 < cy ? 1 : -1;
     
+    bubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, b));
     $bubbleInspectorPosition = {
       center: elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector([cx,cy])),
       height: y1 - y0,
@@ -213,7 +232,7 @@
 
   function hideInspector() {
     console.log('hideInspector');
-    $bubble.redraw = null; // 一応
+    bubbleSnapshot = null;
     $bubble = null;
   }
 
@@ -269,14 +288,17 @@
       frameLayer,
       showInspector, 
       hideInspector, 
-      (_bubbles: Bubble[]) => {
+      (_bubbles: Bubble[], always: boolean) => {
         if ($bubble) {
           bubbleLayer.defaultBubble = $bubble.clone();
         }
-        commit();
+        if (always) {
+          commit();
+        } else {
+          commitIfDirty();
+        }
       },
-      () => {revert();},
-      getDefaultText)
+      () => {revert();})
     layeredCanvas.addLayer(bubbleLayer);
 
     sequentializePointer(InlinePainterLayer);

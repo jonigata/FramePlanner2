@@ -42,7 +42,7 @@
   $:onCommitToken($commitToken);
   async function onCommitToken(token: boolean) {
     if (!token) return;
-    paper.commit();
+    paper.commitIfDirty();
     $commitToken = false;
   }
 
