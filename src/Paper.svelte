@@ -21,7 +21,7 @@
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
-  import { type Page, type Revision, commitPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
+  import { type Page, type Revision, commitPage, revertPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
 
   export let page: Page;
   export let editable = false;
@@ -102,12 +102,8 @@
   }
 
   function revert() {
-    console.log("revert", page.historyIndex);
-    const h = page.history[page.historyIndex-1];
-    frameLayer.frameTree = h.frameTree.clone();
-    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
-    bubbleLayer.selected = null;
-    layeredCanvas.redraw(); 
+    console.log("revert");
+    page = revertPage(page);
   }
 
   export function importImage(image: HTMLImageElement) {

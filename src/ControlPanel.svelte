@@ -37,10 +37,10 @@
 
   $:onUpdateSize(paperSize);
   function onUpdateSize(size: [number, number]) {
-    console.log("ControlPanel.onUpdateSize");
     if ($mainPage.paperSize[0] === size[0] && $mainPage.paperSize[1] === size[1]) {
       return;
     }
+    console.log("ControlPanel.onUpdateSize");
     $mainPage.paperSize[0] = size[0];
     $mainPage.paperSize[1] = size[1];
     $mainPage.revision = incrementRevision($mainPage.revision);

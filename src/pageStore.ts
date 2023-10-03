@@ -92,3 +92,14 @@ export function commitPage(page: Page, frameTree: FrameElement, bubbles: Bubble[
   setRevision(newPage, pageRevision);
   return newPage;
 }
+
+export function revertPage(page: Page) {
+  console.log("revert", page.historyIndex);
+  const h = page.history[page.historyIndex-1];
+  const newPage = {...page};
+  newPage.frameTree = h.frameTree.clone();
+  newPage.bubbles = h.bubbles.map(b => b.clone());
+  const pageRevision = getIncrementedRevision(newPage);
+  setRevision(newPage, pageRevision);
+  return newPage;
+}
