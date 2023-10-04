@@ -2,7 +2,7 @@
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile } from "./fileManagerStore";
-  import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
+  import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
   import type { Revision } from "./pageStore";
@@ -24,24 +24,37 @@
     }
 
     if (page.revision.id === "bootstrap") { 
-      // 初期化時は仮ファイルをセーブする
-      const root = await fileSystem.getRoot();
-      const desktop = await root.getNodeByName("デスクトップ");
-      const file = await fileSystem.createFile();
-      console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
-      await savePageTo(page, fileSystem, file);
-      await desktop.asFolder().link(getCurrentDateTime(), file.id);
-      const newPage = commitPage(page, page.frameTree, page.bubbles, null);
-      newPage.revision.id = file.id;
-      newPage.revision.prefix = "standard";
-      currentRevision = getRevision(newPage);
-      $mainPage = newPage;
-      $fileManagerRefreshKey++;
+      const currentFileId = await fetchCurrentFileId();
+
+      if (currentFileId) {
+        const file = await fileSystem.getNode(currentFileId);
+        console.log("*********** loadPageFrom from FileManagerRoot");
+        const newPage = await loadPageFrom(fileSystem, file.asFile());
+        currentRevision = getRevision(newPage);
+        $mainPage = newPage;
+        await recordCurrentFileId(newPage.revision.id as NodeId);
+      } else {
+        // 初期化時は仮ファイルをセーブする
+        const root = await fileSystem.getRoot();
+        const desktop = await root.getNodeByName("デスクトップ");
+        const file = await fileSystem.createFile();
+        console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
+        await savePageTo(page, fileSystem, file);
+        await desktop.asFolder().link(getCurrentDateTime(), file.id);
+        const newPage = commitPage(page, page.frameTree, page.bubbles, null);
+        newPage.revision.id = file.id;
+        newPage.revision.prefix = "standard";
+        currentRevision = getRevision(newPage);
+        $mainPage = newPage;
+        $fileManagerRefreshKey++;
+        await recordCurrentFileId(newPage.revision.id as NodeId);
+      }
     } else {
       const file = await fileSystem.getNode(page.revision.id as NodeId);
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
       currentRevision = {...page.revision};
+      await recordCurrentFileId(page.revision.id as NodeId);
     }
   }
 
@@ -57,6 +70,31 @@
       $mainPage = page;
 
       $fileManagerRefreshKey++;
+    }
+  }
+
+  async function recordCurrentFileId(id: NodeId) {
+    const root = await fileSystem.getRoot();
+    const preference = await root.getNodeByName("プリファレンス");
+    const entry = await preference.asFolder().getEmbodiedEntryByName("currentFile");
+    if (entry) {
+      await (entry[2] as File).write(id);
+    } else {
+      const file = await fileSystem.createFile();
+      await preference.asFolder().link("currentFile", file.id);
+      await file.write(id);
+    }
+  }
+
+  async function fetchCurrentFileId(): Promise<NodeId> {
+    const root = await fileSystem.getRoot();
+    const preference = await root.getNodeByName("プリファレンス");
+    const entry = await preference.asFolder().getEmbodiedEntryByName("currentFile");
+    if (entry) {
+      const id = await (entry[2] as File).read();
+      return id as NodeId;
+    } else {
+      return null;
     }
   }
 

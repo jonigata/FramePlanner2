@@ -54,7 +54,7 @@ export class Folder extends Node {
   async getEntryByName(name: string): Promise<Entry> { return null; }
   async getEntriesByName(name: string): Promise<Entry[]> { return []; }
 
-  async embody(e: Entry): Promise<EmbodiedEntry> { return [e[0], e[1], await this.fileSystem.getNode(e[2])]; }
+  async embody(e: Entry): Promise<EmbodiedEntry> { return e ? [e[0], e[1], await this.fileSystem.getNode(e[2])] : null; }
   async listEmbodied(): Promise<EmbodiedEntry[]> { return await Promise.all((await this.list()).map(e => this.embody(e))); }
   async getEmbodiedEntry(bindId: BindId): Promise<EmbodiedEntry> { return await this.embody(await this.getEntry(bindId)); }
   async getEmbodiedEntryByName(name: string): Promise<EmbodiedEntry> { return await this.embody(await this.getEntryByName(name)); }
