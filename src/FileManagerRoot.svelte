@@ -31,7 +31,7 @@
       console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
       await savePageTo(page, fileSystem, file);
       await desktop.asFolder().link("bootstrap", file.id);
-      const newPage = commitPage(page, page.frameTree, page.bubbles);
+      const newPage = commitPage(page, page.frameTree, page.bubbles, null);
       newPage.revision.id = file.id;
       newPage.revision.prefix = "standard";
       currentRevision = getRevision(newPage);

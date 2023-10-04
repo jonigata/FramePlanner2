@@ -84,9 +84,9 @@
     }
   }
 
-  export function commit() {
+  export function commit(tag: string) {
     console.log("%ccommit", "color:white; background-color:cyan; padding:2px 4px; border-radius:4px;", page.revision, [...page.history], page.historyIndex)
-    const newPage = commitPage(page, frameLayer.frameTree, bubbleLayer.bubbles);
+    const newPage = commitPage(page, frameLayer.frameTree, bubbleLayer.bubbles, tag);
     bubbleSnapshot = $bubble ? JSON.stringify(Bubble.decompile(page.paperSize, $bubble)) : null;
     pageRevision = newPage.revision;
     page = newPage;
@@ -97,7 +97,7 @@
     const newBubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, $bubble));
     if (bubbleSnapshot !== newBubbleSnapshot) {
       console.log("%ccommitIfDirty", "color:white; background-color:cyan; padding:2px 4px; border-radius:4px;", bubbleSnapshot, newBubbleSnapshot);
-      commit();
+      commit(null);
     }
   }
 
@@ -135,14 +135,14 @@
     console.log("insert", element);
     const images = collectImages(frameLayer.frameTree);
     dealImages(frameLayer.frameTree, images, element, null);
-    commit();
+    commit(null);
   }
 
   function splice(element: FrameElement) {
     console.log("splice", element);
     const images = collectImages(frameLayer.frameTree);
     dealImages(frameLayer.frameTree, images, null, element);
-    commit();
+    commit(null);
   }
 
   function constraintElement(element: FrameElement) {
@@ -158,7 +158,7 @@
     inlinePainterLayer.setElement(null);
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
-    commit();
+    commit(null);
   }
 
   export function setTool(tool: any) {
@@ -267,7 +267,7 @@
       editable,
       (_frameTree: FrameElement) => {
         console.log("commit frames");
-        commit();
+        commit(null);
       },
       () => {revert();},
       (frameElement: FrameElement) => {generate(frameElement);},
@@ -289,7 +289,7 @@
           bubbleLayer.defaultBubble = $bubble.clone();
         }
         if (always) {
-          commit();
+          commit(null);
         } else {
           commitIfDirty();
         }

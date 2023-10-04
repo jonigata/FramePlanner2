@@ -4,7 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { type Page, incrementRevision, mainPage } from './pageStore';
+  import { type Page, incrementRevision, mainPage, commitPage } from './pageStore';
   import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
@@ -28,21 +28,32 @@
   let max = 9410;
   let contactText = "";
   let paperSize: [number, number] = [0, 0];
+  let paperColor: string = null;
+  let frameColor: string = null;
+  let frameWidth: number = 2;
 
   $:onUpdateMainPage($mainPage);
   function onUpdateMainPage(page: Page) {
     paperSize[0] = page.paperSize[0];
     paperSize[1] = page.paperSize[1];
+    paperColor = page.paperColor;
+    frameColor = page.frameColor;
+    frameWidth = page.frameWidth;
   }
 
-  $:onUpdateSize(paperSize);
-  function onUpdateSize(size: [number, number]) {
-    if ($mainPage.paperSize[0] === size[0] && $mainPage.paperSize[1] === size[1]) {
+  $:onUpdatePaperProperty(paperSize, paperColor, frameColor, frameWidth);
+  function onUpdatePaperProperty(_a: [number, number], _b: string, _c: string, _d: number) {
+    const mp = $mainPage;
+    if (mp.paperSize[0] === paperSize[0] && mp.paperSize[1] === paperSize[1] &&
+        mp.paperColor === paperColor && mp.frameColor === frameColor && mp.frameWidth === frameWidth) {
       return;
     }
-    console.log("ControlPanel.onUpdateSize");
-    $mainPage.paperSize[0] = size[0];
-    $mainPage.paperSize[1] = size[1];
+    console.log("ControlPanel.onUpdatePaperProperty");
+    $mainPage.paperSize[0] = paperSize[0];
+    $mainPage.paperSize[1] = paperSize[1];
+    $mainPage.paperColor = paperColor;
+    $mainPage.frameColor = frameColor;
+    $mainPage.frameWidth = frameWidth;
     $mainPage.revision = incrementRevision($mainPage.revision);
   }
 
@@ -57,7 +68,7 @@
     page.frameTree = FrameElement.compile(event.detail);
     page.bubbles = [];
     page.revision = incrementRevision(page.revision);
-    $mainPage = page;
+    $mainPage = commitPage(page, page.frameTree, page.bubbles, null);
   }
 
   function save() {
@@ -209,9 +220,9 @@
     </div>
   </div>
   <div class="hbox gap mx-2 paper-color-picker" style="margin-top: 16px;">
-    背景色<ColorPicker bind:hex={$mainPage.paperColor} label=""/>
-    枠色<ColorPicker bind:hex={$mainPage.frameColor} label="" />
-    幅<RangeSlider name="line" bind:value={$mainPage.frameWidth} max={10} step={1} style="width:100px;"/>
+    背景色<ColorPicker bind:hex={paperColor} label=""/>
+    枠色<ColorPicker bind:hex={frameColor} label="" />
+    幅<RangeSlider name="line" bind:value={frameWidth} max={10} step={1} style="width:100px;"/>
 </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>

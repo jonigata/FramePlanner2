@@ -12,6 +12,7 @@ export type Revision = {
 export type HistoryEntry = {
   frameTree: FrameElement;
   bubbles: Bubble[];
+  tag: string;
 }
 
 export type Page = {
@@ -63,12 +64,21 @@ export function revisionEqual(a: Revision, b: Revision): boolean {
   return a.id === b.id && a.revision === b.revision;
 }
 
-export function addHistory(page: Page, frameTree, bubbles) {
-  page.history.length = page.historyIndex;
-  page.history.push({
+export function addHistory(page: Page, frameTree: FrameElement, bubbles: Bubble[], tag: string) {
+  const i = page.history.length = page.historyIndex;
+  const newEntry = {
     frameTree: frameTree.clone(),
     bubbles: bubbles.map(b => b.clone()),
-  })
+    tag
+  };
+
+  if (0 < i &&
+      page.history[i-1].tag != null &&
+      page.history[i-1].tag === tag) {
+    page.history[i-1] = newEntry;
+  } else {
+    page.history.push(newEntry);
+  }
   console.log("page history length", page.history.length);
   page.historyIndex = page.history.length;
 }
@@ -85,9 +95,9 @@ export function redoPageHistory(page) {
   page.historyIndex++;
 }
 
-export function commitPage(page: Page, frameTree: FrameElement, bubbles: Bubble[]) {
+export function commitPage(page: Page, frameTree: FrameElement, bubbles: Bubble[], tag: string) {
   const newPage = {...page, frameTree, bubbles};
-  addHistory(newPage, frameTree, bubbles);
+  addHistory(newPage, frameTree, bubbles, tag);
   const pageRevision = getIncrementedRevision(newPage);
   setRevision(newPage, pageRevision);
   return newPage;

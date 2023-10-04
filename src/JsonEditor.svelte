@@ -28,7 +28,8 @@
       const jsonPage = toJSONContent(updatedContent).json as any;
       const newPage = commitPage($mainPage, 
         FrameElement.compile(jsonPage.frameTree), 
-        jsonPage.bubbles.map(b => Bubble.compile($mainPage.paperSize, b)));
+        jsonPage.bubbles.map(b => Bubble.compile($mainPage.paperSize, b)),
+        "JsonEdit");
       newPage.paperSize = jsonPage.paperSize;
       newPage.paperColor = jsonPage.paperColor;
       newPage.frameColor = jsonPage.frameColor;
