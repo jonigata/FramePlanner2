@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, getCurrentDateTime } from "./fileManagerStore";
   import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
@@ -30,7 +30,7 @@
       const file = await fileSystem.createFile();
       console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
       await savePageTo(page, fileSystem, file);
-      await desktop.asFolder().link("bootstrap", file.id);
+      await desktop.asFolder().link(getCurrentDateTime(), file.id);
       const newPage = commitPage(page, page.frameTree, page.bubbles, null);
       newPage.revision.id = file.id;
       newPage.revision.prefix = "standard";
@@ -75,17 +75,17 @@
 -->
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
           {#if desktop}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} name={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
           {#if cabinet}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} name={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
           {#if trash}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} name={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
           {/if}
         </div>
 <!--

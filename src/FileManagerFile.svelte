@@ -13,6 +13,7 @@
   export let fileSystem: FileSystem;
   export let nodeId: NodeId;
   export let bindId: BindId;
+  export let filename: string;
   export let parent: Folder;
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
@@ -81,7 +82,8 @@
 <div class="file-title" class:selected={selected}
   draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   <img class="button" src={fileIcon} alt="symbol"/>
-  {`Page ${( '00' + (index+1) ).slice( -2 )}`}
+  <!-- {`Page ${( '00' + (index+1) ).slice( -2 )}`} -->
+  {filename}
   {#if isDiscardable}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />

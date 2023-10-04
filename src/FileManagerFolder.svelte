@@ -2,7 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime } from "./fileManagerStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
 
@@ -12,7 +12,7 @@
   import folderIcon from './assets/fileManager/folder.png';
 
   export let fileSystem: FileSystem;
-  export let name: string;
+  export let filename: string;
   export let bindId: BindId;
   export let parent: Folder;
   export let isTrash = false;
@@ -63,7 +63,7 @@
 
   async function addFile() {
     console.log("add file");
-    await newFile(fileSystem, node, "new file", "add-");
+    await newFile(fileSystem, node, getCurrentDateTime(), "add-");
     node = node;
   }
 
@@ -164,7 +164,7 @@
     draggable={removability === "removable"}
   >
     <img class="button" src={folderIcon} alt="symbol"/>
-    {name}
+    {filename}
     <div class="buttons">
       {#if spawnability === "file-spawnable"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -189,11 +189,11 @@
     {#await node.listEmbodied()}
       <div>loading...</div>
     {:then children}
-      {#each children as [bindId, name, childNode], index}
+      {#each children as [bindId, filename, childNode], index}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={name} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
+          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
