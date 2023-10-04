@@ -25,13 +25,15 @@
     }
     content = updatedContent
     try {
-      const jsonPage = toJSONContent(updatedContent).json as unknown as Page;
+      const jsonPage = toJSONContent(updatedContent).json as any;
       const newPage = commitPage($mainPage, 
         FrameElement.compile(jsonPage.frameTree), 
         jsonPage.bubbles.map(b => Bubble.compile($mainPage.paperSize, b)));
-      console.log({...newPage});
+      newPage.paperSize = jsonPage.paperSize;
+      newPage.paperColor = jsonPage.paperColor;
+      newPage.frameColor = jsonPage.frameColor;
+      newPage.frameWidth = jsonPage.frameWidth;
       pageRevision = getRevision(newPage);
-      console.log("pageRevision = ", pageRevision);
       $mainPage = newPage;
     }
     catch (e) {
@@ -58,8 +60,15 @@
 
     skipJsonChange = true;
     pageRevision = getRevision(page);
-    const displayPage = { ...page }; 
-    displayPage.revision = undefined;
+
+    const displayPage = {
+      frameTree: FrameElement.decompile(page.frameTree),
+      bubbles: page.bubbles.map(b => Bubble.decompile(page.paperSize, b)),
+      paperSize: page.paperSize,
+      paperColor: page.paperColor,
+      frameColor: page.frameColor,
+      frameWidth: page.frameWidth,
+    };
     content = { text: JSON.stringify(displayPage, replacer, 2) };
     await tick(); // hack
     skipJsonChange = false;

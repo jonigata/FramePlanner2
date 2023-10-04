@@ -86,7 +86,7 @@ export function redoPageHistory(page) {
 }
 
 export function commitPage(page: Page, frameTree: FrameElement, bubbles: Bubble[]) {
-  const newPage = {...page};
+  const newPage = {...page, frameTree, bubbles};
   addHistory(newPage, frameTree, bubbles);
   const pageRevision = getIncrementedRevision(newPage);
   setRevision(newPage, pageRevision);
