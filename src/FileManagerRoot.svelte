@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, getCurrentDateTime } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile } from "./fileManagerStore";
   import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
@@ -42,6 +42,21 @@
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
       currentRevision = {...page.revision};
+    }
+  }
+
+  $:onNewFileRequest($newFileToken);
+  async function onNewFileRequest(token: boolean) {
+    if (token) {
+      console.log("onNewFileRequest");
+      $newFileToken = false;
+      const root = await fileSystem.getRoot();
+      const desktop = await root.getNodeByName("デスクトップ");
+      const { page, file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), "add-", 0);
+      currentRevision = getRevision(page);
+      $mainPage = page;
+
+      $fileManagerRefreshKey++;
     }
   }
 

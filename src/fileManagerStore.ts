@@ -12,10 +12,10 @@ export type Dragging = {
 }
 
 export const fileManagerOpen = writable(false);
-export const fileSystem: FileSystem = null;
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
+export const newFileToken = writable(false);
 
 let imageCache = {};
 
@@ -178,7 +178,7 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperS
   return unpackedBubbles;
 }
 
-export async function newFile(fs: FileSystem, folder: Folder, name: string, prefix: string, index: number = 2): Promise<{file: File, page: Page}> {
+export async function newFile(fs: FileSystem, folder: Folder, name: string, prefix: string, index: number = 2): Promise<{file: File, page: Page, bindId: BindId}> {
   const file = await fs.createFile();
 
   const page: Page = {
@@ -197,8 +197,8 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, pref
   console.log("*********** savePageTo from newFile");
   // console.trace();
   await savePageTo(page, fs, file);
-  await folder.link(name, file.id);
-  return { file, page };
+  const bindId = await folder.link(name, file.id);
+  return { file, page, bindId };
 }
 
 async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLImageElement> {

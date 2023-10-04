@@ -21,6 +21,7 @@
   import { loadTemplate } from './firebase';
   import ImageGenerator from './ImageGenerator.svelte';
   import FileManager from './FileManager.svelte';
+  import NewFileButton from './NewFileButton.svelte';
   import CabinetButton from './CabinetButton.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
@@ -69,6 +70,7 @@
 <div class="control-panel-container">
   <ControlPanel />
   <PassiveToolTip />
+  <NewFileButton />
   <CabinetButton />
   <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
 </div>
