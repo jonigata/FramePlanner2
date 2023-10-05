@@ -18,6 +18,7 @@
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
   export let path: string[];
+  export let displayMode: 'filename' | 'index' = 'filename';
 
   let acceptable = false;
   let isDiscardable = false;
@@ -82,8 +83,11 @@
 <div class="file-title" class:selected={selected}
   draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   <img class="button" src={fileIcon} alt="symbol"/>
-  <!-- {`Page ${( '00' + (index+1) ).slice( -2 )}`} -->
-  {filename}
+  {#if displayMode === 'index'}
+    {`Page ${( '00' + (index+1) ).slice( -2 )}`}
+  {:else}
+    {filename}
+  {/if}
   {#if isDiscardable && !selected}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />

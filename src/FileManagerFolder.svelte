@@ -16,8 +16,8 @@
   export let bindId: BindId;
   export let parent: Folder;
   export let isTrash = false;
-  export let removability = "removeable"; // "removable" | "unremovable"
-  export let spawnability = "unspawnable"; // "file-spawnable" | "folder-spawnable" | "unspawnable"
+  export let removability: "removable" | "unremovable" = "removable";
+  export let spawnability: "file-spawnable" | "folder-spawnable" | "unspawnable" = "unspawnable";
   export let index: number;
   export let path: string[];
 
@@ -25,6 +25,7 @@
   let acceptable: boolean;
   let isDraggingOver: boolean;
   let isDiscardable = false;
+  let displayMode: 'filename' | 'index' = 'filename';
 
   const dispatch = createEventDispatcher();
 
@@ -84,6 +85,11 @@
     node = node;
   }
 
+  async function toggleDisplayMode() {
+    displayMode = displayMode === 'filename' ? 'index' : 'filename';
+    await node.setAttribute("displayMode", displayMode);
+  }
+
   $:onUpdate(isTrash && $trashUpdateToken);
   function onUpdate(token: boolean) {
     if (token) {
@@ -110,6 +116,8 @@
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
     isDiscardable = removability === "removable" && !path.includes(trash[0]);
+    const a = await node.getAttribute("displayMode");
+    displayMode = a ? a : 'filename' as any;
   });
 
   function onDragStart(ev: DragEvent) {
@@ -160,13 +168,13 @@
       const entries = await folder.listEmbodied();
       for (const entry of entries) {
         if (curr.id === node.id) { // node以外はどうせ親を消すのでunlink不要
-          folder.unlink(entry[0]);
+          await folder.unlink(entry[0]);
         }
         await recycleNode(entry[2]);
       }
     }
     if (curr.id !== node.id) {
-      fileSystem.destroyNode(curr.id);
+      await fileSystem.destroyNode(curr.id);
     }
   }
 
@@ -186,7 +194,7 @@
   >
     <img class="button" src={folderIcon} alt="symbol"/>
     {filename}
-    <div class="buttons">
+    <div class="buttons hbox gap-2">
       {#if spawnability === "file-spawnable"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <img class="button" src={newFileIcon} alt="new file" on:click={addFile}/>
@@ -201,6 +209,8 @@
       {/if}
       {#if isTrash}
         <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
+      {:else}
+        <button class="btn btn-sm variant-filled recycle-button" on:click={toggleDisplayMode}>表示モード</button>
       {/if}
     </div>
     {#if removability === 'removable'}
@@ -217,7 +227,7 @@
         {#if childNode.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} bind:displayMode={displayMode} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
@@ -253,7 +263,6 @@
     border: 2px dashed #444;
   }
   .buttons {
-    width: 80px;
     padding-left: 8px;
   }
   .button {

@@ -47,6 +47,8 @@ export class File extends Node {
 export class Folder extends Node {
   getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
+  async setAttribute(key: string, value: string): Promise<void> {}
+  async getAttribute(key: string): Promise<string> { return null; }
   async list(): Promise<Entry[]> {return [];}
   async link(name: string, nodeId: NodeId): Promise<BindId> { return null;}
   async unlink(bindId: BindId): Promise<void> {}

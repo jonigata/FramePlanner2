@@ -16,7 +16,7 @@ export class IndexedDBFileSystem extends FileSystem {
         const store = db.createObjectStore('nodes', { keyPath: 'id' });
         
         const rootId = "/" as NodeId;
-        await store.add({ id: rootId, type: 'folder', children: [] });
+        await store.add({ id: rootId, type: 'folder', children: [], attributes: {} });
     
         await transaction.done;
       }
@@ -42,9 +42,16 @@ export class IndexedDBFileSystem extends FileSystem {
     const folder = new IndexedDBFolder(this, id, this.db);
     const tx = this.db.transaction("nodes", "readwrite");
     const store = tx.store;
-    await store.add({ id, type: 'folder', children: [] });
+    await store.add({ id, type: 'folder', children: [], attributes: {} });
     await tx.done;
     return folder;
+  }
+
+  async destroyNode(id: NodeId): Promise<void> {
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
+    await store.delete(id);
+    await tx.done;
   }
 
   async getNode(id: NodeId): Promise<Node> {
@@ -103,6 +110,25 @@ export class IndexedDBFolder extends Folder {
 
   asFolder() {
     return this;
+  }
+
+  async setAttribute(key: string, value: string): Promise<void> {
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
+    const data = await store.get(this.id);
+    if (data) {
+      data.attributes[key] = value;
+      store.put(data);
+    }
+    await tx.done;
+  }
+
+  async getAttribute(key: string): Promise<string> {
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
+    const data = await store.get(this.id);
+    await tx.done;
+    return data ? data.attributes[key] : null;
   }
 
   async list(): Promise<Entry[]> {
