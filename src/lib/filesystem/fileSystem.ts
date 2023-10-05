@@ -8,6 +8,7 @@ export type EmbodiedEntry = [BindId, string, Node];
 export class FileSystem {
   async createFile(): Promise<File> {return null;}
   async createFolder(): Promise<Folder> {return null;}
+  async destroyNode(id: NodeId): Promise<void> {}
 
   async getNode(id: NodeId): Promise<Node> {return null;}
 

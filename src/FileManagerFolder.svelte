@@ -149,6 +149,27 @@
     console.log("insert done");
   }
 
+  async function recycle() {
+    await recycleNode(node);
+    node = node;
+  }
+
+  async function recycleNode(curr: Node) {
+    if (curr.getType() === "folder") {
+      const folder = curr.asFolder();
+      const entries = await folder.listEmbodied();
+      for (const entry of entries) {
+        if (curr.id === node.id) { // node以外はどうせ親を消すのでunlink不要
+          folder.unlink(entry[0]);
+        }
+        await recycleNode(entry[2]);
+      }
+    }
+    if (curr.id !== node.id) {
+      fileSystem.destroyNode(curr.id);
+    }
+  }
+
 </script>
 
 {#if node}
@@ -177,6 +198,9 @@
       {#if isDiscardable}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} />
+      {/if}
+      {#if isTrash}
+        <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
       {/if}
     </div>
     {#if removability === 'removable'}
@@ -237,10 +261,14 @@
     height: 16px;
     display: inline;
   }
+  .recycle-button {
+    height: 20px;
+    font-size: 12px;
+  }
   .no-select {
-      user-select: none; /* 標準のCSS */
-      -webkit-user-select: none; /* Chrome, Safari */
-      -moz-user-select: none; /* Firefox */
-      -ms-user-select: none; /* IE/Edge */
+    user-select: none; /* 標準のCSS */
+    -webkit-user-select: none; /* Chrome, Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
   }
 </style>

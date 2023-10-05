@@ -1,5 +1,5 @@
 import { writable, type Writable } from "svelte/store";
-import type { FileSystem, Folder, File, NodeId } from "./lib/filesystem/fileSystem";
+import type { FileSystem, Folder, File, NodeId, BindId } from "./lib/filesystem/fileSystem";
 import type { Page } from "./pageStore";
 import { FrameElement } from "./lib/layeredCanvas/frameTree";
 import { Bubble } from "./lib/layeredCanvas/bubble";
