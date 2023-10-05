@@ -84,7 +84,7 @@
   <img class="button" src={fileIcon} alt="symbol"/>
   <!-- {`Page ${( '00' + (index+1) ).slice( -2 )}`} -->
   {filename}
-  {#if isDiscardable}
+  {#if isDiscardable && !selected}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
   {/if}
