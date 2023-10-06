@@ -118,7 +118,7 @@ export class IndexedDBFolder extends Folder {
     const data = await store.get(this.id);
     if (data) {
       data.attributes[key] = value;
-      store.put(data);
+      await store.put(data);
     }
     await tx.done;
   }
@@ -148,7 +148,7 @@ export class IndexedDBFolder extends Folder {
 
     if (value && Array.isArray(value.children)) {
       value.children.push([bindId, name, nodeId]);
-      store.put(value);
+      await store.put(value);
     }
 
     await tx.done;
@@ -162,7 +162,23 @@ export class IndexedDBFolder extends Folder {
 
     if (value && Array.isArray(value.children)) {
       value.children = value.children.filter(([b, _, __]) => b !== bindId);
-      store.put(value);
+      await store.put(value);
+    }
+
+    await tx.done;
+  }
+
+  async rename(bindId: BindId, newname: string): Promise<void> {
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
+    const value = await store.get(this.id);
+
+    if (value && Array.isArray(value.children)) {
+      const entry = value.children.find(([b, _, __]) => b === bindId);
+      if (entry) {
+        entry[1] = newname;
+        await store.put(value);
+      }
     }
 
     await tx.done;
@@ -177,7 +193,7 @@ export class IndexedDBFolder extends Folder {
 
     if (value && Array.isArray(value.children)) {
       value.children.splice(index, 0, [bindId, name, nodeId]);
-      store.put(value);
+      await store.put(value);
     }
 
     await tx.done;

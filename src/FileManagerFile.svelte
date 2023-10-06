@@ -4,8 +4,10 @@
   import { type Page, mainPage } from './pageStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
+  import RenameEdit from "./RenameEdit.svelte";
 
   import trashIcon from './assets/fileManager/trash.png';
+  import renameIcon from './assets/fileManager/rename.png';
   import fileIcon from './assets/fileManager/file.png';
 
   const dispatch = createEventDispatcher();
@@ -23,6 +25,8 @@
   let acceptable = false;
   let isDiscardable = false;
   let selected = false;
+  let renameEdit = null;
+  let renaming = false;
 
   $: onSelectionChanged($mainPage);
   function onSelectionChanged(page: Page) {
@@ -44,7 +48,11 @@
   }
 
 	async function onDragStart (ev: DragEvent) {
-    console.log("file dragstart");
+    console.log("file dragstart", renaming);
+    if (renaming) {
+      ev.preventDefault();
+      return;
+    }
 		ev.dataTransfer.setData("bindId", bindId);
 		ev.dataTransfer.setData("parent", parent.id);
     ev.stopPropagation();
@@ -62,6 +70,17 @@
 
   function removeFile() {
     dispatch('remove', bindId);
+  }
+
+  function startRename() {
+    console.log("renameFile");
+    renameEdit.setFocus();
+  }
+
+  function submitRename(e: CustomEvent<string>) {
+    console.log("submitRename", e.detail);
+    dispatch('rename', { bindId, name: e.detail });
+    renaming = false;
   }
 
   function onDrop(ev: CustomEvent<DataTransfer>) {
@@ -83,14 +102,20 @@
 <div class="file-title" class:selected={selected}
   draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
   <img class="button" src={fileIcon} alt="symbol"/>
-  {#if displayMode === 'index'}
-    {`Page ${( '00' + (index+1) ).slice( -2 )}`}
+  {#if isDiscardable}
+    {#if displayMode === 'index'}
+      {`Page ${( '00' + (index+1) ).slice( -2 )}`}
+    {:else}
+      <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+    {/if}
+    {#if !selected}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
+    {/if}
   {:else}
     {filename}
-  {/if}
-  {#if isDiscardable && !selected}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
   {/if}
   <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
 </div>
@@ -101,6 +126,9 @@
     font-weight: 700;
     user-select: none;
     position: relative;
+    display: flex;
+    flex-direction: row;
+    height: 18px;
   }
   .button {
     width: 16px;

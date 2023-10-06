@@ -178,6 +178,13 @@
     }
   }
 
+  async function renameChild(e: CustomEvent<{ bindId: BindId, name: string }>) {
+    console.log("rename child", e.detail);
+    const { bindId, name } = e.detail;
+    await node.rename(bindId, name);
+    node = node;
+  }
+
 </script>
 
 {#if node}
@@ -227,7 +234,7 @@
         {#if childNode.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} bind:displayMode={displayMode} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} bind:displayMode={displayMode} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
