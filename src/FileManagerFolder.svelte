@@ -5,11 +5,14 @@
   import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime } from "./fileManagerStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
+  import RenameEdit from "./RenameEdit.svelte";
 
   import newFileIcon from './assets/fileManager/new-file.png';
   import newFolderIcon from './assets/fileManager/new-folder.png';
   import trashIcon from './assets/fileManager/trash.png';
   import folderIcon from './assets/fileManager/folder.png';
+  import renameIcon from './assets/fileManager/rename.png';
+  import pagenameModeIcon from './assets/fileManager/pagename-mode.png';
 
   export let fileSystem: FileSystem;
   export let filename: string;
@@ -26,6 +29,8 @@
   let isDraggingOver: boolean;
   let isDiscardable = false;
   let displayMode: 'filename' | 'index' = 'filename';
+  let renameEdit = null;
+  let renaming = false;
 
   const dispatch = createEventDispatcher();
 
@@ -121,7 +126,11 @@
   });
 
   function onDragStart(ev: DragEvent) {
-    console.log("folder drag start", bindId, parent.id);
+    console.log("folder drag start", bindId, parent.id, renaming);
+    if (renaming || !isDiscardable) {
+      ev.preventDefault();
+      return;
+    }
     ev.dataTransfer.setData("bindId", bindId);
     ev.dataTransfer.setData("parent", parent.id);
     ev.stopPropagation();
@@ -185,6 +194,17 @@
     node = node;
   }
 
+  function startRename() {
+    console.log("renameFile");
+    renameEdit.setFocus();
+  }
+
+  function submitRename(e: CustomEvent<string>) {
+    console.log("submitRename", e.detail);
+    dispatch('rename', { bindId, name: e.detail });
+    renaming = false;
+  }
+
 </script>
 
 {#if node}
@@ -195,30 +215,46 @@
   on:drop={onDropHere}
 >
   <div
-    class="folder-title" 
+    class="folder-title-line" 
     class:no-select={removability === "unremovable"}
     draggable={removability === "removable"}
   >
     <img class="button" src={folderIcon} alt="symbol"/>
-    {filename}
-    <div class="buttons hbox gap-2">
-      {#if spawnability === "file-spawnable"}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <img class="button" src={newFileIcon} alt="new file" on:click={addFile}/>
-      {/if}
-      {#if spawnability === "folder-spawnable"}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
-      {/if}
-      {#if isDiscardable}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} />
-      {/if}
+    <div class="folder-title">
+      <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       {#if isTrash}
         <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
-      {:else}
-        <button class="btn btn-sm variant-filled recycle-button" on:click={toggleDisplayMode}>表示モード</button>
       {/if}
+  </div>
+    <div class="buttons hbox gap-2">
+      <div class="button-container">
+        {#if !isTrash}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img class="button" src={pagenameModeIcon} alt="pagename mode" on:click={toggleDisplayMode} />
+        {/if}
+      </div>
+      <div class="button-container">
+        {#if spawnability === "file-spawnable"}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img class="button" src={newFileIcon} alt="new file" on:click={addFile}/>
+        {/if}
+        {#if spawnability === "folder-spawnable"}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
+        {/if}
+      </div> 
+      <div class="button-container">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        {#if isDiscardable}
+          <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+        {/if}
+      </div>  
+      <div class="button-container">
+        {#if isDiscardable}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} />
+        {/if}
+      </div>
     </div>
     {#if removability === 'removable'}
       <FileManagerInsertZone on:drop={onInsertToParent} bind:acceptable={acceptable} depth={path.length}/>
@@ -232,7 +268,7 @@
     {:then children}
       {#each children as [bindId, filename, childNode], index}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} name={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]}/>
+          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild}/>
         {:else if childNode.getType() === 'file'}
           <FileManagerFile fileSystem={fileSystem} removability={"removable"} bind:displayMode={displayMode} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild}/>
         {/if}
@@ -249,28 +285,43 @@
   .folder {
     text-align: left;
   }
+  .folder-title-line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 20px;
+    position: relative; /* InsertZone用 */
+  }
   .folder-title {
     font-size: 16px;
     font-weight: 700;
     display: flex;
     flex-direction: row;
     align-items: center;
-    position: relative;
     font-family: 'Zen Maru Gothic';
     font-weight: 700;
     font-style: normal;
+    width: 100%;
+    height: 20px;
+    margin-left: 4px;
   }
   .folder-contents {
     padding-left: 16px;
     box-sizing: border-box;
-    border: 2px dashed transparent; /* 初期状態では透明にしておく */
+    /* border: 2px dashed transparent; /* 初期状態では透明にしておく */
   }
   .folder-contents.acceptable {
     background-color: #ee84;
-    border: 2px dashed #444;
+    /* border: 2px dashed #444; */
+    box-shadow: 0 0 0 2px #444 inset; /* inset を使用して要素の内側に影を追加 */
   }
   .buttons {
-    padding-left: 8px;
+    gap: 0px;
+  }
+  .button-container {
+    width: 20px;
+    height: 16px;
+    display: flex;
   }
   .button {
     width: 16px;

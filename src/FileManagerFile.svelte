@@ -108,12 +108,16 @@
     {:else}
       <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+      <div class="button-container">
+        <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+      </div>  
     {/if}
-    {#if !selected}
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
-    {/if}
+    <div class="button-container">
+      {#if !selected}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
+      {/if}
+    </div>
   {:else}
     {filename}
   {/if}
@@ -129,6 +133,12 @@
     display: flex;
     flex-direction: row;
     height: 18px;
+  }
+  .button-container {
+    width: 20px;
+    min-width: 20px;
+    height: 16px;
+    display: flex;
   }
   .button {
     width: 16px;

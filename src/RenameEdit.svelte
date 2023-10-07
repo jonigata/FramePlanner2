@@ -33,6 +33,12 @@
     }
   }
 
+  function keypress(event: KeyboardEvent) {
+    if (event.key == 'Enter') {
+      input.blur();
+    }
+  }
+  
   function keydown(event: KeyboardEvent) {
     if (event.key == 'Escape') {
       event.preventDefault();
@@ -70,6 +76,7 @@
       bind:this={input}
       bind:value={value}
       on:focus={edit}
+      on:keypress={keypress}
       on:keydown={keydown}
       on:blur={handleBlur}
       class="input"
