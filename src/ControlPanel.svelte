@@ -4,7 +4,8 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
+  import { type Page, incrementRevision, mainPage, commitPage } from './pageStore';
+  import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { tick } from 'svelte';
@@ -17,22 +18,57 @@
   import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
+  import { FrameElement } from './lib/layeredCanvas/frameTree';
+  import { Bubble } from './lib/layeredCanvas/bubble';
 
   let min = 256;
   let exponentialMin = 4096;
   let max = 9410;
   let contactText = "";
+  let paperSize: [number, number] = [0, 0];
+  let paperColor: string = null;
+  let frameColor: string = null;
+  let frameWidth: number = 2;
 
-  function setDimensions(w: number, h: number) {
-    $paperWidth = w;
-    $paperHeight = h;
+  $:onUpdateMainPage($mainPage);
+  function onUpdateMainPage(page: Page) {
+    paperSize[0] = page.paperSize[0];
+    paperSize[1] = page.paperSize[1];
+    paperColor = page.paperColor;
+    frameColor = page.frameColor;
+    frameWidth = page.frameWidth;
   }
 
-  function applyTemplate(event) {
-    $paperTemplate = { frameTree: event.detail, bubbles: [] };
+  $:onUpdatePaperProperty(paperSize, paperColor, frameColor, frameWidth);
+  function onUpdatePaperProperty(_a: [number, number], _b: string, _c: string, _d: number) {
+    const mp = $mainPage;
+    if (mp.paperSize[0] === paperSize[0] && mp.paperSize[1] === paperSize[1] &&
+        mp.paperColor === paperColor && mp.frameColor === frameColor && mp.frameWidth === frameWidth) {
+      return;
+    }
+    console.log("ControlPanel.onUpdatePaperProperty");
+    $mainPage.paperSize[0] = paperSize[0];
+    $mainPage.paperSize[1] = paperSize[1];
+    $mainPage.paperColor = paperColor;
+    $mainPage.frameColor = frameColor;
+    $mainPage.frameWidth = frameWidth;
+    $mainPage.revision = incrementRevision($mainPage.revision);
+  }
+
+  function setDimensions(w: number, h: number) {
+    // 入れ物ごと交換するとbindが崩れる模様
+    paperSize[0] = w;
+    paperSize[1] = h;
+  }
+
+  function applyTemplate(event: CustomEvent<any>) {
+    const page = {...$mainPage};
+    page.frameTree = FrameElement.compile(event.detail);
+    page.bubbles = [];
+    page.revision = incrementRevision(page.revision);
+    $mainPage = commitPage(page, page.frameTree, page.bubbles, null);
   }
 
   function save() {
@@ -49,6 +85,7 @@
 
   }
 
+/*
   function openPainter() {
     const d: ModalSettings = {
       type: 'component',
@@ -56,7 +93,7 @@
     };
     modalStore.trigger(d);    
   }
-
+*/
 
   let files: FileList;
   $: uploadImage(files);
@@ -73,21 +110,24 @@
         await imageLoaded;
 
         setDimensions(image.naturalWidth, image.naturalHeight);
-        $paperTemplate = { frameTree: {}, bubbles: [] };
+        $mainPage.frameTree = FrameElement.compile({});
+        $mainPage.bubbles = [];
         await tick();
         $importingImage = image;
         URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
       } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
         const text = await readFileAsText(file);
-        $paperTemplate = JSON.parse(text);
+        const json = JSON.parse(text);
+        $mainPage.frameTree = FrameElement.compile(json.frameTree);
+        $mainPage.bubbles = json.bubbles.map((b: Bubble) => Bubble.compile($mainPage.paperSize, b));
       }
     }
   }
 
-  function readFileAsText(file) {
+  function readFileAsText(file: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(reader.error);
       reader.readAsText(file);
     });
@@ -127,11 +167,11 @@
     contactText = null;
   }
 
-  function onDragOver(e) {
+  function onDragOver(e: DragEvent) {
     e.preventDefault();
   }
 
-  function onDrop(e) {
+  function onDrop(e: DragEvent) {
     e.preventDefault();
     files = e.dataTransfer.files;
   }
@@ -148,20 +188,20 @@
       <div class="hbox">
         <div class="font-bold slider-label">W</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$paperWidth}/></div>
+          <div class="number-box"><NumberEdit bind:value={paperSize[0]}/></div>
           / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">H</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$paperHeight}/></div>
+          <div class="number-box"><NumberEdit bind:value={paperSize[1]}/></div>
            / {max}
         </div>
       </div>
@@ -180,9 +220,9 @@
     </div>
   </div>
   <div class="hbox gap mx-2 paper-color-picker" style="margin-top: 16px;">
-    背景色<ColorPicker bind:hex={$paperColor} label=""/>
-    枠色<ColorPicker bind:hex={$frameColor} label="" />
-    幅<RangeSlider name="line" bind:value={$frameWidth} max={10} step={1} style="width:100px;"/>
+    背景色<ColorPicker bind:hex={paperColor} label=""/>
+    枠色<ColorPicker bind:hex={frameColor} label="" />
+    幅<RangeSlider name="line" bind:value={frameWidth} max={10} step={1} style="width:100px;"/>
 </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
@@ -246,10 +286,6 @@
   .title-image {
     width: 32px;
     height: 32px;
-  }
-  .labeled-component {
-    display: flex;
-    gap: 4px;
   }
   .slider-label {
     width: 20px;

@@ -1,6 +1,4 @@
 <script>
-
-  import { onMount } from 'svelte'
   import { createEventDispatcher } from 'svelte'
 
   export let open         = false;
@@ -19,13 +17,11 @@
 </script>
 
 <aside class="drawer" class:open {style}>
-
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div class="overlay" on:click={handleClickAway} />
-
   <div class="panel {placement}" class:size>
       <slot />
   </div>
-
 </aside>
 
 <style>

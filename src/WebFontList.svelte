@@ -2,9 +2,12 @@
 
 <script lang="ts">
   import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
-  import type { GoogleFontDefinition, GoogleFontVariant } from "@svelte-web-fonts/google";
-  import { createEventDispatcher, onMount } from 'svelte';
+  import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
+  import { createEventDispatcher } from 'svelte';
   import { parseFontFamily } from 'css-font-parser';
+  import type { SearchOptions } from './fontStore';
+
+  type FontDefinition = GoogleFontDefinition & { distinction: string };
 
   const dispatch = createEventDispatcher();
 
@@ -86,13 +89,13 @@
     "'Zen Old Mincho', serif",
   ];
 
-  export let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
+  export let searchOptions: SearchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
 
   const normalFonts = normalFontFamilies.map((fontFamily) => {
     const ff = parseFontFamily(fontFamily);
-    const font: GoogleFontDefinition = {
+    const font: FontDefinition = {
       family: ff[0],
-      variants: ["400"],
+      variants: ["400" as GoogleFontVariant],
       distinction: ff[1],
     };
     return font;
@@ -100,9 +103,9 @@
 
   const boldFonts = boldFontFamilies.map((fontFamily) => {
     const ff = parseFontFamily(fontFamily);
-    const font: GoogleFontDefinition = {
+    const font: FontDefinition = {
       family: ff[0],
-      variants: ["700"],
+      variants: ["700" as GoogleFontVariant],
       distinction: ff[1],
     };
     return font;
@@ -111,18 +114,18 @@
   const fonts = [...normalFonts, ...boldFonts];
   let filteredFonts = fonts;
 
-  function chooseFont(event, fontFamily, fontWeight) {
-    dispatch('choose', { event, fontFamily, fontWeight });
+  function chooseFont(mouseEvent: MouseEvent, fontFamily: string, fontWeight: string) {
+    dispatch('choose', { mouseEvent, fontFamily, fontWeight });
   }
 
   $:filterFonts(searchOptions);
-  function filterFonts(so) {
+  function filterFonts(so: SearchOptions) {
     const { filterString, mincho, gothic, normal, bold } = so;
     const ff = fonts.filter((font) => {
       const isMincho = font.distinction === "serif";
       const isGothic = font.distinction === "sans-serif";
-      const isNormal = font.variants.includes("400");
-      const isBold = font.variants.includes("700");
+      const isNormal = font.variants.includes("400" as GoogleFontVariant);
+      const isBold = font.variants.includes("700" as GoogleFontVariant);
       const isMatched = filterString === "" || font.family.includes(filterString);
       return (
         ((mincho && isMincho) || (gothic && isGothic)) &&
@@ -132,11 +135,15 @@
     filteredFonts = ff;
   }
 
+  function getFontStyle2(fontFamily: string, fontWeight: string) {
+    return getFontStyle(fontFamily as GoogleFontFamily, fontWeight as GoogleFontVariant);
+  }
+
 </script>
 
 <svelte:head>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin={"anonymous"} />
     <GoogleFont fonts="{fonts}" display="swap" />
 </svelte:head>
 
@@ -144,7 +151,7 @@
 
 {#each filteredFonts as font}
     {#each font.variants as variant}
-        <div class="font-sample" style={getFontStyle(font.family, variant)}>
+        <div class="font-sample" style={getFontStyle2(font.family, variant)}>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
         </div>

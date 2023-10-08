@@ -8,6 +8,7 @@ import { tailCoordToWorldCoord, worldCoordToTailCoord } from "./bubbleGeometry.j
 import { translate, scale } from "./pictureControl.js";
 import { add2D } from "./geometry.js";
 import { v4 as uuidv4 } from 'uuid';
+import { getHaiku } from './haiku.js';
 import * as paper from 'paper';
 
 const iconUnit = [20, 20];
@@ -20,8 +21,7 @@ export class BubbleLayer extends Layer {
     onShowInspector,
     onHideInspector,
     onCommit,
-    onRevert,
-    onGetDefaultText
+    onRevert
   ) {
     super();
     this.renderLayer = renderLayer;
@@ -32,7 +32,6 @@ export class BubbleLayer extends Layer {
     this.onHideInspector = onHideInspector;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
-    this.onGetDefaultText = onGetDefaultText;
     this.defaultBubble = new Bubble();
     this.creatingBubble = null;
     this.optionEditActive = {}
@@ -420,7 +419,7 @@ export class BubbleLayer extends Layer {
     bubble.text = "";
     bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
     this.bubbles.push(bubble);
-    this.onCommit(this.bubbles);
+    this.onCommit(this.bubbles, true);
     this.selectBubble(bubble);
     console.log(bubble.p0, bubble.p1);
   }
@@ -551,7 +550,7 @@ export class BubbleLayer extends Layer {
 
   unfocus() {
     if (this.selected) {
-        this.onCommit(this.bubbles);
+        this.onCommit(this.bubbles, false);
         this.onHideInspector();
         this.selected = null;
         this.redraw();
@@ -638,12 +637,13 @@ export class BubbleLayer extends Layer {
   }
 
   doubleClicked(p) {
+    console.log("doubleClicked")
     if (!this.interactable) { return false; }
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(p)) {
         bubble.size = this.calculateFitBubbleSize(bubble.text, bubble);
-        this.onCommit(this.bubbles);
+        this.onCommit(this.bubbles, true);
         return;
       }
     }
@@ -652,12 +652,10 @@ export class BubbleLayer extends Layer {
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
     bubble.initOptions();
-    this.onGetDefaultText().then((text) => {
-      bubble.text = text;
-      this.bubbles.push(bubble);
-      this.onCommit(this.bubbles);
-      this.selectBubble(bubble);
-    });
+    bubble.text = getHaiku();
+    this.bubbles.push(bubble);
+    this.onCommit(this.bubbles, true);
+    this.selectBubble(bubble);
     return true;
   }
 
@@ -697,7 +695,7 @@ export class BubbleLayer extends Layer {
       bubble.regularize();
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
-        this.onCommit(this.bubbles);
+        this.onCommit(this.bubbles, true);
         // this.selectBubble(bubble);
       }
     } catch (e) {
@@ -721,7 +719,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      this.onCommit(this.bubbles);
+      this.onCommit(this.bubbles, true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -750,7 +748,7 @@ export class BubbleLayer extends Layer {
         const b = this.bubbles[i];
         if (b.contains(last)) {
           b.copyStyleFrom(bubble);
-          this.onCommit(this.bubbles);
+          this.onCommit(this.bubbles, true);
           break;
         }
       }  
@@ -771,7 +769,7 @@ export class BubbleLayer extends Layer {
         bubble.rotation = Math.max(-180, Math.min(180, originalRotation + op * 0.2));
         this.redraw();
       }
-      this.onCommit(this.bubbles);
+      this.onCommit(this.bubbles, true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -791,7 +789,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      this.onCommit(this.bubbles);
+      this.onCommit(this.bubbles, true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -822,7 +820,7 @@ export class BubbleLayer extends Layer {
         throw "cancel";
       }
       console.log(bubble.image);
-      this.onCommit(this.bubbles);
+      this.onCommit(this.bubbles, true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;

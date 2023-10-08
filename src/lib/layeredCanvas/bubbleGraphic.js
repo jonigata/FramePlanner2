@@ -460,8 +460,6 @@ function getShoutPath(size, opts, seed) {
     points = jitterDistances(rng, points, bump, opts.depthJitter);
     points = debumpPointsAroundIndex(points, 0.5 - opts.bumpSharp, tailIndex * 2);
     points[tailIndex * 2] = opts.tailTip;
-    console.log(points);
-    console.log(opts.tailTip);
   } else {
     const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
     points = generateSuperEllipsePoints(size, angles, opts.superEllipse);

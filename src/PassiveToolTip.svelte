@@ -23,10 +23,10 @@
     opacity: 0;
     transition: opacity 0.2s;
     transform: translate(-50%, -50%);
-    text-shadow: 1px 2px 3px #202020;
+    text-shadow: 1px 2px 3px #000;
     font-family: "Kosugi Maru", sans-serif;
-    font-size: 22px;
-    color: #FFCB44;
+    font-size: 18px;
+    color: #f0c46b;
     z-index: 9999;
   }
 

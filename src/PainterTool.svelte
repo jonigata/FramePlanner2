@@ -6,19 +6,19 @@
   import { createEventDispatcher } from 'svelte';
 
   export let brush = { strokeStyle: '#000000', lineWidth: 1, selected: false };
-  export let label;
+  export let label: string;
 
   const dispatch = createEventDispatcher();
 
-  function onChoose(e) {
+  function onChoose(_e: MouseEvent) {
     dispatch('choose', brush);
   }
 
-  function onChange(e) {
+  function onChange(_e: CustomEvent<any>) {
     dispatch('change', brush);
   }
 
-  function ignoreClick(e) {
+  function ignoreClick(e: MouseEvent) {
     e.stopPropagation();
   }
 

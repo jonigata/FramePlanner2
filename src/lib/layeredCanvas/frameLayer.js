@@ -357,14 +357,16 @@ export class FrameLayer extends Layer {
     if (payload.layout) {
       const layout = payload.layout;
       const element = layout.element;
-      if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
-          this.scaleIcon.contains(p)) {
-        yield* this.scaleImage(p, layout);
-      } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] ||
-                 this.rotateIcon.contains(p)) {
-        yield* this.rotateImage(p, layout);
-      } else {
-        yield* this.translateImage(p, layout);
+      if (element.image) {
+        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
+            this.scaleIcon.contains(p)) {
+          yield* this.scaleImage(p, layout);
+        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] ||
+                  this.rotateIcon.contains(p)) {
+          yield* this.rotateImage(p, layout);
+        } else {
+          yield* this.translateImage(p, layout);
+        }
       }
     } else if (payload.padding) {
       yield* this.expandPadding(p, payload.padding);
@@ -401,6 +403,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
+    this.onCommit(this.frameTree);
   }
 
   *rotateImage(p, layout) {
@@ -421,6 +424,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
+    this.onCommit(this.frameTree);
   }
 
   *translateImage(p, layout) {
@@ -438,6 +442,9 @@ export class FrameLayer extends Layer {
       if (e === "cancel") {
         this.onRevert();
       }
+    }
+    if (element.translation !== origin) {
+      this.onCommit(this.frameTree);
     }
   }
 
@@ -591,6 +598,7 @@ export class FrameLayer extends Layer {
     layoutlet.element.translation = [0, 0];
     layoutlet.element.scale = [scale, scale];
     layoutlet.element.image = image;
+    layoutlet.element.rotation = 0;
     layoutlet.element.gallery.push(image);
       
     constraintLeaf(layoutlet);

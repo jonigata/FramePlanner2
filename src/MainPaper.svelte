@@ -1,34 +1,18 @@
 <script type="ts">
-  import { onMount, tick } from 'svelte';
-  import { frameExamples } from './lib/layeredCanvas/frameExamples';
+  import { onMount } from 'svelte';
   import Paper from './Paper.svelte';
-  import { paperTemplate, paperWidth, paperHeight, paperColor, frameColor, frameWidth, saveToken, clipboardToken, importingImage } from './paperStore';
+  import { saveToken, clipboardToken, importingImage } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
-  import { jsonEditorInput, jsonEditorOutput } from './jsonEditorStore';
+  import { type Page, mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
 
-  $paperTemplate = { frameTree: frameExamples[0], bubbles:[] };
-
-  let paper;
-  let documentInput;
-  let documentOutput;
-  let width;
-  let height;
+  let paper: Paper;
+  let page = $mainPage;
+  let currentRevision = $mainPage.revision;
   let painterActive = false;
-  let toolBox = null;
-
-  $:onChangePaperSize($paperWidth, $paperHeight);
-  function onChangePaperSize(w, h) {
-    if (!w || !h) return;
-    if (w < 256 || h < 256) return;
-    console.log('onChangePaperSize', w, h);
-    width = w;
-    height = h;
-  }
 
   $:save($saveToken);
-  function save(token) {
-    console.log('MainPaper.save', token);
+  function save(token: string) {
     if (!token) return;
     switch (token) {
       case 'download':
@@ -42,81 +26,58 @@
   }
 
   $:copyToClipboard($clipboardToken);
-  function copyToClipboard(token) {
+  function copyToClipboard(token: boolean) {
     if (!token) return;
-    console.log('tokenValue', token);
     paper.copyToClipboard();
     $clipboardToken = false;
   }
 
   $:importImage($importingImage);
-  function importImage(image) {
+  function importImage(image: HTMLImageElement) {
     if (!image) return;
     paper.importImage(image);
     $importingImage = null;
   }
 
-  $:onInputDocument($jsonEditorInput);
-  function onInputDocument(doc) {
-    console.log("onInputDocument", doc);
-    if (!doc) return;
-    console.log(doc);
-    setDocumentInput(doc);
-  }
-
-  $:onOutputDocument(documentOutput);
-  function onOutputDocument(doc) {
-    if (!doc) return;
-    $jsonEditorOutput = doc;
-  }
-
-  $:onSetPaperTemplate($paperTemplate);
-  function onSetPaperTemplate(template) {
-    if (!template) return;
-    if (template.characters && template.scenes) {
-      pourScenario(template);
-    } else {
-      documentOutput = template;
-      onOutputDocument(documentOutput);
-      setDocumentInput(template);
-    }
-  }
-
   $:onCommitToken($commitToken);
-  async function onCommitToken(token) {
+  async function onCommitToken(token: boolean) {
     if (!token) return;
-    console.log('tokenValue', token);
-    paper.commit();
-    $jsonEditorOutput = documentOutput; // かなりハック、なぜかdocumentOutputのりアクティブが飛んでこないので
+    paper.commitIfDirty();
     $commitToken = false;
   }
 
-
-  function pourScenario(s) {
-    paper.pourScenario(s);
-  }
-
-  function setDocumentInput(doc) {
-    documentInput = doc;
-    $paperColor = doc.frameTree.bgColor ?? 'white';
-    $frameColor = doc.frameTree.borderColor ?? 'black';
-    $frameWidth = doc.frameTree.borderWidth ?? 1;
-  }
-
-  async function onPainterActive(e) {
-    console.log('onPainterActive', e.detail);
+  async function onPainterActive(e: CustomEvent<boolean>) {
     painterActive = e.detail;
   }
 
   function onScribbleDone() {
-    console.log('onScribbleDone');
     paper.scribbleDone();
     painterActive = false;
   }
 
-  function onSetTool(e) {
-    console.log('onSetTool', e.detail);
+  function onSetTool(e: CustomEvent<any>) {
     paper.setTool(e.detail);
+  }
+
+  $:onInnerPageUpdate(page);
+  function onInnerPageUpdate(p: Page) {
+    if (revisionEqual(p.revision, currentRevision)) {
+      return;
+    }
+
+    currentRevision = {...p.revision};
+    $mainPage = p;
+  }
+
+  $:onOuterPageUpdate($mainPage);
+  function onOuterPageUpdate(p: Page) {
+    if (revisionEqual(p.revision, currentRevision)) {
+      // console.log("revision equal");
+      return;
+    }
+
+    currentRevision = {...p.revision};
+    page = p;
   }
 
   onMount(() => {
@@ -126,21 +87,15 @@
 
 <div class="main-paper-container">
   <Paper 
-    bind:width={width}
-    bind:height={height}
-    documentInput={documentInput} 
-    paperColor={$paperColor} 
-    frameColor={$frameColor} 
-    frameWidth={$frameWidth} 
     editable={true} 
     manageKeyCache={true}
-    bind:documentOutput={documentOutput} 
+    bind:page={page} 
     bind:this={paper}
     on:painterActive={onPainterActive}/>
 </div>
 
 {#if painterActive}
-  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone} bind:this={toolBox}/>
+  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone}/>
 {/if}
 
 <style>
@@ -150,14 +105,5 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  .done-button {
-    position: fixed;
-    width: 240px;
-    height: 80px;
-    font-size: 32px;
-    color: white;
-    right: 32px;
-    bottom: 32px;
   }
 </style>

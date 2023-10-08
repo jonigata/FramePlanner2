@@ -1,61 +1,60 @@
 <script type="ts">
-  import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
+  import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
   import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
-  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+  import { Bubble } from './lib/layeredCanvas/bubble.js';
   import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
-  import { Bubble } from './lib/layeredCanvas/bubble.js'; 
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
-  import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
+  import { getFontStyle } from "@svelte-web-fonts/google";
+  import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
   import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
   import { postToAiPictors } from './postToAiPictors'
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { type Page, type Revision, commitPage, revertPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
 
-  export let width = 140;
-  export let height = 198;
-  export let documentInput: unknown;
-  export let documentOutput: unknown;
+  export let page: Page;
   export let editable = false;
-  export let paperColor = 'white';
-  export let frameColor = 'black';
-  export let frameWidth = 1;
   export let manageKeyCache = false;
   export let painterActive = false;
 
-  let containerWidth;
-  let containerHeight;
-  let canvasWidth;
-  let canvasHeight;
-  let canvas;
-  let layeredCanvas;
-  let frameLayer;
-  let bubbleLayer;
-  let inlinePainterLayer;
-  let history = [];
-  let historyIndex = 0;
+  let containerWidth: number;
+  let containerHeight: number;
+  let canvasWidth: number;
+  let canvasHeight: number;
+  let canvas: HTMLCanvasElement;
+  let layeredCanvas: LayeredCanvas;
+  let frameLayer: FrameLayer;
+  let bubbleLayer: BubbleLayer;
+  let inlinePainterLayer: InlinePainterLayer;
+  let pageRevision: Revision | null = null;
+  let bubbleSnapshot: string = null;
+
+  interface CustomCanvasElement extends HTMLCanvasElement {
+    paper: any;
+  }
 
   $:onChangeContainerSize(containerWidth, containerHeight);
-  function onChangeContainerSize(w, h) {
+  function onChangeContainerSize(w: number, h: number) {
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;
   }
 
   $:onFrameImageConstraint($frameImageConstraintToken);
-  function onFrameImageConstraint(token) {
+  function onFrameImageConstraint(token: boolean) {
     if (!token) return;
     console.log("onFrameImageConstraint", token);
     frameLayer.constraintAll();
@@ -65,15 +64,6 @@
 
   const dispatch = createEventDispatcher();
 
-  function addHistory() {
-    history.length = historyIndex;
-    history.push({
-      frameTree: frameLayer.frameTree.clone(),
-      bubbles: bubbleLayer.bubbles.map(b => b.clone()),
-    })
-    historyIndex = history.length;
-  }
-
   function isPainting() {
     return painterActive;
   }
@@ -82,9 +72,7 @@
     if (isPainting()) {
       inlinePainterLayer.undo();
     } else {
-      console.log("undo", historyIndex);
-      if (historyIndex <= 1) { return; }
-      historyIndex--;
+      undoPageHistory(page);
       revert();
     }
   }
@@ -93,43 +81,44 @@
     if (isPainting()) {
       inlinePainterLayer.redo();
     } else {
-      console.log("redo", historyIndex);
-      if (history.length <= historyIndex) { return; }
-      historyIndex++;
-      const h = history[historyIndex-1];
-      frameLayer.frameTree = h.frameTree.clone();
-      bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
-      bubbleLayer.selected = null;
-      layeredCanvas.redraw(); 
+      redoPageHistory(page);
+      revert();
     }
   }
 
-  export function commit() {
-    console.log("commit");
-    addHistory();
-    outputDocument();
+  export function commit(tag: string) {
+    console.log("%ccommit", "color:white; background-color:cyan; padding:2px 4px; border-radius:4px;", page.revision, [...page.history], page.historyIndex)
+    const newPage = commitPage(page, frameLayer.frameTree, bubbleLayer.bubbles, tag);
+    bubbleSnapshot = $bubble ? JSON.stringify(Bubble.decompile(page.paperSize, $bubble)) : null;
+    pageRevision = newPage.revision;
+    page = newPage;
+  }
+
+  export function commitIfDirty() {
+    if (!bubbleSnapshot || !$bubble) { return; }
+    const newBubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, $bubble));
+    if (bubbleSnapshot !== newBubbleSnapshot) {
+      console.log("%ccommitIfDirty", "color:white; background-color:cyan; padding:2px 4px; border-radius:4px;", bubbleSnapshot, newBubbleSnapshot);
+      commit(null);
+    }
   }
 
   function revert() {
-    console.log("revert", historyIndex);
-    const h = history[historyIndex-1];
-    frameLayer.frameTree = h.frameTree.clone();
-    bubbleLayer.bubbles = h.bubbles.map(b => b.clone());
-    bubbleLayer.selected = null;
-    layeredCanvas.redraw(); 
+    console.log("revert");
+    page = revertPage(page);
   }
 
-  export function importImage(image) {
+  export function importImage(image: HTMLImageElement) {
     const layout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     frameLayer.importImage(layout, image);
   }
 
-  function generate(frameTreeElement) {
+  function generate(element: FrameElement) {
     console.log("generateImages");
-    $frameImageGeneratorTarget = frameTreeElement;
+    $frameImageGeneratorTarget = element;
   }
 
-  async function scribble(element) {
+  async function scribble(element: FrameElement) {
     console.log("scribble");
     if (!element.image) { 
       element.image = await makeWhiteImage(500, 500);
@@ -144,21 +133,21 @@
     dispatch('painterActive', painterActive);
   }
 
-  function insert(frameTreeElement) {
-    console.log("insert", frameTreeElement);
+  function insert(element: FrameElement) {
+    console.log("insert", element);
     const images = collectImages(frameLayer.frameTree);
-    dealImages(frameLayer.frameTree, images, frameTreeElement, null);
-    commit();
+    dealImages(frameLayer.frameTree, images, element, null);
+    commit(null);
   }
 
-  function splice(frameTreeElement) {
-    console.log("splice", frameTreeElement);
+  function splice(element: FrameElement) {
+    console.log("splice", element);
     const images = collectImages(frameLayer.frameTree);
-    dealImages(frameLayer.frameTree, images, null, frameTreeElement);
-    commit();
+    dealImages(frameLayer.frameTree, images, null, element);
+    commit(null);
   }
 
-  function constraintElement(element) {
+  function constraintElement(element: FrameElement) {
     const pageLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     const layout = findLayoutOf(pageLayout, element);
     if (!layout) { return; }
@@ -171,10 +160,10 @@
     inlinePainterLayer.setElement(null);
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
-    commit();
+    commit(null);
   }
 
-  export function setTool(tool) {
+  export function setTool(tool: any) {
     console.log("setTool", tool);
     inlinePainterLayer.currentBrush = tool;
   }
@@ -187,83 +176,61 @@
     layeredCanvas?.redraw(); 
   });
 
-  $:onChangePaperSize(width, height);
-  function onChangePaperSize(w, h) {
-    console.log("onChangePaperSize", w, h);
-    if (!layeredCanvas) { return; }
-    layeredCanvas.setPaperSize([w, h]);
-  }
-
-  $:onInputDocument(documentInput);
-  function onInputDocument(newDocumentInput) {
+  $:onUpdatePage(page);
+  function onUpdatePage(newPage: Page) {
     if (!frameLayer) { return; }
-    const images = collectImages(frameLayer.frameTree);
-    const newFrameTree = FrameElement.compile(newDocumentInput.frameTree);
-    frameLayer.frameTree = newFrameTree;
-    dealImages(newFrameTree, images);
+    if (revisionEqual(newPage.revision, pageRevision)) { 
+      console.log("%csame revision", "color:white; background-color:purple; padding:2px 4px; border-radius:4px;")
+      return; 
+    }
+    console.log("%cdifferent revision", "color:white; background-color:purple; padding:2px 4px; border-radius:4px;", newPage.revision, pageRevision);
 
-    const paperSize = frameLayer.getPaperSize();
-    bubbleLayer.bubbles = newDocumentInput.bubbles.map(b => Bubble.compile(paperSize, b));
+    bubbleLayer.bubbles = newPage.bubbles;
     bubbleLayer.selected = null;
-    commit();
 
-    layeredCanvas.redraw();
-  }
+    frameLayer.frameTree = newPage.frameTree;
+    frameLayer.frameTree.bgColor = page.paperColor;
+    frameLayer.frameTree.borderColor = page.frameColor;
+    frameLayer.frameTree.borderWidth = page.frameWidth;
 
-  $:onChangePaperColor(paperColor);
-  function onChangePaperColor(newPaperColor) {
-    if (!frameLayer) { return; }
-    frameLayer.frameTree.bgColor = newPaperColor;
-    layeredCanvas.redraw();
-  }
+    pageRevision = {...newPage.revision};
 
-  $:onChangeFrameColor(frameColor);
-  function onChangeFrameColor(newFrameColor) {
-    if (!frameLayer) { return; }
-    frameLayer.frameTree.borderColor = newFrameColor;
-    layeredCanvas.redraw();
-  }
-
-  $:onChangeFrameWidth(frameWidth);
-  function onChangeFrameWidth(newFrameWidth) {
-    if (!frameLayer) { return; }
-    frameLayer.frameTree.borderWidth = newFrameWidth;
+    layeredCanvas.setPaperSize(page.paperSize);
     layeredCanvas.redraw();
   }
 
   $:onChangeBubble($bubble);
-  function onChangeBubble(b) {
+  function onChangeBubble(b: Bubble) {
+    if (!b) { return; }
+    // TODO: クリックしただけで8回も呼ばれるのでなんとかしたい
+    // showInspectorで$bubble = bとするだけで8回呼ばれる
+    // BubbleInspectorの参照している場所各部で変更したことになってるのか？
+    // 全ての参照箇所だとすると逆に8じゃ少ないので、いくつかのコンポーネントが怪しい
+
     // フォント読み込みが遅れるようなのでヒューリスティック
     setTimeout(() => layeredCanvas.redraw(), 2000);
     setTimeout(() => layeredCanvas.redraw(), 5000);
   }
 
-  function outputDocument() {
-    const paperSize = frameLayer.getPaperSize();
-    documentOutput = {
-      frameTree: FrameElement.decompile(frameLayer.frameTree),
-      bubbles: bubbleLayer.bubbles.map(b => Bubble.decompile(paperSize, b)),
-    }
-  }
-
-  function showInspector(b) {
+  function showInspector(b: Bubble) {
+    console.log("showInspector");
     const [x0, y0] = b.p0;
     const [x1, y1] = b.p1;
     const [cx, cy] = [(x0+x1)/2, (y0+y1)/2];
     const offset = canvas.height / 2 < cy ? 1 : -1;
     
+    bubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, b));
     $bubbleInspectorPosition = {
       center: elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector([cx,cy])),
       height: y1 - y0,
       offset
     };
-    b.redraw = () => layeredCanvas.redraw();
     $bubble = b;
   }
 
   function hideInspector() {
     console.log('hideInspector');
-    $bubble.redraw = null; // 一応
+    bubbleSnapshot = null;
     $bubble = null;
   }
 
@@ -272,18 +239,17 @@
   }
 
   onMount(async () => {
-    const frameJson = documentInput ? documentInput.frameTree : frameExamples[0];
-    const frameTree = FrameElement.compile(frameJson);
-
     layeredCanvas = new LayeredCanvas(
       canvas, 
-      [width, height],
-      (p, s) => {
-        if (s) {
-          const q = convertPointFromNodeToPage(canvas, ...p);
-          toolTipRequest.set({ message: s, position: q });
-        } else {
-          toolTipRequest.set(null);
+      page.paperSize,
+      (p: [number, number], s: String) => {
+        if (editable) {
+          if (s) {
+            const q = convertPointFromNodeToPage(canvas, ...p);
+            toolTipRequest.set({ message: s, position: q });
+          } else {
+            toolTipRequest.set(null);
+          }
         }
       });
 
@@ -299,17 +265,17 @@
     sequentializePointer(FrameLayer);
     frameLayer = new FrameLayer(
       paperRendererLayer,
-      frameTree,
+      page.frameTree,
       editable,
-      (frameTree) => {
+      (_frameTree: FrameElement) => {
         console.log("commit frames");
-        commit();
+        commit(null);
       },
       () => {revert();},
-      (frameTreeElement) => {generate(frameTreeElement);},
-      (frameTreeElement) => {scribble(frameTreeElement);},
-      (frameTreeElement) => {insert(frameTreeElement);},
-      (frameTreeElement) => {splice(frameTreeElement);},
+      (frameElement: FrameElement) => {generate(frameElement);},
+      (frameElement: FrameElement) => {scribble(frameElement);},
+      (frameElement: FrameElement) => {insert(frameElement);},
+      (frameElement: FrameElement) => {splice(frameElement);},
       );
     layeredCanvas.addLayer(frameLayer);
 
@@ -320,14 +286,17 @@
       frameLayer,
       showInspector, 
       hideInspector, 
-      (bubbles) => {
+      (_bubbles: Bubble[], always: boolean) => {
         if ($bubble) {
           bubbleLayer.defaultBubble = $bubble.clone();
         }
-        commit();
+        if (always) {
+          commit(null);
+        } else {
+          commitIfDirty();
+        }
       },
-      () => {revert();},
-      getDefaultText)
+      () => {revert();})
     layeredCanvas.addLayer(bubbleLayer);
 
     sequentializePointer(InlinePainterLayer);
@@ -337,7 +306,7 @@
     layeredCanvas.redraw();
 
     if (manageKeyCache) {
-      initializeKeyCache(canvas, (code) => {
+      initializeKeyCache(canvas, (code: string) => {
         if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) && (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"])) {
           console.log("paper ctrl+shift+z")
           $undoStore.redo();
@@ -357,20 +326,14 @@
             code === "Space";
       });
     }
-
-    if (editable) {
-
-    }
-
-    addHistory();
   });
 
-  async function swapCanvas(f) {
-    const tmpCanvas = document.createElement("canvas");
-    tmpCanvas.width = width;
-    tmpCanvas.height = height;
+  async function swapCanvas(f: (c: CustomCanvasElement) => Promise<void>) {
+    const tmpCanvas = document.createElement("canvas") as CustomCanvasElement;
+    tmpCanvas.width = page.paperSize[0]
+    tmpCanvas.height = page.paperSize[1]
     tmpCanvas.paper = {};
-    tmpCanvas.paper.size = [width, height];
+    tmpCanvas.paper.size = page.paperSize;
     tmpCanvas.paper.translate = [0,0];
     tmpCanvas.paper.viewTranslate = [0,0];
     tmpCanvas.paper.scale = [1,1];
@@ -389,19 +352,15 @@
 
   export function save() {
     console.log("save");
-    function zeropadding(n) {
-      return n < 10 ? "0" + n : n;
-    }
-
-    swapCanvas(async (c) => {
+    swapCanvas(async (c: CustomCanvasElement) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       saveCanvas(c, makeFilename("png"), latestJson);
     });
   }
 
-  export function postToSNS() {
-    console.log("postToSNS");
-    swapCanvas(async (c) => {
+  export function postToAIPictors() {
+    console.log("postToAIPictors");
+    swapCanvas(async (c: CustomCanvasElement) => {
       const latestJson = FrameElement.decompile(frameLayer.frameTree);
       const url = canvasToUrl(c, latestJson);
       await postToAiPictors(
@@ -416,28 +375,32 @@
   
   export async function copyToClipboard() {
     console.log("copyToClipboard");
-    swapCanvas(async (c) => {
+    swapCanvas(async (c: CustomCanvasElement) => {
       await copyCanvasToClipboard(c);
     });
   }
 
-  export function pourScenario(s) {
+  export function pourScenario(s: any) { // TODO: 型が雑
     const paperLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     const leaves = collectLeaves(frameLayer.frameTree);
-    s.scenes.forEach((scene, index) => {
+    s.scenes.forEach((scene: any, index: number) => {
       const leaf = leaves[index];
       leaf.prompt = scene.description;
 
       const layout = findLayoutOf(paperLayout, leaf);
       const r = makeTrapezoidRect(layout.corners);
       const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
-      scene.bubbles.forEach(b => {
+      scene.bubbles.forEach((b:any) => {
         const bubbles = bubbleLayer.createTextBubble(b[1]);
         bubbles[0].shape = "rounded";
         bubbles[0].initOptions();
         bubbles[0].move(c);
       })
     });
+  }
+
+  function getFontStyle2(fontFamily: string, fontWeight: string): string {
+    return getFontStyle(fontFamily as GoogleFontFamily, fontWeight as GoogleFontVariant);
   }
 </script>
 
@@ -446,13 +409,12 @@
   <div class="canvas-container fullscreen" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
     <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
     {#if bubbleLayer?.defaultBubble}
-    <GoogleFont fonts="{[{family: bubbleLayer.defaultBubble.fontFamily,variants: ["400"],},]}" display="swap" />
-    <p style={getFontStyle(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み、ローカルフォントだと多分エラー出る -->
+    <p style={getFontStyle2(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!-- 事前読み込み、ローカルフォントだと多分エラー出る -->
     {/if}
   </div>    
 {:else}
-  <div class="canvas-container" style="width: {width}px; height: {height}px;">
-    <canvas width={width} height={height} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
+  <div class="canvas-container" style="width: {page.paperSize[0]}px; height: {page.paperSize[1]}px;">
+    <canvas width={page.paperSize[0]} height={page.paperSize[1]} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
   </div>    
 {/if}
 

@@ -1,7 +1,7 @@
 <script type="ts">
   import { draggable } from '@neodrag/svelte';
   import PainterTool from './PainterTool.svelte';
-  import { createEventDispatcher, onMount, tick } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -18,7 +18,7 @@
     tools.forEach(tool => tool.selected = tool.id === 0);
   }
 
-  function onChoose(e) {
+  function onChoose(e: CustomEvent<any>) {
     console.log(e.detail);
     tools = tools.map(tool => ({ ...tool, selected: false }));
 
@@ -29,7 +29,7 @@
     dispatch('setTool', e.detail);
   }
 
-  function onChange(e) {
+  function onChange(e: CustomEvent<any>) {
     const targetTool = tools.find(tool => tool.id === e.detail.id);
     targetTool.strokeStyle = e.detail.strokeStyle;
     targetTool.lineWidth = e.detail.lineWidth;
@@ -81,10 +81,6 @@
     flex-direction: column;
     align-items: center;
     height: 24px;
-  }
-  .title-image {
-    width: 32px;
-    height: 32px;
   }
   .inner {
     padding: 8px;

@@ -7,14 +7,14 @@
   export let height = 512;
   export let pen = { strokeStyle: "black", lineWidth: 5 };
 
-  let containerWidth;
-  let containerHeight;
-  let canvas;
-  let layeredCanvas;
-  let painterLayer;
+  let containerWidth: number;
+  let containerHeight: number;
+  let canvas: HTMLCanvasElement;
+  let layeredCanvas: any;
+  let painterLayer: any;
 
   $: onChangePen(pen);
-  function onChangePen(pen) {
+  function onChangePen(pen: { strokeStyle: string, lineWidth: number }) {
     console.log("onChangePen", pen);
     if (painterLayer) {
       painterLayer.currentPen = pen;
@@ -25,7 +25,7 @@
     layeredCanvas = new LayeredCanvas(
         canvas, 
         [width, height],
-        (p, s) => {
+        (_p: [number, number], _s: string) => {
         });
 
     sequentializePointer(PainterLayer);

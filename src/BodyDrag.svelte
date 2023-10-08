@@ -14,7 +14,7 @@
   let y = 0;
   let scale = 1.0;
 
-  function handlePointerDown(e) {
+  function handlePointerDown(e: PointerEvent) {
     if (keyDownFlags["Space"]) {
       console.log('handlePointerDown', e);
       dragging = true;
@@ -23,19 +23,19 @@
       $bodyDragging = true;
     }
   }
-  function handlePointerMove(e) {
+  function handlePointerMove(e: PointerEvent) {
     if (!dragging) return;
     const [dx, dy] = [e.clientX - dragStart[0], e.clientY - dragStart[1]];
     x = origin[0] + dx;
     y = origin[1] + dy;
   }
 
-  function handlePointerUp(e) {
+  function handlePointerUp(_e: PointerEvent) {
     dragging = false;
      $bodyDragging = false;
   }
 
-  function handleWheel(e) {
+  function handleWheel(e: WheelEvent) {
     if ($drawerStore.open) { return; }
     scale -= e.deltaY * 0.0001;
     if (scale < 0.1) scale = 0.1;
@@ -50,7 +50,7 @@
     x = (parentWidth - innerWidth) / 2;
     y = (parentHeight - innerHeight) / 2;
 
-    initializeKeyCache(fullscreen, (code) => {
+    initializeKeyCache(fullscreen, (code: string) => {
       if (code =="KeyZ" && (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) && (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"])) {
         console.log("ctrl+shift+z")
         $undoStore.redo();

@@ -1,7 +1,6 @@
 export const keyDownFlags = {};
 
 export function initializeKeyCache(canvas, consume) {
-    console.log("initializeKeyCache");
     function getCanvasPosition(event) {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;

@@ -2,7 +2,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
 
-  export let name;
+  export let name: string;
   export let value = 1;
   export let min = 1;
   export let max = null;
@@ -19,7 +19,7 @@
   }
 
   $:onChangeRawValue(rawValue);
-  function onChangeRawValue(rawValue) {
+  function onChangeRawValue(rawValue: number) {
     if (!ready) { return; }
     if (rawValue < exponentialMin) {
       value = rawValue;
@@ -32,7 +32,7 @@
   }
 
   $:onChangeValue(value);
-  function onChangeValue(value) {
+  function onChangeValue(value: number) {
     if (value < exponentialMin) {
       rawValue = value;
     } else {

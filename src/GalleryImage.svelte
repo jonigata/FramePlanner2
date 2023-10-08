@@ -5,11 +5,11 @@
   import reference from './assets/reference.png';
   import referenceSelected from './assets/reference-selected.png';
 
-  export let image = null;
+  export let image: HTMLImageElement = null;
   export let width = 160;
-  export let chosen = null;
-  export let refered = null;
-  let container;
+  export let chosen: HTMLImageElement = null;
+  export let refered: HTMLImageElement = null;
+  let container: HTMLDivElement;
 
   const dispatch = createEventDispatcher();
 
@@ -22,13 +22,13 @@
     chosen = image;
   }
 
-  function onDelete(e, image) {
+  function onDelete(e: MouseEvent, image: HTMLImageElement) {
     console.log("onDelete");
     e.stopPropagation();
     dispatch("delete", image);
   }
 
-  function onRefer(e, image) {
+  function onRefer(e: MouseEvent, image: HTMLImageElement) {
     console.log("onRefer");
     e.stopPropagation();
     dispatch("refer", image);
@@ -71,14 +71,6 @@
   }
   .selected {
     border: 2px solid blue;
-  }
-  .frame > img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
   }
   .delete-button {
     position: absolute;

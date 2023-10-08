@@ -10,11 +10,11 @@
 
   const dispatch = createEventDispatcher();
 
-  function onCommit(e) {
+  function onCommit(e: CustomEvent<HTMLImageElement>) {
     dispatch("commit", e.detail);
   }
 
-  async function onDelete(e) {
+  async function onDelete(e: CustomEvent<HTMLImageElement>) {
     console.log(images.indexOf(e.detail));
     images.splice(images.indexOf(e.detail), 1);
     const newImages = images;
@@ -23,7 +23,7 @@
     images = newImages;
   }
 
-  function onRefer(e) {
+  function onRefer(e: CustomEvent<HTMLImageElement>) {
     refered = e.detail;
   }
 </script>

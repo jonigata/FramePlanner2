@@ -8,7 +8,7 @@
   export let height = 96;
   export let shape = 'rounded';
 
-  let canvas;
+  let canvas: HTMLCanvasElement; // 勝手にフィールドを追加するのでany
 
   const dispatch = createEventDispatcher();
 
@@ -16,13 +16,13 @@
     redraw(shape);
   });
 
-  function click(e) {
+  function click(e: MouseEvent) {
     console.log('click');
     dispatch('click', e);
   }
 
   $: redraw(shape);
-  function redraw(p) {
+  function redraw(p: string) {
     if (!canvas) return;
 
     const opts = Bubble.getInitialOptions({ shape, size: [width, height] }, true);
@@ -36,9 +36,9 @@
     ctx.translate(width * 0.5, height * 0.5);
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
-    ctx.bubbleDrawMethod = "fill";
+    ctx["bubbleDrawMethod"] = "fill";
     drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
-    ctx.bubbleDrawMethod = "stroke";
+    ctx["bubbleDrawMethod"] = "stroke";
     drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
     ctx.restore();
   }

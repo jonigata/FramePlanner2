@@ -316,7 +316,6 @@ export class Bubble {
       if (optionSet[option].init) {
         options[option] = optionSet[option].init(b);
         if (sample && optionSet[option].sampleInit) {
-          console.log("sample init", option, optionSet[option].sampleInit(b))
           options[option] = optionSet[option].sampleInit(b);
         }
       }

@@ -2,7 +2,6 @@ import { convertPointFromPageToNode } from "./convertPoint";
 
 export class LayeredCanvas {
     constructor(c, size, onHint) {
-        console.log("initializeLayeredCanvas");
         this.canvas = c;
         this.canvas.paper = {};
         this.canvas.paper.size = size;

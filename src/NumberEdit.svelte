@@ -1,14 +1,13 @@
 <!-- SliderEdit.svelte -->
-<script>
-  import { createEventDispatcher, onMount, tick } from 'svelte';
+<script lang="ts">
+  import { createEventDispatcher, onMount } from 'svelte';
 
-  export let value;
+  export let value: number;
   export let allowDecimal = false;
 
   const dispatch = createEventDispatcher();
-  let editing = false;
-  let original;
-  let container;
+  let original: number;
+  let container: HTMLDivElement;
   let containerWidth = 0;
   let containerHeight = 0;
   let textValue = '';
@@ -16,7 +15,7 @@
   let key = 0; // undo防止
 
   $: onChangeValue(value);
-  function onChangeValue(value) {
+  function onChangeValue(value: number) {
     let s = allowDecimal ? value.toFixed(2) : value.toString();
     if (textValue != s) {
       textValue = s;
@@ -24,7 +23,7 @@
   }
 
   $: onChangeTextValue(textValue);
-  function onChangeTextValue(textValue) {
+  function onChangeTextValue(textValue: string) {
     let n = allowDecimal ? parseFloat(textValue) : parseInt(textValue, 10);
     if (value != n) {
       value = n;
@@ -38,28 +37,25 @@
     textValue = value.toString();
   });
 
-  function edit(element) {
-    console.log(element.target);
-    element.target.select();
-    editing = true;
+  function edit(event: FocusEvent) {
+    console.log(event);
+    (event.target as HTMLInputElement).select();
   }
 
   function submit() {
     if (value != original) {
       dispatch('submit', value);
     }
-    editing = false;
   }
 
-  function keydown(event) {
+  function keydown(event: KeyboardEvent) {
     if (event.key == 'Escape') {
       event.preventDefault();
       value = original;
-      editing = false;
     }
   }
   
-  function handleBlur(event) {
+  function handleBlur(event: FocusEvent) {
     if (event.relatedTarget) {
       return;
     }

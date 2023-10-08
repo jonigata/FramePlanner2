@@ -12,6 +12,7 @@
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
+  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -29,7 +30,6 @@
   let adjustedPosition = { x: 0, y: 0 };
   let pinned = true;
   let textarea = null;
-  let appendix = null;
 
   $:move(position);
   function move(p) {
@@ -48,7 +48,7 @@
   }
 
   $:onChangeBubble(bubble);
-  async function onChangeBubble(b) {
+  async function onChangeBubble(b: Bubble) {
     if (b === oldBubble) {return;}
     oldBubble = b;
     if (b) {
@@ -58,12 +58,11 @@
       textarea.focus({preventScroll: true});
       textarea.select();
       pinned = true;
-      move(b.position);
     }
   }
 
   $:onChangeShape($chosenShape);
-  function onChangeShape(s) {
+  function onChangeShape(s: string) {
     if (bubble && bubble.shape !== s) {
       bubble.shape = s;
       bubble.initOptions();
@@ -71,7 +70,7 @@
   }
 
   $:onChangeFont($chosenFont);
-  function onChangeFont(f) {
+  function onChangeFont(f: { fontFamily: string, fontWeight: string }) {
     if (bubble && f && (bubble.fontFamily !== f.fontFamily || bubble.fontWeight !== f.fontWeight)) {
       bubble.fontFamily = f.fontFamily;
       bubble.fontWeight = f.fontWeight;
@@ -168,7 +167,7 @@
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
-    <BubbleInspectorAppendix bubble={bubble} bind:this={appendix}/>
+    <BubbleInspectorAppendix bind:bubble={bubble}/>
   </div>
 </div>
 {/if}
@@ -237,10 +236,6 @@
   }
   .selected-font:hover {
     color: rgb(128, 93, 47);
-  }
-  .template-chooser-container {
-    height: 120px;
-    width: 100%;
   }
   .direction-item {
     width: 12px;

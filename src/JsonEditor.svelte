@@ -2,50 +2,81 @@
   import { draggable } from '@neodrag/svelte';
   import { bodyDragging } from './uiStore';
   import titleBarIcon from './assets/json.png';
-  import { JSONEditor, toJSONContent, toTextContent } from 'svelte-jsoneditor';
-  import { isJsonEditorOpen, jsonEditorInput, jsonEditorOutput, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
+  import { JSONEditor, toJSONContent, toTextContent, Mode } from 'svelte-jsoneditor';
+  import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
   import { tick } from 'svelte';
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
+  import { type Page, type Revision, mainPage, getRevision, revisionEqual, commitPage } from './pageStore';
+  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
+  import { Bubble } from './lib/layeredCanvas/bubble.js';
 
   let content = { text: "hello" };
   let skipJsonChange = false;
+  let pageRevision: Revision | null = null;
 
-  function handleChange(updatedContent, previousContent, { contentErrors, patchResult }) {
+  function handleChange(updatedContent: any /*, previousContent, { contentErrors, patchResult }*/) {
     // content is an object { json: JSONValue } | { text: string }
-    // console.log('onChange: ', { updatedContent, previousContent, contentErrors, patchResult })
+    console.log('Json/handleChange')
     if (skipJsonChange) {
       // console.log("skipJsonChange");
       return;
     }
     content = updatedContent
     try {
-      $jsonEditorInput = toJSONContent(updatedContent).json;
+      const jsonPage = toJSONContent(updatedContent).json as any;
+      const newPage = commitPage($mainPage, 
+        FrameElement.compile(jsonPage.frameTree), 
+        jsonPage.bubbles.map(b => Bubble.compile($mainPage.paperSize, b)),
+        "JsonEdit");
+      newPage.paperSize = jsonPage.paperSize;
+      newPage.paperColor = jsonPage.paperColor;
+      newPage.frameColor = jsonPage.frameColor;
+      newPage.frameWidth = jsonPage.frameWidth;
+      pageRevision = getRevision(newPage);
+      $mainPage = newPage;
     }
     catch (e) {
-      // 握りつぶす
+      // ユーザーの入力したJSONが不正な場合、握りつぶす
       console.log("invalid json", e);
     }
   }
 
-  function replacer(key, value) {
+  function replacer(_key: string, value: number) {
     if (typeof value === 'number' && !Number.isInteger(value)) {
       return parseFloat(value.toFixed(2)); // 小数点以下2桁に制限
     }
     return value;
   }
 
-  $:onOutputJsonDocument($jsonEditorOutput);
-  async function onOutputJsonDocument(json) {
+  $:onUpdateOuterPage($mainPage);
+  async function onUpdateOuterPage(page: Page) {
+    console.log("Json/onUpdateOuterPage", page);
+    if (revisionEqual(page.revision, pageRevision)) { 
+      console.log("%csame revision", "color:white; background-color:orange; padding:2px 4px; border-radius:4px;")
+      return; 
+    }
+    console.log("%cdifferent revision", "color:white; background-color:orange; padding:2px 4px; border-radius:4px;", page.revision, pageRevision)
+
     skipJsonChange = true;
-    content = { text: JSON.stringify(json, replacer, 2) };
+    pageRevision = getRevision(page);
+
+    const displayPage = {
+      frameTree: FrameElement.decompile(page.frameTree),
+      bubbles: page.bubbles.map(b => Bubble.decompile(page.paperSize, b)),
+      paperSize: page.paperSize,
+      paperColor: page.paperColor,
+      frameColor: page.frameColor,
+      frameWidth: page.frameWidth,
+    };
+    content = { text: JSON.stringify(displayPage, replacer, 2) };
     await tick(); // hack
     skipJsonChange = false;
   }
 
   $:onDownloadJsonDocument($downloadJsonToken);
-  function onDownloadJsonDocument(t) {
+  function onDownloadJsonDocument(t: boolean) {
     if (!t) { return; }
 
     const jsonString = toTextContent(content).text;
@@ -65,7 +96,7 @@
   }
 
   $:onShareJsonDocument($shareJsonToken);
-  async function onShareJsonDocument(t) {
+  async function onShareJsonDocument(t: boolean) {
     if (!t) { return; }
 
     console.log("onShareJsonDocument");
@@ -86,7 +117,7 @@
 <div class="control-panel variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token expand"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="inner expand">
-    <JSONEditor {content} mode="text" onChange="{handleChange}"/>
+    <JSONEditor {content} mode={Mode.text} onChange={handleChange}/>
   </div>
 </div>
 {/if}

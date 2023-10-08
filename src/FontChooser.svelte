@@ -4,15 +4,15 @@
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import HistoryStorage from './HistoryStorage.svelte';
   import WebFontList from './WebFontList.svelte';
-  import { fontChooserOpen, chosenFont } from './fontStore';
+  import { type SearchOptions, fontChooserOpen, chosenFont } from './fontStore';
   import trash from './assets/trash.png';
 
-  let searchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
+  let searchOptions: SearchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
   let drawerPage = 0;
-  let fontList = null;
-  let localFontName;
+  let fontList: WebFontList = null;
+  let localFontName: string;
   let localFonts = [];
-  let historyStorage;
+  let historyStorage: HistoryStorage;
 
   function setLocalFont() {
     $fontChooserOpen = false;
@@ -23,25 +23,25 @@
     }
   }
 
-  function onChangeFont(event) {
+  function onChangeFont(event: { detail: { mouseEvent: MouseEvent, fontFamily: string, fontWeight: string } }) {
     chosenFont.set(event.detail);
-    if (!event.detail.event.ctrlKey) {
+    if (!event.detail.mouseEvent.ctrlKey) {
       $fontChooserOpen = false;
     }
   }
 
-  function addHistory(fontFamily) {
+  function addHistory(fontFamily: string) {
     historyStorage.add(fontFamily);
     localFonts.push(fontFamily);
   }
 
-  function removeFromHistory(fontFamily) {
+  function removeFromHistory(fontFamily: string) {
     historyStorage.remove(fontFamily);
     localFonts = localFonts.filter((f) => f !== fontFamily);
   }
 
   $:onChangeSearchOptions(searchOptions);
-  function onChangeSearchOptions(options) {
+  function onChangeSearchOptions(options: SearchOptions) {
     if (fontList) {
       fontList.searchOptions = options;
     }
@@ -56,8 +56,8 @@
 
   onMount(async () => {
     await historyStorage.isReady();
-    historyStorage.getAll().onsuccess = (e) => {
-      localFonts = e.target.result;
+    historyStorage.getAll().onsuccess = (e: Event) => {
+      localFonts = (e.target as IDBRequest<string[]>).result;
     };
   });
 
@@ -92,7 +92,7 @@
     {#each localFonts as font}
       <div class="font-sample hbox" style="font-family: '{font}'">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <span on:click={event=>onChangeFont({detail:{event,fontWeight:"400",fontFamily:font}})}>{font} 今日はいい天気ですね</span>
+        <span on:click={mouseEvent=>onChangeFont({detail:{mouseEvent,fontWeight:"400",fontFamily:font}})}>{font} 今日はいい天気ですね</span>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
       </div>
