@@ -96,12 +96,10 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
     const image = src.image;
     const bubble = Bubble.decompile(paperSize, src);
     if (image) {
-      console.log("saving image", image);
       await saveImage(fileSystem, image.image);
       const fileId = image.image["fileId"];
       await imageFolder.link(fileId, fileId);
       bubble.image = { ...src.image, image: fileId };
-      console.log("save bubble image", {...bubble.image}, fileId);
     }
     packedBubbles.push(bubble);
   }
@@ -117,7 +115,6 @@ export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<
   const root = await fileSystem.getRoot();
   const imageFolder = await root.getNodeByName('画像') as Folder;
 
-  console.log("bubble count", serializedPage.bubbles.length);
   const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
   const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
 
@@ -167,15 +164,10 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<F
 async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperSize: [number, number]): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
   for (const src of bubbles) {
-    console.log(src);
     const image = src.image;
     const bubble: Bubble = Bubble.compile(paperSize, src);
     if (image) {
-      console.log("loading bubble image", image);
       bubble.image = { ...image, image: await loadImage(fileSystem, image.image) };
-      console.log("loaded bubble image", {...bubble.image});
-    } else {
-      console.log("no imageId");
     }
     unpackedBubbles.push(bubble);
   }
@@ -228,6 +220,7 @@ async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promi
   const file = await fileSystem.createFile();
   await file.write(imageToBase64(image));
   image["fileId"] = file.id;
+  imageCache[file.id] = image;
 }
 
 export function getCurrentDateTime() {
