@@ -361,7 +361,10 @@ export class PaperRendererLayer extends Layer {
 
     // 描き戻し
     try {
+      targetCtx.save();
+      targetCtx.imageSmoothingEnabled = false;
       targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5, ...bubble.size);
+      targetCtx.restore();
     }
     catch (e) {
       console.log(pw, ph, canvas.width, canvas.height, bubble.size);
