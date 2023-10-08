@@ -294,6 +294,9 @@
     height: 24px;
     position: relative; /* InsertZone用 */
   }
+  .folder-title-line:hover {
+    background-color: #fff4;
+  }
   .folder-title {
     font-size: 16px;
     font-weight: 700;

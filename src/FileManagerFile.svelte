@@ -135,7 +135,11 @@
     width: 100%;
     display: flex;
     flex-direction: row;
+    align-items: center;
     position: relative;
+  }
+  .file:hover {
+    background-color: #fff4;
   }
   .file-title {
     font-size: 16px;
@@ -159,6 +163,8 @@
     display: inline;
   }
   .selected {
-    background-color: #ccc;
+    background-color: #f8f4;
+    border-radius: 8px;
   }
+
 </style>
