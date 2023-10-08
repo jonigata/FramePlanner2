@@ -1,11 +1,12 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile, filenameDisplayMode } from "./fileManagerStore";
   import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
   import type { Revision } from "./pageStore";
+  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 
   export let fileSystem: FileSystem;
 
@@ -98,6 +99,10 @@
     }
   }
 
+  function toggleFilenameDisplayMode() {
+    $filenameDisplayMode = $filenameDisplayMode === "filename" ? "index" : "filename";
+  }
+
   onMount(async () => {
     root = await fileSystem.getRoot();
     desktop = await root.getEntryByName("デスクトップ");
@@ -114,7 +119,6 @@
     size="640px"
     on:clickAway={() => ($fileManagerOpen = false)}
   >
-
     {#key $fileManagerRefreshKey}
       <div class="drawer-content">
 <!--
@@ -149,11 +153,23 @@
         </div>
 -->
       </div>
+      <div class="toolbar">
+        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+          <RadioItem bind:group={$filenameDisplayMode} name="filenameDisplayMode" value={'filename'}>ファイル名</RadioItem>
+          <RadioItem bind:group={$filenameDisplayMode} name="filenameDisplayMode" value={'index'}>ページ番号</RadioItem>
+        </RadioGroup>
+      </div>
     {/key}
   </Drawer>
 </div>
 
 <style>
+  .toolbar {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    margin: 8px;
+  }
   .cabinet {
     margin: 8px;
     padding: 8px;

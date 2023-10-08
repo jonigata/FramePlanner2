@@ -6,13 +6,13 @@
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "./RenameEdit.svelte";
+  import { toolTip } from './passiveToolTipStore';
 
   import newFileIcon from './assets/fileManager/new-file.png';
   import newFolderIcon from './assets/fileManager/new-folder.png';
   import trashIcon from './assets/fileManager/trash.png';
   import folderIcon from './assets/fileManager/folder.png';
   import renameIcon from './assets/fileManager/rename.png';
-  import pagenameModeIcon from './assets/fileManager/pagename-mode.png';
 
   export let fileSystem: FileSystem;
   export let filename: string;
@@ -28,7 +28,6 @@
   let acceptable: boolean;
   let isDraggingOver: boolean;
   let isDiscardable = false;
-  let displayMode: 'filename' | 'index' = 'filename';
   let renameEdit = null;
   let renaming = false;
 
@@ -90,11 +89,6 @@
     node = node;
   }
 
-  async function toggleDisplayMode() {
-    displayMode = displayMode === 'filename' ? 'index' : 'filename';
-    await node.setAttribute("displayMode", displayMode);
-  }
-
   $:onUpdate(isTrash && $trashUpdateToken);
   function onUpdate(token: boolean) {
     if (token) {
@@ -121,8 +115,6 @@
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
     isDiscardable = removability === "removable" && !path.includes(trash[0]);
-    const a = await node.getAttribute("displayMode");
-    displayMode = a ? a : 'filename' as any;
   });
 
   function onDragStart(ev: DragEvent) {
@@ -220,7 +212,7 @@
     draggable={removability === "removable"}
   >
     <div class="folder-title">
-      <div class="foldername">
+      <div class="foldername" use:toolTip={"ドラッグで移動"}>
         <img class="button" src={folderIcon} alt="symbol"/>
         <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       </div>
@@ -228,19 +220,13 @@
         <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
       {/if}
       <div class="button-container">
-        {#if !isTrash}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <img class="button" src={pagenameModeIcon} alt="pagename mode" on:click={toggleDisplayMode} />
-        {/if}
-      </div>
-      <div class="button-container">
         {#if spawnability === "file-spawnable"}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <img class="button" src={newFileIcon} alt="new file" on:click={addFile}/>
+          <img class="button" src={newFileIcon} alt="new file" on:click={addFile} use:toolTip={"ページ作成"}/>
         {/if}
         {#if spawnability === "folder-spawnable"}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
+          <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} use:toolTip={"フォルダ作成"}/>
         {/if}
       </div> 
   </div>
@@ -248,13 +234,13 @@
       <div class="button-container">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         {#if isDiscardable}
-          <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+          <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"フォルダ名変更"}/>
         {/if}
       </div>  
       <div class="button-container">
         {#if isDiscardable}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} />
+          <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} use:toolTip={"捨てる"}/>
         {/if}
       </div>
     </div>
@@ -272,7 +258,7 @@
         {#if childNode.getType() === 'folder'}
           <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} bind:displayMode={displayMode} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>

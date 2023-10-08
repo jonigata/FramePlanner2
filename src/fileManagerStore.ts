@@ -16,6 +16,7 @@ export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
 export const newFileToken = writable(false);
+export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 
 let imageCache = {};
 

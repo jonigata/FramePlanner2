@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { loadPageFrom, fileManagerDragging, type Dragging } from "./fileManagerStore";
+  import { loadPageFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
   import { type Page, mainPage } from './pageStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "./RenameEdit.svelte";
+  import { toolTip } from './passiveToolTipStore';
 
   import trashIcon from './assets/fileManager/trash.png';
   import renameIcon from './assets/fileManager/rename.png';
@@ -20,7 +21,6 @@
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
   export let path: string[];
-  export let displayMode: 'filename' | 'index' = 'filename';
 
   let acceptable = false;
   let isDiscardable = false;
@@ -100,11 +100,11 @@
 </script>
 
 <div class="file">
-  <div class="file-title" class:selected={selected}
+  <div class="file-title" class:selected={selected} use:toolTip={"ドラッグで移動、ダブルクリックで編集"}
     draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
     <img class="button" src={fileIcon} alt="symbol"/>
     {#if isDiscardable}
-      {#if displayMode === 'index'}
+      {#if $filenameDisplayMode === 'index'}
         {`Page ${( '00' + (index+1) ).slice( -2 )}`}
       {:else}
         <div class="filename">
@@ -116,15 +116,15 @@
     {/if}
   </div>
   <div class="button-container">
-    {#if displayMode !== 'index'}
+    {#if $filenameDisplayMode !== 'index'}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+      <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
     {/if}
   </div>  
   <div class="button-container">
     {#if !selected}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
+      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} use:toolTip={"捨てる"}/>
     {/if}
   </div>
   <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
