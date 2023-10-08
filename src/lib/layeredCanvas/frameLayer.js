@@ -331,6 +331,7 @@ export class FrameLayer extends Layer {
 
       if (this.dropIcon.contains(point)) {
         layout.element.image = null;
+        this.onCommit(this.frameTree);
         this.redraw();
       } else if (this.flipHorizontalIcon.contains(point)) {
         layout.element.reverse[0] *= -1;
