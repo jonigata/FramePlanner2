@@ -219,9 +219,14 @@
     class:no-select={removability === "unremovable"}
     draggable={removability === "removable"}
   >
-    <img class="button" src={folderIcon} alt="symbol"/>
     <div class="folder-title">
-      <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
+      <div class="foldername">
+        <img class="button" src={folderIcon} alt="symbol"/>
+        <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
+      </div>
+      {#if isTrash}
+        <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
+      {/if}
       <div class="button-container">
         {#if !isTrash}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -238,9 +243,6 @@
           <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
         {/if}
       </div> 
-      {#if isTrash}
-        <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
-      {/if}
   </div>
     <div class="buttons hbox gap-2">
       <div class="button-container">
@@ -289,7 +291,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 20px;
+    height: 24px;
     position: relative; /* InsertZone用 */
   }
   .folder-title {
@@ -304,6 +306,17 @@
     width: 100%;
     height: 20px;
     margin-left: 4px;
+  }
+  .foldername {
+    background: rgb(221, 235, 189);
+    border-radius: 8px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    display: flex;
+    flex-direction: row;
+    margin-right: 8px;
   }
   .folder-contents {
     padding-left: 16px;

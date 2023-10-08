@@ -107,7 +107,9 @@
       {#if displayMode === 'index'}
         {`Page ${( '00' + (index+1) ).slice( -2 )}`}
       {:else}
-        <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
+        <div class="filename">
+          <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
+        </div>
       {/if}
     {:else}
       {filename}
@@ -143,7 +145,7 @@
     flex-direction: row;
     align-items: center;
     width: 100%;
-    height: 20px;
+    height: 24px;
   }
   .button-container {
     width: 20px;
