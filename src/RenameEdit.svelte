@@ -10,7 +10,7 @@
   let container: HTMLDivElement;
   let containerWidth = 0;
   let containerHeight = 0;
-  let input: HTMLInputElement;
+  let input: HTMLSpanElement;
 
   let key = 0; // undo防止
 
@@ -23,7 +23,7 @@
 
   function edit(event: FocusEvent) {
     console.log(event);
-    (event.target as HTMLInputElement).select();
+    selectContentOfElement(event.target);
   }
 
   function submit() {
@@ -55,9 +55,17 @@
     key++; // undo防止
   }
 
+  function selectContentOfElement(element) {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
   export function setFocus() {
     console.log("setFocus");
-    input.inert = false;
+    input.contentEditable = "plaintext-only";
     input.focus();
     editing = true;
   }
@@ -71,15 +79,15 @@
 >
   <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
     {#key key}
-    <input
-      inert
+    <span
+      contenteditable="false" 
+      bind:textContent={value}
       bind:this={input}
-      bind:value={value}
       on:focus={edit}
       on:keypress={keypress}
       on:keydown={keydown}
       on:blur={handleBlur}
-      class="input"
+      class="editable"
     />
     {/key}
   </div>
@@ -93,7 +101,12 @@
     height: 100%;
     align-items: center;
   }
-  input {
+  .edit-box {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .editable {
     background: #fff0;
     font-size: inherit;
     color: inherit;
@@ -103,19 +116,14 @@
     box-sizing: content-box;
     border-radius: 2px;
     padding-left: 2px;
-    padding-bottom: 2px;
-    width: 100%;
     height: 100%;
     border: none;
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: 40px;
+    line-height: 1;
   }
-  .input:focus {
+  .editable:focus {
     z-index: 1;
-  }
-  .edit-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
   }
 </style>

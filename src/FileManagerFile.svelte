@@ -132,6 +132,7 @@
     position: relative;
     display: flex;
     flex-direction: row;
+    align-items: center;
     height: 18px;
   }
   .button-container {
