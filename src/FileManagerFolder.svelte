@@ -127,7 +127,7 @@
 
   function onDragStart(ev: DragEvent) {
     console.log("folder drag start", bindId, parent.id, renaming);
-    if (renaming || !isDiscardable) {
+    if (renaming || removability === "unremovable") {
       ev.preventDefault();
       return;
     }
@@ -222,11 +222,6 @@
     <img class="button" src={folderIcon} alt="symbol"/>
     <div class="folder-title">
       <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
-      {#if isTrash}
-        <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
-      {/if}
-  </div>
-    <div class="buttons hbox gap-2">
       <div class="button-container">
         {#if !isTrash}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -243,6 +238,11 @@
           <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} />
         {/if}
       </div> 
+      {#if isTrash}
+        <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
+      {/if}
+  </div>
+    <div class="buttons hbox gap-2">
       <div class="button-container">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         {#if isDiscardable}

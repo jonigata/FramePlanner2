@@ -99,41 +99,51 @@
   
 </script>
 
-<div class="file-title" class:selected={selected}
-  draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
-  <img class="button" src={fileIcon} alt="symbol"/>
-  {#if isDiscardable}
-    {#if displayMode === 'index'}
-      {`Page ${( '00' + (index+1) ).slice( -2 )}`}
-    {:else}
-      <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div class="button-container">
-        <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
-      </div>  
-    {/if}
-    <div class="button-container">
-      {#if !selected}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
+<div class="file">
+  <div class="file-title" class:selected={selected}
+    draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
+    <img class="button" src={fileIcon} alt="symbol"/>
+    {#if isDiscardable}
+      {#if displayMode === 'index'}
+        {`Page ${( '00' + (index+1) ).slice( -2 )}`}
+      {:else}
+        <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       {/if}
-    </div>
-  {:else}
-    {filename}
-  {/if}
+    {:else}
+      {filename}
+    {/if}
+  </div>
+  <div class="button-container">
+    {#if displayMode !== 'index'}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="button" src={renameIcon} alt="rename" on:click={startRename}/>
+    {/if}
+  </div>  
+  <div class="button-container">
+    {#if !selected}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} />
+    {/if}
+  </div>
   <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
 </div>
 
 <style>
+  .file {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+  }
   .file-title {
     font-size: 16px;
     font-weight: 700;
     user-select: none;
-    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 18px;
+    width: 100%;
+    height: 20px;
   }
   .button-container {
     width: 20px;

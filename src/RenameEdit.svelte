@@ -7,18 +7,12 @@
 
   const dispatch = createEventDispatcher();
   let original: string;
-  let container: HTMLDivElement;
-  let containerWidth = 0;
-  let containerHeight = 0;
   let input: HTMLSpanElement;
 
   let key = 0; // undo防止
 
   onMount(() => {
     original = value;
-    containerWidth = container.offsetWidth;
-    containerHeight = container.offsetHeight;
-    console.log(containerWidth, containerHeight);
   });
 
   function edit(event: FocusEvent) {
@@ -73,34 +67,22 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-  class="container"
-  bind:this="{container}"
->
-  <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
-    {#key key}
-    <span
-      contenteditable="false" 
-      bind:textContent={value}
-      bind:this={input}
-      on:focus={edit}
-      on:keypress={keypress}
-      on:keydown={keydown}
-      on:blur={handleBlur}
-      class="editable"
-    />
-    {/key}
-  </div>
+<div class="edit-box">
+  {#key key}
+  <span
+    contenteditable="false" 
+    bind:textContent={value}
+    bind:this={input}
+    on:focus={edit}
+    on:keypress={keypress}
+    on:keydown={keydown}
+    on:blur={handleBlur}
+    class="editable"
+  />
+  {/key}
 </div>
 
 <style>
-  .container {
-    display: flex;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    align-items: center;
-  }
   .edit-box {
     display: flex;
     align-items: center;
@@ -108,18 +90,11 @@
   }
   .editable {
     background: #fff0;
-    font-size: inherit;
-    color: inherit;
-    font-weight: inherit;
-    text-align: inherit;
     box-shadow: none;
     box-sizing: content-box;
     border-radius: 2px;
     padding-left: 2px;
-    height: 100%;
     border: none;
-    flex-grow: 0;
-    flex-shrink: 0;
     min-width: 40px;
     line-height: 1;
   }
