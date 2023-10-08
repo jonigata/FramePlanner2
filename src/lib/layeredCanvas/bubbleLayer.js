@@ -623,13 +623,14 @@ export class BubbleLayer extends Layer {
 
     if (this.createBubbleIcon.contains(position)) {
       this.createImageBubble(image);
-      return;
+      this.onCommit(this.bubbles, true);
+      return true;
     }
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(position)) {
         this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1], scaleLock: false };
-        this.redraw();
+        this.onCommit(this.bubbles, true);
         return true;
       }
     }
@@ -1177,6 +1178,7 @@ export class BubbleLayer extends Layer {
   }
 
   selectBubble(bubble) {
+    console.log("selectBubble");
     for (let a of Object.keys(this.optionEditActive)) {
       if (this.optionEditActive[a]) {
         this.redraw();
