@@ -1,7 +1,7 @@
 import type { FileSystem } from './lib/filesystem/fileSystem';
 import { MockFileSystem } from './lib/filesystem/mockFileSystem';
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-import { newFile } from "./fileManagerStore";
+import { newPage, newFile } from "./fileManagerStore";
 
 export async function buildFileSystem(): Promise<FileSystem> {
   const fs = new MockFileSystem();
@@ -47,5 +47,6 @@ async function addFolder(fs, parent, name, count) {
 let index = 0;
 
 async function addFile(fs, folder, name) {
-  await newFile(fs, folder, name, "sample-", index++ % frameExamples.length);
+  const page = newPage("sample-", index++ % frameExamples.length);
+  await newFile(fs, folder, name, page);
 }

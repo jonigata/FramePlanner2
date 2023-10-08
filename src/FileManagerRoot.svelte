@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile, filenameDisplayMode } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile, newPage, filenameDisplayMode } from "./fileManagerStore";
   import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
@@ -60,13 +60,13 @@
   }
 
   $:onNewFileRequest($newFileToken);
-  async function onNewFileRequest(token: boolean) {
-    if (token) {
+  async function onNewFileRequest(page: Page) {
+    if (page) {
       console.log("onNewFileRequest");
-      $newFileToken = false;
+      $newFileToken = null;
       const root = await fileSystem.getRoot();
       const desktop = await root.getNodeByName("デスクトップ");
-      const { page, file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), "add-", 0);
+      await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), page);
       currentRevision = getRevision(page);
       $mainPage = page;
 

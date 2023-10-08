@@ -1,7 +1,7 @@
 <script type="ts">
   import { onMount } from 'svelte';
   import Paper from './Paper.svelte';
-  import { saveToken, clipboardToken, importingImage } from './paperStore';
+  import { saveToken, clipboardToken } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
   import { type Page, mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
@@ -30,13 +30,6 @@
     if (!token) return;
     paper.copyToClipboard();
     $clipboardToken = false;
-  }
-
-  $:importImage($importingImage);
-  function importImage(image: HTMLImageElement) {
-    if (!image) return;
-    paper.importImage(image);
-    $importingImage = null;
   }
 
   $:onCommitToken($commitToken);

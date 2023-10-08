@@ -15,7 +15,7 @@ export const fileManagerOpen = writable(false);
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
-export const newFileToken = writable(false);
+export const newFileToken: Writable<Page> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 
 let imageCache = {};
@@ -174,13 +174,11 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperS
   return unpackedBubbles;
 }
 
-export async function newFile(fs: FileSystem, folder: Folder, name: string, prefix: string, index: number = 2): Promise<{file: File, page: Page, bindId: BindId}> {
-  const file = await fs.createFile();
-
+export function newPage(prefix: string, index: number = 2) {
   const page: Page = {
     frameTree: FrameElement.compile(frameExamples[index]),
     bubbles:[], 
-    revision: {id: file.id, revision:1, prefix }, 
+    revision: {id: "new page", revision:1, prefix }, 
     paperSize: [840, 1188],
     paperColor: '#ffffff',
     frameColor: '#000000',
@@ -189,12 +187,18 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, pref
     history: [],
     historyIndex: 0,
   }
+  return page;
+}
+
+export async function newFile(fs: FileSystem, folder: Folder, name: string, page: Page): Promise<{file: File, bindId: BindId}> {
+  const file = await fs.createFile();
+  page.revision.id = file.id;
 
   console.log("*********** savePageTo from newFile");
   // console.trace();
   await savePageTo(page, fs, file);
   const bindId = await folder.link(name, file.id);
-  return { file, page, bindId };
+  return { file, bindId };
 }
 
 async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLImageElement> {

@@ -5,10 +5,9 @@
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
   import { type Page, incrementRevision, mainPage, commitPage } from './pageStore';
-  import { saveToken, clipboardToken, importingImage } from './paperStore';
+  import { saveToken, clipboardToken } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
-  import { tick } from 'svelte';
   import { bodyDragging } from './uiStore';
   import { aboutOpen } from './aboutStore';
   import { postContact } from './firebase';
@@ -22,6 +21,7 @@
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
+  import { newFileToken, newPage, newFile } from './fileManagerStore';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -109,12 +109,17 @@
         image.src = imageURL;
         await imageLoaded;
 
-        setDimensions(image.naturalWidth, image.naturalHeight);
-        $mainPage.frameTree = FrameElement.compile({});
-        $mainPage.bubbles = [];
+        const page = newPage("drop-", 2)
+        page.paperSize = [image.naturalWidth, image.naturalHeight];
+        console.log(page.frameTree);
+        page.frameTree.children[0].image = image;
+        $newFileToken = page;
+
+/*
         await tick();
         $importingImage = image;
         URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
+*/
       } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
         const text = await readFileAsText(file);
         const json = JSON.parse(text);

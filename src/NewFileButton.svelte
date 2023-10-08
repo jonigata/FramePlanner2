@@ -1,9 +1,9 @@
 <script type="ts">
   import newFileIcon from './assets/fileManager/new-file.png';
-  import { newFileToken } from "./fileManagerStore";
+  import { newPage, newFileToken } from "./fileManagerStore";
 
   async function createNewFile() {
-    $newFileToken = true;
+    $newFileToken = newPage("shortcut-", 0);
   }
 </script>
 
