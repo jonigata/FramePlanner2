@@ -84,8 +84,12 @@ function drawConcentrationBubble(context, seed, size, opts) {
     const n = opts.lineCount;
     context.save();
     const gradient = context.createRadialGradient(0, 0, 1, 0, 0, opts.lineLength);
-    gradient.addColorStop(0.0, "rgba(0,0,0,1)");
-    gradient.addColorStop(1.0, "rgba(0,0,0,0)");
+    const color = context.strokeStyle;
+    const color0 = new paper.Color(color); // わざとstrokeStyleを使う
+    const color1 = new paper.Color(color);
+    color0.alpha = 0;
+    gradient.addColorStop(0.0, color2string(color1));
+    gradient.addColorStop(1.0, color2string(color0));
     context.strokeStyle = gradient;
     context.beginPath();
     for (let i = 0; i < n; i++) {
