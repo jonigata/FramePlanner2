@@ -326,14 +326,10 @@ export class PaperRendererLayer extends Layer {
     const canvas = bubble.tmpCanvas;
     const ctx = bubble.tmpCtx;
 
-    const dpr = window.devicePixelRatio;
-    const [pw, ph] = [Math.floor(w * dpr), Math.floor(h * dpr)];
-    if (pw <= 0 || ph <= 0) { return; } // ブラウザ解像度などで実質サイズが0になることがあるらしい
-    canvas.width = pw;
-    canvas.height = ph;
+    canvas.width = w;
+    canvas.height = h;
 
-    ctx.translate(pw * 0.5, ph * 0.5);
-    ctx.scale(dpr, dpr);
+    ctx.translate(w * 0.5, h * 0.5);
     ctx.translate(...bubble.offset);
 
     const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
@@ -366,7 +362,7 @@ export class PaperRendererLayer extends Layer {
       targetCtx.restore();
     }
     catch (e) {
-      console.log(pw, ph, canvas.width, canvas.height, bubble.size);
+      console.log(w, h, canvas.width, canvas.height, bubble.size);
       throw e;
     }
   }
