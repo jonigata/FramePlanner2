@@ -13,6 +13,7 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
+  import { type BubbleInspectorPosition, bubbleInspectorPosition } from './bubbleInspectorStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -23,27 +24,23 @@
   import unembeddedIcon from './assets/unembedded.png';
   import resetIcon from './assets/reset.png';
 
-
-  export let position = { x: 0, y: 0 };
   export let bubble = null;
   let oldBubble = null;
-  let adjustedPosition = { x: 0, y: 0 };
+  let adjustedPosition = { x: 50, y: 720 };
   let pinned = true;
   let textarea = null;
+  let inspectorSize = [0, 0];
+  let inspector = null;
 
-  $:move(position);
-  function move(p) {
+  $:move($bubbleInspectorPosition, inspectorSize);
+  function move(p: BubbleInspectorPosition, dialogSize) {
     if (!p) {return;}
     if (pinned) {return;}
 
-    const center = p.center;
-    const height = p.height;
-    const offset = p.offset;
-    const dialogWidth = 350;
-    const dialogHeight = 400;
+    const { center, height, offset } = p;
     adjustedPosition = { 
-      x: Math.floor(center.x - dialogWidth*0.5), 
-      y: Math.floor(center.y + (offset === 1 ? -height*0.5 - 40 - dialogHeight : height*0.5 + 40))
+      x: Math.floor(center.x - dialogSize[0] * 0.5), 
+      y: Math.floor(center.y + (offset === 1 ? height*0.5 + 40 : -(height*0.5 + 40 + dialogSize[1])))
     };
   }
 
@@ -52,12 +49,12 @@
     if (b === oldBubble) {return;}
     oldBubble = b;
     if (b) {
-      console.log(b.optionSet);
       $chosenShape = b.shape;
       await tick();
       textarea.focus({preventScroll: true});
       textarea.select();
-      pinned = true;
+      inspectorSize = [inspector.offsetWidth, inspector.offsetHeight];
+      console.log(inspectorSize);
     }
   }
 
@@ -95,7 +92,7 @@
 
 {#if bubble}
 <div class="bubble-inspector-container">
-  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}}>
+  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>
     <div class="title-bar variant-filled-surface rounded-container-token">
       <img class="title-image" src={bubbleIcon} alt="title"/>
       <div class="bubble-size">{Math.round(bubble.size[0])}x{Math.round(bubble.size[1])}</div>
@@ -180,8 +177,8 @@
   }
   .bubble-inspector {
     position: absolute;
-    top: 710px;
-    left: 50px;
+    top: 0px;
+    left: 0px;
     width: 350px;
     display: flex;
     flex-direction: column;

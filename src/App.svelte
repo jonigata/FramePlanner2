@@ -73,7 +73,7 @@
   <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
 </div>
 
-<BubbleInspector position={$bubbleInspectorPosition} bind:bubble={$bubble}/>
+<BubbleInspector bind:bubble={$bubble}/>
 <FontChooser/>
 <ShapeChooser paperWidth={64} paperHeight={96}/>
 <ImageGenerator/>

@@ -216,16 +216,17 @@
     console.log("showInspector");
     const [x0, y0] = b.p0;
     const [x1, y1] = b.p1;
-    const [cx, cy] = [(x0+x1)/2, (y0+y1)/2];
-    const offset = canvas.height / 2 < cy ? 1 : -1;
+    const [px, py] = [(x0+x1)/2, (y0+y1)/2];
+    const [cx, cy] = layeredCanvas.paperPositionToCanvasPosition([px, py]);
+    const offset = canvas.height / 2 < cy ? -1 : 1;
     
     bubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, b));
+    $bubble = b;
     $bubbleInspectorPosition = {
-      center: elementCoordToDocumentCoord(canvas, arrayVectorToObjectVector([cx,cy])),
+      center: convertPointFromNodeToPage(canvas, cx, cy),
       height: y1 - y0,
       offset
     };
-    $bubble = b;
   }
 
   function hideInspector() {
@@ -366,7 +367,6 @@
       await postToAiPictors(
         url, 
         e => {
-          console.log(e);
           toastStore.trigger({ message: e, timeout: 1500});
         }
       );
