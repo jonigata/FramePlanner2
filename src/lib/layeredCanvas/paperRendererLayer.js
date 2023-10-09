@@ -231,12 +231,11 @@ export class PaperRendererLayer extends Layer {
 
     // 画像描画
     if (bubble.image) {
-      const [w,h] = size;
       const img = bubble.image;
       let iw = img.image.naturalWidth * img.scale[0];
       let ih = img.image.naturalHeight * img.scale[1];
-      let ix = w * 0.5 - iw * 0.5 + img.translation[0];
-      let iy = h * 0.5 - ih * 0.5 + img.translation[1];
+      let ix = - iw * 0.5 + img.translation[0];
+      let iy = - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
     }
 
