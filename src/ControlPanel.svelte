@@ -336,4 +336,7 @@
   .function-button {
     width: 125px;
   }
+  .genei {
+    font-family: 'genei';
+  }
 </style>
