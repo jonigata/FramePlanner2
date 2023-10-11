@@ -20,17 +20,17 @@ export class Bubble {
   reset() {
     this.offset = [0, 0];
     this.rotation = 0;
-    this.shape = "square";
+    this.shape = "rounded";
     this.embedded = false;
     this.fontStyle = "normal";
     this.fontWeight = "400";
-    this.fontSize = 26;
-    this.fontFamily = "Noto Sans JP";
+    this.fontSize = 32;
+    this.fontFamily = "源暎アンチック";
     this.direction = 'v';
     this.fontColor = '#000000FF';
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
-    this.strokeWidth = 1;
+    this.strokeWidth = 3;
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
     this.autoNewline = true;
