@@ -33,7 +33,7 @@ export class Bubble {
     this.strokeWidth = 3;
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
-    this.autoNewline = true;
+    this.autoNewline = false;
   }
 
   getStackTrace() {
