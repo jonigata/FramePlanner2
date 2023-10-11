@@ -681,7 +681,7 @@ export class BubbleLayer extends Layer {
     const bubble = this.defaultBubble.clone();
     bubble.p0 = dragStart;
     bubble.p1 = dragStart;
-    bubble.text = await this.onGetDefaultText();
+    bubble.text = getHaiku();
     bubble.initOptions();
     this.creatingBubble = bubble;
 
