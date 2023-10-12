@@ -190,6 +190,14 @@ export function newPage(prefix: string, index: number = 2) {
   return page;
 }
 
+export function newImagePage(image: HTMLImageElement, prefix: string): Page {
+  const page = newPage(prefix, 2)
+  page.paperSize = [image.naturalWidth, image.naturalHeight];
+  console.log(page.frameTree);
+  page.frameTree.children[0].image = image;
+  return page;
+}
+
 export async function newFile(fs: FileSystem, folder: Folder, name: string, page: Page): Promise<{file: File, bindId: BindId}> {
   const file = await fs.createFile();
   page.revision.id = file.id;

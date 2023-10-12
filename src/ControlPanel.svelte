@@ -21,7 +21,7 @@
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
-  import { newFileToken, newPage, newFile } from './fileManagerStore';
+  import { newFileToken, newImagePage } from './fileManagerStore';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -108,18 +108,10 @@
         const imageLoaded = new Promise((resolve) => image.onload = resolve);          
         image.src = imageURL;
         await imageLoaded;
-
-        const page = newPage("drop-", 2)
-        page.paperSize = [image.naturalWidth, image.naturalHeight];
-        console.log(page.frameTree);
-        page.frameTree.children[0].image = image;
-        $newFileToken = page;
-
-/*
-        await tick();
-        $importingImage = image;
         URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
-*/
+
+        const page = newImagePage(image, "drop-")
+        $newFileToken = page;
       } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
         const text = await readFileAsText(file);
         const json = JSON.parse(text);
