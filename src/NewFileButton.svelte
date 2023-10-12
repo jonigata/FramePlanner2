@@ -1,5 +1,5 @@
 <script type="ts">
-  import newFileIcon from './assets/fileManager/new-file.png';
+  import newFileIcon from './assets/new-file.png';
   import { newPage, newFileToken } from "./fileManagerStore";
 
   async function createNewFile() {

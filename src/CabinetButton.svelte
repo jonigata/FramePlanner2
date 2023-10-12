@@ -1,5 +1,5 @@
 <script type="ts">
-  import fileManagerIcon from './assets/fileManager.png';
+  import fileManagerIcon from './assets/file-manager.png';
   import { fileManagerOpen } from './fileManagerStore';
   
   function openFileManager() {
