@@ -14,6 +14,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
 
   //let model = 'gpt-3.5-turbo';
+  let apiKey = '';
   let model = 'gpt-4';
   let theme = 'おまかせ';
   let pageNumber = 1;
@@ -21,7 +22,7 @@
 
   async function generate_AI() {
     const openai = new OpenAI({
-      apiKey: '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',
+      apiKey,
       dangerouslyAllowBrowser: true
     });
 
@@ -236,7 +237,7 @@
     <fieldset>
       <div>
         <label for="openai-key">OpenAI Key</label>
-        <input type="text" id="openai-key" name="openai-key" placeholder="OpenAI Key" />
+        <input type="text" id="openai-key" name="openai-key" placeholder="OpenAI Key" bind:value={apiKey}/>
       </div>
       <div>
         <label for="model">GPT モデル</label>
