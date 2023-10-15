@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { draggable } from '@neodrag/svelte';
   import { bodyDragging } from './uiStore';
   import titleBarIcon from './assets/json.png';

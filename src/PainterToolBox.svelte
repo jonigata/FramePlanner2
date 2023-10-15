@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { draggable } from '@neodrag/svelte';
   import PainterTool from './PainterTool.svelte';
   import { createEventDispatcher, onMount } from 'svelte';

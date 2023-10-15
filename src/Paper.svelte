@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
@@ -7,7 +7,6 @@
   import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { Bubble } from './lib/layeredCanvas/bubble.js';
-  import { arrayVectorToObjectVector, elementCoordToDocumentCoord } from './lib/Misc'
   import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';

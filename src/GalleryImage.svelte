@@ -50,6 +50,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="frame" class:selected={chosen === image} bind:this={container} on:click={onClick} style="width: {width}px; height: {getHeight()};">
   <div class="delete-button" on:click={e => onDelete(e, image)}>
     <img src={drop} alt="delete" />

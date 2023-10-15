@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { draggable } from '@neodrag/svelte';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
@@ -98,15 +98,18 @@
       <div class="bubble-size">{Math.round(bubble.size[0])}x{Math.round(bubble.size[1])}</div>
       {#if pinned}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="pin-image" src={whitePinIcon} alt="pin" on:click={() => pinned = false} use:toolTip={"場所の固定"}/>
       {:else}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="pin-image" src={pinIcon} alt="pin" on:click={() => pinned = true} use:toolTip={"場所の固定"}/>
       {/if}
     </div>
 
     <div class="hbox gap-x-2 expand">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{bubble.fontFamily}</div>
       <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
@@ -162,6 +165,7 @@
         </RadioGroup>
       </div> 
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
     <BubbleInspectorAppendix bind:bubble={bubble}/>

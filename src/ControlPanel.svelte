@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { draggable } from '@neodrag/svelte';
   import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
@@ -101,7 +101,7 @@
       const file = files[0];
       console.log(file.type)
       if (file.type.startsWith("image/")) {
-        const imageURL = URL.createObjectURL(file);
+        const imageURL = URL.createObjectURL(file); 
         const image = new Image();
 
         const imageLoaded = new Promise((resolve) => image.onload = resolve);          

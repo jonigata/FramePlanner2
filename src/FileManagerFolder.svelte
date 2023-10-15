@@ -201,6 +201,7 @@
 </script>
 
 {#if node}
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="folder"
   on:dragover={onDragOver} 
   on:dragstart={onDragStart}
@@ -223,24 +224,28 @@
       <div class="button-container">
         {#if spawnability === "file-spawnable"}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <img class="button" src={newFileIcon} alt="new file" on:click={addFile} use:toolTip={"ページ作成"}/>
         {/if}
         {#if spawnability === "folder-spawnable"}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} use:toolTip={"フォルダ作成"}/>
         {/if}
       </div> 
   </div>
     <div class="buttons hbox gap-2">
       <div class="button-container">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
         {#if isDiscardable}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"フォルダ名変更"}/>
         {/if}
       </div>  
       <div class="button-container">
         {#if isDiscardable}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} use:toolTip={"捨てる"}/>
         {/if}
       </div>

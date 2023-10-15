@@ -92,8 +92,10 @@
     {#each localFonts as font}
       <div class="font-sample hbox" style="font-family: '{font}'">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <span on:click={mouseEvent=>onChangeFont({detail:{mouseEvent,fontWeight:"400",fontFamily:font}})}>{font}(ローカル) 今日はいい天気ですね</span>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
       </div>
     {/each}

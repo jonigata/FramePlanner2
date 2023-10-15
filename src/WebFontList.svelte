@@ -205,6 +205,7 @@
     {#each font.variants as variant}
         <div class="font-sample" style={getFontStyle2(font, variant)}>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
           <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
         </div>
     {/each}

@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { onMount } from 'svelte';
   import Paper from './Paper.svelte';
   import { saveToken, clipboardToken } from './paperStore';

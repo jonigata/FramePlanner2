@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import newFileIcon from './assets/new-file.png';
   import { newPage, newImagePage, newFileToken } from "./fileManagerStore";
 

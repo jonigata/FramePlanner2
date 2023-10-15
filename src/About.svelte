@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import Drawer from './Drawer.svelte'
   import { aboutOpen } from './aboutStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -33,6 +33,7 @@
     </p>
     <p>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
       <span class="comic-link" on:click={showComic}>はじめてのFramePlanner（まんが入門！）</span>(<a href="https://twitter.com/aiai61555228" target="_blank" rel="noopener noreferer">@aiai61555228</a>)
     </p>
 
@@ -131,6 +132,7 @@
     <h2>ライセンス</h2>
     <p>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
       <span class="comic-link" on:click={showLicense}>ライセンス</span>
     </p>
   </div>
@@ -189,7 +191,4 @@
     display: inline-block;
     vertical-align: middle;
   }  
-  p.verbatim {
-    white-space: pre-line;
-  }
 </style>

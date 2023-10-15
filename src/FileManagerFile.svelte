@@ -100,6 +100,7 @@
 </script>
 
 <div class="file">
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="file-title" class:selected={selected} use:toolTip={"ドラッグで移動、ダブルクリックで編集"}
     draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
     <img class="button" src={fileIcon} alt="symbol"/>
@@ -118,12 +119,14 @@
   <div class="button-container">
     {#if $filenameDisplayMode !== 'index'}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
     {/if}
   </div>  
   <div class="button-container">
     {#if !selected}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="button" src={trashIcon} alt="trash" on:click={removeFile} use:toolTip={"捨てる"}/>
     {/if}
   </div>

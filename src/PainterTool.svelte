@@ -1,6 +1,6 @@
 <svelte:options accessors={true} />
 
-<script type="ts">
+<script lang="ts">
   import { RangeSlider } from '@skeletonlabs/skeleton';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { createEventDispatcher } from 'svelte';
@@ -25,6 +25,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class:variant-filled-primary={brush.selected} class:variant-filled-surface={!brush.selected} class="rounded-container-token vbox tool" on:click={onChoose}>
   <RangeSlider name="outlinewidth" min={1} max={100} step={1} bind:value={brush.lineWidth} on:change={onChange} on:click={ignoreClick}/>
   <div class="hbox gap-0.5">

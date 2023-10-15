@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { bodyDragging } from './uiStore';
   import { drawerStore } from '@skeletonlabs/skeleton';

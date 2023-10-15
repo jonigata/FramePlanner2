@@ -3,9 +3,9 @@
   import NumberEdit from './NumberEdit.svelte';
   import OpenAI from 'openai';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
-  import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
-  import { type Page, type Revision, commitPage, revertPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
-  import { newPage, newImagePage, newFileToken, newFile } from "./fileManagerStore";
+  import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
+  import type { Page } from './pageStore';
+  import { newPage, newFileToken } from "./fileManagerStore";
   import { aiTemplates } from './lib/layeredCanvas/frameExamples';
   import { Bubble } from './lib/layeredCanvas/bubble';
   import { measureVerticalText } from './lib/layeredCanvas/verticalText';
