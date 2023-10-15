@@ -26,6 +26,7 @@
   }
   .number-box {
     width: 30px;
+    height: 20px;
     display: inline-block;
     text-align: right;
   }
