@@ -11,11 +11,17 @@ export type Dragging = {
   parent: string;
 }
 
+export type Book = {
+  title: string;
+  pages: Page[];
+}
+
 export const fileManagerOpen = writable(false);
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
 export const newFileToken: Writable<Page> = writable(null);
+export const newBookToken: Writable<Book> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 
 let imageCache = {};

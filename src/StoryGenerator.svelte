@@ -5,19 +5,31 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
   import type { Page } from './pageStore';
-  import { newPage, newFileToken } from "./fileManagerStore";
+  import { newPage, newBookToken } from "./fileManagerStore";
   import { aiTemplates } from './lib/layeredCanvas/frameExamples';
   import { Bubble } from './lib/layeredCanvas/bubble';
   import { measureVerticalText } from './lib/layeredCanvas/verticalText';
   import { parse as JSONCParse } from 'jsonc-parser';
+  import { toastStore } from '@skeletonlabs/skeleton';
+  import { ProgressRadial } from '@skeletonlabs/skeleton';
 
   //let model = 'gpt-3.5-turbo';
   let model = 'gpt-4';
+  let theme = 'おまかせ';
+  let pageNumber = 1;
+  let loading = false;
 
-  const prompt =`
-以下の条件に従ったマンガのアイディアを考えてください。
-題材：電柱
-ページ数：2ページ
+  async function generate_AI() {
+    const openai = new OpenAI({
+      apiKey: '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',
+      dangerouslyAllowBrowser: true
+    });
+
+    const prompt =`
+# Task Description
+
+マンガのアイディアを考えてください。
+題材とページ数は最後に伝えます。
 
 フォーマットは以下のような形にしてください。これは例なので、形式だけを参考にし、内容は無視してください。
 出力はJSONだけとし、それ以外の文言を含むことは許されません。
@@ -86,14 +98,16 @@
     }
   ]
 }
-`;
 
-  const openai = new OpenAI({
-    apiKey: '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',
-    dangerouslyAllowBrowser: true
-  });
+# Task condition
 
-  async function generate_AI() {
+題材：${theme}
+ページ数：${pageNumber}ページ
+`
+;
+
+
+
     console.log(prompt);
     const chatCompletion = await openai.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
@@ -149,18 +163,31 @@
   }
 
   async function generate() {
-    createPage(await generate_AI());
-    // createPage(generate_mock());
+    loading = true;
+    try {
+      const story = await generate_AI();
+
+      const book = { title: theme, pages: [] };
+      for (let i = 0; i < story.pages.length; i++) {
+        const page = await createPage(story.pages[i]);
+        book.pages.push(page);
+      }
+      $newBookToken = book;
+    }
+    catch (e) {
+      toastStore.trigger({ message: `GPT エラー: ${e}`, timeout: 4000});
+      console.log(e);
+    }
+    loading = false;
+    modalStore.close();
   }
 
-  async function createPage(s: any) {
-    const source = s.pages[0];
-    const page = newPage("ai-", 0);
+  async function createPage(source: any) {
+    const page = newPage("ai-", 2);
     const n = source.scenes.length;
-    console.log(n);
-    page.frameTree = FrameElement.compile(aiTemplates[n - 2]);
+    page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
     pourScenario(page, source);
-    $newFileToken = page;
+    return page;
   }
 
   function pourScenario(page: Page, s: any) { // TODO: 型が雑
@@ -178,8 +205,9 @@
       scene.bubbles.forEach((b:any, i:number) => {
         const bubble = new Bubble();
         bubble.text = b[1];
+        bubble.embedded = true;
         bubble.initOptions();
-        const cc = [r[0] + (r[2] - r[0]) * (i+1) / (n+1), (r[1] + r[3]) / 2];
+        const cc = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
         bubble.move(cc);
         calculateFitBubbleSize(bubble);
         page.bubbles.push(bubble);
@@ -192,44 +220,50 @@
     const charSkip = bubble.fontSize;
     let size =[0,0];
     const m = measureVerticalText(null, Infinity, bubble.text, baselineSkip, charSkip, false);
-    size = [Math.floor(m.width*1.4), Math.floor(m.height*1.4)];
+    size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
     bubble.size = size;
+    bubble.forceEnoughSize();
   }
 
 </script>
 
 <div class="page-container">
-  <fieldset>
-    <div>
-      <label for="openai-key">OpenAI Key</label>
-      <input type="text" id="openai-key" name="openai-key" placeholder="OpenAI Key" />
+  {#if loading}
+    <div class="loading">
+      <ProgressRadial/>
     </div>
-    <div>
-      <label for="model">GPT モデル</label>
-      <div class="toggle" id="model">
-        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={model} name="justify" value={'gpt-3.5-turbo'}>GPT-3.5</RadioItem>
-          <RadioItem bind:group={model} name="justify" value={'gpt-4'}>GPT-4</RadioItem>
-        </RadioGroup>
+  {:else}
+    <fieldset>
+      <div>
+        <label for="openai-key">OpenAI Key</label>
+        <input type="text" id="openai-key" name="openai-key" placeholder="OpenAI Key" />
       </div>
-    </div>
-    <div>
-      <label for="prompt">お題</label>
-      <textarea id="prompt" name="prompt" placeholder="お題" />
-    </div>
-    <div>
-      <label for="page">ページ数</label>
-      <div class="number-box" id="page">
-        <NumberEdit value={1}/>
+      <div>
+        <label for="model">GPT モデル</label>
+        <div class="toggle" id="model">
+          <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+            <RadioItem bind:group={model} name="justify" value={'gpt-3.5-turbo'}>GPT-3.5</RadioItem>
+            <RadioItem bind:group={model} name="justify" value={'gpt-4'}>GPT-4</RadioItem>
+          </RadioGroup>
+        </div>
       </div>
-    </div>
+      <div>
+        <label for="theme">お題</label>
+        <textarea id="theme" name="theme" placeholder="お題" bind:value={theme}/>
+      </div>
+      <div>
+        <label for="page">ページ数</label>
+        <div class="number-box" id="page">
+          <NumberEdit bind:value={pageNumber}/>
+        </div>
+      </div>
 
-    <div class="button-panel">
-      <button class="button btn variant-filled-primary px-2 py-2" on:click={generate}>生成</button>
-      <button class="button btn variant-filled-secondary px-2 py-2" on:click={() => modalStore.close()}>back</button>
-    </div>
-
-  </fieldset>
+      <div class="button-panel">
+        <button class="button btn variant-filled-primary px-2 py-2" on:click={generate}>生成</button>
+        <button class="button btn variant-filled-secondary px-2 py-2" on:click={() => modalStore.close()}>back</button>
+      </div>
+    </fieldset>
+  {/if}
 </div>
 
 <style>
@@ -244,6 +278,7 @@
   fieldset {
     background-color: #fff;
     width: 600px;
+    height: 400px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -298,5 +333,13 @@
     cursor: pointer;
     color: #fff;
     width: 160px;
+  }
+  .loading {
+    width: 600px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 </style>

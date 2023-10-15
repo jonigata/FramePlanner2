@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newFile, newPage, filenameDisplayMode } from "./fileManagerStore";
+  import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newFile, filenameDisplayMode } from "./fileManagerStore";
   import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
@@ -69,6 +69,31 @@
       await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), page);
       currentRevision = getRevision(page);
       $mainPage = page;
+
+      $fileManagerRefreshKey++;
+    }
+  }
+
+  $:onNewBookRequest($newBookToken);
+  async function onNewBookRequest(book: Book) {
+    if (book) {
+      console.log("onNewBookRequest");
+      $newBookToken = null;
+      const root = await fileSystem.getRoot();
+      const cabinet = await root.getNodeByName("キャビネット");
+
+      // フォルダ
+      const folder = await fileSystem.createFolder();
+      await cabinet.asFolder().link(book.title, folder.id);
+
+      // ファイル
+      for (let i = 0; i < book.pages.length; i++) {
+        const file = await fileSystem.createFile();
+        await newFile(fileSystem, folder, getCurrentDateTime(), book.pages[i]);
+      }
+
+      currentRevision = getRevision(book.pages[0]);
+      $mainPage = book.pages[0];
 
       $fileManagerRefreshKey++;
     }
