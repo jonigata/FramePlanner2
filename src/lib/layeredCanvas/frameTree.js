@@ -55,6 +55,7 @@ export class FrameElement {
   }
 
   static compile(markUp) {
+    console.log(markUp);
     const element = FrameElement.compileNode(markUp);
 
     const children = markUp.column || markUp.row;
@@ -68,6 +69,7 @@ export class FrameElement {
   }
 
   static compileNode(markUp) {
+    console.log(markUp);
     const element = new FrameElement(markUp.width ?? markUp.height ?? markUp.size ?? 1);
     element.divider = { 
       spacing: markUp.divider?.spacing ?? 0, 

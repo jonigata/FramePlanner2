@@ -4,6 +4,7 @@
 
   export let value: number;
   export let allowDecimal = false;
+  export let id = null;
 
   const dispatch = createEventDispatcher();
   let original: number;
@@ -35,6 +36,7 @@
     containerWidth = container.offsetWidth;
     containerHeight = container.offsetHeight;
     textValue = value.toString();
+    console.log(containerWidth, containerHeight);
   });
 
   function edit(event: FocusEvent) {
@@ -68,7 +70,8 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="container"
-  bind:this="{container}"
+  id={id}
+  bind:this={container}
 >
   <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
     {#key key}

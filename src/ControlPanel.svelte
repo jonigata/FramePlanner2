@@ -22,6 +22,7 @@
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
   import { newFileToken, newImagePage } from './fileManagerStore';
+  import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -85,15 +86,13 @@
 
   }
 
-/*
-  function openPainter() {
+  function openStoryGenerator() {
     const d: ModalSettings = {
       type: 'component',
-      component: 'paint',
+      component: 'storyGenerator',
     };
     modalStore.trigger(d);    
   }
-*/
 
   let files: FileList;
   $: uploadImage(files);
@@ -258,6 +257,9 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareJson}>
       Share
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryGenerator}>
+      AI
     </button>
   </div>  
 </div>
