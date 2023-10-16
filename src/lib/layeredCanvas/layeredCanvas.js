@@ -149,7 +149,7 @@ export class LayeredCanvas {
         var file = event.dataTransfer.files[0];
         if (!file) return; // 選択テキストのドロップなど
 
-        if (!file.type.match(/^image\/(png|jpeg|gif)$/)) return;
+        if (!file.type.match(/^image\/(png|jpeg|gif|webp)$/)) return;
 
         var image = new Image();
         var reader = new FileReader();
