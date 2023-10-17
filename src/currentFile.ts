@@ -1,26 +1,9 @@
-import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
-
-export async function recordCurrentFileId(fileSystem: FileSystem, id: NodeId) {
-  const root = await fileSystem.getRoot();
-  const preference = await root.getNodeByName("プリファレンス");
-  const entry = await preference.asFolder().getEmbodiedEntryByName("currentFile");
-  if (entry) {
-    await (entry[2] as File).write(id);
-  } else {
-    const file = await fileSystem.createFile();
-    await preference.asFolder().link("currentFile", file.id);
-    await file.write(id);
-  }
+// 現在のファイルIDをSessionStorageに記録する関数
+export async function recordCurrentFileId(id: string) {
+  sessionStorage.setItem('currentFileId', id);
 }
 
-export async function fetchCurrentFileId(fileSystem: FileSystem): Promise<NodeId> {
-  const root = await fileSystem.getRoot();
-  const preference = await root.getNodeByName("プリファレンス");
-  const entry = await preference.asFolder().getEmbodiedEntryByName("currentFile");
-  if (entry) {
-    const id = await (entry[2] as File).read();
-    return id as NodeId;
-  } else {
-    return null;
-  }
+// SessionStorageから現在のファイルIDを取得する関数
+export async function fetchCurrentFileId(): Promise<string | null> {
+  return sessionStorage.getItem('currentFileId');
 }

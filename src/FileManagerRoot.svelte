@@ -29,7 +29,7 @@
     if (page.revision.id === "bootstrap") { 
       modalStore.trigger({ type: 'component',component: 'waiting' });    
 
-      const currentFileId = await fetchCurrentFileId(fileSystem);
+      const currentFileId = (await fetchCurrentFileId()) as NodeId;
 
       if (currentFileId) {
         const file = await fileSystem.getNode(currentFileId);
@@ -37,7 +37,6 @@
         const newPage = await loadPageFrom(fileSystem, file.asFile());
         currentRevision = getRevision(newPage);
         $mainPage = newPage;
-        await recordCurrentFileId(fileSystem, newPage.revision.id as NodeId);
       } else {
         // 初期化時は仮ファイルをセーブする
         const root = await fileSystem.getRoot();
@@ -52,7 +51,7 @@
         currentRevision = getRevision(newPage);
         $mainPage = newPage;
         $fileManagerRefreshKey++;
-        await recordCurrentFileId(fileSystem, newPage.revision.id as NodeId);
+        await recordCurrentFileId(file.id);
       }
 
       modalStore.close();
@@ -61,7 +60,7 @@
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
       currentRevision = {...page.revision};
-      await recordCurrentFileId(fileSystem, page.revision.id as NodeId);
+      await recordCurrentFileId(page.revision.id as NodeId);
     }
   }
 
