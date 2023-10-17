@@ -8,3 +8,4 @@ export type BubbleInspectorPosition = {
 
 export const bubble = writable(null);
 export const bubbleInspectorPosition: Writable<BubbleInspectorPosition> = writable(null);
+export const bubbleSplitCursor = writable(null);

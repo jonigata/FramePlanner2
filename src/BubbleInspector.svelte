@@ -13,7 +13,7 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
-  import { type BubbleInspectorPosition, bubbleInspectorPosition } from './bubbleInspectorStore';
+  import { type BubbleInspectorPosition, bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -24,7 +24,6 @@
   import unembeddedIcon from './assets/unembedded.png';
   import resetIcon from './assets/reset.png';
 
-  export let bubble = null;
   let oldBubble = null;
   let adjustedPosition = { x: 50, y: 720 };
   let pinned = true;
@@ -44,7 +43,7 @@
     };
   }
 
-  $:onChangeBubble(bubble);
+  $:onChangeBubble($bubble);
   async function onChangeBubble(b: Bubble) {
     if (b === oldBubble) {return;}
     oldBubble = b;
@@ -60,17 +59,17 @@
 
   $:onChangeShape($chosenShape);
   function onChangeShape(s: string) {
-    if (bubble && bubble.shape !== s) {
-      bubble.shape = s;
-      bubble.initOptions();
+    if ($bubble && $bubble.shape !== s) {
+      $bubble.shape = s;
+      $bubble.initOptions();
     }
   }
 
   $:onChangeFont($chosenFont);
   function onChangeFont(f: { fontFamily: string, fontWeight: string }) {
-    if (bubble && f && (bubble.fontFamily !== f.fontFamily || bubble.fontWeight !== f.fontWeight)) {
-      bubble.fontFamily = f.fontFamily;
-      bubble.fontWeight = f.fontWeight;
+    if ($bubble && f && ($bubble.fontFamily !== f.fontFamily || $bubble.fontWeight !== f.fontWeight)) {
+      $bubble.fontFamily = f.fontFamily;
+      $bubble.fontWeight = f.fontWeight;
     }
   }
 
@@ -83,19 +82,29 @@
   }
 
   function reset() {
-    bubble?.reset();
-    bubble?.initOptions();
-    bubble = bubble;    
+    $bubble?.reset();
+    $bubble?.initOptions();
+    $bubble = $bubble;    
+  }
+
+  function split() {
+    $bubbleSplitCursor = textarea.selectionStart;
+  }
+
+  function onKeyPress(event: KeyboardEvent) {
+    if (event.shiftKey && event.key === "Enter") {
+      event.preventDefault();
+      split();
+    }
   }
 
 </script>
 
-{#if bubble}
+{#if $bubble}
 <div class="bubble-inspector-container">
-  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>
-    <div class="title-bar variant-filled-surface rounded-container-token">
+  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    <div class="title-bar variant-filled-surface rounded-container-token">
       <img class="title-image" src={bubbleIcon} alt="title"/>
-      <div class="bubble-size">{Math.round(bubble.size[0])}x{Math.round(bubble.size[1])}</div>
+      <div class="bubble-size">{Math.round($bubble.size[0])}x{Math.round($bubble.size[1])}</div>
       {#if pinned}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -110,38 +119,39 @@
     <div class="hbox gap-x-2 expand">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{bubble.fontFamily}</div>
+      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{$bubble.fontFamily}</div>
       <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
-          <RadioItem bind:group={bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={$bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
         </RadioGroup>
       </div>
-      <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={bubble.autoNewline}/>
+      <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
     </div>
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">T</div>
       <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
-        <ExponentialRangeSlider name="fontsize" bind:value={bubble.fontSize} exponentialMin={100} step={1}/>
+        <ExponentialRangeSlider name="fontsize" bind:value={$bubble.fontSize} exponentialMin={100} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={bubble.fontSize}/></div>
+          <div class="number-box"><NumberEdit bind:value={$bubble.fontSize}/></div>
         </div>  
-        <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={bubble.fontColor} label="" /></span>
+        <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={$bubble.fontColor} label="" /></span>
       </div>
       <span class="mx-2">/</span>
       <div class="hbox gap-0.5" use:toolTip={"フチの太さ"}>
         <span>フチ</span>
-        <RangeSlider name="outlinewidth" bind:value={bubble.outlineWidth} max={20} step={1} style="width:50px;"/>
-        <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={bubble.outlineColor} label="" /></span>
+        <RangeSlider name="outlinewidth" bind:value={$bubble.outlineWidth} max={20} step={1} style="width:50px;"/>
+        <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={$bubble.outlineColor} label="" /></span>
       </div>
     </div>
 
     <div class="hbox expand gap-2">
       <textarea
         class="my-2 rounded-container-token textarea" 
-        bind:value={bubble.text}
-        bind:this={textarea}/>
+        bind:value={$bubble.text}
+        bind:this={textarea}
+        on:keypress={onKeyPress}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
       <BubbleSample width={64} height={96} bind:shape={$chosenShape} on:click={chooseShape}/>
     </div>
@@ -149,26 +159,26 @@
     <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="hbox" use:toolTip={"フキダシ背景色"}>
         <div class="font-bold slider-label">fill</div>
-        <ColorPicker bind:hex={bubble.fillColor} label="" />
+        <ColorPicker bind:hex={$bubble.fillColor} label="" />
       </div>
       <div class="hbox" use:toolTip={"フキダシ枠の色"}>
         <div class="font-bold slider-label">stroke</div>
-        <ColorPicker bind:hex={bubble.strokeColor} label="" />
+        <ColorPicker bind:hex={$bubble.strokeColor} label="" />
       </div>
       <div class="hbox" use:toolTip={"フキダシ枠の太さ"}>
-        <RangeSlider name="line" bind:value={bubble.strokeWidth} max={10} step={1} style="width:100px;"/>
+        <RangeSlider name="line" bind:value={$bubble.strokeWidth} max={10} step={1} style="width:100px;"/>
       </div>
       <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
-          <RadioItem bind:group={bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={$bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={$bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
         </RadioGroup>
       </div> 
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
-    <BubbleInspectorAppendix bind:bubble={bubble}/>
+    <BubbleInspectorAppendix/>
   </div>
 </div>
 {/if}

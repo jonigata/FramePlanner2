@@ -1,23 +1,21 @@
 <script lang="ts">
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
   import NumberEdit from './NumberEdit.svelte';
-
-  export let bubble: Bubble;
+  import { bubble } from './bubbleInspectorStore';
 </script>
 
 <div class="container">
-  {#each Object.entries(bubble.optionSet) as [key, value], _ (key)}
+  {#each Object.entries($bubble.optionSet) as [key, value], _ (key)}
     {#if value["type"] === "number"}
       <div class="row">
         <div class="label">{value["label"]}</div>
         <RangeSlider 
           name={key} 
-          bind:value={bubble.optionContext[key]} 
+          bind:value={$bubble.optionContext[key]} 
           min={value["min"]} 
           max={value["max"]} 
           step={value["step"]}/>
-        <div class="number-box"><NumberEdit bind:value={bubble.optionContext[key]} allowDecimal={true}/></div>
+        <div class="number-box"><NumberEdit bind:value={$bubble.optionContext[key]} allowDecimal={true}/></div>
       </div>
     {/if}
   {/each}

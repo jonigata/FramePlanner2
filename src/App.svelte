@@ -8,7 +8,6 @@
   import PassiveToolTip from './PassiveToolTip.svelte';
   import About from './About.svelte';
   import BubbleInspector from './BubbleInspector.svelte';
-  import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
   import JsonEditor from './JsonEditor.svelte';
   import { onMount } from 'svelte';
   import * as Sentry from "@sentry/svelte";
@@ -81,7 +80,7 @@
   <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
 </div>
 
-<BubbleInspector bind:bubble={$bubble}/>
+<BubbleInspector/>
 <FontChooser/>
 <ShapeChooser paperWidth={64} paperHeight={96}/>
 <ImageGenerator/>

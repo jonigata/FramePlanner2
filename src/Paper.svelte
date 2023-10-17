@@ -10,7 +10,7 @@
   import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
   import { toolTipRequest } from './passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
-  import { bubble, bubbleInspectorPosition } from './bubbleInspectorStore';
+  import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
   import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
   import { undoStore } from './undoStore';
@@ -59,6 +59,34 @@
     frameLayer.constraintAll();
     layeredCanvas.redraw();
     $frameImageConstraintToken = false;
+  }
+
+  $:onSplitCursor($bubbleSplitCursor);
+  function onSplitCursor(cursor: number | null) {
+    if (cursor == null || bubbleLayer == null) { return; }
+    $bubbleSplitCursor = null;
+
+    const text = $bubble.text;
+    console.log(text.slice(cursor));
+    console.log(text.slice(0,cursor));
+
+    const width = $bubble.size[0];
+    const center = $bubble.center;
+
+    const newBubble = bubbleLayer.defaultBubble.clone();
+    newBubble.p0 = $bubble.p0;
+    newBubble.p1 = $bubble.p1;
+    newBubble.initOptions();
+    newBubble.text = text.slice(cursor).trimStart();
+    bubbleLayer.bubbles.push(newBubble);
+
+    $bubble.text = text.slice(0, cursor).trimEnd();
+
+    $bubble.move([center[0] - width / 2, center[1]]);
+    newBubble.move([center[0] + width / 2, center[1]]);
+
+    commit(null);
+    bubbleLayer.selectBubble(newBubble);
   }
 
   const dispatch = createEventDispatcher();
