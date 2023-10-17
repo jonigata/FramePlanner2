@@ -87,6 +87,20 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
   function calcHeight(ca) {
     let h = 0;
     for (let i = 0 ; i < ca.length ; i++) {
+      let c0 = ca[i];
+      let c1 = ca[i + 1];
+
+      switch (true) {
+        case /[0-9!?][0-9!?]/.test(c0+c1):
+          i++;
+          break;
+        case isEmojiAt(c0, 0):
+          i+=c0.length-1;
+          break;
+        default:
+          break;
+      }
+
       h += charSkip;
       if (i < ca.length - 1) {
         h += limitedKerning(ca[i], ca[i+1]) * charSkip;
@@ -112,6 +126,5 @@ function limitedKerning(c0, c1) {
   if (/[、。」』）】〕〟]/.test(c0)) {
     if (/[「『（【〔〝]/.test(c1)) { return -1; } else if (/[、。]/.test(c1)) { return -0.5; }
   }
-  if (/[0-9!?]/.test(c0) && /[0-9!?]/.test(c1)) { return -1; }            
   return 0;
 }

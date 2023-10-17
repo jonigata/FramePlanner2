@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Paper from './Paper.svelte';
-  import { saveToken, clipboardToken } from './paperStore';
+  import { saveToken, clipboardToken, scale } from './paperStore';
   import { undoStore, commitToken } from './undoStore';
   import { type Page, mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
@@ -83,6 +83,7 @@
     editable={true} 
     manageKeyCache={true}
     bind:page={page} 
+    bind:scale={$scale}
     bind:this={paper}
     on:painterActive={onPainterActive}/>
 </div>

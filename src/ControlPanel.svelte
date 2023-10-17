@@ -5,7 +5,7 @@
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
   import { type Page, incrementRevision, mainPage, commitPage } from './pageStore';
-  import { saveToken, clipboardToken } from './paperStore';
+  import { saveToken, clipboardToken, scale } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from './uiStore';
@@ -227,7 +227,8 @@
     背景色<ColorPicker bind:hex={paperColor} label=""/>
     枠色<ColorPicker bind:hex={frameColor} label="" />
     幅<RangeSlider name="line" bind:value={frameWidth} max={10} step={1} style="width:100px;"/>
-</div>
+  </div>
+  <!-- 拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:100px;"/> -->
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
@@ -257,9 +258,6 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={waiting}>
-      Waiting
     </button>
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">

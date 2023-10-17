@@ -1,7 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
-  import OpenAI from 'openai';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
   import type { Page } from './pageStore';
@@ -9,9 +8,9 @@
   import { aiTemplates } from './lib/layeredCanvas/frameExamples';
   import { Bubble } from './lib/layeredCanvas/bubble';
   import { measureVerticalText } from './lib/layeredCanvas/verticalText';
-  import { parse as JSONCParse } from 'jsonc-parser';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import { generateStory, storyBoarding } from './prompts/storyGenerator'
 
   //let model = 'gpt-3.5-turbo';
   let apiKey = '';
@@ -20,157 +19,16 @@
   let pageNumber = 1;
   let loading = false;
 
-  async function generate_AI() {
-    const openai = new OpenAI({
-      apiKey,
-      dangerouslyAllowBrowser: true
-    });
-
-    const prompt =`
-# Task Description
-
-マンガのアイディアを考えてください。
-題材とページ数は最後に伝えます。
-
-フォーマットは以下のような形にしてください。これは例なので、形式だけを参考にし、内容は無視してください。
-出力はJSONだけとし、それ以外の文言を含むことは許されません。
-4～5コマ程度で1ページとしてください。
-セリフは10文字前後にし、適切に改行コード(\\n)を入れて一行7～8文字まで程度になるようにしてください。
-"description"は、画像生成AIにわたすプロンプトを想定してください。
-{
-  "characters": {
-    "Mia": "girl",
-    "Mom": "woman",
-    "Dad": "man"
-  },
-  "pages": [
-    {
-      "scenes": [
-        {
-          "description": "The mood is tense in the household. Mom looks worried and Dad is calming her down.",
-          "bubbles": [
-            ["Mom", "ああ、だめだわ。\\nケーキの材料が足りないわ。"],
-            ["Dad", "大丈夫だよ、\\n何とかなるさ。"]
-          ]
-        },
-        {
-          "description": "Mia enters the living room with her hands behind her back.",
-          "bubbles": [
-            ["Mia", "ヘイ、\\n何が問題なの？"]
-          ]
-        },
-        {
-          "description": "Mom sighs and tells Mia their problem.",
-          "bubbles": [
-            ["Mom", "お父さんの誕生日ケーキを\\n作ろうと思ったのに、\\n力が足りないのよ。"],
-          ]
-        },
-        {
-          "description": "Mia unveils what she was hiding behind her back -- a box full of cake ingredients.",
-          "bubbles": [
-            ["Mia", "どうぞ！\\n学校から帰る途中で\\nパン屋さんで買ったんだよ。"]
-          ]
-        }
-      ]
-    },
-    {
-      "scenes": [
-        {
-          "description": "Everyone in the room is surprised and Mom is relieved.",
-          "bubbles": [
-            ["Mom", "ありがとう、ミア。\\n本当に助かったわ。"],
-            ["Dad", "さすがミア！"]
-          ]
-        },
-        {
-          "description": "Mia smiles and starts gathering the ingredients.",
-          "bubbles": [
-            ["Mia", "一緒に作ろうよ、\\nお母さん！"]
-          ]
-        },
-        {
-          "description": "Mom nods and they start making the cake together. Dad watches them with a smile on his face.",
-          "bubbles": [
-            ["Dad", "良い一日だ。"],
-            ["Mom", "本当にそうね。"]
-          ]
-        }
-      ]
-    }
-  ]
-}
-
-# Task condition
-
-題材：${theme}
-ページ数：${pageNumber}ページ
-`
-;
-
-
-
-    console.log(prompt);
-    const chatCompletion = await openai.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-        model: model,
-    });
-
-    console.log("RESULT");
-    console.log(chatCompletion.choices[0].message.content);
-    return JSONCParse(chatCompletion.choices[0].message.content);
-  }
-
-  async function generate_mock() {
-    const s = JSON.parse(`
-{
-  "characters": {
-    "Mia": "girl",
-    "Mom": "woman",
-    "Dad": "man"
-  },
-  "pages": [
-    {
-      "scenes": [
-        {
-          "description": "The mood is tense in the household. Mom looks worried and Dad is calming her down.",
-          "bubbles": [
-            ["Mom", "ああ、だめだわ。\\nケーキの材料が足りないわ。"],
-            ["Dad", "大丈夫だよ、\\n何とかなるさ。"]
-          ]
-        },
-        {
-          "description": "Mia enters the living room with her hands behind her back.",
-          "bubbles": [
-            ["Mia", "ヘイ、\\n何が問題なの？"]
-          ]
-        },
-        {
-          "description": "Mom sighs and tells Mia their problem.",
-          "bubbles": [
-            ["Mom", "お父さんの誕生日ケーキを\\n作ろうと思ったのに、\\n力が足りないのよ。"]
-          ]
-        },
-        {
-          "description": "Mia unveils what she was hiding behind her back -- a box full of cake ingredients.",
-          "bubbles": [
-            ["Mia", "どうぞ！\\n学校から帰る途中で\\nパン屋さんで買ったんだよ。"]
-          ]
-        }
-      ]
-    }
-  ]
-}`);
-    return s;
-  }
-
   async function generate() {
     loading = true;
     try {
-      const story = await generate_AI();
+      const story = await generateStory(apiKey, model, theme, pageNumber);
+      const storyBoard = await storyBoarding(apiKey, model, story, pageNumber);
 
       const book = { title: theme, pages: [] };
-      for (let i = 0; i < story.pages.length; i++) {
-        const page = await createPage(story.pages[i]);
+      for (let i = 0; i < storyBoard.pages.length; i++) {
+        console.log(storyBoard.pages[i]);
+        const page = await createPage(storyBoard.pages[i]);
         book.pages.push(page);
       }
       $newBookToken = book;

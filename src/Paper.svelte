@@ -28,6 +28,7 @@
   export let editable = false;
   export let manageKeyCache = false;
   export let painterActive = false;
+  export let scale = 1;
 
   let containerWidth: number;
   let containerHeight: number;
@@ -92,6 +93,13 @@
 
     commit(null);
     bubbleLayer.selectBubble(newBubble);
+  }
+
+  $:onChangeScale(scale);
+  function onChangeScale(s: number){
+    if (layeredCanvas) {
+      layeredCanvas.canvas.paper.scale = [s, s];
+    }
   }
 
   const dispatch = createEventDispatcher();
@@ -288,7 +296,7 @@
 
     sequentializePointer(FloorLayer);
     if (editable) {
-      const floorLayer = new FloorLayer();
+      const floorLayer = new FloorLayer((s: number) => scale = s);
       layeredCanvas.addLayer(floorLayer);
     }
 
