@@ -284,6 +284,12 @@ export class FrameElement {
         const grandParent = this.findParent(root, parent);
         if (grandParent && grandParent.direction === parent.direction) {
           const grandIndex = grandParent.children.indexOf(parent);
+          const l = parent.rawSize;
+          const ll = parent.children[0].rawSize + parent.children[1].rawSize + divider.spacing;
+          parent.children[0].rawSize = l * parent.children[0].rawSize / ll;
+          parent.children[1].rawSize = l * parent.children[1].rawSize / ll;
+          parent.children[0].divider = {...divider, spacing: l * divider.spacing / ll};
+          parent.children[1].divider = parent.divider;
           grandParent.children.splice(grandIndex, 1, ...parent.children);
           grandParent.calculateLengthAndBreadth();
         }
