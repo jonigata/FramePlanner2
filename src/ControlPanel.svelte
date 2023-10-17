@@ -223,12 +223,15 @@
       </div>  
     </div>
   </div>
-  <div class="hbox gap mx-2 paper-color-picker" style="margin-top: 16px;">
+  <div class="hbox gap mx-2 paper-color-picker">
     背景色<ColorPicker bind:hex={paperColor} label=""/>
     枠色<ColorPicker bind:hex={frameColor} label="" />
     幅<RangeSlider name="line" bind:value={frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
-  <!-- 拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:100px;"/> -->
+  <div class="hbox gap" style="margin-top: 16px;">
+    拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
+    <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
+  </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
@@ -277,7 +280,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 690px;
+    height: 710px;
     display: flex;
     flex-direction: column;
     top: 20px;
