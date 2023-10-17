@@ -356,8 +356,12 @@ export class PaperRendererLayer extends Layer {
 
     // 描き戻し
     try {
+      const rotation = Math.round(bubble.rotation * 10) / 10;
+
       targetCtx.save();
-      targetCtx.imageSmoothingEnabled = false;
+      if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
+        targetCtx.imageSmoothingEnabled = false;
+      } 
       targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5, ...bubble.size);
       targetCtx.restore();
     }
