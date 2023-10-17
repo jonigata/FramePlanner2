@@ -1,13 +1,15 @@
 <script type="ts">
   import fileManagerIcon from './assets/file-manager.png';
   import { fileManagerOpen } from './fileManagerStore';
+  import { toolTip } from './passiveToolTipStore';
   
   function openFileManager() {
     $fileManagerOpen = !$fileManagerOpen;
   }
 </script>
 
-<button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={openFileManager}>
+<button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={openFileManager}
+  use:toolTip={`ファイルマネージャー`}>
   <img src={fileManagerIcon} alt="file manager"/>
 </button>
 

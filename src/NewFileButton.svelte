@@ -1,6 +1,7 @@
 <script lang="ts">
   import newFileIcon from './assets/new-file.png';
   import { newPage, newImagePage, newFileToken } from "./fileManagerStore";
+  import { toolTip } from './passiveToolTipStore';
 
   async function createNewFile() {
     $newFileToken = newPage("shortcut-", 0);
@@ -38,7 +39,8 @@
 <button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 new-file-button hbox" 
   on:click={createNewFile}
   on:dragover={onDragOver}
-  on:drop={onDrop}>
+  on:drop={onDrop}
+  use:toolTip={`新規ページ\n画像ドロップで一枚絵ページ`}>
   <img src={newFileIcon} alt="file manager"/>
 </button>
 
