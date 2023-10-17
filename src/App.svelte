@@ -24,6 +24,7 @@
   import FileManager from './FileManager.svelte';
   import NewFileButton from './NewFileButton.svelte';
   import CabinetButton from './CabinetButton.svelte';
+  import Waiting from './Waiting.svelte'
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -38,6 +39,9 @@
     storyGenerator: {
       ref: StoryGenerator,
     },
+    waiting: {
+      ref: Waiting,
+    }
   };
 
   onMount(async () => {

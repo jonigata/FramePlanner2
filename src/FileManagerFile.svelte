@@ -6,6 +6,7 @@
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "./RenameEdit.svelte";
   import { toolTip } from './passiveToolTipStore';
+  import { modalStore } from '@skeletonlabs/skeleton';
 
   import trashIcon from './assets/fileManager/trash.png';
   import renameIcon from './assets/fileManager/rename.png';
@@ -42,9 +43,11 @@
   }
 
   async function onDoubleClick() {
+    modalStore.trigger({ type: 'component',component: 'waiting' });    
     const file = await parent.getNode(bindId) as File;
     const page = await loadPageFrom(fileSystem, file);
     $mainPage = page;
+    modalStore.close();
   }
 
 	async function onDragStart (ev: DragEvent) {

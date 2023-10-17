@@ -7,6 +7,8 @@
   import { onMount } from 'svelte';
   import type { Revision } from "./pageStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
+  import { modalStore } from '@skeletonlabs/skeleton';
 
   export let fileSystem: FileSystem;
 
@@ -25,7 +27,9 @@
     }
 
     if (page.revision.id === "bootstrap") { 
-      const currentFileId = await fetchCurrentFileId();
+      modalStore.trigger({ type: 'component',component: 'waiting' });    
+
+      const currentFileId = await fetchCurrentFileId(fileSystem);
 
       if (currentFileId) {
         const file = await fileSystem.getNode(currentFileId);
@@ -33,7 +37,7 @@
         const newPage = await loadPageFrom(fileSystem, file.asFile());
         currentRevision = getRevision(newPage);
         $mainPage = newPage;
-        await recordCurrentFileId(newPage.revision.id as NodeId);
+        await recordCurrentFileId(fileSystem, newPage.revision.id as NodeId);
       } else {
         // 初期化時は仮ファイルをセーブする
         const root = await fileSystem.getRoot();
@@ -48,14 +52,16 @@
         currentRevision = getRevision(newPage);
         $mainPage = newPage;
         $fileManagerRefreshKey++;
-        await recordCurrentFileId(newPage.revision.id as NodeId);
+        await recordCurrentFileId(fileSystem, newPage.revision.id as NodeId);
       }
+
+      modalStore.close();
     } else {
       const file = await fileSystem.getNode(page.revision.id as NodeId);
       console.log("*********** savePageTo from FileManagerRoot(2)");
       await savePageTo(page, fileSystem, file.asFile());
       currentRevision = {...page.revision};
-      await recordCurrentFileId(page.revision.id as NodeId);
+      await recordCurrentFileId(fileSystem, page.revision.id as NodeId);
     }
   }
 
@@ -96,31 +102,6 @@
       $mainPage = book.pages[0];
 
       $fileManagerRefreshKey++;
-    }
-  }
-
-  async function recordCurrentFileId(id: NodeId) {
-    const root = await fileSystem.getRoot();
-    const preference = await root.getNodeByName("プリファレンス");
-    const entry = await preference.asFolder().getEmbodiedEntryByName("currentFile");
-    if (entry) {
-      await (entry[2] as File).write(id);
-    } else {
-      const file = await fileSystem.createFile();
-      await preference.asFolder().link("currentFile", file.id);
-      await file.write(id);
-    }
-  }
-
-  async function fetchCurrentFileId(): Promise<NodeId> {
-    const root = await fileSystem.getRoot();
-    const preference = await root.getNodeByName("プリファレンス");
-    const entry = await preference.asFolder().getEmbodiedEntryByName("currentFile");
-    if (entry) {
-      const id = await (entry[2] as File).read();
-      return id as NodeId;
-    } else {
-      return null;
     }
   }
 
