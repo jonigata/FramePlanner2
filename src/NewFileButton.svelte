@@ -46,9 +46,13 @@
   .new-file-button {
     pointer-events: auto;
     position: absolute;
-    width: 160px;
-    height: 160px;
-    bottom: 200px;
+    width: 120px;
+    height: 120px;
+    bottom: 160px;
     left: 20px;
+  }
+  img {
+    width: 80%;
+    height: 80%;
   }
 </style>

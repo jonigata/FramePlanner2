@@ -15,9 +15,13 @@
   .open-button {
     pointer-events: auto;
     position: absolute;
-    width: 160px;
-    height: 160px;
+    width: 120px;
+    height: 120px;
     bottom: 20px;
     left: 20px;
+  }
+  img {
+    width: 80%;
+    height: 80%;
   }
 </style>
