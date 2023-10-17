@@ -21,7 +21,7 @@ export class Bubble {
     this.offset = [0, 0];
     this.rotation = 0;
     this.shape = "rounded";
-    this.embedded = false;
+    this.embedded = true;
     this.fontStyle = "normal";
     this.fontWeight = "400";
     this.fontSize = 32;
