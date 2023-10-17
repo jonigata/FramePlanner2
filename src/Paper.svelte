@@ -82,8 +82,13 @@
 
     $bubble.text = text.slice(0, cursor).trimEnd();
 
-    $bubble.move([center[0] - width / 2, center[1]]);
-    newBubble.move([center[0] + width / 2, center[1]]);
+    if ($bubble.direction === 'v') {
+      $bubble.move([center[0] + width / 2, center[1]]);
+      newBubble.move([center[0] - width / 2, center[1]]);
+    } else {
+      $bubble.move([center[0] - width / 2, center[1]]);
+      newBubble.move([center[0] + width / 2, center[1]]);
+    }
 
     commit(null);
     bubbleLayer.selectBubble(newBubble);
