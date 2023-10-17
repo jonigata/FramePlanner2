@@ -216,7 +216,16 @@ export class FrameLayer extends Layer {
     }
 
     if (this.focusedBorder) {
-      return { border: this.focusedBorder };
+      if (keyDownFlags["KeyT"]) {
+        console.log("transpose border", this.focusedBorder.index)
+        const target = this.focusedBorder.layout.element.children[this.focusedBorder.index-1];
+        FrameElement.transposeDivider(this.frameTree, target);
+        this.onCommit(this.frameTree);
+        this.redraw();
+        return null;
+      } else {
+        return { border: this.focusedBorder };
+      }
     }
 
     const layout = this.focusedLayout;

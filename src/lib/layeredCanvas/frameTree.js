@@ -271,6 +271,37 @@ export class FrameElement {
     }
   }
 
+  static transposeDivider(root, target) {
+    const parent = this.findParent(root, target);
+    if (parent) {
+      const index = parent.children.indexOf(target);
+      console.log("siblings", parent.children.length, "index", index);
+      const divider = parent.children[index].divider;
+      console.log(parent.children.length);
+      if (parent.children.length === 2) {
+        parent.direction = parent.direction === 'h' ? 'v' : 'h';
+        // 親の親と方向が同じなら埋め込んだほうがいい
+        const grandParent = this.findParent(root, parent);
+        if (grandParent && grandParent.direction === parent.direction) {
+          const grandIndex = grandParent.children.indexOf(parent);
+          grandParent.children.splice(grandIndex, 1, ...parent.children);
+          grandParent.calculateLengthAndBreadth();
+        }
+      } else if (2 < parent.children.length) {
+        const nextSibling = parent.children[index+1];
+        const size = target.rawSize + divider.spacing + nextSibling.rawSize;
+        const newContainer = new FrameElement(target.rawSize);
+        newContainer.rawSize = size;
+        newContainer.direction = parent.direction === 'h' ? 'v' : 'h';
+        newContainer.children.push(target);
+        newContainer.children.push(nextSibling);
+        newContainer.divider = {...nextSibling.divider};
+        newContainer.calculateLengthAndBreadth();
+        parent.children.splice(index, 2, newContainer);
+      }
+    }    
+  }
+
   calculateLengthAndBreadth() {
     let totalLength = 0;
     totalLength = 0;
