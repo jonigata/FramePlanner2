@@ -22,8 +22,8 @@
   async function generate() {
     loading = true;
     try {
-      const story = await generateStory(apiKey, model, theme, pageNumber);
-      const storyBoard = await storyBoarding(apiKey, model, story, pageNumber);
+      const storyText = await generateStory(apiKey, model, theme, pageNumber);
+      const storyBoard = await storyBoarding(apiKey, model, storyText, pageNumber);
 
       const book = { title: theme, pages: [] };
       for (let i = 0; i < storyBoard.pages.length; i++) {

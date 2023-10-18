@@ -7,7 +7,7 @@ import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdivi
 
 export function drawBubble(context, seed, size, shape, opts) {
   if (opts.randomSeed) {
-    seed += opts.randomSeed;
+    seed = opts.randomSeed;
   }
 
   switch (shape) {
