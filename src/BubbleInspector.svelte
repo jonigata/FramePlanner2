@@ -85,6 +85,7 @@
     $bubble?.reset();
     $bubble?.initOptions();
     $bubble = $bubble;    
+    $chosenShape = $bubble.shape;
   }
 
   function split() {
