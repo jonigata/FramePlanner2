@@ -409,6 +409,11 @@ export const bubbleOptionSets = {
   },
   "heart" : {link: {hint:"結合", icon:"unite"} },
   "diamond": {link: {hint:"結合", icon:"unite"} },
+  "arrow": {
+    link: {hint:"結合", icon:"unite"},
+    shaftWidth: { label: "軸の太さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
+    headLength: { label: "矢じりの長さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
+  },
   "motion-lines": {
     focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
     focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, Math.hypot(b.size[0]/2, b.size[1]/2) * 0.25] },

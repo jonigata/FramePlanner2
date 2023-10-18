@@ -19,6 +19,7 @@
     "double-strokes",
     "heart",
     "diamond",
+    "arrow",
     "motion-lines",
     "speed-lines",
     "ellipse-mind",

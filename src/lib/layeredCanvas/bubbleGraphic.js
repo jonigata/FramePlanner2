@@ -47,6 +47,9 @@ export function drawBubble(context, seed, size, shape, opts) {
     case "diamond":
       drawDiamondBubble(context, seed, size, opts);
       break;
+    case "arrow":
+      drawArrowBubble(context, seed, size, opts);
+      break;
     case "motion-lines":
       drawMotionLinesBubble(context, seed, size, opts);
       break;
@@ -355,6 +358,8 @@ export function getPath(shape, size, opts, seed) {
         return getHeartPath(size, opts, seed);
       case 'diamond':
         return getDiamondPath(size, opts, seed);
+      case 'arrow':
+        return getArrowPath(size, opts, seed);
       case 'ellipse-mind':
         return getEllipseMindPath(size, opts, seed);
       case 'soft-mind':
@@ -538,6 +543,31 @@ function getDiamondPath(size, opts, seed) {
   return path;
 }
 
+function getArrowPath(size, opts, seed) {
+  const [x0, y0, w, h] = sizeToRect(size);
+
+  const { shaftWidth, headLength } = opts;
+  const actualHalfShaftWidth = shaftWidth * w * 0.5;
+
+  const path = new paper.Path();
+  const y1 = y0 + h * headLength;
+  const x1 = x0 + w * 0.5 - actualHalfShaftWidth;
+  const x2 = x0 + w * 0.5 + actualHalfShaftWidth;
+
+  path.moveTo([0, y0]);
+  path.lineTo([x0, y1]);
+  path.lineTo([x1, y1]);
+  path.lineTo([x1, y0+h]);
+  path.lineTo([x2, y0+h]);
+  path.lineTo([x2, y1]);
+  path.lineTo([x0+w, y1]);
+  path.lineTo([0, y0]);
+  path.closed = true;
+
+  return path;
+  
+}
+
 function getEllipseMindPath(size, opts, seed) {
   const newOpts = {...opts};
   newOpts.tailTip = [0,0];
@@ -674,6 +704,11 @@ function drawHeartBubble(context, seed, size, opts) {
 
 function drawDiamondBubble(context, seed, size, opts) {
   const path = getDiamondPath(size, opts, seed);
+  drawPath(context, path);
+}
+
+function drawArrowBubble(context, seed, size, opts) {
+  const path = getArrowPath(size, opts, seed);
   drawPath(context, path);
 }
 
