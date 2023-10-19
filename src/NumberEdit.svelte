@@ -17,7 +17,7 @@
 
   $: onChangeValue(value);
   function onChangeValue(value: number) {
-    if (!value) { return; }
+    if (value == null) { return; }
     let s = allowDecimal ? value.toFixed(2) : value.toString();
     if (textValue != s) {
       textValue = s;
