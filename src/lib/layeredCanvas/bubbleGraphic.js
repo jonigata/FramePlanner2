@@ -6,9 +6,7 @@ import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionS
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
 
 export function drawBubble(context, seed, size, shape, opts) {
-  if (opts.randomSeed) {
-    seed = opts.randomSeed;
-  }
+  seed = opts.randomSeed ?? 0;
 
   switch (shape) {
     case "rounded":
@@ -333,9 +331,7 @@ paper.setup([1,1]); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
 export function getPath(shape, size, opts, seed) {
-  if (opts.randomSeed) {
-    seed += opts.randomSeed;
-  }
+  seed = opts.randomSeed ?? 0;
 
   const startTime = performance.now();
   try {
