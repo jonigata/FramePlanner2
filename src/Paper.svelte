@@ -287,6 +287,7 @@
         if (editable) {
           if (s) {
             const q = convertPointFromNodeToPage(canvas, ...p);
+            q.y -= 25;
             toolTipRequest.set({ message: s, position: q });
           } else {
             toolTipRequest.set(null);
