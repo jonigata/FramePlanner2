@@ -22,7 +22,9 @@ export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
 export const newFileToken: Writable<Page> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);
+export const newBubbleToken: Writable<Bubble> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
+export const fileSystem: Writable<FileSystem> = writable(null);
 
 let imageCache = {};
 
@@ -252,3 +254,16 @@ export function getCurrentDateTime() {
 
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }  
+
+export async function saveBubbleTo(bubble: Bubble, file: File) {
+  const markUp = Bubble.decompile([64, 96], bubble);
+  const json = JSON.stringify(markUp);
+  await file.write(json);
+}
+
+export async function loadBubbleFrom(file: File): Promise<Bubble> {
+  const content = await file.read();
+  const markUp = JSON.parse(content);
+  const bubble = Bubble.compile([64, 96], markUp);
+  return bubble;
+}

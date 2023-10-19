@@ -14,6 +14,7 @@
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
   import { type BubbleInspectorPosition, bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
+  import { newBubbleToken } from './fileManagerStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';
@@ -99,6 +100,10 @@
     }
   }
 
+  async function saveTemplate() {
+    $newBubbleToken = $bubble;
+  }
+
 </script>
 
 {#if $bubble}
@@ -154,7 +159,10 @@
         bind:this={textarea}
         on:keypress={onKeyPress}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
-      <BubbleSample width={64} height={96} bind:shape={$chosenShape} on:click={chooseShape}/>
+      <div class="vbox gap-2">
+        <BubbleSample width={64} height={96} bind:shape={$chosenShape} on:click={chooseShape}/>
+        <button class="save-button btn btn-sm variant-filled paper-size" on:click={saveTemplate}>SAVE</button>
+      </div>
     </div>
 
     <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">
@@ -290,5 +298,8 @@
   .slider-label {
     margin-left: 4px;
     margin-right: 2px;
+  }
+  .save-button {
+    height: 12px;
   }
 </style>

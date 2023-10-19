@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newFile, filenameDisplayMode } from "./fileManagerStore";
+  import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo } from "./fileManagerStore";
   import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
@@ -9,6 +9,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
   import { modalStore } from '@skeletonlabs/skeleton';
+  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
 
   export let fileSystem: FileSystem;
 
@@ -104,8 +105,17 @@
     }
   }
 
-  function toggleFilenameDisplayMode() {
-    $filenameDisplayMode = $filenameDisplayMode === "filename" ? "index" : "filename";
+  $:onNewBubbleRequest($newBubbleToken);
+  async function onNewBubbleRequest(bubble: Bubble) {
+    if (bubble) {
+      console.log("onNewBalloonRequest");
+      $newBubbleToken = null;
+      const root = await fileSystem.getRoot();
+      const folder = await root.getNodeByName("テンプレート");
+      const file = await fileSystem.createFile();
+      await saveBubbleTo(bubble, file);
+      await folder.asFolder().link(getCurrentDateTime(), file.id);
+    }
   }
 
   onMount(async () => {

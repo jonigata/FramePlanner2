@@ -8,7 +8,7 @@
   export let height = 96;
   export let shape = 'rounded';
 
-  let canvas: HTMLCanvasElement; // 勝手にフィールドを追加するのでany
+  let canvas: HTMLCanvasElement;
 
   const dispatch = createEventDispatcher();
 
