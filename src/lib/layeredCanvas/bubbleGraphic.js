@@ -617,7 +617,11 @@ function addTrivialTail(path, size, opts) {
     if (v[0] === 0 && v[1] === 0) {
       // do nothing
     } else {
-      return path.unite(makeTrivialTailPath(size, m, v));
+      if (!opts?.extract) {
+        return path.unite(makeTrivialTailPath(size, m, v));
+      } else {
+        return path.subtract(makeExtractTailPath(size, m, v, opts.extractWidth));
+      }
     }
   }
 
@@ -640,6 +644,21 @@ function makeTrivialTailPath(size, m, v) {
   tail.moveTo(v1);
   tail.curveTo(m1, v0);
   tail.curveTo(m2, v2);
+  tail.closed = true;
+  return tail;
+}
+
+function makeExtractTailPath(size, m, p, w) {
+  const q = tailCoordToWorldCoord([0,0], p, m);
+  const v = [p[0] - q[0], p[1] - q[1]];
+  const l = Math.hypot(p[0], p[1]);
+  const vd = normalize2D(perpendicular2D(v), l * w);
+  const vt1 = [p[0] + vd[0], p[1] + vd[1]];
+  const vt2 = [p[0] - vd[0], p[1] - vd[1]];
+  const tail = new paper.Path();
+  tail.moveTo(q);
+  tail.lineTo(vt1);
+  tail.lineTo(vt2);
   tail.closed = true;
   return tail;
 }

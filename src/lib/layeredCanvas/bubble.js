@@ -338,16 +338,22 @@ export const bubbleOptionSets = {
     tailMid: {hint: "しっぽの途中", icon:"curve", init: (b) => [0.5,0]},
     xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
+    extract: {label: "食い込み", type:"boolean", init: b => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
   },
   "square": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
+    extract: {label: "食い込み", type:"boolean", init: b => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
   },
   "ellipse": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
+    extract: {label: "食い込み", type:"boolean", init: b => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
   },
   "concentration": {
     lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
@@ -361,6 +367,8 @@ export const bubbleOptionSets = {
     superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
     vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 7 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
+    extract: {label: "食い込み", type:"boolean", init: b => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
   },
   "strokes": {
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
@@ -406,6 +414,8 @@ export const bubbleOptionSets = {
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.15 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 8 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
+    extract: {label: "食い込み", type:"boolean", init: b => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
   },
   "heart" : {link: {hint:"結合", icon:"unite"} },
   "diamond": {link: {hint:"結合", icon:"unite"} },

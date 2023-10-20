@@ -18,6 +18,12 @@
         <div class="number-box"><NumberEdit bind:value={$bubble.optionContext[key]} allowDecimal={true}/></div>
       </div>
     {/if}
+    {#if value["type"] === "boolean"}
+      <div class="row">
+        <div class="label">{value["label"]}</div>
+        <input type="checkbox" name={key} bind:checked={$bubble.optionContext[key]}/>
+      </div>
+    {/if}
   {/each}
 </div>
 
