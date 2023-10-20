@@ -31,11 +31,14 @@
       modalStore.trigger({ type: 'component',component: 'waiting' });    
 
       const currentFileId = (await fetchCurrentFileId()) as NodeId;
-
+      let currentFile = null;
       if (currentFileId) {
-        const file = await fileSystem.getNode(currentFileId);
-        console.log("*********** loadPageFrom from FileManagerRoot");
-        const newPage = await loadPageFrom(fileSystem, file.asFile());
+        currentFile = await fileSystem.getNode(currentFileId); // 存在しない場合null
+      }
+
+      if (currentFile) {
+        console.log("*********** loadPageFrom from FileManagerRoot", currentFile);
+        const newPage = await loadPageFrom(fileSystem, currentFile.asFile());
         currentRevision = getRevision(newPage);
         $mainPage = newPage;
       } else {
