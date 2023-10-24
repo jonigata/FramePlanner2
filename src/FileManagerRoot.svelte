@@ -11,6 +11,8 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
   import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
+  import type { FirebaseFileSystem } from './lib/filesystem/firebaseFileSystem';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   export let fileSystem: FileSystem;
 
@@ -35,6 +37,12 @@
       let currentFile = null;
       if (currentFileId) {
         currentFile = await fileSystem.getNode(currentFileId); // 存在しない場合null
+      }
+
+      const sharedPage = await loadSharedPage();
+      if (sharedPage) {
+        currentFile = null;
+        page = sharedPage;
       }
 
       if (currentFile) {
@@ -68,6 +76,21 @@
       await recordCurrentFileId(page.revision.id as NodeId);
     }
   }
+
+  async function loadSharedPage(): Promise<Page> {
+    const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('user') && urlParams.get('key')) {
+        const user = urlParams.get('user');
+        const key = urlParams.get('key');
+        console.log("user:key = ", user, key);
+
+        const fileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
+        const file = await fileSystem.getNode(key as NodeId);
+        const page = await loadPageFrom(fileSystem, file.asFile());
+        return page;
+      }
+      return null;
+    }
 
   $:onNewFileRequest($newFileToken);
   async function onNewFileRequest(page: Page) {
@@ -123,14 +146,31 @@
   }
 
   $:onSharePageRequest($sharePageToken);
-  async function onSharePageRequest(page: Page) {
-    if (page) {
+  async function onSharePageRequest(p: Page) {
+    if (p) {
+      modalStore.trigger({ type: 'component',component: 'waiting' });    
+
+      const page = {...p};
+      page.history = [];
+      page.historyIndex = 0;
       console.log("onSharePageRequest");
       $sharePageToken = null;
-      const fileSystem = await buildShareFileSystem();
-      const file = await fileSystem.createFile();
+      const fileSystem = (await buildShareFileSystem(null)) as FirebaseFileSystem;
+      const file = await fileSystem.createFile('text');
       await savePageTo(page, fileSystem, file);
       console.log(file.id);
+
+      // URL作成
+      const url = new URL(window.location.href);
+      const params = url.searchParams;
+      params.set('user', fileSystem.userId);
+      params.set('key', file.id);
+      url.search = params.toString();
+      const shareUrl = url.toString();
+      navigator.clipboard.writeText(shareUrl);
+
+      modalStore.close();
+      toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
     }
   }
 

@@ -79,7 +79,7 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
 
   if (image) {
     await saveImage(fileSystem, image);
-    const fileId = image["fileId"];
+    const fileId = image["fileId"][fileSystem.id];
     await imageFolder.link(fileId, fileId);
     markUp.image = fileId;
   }
@@ -105,7 +105,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
     const bubble = Bubble.decompile(paperSize, src);
     if (image) {
       await saveImage(fileSystem, image.image);
-      const fileId = image.image["fileId"];
+      const fileId = image.image["fileId"][fileSystem.id];
       await imageFolder.link(fileId, fileId);
       bubble.image = { ...src.image, image: fileId };
     }
@@ -233,9 +233,10 @@ async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLI
 }
 
 async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<void> {
-  const fileId = image["fileId"];
-
   imageCache[fileSystem.id] ??= {};
+  image["fileId"] ??= {}
+
+  const fileId = image["fileId"][fileSystem.id];
   if (imageCache[fileSystem.id][fileId]) {
     // TODO: 画像のピクセル更新対応
     return;

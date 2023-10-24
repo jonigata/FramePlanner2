@@ -59,20 +59,6 @@
       integrations: [new Sentry.Replay()],
     });
   */
-
-    // 現在のURLのパラメータを取得する
-    const urlParams = new URLSearchParams(window.location.search);
-
-    // 'myParam' という名前のパラメータを取得する
-    if (urlParams.has('key')) {
-      const key = urlParams.get('key');
-
-      // パラメータの値をコンソールに出力
-      console.log("key", key);
-      const paper = await loadTemplate(key);
-      console.log(paper);
-      $paperTemplate = JSON.parse(paper.value);
-    }
   });
 </script>
 

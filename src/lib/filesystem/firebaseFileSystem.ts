@@ -22,13 +22,16 @@ export class FirebaseFileSystem extends FileSystem {
     this.storage = getStorage();
   }
 
-  async open() {
+  async open(referenceUserId: string) {
     const auth = getAuth(app);
     const userCredential = await signInAnonymously(auth);
 
+    referenceUserId ??= userCredential.user.uid;
+    console.log(`anonymousUsers/${referenceUserId}`);
+
     this.userId = userCredential.user.uid;
     this.database = getDatabase(app);
-    this.userRef = ref(this.database, `anonymousUsers/${this.userId}`);
+    this.userRef = ref(this.database, `anonymousUsers/${referenceUserId}`);
     this.nodesRef = child(this.userRef, 'fileSystem/nodes');
   }
 
@@ -85,7 +88,7 @@ export class FirebaseFile extends File {
   }
 
   async read(): Promise<string> {
-    const snapshot = await get(child(child(this.nodeRef, this.id), 'content'));
+    const snapshot = await get(child(this.nodeRef, 'content'));
     return snapshot.val() ?? '';
   }
 
