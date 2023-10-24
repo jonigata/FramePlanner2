@@ -1,11 +1,20 @@
+import { ulid } from 'ulid';
+
 export type NodeType = 'file' | 'folder';
 export type NodeId = string & { _NodeId: never };
 export type BindId = string & { _BindId: never };
+export type FileSystemId = string & { _FileSystemId: never };
 
 export type Entry = [BindId, string, NodeId];
 export type EmbodiedEntry = [BindId, string, Node];
 
 export class FileSystem {
+  id: FileSystemId;
+
+  constructor() {
+    this.id = ulid() as FileSystemId;
+  }
+
   async createFile(type: string = 'text'): Promise<File> {return null;}
   async createFolder(): Promise<Folder> {return null;}
   async destroyNode(id: NodeId): Promise<void> {}

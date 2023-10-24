@@ -26,7 +26,7 @@ export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('fil
 export const fileSystem: Writable<FileSystem> = writable(null);
 export const sharePageToken: Writable<Page> = writable(null);
 
-let imageCache = {};
+const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
 
 type SerializedPage = {
   revision: {id: string, revision: number, prefix: string},
@@ -218,27 +218,33 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, page
 }
 
 async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLImageElement> {
-  if (imageCache[imageId]) {
-    return imageCache[imageId];
+  imageCache[fileSystem.id] ??= {};
+
+  if (imageCache[fileSystem.id][imageId]) {
+    return imageCache[fileSystem.id][imageId];
   } else {
     const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
     const image = await file.readImage();
-    image["fileId"] = imageId;
-    imageCache[imageId] = image;
+    image["fileId"] ??= {}
+    image["fileId"][fileSystem.id] = file.id
+    imageCache[fileSystem.id][imageId] = image;
     return image;
   }
 }
 
-async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<string> {
+async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<void> {
   const fileId = image["fileId"];
-  if (imageCache[fileId]) {
+
+  imageCache[fileSystem.id] ??= {};
+  if (imageCache[fileSystem.id][fileId]) {
     // TODO: 画像のピクセル更新対応
-    return imageCache[fileId];
+    return;
   }
   const file = await fileSystem.createFile();
   await file.writeImage(image);
-  image["fileId"] = file.id;
-  imageCache[file.id] = image;
+  image["fileId"] ??= {}
+  image["fileId"][fileSystem.id] = file.id
+  imageCache[fileSystem.id][file.id] = image;
 }
 
 export function getCurrentDateTime() {
