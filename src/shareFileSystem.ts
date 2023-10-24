@@ -6,9 +6,12 @@ export async function buildFileSystem(referenceUserId: string): Promise<FileSyst
   await fs.open(referenceUserId);
   const root = await fs.getRoot();
 
-  if (!referenceUserId) { // TODO: 「なければ作る」ようにする
+  const imageFolder = await root.getEntryByName('画像');
+  if (!imageFolder) {
     const images = await fs.createFolder();
     await root.link('画像', images.id);
+  } else {
+    console.log('画像フォルダーはすでに存在します');
   }
 
   return fs;

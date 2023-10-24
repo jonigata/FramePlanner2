@@ -4,7 +4,7 @@ import { Node, File, Folder, FileSystem } from './fileSystem';
 import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
-import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob } from "firebase/storage";
+import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
 import { imageToBase64  } from '../layeredCanvas/saveCanvas';
 
 // 仮
@@ -97,8 +97,11 @@ export class FirebaseFile extends File {
   }
 
   async readImage(): Promise<HTMLImageElement> {
+    const snapshot = await get(child(this.nodeRef, 'link'));
+    const id = snapshot.val();
+
     const storage = (this.fileSystem as FirebaseFileSystem).storage;
-    const storageFileRef = sref(storage, this.id);
+    const storageFileRef = sref(storage, id);
     const blob = await getBlob(storageFileRef);
 
     // Create an object URL from the Blob data
@@ -118,19 +121,31 @@ export class FirebaseFile extends File {
 
   async writeImage(image: HTMLImageElement): Promise<void> {
     console.log("*********** writeImage");
-    const storage = (this.fileSystem as FirebaseFileSystem).storage;
-    const storageFileRef = sref(storage, this.id);
-
     const base64Image = imageToBase64(image);
-    const data = base64Image.split(',')[1];
-    const blob = new Blob(
-      [Uint8Array.from(atob(data), c => c.charCodeAt(0))], 
-      { type: 'image/png' });
-  
-    const metadata = {
-      contentType: 'image/png',
-    };
-    await uploadBytes(storageFileRef, blob, metadata);
+    const id = await sha1(base64Image);
+    console.log(id);
+
+    const storage = (this.fileSystem as FirebaseFileSystem).storage;
+    const storageFileRef = sref(storage, id);
+
+    try {
+      // Try to get the metadata of the file
+      await getMetadata(storageFileRef);
+      console.log('File already exists, skipping...');
+    } catch (error) {
+      // If error occurs (e.g., file doesn't exist), upload the file
+      const data = base64Image.split(',')[1];
+      const blob = new Blob(
+          [Uint8Array.from(atob(data), c => c.charCodeAt(0))],
+          { type: 'image/png' }
+      );
+
+      const metadata = {
+          contentType: 'image/png',
+      };
+      await uploadBytes(storageFileRef, blob, metadata);
+    }
+    await set(child(this.nodeRef, 'link'), id);
   }
 }
 
@@ -206,4 +221,13 @@ export async function signIn(email: string, password: string): Promise<string> {
   const auth = getAuth();
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
   return userCredential.user.uid;
+}
+
+async function sha1(message: string) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return hashHex;
 }
