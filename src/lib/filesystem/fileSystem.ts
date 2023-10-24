@@ -6,7 +6,7 @@ export type Entry = [BindId, string, NodeId];
 export type EmbodiedEntry = [BindId, string, Node];
 
 export class FileSystem {
-  async createFile(): Promise<File> {return null;}
+  async createFile(type: string = 'text'): Promise<File> {return null;}
   async createFolder(): Promise<Folder> {return null;}
   async destroyNode(id: NodeId): Promise<void> {}
 
@@ -42,6 +42,8 @@ export class File extends Node {
   asFile() { return this; }
   async read(): Promise<string> {return null;}
   async write(data: string): Promise<void> {}
+  async readImage(): Promise<HTMLImageElement> {return null;}
+  async writeImage(image: HTMLImageElement): Promise<void> {}
 }
 
 export class Folder extends Node {

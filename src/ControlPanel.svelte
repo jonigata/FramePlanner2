@@ -14,14 +14,14 @@
   import titleBarIcon from './assets/title-control-panel.png';
   import downloadIcon from './assets/get.png';
   import clipboardIcon from './assets/clipboard.png';
-  import { isJsonEditorOpen, downloadJsonToken, shareJsonToken } from './jsonEditorStore';
+  import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitToken } from './undoStore';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
-  import { newFileToken, newImagePage } from './fileManagerStore';
+  import { newFileToken, newImagePage, sharePageToken } from './fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 
   let min = 256;
@@ -152,9 +152,9 @@
     $downloadJsonToken = true;
   }
 
-  async function shareJson() {
+  async function sharePage() {
     $commitToken = true;
-    $shareJsonToken = true;
+    $sharePageToken = $mainPage;
   }
 
   async function contact() {
@@ -267,7 +267,7 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
       Download JSON
     </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareJson}>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={sharePage}>
       Share
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryGenerator}>

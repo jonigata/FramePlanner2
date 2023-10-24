@@ -10,7 +10,7 @@ export class MockFileSystem extends FileSystem {
     super();
   }
 
-  async createFile(): Promise<File> {
+  async createFile(_type: string): Promise<File> {
     const id = ulid() as NodeId;
     const file = new MockFile(this, id);
     await file.write('');

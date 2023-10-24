@@ -3,7 +3,6 @@ import type { FileSystem, Folder, File, NodeId, BindId } from "./lib/filesystem/
 import type { Page } from "./pageStore";
 import { FrameElement } from "./lib/layeredCanvas/frameTree";
 import { Bubble } from "./lib/layeredCanvas/bubble";
-import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
 
 export type Dragging = {
@@ -25,6 +24,7 @@ export const newBookToken: Writable<Book> = writable(null);
 export const newBubbleToken: Writable<Bubble> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 export const fileSystem: Writable<FileSystem> = writable(null);
+export const sharePageToken: Writable<Page> = writable(null);
 
 let imageCache = {};
 
@@ -222,9 +222,7 @@ async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLI
     return imageCache[imageId];
   } else {
     const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
-    const content = await file.read();
-    const image = new Image();
-    image.src = content;
+    const image = await file.readImage();
     image["fileId"] = imageId;
     imageCache[imageId] = image;
     return image;
@@ -234,11 +232,11 @@ async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLI
 async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<string> {
   const fileId = image["fileId"];
   if (imageCache[fileId]) {
-    // TODO: 画像のピクセル更新
+    // TODO: 画像のピクセル更新対応
     return imageCache[fileId];
   }
   const file = await fileSystem.createFile();
-  await file.write(imageToBase64(image));
+  await file.writeImage(image);
   image["fileId"] = file.id;
   imageCache[file.id] = image;
 }

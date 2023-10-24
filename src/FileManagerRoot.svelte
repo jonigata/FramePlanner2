@@ -1,7 +1,7 @@
 <script lang="ts">
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo } from "./fileManagerStore";
+  import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, sharePageToken } from "./fileManagerStore";
   import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
@@ -10,6 +10,7 @@
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
   import { modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
+  import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
 
   export let fileSystem: FileSystem;
 
@@ -121,6 +122,18 @@
     }
   }
 
+  $:onSharePageRequest($sharePageToken);
+  async function onSharePageRequest(page: Page) {
+    if (page) {
+      console.log("onSharePageRequest");
+      $sharePageToken = null;
+      const fileSystem = await buildShareFileSystem();
+      const file = await fileSystem.createFile();
+      await savePageTo(page, fileSystem, file);
+      console.log(file.id);
+    }
+  }
+
   onMount(async () => {
     root = await fileSystem.getRoot();
     desktop = await root.getEntryByName("デスクトップ");
@@ -169,8 +182,8 @@
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} index={2} isTrash={true} path={[templates[0]]}/>
           {/if}
         </div>
--->
-      </div>
+  -->
+        </div>
       <div class="toolbar">
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
           <RadioItem bind:group={$filenameDisplayMode} name="filenameDisplayMode" value={'filename'}>ファイル名</RadioItem>

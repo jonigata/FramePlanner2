@@ -2,6 +2,7 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
+import { imageToBase64 } from "./../layeredCanvas/saveCanvas";
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;
@@ -23,7 +24,8 @@ export class IndexedDBFileSystem extends FileSystem {
     });
   }
 
-  async createFile(): Promise<File> {
+  async createFile(_type: string): Promise<File> {
+    console.log("createFile", _type);
     try {
       const id = ulid() as NodeId;
       const file = new IndexedDBFile(this, id, this.db);
@@ -93,6 +95,17 @@ export class IndexedDBFile extends File {
 
   async write(data) {
     await this.db.put('nodes', { id: this.id, type: 'file', content: data });
+  }
+
+  async readImage(): Promise<HTMLImageElement> {
+    const content = await this.read();
+    const image = new Image();
+    image.src = content;
+    return image;
+  }
+
+  async writeImage(image: HTMLImageElement): Promise<void> {
+    await this.write(imageToBase64(image));
   }
 }
 
