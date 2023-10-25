@@ -146,7 +146,7 @@ export class FrameLayer extends Layer {
       const x = origin[0] + size[0] / 2;
       if (this.hintIfContains(point, this.frameIcons)) {
       } else if (this.focusedLayout.element.image) {
-        this.hint([x, origin[1] + 16],"ドラッグで移動、Ctrl+ドラッグでスケール、Alt+ドラッグで回転");
+        this.hint([x, origin[1] - 8],"ドラッグで移動、Ctrl+ドラッグでスケール、Alt+ドラッグで回転");
       } else if (0 < this.focusedLayout.element.visibility) {
         this.hint([x, origin[1] + 48], "画像をドロップ");
       } else {
