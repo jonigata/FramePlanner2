@@ -21,18 +21,20 @@ export class WeaverAnchor {
   }
 }
 
-export type WeaverArgType = 'largetext' | 'text' | 'number';
+export type WeaverArgType = 'largetext' | 'text' | 'number' | 'boolean';
 
 export class WeaverArg {
   type: WeaverArgType;
   name: string;
   label: string;
+  supplemental: boolean;
   value: any;
 
-  constructor(type: WeaverArgType, name: string, label: string, value: any) {
+  constructor(type: WeaverArgType, name: string, label: string, supplemental: boolean, value: any) {
     this.type = type;
     this.name = name;
     this.label = label;
+    this.supplemental = supplemental;
     this.value = value;
   }
 }

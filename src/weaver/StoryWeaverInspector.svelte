@@ -3,6 +3,8 @@
   import '../box.css';
   import { createEventDispatcher } from 'svelte';
   import DOMPurify from 'dompurify';
+  import StoryWeaverInspectorArg from './StoryWeaverInspectorArg.svelte';
+  import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
 
   const dispatch = createEventDispatcher();
 
@@ -34,30 +36,7 @@
   <div class="args">
     <div class="label">{model.label}</div>
     {#each args as arg, index}
-      {#if arg.type === 'largetext'}
-        <div class="arg">
-          <div class="arg-caption">{arg.label}</div>
-          <textarea bind:value={model.args[index].value} rows={10} cols={40}/>
-        </div>
-      {/if}
-      {#if arg.type === 'text'}
-        <div class="arg">
-          <div class="arg-caption">{arg.label}</div>
-          <input type="text" bind:value={model.args[index].value}/>
-        </div>
-      {/if}
-      {#if arg.type === 'number'}
-        <div class="arg">
-          <div class="arg-caption">{arg.label}</div>
-          <input type="number" bind:value={model.args[index].value}/>
-        </div>
-      {/if}
-      {#if arg.type === 'boolean'}
-        <div class="arg">
-          <div class="arg-caption">{arg.label}</div>
-          <input type="checkbox" bind:checked={model.args[index].value}/>
-        </div>
-      {/if}
+      <StoryWeaverInspectorArg model={model} index={index} arg={arg}/>
     {/each}
   </div>
 
@@ -111,35 +90,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-  }
-  .arg {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    min-height: 32px;
-  }
-  .arg-caption {
-    width: 80px;
-    min-width: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    font-size: 12px;
-  }
-  textarea {
-    @apply variant-ringed-surface rounded-container-token;
-    background-color: white;
-    width: 100%;
-    height: 400px;
-    resize: none;
-    font-family: 'Noto Sans JP';
-    font-size: 14px;
-    padding: 8px;
-  }
-  input {
-    @apply variant-ringed-surface rounded-container-token;
-    background-color: white;
-    height: 30px;
   }
   .apply-button {
     @apply btn variant-filled;

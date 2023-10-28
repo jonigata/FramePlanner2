@@ -9,21 +9,115 @@
 
   let inspector: StoryWeaverInspector = null;
 
+  const aiDrafterDefaultPrompt = 
+`マンガのアイディアを考えてください。
+題材：\${theme}
+ページ数：\${pageNumber}ページ
+1ページあたり\${panelCount}コマ程度で構成してください。
+
+考えた内容以外の情報は出力しないでください。`;
+
+  const aiStoryboarderDefaultPrompt = 
+`# Task description
+
+マンガのアイディアをフォーマットしてください。
+題材とページ数は最後に伝えます。
+
+フォーマットは以下のような形にしてください。これは例なので、形式だけを参考にし、内容は無視してください。
+出力はJSONだけとし、それ以外の文言を含むことは許されません。
+セリフは10文字前後にし、適切に改行コード(\\n)を入れて一行7～8文字まで程度になるようにしてください。
+"description"は、画像生成AIにわたすプロンプトを想定してください。
+{
+"characters": {
+  "Mia": "girl",
+  "Mom": "woman",
+  "Dad": "man"
+},
+"pages": [
+  {
+    "scenes": [
+      {
+        "description": "The mood is tense in the household. Mom looks worried and Dad is calming her down.",
+        "bubbles": [
+          ["Mom", "ああ、だめだわ。\\nケーキの材料が足りないわ。"],
+          ["Dad", "大丈夫だよ、\\n何とかなるさ。"]
+        ]
+      },
+      {
+        "description": "Mia enters the living room with her hands behind her back.",
+        "bubbles": [
+          ["Mia", "ヘイ、\\n何が問題なの？"]
+        ]
+      },
+      {
+        "description": "Mom sighs and tells Mia their problem.",
+        "bubbles": [
+          ["Mom", "お父さんの誕生日ケーキを\\n作ろうと思ったのに、\\n力が足りないのよ。"],
+        ]
+      },
+      {
+        "description": "Mia unveils what she was hiding behind her back -- a box full of cake ingredients.",
+        "bubbles": [
+          ["Mia", "どうぞ！\\n学校から帰る途中で\\nパン屋さんで買ったんだよ。"]
+        ]
+      }
+    ]
+  },
+  {
+    "scenes": [
+      {
+        "description": "Everyone in the room is surprised and Mom is relieved.",
+        "bubbles": [
+          ["Mom", "ありがとう、ミア。\\n本当に助かったわ。"],
+          ["Dad", "さすがミア！"]
+        ]
+      },
+      {
+        "description": "Mia smiles and starts gathering the ingredients.",
+        "bubbles": [
+          ["Mia", "一緒に作ろうよ、\\nお母さん！"]
+        ]
+      },
+      {
+        "description": "Mom nods and they start making the cake together. Dad watches them with a smile on his face.",
+        "bubbles": [
+          ["Dad", "良い一日だ。"],
+          ["Mom", "本当にそうね。"]
+        ]
+      }
+    ]
+  }
+]
+}
+
+# Task condition
+
+ページ数：\${pageNumber}ページ
+元になるストーリー：\${story}
+1ページあたりのコマ数: \${panelCount}コマ程度
+
+元になるストーリーでは、1ページあたりのコマ数が多いことがありますが、
+その場合、冗長なコマを削る・一コマに複数のセリフを収めるなどして指定通り圧縮してください。
+
+# Input story
+`;
+
+
   let aiDrafter = new WeaverNode(
     'drafter', 'aiDrafter', "AI原案作成", 
     [], [new WeaverAnchor('stdout','draft')], 
     () => 'ok',
     (m) => {
       let s = '';
-      if (!m.args[0].value) { s += 'プロンプトがありません\n'; }
-      if (!m.args[1].value) { s += 'ページ数がありません\n'; }
-      if (!m.args[2].value) { s += 'コマ/ページがありません\n'; }
+      if (!m.args[0].value) { s += 'ページ数がありません\n'; }
+      if (!m.args[1].value) { s += 'コマ/ページがありません\n'; }
+      if (!m.args[2].value) { s += 'プロンプトがありません\n'; }
       return s;
     },
     [
-      new WeaverArg('largetext', 'prompt', 'プロンプト', ''),
-      new WeaverArg('number', 'pageCount', 'ページ数', 1),
-      new WeaverArg('number', 'panelCount', 'コマ/ページ', 1),
+      new WeaverArg('number', 'pageCount', 'ページ数', false, 1),
+      new WeaverArg('number', 'panelCount', 'コマ/ページ', false, 1),
+      new WeaverArg('largetext', 'prompt', 'プロンプト', true, aiDrafterDefaultPrompt),
     ],
     );
   let manualDrafter = new WeaverNode(
@@ -36,10 +130,10 @@
       return s;
     },
     [
-      new WeaverArg('largetext', 'draft', '原案', '')
+      new WeaverArg('largetext', 'draft', '原案', false, '')
     ]);
 
-    let aiStoryboarder = new WeaverNode(
+  let aiStoryboarder = new WeaverNode(
     'storyboarder', 'aiStoryboarder', "AIネーム作成", 
     [new WeaverAnchor('stdin','draft')], [new WeaverAnchor('stdout','storyboard')], 
     () => 'ok',
@@ -47,11 +141,13 @@
       let s = '';
       if (!m.args[0].value) { s += 'ページ数がありません\n'; }
       if (!m.args[1].value) { s += 'コマ/ページがありません\n'; }
+      if (!m.args[2].value) { s += 'プロンプトがありません\n'; }
       return s;
     },
     [
-      new WeaverArg('number', 'pageCount', 'ページ数', 1),
-      new WeaverArg('number', 'panelCount', 'コマ/ページ', 1),
+      new WeaverArg('number', 'pageCount', 'ページ数', false, 1),
+      new WeaverArg('number', 'panelCount', 'コマ/ページ', false, 1),
+      new WeaverArg('largetext', 'prompt', 'プロンプト', true, aiDrafterDefaultPrompt),
     ]);
   let manualStoryboarder = new WeaverNode(
     'storyboarder', 'manualStoryboarder', "手動ネーム作成", 
@@ -63,7 +159,7 @@
       return s;
     },
     [
-      new WeaverArg('largetext', 'storyboard', 'ネーム', '')
+      new WeaverArg('largetext', 'storyboard', 'ネーム', false, '')
     ]);
   let pageGenerator = new WeaverNode(
     'generator', 'pageGenerator', "レイアウト生成",
