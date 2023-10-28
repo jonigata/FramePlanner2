@@ -1,56 +1,70 @@
 import { writable } from "svelte/store";
 
-export type WeaverDataType = 'draft' | 'storyboard';
-// draft: 原案、formatless text
-// storyboard: ネーム、json
-
-export type WeaverNodeType = 'drafter' | 'storyboarder' | 'generator';
 // drafter: 原案を出力する 引数：お題
 // storyboarder: 原案を入力としてネームを出力する 引数：ページ数、ページあたりのコマ数
 // generator: ネームを入力としてFramePlannerのページを生成する 引数：なし
+export type WeaverNodeType = 'drafter' | 'storyboarder' | 'generator';
+
+// draft: 原案、formatless text
+// storyboard: ネーム、json
+export type WeaverDataType = 'draft' | 'storyboard';
+
+export class WeaverAnchor {
+  id: string;
+  type: WeaverDataType;
+  opposite: WeaverAnchor = null;
+  node: WeaverNode = null;
+
+  constructor(id: string, type: WeaverDataType) {
+    this.id = id;
+    this.type = type;
+  }
+}
 
 export type WeaverArgType = 'largetext' | 'text' | 'number';
-export type WeaverFormalArg = {
+
+export class WeaverArg {
   type: WeaverArgType;
   name: string;
   label: string;
+  value: any;
+
+  constructor(type: WeaverArgType, name: string, label: string, value: any) {
+    this.type = type;
+    this.name = name;
+    this.label = label;
+    this.value = value;
+  }
 }
-export type WeaverActualArg = any;
 
 export class WeaverNode {
   type: WeaverNodeType;
   id: string;
   label: string;
-  inputs: WeaverDataType[];
-  outputs: WeaverDataType[];
-  injector: WeaverNode[];
-  extractor: WeaverNode[];
+  injectors: WeaverAnchor[];
+  extractors: WeaverAnchor[];
   executor: (w: WeaverNode) => any;
   validator: (w: WeaverNode) => string;
-  formalArgs: WeaverFormalArg[];
-  actualArgs: WeaverActualArg[];
+  args: WeaverArg[];
   data: any = null;
-  linkTo: string[] = [];
 
   constructor(
     type: WeaverNodeType, id: string, label: string, 
-    inputs: WeaverDataType[], outputs: WeaverDataType[], 
-    formalArgs: WeaverFormalArg[],
+    injectors: WeaverAnchor[], extractors: WeaverAnchor[], 
     executor: (w: WeaverNode) => any, 
     validator: (w: WeaverNode) => string,
-    linkTo: string[]) {
+    args: WeaverArg[]) {
     this.type = type;
     this.id = id;
     this.label = label;
-    this.inputs = [...inputs];
-    this.outputs = [...outputs];
-    this.injector = Array.from({length: inputs.length}, () => null);
-    this.extractor = Array.from({length: outputs.length}, () => null);
-    this.formalArgs = formalArgs;
-    this.actualArgs = Array.from({length: formalArgs.length}, () => null);
+    this.injectors = [...injectors];
+    this.extractors = [...extractors];
+    this.args = args;
     this.executor = executor;
     this.validator = validator;
-    this.linkTo = linkTo;
+
+    this.injectors.forEach((anchor) => {anchor.node = this;});
+    this.extractors.forEach((anchor) => {anchor.node = this;});
   }
 
   run() {
@@ -75,25 +89,30 @@ export class WeaverNode {
     return s;
   }
 
+  getAnchor(id: string): WeaverAnchor {
+    return this.injectors.concat(this.extractors).find((anchor) => anchor.id === id);
+  }
+
+  connect(thisAnchorId: string, thatAnchor: WeaverAnchor) {
+    const thisAnchor = this.getAnchor(thisAnchorId);
+    thisAnchor.opposite = thatAnchor;
+    thatAnchor.opposite = thisAnchor;
+  }
+
   get filled() {
     return this.data != null;
   }
 
   get inputReady() {
-    return this.injector.every((node) => node != null && node.filled);
+    return this.injectors.every((a) => a.opposite && a.opposite.node.filled);
   }
 
   get ready() {
     return this.validate() === null;
   }
 
-  get args() {
-    return this.formalArgs.map((arg, i) => {
-      return {
-        ...arg,
-        value: this.actualArgs[i],
-      }
-    });
+  get links() {
+    return this.injectors.concat(this.extractors).filter(a => a.opposite).map(a => a.opposite.node.id);
   }
 
 }

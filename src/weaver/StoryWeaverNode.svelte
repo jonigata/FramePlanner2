@@ -1,13 +1,15 @@
 <script lang="ts">
   import { Node, Anchor, type CSSColorString } from 'svelvet';
   import type { WeaverDataType, WeaverNodeType, WeaverNode } from './weaverStore';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, setContext } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
   export let position: {x: number, y: number};
   export let state: 'empty' | 'filled' | 'ready' = 'empty';
   export let model: WeaverNode;
+
+  setContext('weaverNode', model);
 
   $: onStateChanged(model);
   function onStateChanged(model) {
@@ -33,7 +35,7 @@
   }
 </script>
 
-<Node id={model.id} position={position} inputs={model.inputs.length} outputs={model.outputs.length} connections={model.linkTo} on:nodeClicked={onNodeClicked}>
+<Node id={model.id} position={position} inputs={model.injectors.length} outputs={model.extractors.length} connections={model.links} on:nodeClicked={onNodeClicked}>
   <div class="node {model.type} {state}">
     {model.label}
 <!--
@@ -47,11 +49,11 @@
     </div>
 -->
   </div>
-  {#each model.inputs as dt}
-    <Anchor bgColor={dataColor[dt]} direction="north" dynamic={true} input/>
+  {#each model.injectors as dt}
+    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="north" dynamic={true} input/>
   {/each}
-  {#each model.outputs as dt}
-    <Anchor bgColor={dataColor[dt]} direction="south" dynamic={true} output/>
+  {#each model.extractors as dt}
+    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="south" dynamic={true} output/>
   {/each}
 </Node>
 

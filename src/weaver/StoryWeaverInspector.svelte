@@ -37,25 +37,25 @@
       {#if arg.type === 'largetext'}
         <div class="arg">
           <div class="arg-caption">{arg.label}</div>
-          <textarea bind:value={model.actualArgs[index]} rows={10} cols={40}/>
+          <textarea bind:value={model.args[index].value} rows={10} cols={40}/>
         </div>
       {/if}
       {#if arg.type === 'text'}
         <div class="arg">
           <div class="arg-caption">{arg.label}</div>
-          <input type="text" bind:value={model.actualArgs[index]}/>
+          <input type="text" bind:value={model.args[index].value}/>
         </div>
       {/if}
       {#if arg.type === 'number'}
         <div class="arg">
           <div class="arg-caption">{arg.label}</div>
-          <input type="number" bind:value={model.actualArgs[index]}/>
+          <input type="number" bind:value={model.args[index].value}/>
         </div>
       {/if}
       {#if arg.type === 'boolean'}
         <div class="arg">
           <div class="arg-caption">{arg.label}</div>
-          <input type="checkbox" bind:checked={model.actualArgs[index]}/>
+          <input type="checkbox" bind:checked={model.args[index].value}/>
         </div>
       {/if}
     {/each}
