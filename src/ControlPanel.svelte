@@ -86,18 +86,19 @@
 
   }
 
-  function waiting() {
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'waiting',
-    };
-    modalStore.trigger(d);    
-  }
-
   function openStoryGenerator() {
     const d: ModalSettings = {
       type: 'component',
       component: 'storyGenerator',
+    };
+    modalStore.trigger(d);    
+  }
+
+  function openStoryWeaver() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'weaver',
+      backdropClasses: 'z-[500]', 
     };
     modalStore.trigger(d);    
   }
@@ -261,6 +262,9 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
+      Weaver
     </button>
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">

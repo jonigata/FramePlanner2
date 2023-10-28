@@ -25,6 +25,7 @@
   import NewFileButton from './NewFileButton.svelte';
   import CabinetButton from './CabinetButton.svelte';
   import Waiting from './Waiting.svelte'
+  import StoryWeaver from './weaver/StoryWeaver.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -41,6 +42,9 @@
     },
     waiting: {
       ref: Waiting,
+    },
+    weaver: {
+      ref: StoryWeaver,
     }
   };
 
