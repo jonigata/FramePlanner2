@@ -1,7 +1,9 @@
 <script lang="ts">
   import { Node, Anchor, type CSSColorString } from 'svelvet';
   import type { WeaverDataType, WeaverNodeType, WeaverNode } from './weaverStore';
-  import { createEventDispatcher, setContext } from 'svelte';
+  import { createEventDispatcher, onMount, setContext, tick } from 'svelte';
+  import StoryWeaverNodeHelper from './StoryWeaverNodeHelper.svelte';
+  import { modeOsPrefers } from '@skeletonlabs/skeleton';
 
   const dispatch = createEventDispatcher();
 
@@ -9,10 +11,11 @@
   export let state: 'empty' | 'filled' | 'ready' = 'empty';
   export let model: WeaverNode;
 
-  setContext('weaverNode', model);
+  let helper: StoryWeaverNodeHelper;
 
   $: onStateChanged(model);
   function onStateChanged(model) {
+    console.log("onStateChanged", model.links);
     if (model.data) {
       state = 'filled';
     } else {
@@ -33,27 +36,23 @@
     console.log("onNodeClicked");
     dispatch('nodeClicked', model);
   }
+
 </script>
 
-<Node id={model.id} position={position} inputs={model.injectors.length} outputs={model.extractors.length} connections={model.links} on:nodeClicked={onNodeClicked}>
+<Node 
+  id={model.id} position={position} dynamic={true}
+  on:nodeClicked={onNodeClicked} 
+  let:connect
+  let:disconnect TD>
+  <StoryWeaverNodeHelper connector={connect} disconnector={disconnect} bind:this={helper}/>
   <div class="node {model.type} {state}">
     {model.label}
-<!--
-    <div class="hbox gap-2">
-      <button class="reset-button" on:click={() => dispatch("reset", model)}>
-        リセット
-      </button>
-      <button class="run-button" on:click={() => dispatch('run', model)}>
-        実行
-      </button>
-    </div>
--->
   </div>
   {#each model.injectors as dt}
-    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="north" dynamic={true} input/>
+    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="north" input/>
   {/each}
   {#each model.extractors as dt}
-    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="south" dynamic={true} output/>
+    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="south" connections={model.outputs} output/>
   {/each}
 </Node>
 

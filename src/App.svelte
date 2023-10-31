@@ -88,7 +88,7 @@
 
 <Toast/>
 
-<Modal components={modalComponentRegistry} />
+<Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>
 
 <style>
   :global(body) {

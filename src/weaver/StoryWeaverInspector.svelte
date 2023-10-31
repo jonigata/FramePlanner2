@@ -5,12 +5,12 @@
   import DOMPurify from 'dompurify';
   import StoryWeaverInspectorArg from './StoryWeaverInspectorArg.svelte';
   import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+  import { ProgressRadial } from '@skeletonlabs/skeleton';
 
   const dispatch = createEventDispatcher();
 
   export let model: WeaverNode;
 
-  let args = null;
   let applyable = false;
   let problems = null;
   let result = null;
@@ -30,38 +30,55 @@
     $weaverRefreshToken = true;
   }
 
+  function stopPropagation(e: Event) {
+    e.stopPropagation();
+  }
+
+  function onArgChanged(e: CustomEvent) {
+    refresh();
+    $weaverRefreshToken = true;
+  }
+
 </script>
 
 <div class="page-container">
-  <div class="args">
-    <div class="label">{model.label}</div>
-    {#each args as arg, index}
-      <StoryWeaverInspectorArg model={model} index={index} arg={arg}/>
-    {/each}
+  {#if model.waiting}
+  <div class="label">{model.label}</div>
+  <div class="waiting">
+    <ProgressRadial/>
   </div>
+  {:else}
+    <div class="args">
+      <div class="label">{model.label}</div>
+      {#each args as arg}
+        <StoryWeaverInspectorArg arg={arg} on:change={onArgChanged}/>
+      {/each}
+    </div>
 
-  <div class="hbox gap-4 mt-4 mb-2">
-    <div class="problems">
-      {#if problems}
-        <div class="problems">
-          {problems}
-        </div>
-      {:else}
-        {#if result}
-          <button class="reset-button" on:click={reset}>
-            リセット
-          </button>
+    <div class="hbox gap-4 mt-4 mb-2">
+      <div class="problems">
+        {#if problems}
+          <div class="problems">
+            {problems}
+          </div>
+        {:else}
+          {#if result}
+            <button class="reset-button" on:click={reset}>
+              リセット
+            </button>
+          {/if}
         {/if}
-      {/if}
+      </div>
+      <button disabled={!applyable} class="apply-button" on:click={() => dispatch("apply", model)}>
+        実行
+      </button>
     </div>
-    <button disabled={!applyable} class="apply-button" on:click={() => dispatch("apply", model)}>
-      実行
-    </button>
-  </div>
-  {#if result}
-    <div class="result">
-      {result}
-    </div>
+    {#if result}
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="result" on:mousedown={stopPropagation} on:mousemove={stopPropagation} on:mouseup={stopPropagation}>
+        {result}
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -132,5 +149,15 @@
     text-align: left;
     overflow-y: auto;
     white-space: pre-line;
+    user-select: text !important;
+    cursor: text;
+  }
+  .waiting {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 </style>

@@ -98,7 +98,6 @@
     const d: ModalSettings = {
       type: 'component',
       component: 'weaver',
-      backdropClasses: 'z-[500]', 
     };
     modalStore.trigger(d);    
   }
