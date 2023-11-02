@@ -242,10 +242,7 @@
   $:onChangeBubble($bubble);
   function onChangeBubble(b: Bubble) {
     if (!b) { return; }
-    // TODO: クリックしただけで8回も呼ばれるのでなんとかしたい
-    // showInspectorで$bubble = bとするだけで8回呼ばれる
-    // BubbleInspectorの参照している場所各部で変更したことになってるのか？
-    // 全ての参照箇所だとすると逆に8じゃ少ないので、いくつかのコンポーネントが怪しい
+    if (!editable) { return; }
 
     // フォント読み込みが遅れるようなのでヒューリスティック
     setTimeout(() => layeredCanvas.redraw(), 2000);
