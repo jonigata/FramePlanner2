@@ -54,7 +54,6 @@
       textarea.focus({preventScroll: true});
       textarea.select();
       inspectorSize = [inspector.offsetWidth, inspector.offsetHeight];
-      console.log(inspectorSize);
     }
   }
 
@@ -108,7 +107,8 @@
 
 {#if $bubble}
 <div class="bubble-inspector-container">
-  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    <div class="title-bar variant-filled-surface rounded-container-token">
+  <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    
+    <div class="title-bar variant-filled-surface rounded-container-token">
       <img class="title-image" src={bubbleIcon} alt="title"/>
       <div class="bubble-size">{Math.round($bubble.size[0])}x{Math.round($bubble.size[1])}</div>
       {#if pinned}

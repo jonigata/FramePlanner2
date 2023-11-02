@@ -37,7 +37,6 @@
     containerWidth = container.offsetWidth;
     containerHeight = container.offsetHeight;
     textValue = value.toString();
-    console.log(containerWidth, containerHeight);
   });
 
   function edit(event: FocusEvent) {
