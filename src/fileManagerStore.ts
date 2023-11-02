@@ -78,9 +78,8 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
 
   if (image) {
-    await saveImage(fileSystem, image);
+    await saveImage(fileSystem, image, imageFolder);
     const fileId = image["fileId"][fileSystem.id];
-    await imageFolder.link(fileId, fileId);
     markUp.image = fileId;
   }
 
@@ -104,9 +103,8 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
     const image = src.image;
     const bubble = Bubble.decompile(paperSize, src);
     if (image) {
-      await saveImage(fileSystem, image.image);
+      await saveImage(fileSystem, image.image, imageFolder);
       const fileId = image.image["fileId"][fileSystem.id];
-      await imageFolder.link(fileId, fileId);
       bubble.image = { ...src.image, image: fileId };
     }
     packedBubbles.push(bubble);
@@ -232,7 +230,7 @@ async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLI
   }
 }
 
-async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<void> {
+async function saveImage(fileSystem: FileSystem, image: HTMLImageElement, imageFolder: Folder): Promise<void> {
   imageCache[fileSystem.id] ??= {};
   image["fileId"] ??= {}
 
@@ -246,6 +244,7 @@ async function saveImage(fileSystem: FileSystem, image: HTMLImageElement): Promi
   image["fileId"] ??= {}
   image["fileId"][fileSystem.id] = file.id
   imageCache[fileSystem.id][file.id] = image;
+  await imageFolder.link(file.id, file.id);
 }
 
 export function getCurrentDateTime() {
