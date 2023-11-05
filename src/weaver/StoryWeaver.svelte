@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { SvelteFlow, Controls, Background, BackgroundVariant, MiniMap, type SnapGrid, type IsValidConnection, type Connection, type Edge } from '@xyflow/svelte';
-  import { WeaverNode, weaverRefreshToken, createPage, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
+  import { SvelteFlow, Background, BackgroundVariant, type SnapGrid, type IsValidConnection, type Connection, type Edge } from '@xyflow/svelte';
+  import { WeaverNode, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
   import { modalStore } from '@skeletonlabs/skeleton';
-  import { onMount, setContext, tick } from 'svelte';
+  import { setContext, tick } from 'svelte';
   import { writable } from 'svelte/store';
   import { buildStoryWeaverGraph } from './storyWeaverModels';
   import ButtonEdge from './ButtonEdge.svelte';
@@ -186,7 +186,7 @@
     gap: 16px;
   }
   input {
-    @apply variant-ringed-surface rounded-container-token;
+    @apply variant-filled-surface rounded-container-token;
     width: 450px;
     padding: 4px;
     padding-left: 8px;
