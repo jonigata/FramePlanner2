@@ -13,7 +13,7 @@ export async function generateStory(apiKey: string, model: string, theme: string
 マンガのアイディアを考えてください。
 題材：${theme}
 ページ数：${pageNumber}ページ
-1ページあたり6～8コマ程度で構成してください。
+1ページあたり4～5コマ程度で構成してください。
 
 考えた内容以外の情報は出力しないでください。
 `
