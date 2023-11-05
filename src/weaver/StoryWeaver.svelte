@@ -1,114 +1,173 @@
 <script lang="ts">
-  import { Node, Svelvet } from 'svelvet';
-  import { WeaverNode, weaverRefreshToken, createPage } from './weaverStore';
+  import { SvelteFlow, Controls, Background, BackgroundVariant, MiniMap, type SnapGrid, type IsValidConnection, type Connection, type Edge } from '@xyflow/svelte';
+  import { WeaverNode, weaverRefreshToken, createPage, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
+  import { modalStore } from '@skeletonlabs/skeleton';
+  import { onMount, setContext, tick } from 'svelte';
+  import { writable } from 'svelte/store';
+  import { buildStoryWeaverGraph } from './storyWeaverModels';
+  import ButtonEdge from './ButtonEdge.svelte';
   import StoryWeaverNode from './StoryWeaverNode.svelte';
   import StoryWeaverInspector from './StoryWeaverInspector.svelte';
+
   import '../box.css';
-  import { modalStore } from '@skeletonlabs/skeleton';
-  import { onMount, tick } from 'svelte';
-  import { buildStoryWeaverGraph } from './storyWeaverModels';
+  import '@xyflow/svelte/dist/style.css';
 
-  let apiKey = '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';
-  let aiModel = 'gpt-4';
+  let models = buildStoryWeaverGraph();
+  let { aiDrafter, manualDrafter, aiStoryboarder, manualStoryboarder, pageGenerator } = models;
+  let selected = writable(manualDrafter);
 
-  let inspector: StoryWeaverInspector = null;
-  let inspectorPosition = {x:500,y:650};
+  const nodeTypes = {
+    storyWeaverNode: StoryWeaverNode,
+    inspector: StoryWeaverInspector,
+  };
+  const edgeTypes = {
+    buttonedge: ButtonEdge,
+  };
 
-  let nodes = buildStoryWeaverGraph();
-  let selected = nodes.manualDrafter;
-  let aiDrafter = nodes.aiDrafter;
-  let manualDrafter = nodes.manualDrafter;
-  let aiStoryboarder = nodes.aiStoryboarder;
-  let manualStoryboarder = nodes.manualStoryboarder;
-  let pageGenerator = nodes.pageGenerator;
-
-  $: onRefresh($weaverRefreshToken);
-  function onRefresh(f: boolean) {
-    if (!f) return;
-    console.log("onRefresh");
-    $weaverRefreshToken = false;
-
-    aiDrafter = aiDrafter;
-    manualDrafter = manualDrafter;
-    aiStoryboarder = aiStoryboarder;
-    manualStoryboarder = manualStoryboarder;
-    pageGenerator = pageGenerator;
+  const rawNodes = [];
+  for (let [key, value] of Object.entries(models)) {
+    rawNodes.push({
+      id: key,
+      type: 'storyWeaverNode',
+      data: { model: value },
+      position: value.initialPosition,
+    });
   }
+  rawNodes.push({
+      id: 'inspector',
+      type: 'inspector',
+      data: { model: $selected },
+      hidden: false,
+      position: { x:380, y:400 }
+    });
 
-  async function onNodeClicked(e: CustomEvent) {
-    const model = e.detail;
-    logNetwork();
-    selected = null;
-    await tick();
-    selected = model;
+  const nodes = writable(rawNodes);
+ 
+  // same for edges
+  const rawEdges: Edge[] = [];
+  for (let [key, value] of Object.entries(models)) {
+    for (let anchor of value.extractors) {
+      if (anchor.opposite == null) { continue; } 
+      rawEdges.push({
+        id: `${key}-${anchor.opposite.node.id}`,
+        type: 'buttonedge',
+        source: key,
+        sourceHandle: anchor.id,
+        target: anchor.opposite.node.id,
+        targetHandle: anchor.opposite.id,
+      });
+    }
   }
+  console.log(rawEdges);
+/*
+  const edges = writable([
+    {
+      id: '1-3',
+      type: 'buttonedge',
+      source: 'aiDrafter',
+      target: 'aiStoryboarder',
+      label: 'Edge Text'
+    },
+    {
+      id: '3-5',
+      type: 'buttonedge',
+      source: 'aiStoryboarder',
+      target: 'pageGenerator',
+      label: 'Edge Text'
+    }
+  ]);
+*/
+  const edges = writable(rawEdges);
 
-  async function apply(e: CustomEvent) {
-    const model: WeaverNode = e.detail;
-    model.waiting = true;
-    inspector.refresh();
-    await model.run();
-    model.waiting = false;
-    inspector.refresh();
-    $weaverRefreshToken = true;
+  setContext('selected', selected);
+
+  function disconnect(id: string, sourceHandleId: string, targetHandleId: string) {
+    const edge = $edges.find((e) => e.id === id);
+    const sourceModel: WeaverNode = models[edge.source];
+    sourceModel.disconnect(sourceHandleId);
+    edges.update((es) => es.filter((e) => e.id !== id));    
   }
+  setContext('disconnect', disconnect);
 
-  function onConnection(e: CustomEvent) {
-    const src = getNodeAndAnchor(e.detail.sourceAnchor.id);
-    const tgt = getNodeAndAnchor(e.detail.targetAnchor.id);
-    console.log("onConnection", src, tgt);
-    nodes[src.node].connect(src.anchor, nodes[tgt.node].getAnchor(tgt.anchor));
-    logNetwork();
-    $weaverRefreshToken = true;
-  }
-
-  function onDisconnection(e: CustomEvent) {
-    const src = getNodeAndAnchor(e.detail.sourceAnchor.id);
-    const tgt = getNodeAndAnchor(e.detail.targetAnchor.id);
-    nodes[src.node].disconnect(src.anchor);
-    logNetwork();
-    $weaverRefreshToken = true;
-  }
-
-  function logNetwork() {
-    // console.log("logNetwork");
-    // console.trace();
-    for (let node of Object.values(nodes)) {
-      // console.log(node.id, JSON.stringify(node.links));
+  function onNodeClick(e: CustomEvent) {
+    if (e.detail.node) {
+      if (e.detail.node.id === 'inspector') {
+      } else {
+        $selected = e.detail.node.data.model;
+      }
+    } else {
+      $selected = null;
     }
   }
 
-  function getNodeAndAnchor(str: string) {
-    const matches = str.match(/A-(\w+)\/N-(\w+)/);
-    return {
-      node: matches[2],
-      anchor: matches[1],
-    };
+  async function apply(model: WeaverNode) {
+    model.waiting = true;
+    $selected = $selected;
+    await model.run();
+    model.waiting = false;
+    $selected = $selected;
+    await refresh();
+  }
+  setContext('apply', apply);
+
+  async function refresh() {
+    const n = $nodes;
+    $nodes = [];
+    await tick();
+    $nodes = n;
   }
 
-  onMount(() => {
-    $weaverRefreshToken = true;
-  });
+  async function onConnect(event: CustomEvent<{ connection: Connection }>) {
+    console.log("onConnect");
+    const connection = event.detail.connection;
+    const { source, target, sourceHandle, targetHandle } = connection;
+    const sourceModel: WeaverNode = models[source];
+    const targetModel: WeaverNode = models[target];
+    sourceModel.connect(sourceHandle, targetModel.getAnchor(targetHandle));
+    await refresh();
+  }
 
+  function onConnectStart() {
+    console.log("onConnectStart");
+  }
+
+  const snapGrid: SnapGrid = [25, 25];
+
+  const isValidConnection: IsValidConnection = (connection) => {  
+    const source = $nodes.find((n) => n.id === connection.source);
+    const target = $nodes.find((n) => n.id === connection.target);
+    const sourceType = weaverNodeOutputType[source.data.model.type];
+    const targetType = weaverNodeInputType[target.data.model.type];
+    return sourceType === targetType;
+  }
 </script>
 
 <div class="container">
-  <Svelvet id="my-canvas"  on:connection={onConnection} on:disconnection={onDisconnection} TD>
-    <StoryWeaverNode model={aiDrafter} position={{x: 100, y: 200}} on:nodeClicked={onNodeClicked}/>
-    <StoryWeaverNode model={manualDrafter} position={{x: 400, y: 200}} on:nodeClicked={onNodeClicked}/>
-    <StoryWeaverNode model={aiStoryboarder} position={{x: 100, y: 500}} on:nodeClicked={onNodeClicked}/>
-    <StoryWeaverNode model={manualStoryboarder} position={{x: 400, y: 500}} on:nodeClicked={onNodeClicked}/>
-    <StoryWeaverNode model={pageGenerator} position={{x: 250, y: 800}} on:nodeClicked={onNodeClicked}/>
-    {#if selected}
-      <Node id="inspector" bind:position={inspectorPosition} inputs={0} outputs={0}>
-        <StoryWeaverInspector model={selected} on:apply={apply} bind:this={inspector}/>
-      </Node>
-    {/if}
-  </Svelvet>
-  <button class="btn back-button" on:click={() => modalStore.close()}>back</button>
+  <SvelteFlow
+    {nodes}
+    {edges}
+    {nodeTypes}
+    {edgeTypes}
+    {snapGrid}
+    {isValidConnection}
+    fitView
+    defaultEdgeOptions={{ type: 'buttonedge' }}
+    on:nodeclick={onNodeClick}
+    on:paneclick={onNodeClick}
+    on:connect={onConnect}
+    on:connectstart={onConnectStart}
+  >
+    <Controls />
+    <Background variant={BackgroundVariant.Dots} />
+    <MiniMap />
+  </SvelteFlow>
 </div>
 
 <style lang="postcss">
+  .container {
+    width: 100%;
+    height: 95vh;
+  }
   .back-button {
     @apply variant-filled-tertiary;
     position: absolute;
@@ -121,4 +180,15 @@
     font-size: 26px;
     color: #fff;
   }
+  :global(.svelte-flow .svelte-flow__node .svelte-flow__handle) {
+    width: 16px;
+    height: 16px;
+  }
+  :global(.svelte-flow .svelte-flow__node .svelte-flow__handle.draft) {
+    background-color: #8d8;
+  }
+  :global(.svelte-flow .svelte-flow__node .svelte-flow__handle.storyboard) {
+    background-color: #88d;
+  }
+
 </style>

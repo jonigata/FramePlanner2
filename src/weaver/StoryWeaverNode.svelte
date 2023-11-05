@@ -1,63 +1,53 @@
 <script lang="ts">
-  import { Node, Anchor, type CSSColorString } from 'svelvet';
-  import type { WeaverDataType, WeaverNodeType, WeaverNode } from './weaverStore';
-  import { createEventDispatcher, onMount, setContext, tick } from 'svelte';
-  import StoryWeaverNodeHelper from './StoryWeaverNodeHelper.svelte';
-  import { modeOsPrefers } from '@skeletonlabs/skeleton';
+  import { Handle, Position, type NodeProps, useEdges } from '@xyflow/svelte';
+  import { type WeaverNode, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
 
-  const dispatch = createEventDispatcher();
+  type $$Props = NodeProps;
 
-  export let position: {x: number, y: number};
-  export let state: 'empty' | 'filled' | 'ready' = 'empty';
-  export let model: WeaverNode;
+  export let data: $$Props['data'];
+  export let isConnectable: $$Props['isConnectable'];
+  export let id: $$Props['id'];
 
-  let helper: StoryWeaverNodeHelper;
+  let model: WeaverNode = data.model;
+  let isInputConnectable = isConnectable;
+  let isOutputConnectable = isConnectable;
 
-  $: onStateChanged(model);
-  function onStateChanged(model) {
-    console.log("onStateChanged", model.links);
-    if (model.data) {
-      state = 'filled';
-    } else {
-      if (model.ready) {
-        state = 'ready';
-      } else {
-        state = 'empty';
-      }
-    }
-  }
+  const edges = useEdges();
 
-  const dataColor: {[key: string]: CSSColorString} = {
-    draft: 'red',
-    storyboard: 'blue',
-  }
-
-  function onNodeClicked(e) {
-    console.log("onNodeClicked");
-    dispatch('nodeClicked', model);
-  }
-
+  $: isInputConnectable = $edges.filter((edge) => edge.target === id).length < 1;
+  $: isOutputConnectable = $edges.filter((edge) => edge.source === id).length < 1;
 </script>
 
-<Node 
-  id={model.id} position={position} dynamic={true}
-  on:nodeClicked={onNodeClicked} 
-  let:connect
-  let:disconnect TD>
-  <StoryWeaverNodeHelper connector={connect} disconnector={disconnect} bind:this={helper}/>
-  <div class="node {model.type} {state}">
-    {model.label}
-  </div>
-  {#each model.injectors as dt}
-    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="north" input/>
+{#each model.injectors as injector}
+  <Handle
+    id="{injector.id}"
+    type="target"
+    position={Position.Top}
+    isConnectable={isInputConnectable}
+    class={weaverNodeInputType[model.type]}
+    on:connectstart on:connect on:connectend
+  />
+  <!-- on:xxx はbubbling -->
   {/each}
-  {#each model.extractors as dt}
-    <Anchor id={dt.id} bgColor={dataColor[dt.type]} direction="south" connections={model.outputs} output/>
-  {/each}
-</Node>
+
+<div class="container {model.type} {model.state}">
+  {model.label}
+</div>
+
+{#each model.extractors as extractor}
+  <Handle
+    id="{extractor.id}"
+    type="source"
+    position={Position.Bottom}
+    isConnectable={isOutputConnectable}
+    class={weaverNodeOutputType[model.type]}
+    on:connectstart on:connect on:connectend
+  />
+  <!-- on:xxx はbubbling -->
+{/each}
 
 <style lang="postcss">
-  .node {
+  .container {
     @apply rounded-container-token;
     width: 200px;
     height: 100px;
@@ -68,22 +58,7 @@
     font-family: '源暎エムゴ';
     font-size: 22px;
     gap: 20px;
-  }
-  .reset-button {
-    width: 70px;
-    @apply bg-secondary-500 text-white;
-    font-family: 'Noto Sans JP';
-    font-size: 14px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .run-button {
-    width: 70px;
-    @apply bg-secondary-500 text-white;
-    font-family: 'Noto Sans JP';
-    font-size: 14px;
-    padding-top: 2px;
-    padding-bottom: 2px;
+    position: relative;
   }
   .drafter.empty {
     @apply variant-soft-primary;

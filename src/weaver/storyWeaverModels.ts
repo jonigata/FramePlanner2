@@ -29,6 +29,7 @@ export function buildStoryWeaverGraph() {
       new WeaverArg('number', 'panelCount', 'コマ/ページ', false, 5),
       new WeaverArg('largetext', 'prompt', 'プロンプト', true, aiDrafterDefaultPrompt),
     ],
+    {x: 0, y: 0}
     );
   let manualDrafter = new WeaverNode(
     'drafter', 'manualDrafter', "原案手動入力", 
@@ -41,7 +42,8 @@ export function buildStoryWeaverGraph() {
     },
     [
       new WeaverArg('largetext', 'draft', '原案', false, '')
-    ]);
+    ],
+    {x: 300, y: 0});
 
   let aiStoryboarder = new WeaverNode(
     'storyboarder', 'aiStoryboarder', "AIネーム作成", 
@@ -64,7 +66,8 @@ export function buildStoryWeaverGraph() {
       new WeaverArg('number', 'pageCount', 'ページ数', false, 1),
       new WeaverArg('number', 'panelCount', 'コマ/ページ', false, 5),
       new WeaverArg('largetext', 'prompt', 'プロンプト', true, aiStoryboarderDefaultPrompt),
-    ]);
+    ],
+    {x: 0, y: 200});
   let manualStoryboarder = new WeaverNode(
     'storyboarder', 'manualStoryboarder', "手動ネーム作成", 
     [], [new WeaverAnchor('stdout','storyboard')], 
@@ -76,7 +79,8 @@ export function buildStoryWeaverGraph() {
     },
     [
       new WeaverArg('largetext', 'storyboard', 'ネーム', false, '')
-    ]);
+    ],
+    {x: 300, y: 200});
   let pageGenerator = new WeaverNode(
     'generator', 'pageGenerator', "レイアウト生成",
     [new WeaverAnchor('stdin','storyboard')], [], 
@@ -94,7 +98,8 @@ export function buildStoryWeaverGraph() {
     },
     (m) => '',
     [
-    ]);
+    ],
+    {x: 150, y: 400});
 
   aiDrafter.connect('stdout', aiStoryboarder.getAnchor('stdin'));
   manualStoryboarder.connect('stdout', pageGenerator.getAnchor('stdin'));

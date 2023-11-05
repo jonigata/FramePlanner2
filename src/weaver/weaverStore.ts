@@ -14,6 +14,16 @@ export type WeaverNodeType = 'drafter' | 'storyboarder' | 'generator';
 // storyboard: ネーム、json
 export type WeaverDataType = 'draft' | 'storyboard';
 
+export const weaverNodeInputType: { [key: string]: WeaverDataType } = {
+  'storyboarder': 'draft',
+  'generator': 'storyboard',
+}
+
+export const weaverNodeOutputType = {
+  'drafter': 'draft',
+  'storyboarder': 'storyboard',
+}
+
 export class WeaverAnchor {
   id: string;
   type: WeaverDataType;
@@ -55,20 +65,24 @@ export class WeaverNode {
   args: WeaverArg[];
   data: any = null;
   waiting: boolean = false;
+  initialPosition: {x:number, y:number} = {x:0, y:0};
+
   constructor(
     type: WeaverNodeType, id: string, label: string, 
     injectors: WeaverAnchor[], extractors: WeaverAnchor[], 
     executor: (w: WeaverNode) => Promise<any>, 
     validator: (w: WeaverNode) => string,
-    args: WeaverArg[]) {
+    args: WeaverArg[],
+    initialPosition: {x:number, y:number}) {
     this.type = type;
     this.id = id;
     this.label = label;
     this.injectors = [...injectors];
     this.extractors = [...extractors];
-    this.args = args;
     this.executor = executor;
     this.validator = validator;
+    this.args = args;
+    this.initialPosition = initialPosition;
 
     this.injectors.forEach((anchor) => {anchor.node = this;});
     this.extractors.forEach((anchor) => {anchor.node = this;});
@@ -131,6 +145,13 @@ export class WeaverNode {
 
   get outputs() {
     return this.extractors.filter(a => a.opposite).map(a => a.opposite.node.id);
+  }
+
+  get state() {
+    if (this.waiting) { return 'waiting'; }
+    if (this.filled) { return 'filled'; }
+    if (this.inputReady) { return 'ready'; }
+    return 'empty';
   }
 
 }
