@@ -20,8 +20,8 @@
 </script>
 
 {#if model}
-  <div class="container">
-    <div class="label drag-handle">{model.label}</div>
+  <div class="container rounded-container-token variant-glass-surface">
+    <div class="label drag-handle variant-filled-surface rounded-container-token">{model.label}</div>
     {#key key}
       <StoryWeaverInspectorContent model={model}/>
     {/key}
@@ -30,14 +30,12 @@
 
 <style lang="postcss">
   .container {
-    @apply rounded-container-token variant-glass-surface;
     width: 500px;
     display: flex;
     flex-direction: column;
     padding: 8px;
   }
   .label {
-    @apply variant-filled-surface rounded-container-token;
     height: 32px;
     cursor: move;
     align-self: stretch;

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Handle, Position, type NodeProps, useEdges } from '@xyflow/svelte';
   import { type WeaverNode, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
+  import "./nodes.postcss";
 
   type $$Props = NodeProps;
 
@@ -59,32 +60,5 @@
     font-size: 22px;
     gap: 20px;
     position: relative;
-  }
-  .drafter.empty {
-    @apply variant-soft-primary;
-  }
-  .storyboarder.empty {
-    @apply variant-soft-secondary;
-  }
-  .generator.empty {
-    @apply variant-soft-tertiary;
-  }
-  .drafter.filled {
-    @apply variant-filled-primary;
-  }
-  .storyboarder.filled {
-    @apply variant-filled-secondary;
-  }
-  .generator.filled {
-    @apply variant-filled-tertiary;
-  }
-  .drafter.ready {
-    @apply variant-ghost-primary;
-  }
-  .storyboarder.ready {
-    @apply variant-ghost-secondary;
-  }
-  .generator.ready {
-    @apply variant-ghost-tertiary;
   }
 </style>  

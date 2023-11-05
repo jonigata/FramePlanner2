@@ -147,11 +147,11 @@
 </script>
 
 <div class="container vbox">
-  <div class="settings hbox">
+  <div class="settings hbox rounded-container-token">
     API key
-    <input type="text" bind:value={apiKey}/>
+    <input class="variant-ringed-surface rounded-container-token" type="text" bind:value={apiKey}/>
     <div class="hbox grow"></div>
-    <button class="btn back-button" on:click={modalStore.close}>back</button>
+    <button class="btn back-button variant-filled-tertiary" on:click={modalStore.close}>back</button>
   </div>
   <SvelteFlow
     {nodes}
@@ -178,7 +178,6 @@
     gap: 16px;
   }
   .settings {
-    @apply rounded-container-token;
     width: 100%;
     background-color: #fff;
     text-align: left;
@@ -186,13 +185,11 @@
     gap: 16px;
   }
   input {
-    @apply variant-filled-surface rounded-container-token;
     width: 450px;
     padding: 4px;
     padding-left: 8px;
   }
   .back-button {
-    @apply variant-filled-tertiary;
     width: 90px;
     height: 32px;
     right: 24px;
