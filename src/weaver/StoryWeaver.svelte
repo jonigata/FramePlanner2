@@ -38,7 +38,8 @@
       type: 'inspector',
       data: { model: $selected },
       hidden: false,
-      position: { x:380, y:400 }
+      position: { x:380, y:400 },
+      dragHandle: '.drag-handle',
     });
 
   const nodes = writable(rawNodes);
@@ -86,6 +87,7 @@
     const sourceModel: WeaverNode = models[edge.source];
     sourceModel.disconnect(sourceHandleId);
     edges.update((es) => es.filter((e) => e.id !== id));    
+    refresh();
   }
   setContext('disconnect', disconnect);
 

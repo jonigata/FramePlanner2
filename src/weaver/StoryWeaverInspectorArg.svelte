@@ -26,7 +26,7 @@
       <textarea class="smalltext" bind:value={value} rows={5} cols={40}/>
     {/if}
     {#if arg.type === 'number'}
-      <input type="number" bind:value={value}/>
+      <input class="number" type="number" bind:value={value}/>
     {/if}
     {#if arg.type === 'boolean'}
       <input type="checkbox" bind:checked={value}/>
@@ -43,7 +43,7 @@
     <textarea class="smalltext" bind:value={value} rows={5} cols={40}/>
   {/if}
   {#if arg.type === 'number'}
-    <input type="number" bind:value={value}/>
+    <input class="number" type="number" bind:value={value}/>
   {/if}
   {#if arg.type === 'boolean'}
     <input type="checkbox" bind:checked={value}/>
@@ -80,6 +80,9 @@
   }
   .smalltext {
     height: 100px;
+  }
+  .number {
+    text-align: right;
   }
   input {
     @apply variant-ringed-surface rounded-container-token;

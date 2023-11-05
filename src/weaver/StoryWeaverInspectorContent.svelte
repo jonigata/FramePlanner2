@@ -42,15 +42,13 @@
 
 </script>
 
-<div class="page-container">
+<div>
   {#if model.waiting}
-  <div class="label">{model.label}</div>
   <div class="waiting">
     <ProgressRadial/>
   </div>
   {:else}
     <div class="args">
-      <div class="label">{model.label}</div>
       {#each args as arg}
         <StoryWeaverInspectorArg arg={arg} on:change={onArgChanged}/>
       {/each}
@@ -84,26 +82,6 @@
 </div>
 
 <style lang="postcss">
-  .page-container {
-    @apply rounded-container-token variant-glass-surface;
-    width: 500px;
-    display: flex;
-    flex-direction: column;
-    padding: 8px;
-  }
-  .label {
-    @apply variant-filled-surface rounded-container-token;
-    height: 32px;
-    cursor: move;
-    align-self: stretch;
-    margin-bottom: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Noto Sans JP';
-    font-size: 16px;
-  }
   .args {
     display: flex;
     flex-direction: column;
