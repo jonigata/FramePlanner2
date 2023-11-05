@@ -19,14 +19,14 @@
 
 </script>
 
-<div class="container">
-  {#if model}
+{#if model}
+  <div class="container">
     <div class="label drag-handle">{model.label}</div>
     {#key key}
       <StoryWeaverInspectorContent model={model}/>
     {/key}
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style lang="postcss">
   .container {

@@ -15,6 +15,8 @@
   let models = buildStoryWeaverGraph();
   let { aiDrafter, manualDrafter, aiStoryboarder, manualStoryboarder, pageGenerator } = models;
   let selected = writable(manualDrafter);
+  let apiKey: string = '';
+  const aiModel = 'gpt-4';
 
   const nodeTypes = {
     storyWeaverNode: StoryWeaverNode,
@@ -105,7 +107,7 @@
   async function apply(model: WeaverNode) {
     model.waiting = true;
     $selected = $selected;
-    await model.run();
+    await model.run({ apiKey, aiModel });
     model.waiting = false;
     $selected = $selected;
     await refresh();
@@ -144,7 +146,13 @@
   }
 </script>
 
-<div class="container">
+<div class="container vbox">
+  <div class="settings hbox">
+    API key
+    <input type="text" bind:value={apiKey}/>
+    <div class="hbox grow"></div>
+    <button class="btn back-button" on:click={modalStore.close}>back</button>
+  </div>
   <SvelteFlow
     {nodes}
     {edges}
@@ -159,9 +167,7 @@
     on:connect={onConnect}
     on:connectstart={onConnectStart}
   >
-    <Controls />
     <Background variant={BackgroundVariant.Dots} />
-    <MiniMap />
   </SvelteFlow>
 </div>
 
@@ -169,17 +175,31 @@
   .container {
     width: 100%;
     height: 95vh;
+    gap: 16px;
+  }
+  .settings {
+    @apply rounded-container-token;
+    width: 100%;
+    background-color: #fff;
+    text-align: left;
+    padding: 8px;
+    gap: 16px;
+  }
+  input {
+    @apply variant-ringed-surface rounded-container-token;
+    width: 450px;
+    padding: 4px;
+    padding-left: 8px;
   }
   .back-button {
     @apply variant-filled-tertiary;
-    position: absolute;
-    width: 180px;
-    height: 60px;
-    bottom: 32px;
+    width: 90px;
+    height: 32px;
+    right: 24px;
     right: 32px;
     z-index: 99999;
     font-family: '源暎エムゴ';
-    font-size: 26px;
+    font-size: 14px;
     color: #fff;
   }
   :global(.svelte-flow .svelte-flow__node .svelte-flow__handle) {

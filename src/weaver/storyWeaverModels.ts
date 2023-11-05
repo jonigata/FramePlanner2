@@ -8,12 +8,16 @@ export function buildStoryWeaverGraph() {
   let aiDrafter = new WeaverNode(
     'drafter', 'aiDrafter', "AI原案作成", 
     [], [new WeaverAnchor('stdout','draft')], 
-    async (m) => {
-      return await runAi(m.args[3].value, { 
-        theme: m.args[0].value,
-        pageNumber: m.args[1].value,
-        panelCount: m.args[2].value,
-      });
+    async (m, opts) => {
+      return await runAi(
+        opts.apiKey,
+        opts.aiModel,
+        m.args[3].value, 
+        { 
+          theme: m.args[0].value,
+          pageNumber: m.args[1].value,
+          panelCount: m.args[2].value,
+        });
     },
     (m) => {
       let s = '';
@@ -48,12 +52,16 @@ export function buildStoryWeaverGraph() {
   let aiStoryboarder = new WeaverNode(
     'storyboarder', 'aiStoryboarder', "AIネーム作成", 
     [new WeaverAnchor('stdin','draft')], [new WeaverAnchor('stdout','storyboard')], 
-    async (m) => {
-      return await runAi(m.args[2].value, { 
-        pageNumber: m.args[0].value,
-        panelCount: m.args[1].value,
-        story: m.getInput(0)
-      });
+    async (m, opts) => {
+      return await runAi(
+        opts.apiKey,
+        opts.aiModel,
+        m.args[2].value, 
+        { 
+          pageNumber: m.args[0].value,
+          panelCount: m.args[1].value,
+          story: m.getInput(0)
+        });
     },
     (m) => {
       let s = '';
@@ -94,7 +102,7 @@ export function buildStoryWeaverGraph() {
         book.pages.push(page);
       }
       newBookToken.set(book);
-      toastStore.trigger({ message: `ページを作成しました`, timeout: 40000, classes: "z-[999]"});
+      toastStore.trigger({ message: `ページを作成しました`, timeout: 4000, classes: "z-[999]"});
     },
     (m) => '',
     [
@@ -204,7 +212,7 @@ const aiDrafterDefaultPrompt =
 `;
 
 
-async function runAi(promptTemplate: string, params: { [key: string]: any }): Promise<string> {
+async function runAi(apiKey: string, aiModel: string, promptTemplate: string, params: { [key: string]: any }): Promise<string> {
   return callAi(apiKey, aiModel, replaceKeywords(promptTemplate, params));
 }
 
@@ -214,9 +222,6 @@ function replaceKeywords(input: string, replacements: { [key: string]: string })
   });
 
 }  
-
-let apiKey = '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';
-let aiModel = 'gpt-4';
 
 async function callAi(apiKey: string, model: string, prompt: string): Promise<string> {
   const openai = new OpenAI({

@@ -54,13 +54,15 @@ export class WeaverArg {
   }
 }
 
+export type ExecuteOptions = { [key: string]: any };
+
 export class WeaverNode {
   type: WeaverNodeType;
   id: string;
   label: string;
   injectors: WeaverAnchor[];
   extractors: WeaverAnchor[];
-  executor: (w: WeaverNode) => Promise<any>;
+  executor: (w: WeaverNode, opts: ExecuteOptions) => Promise<any>;
   validator: (w: WeaverNode) => string;
   args: WeaverArg[];
   data: any = null;
@@ -70,7 +72,7 @@ export class WeaverNode {
   constructor(
     type: WeaverNodeType, id: string, label: string, 
     injectors: WeaverAnchor[], extractors: WeaverAnchor[], 
-    executor: (w: WeaverNode) => Promise<any>, 
+    executor: (w: WeaverNode, opts: ExecuteOptions) => Promise<any>, 
     validator: (w: WeaverNode) => string,
     args: WeaverArg[],
     initialPosition: {x:number, y:number}) {
@@ -88,8 +90,8 @@ export class WeaverNode {
     this.extractors.forEach((anchor) => {anchor.node = this;});
   }
 
-  async run() {
-    this.data = await this.executor(this);
+  async run(opts: ExecuteOptions) {
+    this.data = await this.executor(this, opts);
   }
 
   reset() {
