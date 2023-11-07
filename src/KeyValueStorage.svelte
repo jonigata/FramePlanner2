@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { writable } from "svelte/store";
 
   // IndexedDBのデータベース名とストア名を定義
   export let dbName: string;
@@ -50,6 +51,8 @@
   }
 
   export async function isReady() {
+    // TODO: 名前が変
+    // 実装も変
     return new Promise((resolve) => {
       const timer = setInterval(() => {
         if (db) {

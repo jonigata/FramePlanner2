@@ -13,6 +13,10 @@
     arg.value = value;
     dispatch('change', arg);
   }
+
+  function onKeyDown(e: KeyboardEvent) {
+    e.stopPropagation();
+  }
 </script>
 
 {#if arg.supplemental}
@@ -20,16 +24,16 @@
   <summary>{arg.label}</summary>
   <div class="arg">
     {#if arg.type === 'largetext'}
-      <textarea class="largetext" bind:value={value} rows={10} cols={40}/>
+      <textarea class="largetext" bind:value={value} rows={10} cols={40} on:keydown={onKeyDown}/>
     {/if}
     {#if arg.type === 'smalltext'}
-      <textarea class="smalltext" bind:value={value} rows={5} cols={40}/>
+      <textarea class="smalltext" bind:value={value} rows={5} cols={40} on:keydown={onKeyDown}/>
     {/if}
     {#if arg.type === 'number'}
-      <input class="number" type="number" bind:value={value}/>
+      <input class="number" type="number" bind:value={value} on:keydown={onKeyDown}/>
     {/if}
     {#if arg.type === 'boolean'}
-      <input type="checkbox" bind:checked={value}/>
+      <input type="checkbox" bind:checked={value} on:keydown={onKeyDown}/>
     {/if}
   </div>
 </details>
@@ -37,16 +41,16 @@
 <div class="arg">
   <div class="arg-caption">{arg.label}</div>
   {#if arg.type === 'largetext'}
-    <textarea class="largetext" bind:value={value} rows={10} cols={40}/>
+    <textarea class="largetext" bind:value={value} rows={10} cols={40} on:keydown={onKeyDown}/>
   {/if}
   {#if arg.type === 'smalltext'}
-    <textarea class="smalltext" bind:value={value} rows={5} cols={40}/>
+    <textarea class="smalltext" bind:value={value} rows={5} cols={40} on:keydown={onKeyDown}/>
   {/if}
   {#if arg.type === 'number'}
-    <input class="number" type="number" bind:value={value}/>
+    <input class="number" type="number" bind:value={value} on:keydown={onKeyDown}/>
   {/if}
   {#if arg.type === 'boolean'}
-    <input type="checkbox" bind:checked={value}/>
+    <input type="checkbox" bind:checked={value} on:keydown={onKeyDown}/>
   {/if}
 </div>
 {/if}

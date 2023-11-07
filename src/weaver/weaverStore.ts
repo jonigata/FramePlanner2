@@ -92,6 +92,7 @@ export class WeaverNode {
 
   async run(opts: ExecuteOptions) {
     this.data = await this.executor(this, opts);
+    console.log(this.data);
   }
 
   reset() {
@@ -183,7 +184,6 @@ function pourScenario(page: Page, s: any) { // TODO: 型が雑
     scene.bubbles.forEach((b:any, i:number) => {
       const bubble = new Bubble();
       bubble.text = b[1];
-      bubble.embedded = true;
       bubble.initOptions();
       const cc = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
       bubble.move(cc);

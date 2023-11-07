@@ -1,13 +1,14 @@
 <script lang="ts">
   import { SvelteFlow, Background, BackgroundVariant, type SnapGrid, type IsValidConnection, type Connection, type Edge } from '@xyflow/svelte';
   import { WeaverNode, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
-  import { modalStore } from '@skeletonlabs/skeleton';
-  import { setContext, tick } from 'svelte';
+  import { modalStore, toastStore } from '@skeletonlabs/skeleton';
+  import { onMount, setContext, tick } from 'svelte';
   import { writable } from 'svelte/store';
   import { buildStoryWeaverGraph } from './storyWeaverModels';
   import ButtonEdge from './ButtonEdge.svelte';
   import StoryWeaverNode from './StoryWeaverNode.svelte';
   import StoryWeaverInspector from './StoryWeaverInspector.svelte';
+  import KeyValueStorage from "../KeyValueStorage.svelte";
 
   import '../box.css';
   import '@xyflow/svelte/dist/style.css';
@@ -15,8 +16,12 @@
   let models = buildStoryWeaverGraph();
   let { aiDrafter, manualDrafter, aiStoryboarder, manualStoryboarder, pageGenerator } = models;
   let selected = writable(manualDrafter);
+  let storedApiKey: string = null; // TODO: だるいコードなのであとで書き直す
   let apiKey: string = '';
-  const aiModel = 'gpt-4';
+  let keyValueStorage: KeyValueStorage = null;
+
+  //const aiModel = 'gpt-4';
+  const aiModel = "gpt-4-1106-preview";
 
   const nodeTypes = {
     storyWeaverNode: StoryWeaverNode,
@@ -33,6 +38,7 @@
       type: 'storyWeaverNode',
       data: { model: value },
       position: value.initialPosition,
+      deletable: false,
     });
   }
   rawNodes.push({
@@ -107,7 +113,13 @@
   async function apply(model: WeaverNode) {
     model.waiting = true;
     $selected = $selected;
-    await model.run({ apiKey, aiModel });
+    try {
+      await model.run({ apiKey, aiModel });
+    }
+    catch(e) {
+      console.log(e);
+      toastStore.trigger({message: e.message, timeout: 15000})
+    }
     model.waiting = false;
     $selected = $selected;
     await refresh();
@@ -144,6 +156,19 @@
     const targetType = weaverNodeInputType[target.data.model.type];
     return sourceType === targetType;
   }
+
+  $: onUpdateApiKey(apiKey);
+  async function onUpdateApiKey(ak: string) {
+    if (!keyValueStorage || ak === storedApiKey) { return; }
+    keyValueStorage.set("apiKey", ak);
+    storedApiKey = ak;
+  }
+
+  onMount(async () => {
+    await keyValueStorage.isReady();
+    storedApiKey = await keyValueStorage.get("apiKey") ?? '';
+    apiKey = storedApiKey;
+  });
 </script>
 
 <div class="container vbox">
@@ -169,6 +194,8 @@
   >
     <Background variant={BackgroundVariant.Dots} />
   </SvelteFlow>
+
+  <KeyValueStorage bind:this={keyValueStorage} dbName={"story-weaver"} storeName={"story-weaver"}/>
 </div>
 
 <style lang="postcss">

@@ -110,7 +110,7 @@ export function buildStoryWeaverGraph() {
     {x: 150, y: 400});
 
   aiDrafter.connect('stdout', aiStoryboarder.getAnchor('stdin'));
-  manualStoryboarder.connect('stdout', pageGenerator.getAnchor('stdin'));
+  aiStoryboarder.connect('stdout', pageGenerator.getAnchor('stdin'));
 
   const nodes = {aiDrafter, manualDrafter, aiStoryboarder, manualStoryboarder, pageGenerator};
   return nodes;
