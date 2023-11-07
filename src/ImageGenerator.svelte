@@ -25,7 +25,7 @@
   }
   let calling: boolean;
   let progress = 0;
-  let storage: KeyValueStorage = null;
+  let keyValueStorage: KeyValueStorage = null;
   let refered: HTMLImageElement = null;
 
 /*
@@ -48,8 +48,8 @@
   async function generate() {
     let f = null;
     f = async () => {
-      storage.set("imageRequest", JSON.stringify(imageRequest));
-      storage.set("url", url);
+      await keyValueStorage.set("imageRequest", JSON.stringify(imageRequest));
+      await keyValueStorage.set("url", url);
       const data = await getProgression(url);
       if (calling) {
         progress = data.progress;
@@ -88,9 +88,9 @@
   }
 
   onMount(async () => {
-    await storage.isReady();
-    const data = await storage.get("imageRequest");
-    url = await storage.get("url") ?? url;
+    await keyValueStorage.waitForReady();
+    const data = await keyValueStorage.get("imageRequest");
+    url = await keyValueStorage.get("url") ?? url;
     if (data) {
       imageRequest = JSON.parse(data);
     }
@@ -115,8 +115,8 @@
 
     let f = null;
     f = async () => {
-      storage.set("imageRequest", JSON.stringify(imageRequest));
-      storage.set("url", url);
+      await keyValueStorage.set("imageRequest", JSON.stringify(imageRequest));
+      await keyValueStorage.set("url", url);
       const data = await getProgression(url);
       if (calling) {
         progress = data.progress;
@@ -216,7 +216,7 @@
   </Drawer>
 </div>
 
-<KeyValueStorage bind:this={storage} dbName={"image-generator"} storeName={"generation-request"}/>
+<KeyValueStorage bind:this={keyValueStorage} dbName={"image-generator"} storeName={"default-parameters"}/>
 
 <style>
   .drawer-outer :global(.drawer .panel) {

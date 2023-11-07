@@ -1,65 +1,46 @@
 <script lang="ts">
+  import { type IDBPDatabase, openDB } from 'idb';
   import { onMount } from "svelte";
-  import { writable } from "svelte/store";
+  import { type Writable, writable } from "svelte/store";
 
   // IndexedDBのデータベース名とストア名を定義
   export let dbName: string;
   export let storeName: string;
 
-  let db: IDBDatabase;
+  let db: Writable<IDBPDatabase<unknown>> = writable(null);
 
   // IndexedDBを開く
-  onMount(() => {
-    const openRequest = indexedDB.open(dbName, 1);
-
-    openRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      db.createObjectStore(storeName);
-    };
-
-    openRequest.onsuccess = (event: Event) => {
-      db = (event.target as IDBOpenDBRequest).result;
-    };
+  onMount(async () => {
+    db.set(await openDB(dbName, 2, {
+      async upgrade(db) {
+        db.createObjectStore(storeName, { keyPath: 'key' });
+      }
+    }));
   });
 
-  export function set(key: string, value: string) {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    store.put(value, key);
+  export async function set(key: string, value: string) {
+    console.log($db);
+    await $db.put(storeName, { key, value });
   }
 
-  export function get(key: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, 'readonly');
-      const store = transaction.objectStore(storeName);
-      const objectStoreRequest = store.get(key);
-      
-      objectStoreRequest.onsuccess = (_event: Event) => {
-        resolve(objectStoreRequest.result);
-      };
-
-      objectStoreRequest.onerror = (event: any) => {
-        reject(event.error);
-      };
-    });
-  };
-
-  export function remove(key: string) {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    store.delete(key);
+  export async function get(key: string): Promise<string> {
+    const data = await $db.get(storeName, key);
+    return data?.value;
   }
 
-  export async function isReady() {
-    // TODO: 名前が変
-    // 実装も変
-    return new Promise((resolve) => {
-      const timer = setInterval(() => {
-        if (db) {
-          clearInterval(timer);
-          resolve(null);
-        }
-      }, 100);
-    });
+  export async function remove(key: string) {
+    await $db.delete(storeName, key);
   }
+
+  export async function waitForReady() {
+    return new Promise<void>(
+      (resolve) => {
+        db.subscribe((v) => {
+          if (v) {
+            resolve();
+          }
+        });
+      });
+  }
+  
 </script>

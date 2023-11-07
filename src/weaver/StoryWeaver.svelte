@@ -16,7 +16,7 @@
   let models = buildStoryWeaverGraph();
   let { aiDrafter, manualDrafter, aiStoryboarder, manualStoryboarder, pageGenerator } = models;
   let selected = writable(manualDrafter);
-  let storedApiKey: string = null; // TODO: だるいコードなのであとで書き直す
+  let storedApiKey: string = null;
   let apiKey: string = '';
   let keyValueStorage: KeyValueStorage = null;
 
@@ -68,24 +68,6 @@
     }
   }
   console.log(rawEdges);
-/*
-  const edges = writable([
-    {
-      id: '1-3',
-      type: 'buttonedge',
-      source: 'aiDrafter',
-      target: 'aiStoryboarder',
-      label: 'Edge Text'
-    },
-    {
-      id: '3-5',
-      type: 'buttonedge',
-      source: 'aiStoryboarder',
-      target: 'pageGenerator',
-      label: 'Edge Text'
-    }
-  ]);
-*/
   const edges = writable(rawEdges);
 
   setContext('selected', selected);
@@ -160,12 +142,12 @@
   $: onUpdateApiKey(apiKey);
   async function onUpdateApiKey(ak: string) {
     if (!keyValueStorage || ak === storedApiKey) { return; }
-    keyValueStorage.set("apiKey", ak);
+    await keyValueStorage.set("apiKey", ak);
     storedApiKey = ak;
   }
 
   onMount(async () => {
-    await keyValueStorage.isReady();
+    await keyValueStorage.waitForReady();
     storedApiKey = await keyValueStorage.get("apiKey") ?? '';
     apiKey = storedApiKey;
   });
@@ -195,7 +177,7 @@
     <Background variant={BackgroundVariant.Dots} />
   </SvelteFlow>
 
-  <KeyValueStorage bind:this={keyValueStorage} dbName={"story-weaver"} storeName={"story-weaver"}/>
+  <KeyValueStorage bind:this={keyValueStorage} dbName={"story-weaver"} storeName={"preferences"}/>
 </div>
 
 <style lang="postcss">
