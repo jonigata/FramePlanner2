@@ -69,6 +69,7 @@
     page.frameTree = FrameElement.compile(event.detail);
     page.bubbles = [];
     page.revision = incrementRevision(page.revision);
+    page.paperColor = page.frameTree.bgColor;
     $mainPage = commitPage(page, page.frameTree, page.bubbles, null);
   }
 
