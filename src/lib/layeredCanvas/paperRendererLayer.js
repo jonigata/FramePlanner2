@@ -40,7 +40,10 @@ export class PaperRendererLayer extends Layer {
 
     for (let bubble of this.floatingBubbles) {
       this.renderBubbleBackground(ctx, bubble);
-      this.renderBubbleForeground(ctx, bubble);
+      this.renderBubbleForeground(ctx, bubble, false);
+    }
+    for (let bubble of this.floatingBubbles) {
+      this.renderBubbleForeground(ctx, bubble, true);
     }
 
     this.rawBubbles = [];
@@ -178,7 +181,10 @@ export class PaperRendererLayer extends Layer {
       if (layout.bubbles) {
         for (let bubble of layout.bubbles) {
           this.renderBubbleBackground(ctx, bubble);
-          this.renderBubbleForeground(ctx, bubble);
+          this.renderBubbleForeground(ctx, bubble, false);
+        }
+        for (let bubble of layout.bubbles) {
+          this.renderBubbleForeground(ctx, bubble, true);
         }
       }
   
@@ -242,7 +248,13 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  renderBubbleForeground(ctx, bubble) {
+  renderBubbleForeground(ctx, bubble, drawsUnited) {
+    if (bubble.parent) {
+      if (!drawsUnited) { return; }
+    } else {
+      if (drawsUnited) { return; }
+    }
+
     const size = bubble.size;
 
     ctx.save();
