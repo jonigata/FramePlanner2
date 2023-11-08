@@ -40,7 +40,7 @@
     "firebase": "^9.18.0",
     "idb": "^7.1.1",
     "jsonc-parser": "^3.2.0",
-    "openai": "^4.12.1",
+    "openai": "^4.16.1",
     "paper": "^0.12.17",
     "parse-css-font": "^4.0.0",
     "rete-render-utils": "^2.0.1",

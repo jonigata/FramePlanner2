@@ -166,6 +166,7 @@
       constraintElement(element);
     }
 
+    element.image.fileId = undefined;
     inlinePainterLayer.setElement(element);
     painterActive = true;
     frameLayer.interactable = false;
