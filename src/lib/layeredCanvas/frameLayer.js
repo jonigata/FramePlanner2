@@ -349,6 +349,7 @@ export class FrameLayer extends Layer {
         layout.element.reverse[1] *= -1;
         this.redraw();
       } else if (this.fitIcon.contains(point)) {
+        layout.element.scale = [0.001, 0.001];
         constraintLeaf(layout);
         this.redraw();
       } else if (this.generateIcon.contains(point)) {

@@ -755,6 +755,7 @@ export function constraintLeaf(layout) {
   const [x0, y0, x1, y1] = makeTrapezoidRect(layout.corners);
   const [w, h] = [x1 - x0, y1 - y0];
   const [iw, ih] = [element.image.naturalWidth, element.image.naturalHeight];
+  console.log('constraintLeaf', iw, ih, w, h, element.scale);
 
   let scale = element.scale[0];
   if (iw * scale < w) { scale = w / iw; }
