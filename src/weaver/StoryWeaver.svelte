@@ -1,6 +1,6 @@
 <script lang="ts">
   import { SvelteFlow, Background, BackgroundVariant, type SnapGrid, type IsValidConnection, type Connection, type Edge } from '@xyflow/svelte';
-  import { WeaverNode, weaverNodeInputType, weaverNodeOutputType } from './weaverStore';
+  import { WeaverNode, weaverNodeInputType, weaverNodeOutputType, packNode, type NodePack, unpackNode } from './weaverStore';
   import { modalStore, toastStore } from '@skeletonlabs/skeleton';
   import { onMount, setContext, tick } from 'svelte';
   import { writable } from 'svelte/store';
@@ -97,6 +97,9 @@
     $selected = $selected;
     try {
       await model.run({ apiKey, aiModel });
+      const r = packNode(model);
+      await keyValueStorage.set(`node:${model.id}`, JSON.stringify(r));
+      console.log(r);
     }
     catch(e) {
       console.log(e);
@@ -150,6 +153,15 @@
     await keyValueStorage.waitForReady();
     storedApiKey = await keyValueStorage.get("apiKey") ?? '';
     apiKey = storedApiKey;
+
+    for (let node of $nodes) {
+      const r = await keyValueStorage.get(`node:${node.id}`);
+      if (r) {
+        const p: NodePack = JSON.parse(r);
+        unpackNode(node.data.model, p);
+      }
+    }
+    await refresh();
   });
 </script>
 

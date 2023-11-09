@@ -23,6 +23,7 @@
   import { Bubble } from './lib/layeredCanvas/bubble';
   import { newFileToken, newImagePage, sharePageToken } from './fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { getAnalytics, logEvent } from "firebase/analytics";
 
   let min = 256;
   let exponentialMin = 4096;
@@ -74,25 +75,20 @@
   }
 
   function save() {
+    logEvent(getAnalytics(), 'download');
     $saveToken = "download";
   }
 
   function postAIPictors() {
+    logEvent(getAnalytics(), 'post_to_aipictors');
     $saveToken = "aipictors";
   }
 
   function copyToClipboard() {
+    logEvent(getAnalytics(), 'copy_to_clipboard');
     $clipboardToken = true;
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
 
-  }
-
-  function openStoryGenerator() {
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'storyGenerator',
-    };
-    modalStore.trigger(d);    
   }
 
   function openStoryWeaver() {

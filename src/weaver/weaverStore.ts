@@ -203,3 +203,24 @@ function calculateFitBubbleSize(bubble: Bubble) {
   bubble.forceEnoughSize();
 }
 
+type NodePack = {
+  id: string,
+  data: any,
+  args: {name: string, value: any}[]
+}
+
+export function packNode(node: WeaverNode): NodePack {
+  const result: NodePack = {
+    id: node.id,
+    data: node.data,
+    args: node.args.map((arg) => { return { name: arg.name, value: arg.value}; })
+  };
+  return result;
+}
+
+export function unpackNode(node: WeaverNode, pack: NodePack): void {
+  for (let arg of pack.args) {
+    node.args.find((a) => a.name === arg.name).value = arg.value;
+  }
+  node.data = pack.data;
+}
