@@ -102,7 +102,7 @@
       {#if busy}
         <ProgressRadial width={"w-16"}/>
       {:else}
-        <div class="hbox gap-2">API key <input type="text" bind:value={apiKey}/></div>
+        <div class="hbox gap-2">API key <input type="password" bind:value={apiKey}/></div>
         <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={generateAll}>開始</button>
       {/if}
     </div>

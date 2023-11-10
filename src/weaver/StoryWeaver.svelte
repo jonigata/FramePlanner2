@@ -188,7 +188,7 @@
 <div class="container vbox">
   <div class="settings hbox rounded-container-token">
     API key
-    <input class="variant-ringed-surface rounded-container-token" type="text" bind:value={apiKey}/>
+    <input class="variant-ringed-surface rounded-container-token" type="password" bind:value={apiKey}/>
     <div class="hbox grow"></div>
     <button class="btn back-button variant-filled-tertiary" on:click={modalStore.close}>back</button>
   </div>
