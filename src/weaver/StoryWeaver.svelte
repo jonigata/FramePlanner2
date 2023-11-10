@@ -46,7 +46,7 @@
       type: 'inspector',
       data: { model: $selected },
       hidden: false,
-      position: { x:380, y:400 },
+      position: { x:380, y:325 },
       dragHandle: '.drag-handle',
     });
 
@@ -110,6 +110,26 @@
     await refresh();
   }
   setContext('apply', apply);
+
+  async function fullApply(model: WeaverNode) {
+    while (model) {
+      $selected = model;
+      await refresh();
+      await apply(model);
+      model = model.extractors[0]?.opposite?.node;
+    }
+  }
+  setContext('fullApply', fullApply);
+
+  async function fullReset(model: WeaverNode) {
+    while (model) {
+      model.reset();
+      await refresh();
+      model = model.extractors[0]?.opposite?.node;
+    }
+  }
+  setContext('fullReset', fullReset);
+
 
   async function refresh() {
     const n = $nodes;

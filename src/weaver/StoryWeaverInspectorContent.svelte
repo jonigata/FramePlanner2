@@ -39,7 +39,8 @@
   }
 
   const apply = getContext('apply') as (n: WeaverNode)=>void;
-
+  const fullApply = getContext('fullApply') as (n: WeaverNode)=>void;
+  const fullReset = getContext('fullReset') as (n: WeaverNode)=>void;
 </script>
 
 <div>
@@ -54,23 +55,31 @@
       {/each}
     </div>
 
-    <div class="hbox gap-4 mt-4 mb-2">
-      <div class="problems">
+    <div class="hbox gap-2 mt-4 mb-2">
+      <button class="reset-button" on:click={() => fullReset(model)}>
+        フルリセット
+      </button>
+      <button class="apply-button" on:click={() => fullApply(model)}>
+        フル実行
+      </button>
+      <div class="single-panel gap-2">
         {#if problems}
           <div class="problems">
             {problems}
           </div>
         {:else}
           {#if result}
-            <button class="reset-button" on:click={reset}>
-              リセット
-            </button>
+            <div class="button-cushion">
+              <button class="reset-button" on:click={reset}>
+                リセット
+              </button>
+            </div>
           {/if}
+          <button disabled={!applyable} class="apply-button" on:click={() => apply(model)}>
+            実行
+          </button>
         {/if}
       </div>
-      <button disabled={!applyable} class="apply-button" on:click={() => apply(model)}>
-        実行
-      </button>
     </div>
     {#if result}
       <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -87,12 +96,20 @@
     flex-direction: column;
     gap: 8px;
   }
+  .single-panel {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
   .apply-button {
     @apply btn variant-filled;
     width: 90px;
     height: 32px;
     font-family: 'Zen Maru Gothic';
-    font-size: 20px;
+    font-size: 14px;
     padding-top: 2px;
     padding-bottom: 2px;
   }
@@ -101,9 +118,15 @@
     width: 90px;
     height: 32px;
     font-family: 'Zen Maru Gothic';
-    font-size: 16px;
+    font-size: 14px;
     padding-top: 2px;
     padding-bottom: 2px;
+  }
+  .button-cushion {
+    height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .problems {
     width: 100%;
@@ -111,7 +134,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center;
     color: #844;
     white-space: pre-line;
     text-align: left;
