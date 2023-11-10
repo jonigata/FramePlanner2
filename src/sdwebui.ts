@@ -1,4 +1,5 @@
 export async function generateImages(url, imageRequest) {
+  url = removeLastSlash(url);
   try {
     const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount, alwayson_scripts } = imageRequest;
     const payload = {
@@ -47,6 +48,7 @@ export async function generateImages(url, imageRequest) {
 }
 
 export async function getProgression(url) {
+  url = removeLastSlash(url);
   try {
     const response = await fetch(`${url}/sdapi/v1/progress`, {
         method: 'GET',
@@ -66,4 +68,11 @@ export async function getControlNetModuleList(url) {
 
 export async function getControlNetModelList(url) {
   
+}
+
+function removeLastSlash(url) {
+  if (url.endsWith('/')) {
+    return url.slice(0, -1);
+  }
+  return url;
 }
