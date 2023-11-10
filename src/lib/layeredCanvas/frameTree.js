@@ -1,4 +1,3 @@
-import { insert } from "svelte/internal";
 import { intersection, line, line2, deg2rad } from "./geometry";
 
 export class FrameElement {

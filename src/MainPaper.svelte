@@ -1,15 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Paper from './Paper.svelte';
-  import { saveToken, clipboardToken, scale } from './paperStore';
-  import { undoStore, commitToken } from './undoStore';
+  import { saveToken, clipboardToken, redrawToken, scale } from './paperStore';
+  import { undoStore, commitIfDirtyToken, commitToken } from './undoStore';
   import { type Page, mainPage, revisionEqual } from './pageStore';
+  import { frameImageGeneratorTarget } from "./frameImageGeneratorStore";
   import PainterToolBox from './PainterToolBox.svelte';
+  import { imageGeneratorChosen, imageGeneratorOpen, imageGeneratorPrompt, imageGeneratorGallery } from './imageGeneratorStore';
 
   let paper: Paper;
   let page = $mainPage;
   let currentRevision = $mainPage.revision;
   let painterActive = false;
+
+  $: if ($redrawToken) { paper.redraw(); }
 
   $:save($saveToken);
   function save(token: string) {
@@ -32,15 +36,22 @@
     $clipboardToken = false;
   }
 
-  $:onCommitToken($commitToken);
-  async function onCommitToken(token: boolean) {
-    if (!token) return;
+  $: if ($commitIfDirtyToken) {
     paper.commitIfDirty();
+    $commitIfDirtyToken = false;
+  }
+
+  $: if($commitToken) {
+    paper.commit($commitToken);
     $commitToken = false;
   }
 
   async function onPainterActive(e: CustomEvent<boolean>) {
     painterActive = e.detail;
+  }
+
+  function onGenerate(e: CustomEvent) {
+    $frameImageGeneratorTarget = e.detail;
   }
 
   function onScribbleDone() {
@@ -73,6 +84,28 @@
     page = p;
   }
 
+  frameImageGeneratorTarget.subscribe(
+    (target) => {
+      if (target) {
+        imageGeneratorPrompt.set(target.prompt);
+        imageGeneratorGallery.set(target.gallery);
+        imageGeneratorOpen.set(true);
+      }
+    });
+
+  imageGeneratorChosen.subscribe(
+    (chosen) => {
+      if (chosen) {
+        imageGeneratorOpen.set(false);
+        imageGeneratorChosen.set(null);
+        $frameImageGeneratorTarget.image = chosen;
+        paper.constraintElement($frameImageGeneratorTarget, true);
+        paper.commit(null);
+        $redrawToken = true;
+      }
+    });
+
+
   onMount(() => {
     $undoStore = paper;
   });
@@ -85,7 +118,9 @@
     bind:page={page} 
     bind:scale={$scale}
     bind:this={paper}
-    on:painterActive={onPainterActive}/>
+    on:painterActive={onPainterActive}
+    on:generate={onGenerate}
+    />
 </div>
 
 {#if painterActive}

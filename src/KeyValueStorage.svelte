@@ -32,6 +32,10 @@
     await $db.delete(storeName, key);
   }
 
+  export function isReady() {
+    return $db !== null;
+  }
+
   export async function waitForReady() {
     return new Promise<void>(
       (resolve) => {

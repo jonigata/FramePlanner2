@@ -16,7 +16,7 @@
   import clipboardIcon from './assets/clipboard.png';
   import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
-  import { commitToken } from './undoStore';
+  import { commitIfDirtyToken } from './undoStore';
   import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
@@ -24,6 +24,7 @@
   import { newFileToken, newImagePage, sharePageToken } from './fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
+  import { batchImagingOpen } from './batchImagingStore';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -144,13 +145,18 @@
     $isJsonEditorOpen = !$isJsonEditorOpen;      
   }
 
+  function batchImaging() {
+    console.log("batchImaging");
+    $batchImagingOpen = true;
+  }
+
   async function downloadJson() {
-    $commitToken = true;
+    $commitIfDirtyToken = true;
     $downloadJsonToken = true;
   }
 
   async function sharePage() {
-    $commitToken = true;
+    $commitIfDirtyToken = true;
     $sharePageToken = $mainPage;
   }
 
@@ -258,6 +264,9 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={batchImaging}>
+      Batch imaging
     </button>
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">

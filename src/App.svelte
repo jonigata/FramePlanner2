@@ -18,14 +18,13 @@
   import StoryGenerator from './StoryGenerator.svelte';
   import FontChooser from './FontChooser.svelte';
   import ShapeChooser from './ShapeChooser.svelte';
-  import { paperTemplate } from './paperStore';
-  import { loadTemplate } from './firebase';
   import ImageGenerator from './ImageGenerator.svelte';
   import FileManager from './FileManager.svelte';
   import NewFileButton from './NewFileButton.svelte';
   import CabinetButton from './CabinetButton.svelte';
   import Waiting from './Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
+  import BatchImaging from './BatchImaging.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -45,7 +44,7 @@
     },
     weaver: {
       ref: StoryWeaver,
-    }
+    },
   };
 
   onMount(async () => {
@@ -85,7 +84,7 @@
 <JsonEditor/>
 
 <About/>
-
+<BatchImaging/>
 <Toast/>
 
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>

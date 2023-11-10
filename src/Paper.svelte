@@ -16,8 +16,6 @@
   import { undoStore } from './undoStore';
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
-  import { frameImageGeneratorTarget, frameImageConstraintToken } from "./frameImageGeneratorStore";
-  import FrameImageGenerator from './FrameImageGenerator.svelte';
   import { makeWhiteImage } from './imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
   import { postToAiPictors } from './postToAiPictors'
@@ -51,15 +49,6 @@
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;
-  }
-
-  $:onFrameImageConstraint($frameImageConstraintToken);
-  function onFrameImageConstraint(token: boolean) {
-    if (!token) return;
-    console.log("onFrameImageConstraint", token);
-    frameLayer.constraintAll();
-    layeredCanvas.redraw();
-    $frameImageConstraintToken = false;
   }
 
   $:onSplitCursor($bubbleSplitCursor);
@@ -155,7 +144,7 @@
 
   function generate(element: FrameElement) {
     console.log("generateImages");
-    $frameImageGeneratorTarget = element;
+    dispatch("generate", element);
   }
 
   async function scribble(element: FrameElement) {
@@ -163,7 +152,7 @@
     if (!element.image) { 
       element.image = await makeWhiteImage(500, 500);
       element.gallery.push(element.image);
-      constraintElement(element);
+      constraintElement(element, false);
     }
 
     element.image.fileId = undefined;
@@ -188,10 +177,13 @@
     commit(null);
   }
 
-  function constraintElement(element: FrameElement) {
+  export function constraintElement(element: FrameElement, shrinkBeforeConstraint: boolean) {
     const pageLayout = calculatePhysicalLayout(frameLayer.frameTree, frameLayer.getPaperSize(), [0,0]);
     const layout = findLayoutOf(pageLayout, element);
     if (!layout) { return; }
+    if (shrinkBeforeConstraint) {
+      element.scale = [0.001, 0.001];
+    }
     constraintLeaf(layout);
   }
 
@@ -441,6 +433,10 @@
   function getFontStyle2(fontFamily: string, fontWeight: string): string {
     return getFontStyle(fontFamily as GoogleFontFamily, fontWeight as GoogleFontVariant);
   }
+
+  export function redraw() {
+    layeredCanvas.redraw();
+  }
 </script>
 
 
@@ -456,8 +452,6 @@
     <canvas width={page.paperSize[0]} height={page.paperSize[1]} bind:this={canvas} on:click={handleClick} style="cursor: pointer;"/>
   </div>    
 {/if}
-
-<FrameImageGenerator/>
 
 <style>
   .canvas-container {
