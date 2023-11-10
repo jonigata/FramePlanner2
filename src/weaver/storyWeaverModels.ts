@@ -1,4 +1,4 @@
-import { WeaverAnchor, WeaverArg, WeaverNode, weaverRefreshToken, createPage } from './weaverStore';
+import { WeaverAnchor, WeaverArg, WeaverNode, createPage } from './weaverStore';
 import { newBookToken } from "../fileManagerStore";
 import { toastStore } from '@skeletonlabs/skeleton';
 import OpenAI from 'openai';
@@ -98,7 +98,7 @@ export function buildStoryWeaverGraph() {
       const book = { title: 'AI作成', pages: [] };
       for (let i = 0; i < storyBoard.pages.length; i++) {
         console.log(storyBoard.pages[i]);
-        const page = await createPage(storyBoard.pages[i]);
+        const page = createPage(storyBoard.pages[i], m.args[0].value);
         book.pages.push(page);
       }
       newBookToken.set(book);
@@ -106,6 +106,7 @@ export function buildStoryWeaverGraph() {
     },
     (m) => '',
     [
+      new WeaverArg('smalltext', 'additionalPrompt', '追加画像プロンプト', false, ''),
     ],
     {x: 150, y: 400});
 
@@ -127,13 +128,25 @@ const aiDrafterDefaultPrompt =
   const aiStoryboarderDefaultPrompt = 
 `# Task description
 
-マンガのアイディアをフォーマットしてください。
+後述の「Input Story」をJSONにフォーマットしてください。
 ページ数は最後に伝えます。
 
-フォーマットは以下のような形にしてください。これは例なので、形式だけを参考にし、内容は無視してください。
+# Ouput Format
+
 出力はJSONだけとし、それ以外の文言を含むことは許されません。
 セリフは10文字前後にし、適切に改行コード(\\n)を入れて一行5文字以下にしてください。
-"description"は、画像生成AIにわたすプロンプトを想定し、視覚的情景を重視してセリフを含めないようにしてください。人名は視覚的属性に置き換えてください。可能な限り詳細にしてください。
+キャラクター設定時に各キャラクターの容姿をある程度詳細に設定してください。
+
+"imagePrompt"では、以下のルールを守ってください。
+- 画像生成AIにわたすプロンプトを想定する
+- 詳細な視覚的情景を記述する。
+- セリフを決して含めない。
+- なるべく詳細にしてください。
+- キャラクターはキャラクター設定で設定した視覚的属性に置き換える。
+
+# Example 
+
+※これは例なので、形式だけを参考にし、内容は完全に無視してください。
 
 {
   "characters": {
@@ -145,26 +158,26 @@ const aiDrafterDefaultPrompt =
     {
       "scenes": [
         {
-          "description": "The mood is tense in the household. Mom looks worried and Dad is calming her down.",
+          "imagePrompt": "The mood is tense in the household. Mom looks worried and Dad is calming her down.",
           "bubbles": [
             ["Mom", "ああ、だめだわ。\\nケーキの材料が足りないわ。"],
             ["Dad", "大丈夫だよ、\\n何とかなるさ。"]
           ]
         },
         {
-          "description": "Mia enters the living room with her hands behind her back.",
+          "imagePrompt": "Mia enters the living room with her hands behind her back.",
           "bubbles": [
             ["Mia", "ヘイ、\\n何が問題なの？"]
           ]
         },
         {
-          "description": "Mom sighs and tells Mia their problem.",
+          "imagePrompt": "Mom sighs and tells Mia their problem.",
           "bubbles": [
             ["Mom", "お父さんの誕生日ケーキを\\n作ろうと思ったのに、\\n力が足りないのよ。"],
           ]
         },
         {
-          "description": "Mia unveils what she was hiding behind her back -- a box full of cake ingredients.",
+          "imagePrompt": "Mia unveils what she was hiding behind her back -- a box full of cake ingredients.",
           "bubbles": [
             ["Mia", "どうぞ！\\n学校から帰る途中で\\nパン屋さんで買ったんだよ。"]
           ]
@@ -174,20 +187,20 @@ const aiDrafterDefaultPrompt =
     {
       "scenes": [
         {
-          "description": "Everyone in the room is surprised and Mom is relieved.",
+          "imagePrompt": "Everyone in the room is surprised and Mom is relieved.",
           "bubbles": [
             ["Mom", "ありがとう、ミア。\\n本当に助かったわ。"],
             ["Dad", "さすがミア！"]
           ]
         },
         {
-          "description": "Mia smiles and starts gathering the ingredients.",
+          "imagePrompt": "Mia smiles and starts gathering the ingredients.",
           "bubbles": [
             ["Mia", "一緒に作ろうよ、\\nお母さん！"]
           ]
         },
         {
-          "description": "Mom nods and they start making the cake together. Dad watches them with a smile on his face.",
+          "imagePrompt": "Mom nods and they start making the cake together. Dad watches them with a smile on his face.",
           "bubbles": [
             ["Dad", "良い一日だ。"],
             ["Mom", "本当にそうね。"]

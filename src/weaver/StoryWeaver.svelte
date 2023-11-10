@@ -15,7 +15,7 @@
 
   let models = buildStoryWeaverGraph();
   let { aiDrafter, manualDrafter, aiStoryboarder, manualStoryboarder, pageGenerator } = models;
-  let selected = writable(manualDrafter);
+  let selected = writable(aiDrafter);
   let storedApiKey: string = null;
   let apiKey: string = '';
   let keyValueStorage: KeyValueStorage = null;
@@ -92,7 +92,7 @@
     }
   }
 
-  async function apply(model: WeaverNode) {
+  async function applyAux(model: WeaverNode) {
     model.waiting = true;
     $selected = $selected;
     try {
@@ -104,19 +104,35 @@
     catch(e) {
       console.log(e);
       toastStore.trigger({message: e.message, timeout: 15000})
+      model.waiting = false;
+      $selected = $selected;
+      await refresh();
+      throw e;
     }
     model.waiting = false;
     $selected = $selected;
     await refresh();
   }
+  async function apply(model: WeaverNode) {
+    try {
+      await applyAux(model);
+    }
+    catch {
+    }
+  }
   setContext('apply', apply);
 
   async function fullApply(model: WeaverNode) {
     while (model) {
-      $selected = model;
-      await refresh();
-      await apply(model);
-      model = model.extractors[0]?.opposite?.node;
+      try {
+        $selected = model;
+        await refresh();
+        await applyAux(model);
+        model = model.extractors[0]?.opposite?.node;
+      }
+      catch(e) {
+        break;
+      }
     }
   }
   setContext('fullApply', fullApply);
@@ -169,6 +185,13 @@
     storedApiKey = ak;
   }
 
+  function resetStorage() {
+    if (confirm("StoryWeaverのパラメータを全てリセットしますか？")) {
+      keyValueStorage.clear();
+      location.reload();
+    }
+  }
+
   onMount(async () => {
     await keyValueStorage.waitForReady();
     storedApiKey = await keyValueStorage.get("apiKey") ?? '';
@@ -188,8 +211,9 @@
 <div class="container vbox">
   <div class="settings hbox rounded-container-token">
     API key
-    <input class="variant-ringed-surface rounded-container-token" type="password" bind:value={apiKey}/>
+      <input class="variant-ringed-surface rounded-container-token" type="password" autocomplete="off" bind:value={apiKey}/>
     <div class="hbox grow"></div>
+    <button class="btn reset-button variant-filled-warning" on:click={resetStorage}>パラメータリセット</button>
     <button class="btn back-button variant-filled-tertiary" on:click={modalStore.close}>back</button>
   </div>
   <SvelteFlow
@@ -229,6 +253,16 @@
     width: 450px;
     padding: 4px;
     padding-left: 8px;
+  }
+  .reset-button {
+    width: 140px;
+    height: 32px;
+    right: 24px;
+    right: 32px;
+    z-index: 99999;
+    font-family: '源暎エムゴ';
+    font-size: 14px;
+    color: #fff;
   }
   .back-button {
     width: 90px;

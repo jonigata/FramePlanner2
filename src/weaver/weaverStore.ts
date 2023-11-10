@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
-import { newPage, newBookToken } from "../fileManagerStore";
+import { newPage } from "../fileManagerStore";
+import type { Page } from "../pageStore";
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from '../lib/layeredCanvas/frameTree.js';
 import { Bubble } from '../lib/layeredCanvas/bubble';
 import { measureVerticalText } from '../lib/layeredCanvas/verticalText';
@@ -161,21 +162,21 @@ export class WeaverNode {
 
 export const weaverRefreshToken = writable(false);
 
-export async function createPage(source: any) {
+export function createPage(source: any, imagePromptPrefix: string) {
   const page = newPage("ai-", 2);
   const n = source.scenes.length;
   page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
-  pourScenario(page, source);
+  pourScenario(page, source, imagePromptPrefix);
   return page;
 }
 
-function pourScenario(page: Page, s: any) { // TODO: 型が雑
+function pourScenario(page: Page, s: any, imagePromptPrefix: string) { // TODO: 型が雑
   const paperLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   console.log(page.frameTree);
   const leaves = collectLeaves(page.frameTree);
   s.scenes.forEach((scene: any, index: number) => {
     const leaf = leaves[index];
-    leaf.prompt = scene.description;
+    leaf.prompt = `${imagePromptPrefix} ${scene.imagePrompt}`;
 
     const layout = findLayoutOf(paperLayout, leaf);
     const r = makeTrapezoidRect(layout.corners);
