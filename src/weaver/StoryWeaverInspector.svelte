@@ -17,10 +17,14 @@
   $: model = $selected;
   $: if (model) { key++; console.log(key); }
 
+  function onWheel(event: WheelEvent) {
+    event.stopPropagation();
+  }
+
 </script>
 
 {#if model}
-  <div class="container rounded-container-token variant-glass-surface">
+  <div class="container rounded-container-token variant-glass-surface" on:wheel={onWheel}>
     <div class="label drag-handle variant-filled-surface rounded-container-token">{model.label}</div>
     {#key key}
       <StoryWeaverInspectorContent model={model}/>
