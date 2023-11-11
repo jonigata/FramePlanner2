@@ -1,22 +1,57 @@
 <script lang="ts">
-  import { imageGeneratorOpen } from "./imageGeneratorStore";
+  import { imageGeneratorTarget } from "./imageGeneratorStore";
   import Drawer from './Drawer.svelte';
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";
-  import { TabGroup, Tab, TabAnchor } from '@skeletonlabs/skeleton';
+  import { TabGroup, Tab } from '@skeletonlabs/skeleton';
+  import { tick } from "svelte";
+  import type { FrameElement } from "./lib/layeredCanvas/frameTree";
 
   let busy: boolean;
   let tabSet: number = 0;
+  let prompt: string = 'zzz';
+  let gallery: HTMLImageElement[] = [];
+  let chosen: HTMLImageElement = null;
+
+  $: onTargetChanged($imageGeneratorTarget);
+  function onTargetChanged(t: FrameElement) {
+    if (t) {
+      console.log("imageGenerator.prompt", t.prompt);
+      prompt = t.prompt;
+    }
+  }
+
+  $: onChangeGallery($imageGeneratorTarget?.gallery);
+  async function onChangeGallery(g: HTMLImageElement[]) {
+    if (g) {
+      gallery = [];
+      await tick(); // HACK: なんかこうしないとHTMLが更新されない
+      gallery = g;
+    }
+  }
+
+  $: onChosen(chosen);
+  function onChosen(c: HTMLImageElement) {
+    if (c) {
+      const t = $imageGeneratorTarget;
+      $imageGeneratorTarget = null;
+      chosen = null;
+      t.prompt = prompt;
+      t.image = c;
+    }
+  }
 
   function onClickAway() {
     if (busy) { return; }
-    $imageGeneratorOpen = false;
+    const t = $imageGeneratorTarget;
+    $imageGeneratorTarget = null;
+    t.prompt = prompt;
   }
 </script>
 
 <div class="drawer-outer">
   <Drawer
-    open={$imageGeneratorOpen}
+    open={$imageGeneratorTarget}
     placement="right"
     size="720px"
     on:clickAway={onClickAway}
@@ -28,9 +63,9 @@
     <!-- Tab Panels --->
     <svelte:fragment slot="panel">
       {#if tabSet === 0}
-        <ImageGeneratorDalle3 bind:busy={busy}/>
+        <ImageGeneratorDalle3 bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
       {:else if tabSet === 1}
-        <ImageGeneratorStableDiffusion bind:busy={busy}/>
+        <ImageGeneratorStableDiffusion bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
       {/if}
     </svelte:fragment>
   </TabGroup>  

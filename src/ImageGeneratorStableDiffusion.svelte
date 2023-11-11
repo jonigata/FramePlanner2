@@ -1,21 +1,22 @@
 <script lang="ts">
-  import { imageGeneratorOpen, imageGeneratorPrompt, imageGeneratorGallery, imageGeneratorChosen } from "./imageGeneratorStore";
+  import { imageGeneratorTarget } from "./imageGeneratorStore";
   import { generateImages, getProgression } from "./sdwebui";
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
   import SliderEdit from './SliderEdit.svelte';
   import KeyValueStorage from "./KeyValueStorage.svelte";
-  import { tick, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeWhiteImage } from "./imageUtil";
   import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
 
   export let busy: boolean;
+  export let prompt: string;
+  export let gallery: HTMLImageElement[];
+  export let chosen: HTMLImageElement;
 
   let url: string = "http://localhost:7860";
-  let images: HTMLImageElement[] = [];
   let imageRequest = {
-     "positive": "1 cat",
      "negative": "EasyNegative",
      "width": 512,
      "height": 512,
@@ -28,21 +29,12 @@
   let keyValueStorage: KeyValueStorage = null;
   let refered: HTMLImageElement = null;
 
-  $: imageRequest.positive = $imageGeneratorPrompt;
-  $: onChangeGallery($imageGeneratorGallery);
-  async function onChangeGallery(gallery: HTMLImageElement[]) {
-    if (gallery) {
-      images = [];
-      await tick(); // HACK: なんかこうしないとHTMLが更新されない
-      images = gallery;
-    }
-  }
-
   async function generate() {
+    await keyValueStorage.set("imageRequest", JSON.stringify(imageRequest));
+    await keyValueStorage.set("url", url);
+
     let f = null;
     f = async () => {
-      await keyValueStorage.set("imageRequest", JSON.stringify(imageRequest));
-      await keyValueStorage.set("url", url);
       const data = await getProgression(url);
       if (busy) {
         progress = data.progress;
@@ -50,21 +42,15 @@
 
       // getProgression呼び出しが1秒を超えると嫌なので
       // setIntervalは使わない
-      setTimeout(
-        () => {
-          if (busy) {
-            f();
-          }
-        },
-        1000);
+      setTimeout(() => {if (busy) {f();}},1000);
     };
 
     busy = true;
     f();
     try {
-      const newImages = await generateImages(url, imageRequest);
-      images.splice(images.length, 0, ...newImages);
-      images = images;
+      const newImages = await generateImages(url, { ...imageRequest, positive: prompt });
+      gallery.splice(gallery.length, 0, ...newImages);
+      gallery = gallery;
       progress = 1;
     } catch (e) {
       console.log(e);
@@ -75,9 +61,7 @@
   }
 
   function onChooseImage({detail}) {
-    console.log("chooseImage", detail);
-    $imageGeneratorChosen = detail;
-    $imageGeneratorOpen = false;
+    chosen = detail;
   }
 
   onMount(async () => {
@@ -91,8 +75,8 @@
 
   async function generateWhiteImage() {
     const img = await makeWhiteImage(imageRequest.width, imageRequest.height);
-    images.push(img);
-    images = images;
+    gallery.push(img);
+    gallery = gallery;
   }
 
   async function scribble() {
@@ -139,8 +123,8 @@
 
       const req = { ...imageRequest, alwayson_scripts };
       const newImages = await generateImages(url, req);
-      images.splice(images.length, 0, ...newImages);
-      images = images;
+      gallery.splice(gallery.length, 0, ...newImages);
+      gallery = gallery;
       progress = 1;
     } catch (e) {
       console.log(e);
@@ -157,7 +141,7 @@
   <p>URL</p>
   <input style="width: 100%;" bind:value={url}/>
   <p>prompt</p>
-  <textarea bind:value={imageRequest.positive}/>
+  <textarea bind:value={prompt}/>
   <p>negative prompt</p>
   <textarea bind:value={imageRequest.negative}/>
 
@@ -193,7 +177,7 @@
   </div>
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:images={images} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:images={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <KeyValueStorage bind:this={keyValueStorage} dbName={"stable-diffusion"} storeName={"default-parameters"}/>

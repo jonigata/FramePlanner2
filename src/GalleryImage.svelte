@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { imageGeneratorOpen } from "./imageGeneratorStore";
+  import { imageGeneratorTarget } from "./imageGeneratorStore";
   import drop from './assets/drop.png';
   import reference from './assets/reference.png';
   import referenceSelected from './assets/reference-selected.png';
@@ -40,8 +40,8 @@
   }
 
   onMount(() => {
-    console.log("change image size", image.width, image.height, $imageGeneratorOpen);
-    if ($imageGeneratorOpen) {
+    console.log("change image size", image.width, image.height, $imageGeneratorTarget);
+    if ($imageGeneratorTarget) {
       image.width = width;
       image.height = getHeight();
     }

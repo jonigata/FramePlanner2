@@ -162,7 +162,7 @@ export class WeaverNode {
 
 export const weaverRefreshToken = writable(false);
 
-export function createPage(source: any, imagePromptPrefix: string) {
+export function createPage(source: any, imagePromptPrefix: string): Page {
   const page = newPage("ai-", 2);
   const n = source.scenes.length;
   page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ

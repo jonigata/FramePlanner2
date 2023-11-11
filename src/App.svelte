@@ -25,7 +25,7 @@
   import Waiting from './Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './BatchImaging.svelte';
-
+  
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
       ref: Comic,
@@ -72,7 +72,6 @@
   <PassiveToolTip />
   <NewFileButton  />
   <CabinetButton />
-  <!-- <canvas id="tmpCanvas" style="position:absolute;"> </canvas> -->
 </div>
 
 <BubbleInspector/>

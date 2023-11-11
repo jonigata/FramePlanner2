@@ -13,6 +13,9 @@
   import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
   import type { FirebaseFileSystem } from './lib/filesystem/firebaseFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { getAnalytics, logEvent } from "firebase/analytics";
+  import { parse as JSONCParse } from 'jsonc-parser';
+  import { createPage } from './weaver/weaverStore';
 
   export let fileSystem: FileSystem;
 
@@ -65,6 +68,7 @@
         $mainPage = newPage;
         $fileManagerRefreshKey++;
         await recordCurrentFileId(file.id);
+        logEvent(getAnalytics(), 'new_page');
       }
 
       modalStore.close();
@@ -79,18 +83,31 @@
 
   async function loadSharedPage(): Promise<Page> {
     const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('user') && urlParams.get('key')) {
-        const user = urlParams.get('user');
-        const key = urlParams.get('key');
-        console.log("user:key = ", user, key);
+    console.log("URLParams", urlParams);
+    if (urlParams.has('user') && urlParams.get('key')) {
+      const user = urlParams.get('user');
+      const key = urlParams.get('key');
+      console.log("user:key = ", user, key);
 
-        const fileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
-        const file = await fileSystem.getNode(key as NodeId);
-        const page = await loadPageFrom(fileSystem, file.asFile());
-        return page;
-      }
-      return null;
+      const fileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
+      const file = await fileSystem.getNode(key as NodeId);
+      const page = await loadPageFrom(fileSystem, file.asFile());
+      return page;
     }
+    /*
+    if (urlParams.has('build')) {
+      const build = urlParams.get('build');
+      // buildはbase64エンコードされたjson stringなので解凍
+      const jsonString = base64decode(build);
+      console.log(jsonString);
+      const jsonObject = JSONCParse(jsonString)
+      console.log(jsonObject);
+      const page = createPage(jsonObject.pages[0], '');
+      return page;
+    }
+    */
+    return null;
+  }
 
   $:onNewFileRequest($newFileToken);
   async function onNewFileRequest(page: Page) {

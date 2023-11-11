@@ -4,9 +4,8 @@
   import { saveToken, clipboardToken, redrawToken, scale } from './paperStore';
   import { undoStore, commitIfDirtyToken, commitToken } from './undoStore';
   import { type Page, mainPage, revisionEqual } from './pageStore';
-  import { frameImageGeneratorTarget } from "./frameImageGeneratorStore";
   import PainterToolBox from './PainterToolBox.svelte';
-  import { imageGeneratorChosen, imageGeneratorOpen, imageGeneratorPrompt, imageGeneratorGallery } from './imageGeneratorStore';
+  import { imageGeneratorTarget } from './imageGeneratorStore';
 
   let paper: Paper;
   let page = $mainPage;
@@ -51,7 +50,7 @@
   }
 
   function onGenerate(e: CustomEvent) {
-    $frameImageGeneratorTarget = e.detail;
+    $imageGeneratorTarget = e.detail;
   }
 
   function onScribbleDone() {
@@ -84,27 +83,30 @@
     page = p;
   }
 
-  frameImageGeneratorTarget.subscribe(
+  let targetFrameElement = null;
+  let oldPrompt = '';
+  let oldImage = null;
+  imageGeneratorTarget.subscribe(
     (target) => {
-      if (target) {
-        imageGeneratorPrompt.set(target.prompt);
-        imageGeneratorGallery.set(target.gallery);
-        imageGeneratorOpen.set(true);
-      }
-    });
-
-  imageGeneratorChosen.subscribe(
-    (chosen) => {
-      if (chosen) {
-        imageGeneratorOpen.set(false);
-        imageGeneratorChosen.set(null);
-        $frameImageGeneratorTarget.image = chosen;
-        paper.constraintElement($frameImageGeneratorTarget, true);
-        paper.commit(null);
+      console.log("imageGeneratorTarget", target, targetFrameElement);
+      if (target && !targetFrameElement) {
+        targetFrameElement = target;
+        oldPrompt = targetFrameElement.positive;
+        oldImage = targetFrameElement.image;
+      } else if (targetFrameElement) {
+        if (targetFrameElement.image !== oldImage) {
+          console.log("image changed");
+          paper.constraintElement(targetFrameElement, true);
+        }
+        if (targetFrameElement.positive !== oldPrompt ||
+            targetFrameElement.image !== oldImage) {
+          console.log("imageGeneration commit");
+          paper.commit(null);
+        }
+        targetFrameElement = null;
         $redrawToken = true;
       }
     });
-
 
   onMount(() => {
     $undoStore = paper;
