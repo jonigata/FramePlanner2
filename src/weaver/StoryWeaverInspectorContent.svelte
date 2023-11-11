@@ -3,8 +3,9 @@
   import { getContext, createEventDispatcher } from 'svelte';
   import DOMPurify from 'dompurify';
   import StoryWeaverInspectorArg from './StoryWeaverInspectorArg.svelte';
-  import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import { ProgressRadial, toastStore } from '@skeletonlabs/skeleton';
   import '../box.css';
+  import copyIcon from '../assets/clipboard.png';
 
   const dispatch = createEventDispatcher();
 
@@ -36,6 +37,11 @@
   function onArgChanged(e: CustomEvent) {
     refresh();
     $weaverRefreshToken = true;
+  }
+
+  function copyResult() {
+    navigator.clipboard.writeText(result);
+    toastStore.trigger({ message: `コピーしました`, timeout: 3000});
   }
 
   const apply = getContext('apply') as (n: WeaverNode)=>void;
@@ -84,6 +90,9 @@
     {#if result}
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="result" on:mousedown={stopPropagation} on:mousemove={stopPropagation} on:mouseup={stopPropagation}>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <img class="copy-button" src={copyIcon} alt="copy" on:click={copyResult}/>
         {result}
       </div>
     {/if}
@@ -153,6 +162,16 @@
     white-space: pre-line;
     user-select: text !important;
     cursor: text;
+    position: relative;
+  }
+  .copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
   }
   .waiting {
     width: 100%;
