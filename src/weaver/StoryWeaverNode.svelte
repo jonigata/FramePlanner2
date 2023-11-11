@@ -26,6 +26,7 @@
     position={Position.Top}
     isConnectable={isInputConnectable}
     class={weaverNodeInputType[model.type]}
+    style="z-index: 1000;"
     on:connectstart on:connect on:connectend
   />
   <!-- on:xxx はbubbling -->
@@ -42,6 +43,7 @@
     position={Position.Bottom}
     isConnectable={isOutputConnectable}
     class={weaverNodeOutputType[model.type]}
+    style="z-index: 1000;"
     on:connectstart on:connect on:connectend
   />
   <!-- on:xxx はbubbling -->
