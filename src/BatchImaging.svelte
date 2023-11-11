@@ -10,6 +10,7 @@
   import KeyValueStorage from "./KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { redrawToken } from './paperStore';
+  import { commitToken } from './undoStore';
 
   let totalCount = 1;
   let filledCount = 0;
@@ -85,6 +86,7 @@
     busy = false;
     updateImageInfo();
     $redrawToken = true;
+    $commitToken = true;
   }
 
   onMount(async () => {
