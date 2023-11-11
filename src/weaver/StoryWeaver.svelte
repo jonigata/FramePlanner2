@@ -31,52 +31,61 @@
     buttonedge: ButtonEdge,
   };
 
-  const rawNodes = [];
-  for (let [key, value] of Object.entries(models)) {
-    rawNodes.push({
-      id: key,
-      type: 'storyWeaverNode',
-      data: { model: value },
-      position: value.initialPosition,
-      deletable: false,
-    });
-  }
-  rawNodes.push({
-      id: 'inspector',
-      type: 'inspector',
-      data: { model: $selected },
-      hidden: false,
-      position: { x:380, y:325 },
-      dragHandle: '.drag-handle',
-    });
-
-  const nodes = writable(rawNodes);
- 
-  // same for edges
-  const rawEdges: Edge[] = [];
-  for (let [key, value] of Object.entries(models)) {
-    for (let anchor of value.extractors) {
-      if (anchor.opposite == null) { continue; } 
-      rawEdges.push({
-        id: `${key}-${anchor.opposite.node.id}`,
-        type: 'buttonedge',
-        source: key,
-        sourceHandle: anchor.id,
-        target: anchor.opposite.node.id,
-        targetHandle: anchor.opposite.id,
+  function buildRawNodes() {
+    const rawNodes = [];
+    for (let [key, value] of Object.entries(models)) {
+      rawNodes.push({
+        id: key,
+        type: 'storyWeaverNode',
+        data: { model: value },
+        position: value.initialPosition,
+        deletable: false,
       });
     }
+    rawNodes.push({
+        id: 'inspector',
+        type: 'inspector',
+        data: { model: $selected },
+        hidden: false,
+        position: { x:380, y:325 },
+        dragHandle: '.drag-handle',
+      });
+    return rawNodes;
   }
-  console.log(rawEdges);
-  const edges = writable(rawEdges);
+
+  const nodes = writable(buildRawNodes());
+ 
+  function buildRawEdges() {
+    const rawEdges: Edge[] = [];
+    for (let [key, value] of Object.entries(models)) {
+      for (let anchor of value.extractors) {
+        if (anchor.opposite == null) { continue; } 
+        rawEdges.push({
+          id: `${key}-${anchor.opposite.node.id}`,
+          type: 'buttonedge',
+          source: key,
+          sourceHandle: anchor.id,
+          target: anchor.opposite.node.id,
+          targetHandle: anchor.opposite.id,
+        });
+      }
+    }
+    return rawEdges;
+  }
+
+  const edges = writable(buildRawEdges());
+
+  function findEdge(sourceHandleId: string, targetHandleId: string) {
+    return $edges.find((e) => e.sourceHandle === sourceHandleId && e.targetHandle === targetHandleId);
+  }
 
   setContext('selected', selected);
 
   function disconnect(id: string, sourceHandleId: string, targetHandleId: string) {
-    const edge = $edges.find((e) => e.id === id);
+    const edge = findEdge(sourceHandleId, targetHandleId);
     const sourceModel: WeaverNode = models[edge.source];
     sourceModel.disconnect(sourceHandleId);
-    edges.update((es) => es.filter((e) => e.id !== id));    
+    $edges = buildRawEdges();
     refresh();
   }
   setContext('disconnect', disconnect);
@@ -160,7 +169,9 @@
     const { source, target, sourceHandle, targetHandle } = connection;
     const sourceModel: WeaverNode = models[source];
     const targetModel: WeaverNode = models[target];
+    targetModel.disconnect(targetHandle);
     sourceModel.connect(sourceHandle, targetModel.getAnchor(targetHandle));
+    $edges = buildRawEdges();
     await refresh();
   }
 

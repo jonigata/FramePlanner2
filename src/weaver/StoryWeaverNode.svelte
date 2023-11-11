@@ -14,9 +14,10 @@
   let isOutputConnectable = isConnectable;
 
   const edges = useEdges();
-
+/*
   $: isInputConnectable = $edges.filter((edge) => edge.target === id).length < 1;
   $: isOutputConnectable = $edges.filter((edge) => edge.source === id).length < 1;
+*/
 </script>
 
 {#each model.injectors as injector}

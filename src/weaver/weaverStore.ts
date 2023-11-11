@@ -127,6 +127,7 @@ export class WeaverNode {
   disconnect(thisAnchorId: string) {
     console.log('disconnect');
     const thisAnchor = this.getAnchor(thisAnchorId);
+    if (!thisAnchor.opposite) { return; }
     thisAnchor.opposite.opposite = null;
     thisAnchor.opposite = null;
   }
