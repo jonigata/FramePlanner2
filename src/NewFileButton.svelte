@@ -4,8 +4,31 @@
   import { newPage, newImagePage } from "./pageStore";
   import { toolTip } from './passiveToolTipStore';
 
-  async function createNewFile() {
-    $newFileToken = newPage("shortcut-", 0);
+  async function createNewFile(e: MouseEvent) {
+    if (e.ctrlKey) {
+      const items = await navigator.clipboard.read();
+      for (let item of items) {
+        for (let type of item.types) {
+          console.log(type);
+          if (type.startsWith("image/")) {
+            const blob = await item.getType(type);
+            const imageURL = URL.createObjectURL(blob);
+            const image = new Image();
+
+            const imageLoaded = new Promise((resolve) => image.onload = resolve);          
+            image.src = imageURL;
+            await imageLoaded;
+            URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
+
+            const page = newImagePage(image, "paste-")
+            $newFileToken = page;
+            return;
+          }
+        }
+      }
+    } else {
+      $newFileToken = newPage("shortcut-", 0);
+    }
   }
 
   function onDragOver(ev: DragEvent) {
@@ -41,7 +64,7 @@
   on:click={createNewFile}
   on:dragover={onDragOver}
   on:drop={onDrop}
-  use:toolTip={`新規ページ\n画像ドロップで一枚絵ページ`}>
+  use:toolTip={`新規ページ\n画像ドロップで一枚絵ページ\nCtrl+クリックで画像ペースト`}>
   <img src={newFileIcon} alt="file manager"/>
 </button>
 
