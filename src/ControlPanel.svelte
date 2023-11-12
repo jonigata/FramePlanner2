@@ -4,7 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
   import './box.css';
-  import { type Page, incrementRevision, mainPage, commitPage } from './pageStore';
+  import { type Page, incrementRevision, mainPage, commitPage, newImagePage } from './pageStore';
   import { saveToken, clipboardToken, scale } from './paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
@@ -21,7 +21,7 @@
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
-  import { newFileToken, newImagePage, sharePageToken } from './fileManagerStore';
+  import { newFileToken, sharePageToken } from './fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { batchImagingOpen } from './batchImagingStore';
