@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { type Page, newPage } from "../pageStore";
+import { type Page, newPage, commitPage } from "../pageStore";
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from '../lib/layeredCanvas/frameTree.js';
 import { Bubble } from '../lib/layeredCanvas/bubble';
 import { measureVerticalText } from '../lib/layeredCanvas/verticalText';
@@ -167,6 +167,7 @@ export function createPage(source: any, imagePromptPrefix: string): Page {
   const n = source.scenes.length;
   page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
   pourScenario(page, source, imagePromptPrefix);
+  commitPage(page, page.frameTree, page.bubbles, null);
   return page;
 }
 
