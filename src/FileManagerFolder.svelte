@@ -2,7 +2,8 @@
   import type { FileSystem, Folder, NodeId, BindId, Node } from "./lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, newPage, type Dragging, getCurrentDateTime } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime } from "./fileManagerStore";
+  import { newPage } from "./pageStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "./RenameEdit.svelte";

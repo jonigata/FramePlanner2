@@ -180,30 +180,6 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperS
   return unpackedBubbles;
 }
 
-export function newPage(prefix: string, index: number = 2) {
-  const page: Page = {
-    frameTree: FrameElement.compile(frameExamples[index]),
-    bubbles:[], 
-    revision: {id: "new page", revision:1, prefix }, 
-    paperSize: [840, 1188],
-    paperColor: '#ffffff',
-    frameColor: '#000000',
-    frameWidth: 2,
-    desktopPosition: [0, 0],
-    history: [],
-    historyIndex: 0,
-  }
-  return page;
-}
-
-export function newImagePage(image: HTMLImageElement, prefix: string): Page {
-  const page = newPage(prefix, 2)
-  page.paperSize = [image.naturalWidth, image.naturalHeight];
-  console.log(page.frameTree);
-  page.frameTree.children[0].image = image;
-  return page;
-}
-
 export async function newFile(fs: FileSystem, folder: Folder, name: string, page: Page): Promise<{file: File, bindId: BindId}> {
   const file = await fs.createFile();
   page.revision.id = file.id;

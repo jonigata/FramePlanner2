@@ -121,6 +121,7 @@
     bubbleSnapshot = $bubble ? JSON.stringify(Bubble.decompile(page.paperSize, $bubble)) : null;
     pageRevision = newPage.revision;
     page = newPage;
+    console.log([...page.history], page.historyIndex)
   }
 
   export function commitIfDirty() {

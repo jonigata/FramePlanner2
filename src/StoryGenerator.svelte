@@ -3,8 +3,8 @@
   import NumberEdit from './NumberEdit.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
-  import type { Page } from './pageStore';
-  import { newPage, newBookToken } from "./fileManagerStore";
+  import { type Page, newPage } from './pageStore';
+  import { newBookToken } from "./fileManagerStore";
   import { aiTemplates } from './lib/layeredCanvas/frameExamples';
   import { Bubble } from './lib/layeredCanvas/bubble';
   import { measureVerticalText } from './lib/layeredCanvas/verticalText';

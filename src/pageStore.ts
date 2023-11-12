@@ -113,3 +113,33 @@ export function revertPage(page: Page) {
   setRevision(newPage, pageRevision);
   return newPage;
 }
+
+function newPageAux(frameTree: FrameElement, prefix: string, index: number) {
+  const page: Page = {
+    revision: {id: "new page", revision:1, prefix },
+    frameTree,
+    bubbles:[], 
+    paperSize: [840, 1188],
+    paperColor: '#ffffff',
+    frameColor: '#000000',
+    frameWidth: 2,
+    desktopPosition: [0, 0],
+    history: [{frameTree: frameTree.clone(), bubbles:[], tag: null}],
+    historyIndex: 1,
+  }
+  return page;
+}
+
+export function newPage(prefix: string, index: number = 2) {
+  const frameTree = FrameElement.compile(frameExamples[index]);
+  return newPageAux(frameTree, prefix, index);
+}
+
+export function newImagePage(image: HTMLImageElement, prefix: string): Page {
+  const frameTree = FrameElement.compile(frameExamples[2]);
+  frameTree.children[0].image = image;
+  const page = newPageAux(frameTree, prefix, 2)
+  page.paperSize = [image.naturalWidth, image.naturalHeight];
+  return page;
+}
+

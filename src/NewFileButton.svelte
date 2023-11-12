@@ -1,6 +1,7 @@
 <script lang="ts">
   import newFileIcon from './assets/new-file.png';
-  import { newPage, newImagePage, newFileToken } from "./fileManagerStore";
+  import { newFileToken } from "./fileManagerStore";
+  import { newPage, newImagePage } from "./pageStore";
   import { toolTip } from './passiveToolTipStore';
 
   async function createNewFile() {

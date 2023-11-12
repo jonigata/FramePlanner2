@@ -2,7 +2,7 @@
   import Drawer from './Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, sharePageToken } from "./fileManagerStore";
-  import type { FileSystem, NodeId, File } from './lib/filesystem/fileSystem';
+  import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
   import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
   import { onMount } from 'svelte';
   import type { Revision } from "./pageStore";
@@ -14,8 +14,6 @@
   import type { FirebaseFileSystem } from './lib/filesystem/firebaseFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { parse as JSONCParse } from 'jsonc-parser';
-  import { createPage } from './weaver/weaverStore';
 
   export let fileSystem: FileSystem;
 
@@ -112,7 +110,7 @@
   $:onNewFileRequest($newFileToken);
   async function onNewFileRequest(page: Page) {
     if (page) {
-      console.log("onNewFileRequest");
+      console.log("onNewFileRequest", page);
       $newFileToken = null;
       const root = await fileSystem.getRoot();
       const desktop = await root.getNodeByName("デスクトップ");

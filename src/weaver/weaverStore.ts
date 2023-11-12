@@ -1,6 +1,5 @@
 import { writable } from "svelte/store";
-import { newPage } from "../fileManagerStore";
-import type { Page } from "../pageStore";
+import { type Page, newPage } from "../pageStore";
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from '../lib/layeredCanvas/frameTree.js';
 import { Bubble } from '../lib/layeredCanvas/bubble';
 import { measureVerticalText } from '../lib/layeredCanvas/verticalText';
