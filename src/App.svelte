@@ -15,7 +15,6 @@
   import Comic from './Comic.svelte'; 
   import Painter from './Painter.svelte';
   import License from './License.svelte';
-  import StoryGenerator from './StoryGenerator.svelte';
   import FontChooser from './FontChooser.svelte';
   import ShapeChooser from './ShapeChooser.svelte';
   import ImageGenerator from './ImageGenerator.svelte';
@@ -35,9 +34,6 @@
     },
     license: {
       ref: License,
-    },
-    storyGenerator: {
-      ref: StoryGenerator,
     },
     waiting: {
       ref: Waiting,

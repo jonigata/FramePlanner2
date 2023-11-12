@@ -125,7 +125,7 @@ const aiDrafterDefaultPrompt =
 
 考えた内容以外の情報は出力しないでください。`;
 
-  const aiStoryboarderDefaultPrompt = 
+const aiStoryboarderDefaultPrompt = 
 `# Task description
 
 後述の「Input Story」をJSONにフォーマットしてください。
@@ -135,13 +135,12 @@ const aiDrafterDefaultPrompt =
 
 出力はJSONだけとし、それ以外の文言を含むことは許されません。
 セリフは10文字前後にし、適切に改行コード(\\n)を入れて一行5文字以下にしてください。
-キャラクター設定時に各キャラクターの容姿をある程度詳細に設定してください。
+キャラクター設定時に各キャラクターの容姿(appearance)をある程度詳細に設定してください。
 
-"imagePrompt"では、以下のルールを守ってください。
+"composition"では、以下のルールを守ってください。
 - 画像生成AIにわたすプロンプトを想定する
 - 詳細な視覚的情景を記述する。
 - セリフを決して含めない。
-- なるべく詳細にしてください。
 - キャラクターはキャラクター設定で設定した視覚的属性に置き換える。
 
 # Example 
@@ -149,37 +148,37 @@ const aiDrafterDefaultPrompt =
 ※これは例なので、形式だけを参考にし、内容は完全に無視してください。
 
 {
-  "characters": {
-    "Mia": "girl",
-    "Mom": "woman",
-    "Dad": "man"
-  },
+  "characters": [
+    { "name": "Mia", "appearance": "Modern girl in casual attire, with short wavy hair, wearing headphones, holding a smartphone" },
+    { "name": "Mom", "appearance": "Contemporary woman, long straight hair, wearing a blazer, carrying a tote bag" },
+    { "name": "Dad", "appearance": "Modern man, short curly hair, sporting a smart casual look, with a laptop bag" },
+  ],
   "pages": [
     {
       "scenes": [
         {
-          "imagePrompt": "The mood is tense in the household. Mom looks worried and Dad is calming her down.",
+          "composition": "In a dim living room, a contemporary woman with long straight hair in a blazer looks worried. Beside her, a modern man with short curly hair gently holds her arm, offering comfort.",
           "bubbles": [
-            ["Mom", "ああ、だめだわ。\\nケーキの材料が足りないわ。"],
-            ["Dad", "大丈夫だよ、\\n何とかなるさ。"]
+            { "owner": "Mom", "speech": "ああ、だめだわ。\\nケーキの材料が足りないわ。"},
+            { "owner": "Dad", "speech": "大丈夫だよ、\\n何とかなるさ。"}
           ]
         },
         {
-          "imagePrompt": "Mia enters the living room with her hands behind her back.",
+          "composition": "A modern girl with short wavy hair and headphones walks into the living room, something hidden behind her back.",
           "bubbles": [
-            ["Mia", "ヘイ、\\n何が問題なの？"]
+            { "owner": "Mia", "speech": "ヘイ、\\n何が問題なの？"}
           ]
         },
         {
-          "imagePrompt": "Mom sighs and tells Mia their problem.",
+          "composition": "The contemporary woman with long straight hair faces the modern girl, revealing a troubling situation.",
           "bubbles": [
-            ["Mom", "お父さんの誕生日ケーキを\\n作ろうと思ったのに、\\n力が足りないのよ。"],
+            { "owner": "Mom", "speech": "お父さんの誕生日ケーキを\\n作ろうと思ったのに、\\n力が足りないのよ。"},
           ]
         },
         {
-          "imagePrompt": "Mia unveils what she was hiding behind her back -- a box full of cake ingredients.",
+          "composition": "The modern girl reveals a box full of cake-making ingredients, her eyes filled with hope.",
           "bubbles": [
-            ["Mia", "どうぞ！\\n学校から帰る途中で\\nパン屋さんで買ったんだよ。"]
+            { "owner": "Mia", "speech": "どうぞ！\\n学校から帰る途中で\\nパン屋さんで買ったんだよ。" }
           ]
         }
       ]
@@ -187,23 +186,23 @@ const aiDrafterDefaultPrompt =
     {
       "scenes": [
         {
-          "imagePrompt": "Everyone in the room is surprised and Mom is relieved.",
+          "composition": "Surprise appears on the faces of the contemporary woman and the modern man in the room, the woman showing relief.",
           "bubbles": [
-            ["Mom", "ありがとう、ミア。\\n本当に助かったわ。"],
-            ["Dad", "さすがミア！"]
+            { "owner": "Mom", "speech": "ありがとう、ミア。\\n本当に助かったわ。"},
+            { "owner": "Dad", "speech": "さすがミア！"}
           ]
         },
         {
-          "imagePrompt": "Mia smiles and starts gathering the ingredients.",
+          "composition": "The modern girl with short wavy hair smiles brightly, organizing cake ingredients on the table.",
           "bubbles": [
-            ["Mia", "一緒に作ろうよ、\\nお母さん！"]
+            { "owner": "Mia", "speech": "一緒に作ろうよ、\\nお母さん！"}
           ]
         },
         {
-          "imagePrompt": "Mom nods and they start making the cake together. Dad watches them with a smile on his face.",
+          "composition": "The contemporary woman nods in approval, and they start making the cake together, while the modern man watches with a smile.",
           "bubbles": [
-            ["Dad", "良い一日だ。"],
-            ["Mom", "本当にそうね。"]
+            { "owner": "Dad", "speech": "いい一日だ。" },
+            { "owner": "Mom", "speech": "本当にそうね。" }
           ]
         }
       ]

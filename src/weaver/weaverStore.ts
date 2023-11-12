@@ -4,6 +4,7 @@ import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, mak
 import { Bubble } from '../lib/layeredCanvas/bubble';
 import { measureVerticalText } from '../lib/layeredCanvas/verticalText';
 import { aiTemplates } from '../lib/layeredCanvas/frameExamples';
+import type * as Storyboard from './storyboard';
 
 // drafter: 原案を出力する 引数：お題
 // storyboarder: 原案を入力としてネームを出力する 引数：ページ数、ページあたりのコマ数
@@ -162,7 +163,7 @@ export class WeaverNode {
 
 export const weaverRefreshToken = writable(false);
 
-export function createPage(source: any, imagePromptPrefix: string): Page {
+export function createPage(source: Storyboard.Page, imagePromptPrefix: string): Page {
   const page = newPage("ai-", 2);
   const n = source.scenes.length;
   page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
@@ -171,21 +172,21 @@ export function createPage(source: any, imagePromptPrefix: string): Page {
   return page;
 }
 
-function pourScenario(page: Page, s: any, imagePromptPrefix: string) { // TODO: 型が雑
+function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string) { // TODO: 型が雑
   const paperLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   console.log(page.frameTree);
   const leaves = collectLeaves(page.frameTree);
-  s.scenes.forEach((scene: any, index: number) => {
+  s.scenes.forEach((scene: Storyboard.Scene, index: number) => {
     const leaf = leaves[index];
-    leaf.prompt = `${imagePromptPrefix} ${scene.imagePrompt}`;
+    leaf.prompt = `${imagePromptPrefix} ${scene.composition}`;
 
     const layout = findLayoutOf(paperLayout, leaf);
     const r = makeTrapezoidRect(layout.corners);
     const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
     const n = scene.bubbles.length;
-    scene.bubbles.forEach((b:any, i:number) => {
+    scene.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
       const bubble = new Bubble();
-      bubble.text = b[1];
+      bubble.text = b.speech
       bubble.initOptions();
       const cc = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
       bubble.move(cc);
@@ -205,7 +206,7 @@ function calculateFitBubbleSize(bubble: Bubble) {
   bubble.forceEnoughSize();
 }
 
-type NodePack = {
+export type NodePack = {
   id: string,
   data: any,
   args: {name: string, value: any}[]
