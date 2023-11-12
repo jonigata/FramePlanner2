@@ -14,6 +14,8 @@
   import type { FirebaseFileSystem } from './lib/filesystem/firebaseFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
+  import { getLayover } from "./firebase";
+  import { createPage } from './weaver/weaverStore';
 
   export let fileSystem: FileSystem;
 
@@ -92,18 +94,14 @@
       const page = await loadPageFrom(fileSystem, file.asFile());
       return page;
     }
-    /*
     if (urlParams.has('build')) {
       const build = urlParams.get('build');
-      // buildはbase64エンコードされたjson stringなので解凍
-      const jsonString = base64decode(build);
-      console.log(jsonString);
-      const jsonObject = JSONCParse(jsonString)
-      console.log(jsonObject);
-      const page = createPage(jsonObject.pages[0], '');
+      const storyboard = await getLayover(build);
+
+      console.log(storyboard.pages[0]);
+      const page = createPage(storyboard.pages[0], '');
       return page;
     }
-    */
     return null;
   }
 

@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
+import type * as Storyboard from "./weaver/storyboard";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
@@ -51,6 +52,16 @@ export async function shareTemplate(doc) {
 export async function loadTemplate(key) {
   const database = getDatabase(app);
   const docRef = ref(database, `shares/${key}`);
+  const snapshot = await get(docRef);
+  return snapshot.val();
+}
+
+export async function getLayover(key: string): Promise<Storyboard.Storyboard> {
+  const auth = getAuth(app);
+  await signInAnonymously(auth);
+
+  const database = getDatabase(app);
+  const docRef = ref(database, `layover/${key}/data`);
   const snapshot = await get(docRef);
   return snapshot.val();
 }

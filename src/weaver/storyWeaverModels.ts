@@ -93,12 +93,12 @@ export function buildStoryWeaverGraph() {
     'generator', 'pageGenerator', "レイアウト生成",
     [new WeaverAnchor('stdin','storyboard')], [], 
     async (m) => {
-      const storyBoard = JSONCParse(m.getInput(0));
+      const storyboard = JSONCParse(m.getInput(0));
 
       const book = { title: 'AI作成', pages: [] };
-      for (let i = 0; i < storyBoard.pages.length; i++) {
-        console.log(storyBoard.pages[i]);
-        const page = createPage(storyBoard.pages[i], m.args[0].value);
+      for (let i = 0; i < storyboard.pages.length; i++) {
+        console.log(storyboard.pages[i]);
+        const page = createPage(storyboard.pages[i], m.args[0].value);
         book.pages.push(page);
       }
       newBookToken.set(book);
