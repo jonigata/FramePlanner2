@@ -186,7 +186,7 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
     const n = scene.bubbles.length;
     scene.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
       const bubble = new Bubble();
-      bubble.text = b.speech
+      bubble.text = b.speech.replace(/\\n/g, '\n');
       bubble.initOptions();
       const cc = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
       bubble.move(cc);
