@@ -58,6 +58,7 @@
       img.src = "data:image/png;base64," + imageJson;
 
       frame.image = img;
+      frame.gallery.push(img);
     } catch (e) {
       console.log(e);
       toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
