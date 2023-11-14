@@ -4,6 +4,7 @@ import * as paper from 'paper';
 import { debumpPointsAroundIndex, tailCoordToWorldCoord, jitterDistances } from "./bubbleGeometry.js";
 import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D } from "./geometry.js";
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "./bubbleGeometry.js";
+import { PaperOffset } from 'paperjs-offset'
 
 export function drawBubble(context, seed, size, shape, opts) {
   seed = opts.randomSeed ?? 0;
@@ -132,16 +133,25 @@ function drawStrokesBubbleAux(context, seed, size, opts, double) {
   const points = cookedPoints.map((p) => [p.x, p.y]);
 
   if (context.bubbleDrawMethod == "fill" || context.bubbleDrawMethod == "clip") {
-    context.beginPath();
+    const path = new paper.Path();
     for (let i = 0; i < points.length; i++) {
       const p = points[i];
       if (i === 0) {
-        context.moveTo(p[0], p[1]);
+        path.moveTo(p);
       } else {
-        context.lineTo(p[0], p[1]);
+        path.lineTo(p);
       }
     }
-    finishTrivialPath(context);
+    path.closed = true;
+
+    if (context.bubbleDrawMethod === "fill") {
+      const expanded = PaperOffset.offset(path, context.shapeExpand);
+      const path2d = new Path2D(expanded.pathData);
+      context.fill(path2d);
+    } else { // clip
+      const path2d = new Path2D(path.pathData);
+      context.clip(path2d);
+    }
   } else {
     const color = context.strokeStyle;
     for (let i = 0; i < points.length; i++) {

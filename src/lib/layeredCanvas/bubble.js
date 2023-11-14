@@ -33,6 +33,7 @@ export class Bubble {
     this.strokeWidth = 3;
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
+    this.shapeExpand = 0;
     this.autoNewline = false;
   }
 
@@ -60,6 +61,7 @@ export class Bubble {
     b.strokeWidth = this.strokeWidth;
     b.outlineColor = this.outlineColor;
     b.outlineWidth = this.outlineWidth;
+    b.shapeExpand = this.shapeExpand;
     b.autoNewline = this.autoNewline;
     b.uuid = uuidv4();
     b.parent = null;
@@ -83,6 +85,7 @@ export class Bubble {
     this.strokeWidth = c.strokeWidth;
     this.outlineColor = c.outlineColor;
     this.outlineWidth = c.outlineWidth;
+    this.shapeExpand = c.shapeExpand;
     this.autoNewline = c.autoNewline;
     this.optionContext = {...c.optionContext};
   }
@@ -108,6 +111,7 @@ export class Bubble {
     b.strokeWidth = json.strokeWidth ?? 1;
     b.outlineColor = json.outlineColor ?? "#000000FF";
     b.outlineWidth = json.outlineWidth ?? 0;
+    b.shapeExpand = json.shapeExpand ?? 0;
     b.autoNewline = json.autoNewline ?? true;
     b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
@@ -136,6 +140,7 @@ export class Bubble {
       strokeWidth: b.strokeWidth == 1 ? undefined : b.strokeWidth,
       outlineColor: b.outlineColor == "#000000FF" ? undefined : b.outlineColor,
       outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
+      shapeExpand: b.shapeExpand == 0 ? undefined : b.shapeExpand,
       autoNewline: b.autoNewline ? undefined : b.autoNewline,
       uuid: b.uuid,
       parent: b.parent ? b.parent.uuid : undefined,

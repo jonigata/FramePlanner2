@@ -95,6 +95,7 @@
       return page;
     }
     if (urlParams.has('build')) {
+      logEvent(getAnalytics(), 'gpt-build');
       const build = urlParams.get('build');
       const storyboard = await getLayover(build);
 

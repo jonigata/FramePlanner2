@@ -4,6 +4,7 @@ import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawText, measureText } from "./drawText.js";
 import { reverse2D } from "./geometry.js";
+import { PaperOffset } from 'paperjs-offset'
 
 export class PaperRendererLayer extends Layer {
   constructor() {
@@ -229,9 +230,8 @@ export class PaperRendererLayer extends Layer {
     ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
     ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
     ctx.lineWidth = bubble.strokeWidth;
-
+    
     // shape背景描画
-    ctx.bubbleDrawMethod = 'fill'; // 行儀が悪い
     this.drawBubble(ctx, size, 'fill', bubble);
     this.drawBubble(ctx, size, 'clip', bubble);
 
@@ -279,12 +279,20 @@ export class PaperRendererLayer extends Layer {
   }
 
   drawBubble(ctx, size, method, bubble) {
+    function expandedPath() {
+      if (method === 'fill' && 0 < bubble.shapeExpand) {
+        return PaperOffset.offset(bubble.path, bubble.shapeExpand);
+      }
+      return bubble.path;
+    }
+
     ctx.bubbleDrawMethod = method; // 行儀が悪い
+    ctx.shapeExpand = bubble.shapeExpand; // 行儀が悪い
     if (bubble.unitedPath) {
-      drawPath(ctx, bubble.unitedPath);
+      drawPath(ctx, expandedPath());
     } else if (!bubble.parent) {
       if (bubble.path) {
-        drawPath(ctx, bubble.path);
+        drawPath(ctx, expandedPath());
       } else {
         drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
       }
