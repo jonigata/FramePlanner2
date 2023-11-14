@@ -279,20 +279,12 @@ export class PaperRendererLayer extends Layer {
   }
 
   drawBubble(ctx, size, method, bubble) {
-    function expandedPath() {
-      if (method === 'fill' && 0 < bubble.shapeExpand) {
-        return PaperOffset.offset(bubble.path, bubble.shapeExpand);
-      }
-      return bubble.path;
-    }
-
     ctx.bubbleDrawMethod = method; // 行儀が悪い
-    ctx.shapeExpand = bubble.shapeExpand; // 行儀が悪い
     if (bubble.unitedPath) {
-      drawPath(ctx, expandedPath());
+      drawPath(ctx, bubble.unitedPath, bubble.optionContext);
     } else if (!bubble.parent) {
       if (bubble.path) {
-        drawPath(ctx, expandedPath());
+        drawPath(ctx, bubble.path, bubble.optionContext);
       } else {
         drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
       }

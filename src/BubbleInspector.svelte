@@ -123,6 +123,9 @@
     </div>
 
     <div class="hbox gap-x-2 expand">
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{$bubble.fontFamily}</div>
       <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
           <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
@@ -130,21 +133,6 @@
         </RadioGroup>
       </div>
       <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
-      <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
-        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={$bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
-          <RadioItem bind:group={$bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
-        </RadioGroup>
-      </div> 
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
-    </div>
-
-    <div class="hbox gap-x-2 expand">
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{$bubble.fontFamily}</div>
     </div>
 
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
@@ -177,7 +165,7 @@
       </div>
     </div>
 
-    <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker gap-2" style="align-self: stretch;">
+    <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="hbox" use:toolTip={"フキダシ背景色"}>
         <div class="font-bold slider-label">fill</div>
         <ColorPicker bind:hex={$bubble.fillColor} label="" />
@@ -187,11 +175,17 @@
         <ColorPicker bind:hex={$bubble.strokeColor} label="" />
       </div>
       <div class="hbox" use:toolTip={"フキダシ枠の太さ"}>
-        W<RangeSlider name="line" bind:value={$bubble.strokeWidth} max={10} step={1} style="width:80px;"/>
+        <RangeSlider name="line" bind:value={$bubble.strokeWidth} max={10} step={1} style="width:100px;"/>
       </div>
-      <div class="hbox" use:toolTip={"はみだし"}>
-        E<RangeSlider name="line" bind:value={$bubble.shapeExpand} max={20} step={1} style="width:80px;"/>
-      </div>
+      <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
+        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+          <RadioItem bind:group={$bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
+          <RadioItem bind:group={$bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
+        </RadioGroup>
+      </div> 
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
     <BubbleInspectorAppendix/>
   </div>

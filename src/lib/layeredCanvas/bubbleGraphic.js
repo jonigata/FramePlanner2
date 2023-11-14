@@ -381,18 +381,23 @@ export function getPath(shape, size, opts, seed) {
   }
 }
 
-export function drawPath(context, unified) {
+export function drawPath(context, unified, opts) {
   context.beginPath();
-  const path = new Path2D(unified.pathData);
   switch(context.bubbleDrawMethod) {
     case 'fill':
-      context.fill(path);
+      if (opts?.shapeExpand && 0 < opts?.shapeExpand) {
+        let expansion = Math.min(unified.bounds.width, unified.bounds.height) * opts.shapeExpand;
+        let path = PaperOffset.offset(unified, expansion);
+        context.fill(new Path2D(path.pathData));
+      } else {
+        context.fill(new Path2D(unified.pathData));
+      }
       break;
     case 'stroke':
-      context.stroke(path);
+      context.stroke(new Path2D(unified.pathData));
       break;
     case 'clip':
-      context.clip(path);
+      context.clip(new Path2D(unified.pathData));
       break;
   }
 }
@@ -689,67 +694,67 @@ function getPolygonPath(size, opts, seed) {
 
 function drawEllipseBubble(context, seed, size, opts) {
   const path = getEllipsePath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawSquareBubble(context, seed, size, opts) {
   const path = getSquarePath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawPolygonBubble(context, seed, size, opts) {
   const path = getPolygonPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawRoundedBubble(context, seed, size, opts) {
   const path = getRoundedPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawHarshBubble(context, seed, size, opts) {
   const path = getHarshPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawShoutBubble(context, seed, size, opts) {
   const path = getShoutPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawSoftBubble(context, seed, size, opts) {
   const path = getSoftPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawHeartBubble(context, seed, size, opts) {
   const path = getHeartPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawDiamondBubble(context, seed, size, opts) {
   const path = getDiamondPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawArrowBubble(context, seed, size, opts) {
   const path = getArrowPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawEllipseMindBubble(context, seed, size, opts) {
   const path = getEllipseMindPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawSoftMindBubble(context, seed, size, opts) {
   const path = getSoftMindPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawRoundedMindBubble(context, seed, size, opts) {
   const path = getRoundedMindPath(size, opts, seed);
-  drawPath(context, path);
+  drawPath(context, path, opts);
 }
 
 function drawPoints(context, points, color) {

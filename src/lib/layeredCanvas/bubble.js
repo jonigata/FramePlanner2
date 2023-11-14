@@ -33,7 +33,6 @@ export class Bubble {
     this.strokeWidth = 3;
     this.outlineWidth = 0;
     this.outlineColor = "#000000FF";
-    this.shapeExpand = 0;
     this.autoNewline = false;
   }
 
@@ -61,7 +60,6 @@ export class Bubble {
     b.strokeWidth = this.strokeWidth;
     b.outlineColor = this.outlineColor;
     b.outlineWidth = this.outlineWidth;
-    b.shapeExpand = this.shapeExpand;
     b.autoNewline = this.autoNewline;
     b.uuid = uuidv4();
     b.parent = null;
@@ -85,7 +83,6 @@ export class Bubble {
     this.strokeWidth = c.strokeWidth;
     this.outlineColor = c.outlineColor;
     this.outlineWidth = c.outlineWidth;
-    this.shapeExpand = c.shapeExpand;
     this.autoNewline = c.autoNewline;
     this.optionContext = {...c.optionContext};
   }
@@ -111,7 +108,6 @@ export class Bubble {
     b.strokeWidth = json.strokeWidth ?? 1;
     b.outlineColor = json.outlineColor ?? "#000000FF";
     b.outlineWidth = json.outlineWidth ?? 0;
-    b.shapeExpand = json.shapeExpand ?? 0;
     b.autoNewline = json.autoNewline ?? true;
     b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
@@ -140,7 +136,6 @@ export class Bubble {
       strokeWidth: b.strokeWidth == 1 ? undefined : b.strokeWidth,
       outlineColor: b.outlineColor == "#000000FF" ? undefined : b.outlineColor,
       outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
-      shapeExpand: b.shapeExpand == 0 ? undefined : b.shapeExpand,
       autoNewline: b.autoNewline ? undefined : b.autoNewline,
       uuid: b.uuid,
       parent: b.parent ? b.parent.uuid : undefined,
@@ -345,6 +340,7 @@ export const bubbleOptionSets = {
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     extract: {label: "食い込み", type:"boolean", init: b => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "square": {
     link: {hint:"結合", icon:"unite"}, 
@@ -352,6 +348,7 @@ export const bubbleOptionSets = {
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     extract: {label: "食い込み", type:"boolean", init: b => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "ellipse": {
     link: {hint:"結合", icon:"unite"}, 
@@ -359,6 +356,7 @@ export const bubbleOptionSets = {
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     extract: {label: "食い込み", type:"boolean", init: b => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "concentration": {
     lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
@@ -374,6 +372,7 @@ export const bubbleOptionSets = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
     extract: {label: "食い込み", type:"boolean", init: b => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "strokes": {
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
@@ -381,6 +380,7 @@ export const bubbleOptionSets = {
     vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
     overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: b => 1.2 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "double-strokes": {
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
@@ -389,6 +389,7 @@ export const bubbleOptionSets = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
     overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: b => 1.25 },
     interval: { label: "間隔", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "harsh": {
     link: {hint:"結合", icon:"unite"}, 
@@ -399,6 +400,7 @@ export const bubbleOptionSets = {
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.07 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 15 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.1 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "shout": {
     link: {hint:"結合", icon:"unite"},
@@ -409,6 +411,7 @@ export const bubbleOptionSets = {
     bumpCount: { label: "でっぱりの数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5, sampleInit: b => 0.2 },
     depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 1.5, step: 0.01, init: b => 0.5, sampleInit: b => 0.1  },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "soft": {
     link: {hint:"結合", icon:"unite"}, 
@@ -421,13 +424,21 @@ export const bubbleOptionSets = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
     extract: {label: "食い込み", type:"boolean", init: b => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
-  "heart" : {link: {hint:"結合", icon:"unite"} },
-  "diamond": {link: {hint:"結合", icon:"unite"} },
+  "heart" : {
+    link: {hint:"結合", icon:"unite"},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
+  },
+  "diamond": {
+    link: {hint:"結合", icon:"unite"},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
+  },
   "arrow": {
     link: {hint:"結合", icon:"unite"},
     shaftWidth: { label: "軸の太さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
     headLength: { label: "矢じりの長さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "motion-lines": {
     focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
@@ -450,7 +461,8 @@ export const bubbleOptionSets = {
   "ellipse-mind": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]}
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "soft-mind": {
     link: {hint:"結合", icon:"unite"}, 
@@ -461,6 +473,7 @@ export const bubbleOptionSets = {
     bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.15 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 8 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "rounded-mind": {
     link: {hint:"結合", icon:"unite"}, 
@@ -468,6 +481,7 @@ export const bubbleOptionSets = {
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
   },
   "none": {},
 };
