@@ -239,12 +239,14 @@ export class FrameElement {
         newElement.divider = {...target.divider};
         newElement.calculateLengthAndBreadth();
         target.rawSize = newElement.rawSize;
+        target.divider.spacing = length * 0.05;
         parent.children.splice(index+1, 0, newElement);
         parent.calculateLengthAndBreadth();
       } else {
         console.log("different direction");
         const index = parent.children.indexOf(target);
         const newElement = new FrameElement(target.rawSize);
+        const length = target.rawSize;
         newElement.direction = splitDirection;
         for (let i = 0; i < 2; i++) {
           const newChild = new FrameElement(target.rawSize);
@@ -258,6 +260,7 @@ export class FrameElement {
           newElement.children[0].rotation = target.rotation;
         }
         newElement.divider = {...target.divider};
+        newElement.children[0].divider.spacing = length * 0.05;
         newElement.calculateLengthAndBreadth();
         parent.children[index] = newElement;
       } 
