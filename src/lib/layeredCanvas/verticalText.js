@@ -49,15 +49,15 @@ export function drawVerticalText(context, method, r, text, baselineSkip, m, char
 
       switch (true) {
         case /[、。]/.test(c0):
-          drawChar(0.7, -0.7)
+          drawChar(0.7, -0.6)
           break;
         case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c0):
           drawChar(0.1, -0.1);
           break;
-        case /[「」『』（）＜＞【】〔〕≪≫＜＞｛｝～―…：；〝〟]/.test(c0):
+        case /[「」『』（）＜＞【】〔〕≪≫＜＞｛｝～―：；〝〟]/.test(c0):
           drawRotatedChar(90, 0.2, -0.4, 1);
           break;
-        case /[ー]/.test(c0):
+        case /[ー…]/.test(c0):
           drawRotatedChar(90, -0.1, -0.4, -1);
           break;
         case /[0-9!?][0-9!?]/.test(c0+c1):
