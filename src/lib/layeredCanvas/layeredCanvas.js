@@ -1,7 +1,7 @@
 import { convertPointFromPageToNode } from "./convertPoint";
 
 export class LayeredCanvas {
-    constructor(c, size, onHint) {
+    constructor(c, size, onHint, editable) {
         this.canvas = c;
         this.canvas.paper = {};
         this.canvas.paper.size = size;
@@ -19,17 +19,21 @@ export class LayeredCanvas {
         this.canvas.addEventListener('dblclick', this.handleDoubleClick.bind(this));
         this.canvas.addEventListener('contextmenu', this.handleContextMenu.bind(this));
         this.canvas.addEventListener('wheel', this.handleWheel.bind(this));
-        document.addEventListener('keydown', this.handleKeyDown.bind(this));
 
         this.layers = [];
         this.onHint = onHint;
 
-        setInterval(() => {
-            this.redrawIfRequired();
-        }, 33);
+        if (editable) {
+            this.keyDownHandler = this.handleKeyDown.bind(this);
+            document.addEventListener('keydown', this.keyDownHandler);
+            setInterval(() => {this.redrawIfRequired();}, 33);
+        }
     }
 
     cleanup() {
+        if (this.keyDownHandler) {
+            document.removeEventListener('keydown', this.keyDownHandler);
+        }
     }
 
     getPaperSize() {
@@ -187,14 +191,14 @@ export class LayeredCanvas {
         }
     }
 
-    handleKeyDown(event) {
+    async handleKeyDown(event) {
         if (!this.pointerCursor || !this.isPointerOnCanvas(this.pointerCursor)) {
             return;
         }
 
         for (let i = this.layers.length - 1; i >= 0; i--) {
             const layer = this.layers[i];
-            if (layer.keyDown(event)) {
+            if (await layer.keyDown(event)) {
                 event.preventDefault();
                 this.redrawIfRequired();
                 break;
@@ -330,6 +334,6 @@ export class Layer {
     dropped(image, position) { return false; }
     beforeDoubleClick(position) { return false; }
     doubleClicked(position) { return false; }
-    keyDown(event) { return false; }
+    async keyDown(event) { return false; }
     wheel(delta) { return false; }
 }

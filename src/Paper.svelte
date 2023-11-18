@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, afterUpdate, createEventDispatcher } from 'svelte';
+  import { onMount, afterUpdate, createEventDispatcher, onDestroy } from 'svelte';
   import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
   import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
   import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
@@ -270,6 +270,10 @@
     return getHaiku();
   }
 
+  onDestroy(() => {
+    layeredCanvas.cleanup();
+  });
+
   onMount(async () => {
     layeredCanvas = new LayeredCanvas(
       canvas, 
@@ -284,7 +288,8 @@
             toolTipRequest.set(null);
           }
         }
-      });
+      },
+      editable);
 
     sequentializePointer(FloorLayer);
     if (editable) {

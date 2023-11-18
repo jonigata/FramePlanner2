@@ -26,7 +26,8 @@
         canvas, 
         [width, height],
         (_p: [number, number], _s: string) => {
-        });
+        },
+        true);
 
     sequentializePointer(PainterLayer);
     painterLayer = new PainterLayer();

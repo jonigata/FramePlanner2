@@ -278,7 +278,7 @@ export class BubbleLayer extends Layer {
     return false;
   }
 
-  keyDown(event) {
+  async keyDown(event) {
     if (!this.interactable) {return false;}
 
     if (event.code === "KeyX" && event.ctrlKey) {
@@ -296,8 +296,7 @@ export class BubbleLayer extends Layer {
     }
     if (event.code === "KeyV" && event.ctrlKey) {
       console.log("paste");
-      this.pasteBubble();
-      return true;
+      return await this.pasteBubble();
     }
     return false;
   }
@@ -311,30 +310,26 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  pasteBubble() {
-    navigator.clipboard.read().then((items) => {
+  async pasteBubble() {
+    try {
+      const items = await navigator.clipboard.read();
+
       for (let item of items) {
         for (let type of item.types) {
-          console.log(type);
           if (type === "text/plain") {
-            item.getType(type).then((blob) => {
-              blob.text().then((text) => {
-                this.createTextBubble(text);
-              });
-            });
+            const blob = await item.getType(type);
+            const text = await blob.text();
+            this.createTextBubble(text);
+            return true;
           } else if (type.startsWith("image/")) {
-            item.getType(type).then((blob) => {
-              const url = URL.createObjectURL(blob);
-              const image = new Image();
-              image.src = url;
-              this.createImageBubble(image);
-            });
+            return false;
           }
         }
       }
-    }).catch(err => {
+    }
+    catch(err) {
       console.error('ユーザが拒否、もしくはなんらかの理由で失敗', err);
-    });
+    }
   }
 
   createTextBubble(text) {
@@ -353,7 +348,6 @@ export class BubbleLayer extends Layer {
       return [b];
     }
     catch (e) {
-      console.log(e);
       const paperSize = this.getPaperSize();
       let cursorX = 10;
       let cursorY = 10;

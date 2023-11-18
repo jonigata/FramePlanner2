@@ -20,6 +20,7 @@ export class FrameLayer extends Layer {
     this.onScribble = onScribble;
     this.onInsert = onInsert;
     this.onSplice = onSplice;
+    this.cursorPosition = [-1, -1];
 
     const unit = iconUnit;
     const isFrameActive = () => this.interactable && this.focusedLayout && !this.pointerHandler;
@@ -195,12 +196,40 @@ export class FrameLayer extends Layer {
   }
 
   pointerHover(point) {
+    this.cursorPosition = point;
     if(!point) {
       this.focusedLayout = null;
       return false;
     }
     if (keyDownFlags["Space"]) { return; }
     this.updateFocus(point);
+  }
+
+  async keyDown(event) {
+    if (event.code === "KeyV" && event.ctrlKey) {
+      try {
+        const items = await navigator.clipboard.read();
+  
+        for (let item of items) {
+          for (let type of item.types) {
+            if (type.startsWith("image/")) {
+              const blob = await item.getType(type);
+              const url = URL.createObjectURL(blob);
+              const image = new Image();
+              image.src = url;
+              image.onload = () => {
+                this.dropped(image, this.cursorPosition);
+              };
+              return true;
+            }
+          }
+        }
+      }
+      catch(err) {
+        console.error('ユーザが拒否、もしくはなんらかの理由で失敗', err);
+      }
+    }
+    return false;
   }
 
   accepts(point) {
