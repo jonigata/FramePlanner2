@@ -11,10 +11,21 @@ export function initializeKeyCache(canvas, consume) {
     let mouseCursor = [-1, -1];
     function isMouseOnCanvas() {
         var rect = canvas.getBoundingClientRect();
-        var f = 0 <= mouseCursor[0] && mouseCursor[0] <= rect.width && 0 <= mouseCursor[1] && mouseCursor[1] <= rect.height;
-        return f;
+        
+        // カーソルの座標がキャンバスの範囲内にあるかをチェック
+        var isInCanvas = 0 <= mouseCursor[0] - rect.left && mouseCursor[0] - rect.left <= rect.width &&
+                         0 <= mouseCursor[1] - rect.top && mouseCursor[1] - rect.top <= rect.height;
+    
+        // カーソルの座標に最前面の要素がキャンバスかどうかをチェック
+        if (isInCanvas) {
+            var elementAtCursor = document.elementFromPoint(mouseCursor[0], mouseCursor[1]);
+            return elementAtCursor === canvas;
+        }
+    
+        return false;
     }
-      
+    
+
     canvas.addEventListener('mousemove', (event) => {
         mouseCursor = getCanvasPosition(event);
     });
