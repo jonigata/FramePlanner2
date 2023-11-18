@@ -650,6 +650,7 @@ export class BubbleLayer extends Layer {
     }
 
     const bubble = this.defaultBubble.clone();
+    bubble.image = null;
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
     bubble.initOptions();
@@ -679,6 +680,7 @@ export class BubbleLayer extends Layer {
   async *createBubble(dragStart) {
     this.unfocus();
     const bubble = this.defaultBubble.clone();
+    bubble.image = null;
     bubble.p0 = dragStart;
     bubble.p1 = dragStart;
     bubble.text = getHaiku();
