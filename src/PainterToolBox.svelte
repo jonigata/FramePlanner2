@@ -2,7 +2,16 @@
   import { draggable } from '@neodrag/svelte';
   import PainterTool from './PainterTool.svelte';
   import { createEventDispatcher, onMount } from 'svelte';
+  import PainterCanvas from './PainterCanvas.svelte';
+  import type { FrameElement } from './lib/layeredCanvas/frameTree';
 
+  export let element: FrameElement;
+
+  let chosenTool = null;
+  let prompt = "";
+  let lcm = true;
+  let autoGeneration = true;
+  
   const dispatch = createEventDispatcher();
 
   let tools = [
@@ -22,8 +31,8 @@
     console.log(e.detail);
     tools = tools.map(tool => ({ ...tool, selected: false }));
 
-// 選択されたツールの選択状態を更新
-    const chosenTool = tools.find(tool => tool.id === e.detail.id);
+    // 選択されたツールの選択状態を更新
+    chosenTool = tools.find(tool => tool.id === e.detail.id);
     chosenTool.selected = true;
 
     dispatch('setTool', e.detail);
@@ -50,7 +59,7 @@
   });
 </script>
 
-<div class="control-panel variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }}>
+<div class="toolbox variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }}>
   <div class="title-bar variant-filled-surface rounded-container-token expand"></div>
   <div class="inner expand hbox gap-0.5">
     {#each tools as tool}
@@ -58,20 +67,36 @@
     <PainterTool brush={tool} label={tool.name} on:choose={onChoose} on:change={onChange}/>
     {/each}
     <span style="width:20px;"></span>
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>
-      Done
-    </button>
+  </div>
+  <div class="prompt-container">
+    <textarea class="prompt" placeholder="prompt" bind:value={prompt}></textarea>
+  </div>
+  <div class="canvas-container">
+    <div class="canvas-left">
+      <div>
+        <input type="checkbox" bind:checked={autoGeneration}/>自動AI生成
+      </div>
+      <div>
+        <input type="checkbox" bind:checked={lcm}/>LCM
+      </div>
+      <div class="vfill"/>
+      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>
+        Done
+      </button>
+    </div>
+    <PainterCanvas scribbleImage={element.scribble} targetImage={element.image} bind:tool={chosenTool} bind:prompt={prompt} bind:autoGeneration={autoGeneration} bind:lcm={lcm}/>
   </div>
 </div>
 
 
 <style>
-  .control-panel {
+  .toolbox {
     position: absolute;
     display: flex;
     flex-direction: column;
     bottom: 200px;
     left: 200px;
+    padding-bottom: 16px;
   }
   .title-bar {
     cursor: move;
@@ -88,5 +113,33 @@
   .done-button {
     width: 120px;
     height: 40px;
+  }
+  .canvas-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    padding: 8px;
+  } 
+  .canvas-left {
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .prompt-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    height: 96px;
+  } 
+  .prompt {
+    width: 100%;
+    height: 100%;
+  }
+  .vfill {
+    flex-grow: 1;
   }
 </style>

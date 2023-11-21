@@ -6,13 +6,15 @@
   import { type Page, mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './PainterToolBox.svelte';
   import { imageGeneratorTarget } from './imageGeneratorStore';
+  import type { FrameElement } from './lib/layeredCanvas/frameTree.js';
 
   let paper: Paper;
   let page = $mainPage;
   let currentRevision = $mainPage.revision;
   let painterActive = false;
+  let painterElement = null;
 
-  $: if ($redrawToken) { paper.redraw(); }
+  $: if ($redrawToken) { paper.redraw(); $redrawToken = false; }
 
   $:save($saveToken);
   function save(token: string) {
@@ -45,8 +47,9 @@
     $commitToken = false;
   }
 
-  async function onPainterActive(e: CustomEvent<boolean>) {
-    painterActive = e.detail;
+  async function onPainterActive(e: CustomEvent<FrameElement>) {
+    painterActive = true;
+    painterElement = e.detail;
   }
 
   function onGenerate(e: CustomEvent) {
@@ -126,7 +129,7 @@
 </div>
 
 {#if painterActive}
-  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone}/>
+  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone} element={painterElement}/>
 {/if}
 
 <style>

@@ -148,22 +148,6 @@
     dispatch("generate", element);
   }
 
-  async function scribble(element: FrameElement) {
-    console.log("scribble");
-    if (!element.image) { 
-      element.image = await makeWhiteImage(500, 500);
-      element.gallery.push(element.image);
-      constraintElement(element, false);
-    }
-
-    element.image.fileId = undefined;
-    inlinePainterLayer.setElement(element);
-    painterActive = true;
-    frameLayer.interactable = false;
-    bubbleLayer.interactable = false;
-    dispatch('painterActive', painterActive);
-  }
-
   function insert(element: FrameElement) {
     console.log("insert", element);
     const images = collectImages(frameLayer.frameTree);
@@ -186,6 +170,26 @@
       element.scale = [0.001, 0.001];
     }
     constraintLeaf(layout);
+  }
+
+  async function scribble(element: FrameElement) {
+    console.log("scribble");
+    if (!element.image) { 
+      element.image = await makeWhiteImage(512, 512);
+      element.gallery.push(element.image);
+      constraintElement(element, false);
+    }
+    if (!element.scribble) {
+      element.scribble = await makeWhiteImage(512, 512);
+      element.gallery.push(element.scribble);
+    }
+
+    element.image.fileId = undefined;
+    inlinePainterLayer.setElement(element);
+    painterActive = true;
+    frameLayer.interactable = false;
+    bubbleLayer.interactable = false;
+    dispatch('painterActive', element);
   }
 
   export function scribbleDone() {

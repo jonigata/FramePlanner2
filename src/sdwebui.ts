@@ -24,20 +24,12 @@ export async function generateImages(url, imageRequest) {
     }
 
     const data = await response.json();
-    console.log("===== data");
-    console.log(data);
-    console.log(data.info);
     const images = data.images;
 
     const imgs = [];
     for (let i of images) {
-        const png_payload = {
-            image: "data:image/png;base64," + i
-        };
-
-        // Display the image
         const img = document.createElement('img');
-        img.src = png_payload.image;
+        img.src = "data:image/png;base64," + i;
         imgs.push(img);
     }
     return imgs;
