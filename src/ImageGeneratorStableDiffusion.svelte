@@ -105,7 +105,7 @@
     try {
       const encoded_image = imageToBase64(refered);
 
-      const alwayson_scripts = {
+      const alwaysonScripts = {
         controlNet: {
           args: [
             {
@@ -119,9 +119,9 @@
           ]
         }
       };
-      console.log(alwayson_scripts);
+      console.log(alwaysonScripts);
 
-      const req = { ...imageRequest, alwayson_scripts };
+      const req = { ...imageRequest, alwayson_scripts: alwaysonScripts };
       const newImages = await generateImages(url, req);
       gallery.splice(gallery.length, 0, ...newImages);
       gallery = gallery;

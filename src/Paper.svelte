@@ -177,7 +177,7 @@
     if (!element.image) { 
       element.image = await makeWhiteImage(512, 512);
       element.gallery.push(element.image);
-      constraintElement(element, false);
+      constraintElement(element, true);
     }
     if (!element.scribble) {
       element.scribble = await makeWhiteImage(512, 512);

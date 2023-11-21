@@ -8,9 +8,9 @@
   export let element: FrameElement;
 
   let chosenTool = null;
-  let prompt = "";
   let lcm = true;
   let autoGeneration = true;
+  let canvas;
   
   const dispatch = createEventDispatcher();
 
@@ -52,8 +52,12 @@
     dispatch('done');
   }
 
+  function onRedraw() {
+    console.log("onRedraw");
+    canvas.generate();
+  }
+
   onMount(() => {
-    console.log("onMount");
     reset();
     dispatch('setTool', tools[0]);
   });
@@ -69,7 +73,7 @@
     <span style="width:20px;"></span>
   </div>
   <div class="prompt-container">
-    <textarea class="prompt" placeholder="prompt" bind:value={prompt}></textarea>
+    <textarea class="prompt" placeholder="prompt" bind:value={element.prompt}></textarea>
   </div>
   <div class="canvas-container">
     <div class="canvas-left">
@@ -80,11 +84,15 @@
         <input type="checkbox" bind:checked={lcm}/>LCM
       </div>
       <div class="vfill"/>
+      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 done-button" on:click={onRedraw}>
+        Redraw
+      </button>
+      <div class="h-4"/>
       <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>
         Done
       </button>
     </div>
-    <PainterCanvas scribbleImage={element.scribble} targetImage={element.image} bind:tool={chosenTool} bind:prompt={prompt} bind:autoGeneration={autoGeneration} bind:lcm={lcm}/>
+    <PainterCanvas scribbleImage={element.scribble} targetImage={element.image} bind:tool={chosenTool} bind:prompt={element.prompt} bind:autoGeneration={autoGeneration} bind:lcm={lcm} bind:this={canvas}/>
   </div>
 </div>
 

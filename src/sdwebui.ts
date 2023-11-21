@@ -1,7 +1,7 @@
 export async function generateImages(url, imageRequest) {
   url = removeLastSlash(url);
   try {
-    const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount, alwayson_scripts } = imageRequest;
+    const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount, alwaysonScripts, samplerName } = imageRequest;
     const payload = {
       prompt: positive,
       negative_prompt: negative,
@@ -11,9 +11,12 @@ export async function generateImages(url, imageRequest) {
       n_iter: batchCount,
       width: width,
       height: height,
-      alwayson_scripts: alwayson_scripts      
+      alwayson_scripts: alwaysonScripts,
+      sampler_name: samplerName,
+      save_images: false,
     };
-  
+    console.log(payload);
+
     const response = await fetch(`${url}/sdapi/v1/txt2img`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
