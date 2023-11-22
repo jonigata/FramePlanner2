@@ -7,12 +7,21 @@
   import PainterToolBox from './PainterToolBox.svelte';
   import { imageGeneratorTarget } from './imageGeneratorStore';
   import type { FrameElement } from './lib/layeredCanvas/frameTree.js';
+  import PainterAutoGenerate from './PainterAutoGenerate.svelte';
+  import KeyValueStorage from "./KeyValueStorage.svelte";
 
   let paper: Paper;
   let page = $mainPage;
   let currentRevision = $mainPage.revision;
   let painterActive = false;
   let painterElement = null;
+  let painterAutoGenerate = null;
+  let keyValueStorage: KeyValueStorage = null;
+
+  let url: string = "http://192.168.68.111:7860";
+  let autoGeneration;
+  let lcm;
+  let changeTimer = null;
 
   $: if ($redrawToken) { paper.redraw(); $redrawToken = false; }
 
@@ -47,13 +56,24 @@
     $commitToken = false;
   }
 
-  async function onPainterActive(e: CustomEvent<FrameElement>) {
-    painterActive = true;
-    painterElement = e.detail;
+  $: onChangeSettings([painterElement?.prompt, lcm, autoGeneration]);
+  function onChangeSettings(_dummy) {
+    console.log("onAutoGenerate");
+    if (changeTimer) { clearTimeout(changeTimer); }
+    changeTimer = setTimeout(() => {
+      onAutoGenerate(null);
+    }, 1000);
   }
 
-  function onGenerate(e: CustomEvent) {
+
+  function onModalGenerate(e: CustomEvent) {
     $imageGeneratorTarget = e.detail;
+  }
+
+  async function onModalScribble(e: CustomEvent<FrameElement>) {
+    painterActive = true;
+    painterElement = e.detail;
+    paper.scribbleStart(painterElement);
   }
 
   function onScribbleDone() {
@@ -63,6 +83,19 @@
 
   function onSetTool(e: CustomEvent<any>) {
     paper.setTool(e.detail);
+  }
+
+  function onAutoGenerate(e_: CustomEvent) {
+    console.log("onAutoGenerate");
+    console.trace();
+    if (!painterAutoGenerate) { return; }
+    painterAutoGenerate.doScribble(
+      autoGeneration,
+      url,
+      painterElement.scribble,
+      painterElement.prompt,
+      lcm,
+      painterElement.image);
   }
 
   $:onInnerPageUpdate(page);
@@ -111,7 +144,10 @@
       }
     });
 
-  onMount(() => {
+  onMount(async () => {
+    await keyValueStorage.waitForReady();
+    url = await keyValueStorage.get("url") ?? url;
+
     $undoStore = paper;
   });
 </script>
@@ -123,14 +159,18 @@
     bind:page={page} 
     bind:scale={$scale}
     bind:this={paper}
-    on:painterActive={onPainterActive}
-    on:generate={onGenerate}
+    on:modalGenerate={onModalGenerate}
+    on:modalScribble={onModalScribble}
+    on:autoGenerate={onAutoGenerate}
     />
 </div>
 
 {#if painterActive}
-  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone} element={painterElement}/>
+  <PainterToolBox on:setTool={onSetTool} on:done={onScribbleDone} on:redraw={onAutoGenerate} bind:element={painterElement} bind:autoGeneration={autoGeneration} bind:lcm={lcm}/>
+  <PainterAutoGenerate bind:this={painterAutoGenerate}/>
 {/if}
+
+<KeyValueStorage bind:this={keyValueStorage} dbName={"stable-diffusion"} storeName={"default-parameters"}/>
 
 <style>
   .main-paper-container {

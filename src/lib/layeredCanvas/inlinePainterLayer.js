@@ -4,7 +4,7 @@ import { trapezoidBoundingRect } from "./trapezoid.js";
 import { calculatePhysicalLayout, constraintLeaf, findLayoutOf } from './frameTree.js';
 
 export class InlinePainterLayer extends Layer {
-  constructor(frameLayer) {
+  constructor(frameLayer, onAutoGenerate) {
     super();
     this.frameLayer = frameLayer;
     this.currentBrush = { strokeStyle: "black", lineWidth: 5 };
@@ -14,6 +14,8 @@ export class InlinePainterLayer extends Layer {
     this.maskPath = null;
     this.history = [];
     this.historyIndex = 0;
+    this.onAutoGenerate = onAutoGenerate;
+    this.layout = null;
 
     this.offscreenCanvas = document.createElement('canvas');
     this.offscreenContext = this.offscreenCanvas.getContext('2d');
@@ -22,9 +24,9 @@ export class InlinePainterLayer extends Layer {
   render(ctx) {
     if (!this.image) {return;}
 
-    const size = this.getPaperSize();
+    this.drawImage(ctx, this.layout)
+    // ctx.drawImage(this.image, 0, 0);
 
-    // ctx.drawImage(this.offscreenCanvas, 0, 0, size[0], size[1]);
     if (this.maskPath) {
       ctx.beginPath();
       ctx.fillStyle = "rgb(0, 0, 0, 0.5)";
@@ -59,23 +61,24 @@ export class InlinePainterLayer extends Layer {
     await this.snapshot();
     this.path = null;
     this.redraw();
+    this.onAutoGenerate();
   }
 
   async snapshot() {
-    const size = [this.image.naturalWidth, this.image.naturalHeight];
+    const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
 
     const canvas = this.offscreenCanvas;
     const ctx = this.offscreenContext;
 
     ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, size[0], size[1]);
+    ctx.fillRect(0, 0, w, h);
 
-    ctx.drawImage(this.image, 0, 0, size[0], size[1]);
+    ctx.drawImage(this.image, 0, 0, w, h);
 
     if (this.path) {
       ctx.save();
-      console.log("snapshot", this.translation, this.scale, [this.image.naturalWidth, this.image.naturalHeight]);
-      ctx.translate(this.image.naturalWidth * 0.5, this.image.naturalHeight * 0.5);
+      console.log("snapshot", this.translation, this.scale, [w, h]);
+      ctx.translate(w * 0.5, h * 0.5);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
       this.applyCurrentBrush(ctx);
@@ -113,6 +116,7 @@ export class InlinePainterLayer extends Layer {
 
       this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, this.frameLayer.getPaperSize(), [0,0]);
       const layout = findLayoutOf(this.paperLayout, element);
+      this.layout = layout;
       constraintLeaf(layout);
       const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
       const translation = [
@@ -148,7 +152,7 @@ export class InlinePainterLayer extends Layer {
   }
 
   get image() {
-    return this.element?.image;
+    return this.element?.scribble;
   }
 
   undo() {
@@ -158,6 +162,7 @@ export class InlinePainterLayer extends Layer {
     this.historyIndex--;
     this.image.src = this.history[this.historyIndex - 1];
     this.redraw();
+    this.onAutoGenerate();
   }
 
   redo() {
@@ -167,5 +172,22 @@ export class InlinePainterLayer extends Layer {
     this.historyIndex++;
     this.image.src = this.history[this.historyIndex - 1];
     this.redraw();
+    this.onAutoGenerate();
   }
+
+  // paperRenderLayerからコピペ
+  drawImage(ctx, layout) {
+    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+    const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
+
+    ctx.save();
+    ctx.translate(this.translation[0], this.translation[1]);
+    ctx.scale(this.scale[0], this.scale[1]);
+    ctx.translate(-w * 0.5, -h * 0.5);
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(this.image, 0, 0, w, h);
+    ctx.restore();
+  }
+
+
 }

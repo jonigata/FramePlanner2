@@ -6,10 +6,10 @@
   import type { FrameElement } from './lib/layeredCanvas/frameTree';
 
   export let element: FrameElement;
+  export let lcm = true;
+  export let autoGeneration = true;
 
   let chosenTool = null;
-  let lcm = true;
-  let autoGeneration = true;
   let canvas;
   
   const dispatch = createEventDispatcher();
@@ -54,7 +54,7 @@
 
   function onRedraw() {
     console.log("onRedraw");
-    canvas.generate();
+    dispatch("redraw");
   }
 
   onMount(() => {
@@ -76,23 +76,23 @@
     <textarea class="prompt" placeholder="prompt" bind:value={element.prompt}></textarea>
   </div>
   <div class="canvas-container">
-    <div class="canvas-left">
-      <div>
-        <input type="checkbox" bind:checked={autoGeneration}/>自動AI生成
-      </div>
-      <div>
-        <input type="checkbox" bind:checked={lcm}/>LCM
-      </div>
-      <div class="vfill"/>
-      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 done-button" on:click={onRedraw}>
-        Redraw
-      </button>
-      <div class="h-4"/>
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>
-        Done
-      </button>
+    <div>
+      <input type="checkbox" bind:checked={autoGeneration}/>自動AI生成
     </div>
+    <div>
+      <input type="checkbox" bind:checked={lcm}/>LCM
+    </div>
+    <div class="vfill"/>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 done-button" on:click={onRedraw}>
+      Redraw
+    </button>
+    <div class="h-4"/>
+    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>
+      Done
+    </button>
+    <!--
     <PainterCanvas scribbleImage={element.scribble} targetImage={element.image} bind:tool={chosenTool} bind:prompt={element.prompt} bind:autoGeneration={autoGeneration} bind:lcm={lcm} bind:this={canvas}/>
+    -->
   </div>
 </div>
 
@@ -128,13 +128,8 @@
     flex-direction: row;
     align-items: stretch;
     padding: 8px;
+    gap: 8px;
   } 
-  .canvas-left {
-    width: 140px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
   .prompt-container {
     width: 100%;
     display: flex;

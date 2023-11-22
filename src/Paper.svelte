@@ -143,9 +143,46 @@
     frameLayer.importImage(layout, image);
   }
 
-  function generate(element: FrameElement) {
-    console.log("generateImages");
-    dispatch("generate", element);
+  function modalGenerate(element: FrameElement) {
+    console.log("modalGenerate");
+    dispatch("modalGenerate", element);
+  }
+
+  async function modalScribble(element: FrameElement) {
+    console.log("modalScribble");
+    dispatch('modalScribble', element);
+  }
+
+  export async function scribbleStart(element: FrameElement) {
+    if (!element.image) { 
+      element.image = await makeWhiteImage(512, 512);
+      element.gallery.push(element.image);
+      constraintElement(element, true);
+    }
+    if (!element.scribble) {
+      element.scribble = await makeWhiteImage(512, 512);
+      element.gallery.push(element.scribble);
+    }
+
+    element.image.fileId = undefined;
+    inlinePainterLayer.setElement(element);
+    painterActive = true;
+    frameLayer.interactable = false;
+    bubbleLayer.interactable = false;
+  }
+
+  export function scribbleDone() {
+    console.log("scribbleDone");
+    painterActive = false;
+    inlinePainterLayer.setElement(null);
+    frameLayer.interactable = true;
+    bubbleLayer.interactable = true;
+    commit(null);
+  }
+
+  export function setTool(tool: any) {
+    console.log("setTool", tool);
+    inlinePainterLayer.currentBrush = tool;
   }
 
   function insert(element: FrameElement) {
@@ -170,40 +207,6 @@
       element.scale = [0.001, 0.001];
     }
     constraintLeaf(layout);
-  }
-
-  async function scribble(element: FrameElement) {
-    console.log("scribble");
-    if (!element.image) { 
-      element.image = await makeWhiteImage(512, 512);
-      element.gallery.push(element.image);
-      constraintElement(element, true);
-    }
-    if (!element.scribble) {
-      element.scribble = await makeWhiteImage(512, 512);
-      element.gallery.push(element.scribble);
-    }
-
-    element.image.fileId = undefined;
-    inlinePainterLayer.setElement(element);
-    painterActive = true;
-    frameLayer.interactable = false;
-    bubbleLayer.interactable = false;
-    dispatch('painterActive', element);
-  }
-
-  export function scribbleDone() {
-    console.log("scribbleDone");
-    painterActive = false;
-    inlinePainterLayer.setElement(null);
-    frameLayer.interactable = true;
-    bubbleLayer.interactable = true;
-    commit(null);
-  }
-
-  export function setTool(tool: any) {
-    console.log("setTool", tool);
-    inlinePainterLayer.currentBrush = tool;
   }
 
   function handleClick() { // 非interactableの場合はボタンとして機能する
@@ -314,8 +317,8 @@
         commit(null);
       },
       () => {revert();},
-      (frameElement: FrameElement) => {generate(frameElement);},
-      (frameElement: FrameElement) => {scribble(frameElement);},
+      (frameElement: FrameElement) => {modalGenerate(frameElement);},
+      (frameElement: FrameElement) => {modalScribble(frameElement);},
       (frameElement: FrameElement) => {insert(frameElement);},
       (frameElement: FrameElement) => {splice(frameElement);},
       );
@@ -342,7 +345,7 @@
     layeredCanvas.addLayer(bubbleLayer);
 
     sequentializePointer(InlinePainterLayer);
-    inlinePainterLayer = new InlinePainterLayer(frameLayer);
+    inlinePainterLayer = new InlinePainterLayer(frameLayer, onAutoGenerate);
     layeredCanvas.addLayer(inlinePainterLayer);
 
     layeredCanvas.redraw();
@@ -447,6 +450,10 @@
   export function redraw() {
     layeredCanvas.redraw();
   }
+
+  function onAutoGenerate() {
+    dispatch('autoGenerate');
+  }  
 </script>
 
 

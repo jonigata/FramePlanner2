@@ -2,8 +2,7 @@
   import { onMount } from "svelte";
   import * as paper from 'paper';
   import { convertPointFromPageToNode } from "./lib/layeredCanvas/convertPoint";
-  import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
-  import { generateImages } from "./sdwebui";
+  import { generateImageWithScribble } from "./sdwebui";
   import { redrawToken } from './paperStore';
   import KeyValueStorage from "./KeyValueStorage.svelte";
 
@@ -24,14 +23,14 @@
   let changeTimer = null;
 
   export function generate() {
-    scribble(scribbleImage);
+    doScribble(scribbleImage);
   }
 
   $: onChange([prompt, lcm, autoGeneration]);
   function onChange(_dummy) {
     if (changeTimer) { clearTimeout(changeTimer); }
     changeTimer = setTimeout(() => {
-      scribble(scribbleImage);
+      doScribble(scribbleImage);
     }, 1000);
   }
 
@@ -84,11 +83,11 @@
     }
     ctx.stroke(new Path2D(path.pathData));
     scribbleImage.src = offscreen.toDataURL();
-    scribble(scribbleImage);
+    doScribble(scribbleImage);
     path = null;
   }
 
-  async function scribble(refered) {
+  async function doScribble(refered) {
     if (!autoGeneration) {
       targetImage.src = scribbleImage.src;
       await targetImage.decode();
@@ -96,49 +95,15 @@
       return;
     }
 
-
     if (busy) { 
       queued = true;
       return; 
     }
 
-    await refered.decode();
-
     busy = true;
     try {
-      const encoded_image = imageToBase64(refered);
-
-      let imageRequest = {
-        "positive": prompt + (lcm ? " <lora:pytorch_lora_weights:0.3>" : ""),
-        "negative": "EasyNegative",
-        "width": refered.naturalWidth,
-        "height": refered.naturalHeight,
-        "batchSize": 1,
-        "batchCount": 1,
-        "samplingSteps": 6,
-        "cfgScale": 3,
-        "samplerName": (lcm ? "DPM++ 2S a Karras" : "DPM++ 2M Karras" )
-      }
-
-      const alwaysonScripts = {
-        controlNet: {
-          args: [
-            {
-              input_image: encoded_image,
-              module: "scribble_xdog",
-              model: "control_v11p_sd15_scribble [d4ba51ff]",
-              weight: 0.75,
-              resize_mode: 0,
-              threshold_a: 32,
-            }
-          ]
-        }
-      };
-
-      const req = { ...imageRequest, alwaysonScripts };
-      console.log(req);
-      const newImages = await generateImages(url, req);
-      targetImage.src = newImages[0].src;
+      const img = await generateImageWithScribble(url, refered, prompt, lcm);
+      targetImage.src = img.src;
       await targetImage.decode();
     } catch (e) {
       console.log(e);
@@ -149,7 +114,7 @@
 
     if (queued) {
       queued = false;
-      scribble(refered);
+      doScribble(refered);
     }
   }
 
@@ -159,7 +124,6 @@
     render();
   });
 </script>
-
 
 <div>
   <canvas

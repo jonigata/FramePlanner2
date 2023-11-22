@@ -1,3 +1,6 @@
+import type { H } from "vitest/dist/types-fe79687a";
+import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
+
 export async function generateImages(url, imageRequest) {
   url = removeLastSlash(url);
   try {
@@ -71,3 +74,46 @@ function removeLastSlash(url) {
   }
   return url;
 }
+
+export async function generateImageWithScribble(url: string, refered: HTMLImageElement, prompt: string, lcm: boolean): Promise<HTMLImageElement> {
+  await refered.decode();
+
+  try {
+    let imageRequest = {
+      "positive": prompt + (lcm ? " <lora:pytorch_lora_weights:0.3>" : ""),
+      "negative": "EasyNegative",
+      "width": refered.naturalWidth,
+      "height": refered.naturalHeight,
+      "batchSize": 1,
+      "batchCount": 1,
+      "samplingSteps": 6,
+      "cfgScale": 3,
+      "samplerName": (lcm ? "DPM++ 2S a Karras" : "DPM++ 2M Karras" )
+    }
+
+    const alwaysonScripts = {
+      controlNet: {
+        args: [
+          {
+            input_image: imageToBase64(refered),
+            module: "scribble_xdog",
+            model: "control_v11p_sd15_scribble [d4ba51ff]",
+            weight: 0.75,
+            resize_mode: 0,
+            threshold_a: 32,
+          }
+        ]
+      }
+    };
+
+    const req = { ...imageRequest, alwaysonScripts };
+    console.log(req);
+    const newImages = await generateImages(url, req);
+    return newImages[0];
+  } catch (e) {
+    console.log(e);
+    // toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
+    throw e;
+  }
+}
+
