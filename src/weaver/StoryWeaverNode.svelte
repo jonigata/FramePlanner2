@@ -7,7 +7,6 @@
 
   export let data: $$Props['data'];
   export let isConnectable: $$Props['isConnectable'];
-  export let id: $$Props['id'];
 
   let model: WeaverNode = data.model;
   let isInputConnectable = isConnectable;

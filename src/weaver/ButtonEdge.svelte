@@ -15,8 +15,8 @@
   export let targetPosition: $$Props['targetPosition'];
   export let markerEnd: $$Props['markerEnd'] = undefined;
   export let style: $$Props['style'] = undefined;
-  export let sourceHandleId: $$Props['sourceHandleId'];
-  export let targetHandleId: $$Props['targetHandleId'];
+  export let sourceHandleId: $$Props['sourceHandleId'] = null;
+  export let targetHandleId: $$Props['targetHandleId'] = null;
   let _dummy = $$restProps; // warningがうるさいので
 
   $: [edgePath, labelX, labelY] = getBezierPath({
