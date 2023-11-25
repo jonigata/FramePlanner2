@@ -1,16 +1,16 @@
 <script lang="ts">
   import { loadPageFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
-  import type { NodeId, BindId, FileSystem, Folder, File } from "./lib/filesystem/fileSystem";
-  import { type Page, mainPage } from './pageStore';
+  import type { NodeId, BindId, FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
+  import { type Page, mainPage } from '../pageStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
-  import RenameEdit from "./RenameEdit.svelte";
-  import { toolTip } from './passiveToolTipStore';
+  import RenameEdit from "../utils/RenameEdit.svelte";
+  import { toolTip } from '../utils/passiveToolTipStore';
   import { modalStore } from '@skeletonlabs/skeleton';
 
-  import trashIcon from './assets/fileManager/trash.png';
-  import renameIcon from './assets/fileManager/rename.png';
-  import fileIcon from './assets/fileManager/file.png';
+  import trashIcon from '../assets/fileManager/trash.png';
+  import renameIcon from '../assets/fileManager/rename.png';
+  import fileIcon from '../assets/fileManager/file.png';
 
   const dispatch = createEventDispatcher();
 

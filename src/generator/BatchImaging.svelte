@@ -1,16 +1,16 @@
 <script lang="ts">
-  import Drawer from './Drawer.svelte'
+  import Drawer from '../utils/Drawer.svelte'
   import { batchImagingOpen } from "./batchImagingStore";
-  import "./box.css"  
+  import "../box.css"  
   import { onMount } from 'svelte';
-  import { mainPage } from './pageStore';
+  import { mainPage } from '../pageStore';
   import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from './lib/layeredCanvas/frameTree.js';
+  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/frameTree.js';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import KeyValueStorage from "./KeyValueStorage.svelte";
+  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { redrawToken } from './paperStore';
-  import { commitToken } from './undoStore';
+  import { redrawToken } from '../paperStore';
+  import { commitToken } from '../undoStore';
 
   let totalCount = 1;
   let filledCount = 0;

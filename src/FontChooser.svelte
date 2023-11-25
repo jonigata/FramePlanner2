@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Drawer from './Drawer.svelte'
+  import Drawer from './utils/Drawer.svelte'
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import HistoryStorage from './HistoryStorage.svelte';
   import WebFontList from './WebFontList.svelte';

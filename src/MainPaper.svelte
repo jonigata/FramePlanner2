@@ -4,11 +4,11 @@
   import { saveToken, clipboardToken, redrawToken, scale } from './paperStore';
   import { undoStore, commitIfDirtyToken, commitToken } from './undoStore';
   import { type Page, mainPage, revisionEqual } from './pageStore';
-  import PainterToolBox from './PainterToolBox.svelte';
-  import { imageGeneratorTarget } from './imageGeneratorStore';
+  import PainterToolBox from './painter/PainterToolBox.svelte';
+  import { imageGeneratorTarget } from './generator/imageGeneratorStore';
   import type { FrameElement } from './lib/layeredCanvas/frameTree.js';
-  import PainterAutoGenerate from './PainterAutoGenerate.svelte';
-  import KeyValueStorage from "./KeyValueStorage.svelte";
+  import PainterAutoGenerate from './painter/PainterAutoGenerate.svelte';
+  import KeyValueStorage from "./utils/KeyValueStorage.svelte";
 
   let paper: Paper;
   let page = $mainPage;

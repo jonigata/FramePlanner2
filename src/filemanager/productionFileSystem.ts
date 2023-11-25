@@ -1,5 +1,5 @@
-import type { FileSystem } from './lib/filesystem/fileSystem';
-import { IndexedDBFileSystem } from './lib/filesystem/indexeddbFileSystem';
+import type { FileSystem } from '../lib/filesystem/fileSystem';
+import { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
 
 export async function buildFileSystem(): Promise<FileSystem> {
   const fs = new IndexedDBFileSystem();

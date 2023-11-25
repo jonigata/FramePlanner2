@@ -1,19 +1,19 @@
 <script lang="ts">
-  import type { FileSystem, Folder, NodeId, BindId, Node } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, Folder, NodeId, BindId, Node } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
   import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime } from "./fileManagerStore";
-  import { newPage } from "./pageStore";
+  import { newPage } from "../pageStore";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
-  import RenameEdit from "./RenameEdit.svelte";
-  import { toolTip } from './passiveToolTipStore';
+  import RenameEdit from "../utils/RenameEdit.svelte";
+  import { toolTip } from '../utils/passiveToolTipStore';
 
-  import newFileIcon from './assets/fileManager/new-file.png';
-  import newFolderIcon from './assets/fileManager/new-folder.png';
-  import trashIcon from './assets/fileManager/trash.png';
-  import folderIcon from './assets/fileManager/folder.png';
-  import renameIcon from './assets/fileManager/rename.png';
+  import newFileIcon from '../assets/fileManager/new-file.png';
+  import newFolderIcon from '../assets/fileManager/new-folder.png';
+  import trashIcon from '../assets/fileManager/trash.png';
+  import folderIcon from '../assets/fileManager/folder.png';
+  import renameIcon from '../assets/fileManager/rename.png';
 
   export let fileSystem: FileSystem;
   export let filename: string;

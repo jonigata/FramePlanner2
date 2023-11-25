@@ -1,21 +1,21 @@
 <script lang="ts">
-  import Drawer from './Drawer.svelte'
+  import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, sharePageToken } from "./fileManagerStore";
-  import type { FileSystem, NodeId } from './lib/filesystem/fileSystem';
-  import { type Page, mainPage, revisionEqual, commitPage, getRevision } from './pageStore';
+  import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
+  import { type Page, mainPage, revisionEqual, commitPage, getRevision } from '../pageStore';
   import { onMount } from 'svelte';
-  import type { Revision } from "./pageStore";
+  import type { Revision } from "../pageStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
   import { modalStore } from '@skeletonlabs/skeleton';
-  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
+  import type { Bubble } from "../lib/layeredCanvas/bubble.js";
   import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
-  import type { FirebaseFileSystem } from './lib/filesystem/firebaseFileSystem';
+  import type { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { getLayover } from "./firebase";
-  import { createPage } from './weaver/weaverStore';
+  import { getLayover } from "../firebase";
+  import { createPage } from '../weaver/weaverStore';
 
   export let fileSystem: FileSystem;
 

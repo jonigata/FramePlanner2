@@ -2,8 +2,8 @@
   import { draggable } from '@neodrag/svelte';
   import PainterTool from './PainterTool.svelte';
   import { createEventDispatcher, onMount } from 'svelte';
-  import PainterCanvas from './PainterCanvas.svelte';
-  import type { FrameElement } from './lib/layeredCanvas/frameTree';
+  // import PainterCanvas from './PainterCanvas.svelte';
+  import type { FrameElement } from '../lib/layeredCanvas/frameTree';
 
   export let element: FrameElement;
   export let lcm = true;

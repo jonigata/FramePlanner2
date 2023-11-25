@@ -7,8 +7,6 @@
   import '../box.css';
   import copyIcon from '../assets/clipboard.png';
 
-  const dispatch = createEventDispatcher();
-
   export let model: WeaverNode;
 
   let applyable = false;

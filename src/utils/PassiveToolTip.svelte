@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toolTipRequest } from "./passiveToolTipStore";
-  import { fontChooserOpen } from './fontStore';
-  import { aboutOpen } from './aboutStore';
+  import { fontChooserOpen } from '../fontStore';
+  import { aboutOpen } from '../aboutStore';
   import { tick } from "svelte";
 
   let tooltip = null;

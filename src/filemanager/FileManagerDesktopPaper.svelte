@@ -1,9 +1,9 @@
 <script lang="ts">
   import { loadPageFrom } from "./fileManagerStore";
-  import type { FileSystem, File, NodeId } from "./lib/filesystem/fileSystem";
+  import type { FileSystem, File, NodeId } from "../lib/filesystem/fileSystem";
   import { draggable } from '@neodrag/svelte';
-  import { mainPage, type Page } from './pageStore';
-  import Paper from './Paper.svelte';
+  import { mainPage, type Page } from '../pageStore';
+  import Paper from '../Paper.svelte';
   import { savePageTo } from "./fileManagerStore";
 
   export let fileSystem: FileSystem;

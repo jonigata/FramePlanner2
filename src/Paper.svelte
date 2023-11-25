@@ -8,7 +8,7 @@
   import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
   import { Bubble } from './lib/layeredCanvas/bubble.js';
   import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
-  import { toolTipRequest } from './passiveToolTipStore';
+  import { toolTipRequest } from './utils/passiveToolTipStore';
   import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { getHaiku } from './lib/layeredCanvas/haiku.js';
@@ -16,9 +16,9 @@
   import { undoStore } from './undoStore';
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
-  import { makeWhiteImage } from './imageUtil';
+  import { makeWhiteImage } from './utils/imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
-  import { postToAiPictors } from './postToAiPictors'
+  import { postToAiPictors } from './utils/postToAiPictors.js'
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type Page, type Revision, commitPage, revertPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
 

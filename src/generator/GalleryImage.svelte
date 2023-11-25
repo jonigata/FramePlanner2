@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   import { imageGeneratorTarget } from "./imageGeneratorStore";
-  import drop from './assets/drop.png';
-  import reference from './assets/reference.png';
-  import referenceSelected from './assets/reference-selected.png';
+  import drop from '../assets/drop.png';
+  import reference from '../assets/reference.png';
+  import referenceSelected from '../assets/reference-selected.png';
 
   export let image: HTMLImageElement = null;
   export let width = 160;

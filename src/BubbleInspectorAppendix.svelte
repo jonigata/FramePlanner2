@@ -1,6 +1,6 @@
 <script lang="ts">
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import NumberEdit from './NumberEdit.svelte';
+  import NumberEdit from './utils/NumberEdit.svelte';
   import { bubble } from './bubbleInspectorStore';
 </script>
 

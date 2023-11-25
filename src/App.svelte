@@ -5,7 +5,7 @@
   import ControlPanel from './ControlPanel.svelte';
   import MainPaper from './MainPaper.svelte';
   import { Toast } from '@skeletonlabs/skeleton';
-  import PassiveToolTip from './PassiveToolTip.svelte';
+  import PassiveToolTip from './utils/PassiveToolTip.svelte';
   import About from './About.svelte';
   import BubbleInspector from './BubbleInspector.svelte';
   import JsonEditor from './JsonEditor.svelte';
@@ -16,13 +16,13 @@
   import License from './License.svelte';
   import FontChooser from './FontChooser.svelte';
   import ShapeChooser from './ShapeChooser.svelte';
-  import ImageGenerator from './ImageGenerator.svelte';
-  import FileManager from './FileManager.svelte';
+  import ImageGenerator from './generator/ImageGenerator.svelte';
+  import FileManager from './filemanager/FileManager.svelte';
   import NewFileButton from './NewFileButton.svelte';
   import CabinetButton from './CabinetButton.svelte';
   import Waiting from './Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
-  import BatchImaging from './BatchImaging.svelte';
+  import BatchImaging from './generator/BatchImaging.svelte';
   
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {

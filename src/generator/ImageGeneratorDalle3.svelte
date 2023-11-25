@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
-  import KeyValueStorage from "./KeyValueStorage.svelte";
+  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import OpenAI from 'openai';

@@ -1,5 +1,5 @@
 import { WeaverAnchor, WeaverArg, WeaverNode, createPage } from './weaverStore';
-import { newBookToken } from "../fileManagerStore";
+import { newBookToken } from "../filemanager/fileManagerStore";
 import { toastStore } from '@skeletonlabs/skeleton';
 import OpenAI from 'openai';
 import { parse as JSONCParse } from 'jsonc-parser';

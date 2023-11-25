@@ -1,7 +1,7 @@
 <script type="ts">
   import fileManagerIcon from './assets/file-manager.png';
-  import { fileManagerOpen } from './fileManagerStore';
-  import { toolTip } from './passiveToolTipStore';
+  import { fileManagerOpen } from './filemanager/fileManagerStore';
+  import { toolTip } from './utils/passiveToolTipStore';
   
   function openFileManager() {
     $fileManagerOpen = !$fileManagerOpen;

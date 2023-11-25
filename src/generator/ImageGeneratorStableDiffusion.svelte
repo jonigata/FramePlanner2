@@ -3,12 +3,12 @@
   import { generateImages, getProgression } from "./sdwebui";
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
-  import SliderEdit from './SliderEdit.svelte';
-  import KeyValueStorage from "./KeyValueStorage.svelte";
+  import SliderEdit from '../utils/SliderEdit.svelte';
+  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { makeWhiteImage } from "./imageUtil";
-  import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
+  import { makeWhiteImage } from "../utils/imageUtil";
+  import { imageToBase64 } from "../lib/layeredCanvas/saveCanvas";
 
   export let busy: boolean;
   export let prompt: string;

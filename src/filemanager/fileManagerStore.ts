@@ -1,9 +1,9 @@
 import { writable, type Writable } from "svelte/store";
-import type { FileSystem, Folder, File, NodeId, BindId } from "./lib/filesystem/fileSystem";
-import type { Page } from "./pageStore";
-import { FrameElement } from "./lib/layeredCanvas/frameTree";
-import { Bubble } from "./lib/layeredCanvas/bubble";
-import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
+import type { Page } from "../pageStore.js";
+import { FrameElement } from "../lib/layeredCanvas/frameTree.js";
+import { Bubble } from "../lib/layeredCanvas/bubble.js";
+import { frameExamples } from '../lib/layeredCanvas/frameExamples.js';
 
 export type Dragging = {
   bindId: string;

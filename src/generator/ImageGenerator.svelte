@@ -1,11 +1,11 @@
 <script lang="ts">
   import { imageGeneratorTarget } from "./imageGeneratorStore";
-  import Drawer from './Drawer.svelte';
+  import Drawer from '../utils/Drawer.svelte';
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { tick } from "svelte";
-  import type { FrameElement } from "./lib/layeredCanvas/frameTree";
+  import type { FrameElement } from "../lib/layeredCanvas/frameTree";
 
   let busy: boolean;
   let tabSet: number = 0;

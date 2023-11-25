@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import * as paper from 'paper';
-  import { convertPointFromPageToNode } from "./lib/layeredCanvas/convertPoint";
-  import { generateImageWithScribble } from "./sdwebui";
-  import { redrawToken } from './paperStore';
-  import KeyValueStorage from "./KeyValueStorage.svelte";
+  import { convertPointFromPageToNode } from "../lib/layeredCanvas/convertPoint";
+  import { generateImageWithScribble } from "../generator/sdwebui";
+  import { redrawToken } from '../paperStore';
+  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
 
   export let targetImage: HTMLImageElement;
   export let scribbleImage: HTMLImageElement;

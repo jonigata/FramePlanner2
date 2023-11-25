@@ -4,7 +4,6 @@ import { trapezoidBoundingRect, trapezoidPath } from "./trapezoid.js";
 import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawText, measureText } from "./drawText.js";
 import { reverse2D } from "./geometry.js";
-import { PaperOffset } from 'paperjs-offset'
 
 export class PaperRendererLayer extends Layer {
   constructor() {

@@ -1,20 +1,20 @@
 <script lang="ts">
   import { draggable } from '@neodrag/svelte';
-  import NumberEdit from './NumberEdit.svelte';
+  import NumberEdit from './utils/NumberEdit.svelte';
   import './box.css';
   import BubbleSample from './BubbleSample.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
+  import ExponentialRangeSlider from './utils/ExponentialRangeSlider.svelte';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { tick } from 'svelte';
-  import { toolTip } from './passiveToolTipStore';
+  import { toolTip } from './utils/passiveToolTipStore';
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
   import { type BubbleInspectorPosition, bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
-  import { newBubbleToken } from './fileManagerStore';
+  import { newBubbleToken } from './filemanager/fileManagerStore';
 
   import bubbleIcon from './assets/title-bubble.png';
   import horizontalIcon from './assets/horizontal.png';

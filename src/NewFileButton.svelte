@@ -1,9 +1,9 @@
 <script lang="ts">
   import newFileIcon from './assets/new-file.png';
-  import { newFileToken } from "./fileManagerStore";
+  import { newFileToken } from "./filemanager/fileManagerStore";
   import { newPage, newImagePage } from "./pageStore";
-  import { toolTip } from './passiveToolTipStore';
-  import { hoverKey } from './hoverKeyStore';
+  import { toolTip } from './utils/passiveToolTipStore';
+  import { hoverKey } from './utils/hoverKeyStore';
 
   async function createNewFile(e: MouseEvent) {
     if (e.ctrlKey) {

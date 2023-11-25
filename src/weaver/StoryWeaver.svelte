@@ -8,7 +8,7 @@
   import ButtonEdge from './ButtonEdge.svelte';
   import StoryWeaverNode from './StoryWeaverNode.svelte';
   import StoryWeaverInspector from './StoryWeaverInspector.svelte';
-  import KeyValueStorage from "../KeyValueStorage.svelte";
+  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
 
   import '../box.css';
   import '@xyflow/svelte/dist/style.css';

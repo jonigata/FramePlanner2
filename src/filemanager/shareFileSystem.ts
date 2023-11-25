@@ -1,5 +1,5 @@
-import type { FileSystem } from './lib/filesystem/fileSystem';
-import { FirebaseFileSystem } from './lib/filesystem/firebaseFileSystem';
+import type { FileSystem } from '../lib/filesystem/fileSystem';
+import { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
 
 export async function buildFileSystem(referenceUserId: string): Promise<FileSystem> {
   const fs = new FirebaseFileSystem();

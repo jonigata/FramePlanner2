@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { redrawToken } from './paperStore';
-  import { generateImageWithScribble } from "./sdwebui";
+  import { redrawToken } from '../paperStore';
+  import { generateImageWithScribble } from "../generator/sdwebui";
 
   let busy: boolean;
   let queued: boolean;

@@ -2,7 +2,7 @@
   import { draggable } from '@neodrag/svelte';
   import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import NumberEdit from './NumberEdit.svelte';
+  import NumberEdit from './utils/NumberEdit.svelte';
   import './box.css';
   import { type Page, incrementRevision, mainPage, commitPage, newImagePage } from './pageStore';
   import { saveToken, clipboardToken, scale } from './paperStore';
@@ -17,14 +17,14 @@
   import { isJsonEditorOpen, downloadJsonToken } from './jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitIfDirtyToken } from './undoStore';
-  import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
+  import ExponentialRangeSlider from './utils/ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
-  import { newFileToken, sharePageToken } from './fileManagerStore';
+  import { newFileToken, sharePageToken } from './filemanager/fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { batchImagingOpen } from './batchImagingStore';
+  import { batchImagingOpen } from './generator/batchImagingStore';
 
   let min = 256;
   let exponentialMin = 4096;

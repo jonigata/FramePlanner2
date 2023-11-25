@@ -1,5 +1,4 @@
-import type { H } from "vitest/dist/types-fe79687a";
-import { imageToBase64 } from "./lib/layeredCanvas/saveCanvas";
+import { imageToBase64 } from "../lib/layeredCanvas/saveCanvas";
 
 export async function generateImages(url, imageRequest) {
   url = removeLastSlash(url);

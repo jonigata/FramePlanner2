@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Drawer from './Drawer.svelte'
+  import Drawer from './utils/Drawer.svelte'
   import { shapeChooserOpen, chosenShape } from "./shapeStore";
   import BubbleSample from "./BubbleSample.svelte";
   import BubbleTemplateSample from './BubbleTemplateSample.svelte';
   import type { BindId } from "./lib/filesystem/fileSystem";
-  import { fileSystem, loadBubbleFrom } from './fileManagerStore';
+  import { fileSystem, loadBubbleFrom } from './filemanager/fileManagerStore';
   import { bubble } from './bubbleInspectorStore';
   import type { Bubble } from "./lib/layeredCanvas/bubble.js";
 
