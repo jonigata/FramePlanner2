@@ -1,38 +1,100 @@
 {
-  "characters": {
-    "Alice": "girl",
-    "Bob": "man",
-    "Charlie": "boy"
-  },
+  "characters": [
+    {
+      "name": "Takashi",
+      "appearance": "Male baker with a chef's hat and apron, a friendly smile, medium build, and short hair"
+    },
+    {
+      "name": "Customer A",
+      "appearance": "Female customer with long hair tied in a ponytail, wearing a casual dress"
+    },
+    {
+      "name": "Customer B",
+      "appearance": "Elderly male customer with glasses, balding, wearing a sweater"
+    },
+    {
+      "name": "Employee",
+      "appearance": "Young female employee with short hair, wearing a bakery uniform"
+    },
+    {
+      "name": "Child",
+      "appearance": "Energetic young boy with short hair and casual clothes"
+    },
+    {
+      "name": "Customer C",
+      "appearance": "Middle-aged woman with curly hair, wearing a stylish blouse"
+    }
+  ],
   "pages": [
     {
       "scenes": [
         {
-          "description": "A family relaxing in the living room with the sound of a TV in the background.",
+          "composition": "A hand-drawn, black and white comic style scene in a busy cake shop. A male baker, wearing a chef's hat and apron, with a friendly smile, medium build, and short hair, is presenting a spectacular new cake to an excited crowd. The customers include a woman with long hair tied in a ponytail, dressed casually, an elderly man with glasses and a balding head wearing a sweater, and a middle-aged woman with curly hair in a stylish blouse. The shop is decorated with an array of cakes and pastries, creating a lively and inviting atmosphere.",
           "bubbles": [
-            ["Alice", "あ、そうだ！\n掃除機かけなきゃ！"]
+            {
+              "owner": "Takashi",
+              "speech": "私たちの新作"
+            },
+            {
+              "owner": "Takashi",
+              "speech": "『ミラクル・スウィート』\\nです！"
+            }
           ]
         },
         {
-          "description": "Character A takes out a new high-performance vacuum cleaner.",
+          "composition": "This scene, in a hand-drawn, black and white comic style, shows customers in a cake shop gasping in wonder at a magnificent cake that begins to move on its own. Featured are a female customer with a ponytail and casual dress, an elderly balding gentleman with glasses in a sweater, and a middle-aged woman with curly hair in a fashionable blouse, all displaying expressions of amazement. The backdrop includes a variety of cakes and pastries, adding to the enchanting feel of the scene.",
           "bubbles": [
-            ["Alice", "この新しい掃除機は\nとっても強力だってさ！"]
-          ]
-        },
-      ]
-    },
-    {
-      "scenes": [
-        {
-          "description": "Character A turns on the vacuum cleaner and starts cleaning the living room floor. The vacuum cleaner is sucking up dirt with incredible force.",
-          "bubbles": [
-            ["Bob", "すごいね！\nこんなに綺麗に\nなるなんて！"]
+            {
+              "owner": "Customer A",
+              "speech": "なんて\\n美しいの！"
+            },
+            {
+              "owner": "Customer B",
+              "speech": "あれ、\\n動いた？！"
+            }
           ]
         },
         {
-          "description": "Character A gets carried away and uses the vacuum cleaner on furniture, curtains, and even the family's heads.",
+          "composition": "In a humorous, hand-drawn, black and white comic style, a male baker and a young female employee, each with distinctive attire suitable for a bakery, are seen comically chasing a mischievous cake around the shop. The background is lively with customers, who watch the amusing chase, adding to the light-hearted chaos of the scene.",
           "bubbles": [
-            ["Charlie", "ちょっと！\n髪まで\n吸い取られちゃうよ！"]
+            {
+              "owner": "Takashi",
+              "speech": "捕まえて！\\nあのケーキを！"
+            },
+            {
+              "owner": "Employee",
+              "speech": "速いよ！"
+            }
+          ]
+        },
+        {
+          "composition": "This scene, depicted in a hand-drawn, black and white comic style, shows children, including a lively young boy with short hair and casual attire, excitedly chasing a moving cake. Customers, characterized by diverse and lively expressions, laugh at this unusual sight. The shop's interior is adorned with various cake displays and decorations, highlighting the contrast between the excited children and the entertained adults.",
+          "bubbles": [
+            {
+              "owner": "Child",
+              "speech": "ケーキが\\n走ってる！"
+            },
+            {
+              "owner": "Customer C",
+              "speech": "これは\\n珍しい光景ね！"
+            }
+          ]
+        },
+        {
+          "composition": "In the final scene, drawn in a hand-drawn, black and white comic style, an animated cake comes to a halt, appearing exhausted. A baker, grinning, reveals the secret behind the cake's movement to the amused customers around him. The customers, representing a variety of ages and styles, are depicted with expressions of amusement and surprise. The warm and charming shop serves as the backdrop to this whimsical revelation.",
+          "bubbles": [
+            {
+              "owner": "Takashi",
+              "speech": "実は\\nこのケーキ、"
+            },
+            {
+              "owner": "Takashi",
+              "speech": "特別な魔法で\n動いていたんです！"
+            },
+            {
+              "owner": "Customer C",
+              "speech": "ははは！\\nそんなオチだったの？！"
+            }
           ]
         }
       ]
