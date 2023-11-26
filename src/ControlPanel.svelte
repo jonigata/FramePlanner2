@@ -155,6 +155,10 @@
     $downloadJsonToken = true;
   }
 
+  async function downloadPSD() {
+    $saveToken = "psd";
+  }
+
   async function sharePage() {
     $commitIfDirtyToken = true;
     $sharePageToken = $mainPage;
@@ -278,6 +282,11 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
       Weaver
+    </button>
+  </div>  
+  <div class="hbox gap mx-2" style="margin-top: 8px;">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
+      PSD
     </button>
   </div>  
 </div>

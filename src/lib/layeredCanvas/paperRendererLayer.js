@@ -8,51 +8,30 @@ import { reverse2D } from "./geometry.js";
 export class PaperRendererLayer extends Layer {
   constructor() {
     super();
-
-    this.rawBubbles = [];
-
-    // leafでないframeのバックグラウンド(単色)
-    this.backgrounds = []; // [{layout, inheritanceContext}] leafは含まない
-
-    // leafの背景(単色)、画像、embedフキダシ、枠線
-    this.foregrounds = []; // [{layout, inheritanceContext, embeddedBubbles:[bubble]}]
-
-    // leafに属さないフキダシ
-    this.floatingBubbles = [];
   }
 
   render(ctx) {
     const size = this.getPaperSize();
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
 
-    this.setUpRenderData(layout);
+    const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.setUpRenderData(layout);
 
     this.cutOut(ctx);
 
-    for (let frame of this.backgrounds) {
-      this.renderFrameBackground(ctx, frame.layout, frame.inheritanceContext);
+    for (let { layout, inheritanceContext } of backgrounds) {
+      this.renderFrameBackground(ctx, layout, inheritanceContext);
     }
 
-    this.foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
-    for (let frame of this.foregrounds) {
-      this.renderFrame(ctx, frame.layout, frame.inheritanceContext);
+    foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
+    for (let { layout, inheritanceContext } of foregrounds) {
+      this.renderFrame(ctx, layout, inheritanceContext, embeddedBubbles);
     }
 
-    for (let bubble of this.floatingBubbles) {
-      this.renderBubbleBackground(ctx, bubble);
-      this.renderBubbleForeground(ctx, bubble, false);
-    }
-    for (let bubble of this.floatingBubbles) {
-      this.renderBubbleForeground(ctx, bubble, true);
-    }
-
-    this.rawBubbles = [];
-    this.backgrounds = [];
-    this.foregrounds = [];
-    this.floatingBubbles = [];
+    this.renderBubbles(ctx, floatingBubbles);
   }
 
   cutOut(ctx) {
+    // 外側を透明にする
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
     ctx.fillStyle = "rgb(255,255,255, 1)";
@@ -62,11 +41,17 @@ export class PaperRendererLayer extends Layer {
 
   setUpRenderData(layout) {
     const inheritanceContext = { borderColor: "black", borderWidth: 1 };
-    this.setUpFrameTree(layout, inheritanceContext);
-    this.setUpBubbles(layout, this.rawBubbles);
+    const { backgrounds, foregrounds } = this.setUpFrameTree(layout, inheritanceContext);
+    const { embeddedBubbles, floatingBubbles } = this.setUpBubbles(layout, this.rawBubbles);
+    return { backgrounds, foregrounds, embeddedBubbles, floatingBubbles };
   }
 
   setUpFrameTree(layout, inheritanceContext, deferred) {
+    // leafでないframeのバックグラウンド(単色)
+    const backgrounds = []; // [{layout, inheritanceContext}] leafは含まない
+    // leafの背景(単色)、画像、embedフキダシ、枠線
+    const foregrounds = []; // [{layout, inheritanceContext, embeddedBubbles:[bubble]}]
+
     if (layout.element.borderColor != null) { 
       inheritanceContext.borderColor = layout.element.borderColor;
     }
@@ -75,30 +60,41 @@ export class PaperRendererLayer extends Layer {
     }
 
     if (layout.children) {
-      this.backgrounds.push({layout, inheritanceContext});
+      backgrounds.push({layout, inheritanceContext});
       for (let i = 0; i < layout.children.length; i++) {
-        this.setUpFrameTree(layout.children[i], inheritanceContext, deferred);
+        const frames = this.setUpFrameTree(layout.children[i], inheritanceContext, deferred);
+        backgrounds.push(...frames.backgrounds);
+        foregrounds.push(...frames.foregrounds);
       }
     } else {
-      this.backgrounds.push({layout, inheritanceContext});
-      this.foregrounds.push({layout, inheritanceContext});
+      backgrounds.push({layout, inheritanceContext});
+      foregrounds.push({layout, inheritanceContext});
     }
+
+    return { backgrounds, foregrounds };
   }
 
   setUpBubbles(layout, bubbles) {
     this.resolveLinkages(bubbles);
 
+    const embeddedBubbles = new Map();
+    const floatingBubbles = [];
+
     for (let bubble of bubbles) {
       if (bubble.embedded) {
         const thisLayout = findLayoutAt(layout, bubble.center);
         if (thisLayout) {
-          thisLayout.bubbles ||= [];
-          thisLayout.bubbles.push(bubble);
-          continue;
+          if (!embeddedBubbles.has(thisLayout)) {
+            embeddedBubbles.set(thisLayout, []);
+          }
+          embeddedBubbles.get(thisLayout).push(bubble);
         }
+      } else {
+        floatingBubbles.push(bubble);
       }
-      this.floatingBubbles.push(bubble);
     }
+
+    return { embeddedBubbles, floatingBubbles };
   }
 
   resolveLinkages(bubbles) {
@@ -156,7 +152,7 @@ export class PaperRendererLayer extends Layer {
     }
   }
 
-  renderFrame(ctx, layout, inheritanceContext) {
+  renderFrame(ctx, layout, inheritanceContext, embeddedBubbles) {
     // ■■■ visibility 0;
     this.renderFrameBackground(ctx, layout, inheritanceContext);
 
@@ -164,11 +160,11 @@ export class PaperRendererLayer extends Layer {
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    if (element.image || 0 < layout.bubbles?.length) {
+    if (element.image || 0 < embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
       if (!element.focused) {
-        ctx.clip();
+        ctx.clip(); // this.renderFrameBackgroundで描画したものをクリップ
       }
 
       if (element.image) {
@@ -178,18 +174,15 @@ export class PaperRendererLayer extends Layer {
         }
       }
 
-      if (layout.bubbles) {
-        for (let bubble of layout.bubbles) {
-          this.renderBubbleBackground(ctx, bubble);
-          this.renderBubbleForeground(ctx, bubble, false);
-        }
-        for (let bubble of layout.bubbles) {
-          this.renderBubbleForeground(ctx, bubble, true);
-        }
+      if (embeddedBubbles.has(layout)) {
+        const bubbles = embeddedBubbles.get(layout);
+        this.renderBubbles(ctx, bubbles);
       }
   
       // unclip
-      ctx.restore();
+      if (!element.focused) {
+        ctx.restore();
+      }
     }
 
     if (element.visibility < 2) { return; }
@@ -216,6 +209,16 @@ export class PaperRendererLayer extends Layer {
     if (!layout.element.bgColor) { return; }
     ctx.fillStyle = layout.element.bgColor;
     ctx.fill();
+  }
+
+  renderBubbles(ctx, bubbles) {
+    for (let bubble of bubbles) {
+      this.renderBubbleBackground(ctx, bubble);
+      this.renderBubbleForeground(ctx, bubble, false);
+    }
+    for (let bubble of bubbles) {
+      this.renderBubbleForeground(ctx, bubble, true);
+    }
   }
 
   renderBubbleBackground(ctx, bubble) {
@@ -389,5 +392,4 @@ export class PaperRendererLayer extends Layer {
   setFrameTree(frameTree) {
     this.frameTree = frameTree;
   }
-
 }

@@ -9,6 +9,7 @@
   import type { FrameElement } from './lib/layeredCanvas/frameTree.js';
   import PainterAutoGenerate from './painter/PainterAutoGenerate.svelte';
   import KeyValueStorage from "./utils/KeyValueStorage.svelte";
+  import { saveAsPSD } from './utils/saveAsPSD';
 
   let paper: Paper;
   let page = $mainPage;
@@ -34,6 +35,9 @@
         break;
       case 'aipictors':
         paper.postToSNS();
+        break;
+      case 'psd':
+        saveAsPSD($mainPage);
         break;
     }
     $saveToken = null;
@@ -86,8 +90,6 @@
   }
 
   function onAutoGenerate(e_: CustomEvent) {
-    console.log("onAutoGenerate");
-    console.trace();
     if (!painterAutoGenerate) { return; }
     painterAutoGenerate.doScribble(
       autoGeneration,
