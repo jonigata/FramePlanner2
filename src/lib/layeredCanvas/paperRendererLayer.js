@@ -5,6 +5,10 @@ import { findLayoutAt, calculatePhysicalLayout } from "./frameTree.js";
 import { drawText, measureText } from "./drawText.js";
 import { reverse2D } from "./geometry.js";
 
+// NOTICE: 現状、bubbleのuniteは破壊的
+// ただしデータ構造の手抜きをしているだけで、
+// フレームをまたいで維持する必要はない
+
 export class PaperRendererLayer extends Layer {
   constructor() {
     super();
@@ -131,7 +135,7 @@ export class PaperRendererLayer extends Layer {
         bubble.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
         bubble.path?.rotate(-bubble.rotation);
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
-    }
+      }
     }
 
     // 結合
@@ -222,6 +226,8 @@ export class PaperRendererLayer extends Layer {
   }
 
   renderBubbleBackground(ctx, bubble) {
+    if (bubble.parent) { return; }
+
     const size = bubble.size;
 
     ctx.save();
@@ -391,5 +397,51 @@ export class PaperRendererLayer extends Layer {
 
   setFrameTree(frameTree) {
     this.frameTree = frameTree;
+  }
+
+  renderApart() {
+    const size = this.getPaperSize();
+
+    function makeCanvas() {
+      const canvas = document.createElement('canvas');
+      canvas.width = size[0];
+      canvas.height = size[1];
+      const ctx = canvas.getContext('2d');
+      return { canvas, ctx };
+    }
+
+    const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
+
+    const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.setUpRenderData(layout);
+
+    const canvases = [];
+
+    foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
+    for (let { layout, inheritanceContext } of foregrounds) {
+      if (layout.element.visibility < 1) { continue; }
+      const { canvas, ctx } = makeCanvas();
+      this.renderFrame(ctx, layout, inheritanceContext, new Map());
+      canvases.push(canvas);
+    }
+
+    const bubbles = [...embeddedBubbles.values(), ...floatingBubbles];
+    const bubbleCanvases = {};
+
+    for (let bubble of bubbles) {
+      if (bubble.parent != null) { continue; }
+      const { canvas, ctx } = makeCanvas();
+      this.renderBubbleBackground(ctx, bubble);
+      this.renderBubbleForeground(ctx, bubble, false);
+      bubbleCanvases[bubble.uuid] = canvas;
+    }
+    for (let bubble of bubbles) {
+      if (bubble.parent == null) { continue; }
+      const ctx = bubbleCanvases[bubble.parent].getContext('2d');
+      this.renderBubbleForeground(ctx, bubble, true);
+    }
+
+    canvases.push(...Object.values(bubbleCanvases));
+
+    return canvases;
   }
 }

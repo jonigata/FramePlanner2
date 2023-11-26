@@ -295,7 +295,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 710px;
+    height: 740px;
     display: flex;
     flex-direction: column;
     top: 20px;
