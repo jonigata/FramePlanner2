@@ -278,9 +278,7 @@ export class FrameElement {
     const parent = this.findParent(root, target);
     if (parent) {
       const index = parent.children.indexOf(target);
-      console.log("siblings", parent.children.length, "index", index);
       const divider = parent.children[index].divider;
-      console.log(parent.children.length);
       if (parent.children.length === 2) {
         parent.direction = parent.direction === 'h' ? 'v' : 'h';
         // 親の親と方向が同じなら埋め込んだほうがいい
@@ -331,6 +329,10 @@ export class FrameElement {
     } else {
       return [this.rawSize, this.rawSize];
     }
+  }
+
+  isLeaf() {
+    return this.children.length === 0;
   }
 
   static visibilityCandidates = ["none", "background", "full"];

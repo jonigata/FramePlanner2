@@ -87,11 +87,13 @@ export class PaperRendererLayer extends Layer {
     for (let bubble of bubbles) {
       if (bubble.embedded) {
         const thisLayout = findLayoutAt(layout, bubble.center);
-        if (thisLayout) {
+        if (thisLayout && 0 < thisLayout.element.visibility && thisLayout.element.isLeaf()) {
           if (!embeddedBubbles.has(thisLayout)) {
             embeddedBubbles.set(thisLayout, []);
           }
           embeddedBubbles.get(thisLayout).push(bubble);
+        } else {
+          floatingBubbles.push(bubble);
         }
       } else {
         floatingBubbles.push(bubble);
