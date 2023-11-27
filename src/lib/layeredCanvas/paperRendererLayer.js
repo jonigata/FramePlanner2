@@ -440,8 +440,6 @@ export class PaperRendererLayer extends Layer {
       this.renderBubbleForeground(ctx, bubble, true);
     }
 
-    canvases.push(...Object.values(bubbleCanvases));
-
-    return canvases;
+    return { frames: canvases, bubbles: Object.values(bubbleCanvases) };
   }
 }

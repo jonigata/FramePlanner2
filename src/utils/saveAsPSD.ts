@@ -30,20 +30,35 @@ export function saveAsPSD(page: Page) {
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);
 
-  const canvases = paperRendererLayer.renderApart();
+  const {frames, bubbles} = paperRendererLayer.renderApart();
 
   const psd = {
     width: page.paperSize[0],
     height: page.paperSize[1],
-    children: []
+    children: [
+      {
+        name: 'コマ',
+        children: []
+      },
+      {
+        name: 'フキダシ',
+        children: []
+      }
+    ]
   };
 
-  for (let canvas of canvases) {
-    psd.children.push({
-      name: 'Layer #1',
+  frames.forEach((canvas, i) => {
+    psd.children[0].children.push({
+      name: `コマ #${i+1}`,
       canvas
     });
-  }
+  });
+  bubbles.forEach((canvas, i) => {
+    psd.children[1].children.push({
+      name: `フキダシ #${i+1}`,
+      canvas
+    });
+  });
 
   const buffer = writePsd(psd);
   const blob = new Blob([buffer], { type: 'application/octet-stream' });
