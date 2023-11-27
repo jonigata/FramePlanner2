@@ -78,7 +78,7 @@
   on:drop={onDrop}
   use:toolTip={`新規ページ\n画像ドロップで一枚絵ページ\nCtrl+クリックで画像ペースト`}
   use:hoverKey={onKeyDown}>
-  <img src={newFileIcon} alt="file manager"/>
+  <img src={newFileIcon} alt="file manager" draggable="false"/>
 </button>
 
 <style>
