@@ -138,7 +138,7 @@ export class Bubble {
       outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
       autoNewline: b.autoNewline ? undefined : b.autoNewline,
       uuid: b.uuid,
-      parent: b.parent ? b.parent.uuid : undefined,
+      parent: b.parent,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
     };
   }

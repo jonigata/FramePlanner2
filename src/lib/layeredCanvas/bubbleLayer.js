@@ -1026,6 +1026,7 @@ export class BubbleLayer extends Layer {
               this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
               this.redraw();
             }
+            this.onCommit(this.bubbles, true);
             break;
           }
         }
