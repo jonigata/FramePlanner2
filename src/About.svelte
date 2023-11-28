@@ -104,7 +104,7 @@
     <dl>
       <dt>API有効化、CORS対応</dt>
       <dd>sdwebui起動時に、COMMANDLINE_ARGSに'--api --cors-allow-origins https://frameplanner-e5569.web.app'を指定する</dd>
-      <dt>Mixed contet対応</dt>
+      <dt>Mixed content対応</dt>
       <dd>以下のどれかを行う
         <ol>
           <li>sdwebuiをhttpsでホスト</li>
