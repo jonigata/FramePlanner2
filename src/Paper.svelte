@@ -16,7 +16,7 @@
   import { undoStore } from './undoStore';
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
-  import { makeWhiteImage } from './utils/imageUtil';
+  import { makePlainImage } from './utils/imageUtil';
   import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
   import { postToAiPictors } from './utils/postToAiPictors.js'
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -155,12 +155,12 @@
 
   export async function scribbleStart(element: FrameElement) {
     if (!element.image) { 
-      element.image = await makeWhiteImage(512, 512);
+      element.image = await makePlainImage(512, 512, true);
       element.gallery.push(element.image);
       constraintElement(element, true);
     }
     if (!element.scribble) {
-      element.scribble = await makeWhiteImage(512, 512);
+      element.scribble = await makePlainImage(element.image.naturalWidth, element.image.naturalHeight, false);
       element.gallery.push(element.scribble);
     }
 
@@ -178,6 +178,11 @@
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
     commit(null);
+  }
+  
+  export function setScribbleBackground(draws: boolean) {
+    console.log("setScribbleAutoGenerate", draws);
+    inlinePainterLayer.drawsBackground = draws;
   }
 
   export function setTool(tool: any) {

@@ -7,7 +7,7 @@
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { makeWhiteImage } from "../utils/imageUtil";
+  import { makePlainImage } from "../utils/imageUtil";
   import { imageToBase64 } from "../lib/layeredCanvas/saveCanvas";
 
   export let busy: boolean;
@@ -74,7 +74,7 @@
   });
 
   async function generateWhiteImage() {
-    const img = await makeWhiteImage(imageRequest.width, imageRequest.height);
+    const img = await makePlainImage(imageRequest.width, imageRequest.height, true);
     gallery.push(img);
     gallery = gallery;
   }

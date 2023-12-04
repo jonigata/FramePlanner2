@@ -186,9 +186,7 @@ export class PaperRendererLayer extends Layer {
       }
   
       // unclip
-      if (!element.focused) {
-        ctx.restore();
-      }
+      ctx.restore();
     }
 
     if (element.visibility < 2) { return; }

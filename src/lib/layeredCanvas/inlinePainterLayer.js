@@ -16,9 +16,7 @@ export class InlinePainterLayer extends Layer {
     this.historyIndex = 0;
     this.onAutoGenerate = onAutoGenerate;
     this.layout = null;
-
-    this.offscreenCanvas = document.createElement('canvas');
-    this.offscreenContext = this.offscreenCanvas.getContext('2d');
+    this.drawsBackground = false;
   }
 
   render(ctx) {
@@ -69,11 +67,6 @@ export class InlinePainterLayer extends Layer {
 
     const canvas = this.offscreenCanvas;
     const ctx = this.offscreenContext;
-
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.drawImage(this.image, 0, 0, w, h);
 
     if (this.path) {
       ctx.save();
@@ -130,8 +123,10 @@ export class InlinePainterLayer extends Layer {
 
       this.translation = translation;
       this.scale = scale;
+      this.offscreenCanvas = document.createElement('canvas');
       this.offscreenCanvas.width = img.naturalWidth;
       this.offscreenCanvas.height = img.naturalHeight;
+      this.offscreenContext = this.offscreenCanvas.getContext('2d');
       this.offscreenContext.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
 
       const windowPath = new paper.Path();
@@ -185,6 +180,11 @@ export class InlinePainterLayer extends Layer {
     ctx.scale(this.scale[0], this.scale[1]);
     ctx.translate(-w * 0.5, -h * 0.5);
     ctx.globalAlpha = 0.4;
+    if (this.drawsBackground) {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.globalAlpha = 1.0;
     ctx.drawImage(this.image, 0, 0, w, h);
     ctx.restore();
   }

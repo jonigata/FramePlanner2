@@ -69,18 +69,25 @@
     }, 1000);
   }
 
+  $: changeAutoGeneration(autoGeneration);
+  function changeAutoGeneration(f) {
+    paper?.setScribbleBackground(f);
+  }
 
   function onModalGenerate(e: CustomEvent) {
     $imageGeneratorTarget = e.detail;
   }
 
   async function onModalScribble(e: CustomEvent<FrameElement>) {
+    console.log("onModalScribble")
     painterActive = true;
     painterElement = e.detail;
+    paper.setScribbleBackground(autoGeneration);
     paper.scribbleStart(painterElement);
   }
 
   function onScribbleDone() {
+    console.log("onScribbleDone")
     paper.scribbleDone();
     painterActive = false;
   }

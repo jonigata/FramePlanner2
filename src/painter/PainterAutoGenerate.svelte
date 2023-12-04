@@ -7,7 +7,13 @@
 
   export async function doScribble(callGeneration, url, refered, prompt, lcm, target) {
     if (!callGeneration) {
-      target.src = refered.src;
+      const canvas = document.createElement('canvas');
+      canvas.width = target.width;
+      canvas.height = target.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(target, 0, 0);
+      ctx.drawImage(refered, 0, 0);
+      target.src = canvas.toDataURL();
       await target.decode();
       $redrawToken = true;
       return;
@@ -20,7 +26,19 @@
 
     busy = true;
     try {
-      const img = await generateImageWithScribble(url, refered, prompt, lcm);
+      const canvas = document.createElement('canvas');
+      canvas.width = refered.width;
+      canvas.height = refered.height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(refered, 0, 0);
+
+      const source = document.createElement('img');
+      source.src = canvas.toDataURL();
+      await source.decode();      
+
+      const img = await generateImageWithScribble(url, source, prompt, lcm);
       target.src = img.src;
       await target.decode();
     } catch (e) {

@@ -7,7 +7,7 @@
 
   export let element: FrameElement;
   export let lcm = true;
-  export let autoGeneration = true;
+  export let autoGeneration = false;
 
   let chosenTool = null;
   let canvas;
