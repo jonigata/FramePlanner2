@@ -29,6 +29,9 @@
 
     <h3>紹介・入門記事</h3>
     <p>
+      <a href="https://www.youtube.com/channel/UC3kZKl2Q5IvlFKnJ8RHKBGw">Youtube ムービーマニュアル</a>
+    </p>
+    <p>
       <a href="https://blogcake.net/ai-comic/" target="_blank" rel="noopener noreferrer">AIで漫画を描く！？FramePlannerで作る漫画の作り方</a>
     </p>
     <p>

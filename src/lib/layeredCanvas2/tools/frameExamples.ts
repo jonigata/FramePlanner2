@@ -1,0 +1,524 @@
+export const frameExamples = [
+  { // オーソドックス
+    bgColor: "white",
+    height: 100,
+    row: [
+      {
+        width: 4, visibility: 0
+      },
+      {
+        width: 180,
+        column: [
+          { height: 2, visibility: 0 },
+          { height: 17, divider: { spacing: 2, slant: 0 }, },
+          { height: 25, 
+            divider: { spacing: 2, slant: 0 },
+            row: [
+              { width: 45, divider: { spacing: 2, slant: 0 }, }, 
+              { width: 55 }
+            ],
+          },
+          { height: 17 },
+          { height: 2, visibility: 0 },
+        ],
+      },
+      {
+        width: 4, visibility: 0
+      },
+    ],
+  },
+  { // 一コマ
+    bgColor: "white",
+    height: 100,
+    row: [
+      { width: 3, visibility: 0 },
+      {
+        width: 120,
+        column: [
+          {
+            height: 3, visibility: 0 ,
+          },
+          {
+            height: 180,
+          },
+          {
+            height: 3, visibility: 0 ,
+          },
+        ],
+      },
+      { width: 3, visibility: 0  },
+    ]
+  },
+  { // 一コマ(マージンなし)
+    bgColor: "white",
+    height: 100,
+    column: [
+      {
+        visibility: 1,
+        height: 100,
+      },
+    ],
+  },
+  { // 4コマ
+    bgColor: "white",
+    height: 100,
+    column: [
+      { height: 4, visibility: 0  },
+      {
+        height: 100,
+        row: [
+          { width: 2, visibility: 0  },
+          { 
+            width: 3,
+            column: [
+              {
+                height: 5,
+                column: [
+                  { height: 2, divider: { spacing: 1, slant: 0 }  },
+                ],
+                divider: { spacing: 2, slant: 0 }
+              },
+              {
+                height: 100,
+                column: [
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8,
+                  },
+                ],
+              },
+            ],
+          },
+          { width: 2, visibility: 0  },
+        ]
+      },
+      { height: 4, visibility: 0  },
+    ]
+  },
+  { // 4コマ2段
+    bgColor: "white",
+    height: 100,
+    column: [
+      { height: 4, visibility: 0  },
+      {
+        height: 100,
+        row: [
+          { width: 1, visibility: 0  },
+          { 
+            width: 5,
+            column: [
+              {
+                height: 5,
+                column: [
+                  { height: 2, divider: { spacing: 1, slant: 0 }  },
+                ],
+                divider: { spacing: 2, slant: 0 }
+              },
+              {
+                height: 100,
+                column: [
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8,
+                  },
+                ],
+              },
+            ],
+            divider: { spacing: 1, slant: 0 },
+          },
+          { 
+            width: 5,
+            column: [
+              {
+                height: 5,
+                column: [
+                  { height: 2, divider: { spacing: 1, slant: 0 }  },
+                ],
+                divider: { spacing: 2, slant: 0 }
+              },
+              {
+                height: 100,
+                column: [
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8, divider: { spacing: 1, slant: 0 }, 
+                  },
+                  {
+                    height: 8,
+                  },
+                ],
+              },
+            ],
+          },
+          { width: 1, visibility: 0  },
+        ]
+      },
+      { height: 4, visibility: 0  },
+    ]
+  },
+  { // オーソドックス2
+    height: 100,
+    bgColor: "white",
+    row: [
+      { width: 4, visibility: 0  },
+      {
+        column: [
+          { height: 4, visibility: 0  },
+          {
+            height: 60,
+            divider: { spacing: 4, slant: 0 }, 
+          },
+          {
+            row: [
+              {
+                width: 30,
+                divider: { spacing: 2, slant: 0 }, 
+              },
+              {
+                column: [
+                  {
+                    height: 30,
+                    divider: { spacing: 2, slant: 0 }, 
+                  },
+                  {
+                    height: 30,
+                  },
+                ],
+                width: 30,
+              },
+            ],
+            height: 120,
+          },
+          { height: 4, visibility: 0  },
+        ],
+        height: 180,
+      },
+      { height: 4, visibility: 0  },
+    ]
+  },
+  {
+    bgColor: "transparent",
+    borderWidth: 0,
+  },
+/*
+  {
+    margin: {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10,
+    },
+    width: 80,
+    bgColor: "white",
+    column: [
+      {
+        size: 80,
+      },
+    ],
+  },
+*/
+];
+
+export const aiTemplates = [
+  // 2コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "divider": {
+              "spacing": 4
+            },
+            "height": 88
+          },
+          {
+            "height": 88
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  },
+  // 3コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 86
+              },
+              {
+                "width": 86
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 96
+          },
+          {
+            "height": 80
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  },
+  // 4コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 86
+              },
+              {
+                "width": 86
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 55
+          },
+          {
+            "divider": {
+              "spacing": 4
+            },
+            "height": 40
+          },
+          {
+            "height": 75
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  },
+  // 5コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 85
+              },
+              {
+                "width": 85
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 55
+          },
+          {
+            "divider": {
+              "spacing": 4
+            },
+            "height": 40
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 75
+              },
+              {
+                "width": 75
+              }
+            ],
+            "height": 80
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  },
+  // 6コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 65
+              },
+              {
+                "width": 105
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 65
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 2
+                },
+                "width": 60
+              },
+              {
+                "width": 30
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 45
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 75
+              },
+              {
+                "width": 75
+              }
+            ],
+            "height": 65
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  },
+]
