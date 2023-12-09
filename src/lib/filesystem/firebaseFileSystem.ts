@@ -5,7 +5,7 @@ import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithE
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
-import { imageToBase64  } from '../layeredCanvas/saveCanvas';
+import { imageToBase64  } from '../layeredCanvas/tools/saveCanvas';
 
 // 仮
 import { app } from '../../firebase';

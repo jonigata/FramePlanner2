@@ -1,9 +1,11 @@
 import { writable } from "svelte/store";
 import { type Page, newPage, commitPage } from "../pageStore";
-import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from '../lib/layeredCanvas/frameTree.js';
-import { Bubble } from '../lib/layeredCanvas/bubble';
-import { measureVerticalText } from '../lib/layeredCanvas/verticalText';
-import { aiTemplates } from '../lib/layeredCanvas/frameExamples';
+import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import { measureVerticalText } from '../lib/layeredCanvas/tools/draw/verticalText';
+import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
+import { aiTemplates } from '../lib/layeredCanvas/tools/frameExamples';
+import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import type * as Storyboard from './storyboard';
 
 // drafter: 原案を出力する 引数：お題
@@ -181,14 +183,13 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
     leaf.prompt = `${imagePromptPrefix} ${scene.composition}`;
 
     const layout = findLayoutOf(paperLayout, leaf);
-    const r = makeTrapezoidRect(layout.corners);
-    const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+    const r = trapezoidBoundingRect(layout.corners);
     const n = scene.bubbles.length;
     scene.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
       const bubble = new Bubble();
       bubble.text = b.speech.replace(/\\n/g, '\n');
       bubble.initOptions();
-      const cc = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
+      const cc: Vector = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
       bubble.move(cc);
       calculateFitBubbleSize(bubble);
       page.bubbles.push(bubble);
@@ -199,7 +200,7 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
 function calculateFitBubbleSize(bubble: Bubble) {
   const baselineSkip = bubble.fontSize * 1.5;
   const charSkip = bubble.fontSize;
-  let size =[0,0];
+  let size: Vector =[0,0];
   const m = measureVerticalText(null, Infinity, bubble.text, baselineSkip, charSkip, false);
   size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
   bubble.size = size;

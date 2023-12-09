@@ -6,7 +6,7 @@
   import { type Page, mainPage, revisionEqual } from './pageStore';
   import PainterToolBox from './painter/PainterToolBox.svelte';
   import { imageGeneratorTarget } from './generator/imageGeneratorStore';
-  import type { FrameElement } from './lib/layeredCanvas/frameTree.js';
+  import type { FrameElement } from './lib/layeredCanvas/dataModels/frameTree';
   import PainterAutoGenerate from './painter/PainterAutoGenerate.svelte';
   import KeyValueStorage from "./utils/KeyValueStorage.svelte";
   import { saveAsPSD } from './utils/saveAsPSD';

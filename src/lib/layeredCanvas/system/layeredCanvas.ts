@@ -3,7 +3,7 @@ import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 type Vector = [number, number];
 
 interface PaperCanvas extends HTMLCanvasElement {
-  paper: {
+  paper?: {
     size: Vector,
     translate: Vector,
     viewTranslate: Vector,

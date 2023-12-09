@@ -5,7 +5,7 @@
   import { onMount } from 'svelte';
   import { mainPage } from '../pageStore';
   import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/frameTree.js';
+  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';

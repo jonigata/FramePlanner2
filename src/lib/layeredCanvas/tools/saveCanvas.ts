@@ -134,7 +134,7 @@ function mergeCanvasWithPose(canvas, keyword, content) {
     return url;  
 }
 
-export function saveCanvas(canvas, filename, jsonData) {
+export function saveCanvas(canvas: HTMLCanvasElement, filename: string, jsonData: any) {
     var url = mergeCanvasWithPose(canvas, "comicframe", JSON.stringify(jsonData));
 
     const createEl = document.createElement('a');
@@ -147,30 +147,34 @@ export function saveCanvas(canvas, filename, jsonData) {
     createEl.remove();
 }
 
-export function canvasToUrl(canvas, jsonData) {
+export function canvasToUrl(canvas: HTMLCanvasElement, jsonData: any) {
     const url = canvas.toDataURL();
     return url;
 }
 
-export async function copyCanvasToClipboard(canvas) {
-  try {
-    // CanvasをBlobとして取得する
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve));
+export async function copyCanvasToClipboard(canvas: HTMLCanvasElement) {
+    try {
+        // CanvasをBlobとして取得する
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve));
 
-    // BlobをClipboardItemとしてクリップボードに書き込む
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        [blob.type]: blob,
-      }),
-    ]);
+        if (blob) {
+            // BlobをClipboardItemとしてクリップボードに書き込む
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    [blob.type || 'image/png']: blob,
+                }),
+            ]);
 
-    console.log("Canvas content copied to clipboard.");
-  } catch (err) {
-    console.error("Failed to copy canvas content to clipboard:", err);
-  }
+            console.log("Canvas content copied to clipboard.");
+        } else {
+            console.error("Failed to copy canvas content to clipboard: Blob is null.");
+        }
+    } catch (err) {
+        console.error("Failed to copy canvas content to clipboard:", err);
+    }
 }
 
-export function imageToBase64(imgElement) {
+export function imageToBase64(imgElement: HTMLImageElement) {
     let canvas = document.createElement("canvas");
     canvas.width = imgElement.naturalWidth;
     canvas.height = imgElement.naturalHeight;
@@ -181,7 +185,7 @@ export function imageToBase64(imgElement) {
     return base64Image;
 }
 
-export function makeFilename(ext) {
+export function makeFilename(ext: string) {
   function zeropadding(n) {
     return n < 10 ? "0" + n : n;
   }

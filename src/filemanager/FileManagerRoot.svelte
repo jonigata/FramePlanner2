@@ -9,7 +9,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
   import { modalStore } from '@skeletonlabs/skeleton';
-  import type { Bubble } from "../lib/layeredCanvas/bubble.js";
+  import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
   import type { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';

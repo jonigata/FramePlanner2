@@ -2,7 +2,7 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { imageToBase64 } from "./../layeredCanvas/saveCanvas";
+import { imageToBase64 } from "./../layeredCanvas/tools/saveCanvas";
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;

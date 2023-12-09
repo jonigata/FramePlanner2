@@ -340,7 +340,7 @@ function finishTrivialPath(context) {
 paper.setup([1,1]); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
-export function getPath(shape, size, opts, seed) {
+export function getPath(shape, size, opts, seed): paper.Path {
   seed = opts.randomSeed ?? 0;
 
   const startTime = performance.now();

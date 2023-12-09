@@ -1,5 +1,6 @@
 import { type Vector, type Rect, intersection, line, line2, deg2rad } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid } from "../tools/geometry/trapezoid";
+import type { ImageFile } from "./imageFile";
 
 export type Padding = { top: number, bottom: number, left: number, right: number};
 export type Border = { layout: Layout, index: number, trapezoid: Trapezoid };
@@ -35,10 +36,10 @@ export class FrameElement {
   visibility: number;
   semantics: string | null;
   prompt: string | null;
-  gallery: HTMLImageElement[];
+  gallery: ImageFile[];
 
-  image: HTMLImageElement;
-  scribble: HTMLImageElement;
+  image: ImageFile;
+  scribble: ImageFile;
   focused: boolean;
 
   constructor(size: number) {
@@ -651,7 +652,7 @@ function makeVerticalBorderTrapezoid(layout: Layout, index: number): Trapezoid {
 }
 
 type CollectedImage = {
-  image: HTMLImageElement,
+  image: ImageFile,
   translation: Vector,
   scale: Vector,
   rotation: number,

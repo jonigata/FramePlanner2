@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { drawBubble } from "./lib/layeredCanvas/bubbleGraphic.js";
-  import { createEventDispatcher } from 'svelte';
-  import { Bubble } from "./lib/layeredCanvas/bubble.js";
+  import { onMount, createEventDispatcher } from 'svelte';
+  import { Bubble } from "./lib/layeredCanvas/dataModels/bubble";
+  import { drawBubble } from "./lib/layeredCanvas/tools/draw/bubbleGraphic";
 
   export let width = 64;
   export let height = 96;

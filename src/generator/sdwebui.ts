@@ -1,4 +1,4 @@
-import { imageToBase64 } from "../lib/layeredCanvas/saveCanvas";
+import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas";
 
 export async function generateImages(url, imageRequest) {
   url = removeLastSlash(url);

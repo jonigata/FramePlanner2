@@ -6,7 +6,7 @@
   import type { BindId } from "./lib/filesystem/fileSystem";
   import { fileSystem, loadBubbleFrom } from './filemanager/fileManagerStore';
   import { bubble } from './bubbleInspectorStore';
-  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
+  import type { Bubble } from "./lib/layeredCanvas/dataModels/bubble";
 
   export let paperWidth = 96;
   export let paperHeight = 96;

@@ -3,7 +3,7 @@
   import PainterTool from './PainterTool.svelte';
   import { createEventDispatcher, onMount } from 'svelte';
   // import PainterCanvas from './PainterCanvas.svelte';
-  import type { FrameElement } from '../lib/layeredCanvas/frameTree';
+  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
   export let element: FrameElement;
   export let lcm = true;

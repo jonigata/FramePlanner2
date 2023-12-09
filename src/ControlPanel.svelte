@@ -19,8 +19,8 @@
   import { commitIfDirtyToken } from './undoStore';
   import ExponentialRangeSlider from './utils/ExponentialRangeSlider.svelte';
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
-  import { FrameElement } from './lib/layeredCanvas/frameTree';
-  import { Bubble } from './lib/layeredCanvas/bubble';
+  import { FrameElement } from './lib/layeredCanvas/dataModels/frameTree';
+  import { Bubble } from './lib/layeredCanvas/dataModels/bubble';
   import { newFileToken, sharePageToken } from './filemanager/fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";

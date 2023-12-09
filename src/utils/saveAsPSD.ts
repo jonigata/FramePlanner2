@@ -1,8 +1,8 @@
 import { writePsd } from 'ag-psd';
 import { saveAs } from 'file-saver';
 import type { Page } from '../pageStore';
-import { LayeredCanvas } from '../lib/layeredCanvas/layeredCanvas.js'
-import { PaperRendererLayer } from '../lib/layeredCanvas/paperRendererLayer.js';
+import { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas'
+import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 
 interface CustomCanvasElement extends HTMLCanvasElement {
   paper: any;

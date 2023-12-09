@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import * as paper from 'paper';
-  import { convertPointFromPageToNode } from "../lib/layeredCanvas/convertPoint";
+  import { convertPointFromPageToNode } from "../lib/layeredCanvas/tools/geometry/convertPoint";
   import { generateImageWithScribble } from "../generator/sdwebui";
   import { redrawToken } from '../paperStore';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";

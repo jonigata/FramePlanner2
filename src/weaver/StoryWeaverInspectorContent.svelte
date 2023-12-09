@@ -1,6 +1,6 @@
 <script lang="ts">
   import { weaverRefreshToken, type WeaverNode } from './weaverStore';
-  import { getContext, createEventDispatcher } from 'svelte';
+  import { getContext } from 'svelte';
   import DOMPurify from 'dompurify';
   import StoryWeaverInspectorArg from './StoryWeaverInspectorArg.svelte';
   import { ProgressRadial, toastStore } from '@skeletonlabs/skeleton';

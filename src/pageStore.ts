@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
-import type { Bubble } from './lib/layeredCanvas/bubble.js';
-import { FrameElement } from './lib/layeredCanvas/frameTree.js';
-import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
+import type { Bubble } from './lib/layeredCanvas/dataModels/bubble';
+import { FrameElement } from './lib/layeredCanvas/dataModels/frameTree';
+import { frameExamples } from './lib/layeredCanvas/tools/frameExamples';
 
 export type Revision = {
   id: string;

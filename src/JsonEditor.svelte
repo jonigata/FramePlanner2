@@ -7,10 +7,10 @@
   import { tick } from 'svelte';
   import { shareTemplate } from './firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { makeFilename } from './lib/layeredCanvas/saveCanvas.js';
+  import { makeFilename } from './lib/layeredCanvas/tools/saveCanvas.js';
   import { type Page, type Revision, mainPage, getRevision, revisionEqual, commitPage } from './pageStore';
-  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
-  import { Bubble } from './lib/layeredCanvas/bubble.js';
+  import { FrameElement } from './lib/layeredCanvas/dataModels/frameTree';
+  import { Bubble } from './lib/layeredCanvas/dataModels/bubble';
 
   let content = { text: "hello" };
   let skipJsonChange = false;

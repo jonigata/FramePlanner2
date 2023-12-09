@@ -1,9 +1,9 @@
 <script lang="ts">
   import FileManagerDesktopPaper from './FileManagerDesktopPaper.svelte';
   import type { FileSystem, Folder } from "../lib/filesystem/fileSystem";
-  import { FrameElement } from '../lib/layeredCanvas/frameTree.js';
+  import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Page } from '../pageStore';
-  import { frameExamples } from '../lib/layeredCanvas/frameExamples.js';
+  import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import { savePageTo } from "./fileManagerStore";
 
   export let fileSystem: FileSystem;

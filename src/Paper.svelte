@@ -1,23 +1,24 @@
 <script lang="ts">
   import { onMount, afterUpdate, createEventDispatcher, onDestroy } from 'svelte';
-  import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/layeredCanvas.js'
-  import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf, makeTrapezoidRect } from './lib/layeredCanvas/frameTree.js';
-  import { FloorLayer } from './lib/layeredCanvas/floorLayer.js';
-  import { PaperRendererLayer } from './lib/layeredCanvas/paperRendererLayer.js';
-  import { FrameLayer } from './lib/layeredCanvas/frameLayer.js';
-  import { BubbleLayer } from './lib/layeredCanvas/bubbleLayer.js';
-  import { Bubble } from './lib/layeredCanvas/bubble.js';
-  import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/saveCanvas.js';
+  import { LayeredCanvas, sequentializePointer } from './lib/layeredCanvas/system/layeredCanvas'
+  import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/system/keyCache";
+  import { FrameElement, calculatePhysicalLayout, collectImages, collectLeaves, constraintLeaf, dealImages, findLayoutOf } from './lib/layeredCanvas/dataModels/frameTree';
+  import { Bubble } from './lib/layeredCanvas/dataModels/bubble';
+  import { FloorLayer } from './lib/layeredCanvas/layers/floorLayer';
+  import { PaperRendererLayer } from './lib/layeredCanvas/layers/paperRendererLayer';
+  import { FrameLayer } from './lib/layeredCanvas/layers/frameLayer';
+  import { BubbleLayer } from './lib/layeredCanvas/layers/bubbleLayer';
+  import { InlinePainterLayer } from './lib/layeredCanvas/layers/inlinePainterLayer';
+  import { saveCanvas, copyCanvasToClipboard, makeFilename, canvasToUrl } from './lib/layeredCanvas/tools/saveCanvas';
+  import { trapezoidCenter } from './lib/layeredCanvas/tools/geometry/trapezoid';
   import { toolTipRequest } from './utils/passiveToolTipStore';
-  import { convertPointFromNodeToPage } from './lib/layeredCanvas/convertPoint.js';
+  import { convertPointFromNodeToPage } from './lib/layeredCanvas/tools/geometry/convertPoint';
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
-  import { getHaiku } from './lib/layeredCanvas/haiku.js';
-  import { initializeKeyCache, keyDownFlags } from "./lib/layeredCanvas/keyCache.js";
+  import { getHaiku } from './lib/layeredCanvas/tools/haiku';
   import { undoStore } from './undoStore';
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { makePlainImage } from './utils/imageUtil';
-  import { InlinePainterLayer } from './lib/layeredCanvas/inlinePainterLayer.js';
   import { postToAiPictors } from './utils/postToAiPictors.js'
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type Page, type Revision, commitPage, revertPage, revisionEqual, undoPageHistory, redoPageHistory } from './pageStore';
@@ -437,8 +438,7 @@
       leaf.prompt = scene.description;
 
       const layout = findLayoutOf(paperLayout, leaf);
-      const r = makeTrapezoidRect(layout.corners);
-      const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+      const c = trapezoidCenter(layout.corners);
       scene.bubbles.forEach((b:any) => {
         const bubbles = bubbleLayer.createTextBubble(b[1]);
         bubbles[0].shape = "rounded";

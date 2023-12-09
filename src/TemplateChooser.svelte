@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { register } from 'swiper/element/bundle';
-  import Paper from './Paper.svelte';
-  import { frameExamples } from './lib/layeredCanvas/frameExamples.js';
-  import { createEventDispatcher } from 'svelte';
+  import { FrameElement } from './lib/layeredCanvas/dataModels/frameTree';
+  import { frameExamples } from './lib/layeredCanvas/tools/frameExamples';
   import type { Page } from './pageStore'
-  import { FrameElement } from './lib/layeredCanvas/frameTree.js';
+  import Paper from './Paper.svelte';
 
   register();
 

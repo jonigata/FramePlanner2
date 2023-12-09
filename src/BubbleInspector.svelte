@@ -12,7 +12,7 @@
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
-  import type { Bubble } from "./lib/layeredCanvas/bubble.js";
+  import type { Bubble } from "./lib/layeredCanvas/dataModels/bubble";
   import { type BubbleInspectorPosition, bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from './filemanager/fileManagerStore';
 

@@ -21,6 +21,13 @@ export function trapezoidBoundingRect(corners: Trapezoid): Rect {
   ];
 }
 
+export function trapezoidCenter(corners: Trapezoid): Vector {
+  return [
+    (corners.topLeft[0] + corners.topRight[0] + corners.bottomLeft[0] + corners.bottomRight[0]) / 4,
+    (corners.topLeft[1] + corners.topRight[1] + corners.bottomLeft[1] + corners.bottomRight[1]) / 4,
+  ];
+}
+
 export function isPointInTrapezoid(p: Vector, t: Trapezoid) {
   return isPointInTriangle(p, [t.topLeft, t.topRight, t.bottomRight]) ||
     isPointInTriangle(p, [t.topLeft, t.bottomRight, t.bottomLeft]);
