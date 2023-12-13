@@ -12,12 +12,12 @@ export class FloorLayer extends Layer {
 
   wheel(delta: number) {
     console.log("FloorLayer wheel", delta);
-    let scale = this.canvas.paper.scale[0];
+    let scale = this.paper.viewport.scale[0];
     scale -= delta * 0.0001;
     if (scale < 0.1) scale = 0.1;
     if (scale > 10) scale = 10;
     scale = Math.round(scale * 100) / 100;
-    this.canvas.paper.scale = [scale, scale];
+    this.paper.viewport.scale = [scale, scale];
     this.redraw();
     this.onChange(scale);
     return true;
@@ -29,7 +29,7 @@ export class FloorLayer extends Layer {
 
   *pointer(p: Vector) {
     const dragStart = p;
-    const scale = this.canvas.paper.scale;
+    const scale = this.paper.viewport.scale;
 
     try {
       while (p = yield) {
@@ -37,7 +37,7 @@ export class FloorLayer extends Layer {
           (p[0] - dragStart[0]) * scale[0],
           (p[1] - dragStart[1]) * scale[1]
         ];
-        this.canvas.paper.viewTranslate = dragOffset;
+        this.paper.viewport.viewTranslate = dragOffset;
         this.redraw();
       }
     }
@@ -47,10 +47,10 @@ export class FloorLayer extends Layer {
         throw e;
       }
     }
-    const t = this.canvas.paper.translate;
-    const v = this.canvas.paper.viewTranslate;
-    this.canvas.paper.translate = [t[0] + v[0], t[1] + v[1]];
-    this.canvas.paper.viewTranslate = [0, 0];
+    const t = this.paper.viewport.translate;
+    const v = this.paper.viewport.viewTranslate;
+    this.paper.viewport.translate = [t[0] + v[0], t[1] + v[1]];
+    this.paper.viewport.viewTranslate = [0, 0];
   }
 
 }

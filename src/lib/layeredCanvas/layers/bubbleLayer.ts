@@ -412,7 +412,7 @@ export class BubbleLayer extends Layer {
   calculateFitBubbleSize(s: string, bubble: Bubble) {
     const baselineSkip = bubble.fontSize * 1.5;
     const charSkip = bubble.fontSize;
-    const ctx = this.context;
+    const ctx = this.paper.canvas.getContext('2d');
     let size: Vector =[0,0];
     if (bubble.direction == 'v') {
       const m = measureVerticalText(ctx, Infinity, s, baselineSkip, charSkip, false);
@@ -1109,7 +1109,7 @@ export class BubbleLayer extends Layer {
   }
 
   uniteBubble(bubbles) {
-    let path = null;
+    let path: paper.PathItem = null;
     for (let bubble of bubbles) {
       const [x, y, w, h] = bubble.regularizedPositionAndSize();
       const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
