@@ -521,4 +521,184 @@ export const aiTemplates = [
     ],
     "height": 100
   },
+  // 7コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 65
+              },
+              {
+                "width": 105
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 65
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 2
+                },
+                "width": 60
+              },
+              {
+                "width": 30
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 45
+          },
+          {
+            "row": [
+              {
+                "width": 75,
+                "column": [
+                  {
+                    "height": 40,
+                    "divider": {
+                      "spacing": 2
+                    },
+                  },
+                  {
+                    "height": 40
+                  }
+                ],
+                "divider": {
+                  "spacing": 3
+                },
+              },
+              {
+                "width": 75
+              },
+            ],
+            "height": 110
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  },
+  // 8コマ
+  {
+    "bgColor": "white",
+    "row": [
+      {
+        "visibility": 0,
+        "width": 3
+      },
+      {
+        "column": [
+          {
+            "visibility": 0,
+            "height": 3
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 65
+              },
+              {
+                "width": 105
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 65
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 2
+                },
+                "width": 60
+              },
+              {
+                "width": 30
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 45
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 75
+              },
+              {
+                "width": 75
+              }
+            ],
+            "divider": {
+              "spacing": 4
+            },
+            "height": 50
+          },
+          {
+            "row": [
+              {
+                "divider": {
+                  "spacing": 3
+                },
+                "width": 70
+              },
+              {
+                "width": 80
+              }
+            ],
+            "height": 65
+          },
+          {
+            "visibility": 0,
+            "height": 3
+          }
+        ],
+        "width": 120
+      },
+      {
+        "visibility": 0,
+        "width": 3
+      }
+    ],
+    "height": 100
+  }  
 ]
