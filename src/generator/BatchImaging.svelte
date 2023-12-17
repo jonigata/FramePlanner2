@@ -3,7 +3,7 @@
   import { batchImagingOpen } from "./batchImagingStore";
   import "../box.css"  
   import { onMount } from 'svelte';
-  import { mainPage } from '../bookeditor/page';
+  import { mainBook } from '../bookeditor/bookStore';
   import OpenAI from 'openai';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';

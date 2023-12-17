@@ -3,11 +3,8 @@ import { keyDownFlags } from "../system/keyCache.js";
 import type { Vector } from '../tools/geometry/geometry.js';
 
 export class FloorLayer extends Layer {
-  onChange: (scale: number) => void;
-
-  constructor(onChange: (scale: number) => void) {
+  constructor() {
     super();
-    this.onChange = onChange;
   }
 
   wheel(_position: Vector, delta: number) {
@@ -19,7 +16,6 @@ export class FloorLayer extends Layer {
     scale = Math.round(scale * 100) / 100;
     this.paper.viewport.scale = [scale, scale];
     this.redraw();
-    this.onChange(scale);
     return true;
   }
 

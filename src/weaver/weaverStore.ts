@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { type Page, newPage, commitPage } from "../bookeditor/page";
+import { type Page, newPage, commitPage } from "../bookeditor/book";
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { measureVerticalText } from '../lib/layeredCanvas/tools/draw/verticalText';

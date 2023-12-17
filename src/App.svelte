@@ -1,26 +1,28 @@
 <script lang="ts">
   import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
   import '@skeletonlabs/skeleton/styles/all.css';
-  //import '../app.postcss';  
-  import ControlPanel from './ControlPanel.svelte';
-  import MainPaper from './MainPaper.svelte';
+
   import { Toast } from '@skeletonlabs/skeleton';
-  import PassiveToolTip from './utils/PassiveToolTip.svelte';
-  import About from './About.svelte';
-  import BubbleInspector from './BubbleInspector.svelte';
-  import JsonEditor from './JsonEditor.svelte';
   import { onMount } from 'svelte';
-  import * as Sentry from "@sentry/svelte";
   import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
-  import Comic from './Comic.svelte'; 
-  import License from './License.svelte';
-  import FontChooser from './FontChooser.svelte';
-  import ShapeChooser from './ShapeChooser.svelte';
+  import * as Sentry from "@sentry/svelte";
+
+  //import '../app.postcss';  
+  import ControlPanel from './controlpanel/ControlPanel.svelte';
+  import BookEditor from './bookeditor/BookEditor.svelte';
+  import PassiveToolTip from './utils/PassiveToolTip.svelte';
+  import About from './about/About.svelte';
+  import BubbleInspector from './bookeditor/bubbleinspector/BubbleInspector.svelte';
+  import JsonEditor from './jsoneditor/JsonEditor.svelte';
+  import Comic from './utils/Comic.svelte'; 
+  import License from './utils/License.svelte';
+  import FontChooser from './bookeditor/bubbleinspector/FontChooser.svelte';
+  import ShapeChooser from './bookeditor/bubbleinspector/ShapeChooser.svelte';
   import ImageGenerator from './generator/ImageGenerator.svelte';
   import FileManager from './filemanager/FileManager.svelte';
-  import NewFileButton from './NewFileButton.svelte';
-  import CabinetButton from './CabinetButton.svelte';
-  import Waiting from './Waiting.svelte'
+  import NewFileButton from './rootelements/NewFileButton.svelte';
+  import CabinetButton from './rootelements/CabinetButton.svelte';
+  import Waiting from './utils/Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   
@@ -57,7 +59,7 @@
   });
 </script>
 
-<MainPaper/>
+<BookEditor />
 
 <div class="control-panel-container">
   <ControlPanel />

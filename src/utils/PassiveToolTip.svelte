@@ -1,8 +1,10 @@
 <script lang="ts">
   import { toolTipRequest } from "./passiveToolTipStore";
-  import { fontChooserOpen } from '../fontStore';
-  import { aboutOpen } from '../aboutStore';
+  import { fontChooserOpen } from '../bookeditor/bubbleinspector/fontStore';
+  import { aboutOpen } from '../about/aboutStore';
   import { tick } from "svelte";
+
+  // TODO: fontChooserOpenとかaboutOpen見に行ってるの見苦しい
 
   let tooltip = null;
   let position = { x: 0, y: 0 };

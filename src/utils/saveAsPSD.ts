@@ -1,6 +1,6 @@
 import { writePsd } from 'ag-psd';
 import { saveAs } from 'file-saver';
-import type { Page } from '../bookeditor/page';
+import type { Page } from '../bookeditor/book';
 import { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas'
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 
