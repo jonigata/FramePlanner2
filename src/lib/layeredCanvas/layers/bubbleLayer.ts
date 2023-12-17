@@ -18,7 +18,7 @@ const iconUnit: Vector = [20, 20];
 export class BubbleLayer extends Layer {
   renderLayer: PaperRendererLayer;
   interactable: boolean;
-  frameLayer: Layer;
+  frameLayer: FrameLayer;
   bubbles: Bubble[];
   onShowInspector: (bubble: Bubble) => void;
   onHideInspector: () => void;
@@ -305,7 +305,7 @@ export class BubbleLayer extends Layer {
     return false;
   }
 
-  async keyDown(event: KeyboardEvent): Promise<boolean> {
+  async keyDown(position_: Vector, event: KeyboardEvent): Promise<boolean> {
     if (!this.interactable) {return false;}
 
     if (event.code === "KeyX" && event.ctrlKey) {
@@ -639,7 +639,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  dropped(image: HTMLImageElement, position: Vector): boolean {
+  dropped(position: Vector, image: HTMLImageElement): boolean {
     if (!this.interactable) { return; }
 
     if (this.createBubbleIcon.contains(position)) {

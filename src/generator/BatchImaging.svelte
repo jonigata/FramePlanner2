@@ -3,13 +3,13 @@
   import { batchImagingOpen } from "./batchImagingStore";
   import "../box.css"  
   import { onMount } from 'svelte';
-  import { mainPage } from '../pageStore';
+  import { mainPage } from '../bookeditor/page';
   import OpenAI from 'openai';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { redrawToken } from '../paperStore';
+  import { redrawToken } from '../bookeditor/paperStore';
   import { commitToken } from '../undoStore';
 
   let totalCount = 1;

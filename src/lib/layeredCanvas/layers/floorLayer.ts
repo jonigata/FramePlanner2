@@ -10,7 +10,7 @@ export class FloorLayer extends Layer {
     this.onChange = onChange;
   }
 
-  wheel(delta: number) {
+  wheel(_position: Vector, delta: number) {
     console.log("FloorLayer wheel", delta);
     let scale = this.paper.viewport.scale[0];
     scale -= delta * 0.0001;

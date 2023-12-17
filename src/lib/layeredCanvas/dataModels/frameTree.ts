@@ -499,17 +499,26 @@ export function rectFromBox(position: Vector, size: Vector): Rect {
 }
 
 export function findLayoutAt(layout: Layout, position: Vector): Layout {
-  if (layout.children) {
+  return findLayoutAtAux(layout, position, null);
+}
+
+export function findLayoutAtAux(layout: Layout, position: Vector, current: Layout): Layout {
+  if (layout.children != null) {
     for (let i = 0; i < layout.children.length; i++) {
       const child = layout.children[i];
-      const found = findLayoutAt(child, position);
-      if (found) { return found; }
+      current = findLayoutAtAux(child, position, current);
+    }
+    return current;
+  } else {
+    if (isPointInTrapezoid(position, layout.corners)) {
+      if (current != null && layout.element.z < current.element.z) { 
+        return current; 
+      }
+      return layout;
+    } else {
+      return current;
     }
   }
-  if (isPointInTrapezoid(position, layout.corners)) {
-    return layout;
-  }
-  return null;
 }
 
 export function findLayoutOf(layout: Layout, element: FrameElement): Layout {

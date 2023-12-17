@@ -1,6 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page } from "../pageStore.js";
+import type { Page } from "../bookeditor/page.js";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 

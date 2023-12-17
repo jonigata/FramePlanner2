@@ -361,7 +361,7 @@ export class LayeredCanvas {
     event.preventDefault();
   }
 
-  async handleDrop(event: DragEvent): void {
+  async handleDrop(event: DragEvent): Promise<void> {
     const p = this.pagePositionToCanvasPosition(event);
     this.pointerCursor = p;
 

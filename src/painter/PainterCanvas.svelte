@@ -3,7 +3,7 @@
   import * as paper from 'paper';
   import { convertPointFromPageToNode } from "../lib/layeredCanvas/tools/geometry/convertPoint";
   import { generateImageWithScribble } from "../generator/sdwebui";
-  import { redrawToken } from '../paperStore';
+  import { redrawToken } from '../bookeditor/paperStore';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
 
   export let targetImage: HTMLImageElement;

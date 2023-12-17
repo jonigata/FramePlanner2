@@ -147,7 +147,7 @@ export class FrameLayer extends Layer {
     this.borderIcons.forEach(icon => icon.render(ctx));
   }
 
-  dropped(image: HTMLImageElement, position: Vector): boolean {
+  dropped(position: Vector, image: HTMLImageElement): boolean {
     if (!this.interactable) { return; }
 
     const layout = calculatePhysicalLayout(
@@ -253,7 +253,7 @@ export class FrameLayer extends Layer {
     this.updateFocus(point);
   }
 
-  async keyDown(event: KeyboardEvent): Promise<boolean> {
+  async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (event.code === "KeyV" && event.ctrlKey) {
       try {
         const items = await navigator.clipboard.read();
@@ -266,7 +266,7 @@ export class FrameLayer extends Layer {
               const image = new Image();
               image.src = url;
               image.onload = () => {
-                this.dropped(image, this.cursorPosition);
+                this.dropped(this.cursorPosition, image);
               };
               return true;
             }

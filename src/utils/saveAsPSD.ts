@@ -1,6 +1,6 @@
 import { writePsd } from 'ag-psd';
 import { saveAs } from 'file-saver';
-import type { Page } from '../pageStore';
+import type { Page } from '../bookeditor/page';
 import { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas'
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 
@@ -20,12 +20,11 @@ export function saveAsPSD(page: Page) {
 
   const layeredCanvas = new LayeredCanvas(
     canvas, 
-    page.paperSize,
     (p: [number, number], s: String) => {},
     false);
 
   const paperRendererLayer = new PaperRendererLayer();
-  layeredCanvas.addLayer(paperRendererLayer);
+  layeredCanvas.rootPaper.addLayer(paperRendererLayer);
 
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { redrawToken } from '../paperStore';
+  import { redrawToken } from '../bookeditor/paperStore';
   import { generateImageWithScribble } from "../generator/sdwebui";
 
   let busy: boolean;
