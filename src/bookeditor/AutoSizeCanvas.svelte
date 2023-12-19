@@ -1,0 +1,45 @@
+<script lang="ts">
+  export let canvas: HTMLCanvasElement;
+
+  let containerWidth: number;
+  let containerHeight: number;
+  let canvasWidth: number;
+  let canvasHeight: number;
+
+  $:onChangeContainerSize(containerWidth, containerHeight);
+  function onChangeContainerSize(w: number, h: number) {
+    if (!w || !h) return;
+    canvasWidth = w;
+    canvasHeight = h;
+  }
+</script>
+
+<div class="canvas-container fullscreen" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
+  <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
+  <slot/>
+</div>    
+
+
+<style>
+  .canvas-container {
+    position: relative;
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+                      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    background-color: white;
+  }
+  .fullscreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    touch-action: none;
+  }  
+</style>

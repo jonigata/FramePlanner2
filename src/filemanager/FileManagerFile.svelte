@@ -1,7 +1,8 @@
 <script lang="ts">
   import { loadPageFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
-  import { type Page, mainPage } from '../bookeditor/book';
+  import type { Page } from '../bookeditor/book';
+  import { mainPage } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";

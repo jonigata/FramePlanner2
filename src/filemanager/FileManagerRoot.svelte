@@ -1,10 +1,9 @@
 <script lang="ts">
-  import Drawer from '../utils/Drawer.svelte'
-  import FileManagerFolder from './FileManagerFolder.svelte';
+  import { onMount } from 'svelte';
   import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, sharePageToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
-  import { type Page, mainPage, revisionEqual, commitPage, getRevision } from '../bookeditor/book';
-  import { onMount } from 'svelte';
+  import { type Page, revisionEqual, commitPage, getRevision } from '../bookeditor/book';
+  import { mainBook, mainPage } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
@@ -16,6 +15,8 @@
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { getLayover } from "../firebase";
   import { createPage } from '../weaver/weaverStore';
+  import Drawer from '../utils/Drawer.svelte'
+  import FileManagerFolder from './FileManagerFolder.svelte';
 
   export let fileSystem: FileSystem;
 
@@ -52,7 +53,7 @@
         console.log("*********** loadPageFrom from FileManagerRoot", currentFile);
         const newPage = await loadPageFrom(fileSystem, currentFile.asFile());
         currentRevision = getRevision(newPage);
-        $mainPage = newPage;
+        $mainBook = { id: 'dummy', pages: [newPage] };
       } else {
         // 初期化時は仮ファイルをセーブする
         const root = await fileSystem.getRoot();
@@ -65,7 +66,7 @@
         newPage.revision.id = file.id;
         newPage.revision.prefix = "standard";
         currentRevision = getRevision(newPage);
-        $mainPage = newPage;
+        $mainBook = { id: 'dummy', pages: [newPage] };
         $fileManagerRefreshKey++;
         await recordCurrentFileId(file.id);
         logEvent(getAnalytics(), 'new_page');

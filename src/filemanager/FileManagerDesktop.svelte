@@ -2,7 +2,7 @@
   import FileManagerDesktopPaper from './FileManagerDesktopPaper.svelte';
   import type { FileSystem, Folder } from "../lib/filesystem/fileSystem";
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
-  import type { Page } from '../pageStore';
+  import type { Page } from '../bookeditor/book';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import { savePageTo } from "./fileManagerStore";
 

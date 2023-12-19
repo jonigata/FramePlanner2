@@ -3,7 +3,6 @@
   import { batchImagingOpen } from "./batchImagingStore";
   import "../box.css"  
   import { onMount } from 'svelte';
-  import { mainBook } from '../bookeditor/bookStore';
   import OpenAI from 'openai';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -11,6 +10,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { redrawToken } from '../bookeditor/paperStore';
   import { commitToken } from '../undoStore';
+  import { mainPage } from '../bookeditor/bookStore';
 
   let totalCount = 1;
   let filledCount = 0;

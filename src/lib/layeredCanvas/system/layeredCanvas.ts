@@ -5,6 +5,8 @@ import type { Vector } from "../tools/geometry/geometry";
 type OnHint = (p: Vector, s: string | null) => void;
 
 export interface Viewport {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
   translate: Vector;
   viewTranslate: Vector;
   scale: Vector;
@@ -43,14 +45,10 @@ export class Layer {
 }
 
 export class Paper {
-  canvas: HTMLCanvasElement;
-  viewport: Viewport;
   size: Vector;
   layers: Layer[];
 
-  constructor(canvas: HTMLCanvasElement, viewport: Viewport, size: Vector) {
-    this.canvas = canvas;
-    this.viewport = viewport;
+  constructor(size: Vector) {
     this.size = size;
     this.layers = [];
   }
@@ -78,6 +76,7 @@ export class Paper {
   }
 
   handlePointerDown(p: Vector, dragging: Dragging): void {
+    console.log("Paper.dragging", dragging);
     dragging.layer.pointerDown(p, dragging.payload);
   }
       
@@ -159,18 +158,9 @@ export class Paper {
     }
   }
 
-  render(): void {
-    const ctx = this.canvas.getContext('2d');
-
-    ctx.fillStyle = "rgb(240,240,240)";
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
+  render(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    ctx.translate(this.canvas.width * 0.5, this.canvas.height * 0.5); // 画面中央
-    ctx.translate(...this.viewport.translate);                             // パン
-    ctx.translate(...this.viewport.viewTranslate);                         // パン(一時)
-    ctx.scale(...this.viewport.scale);                                     // 拡大縮小
-    ctx.translate(-this.size[0] * 0.5, -this.size[1] * 0.5); // 紙面中央
+    ctx.translate(-this.size[0] * 0.5, -this.size[1] * 0.5);  // 紙面左上
     for (let layer of this.layers) {
       layer.render(ctx);
     }
@@ -197,7 +187,7 @@ export class Paper {
     layer.paper = this
     layer.hint = (p, s) => {
       const q = this.paperPositionToViewportPosition(p);
-      this.viewport.onHint(q, s);
+      // this.viewport.onHint(q, s); // TODO:
     }
     this.layers.push(layer);
   }
@@ -211,29 +201,26 @@ export class Paper {
 
 
 export class LayeredCanvas {
-  canvas: HTMLCanvasElement;
-  context: CanvasRenderingContext2D;
   keyDownHandler: (event: KeyboardEvent) => void;
   pointerCursor: Vector;
   viewport: Viewport;
   rootPaper: Paper;
-  listeners: [string, ((event: Event) => void)][];
+  listeners: [string, ((event: Event) => void)][] = [];
   dragging: Dragging;
 
   constructor(c: HTMLCanvasElement, onHint: OnHint, editable: boolean) { // TODO: editableいらなそう
-    this.canvas = c;
-    this.context = this.canvas.getContext('2d');
-
     this.viewport = { 
+      canvas: c,
+      ctx: c.getContext('2d'),
       translate: [0, 0],
       viewTranslate: [0, 0], 
       scale: [1, 1], 
       onHint: (p, s) => {
-        const q = this.viewportPositionToCanvasPosition(p);
+        const q: Vector = p ? this.viewportPositionToCanvasPosition(p) : [-1,-1];
         onHint(q, s);
       }
     };
-    this.rootPaper = new Paper(c, this.viewport, [0,0]);
+    this.rootPaper = new Paper([0,0]);
 
     const addEventListener = (name: string, handler: (event: Event) => void) =>  {
       const f = handler.bind(this);
@@ -263,20 +250,22 @@ export class LayeredCanvas {
       document.removeEventListener('keydown', this.keyDownHandler);
     }
     for (let listener of this.listeners) {
-      this.canvas.removeEventListener(...listener);
+      this.viewport.canvas.removeEventListener(...listener);
     }
   }
 
+  // canvasの中央を原点(1枚目の紙の中央)とする
+
   pagePositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
-    const p = convertPointFromPageToNode(this.canvas, event.pageX, event.pageY);
+    const p = convertPointFromPageToNode(this.viewport.canvas, event.pageX, event.pageY);
     return [Math.floor(p.x), Math.floor(p.y)];
   }
 
   canvasPositionToViewportPosition(p: Vector): Vector {
     const v = this.viewport;
     const centering = [
-      this.canvas.width * 0.5 + v.translate[0],
-      this.canvas.height * 0.5 + v.translate[1],
+      this.viewport.canvas.width * 0.5 + v.translate[0],
+      this.viewport.canvas.height * 0.5 + v.translate[1],
     ];
     const [tx, ty] = [p[0] - centering[0], p[1] - centering[1]];
     const [sx, sy] = [tx / v.scale[0], ty / v.scale[1]];
@@ -297,8 +286,8 @@ export class LayeredCanvas {
     const [sx, sy] = p;
     const v = this.viewport;
     const centering = [
-      this.canvas.width * 0.5 + v.translate[0],
-      this.canvas.height * 0.5 + v.translate[1],
+      this.viewport.canvas.width * 0.5 + v.translate[0],
+      this.viewport.canvas.height * 0.5 + v.translate[1],
     ];
     const [tx, ty] = [sx * v.scale[0], sy * v.scale[1]];
     const [x, y] = [tx + centering[0], ty + centering[1]];
@@ -314,7 +303,8 @@ export class LayeredCanvas {
     const p = this.pagePositionToCanvasPosition(event);
     this.dragging = this.rootPaper.handleAccepts(p);
     if (this.dragging) {
-      this.canvas.setPointerCapture(event.pointerId);
+      console.log("dragging", this.dragging);
+      this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);
       this.rootPaper.changeFocus(this.dragging.layer);
     }
@@ -333,28 +323,34 @@ export class LayeredCanvas {
   }
     
   handlePointerUp(event: PointerEvent): void {
-    const p = this.pagePositionToCanvasPosition(event);
-    this.rootPaper.handlePointerUp(p, this.dragging);
-    this.canvas.releasePointerCapture(event.pointerId);
-    this.dragging = null;
-    this.redrawIfRequired();
+    if (this.dragging) {
+      const p = this.pagePositionToCanvasPosition(event);
+      this.rootPaper.handlePointerUp(p, this.dragging);
+      this.viewport.canvas.releasePointerCapture(event.pointerId);
+      this.dragging = null;
+      this.redrawIfRequired();
+    }
   }
       
   handlePointerLeave(event: PointerEvent): void {
+    if (this.dragging) {
+      const p = this.pagePositionToCanvasPosition(event);
+      this.rootPaper.handlePointerLeave(p, this.dragging);
+      this.viewport.canvas.releasePointerCapture(event.pointerId);
+      this.dragging = null;
+      this.redrawIfRequired();
+    }
     this.pointerCursor = null;
-    const p = this.pagePositionToCanvasPosition(event);
-    this.rootPaper.handlePointerLeave(p, this.dragging);
-    this.canvas.releasePointerCapture(event.pointerId);
-    this.dragging = null;
-    this.redrawIfRequired();
     this.viewport.onHint(null, null);
   }
 
   handleContextMenu(event: PointerEvent): void {
-    const p = this.pagePositionToCanvasPosition(event);
-    this.pointerCursor = p;
-    this.rootPaper.handleCancel(p, this.dragging);
-    this.redrawIfRequired();
+    if (this.dragging) {
+      const p = this.pagePositionToCanvasPosition(event);
+      this.pointerCursor = p;
+      this.rootPaper.handleCancel(p, this.dragging);
+      this.redrawIfRequired();
+    }
   }
         
   handleDragOver(event: DragEvent): void {
@@ -403,8 +399,24 @@ export class LayeredCanvas {
   }
 
   render(): void {
+    const canvas = this.viewport.canvas;
+    const ctx = this.viewport.ctx;
+
+    ctx.fillStyle = "rgb(240,240,240)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(canvas.width * 0.5, canvas.height * 0.5);   // 画面中央
+    ctx.translate(...this.viewport.translate);                     // パン
+    ctx.translate(...this.viewport.viewTranslate);                 // パン(一時)
+    ctx.scale(...this.viewport.scale);                             // 拡大縮小
+
     this.rootPaper.prerender();
-    this.rootPaper.render();
+    this.rootPaper.render(ctx);
+
+    ctx.restore();
+
+
   }
 
   redraw(): void {
@@ -422,7 +434,7 @@ export class LayeredCanvas {
   isPointerOnCanvas(): boolean {
     const m = this.pointerCursor
     if (m == null) { return false; }
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = this.viewport.canvas.getBoundingClientRect();
     const f = 0 <= m[0] && m[0] <= rect.width && 0 <= m[1] && m[1] <= rect.height;
     return f;
   }

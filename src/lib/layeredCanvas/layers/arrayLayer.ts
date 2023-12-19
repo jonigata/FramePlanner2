@@ -19,6 +19,7 @@ export class ArrayLayer extends Layer {
   accepts(p: Vector): any { 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position);
+    if (!innerDragging) { return null; }
     return { paper, innerDragging };
   }
 
@@ -48,16 +49,19 @@ export class ArrayLayer extends Layer {
 
   prerender(): void {
     for (let i = 0; i < this.array.papers.length; i++) {
-      this.array.papers[i].paper.prerender();
+
     }
   }
 
   render(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
     for (let i = 0; i < this.array.papers.length; i++) {
-      // TODO: 多分translateが要る
+      const center = this.array.papers[i].center;
+      ctx.translate(center[0], center[1]);
       const e = this.array.papers[i];
-      e.paper.render();
+      e.paper.render(ctx);
     }
+    ctx.restore();
   }
 
   dropped(p: Vector, image: HTMLImageElement): boolean {
