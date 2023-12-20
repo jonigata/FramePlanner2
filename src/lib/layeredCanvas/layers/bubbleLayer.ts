@@ -1,4 +1,4 @@
-import { Layer } from "../system/layeredCanvas";
+import { Layer, sequentializePointer } from "../system/layeredCanvas";
 import { keyDownFlags } from "../system/keyCache";
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 import { getPath } from "../tools/draw/bubbleGraphic";
@@ -1218,4 +1218,5 @@ export class BubbleLayer extends Layer {
     this.redraw();
   }
 }
+sequentializePointer(BubbleLayer);
 

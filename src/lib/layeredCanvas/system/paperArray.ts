@@ -45,16 +45,34 @@ export class PaperArray {
     return minIndex;
   }
 
+  findNearestPaper(parentPosition: Vector): Paper {
+    const index = this.findNearestPaperIndex(parentPosition);
+    return this.papers[index].paper;
+  }
+
+  findPaperIndex(paper: Paper): number {
+    return this.papers.findIndex(e => e.paper === paper);
+  }
+
   parentPositionToChildPosition(index: number, parentPosition: Vector): Vector {
     const e = this.papers[index];
     const x0 = e.center[0] - e.paper.size[0] * 0.5;
-    return [parentPosition[0] - x0, parentPosition[1]];
+    const y0 = e.center[1] - e.paper.size[1] * 0.5;
+    return [parentPosition[0] - x0, parentPosition[1] - y0];
   }
 
   parentPositionToNearestChildPosition(parentPosition: Vector): {index:number, position:Vector, paper: Paper} {
     const index = this.findNearestPaperIndex(parentPosition);
     const position = this.parentPositionToChildPosition(index, parentPosition);
     return {index, position, paper: this.papers[index].paper};
+  }
+
+  get redrawRequired(): boolean {
+    return this.papers.some(e => e.paper.redrawRequired);
+  }
+
+  set redrawRequired(value: boolean) {
+    this.papers.forEach(e => e.paper.redrawRequired = value);
   }
 
 }

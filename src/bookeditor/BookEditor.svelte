@@ -3,7 +3,7 @@
   import { mainBook } from './bookStore';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { buildBookEditor } from './bookEditorUtils';
+  import { buildBookEditor, type BookOperators } from './bookEditorUtils';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import { undoStore } from '../undoStore';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
@@ -24,12 +24,21 @@
 
   $: if (canvas) {
     console.log("*********** buildBookEditor from BookEditor");
+    const operators: BookOperators = {
+      commit: () => {},
+      revert: () => {},
+      undo: () => { $undoStore.undo(); },
+      redo: () => { $undoStore.redo(); },
+      modalGenerate: () => {},
+      modalScribble: () => {},
+      insert: () => {},
+      splice: () => {},
+      hint: (p: [number, number], s: String) => {},
+    };
     layeredCanvas = buildBookEditor(
       canvas, 
       book.pages,
-      onHint,
-      () => { $undoStore.redo(); },
-      () => { $undoStore.undo(); });
+      operators);
     layeredCanvas.redraw();
   }
 </script>

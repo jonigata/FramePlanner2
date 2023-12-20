@@ -17,10 +17,10 @@ export class ArrayLayer extends Layer {
   }
 
   accepts(p: Vector): any { 
-    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position);
     if (!innerDragging) { return null; }
-    return { paper, innerDragging };
+    return { paper, index, innerDragging };
   }
 
   changeFocus(layer: Layer): void {
@@ -28,23 +28,27 @@ export class ArrayLayer extends Layer {
   }
 
   pointerDown(p: Vector, payload: any): void {
-    const { paper, innerDragging } = payload;
-    paper.handlePointerDown(p, innerDragging);
+    const { paper, index, innerDragging } = payload;
+    const q = this.array.parentPositionToChildPosition(index, p);
+    paper.handlePointerDown(q, innerDragging);
   }
 
   pointerMove(p: Vector, payload: any): void {
-    const { paper, innerDragging } = payload;
-    paper.handlePointerMove(p, innerDragging);
+    const { paper, index, innerDragging } = payload;
+    const q = this.array.parentPositionToChildPosition(index, p);
+    paper.handlePointerMove(q, innerDragging);
   }
 
   pointerUp(p: Vector, payload: any): void {
-    const { paper, innerDragging } = payload;
-    paper.handlePointerUp(p, innerDragging);
+    const { paper, index, innerDragging } = payload;
+    const q = this.array.parentPositionToChildPosition(index, p);
+    paper.handlePointerUp(q, innerDragging);
   }
 
   pointerCancel(p: Vector, payload: any): void {
-    const { paper, innerDragging } = payload;
-    paper.handleCancel(p, innerDragging);
+    const { paper, index, innerDragging } = payload;
+    const q = this.array.parentPositionToChildPosition(index, p);
+    paper.handleCancel(q, innerDragging);
   }
 
   prerender(): void {
@@ -92,5 +96,12 @@ export class ArrayLayer extends Layer {
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     paper.handleWheel(position, delta);
     return false; // TODO: 実際問題として使われないと考えられるため
+  }
+
+  get redrawRequired(): boolean {
+    return this.array.redrawRequired;
+  }
+  set redrawRequired(value: boolean) {
+    this.array.redrawRequired = value;
   }
 }

@@ -20,7 +20,6 @@ export interface Dragging {
 
 export class Layer {
   paper: Paper = null;
-  redrawRequired: boolean = false;
   hint: OnHint = null;
 
   constructor() {}
@@ -42,6 +41,10 @@ export class Layer {
   doubleClicked(position: Vector) { return false; }
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
   wheel(position: Vector, delta: number) { return false; }
+
+  redrawRequired_: boolean = false;
+  get redrawRequired(): boolean { return this.redrawRequired_; }
+  set redrawRequired(f: boolean) { this.redrawRequired_ = f; }
 }
 
 export class Paper {
@@ -76,7 +79,6 @@ export class Paper {
   }
 
   handlePointerDown(p: Vector, dragging: Dragging): void {
-    console.log("Paper.dragging", dragging);
     dragging.layer.pointerDown(p, dragging.payload);
   }
       
@@ -177,9 +179,9 @@ export class Paper {
     return false;
   }
 
-  resetRedrawRequired(): void {
+  set redrawRequired(value: boolean) {
     for (let layer of this.layers) {
-      layer.redrawRequired = false;
+      layer.redrawRequired = value;
     }
   }
   
@@ -300,10 +302,9 @@ export class LayeredCanvas {
   }
     
   handlePointerDown(event: PointerEvent): void {
-    const p = this.pagePositionToCanvasPosition(event);
+    const p = this.pagePositionToPaperPosition(event);
     this.dragging = this.rootPaper.handleAccepts(p);
     if (this.dragging) {
-      console.log("dragging", this.dragging);
       this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);
       this.rootPaper.changeFocus(this.dragging.layer);
@@ -312,7 +313,7 @@ export class LayeredCanvas {
   }
       
   handlePointerMove(event: PointerEvent): void {
-    const p = this.pagePositionToCanvasPosition(event);
+    const p = this.pagePositionToPaperPosition(event);
     this.pointerCursor = p;
     if (this.dragging) {
       this.rootPaper.handlePointerMove(p, this.dragging);
@@ -324,7 +325,7 @@ export class LayeredCanvas {
     
   handlePointerUp(event: PointerEvent): void {
     if (this.dragging) {
-      const p = this.pagePositionToCanvasPosition(event);
+      const p = this.pagePositionToPaperPosition(event);
       this.rootPaper.handlePointerUp(p, this.dragging);
       this.viewport.canvas.releasePointerCapture(event.pointerId);
       this.dragging = null;
@@ -334,7 +335,7 @@ export class LayeredCanvas {
       
   handlePointerLeave(event: PointerEvent): void {
     if (this.dragging) {
-      const p = this.pagePositionToCanvasPosition(event);
+      const p = this.pagePositionToPaperPosition(event);
       this.rootPaper.handlePointerLeave(p, this.dragging);
       this.viewport.canvas.releasePointerCapture(event.pointerId);
       this.dragging = null;
@@ -346,7 +347,7 @@ export class LayeredCanvas {
 
   handleContextMenu(event: PointerEvent): void {
     if (this.dragging) {
-      const p = this.pagePositionToCanvasPosition(event);
+      const p = this.pagePositionToPaperPosition(event);
       this.pointerCursor = p;
       this.rootPaper.handleCancel(p, this.dragging);
       this.redrawIfRequired();
@@ -358,7 +359,7 @@ export class LayeredCanvas {
   }
 
   async handleDrop(event: DragEvent): Promise<void> {
-    const p = this.pagePositionToCanvasPosition(event);
+    const p = this.pagePositionToPaperPosition(event);
     this.pointerCursor = p;
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
@@ -375,7 +376,7 @@ export class LayeredCanvas {
   }
 
   handleDoubleClick(event: PointerEvent): void {
-    const p = this.pagePositionToCanvasPosition(event);
+    const p = this.pagePositionToPaperPosition(event);
     this.pointerCursor = p;
     this.rootPaper.handleBeforeDoubleClick(p);
     this.rootPaper.handleDoubleClicked(p);
@@ -393,7 +394,7 @@ export class LayeredCanvas {
 
   handleWheel(event: WheelEvent): void {
     const delta = event.deltaY;
-    const p = this.pagePositionToCanvasPosition(event);
+    const p = this.pagePositionToPaperPosition(event);
     this.rootPaper.handleWheel(p, delta);
     this.redrawIfRequired();
   }
@@ -425,7 +426,7 @@ export class LayeredCanvas {
     
   redrawIfRequired(): void {
     if (this.rootPaper.redrawRequired) {
-      this.rootPaper.resetRedrawRequired();
+      this.rootPaper.redrawRequired = false;
       this.render();
       return;
     }

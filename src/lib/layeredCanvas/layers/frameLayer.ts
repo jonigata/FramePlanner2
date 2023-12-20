@@ -1,4 +1,4 @@
-import { Layer } from "../system/layeredCanvas";
+import { Layer, sequentializePointer } from "../system/layeredCanvas";
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromBox, type Padding } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
@@ -14,7 +14,7 @@ export class FrameLayer extends Layer {
   renderLayer: PaperRendererLayer;
   frameTree: FrameElement;
   interactable: boolean;
-  onCommit: (frameTree: FrameElement) => void;
+  onCommit: () => void;
   onRevert: () => void;
   onGenerate: (element: FrameElement) => void;
   onScribble: (element: FrameElement) => void;
@@ -55,8 +55,7 @@ export class FrameLayer extends Layer {
   constructor(
     renderLayer: PaperRendererLayer,
     frameTree: FrameElement, 
-    interactable: boolean, 
-    onCommit: (frameTree: FrameElement) => void, 
+    onCommit: () => void, 
     onRevert: () => void, 
     onGenerate: (element: FrameElement) => void, 
     onScribble: (element: FrameElement) => void, 
@@ -65,7 +64,7 @@ export class FrameLayer extends Layer {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
-    this.interactable = interactable;
+    this.interactable = true;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
     this.onGenerate = onGenerate;
@@ -161,7 +160,7 @@ export class FrameLayer extends Layer {
     }
 
     this.importImage(layoutlet, image);
-    this.onCommit(layoutlet.element);
+    this.onCommit();
     return true;
   }
 
@@ -243,14 +242,14 @@ export class FrameLayer extends Layer {
     } 
   }
 
-  pointerHover(point: Vector): boolean {
-    this.cursorPosition = point;
-    if(!point) {
+  pointerHover(position: Vector): boolean {
+    this.cursorPosition = position;
+    if(!position) {
       this.focusedLayout = null;
       return false;
     }
     if (keyDownFlags["Space"]) { return; }
-    this.updateFocus(point);
+    this.updateFocus(position);
   }
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
@@ -297,7 +296,7 @@ export class FrameLayer extends Layer {
         console.log("transpose border", this.focusedBorder.index)
         const target = this.focusedBorder.layout.element.children[this.focusedBorder.index-1];
         FrameElement.transposeDivider(this.frameTree, target);
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       } else {
@@ -309,7 +308,7 @@ export class FrameLayer extends Layer {
     if (layout) {
       if (keyDownFlags["KeyQ"]) {
         FrameElement.eraseElement(this.frameTree, layout.element);
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       }
@@ -318,7 +317,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       }
@@ -327,7 +326,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       }
@@ -356,7 +355,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.focusedLayout = null;
         this.redraw();
         return null;
@@ -366,21 +365,21 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.focusedLayout = null;
         this.redraw();
         return null;
       }
       if (this.deleteIcon.contains(point)) {
         FrameElement.eraseElement(this.frameTree, layout.element);
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.focusedLayout = null;
         this.redraw();
         return null;
       }
       if (this.duplicateIcon.contains(point)) {
         FrameElement.duplicateElement(this.frameTree, layout.element);
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.updateFocus(point);
         this.redraw();
         return null;
@@ -397,27 +396,27 @@ export class FrameLayer extends Layer {
       }
       if (this.zplusIcon.contains(point)) {
         layout.element.z += 1;
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       }
       if (this.zminusIcon.contains(point)) {
         layout.element.z -= 1;
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       }
       if (this.visibilityIcon.contains(point)) {
         this.visibilityIcon.increment();
         layout.element.visibility = this.visibilityIcon.index;
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
         return null;
       }
 
       if (this.dropIcon.contains(point)) {
         layout.element.image = null;
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
       } else if (this.flipHorizontalIcon.contains(point)) {
         layout.element.reverse[0] *= -1;
@@ -428,7 +427,7 @@ export class FrameLayer extends Layer {
       } else if (this.fitIcon.contains(point)) {
         layout.element.scale = [0.001, 0.001];
         constraintLeaf(layout);
-        this.onCommit(this.frameTree);
+        this.onCommit();
         this.redraw();
       } else if (this.generateIcon.contains(point)) {
         this.onGenerate(layout.element);
@@ -492,7 +491,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
-    this.onCommit(this.frameTree);
+    this.onCommit();
   }
 
   *rotateImage(p: Vector, layout: Layout) {
@@ -513,7 +512,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
-    this.onCommit(this.frameTree);
+    this.onCommit();
   }
 
   *translateImage(p: Vector, layout: Layout) {
@@ -533,7 +532,7 @@ export class FrameLayer extends Layer {
       }
     }
     if (element.translation !== origin) {
-      this.onCommit(this.frameTree);
+      this.onCommit();
     }
   }
 
@@ -563,7 +562,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
-    this.onCommit(this.frameTree);
+    this.onCommit();
   }
 
   *expandBorder(p: Vector, border: Border) {
@@ -596,7 +595,7 @@ export class FrameLayer extends Layer {
       }
     }
 
-    this.onCommit(this.frameTree);
+    this.onCommit();
   }
 
   *slantBorder(p: Vector, border: Border) {
@@ -620,7 +619,7 @@ export class FrameLayer extends Layer {
       }
     }
 
-    this.onCommit(this.frameTree);
+    this.onCommit();
   }
 
   *expandPadding(p: Vector, padding: PaddingHandle) {
@@ -645,7 +644,7 @@ export class FrameLayer extends Layer {
       }
     }
 
-    this.onCommit(this.frameTree);
+    this.onCommit();
   }
 
   getBorderBalance(p: Vector, border: Border) {
@@ -751,3 +750,4 @@ export class FrameLayer extends Layer {
   }
 
 }
+sequentializePointer(FrameLayer);
