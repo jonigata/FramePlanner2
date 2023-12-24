@@ -26,7 +26,7 @@
   import resetIcon from './assets/reset.png';
 
   let oldBubble = null;
-  let adjustedPosition = { x: 50, y: 720 };
+  let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let pinned = true;
   let textarea = null;
   let inspectorSize = [0, 0];
