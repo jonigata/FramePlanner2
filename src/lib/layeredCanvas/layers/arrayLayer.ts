@@ -1,4 +1,4 @@
-import { Layer, Paper } from '../system/layeredCanvas';
+import { Layer, Paper, type Dragging } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 
@@ -19,12 +19,20 @@ export class ArrayLayer extends Layer {
   accepts(p: Vector): any { 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position);
-    if (!innerDragging) { return null; }
-    return { paper, index, innerDragging };
+    return innerDragging ? { paper, index, innerDragging } : null;
   }
 
-  changeFocus(layer: Layer): void {
-    // TODO: 頭が働かない
+  changeFocus(dragging: Dragging): void {
+    if (dragging?.layer === this) {
+      const { index, innerDragging } = dragging.payload;
+      for (let i = 0; i < this.array.papers.length; i++) {
+        this.array.papers[i].paper.changeFocus(i === index ? innerDragging : null);
+      }
+    } else {
+      for (let i = 0; i < this.array.papers.length; i++) {
+        this.array.papers[i].paper.changeFocus(null);
+      }
+    }
   }
 
   pointerDown(p: Vector, payload: any): void {
@@ -87,7 +95,7 @@ export class ArrayLayer extends Layer {
   }
 
   async keyDown(p: Vector, event: KeyboardEvent): Promise<boolean> { 
-    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    const {index, paper, position} = this.array.parentPositionToNearestChildPosition(p);
     await paper.handleKeyDown(position, event);
     return false; // TODO: 実際問題として使われないと考えられるため
   }

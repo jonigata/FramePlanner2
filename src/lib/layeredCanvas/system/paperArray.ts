@@ -2,7 +2,7 @@ import type { Paper, Layer, Dragging } from '../system/layeredCanvas';
 import type { Vector } from "../tools/geometry/geometry";
 
 // PaperArray: 複数のPaperをまとめて扱う
-// 1枚目の中央が[0,0]
+// 原点(0,0)は1枚目の中心
 // 2枚名以降は1枚目の左に並ぶ
 // paperの大きさが等しいとは限らない
 
@@ -43,11 +43,6 @@ export class PaperArray {
       }
     }
     return minIndex;
-  }
-
-  findNearestPaper(parentPosition: Vector): Paper {
-    const index = this.findNearestPaperIndex(parentPosition);
-    return this.papers[index].paper;
   }
 
   findPaperIndex(paper: Paper): number {

@@ -1,6 +1,7 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
+import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 
 export type Revision = {
   id: string;
@@ -32,20 +33,8 @@ export type Book = {
   pages: Page[];
 }
 
-export function getRevision(page: Page): Revision {
-  return {...page.revision};
-}
-
-export function setRevision(page: Page, revision: Revision) {
-  page.revision = revision;
-}
-
-export function incrementRevision(revision: Revision): Revision {
-  return {...revision, revision: revision.revision + 1};
-}
-
-export function getIncrementedRevision(page: Page): Revision {
-  return incrementRevision(page.revision);
+export function incrementRevision(revision: Revision): void {
+  revision.revision++;
 }
 
 export function revisionEqual(a: Revision, b: Revision): boolean {
@@ -53,11 +42,11 @@ export function revisionEqual(a: Revision, b: Revision): boolean {
   return a.id === b.id && a.revision === b.revision;
 }
 
-export function addHistory(page: Page, frameTree: FrameElement, bubbles: Bubble[], tag: string) {
+export function addHistory(page: Page, tag: string): void {
   const i = page.history.length = page.historyIndex;
   const newEntry = {
-    frameTree: frameTree.clone(),
-    bubbles: bubbles.map(b => b.clone()),
+    frameTree: page.frameTree.clone(),
+    bubbles: page.bubbles.map(b => b.clone()),
     tag
   };
 
@@ -68,39 +57,32 @@ export function addHistory(page: Page, frameTree: FrameElement, bubbles: Bubble[
   } else {
     page.history.push(newEntry);
   }
-  console.log("page history length", page.history.length);
   page.historyIndex = page.history.length;
+  console.tag("addHistory", "red", page.historyIndex, page.history.length);
 }
 
-export function undoPageHistory(page) {
+export function undoPageHistory(page: Page): void {
   console.log("undo", page.historyIndex);
   if (page.historyIndex <= 1) { return; }
   page.historyIndex--;
 }
 
-export function redoPageHistory(page) {
-  console.log("redo", page.historyIndex);
+export function redoPageHistory(page: Page): void {
+  console.log("redo", page.historyIndex, page.history.length);
   if (page.history.length <= page.historyIndex) { return; }
   page.historyIndex++;
 }
 
-export function commitPage(page: Page, frameTree: FrameElement, bubbles: Bubble[], tag: string) {
-  const newPage = {...page, frameTree, bubbles};
-  addHistory(newPage, frameTree, bubbles, tag);
-  const pageRevision = getIncrementedRevision(newPage);
-  setRevision(newPage, pageRevision);
-  return newPage;
+export function commitPage(page: Page, tag: string): void {
+  addHistory(page, tag);
+  incrementRevision(page.revision);
 }
 
-export function revertPage(page: Page) {
-  console.log("revert", page.historyIndex);
+export function revertPage(page: Page): void {
   const h = page.history[page.historyIndex-1];
-  const newPage = {...page};
-  newPage.frameTree = h.frameTree.clone();
-  newPage.bubbles = h.bubbles.map(b => b.clone());
-  const pageRevision = getIncrementedRevision(newPage);
-  setRevision(newPage, pageRevision);
-  return newPage;
+  page.frameTree = h.frameTree.clone();
+  page.bubbles = h.bubbles.map(b => b.clone());
+  incrementRevision(page.revision);
 }
 
 function newPageAux(frameTree: FrameElement, prefix: string, index: number) {
@@ -130,5 +112,18 @@ export function newImagePage(image: HTMLImageElement, prefix: string): Page {
   const page = newPageAux(frameTree, prefix, 2)
   page.paperSize = [image.naturalWidth, image.naturalHeight];
   return page;
+}
+
+export interface BookOperators {
+  hint: (p: [number, number], s: String) => void;
+  commit: (page: Page, tag: string) => void;
+  revert: (page: Page) => void;
+  undo: (page: Page) => void;
+  redo: (page: Page) => void;
+  modalGenerate: (page: Page, frameElement: FrameElement) => void;
+  modalScribble: (page: Page, frameElement: FrameElement) => void;
+  insert: (page: Page, frameElement: FrameElement) => void;
+  splice: (page: Page, frameElement: FrameElement) => void;
+  focusBubble: (page: Page, bubble: Bubble, p: Vector) => void;
 }
 

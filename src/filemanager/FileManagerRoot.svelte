@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, sharePageToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
-  import { type Page, revisionEqual, commitPage, getRevision } from '../bookeditor/book';
+  import { type Page, revisionEqual, commitPage } from '../bookeditor/book';
   import { mainBook, mainPage } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
@@ -19,6 +19,9 @@
   import FileManagerFolder from './FileManagerFolder.svelte';
 
   export let fileSystem: FileSystem;
+
+  // TODO: 未確認
+  // TODO: ヒストリの最後にタグがついてるときは少し待つ
 
   let root = null;
   let desktop = null;
@@ -52,7 +55,7 @@
       if (currentFile) {
         console.log("*********** loadPageFrom from FileManagerRoot", currentFile);
         const newPage = await loadPageFrom(fileSystem, currentFile.asFile());
-        currentRevision = getRevision(newPage);
+        currentRevision = {...newPage.revision};
         $mainBook = { id: 'dummy', pages: [newPage] };
       } else {
         // 初期化時は仮ファイルをセーブする
@@ -62,11 +65,11 @@
         console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
         await savePageTo(page, fileSystem, file);
         await desktop.asFolder().link(getCurrentDateTime(), file.id);
-        const newPage = commitPage(page, page.frameTree, page.bubbles, null);
-        newPage.revision.id = file.id;
-        newPage.revision.prefix = "standard";
-        currentRevision = getRevision(newPage);
-        $mainBook = { id: 'dummy', pages: [newPage] };
+        commitPage(page, null);
+        page.revision.id = file.id;
+        page.revision.prefix = "standard";
+        currentRevision = {...page.revision};
+        $mainBook = { id: 'dummy', pages: [page] };
         $fileManagerRefreshKey++;
         await recordCurrentFileId(file.id);
         logEvent(getAnalytics(), 'new_page');
@@ -115,7 +118,7 @@
       const root = await fileSystem.getRoot();
       const desktop = await root.getNodeByName("デスクトップ");
       await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), page);
-      currentRevision = getRevision(page);
+      currentRevision = {...page.revision};
       $mainPage = page;
 
       $fileManagerRefreshKey++;
@@ -140,7 +143,7 @@
         await newFile(fileSystem, folder, getCurrentDateTime(), book.pages[i]);
       }
 
-      currentRevision = getRevision(book.pages[0]);
+      currentRevision = {...book.pages[0].revision};
       $mainPage = book.pages[0];
 
       $fileManagerRefreshKey++;

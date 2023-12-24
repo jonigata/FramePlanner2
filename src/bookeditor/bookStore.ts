@@ -1,8 +1,8 @@
 import { type Writable, writable, derived } from "svelte/store";
-import type { Book } from "./book";
 import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
+import type { Book, BookOperators } from './book';
 
 /*
 export const paperTemplate = writable(null);
@@ -33,11 +33,5 @@ export const mainBook = writable<Book>(
 );
 
 export const mainPage = derived(mainBook, $mainBook => $mainBook.pages[0]);
-
 export const viewport: Writable<Viewport> = writable(null);
-
-interface BookEditor {
-
-}
-
-export let bookEditor: BookEditor = null;
+export const bookEditor: Writable<BookOperators> = writable(null);

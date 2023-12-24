@@ -59,7 +59,7 @@
     $mainPage.paperColor = paperColor;
     $mainPage.frameColor = frameColor;
     $mainPage.frameWidth = frameWidth;
-    $mainPage.revision = incrementRevision($mainPage.revision);
+    incrementRevision($mainPage.revision);
   }
 
   function setDimensions(w: number, h: number) {
@@ -69,12 +69,12 @@
   }
 
   function applyTemplate(event: CustomEvent<any>) {
-    const page = {...$mainPage};
+    const page = $mainPage;
     page.frameTree = FrameElement.compile(event.detail);
     page.bubbles = [];
-    page.revision = incrementRevision(page.revision);
+    incrementRevision(page.revision);
     page.paperColor = page.frameTree.bgColor;
-    $mainPage = commitPage(page, page.frameTree, page.bubbles, null);
+    commitPage(page, null);
   }
 
   function save() {

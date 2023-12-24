@@ -221,13 +221,13 @@
   }
   @font-face {
     font-family: '源暎アンチック';
-    src: url('./assets/fonts/GenEiAntiqueNv5-M.woff2') format('woff2');
+    src: url('../../assets/fonts/GenEiAntiqueNv5-M.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
   }
   @font-face {
     font-family: '源暎エムゴ';
-    src: url('./assets/fonts/GenEiMGothic2-Black.woff2') format('woff2');
+    src: url('../../assets/fonts/GenEiMGothic2-Black.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
   }
@@ -239,13 +239,13 @@
   }
   @font-face {
     font-family: '源暎ラテゴ';
-    src: url('./assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
+    src: url('../../assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
   }
   @font-face {
     font-family: '源暎ラテミン';
-    src: url('./assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
+    src: url('../../assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
   }

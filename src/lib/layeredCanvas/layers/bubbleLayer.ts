@@ -1,4 +1,4 @@
-import { Layer, sequentializePointer } from "../system/layeredCanvas";
+import { Layer, sequentializePointer, type Viewport, type Dragging } from "../system/layeredCanvas";
 import { keyDownFlags } from "../system/keyCache";
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 import { getPath } from "../tools/draw/bubbleGraphic";
@@ -11,18 +11,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
-import type { FrameLayer } from "./frameLayer";
 
 const iconUnit: Vector = [20, 20];
 
 export class BubbleLayer extends Layer {
-  renderLayer: PaperRendererLayer;
+  viewport: Viewport;
   interactable: boolean;
-  frameLayer: FrameLayer;
+  renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
-  onShowInspector: (bubble: Bubble) => void;
-  onHideInspector: () => void;
-  onCommit: (bubbles: Bubble[], isCreating: boolean) => void;
+  onFocus: (bubble: Bubble) => void;
+  onCommit: (always: boolean) => void;
   onRevert: () => void;
   defaultBubble: Bubble;
   creatingBubble: Bubble;
@@ -43,20 +41,19 @@ export class BubbleLayer extends Layer {
   optionIcons: Record<string, ClickableIcon>;
 
   constructor(
+    viewport: Viewport,
     renderLayer: PaperRendererLayer,
-    interactable: boolean,
-    frameLayer: FrameLayer,
-    onShowInspector: (bubble: Bubble) => void,
-    onHideInspector: () => void,
-    onCommit: (bubbles: Bubble[], isCreating: boolean) => void,
+    bubbles: Bubble[],
+    onFocus: (bubble: Bubble) => void,
+    onCommit: (always: boolean) => void,
     onRevert: () => void) {
+
     super();
+    this.viewport = viewport;
     this.renderLayer = renderLayer;
-    this.interactable = interactable;
-    this.frameLayer = frameLayer;
-    this.bubbles = [];
-    this.onShowInspector = onShowInspector;
-    this.onHideInspector = onHideInspector;
+    this.interactable = true;
+    this.bubbles = bubbles;
+    this.onFocus = onFocus;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
     this.defaultBubble = new Bubble();
@@ -412,7 +409,7 @@ export class BubbleLayer extends Layer {
   calculateFitBubbleSize(s: string, bubble: Bubble) {
     const baselineSkip = bubble.fontSize * 1.5;
     const charSkip = bubble.fontSize;
-    const ctx = this.paper.canvas.getContext('2d');
+    const ctx = this.viewport.canvas.getContext('2d');
     let size: Vector =[0,0];
     if (bubble.direction == 'v') {
       const m = measureVerticalText(ctx, Infinity, s, baselineSkip, charSkip, false);
@@ -440,7 +437,7 @@ export class BubbleLayer extends Layer {
     bubble.text = "";
     bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
     this.bubbles.push(bubble);
-    this.onCommit(this.bubbles, true);
+    this.onCommit(true);
     this.selectBubble(bubble);
     console.log(bubble.p0, bubble.p1);
   }
@@ -557,6 +554,12 @@ export class BubbleLayer extends Layer {
     return null;
   }
 
+  changeFocus(dragging: Dragging) {
+    if (dragging == null || dragging.layer != this) {
+      this.unfocus();
+    }
+  }
+
   getOptionIconAt(shape: string, p: Vector) {
     const optionSet = bubbleOptionSets[shape];
     for (const option of Object.keys(optionSet)) {
@@ -571,10 +574,10 @@ export class BubbleLayer extends Layer {
 
   unfocus(): void {
     if (this.selected) {
-        this.onCommit(this.bubbles, false);
-        this.onHideInspector();
-        this.selected = null;
-        this.redraw();
+      this.onCommit(false);
+      this.onFocus(null);
+      this.selected = null;
+      this.redraw();
     }
   }
 
@@ -644,14 +647,14 @@ export class BubbleLayer extends Layer {
 
     if (this.createBubbleIcon.contains(position)) {
       this.createImageBubble(image);
-      this.onCommit(this.bubbles, true);
+      this.onCommit(true);
       return true;
     }
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(position)) {
         this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1], scaleLock: false };
-        this.onCommit(this.bubbles, true);
+        this.onCommit(true);
         return true;
       }
     }
@@ -659,13 +662,12 @@ export class BubbleLayer extends Layer {
   }
 
   doubleClicked(p: Vector): boolean {
-    console.log("doubleClicked")
     if (!this.interactable) { return false; }
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(p)) {
         bubble.size = this.calculateFitBubbleSize(bubble.text, bubble);
-        this.onCommit(this.bubbles, true);
+        this.onCommit(true);
         return true;
       }
     }
@@ -677,7 +679,7 @@ export class BubbleLayer extends Layer {
     bubble.initOptions();
     bubble.text = getHaiku();
     this.bubbles.push(bubble);
-    this.onCommit(this.bubbles, true);
+    this.onCommit(true);
     this.selectBubble(bubble);
     return true;
   }
@@ -719,7 +721,7 @@ export class BubbleLayer extends Layer {
       bubble.regularize();
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
-        this.onCommit(this.bubbles, true);
+        this.onCommit(true);
         // this.selectBubble(bubble);
       }
     } catch (e) {
@@ -743,7 +745,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      this.onCommit(this.bubbles, true);
+      this.onCommit(true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -772,7 +774,7 @@ export class BubbleLayer extends Layer {
         const b = this.bubbles[i];
         if (b.contains(last)) {
           b.copyStyleFrom(bubble);
-          this.onCommit(this.bubbles, true);
+          this.onCommit(true);
           break;
         }
       }  
@@ -793,7 +795,7 @@ export class BubbleLayer extends Layer {
         bubble.rotation = Math.max(-180, Math.min(180, originalRotation + op * 0.2));
         this.redraw();
       }
-      this.onCommit(this.bubbles, true);
+      this.onCommit(true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -813,7 +815,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      this.onCommit(this.bubbles, true);
+      this.onCommit(true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -844,7 +846,7 @@ export class BubbleLayer extends Layer {
         throw "cancel";
       }
       console.log(bubble.image);
-      this.onCommit(this.bubbles, true);
+      this.onCommit(true);
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -1053,7 +1055,7 @@ export class BubbleLayer extends Layer {
               this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
               this.redraw();
             }
-            this.onCommit(this.bubbles, true);
+            this.onCommit(true);
             break;
           }
         }
@@ -1202,7 +1204,6 @@ export class BubbleLayer extends Layer {
   }
 
   selectBubble(bubble) {
-    console.log("selectBubble");
     for (let a of Object.keys(this.optionEditActive)) {
       if (this.optionEditActive[a]) {
         this.redraw();
@@ -1213,7 +1214,7 @@ export class BubbleLayer extends Layer {
     this.unfocus();
     this.selected = bubble;
     this.setIconPositions();
-    this.onShowInspector(this.selected);
+    this.onFocus(this.selected);
 
     this.redraw();
   }

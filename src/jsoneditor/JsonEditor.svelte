@@ -8,7 +8,7 @@
   import { shareTemplate } from '../firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from '../lib/layeredCanvas/tools/saveCanvas.js';
-  import { type Page, type Revision, getRevision, revisionEqual, commitPage } from '../bookeditor/book';
+  import { type Page, type Revision, revisionEqual, commitPage, incrementRevision } from '../bookeditor/book';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { mainPage } from '../bookeditor/bookStore';
@@ -26,17 +26,18 @@
     }
     content = updatedContent
     try {
+      // TODO: 未確認
       const jsonPage = toJSONContent(updatedContent).json as any;
-      const newPage = commitPage($mainPage, 
-        FrameElement.compile(jsonPage.frameTree), 
-        jsonPage.bubbles.map(b => Bubble.compile($mainPage.paperSize, b)),
-        "JsonEdit");
-      newPage.paperSize = jsonPage.paperSize;
-      newPage.paperColor = jsonPage.paperColor;
-      newPage.frameColor = jsonPage.frameColor;
-      newPage.frameWidth = jsonPage.frameWidth;
-      pageRevision = getRevision(newPage);
-      $mainPage = newPage;
+      const page = $mainPage;
+      page.frameTree = FrameElement.decompile(jsonPage.frameTree);
+      page.bubbles = jsonPage.bubbles.map(b => Bubble.decompile(jsonPage.paperSize, b));
+      commitPage(page, "JsonEdit");
+      page.paperSize = jsonPage.paperSize;
+      page.paperColor = jsonPage.paperColor;
+      page.frameColor = jsonPage.frameColor;
+      page.frameWidth = jsonPage.frameWidth;
+      incrementRevision(page.revision);
+      $mainPage = page;
     }
     catch (e) {
       // ユーザーの入力したJSONが不正な場合、握りつぶす
@@ -61,7 +62,7 @@
     console.log("%cdifferent revision", "color:white; background-color:orange; padding:2px 4px; border-radius:4px;", page.revision, pageRevision)
 
     skipJsonChange = true;
-    pageRevision = getRevision(page);
+    pageRevision = {...page.revision};
 
     const displayPage = {
       frameTree: FrameElement.decompile(page.frameTree),

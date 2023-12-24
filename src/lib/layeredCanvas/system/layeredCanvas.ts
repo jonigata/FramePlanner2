@@ -29,7 +29,7 @@ export class Layer {
 
   pointerHover(position: Vector): boolean { return false; }
   accepts(position: Vector) { return null; }
-  changeFocus(layer: Layer) {}
+  changeFocus(dragging: Dragging) {}
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
   pointerUp(position: Vector, payload: any) {}
@@ -68,14 +68,22 @@ export class Paper {
   }
 
   handleAccepts(p: Vector): Dragging {
+    var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       const payload = layer.accepts(p);
       if (payload) {
-        return {layer, payload};
+        result = {layer, payload};
+        break;
       }
     }
-    return null;
+    return result;
+  }
+
+  changeFocus(dragging: Dragging): void {
+    for (let layer of this.layers) {
+      layer.changeFocus(dragging);
+    }
   }
 
   handlePointerDown(p: Vector, dragging: Dragging): void {
@@ -194,11 +202,6 @@ export class Paper {
     this.layers.push(layer);
   }
 
-  changeFocus(draggingLayer: Layer): void {
-    for (let layer of this.layers) {
-      layer.changeFocus(draggingLayer);
-    }
-  }
 };
 
 
@@ -210,7 +213,7 @@ export class LayeredCanvas {
   listeners: [string, ((event: Event) => void)][] = [];
   dragging: Dragging;
 
-  constructor(c: HTMLCanvasElement, onHint: OnHint, editable: boolean) { // TODO: editableいらなそう
+  constructor(c: HTMLCanvasElement, onHint: OnHint, editable: boolean) {
     this.viewport = { 
       canvas: c,
       ctx: c.getContext('2d'),
@@ -230,17 +233,17 @@ export class LayeredCanvas {
       this.listeners.push([name, f]);
     }
 
-    addEventListener('pointerdown', this.handlePointerDown);
-    addEventListener('pointermove', this.handlePointerMove);
-    addEventListener('pointerup', this.handlePointerUp);
-    addEventListener('pointerleave', this.handlePointerLeave);
-    addEventListener('dragover', this.handleDragOver);
-    addEventListener('drop', this.handleDrop);
-    addEventListener('dblclick', this.handleDoubleClick);
-    addEventListener('contextmenu', this.handleContextMenu);
-    addEventListener('wheel', this.handleWheel);
-
     if (editable) {
+      addEventListener('pointerdown', this.handlePointerDown);
+      addEventListener('pointermove', this.handlePointerMove);
+      addEventListener('pointerup', this.handlePointerUp);
+      addEventListener('pointerleave', this.handlePointerLeave);
+      addEventListener('dragover', this.handleDragOver);
+      addEventListener('drop', this.handleDrop);
+      addEventListener('dblclick', this.handleDoubleClick);
+      addEventListener('contextmenu', this.handleContextMenu);
+      addEventListener('wheel', this.handleWheel);
+
       this.keyDownHandler = this.handleKeyDown.bind(this);
       document.addEventListener('keydown', this.keyDownHandler);
       setInterval(() => {this.redrawIfRequired();}, 33);
@@ -307,8 +310,9 @@ export class LayeredCanvas {
     if (this.dragging) {
       this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);
-      this.rootPaper.changeFocus(this.dragging.layer);
     }
+    this.rootPaper.changeFocus(this.dragging);
+
     this.redrawIfRequired();
   }
       
@@ -435,8 +439,9 @@ export class LayeredCanvas {
   isPointerOnCanvas(): boolean {
     const m = this.pointerCursor
     if (m == null) { return false; }
+    const mm = this.paperPositionToCanvasPosition(this.rootPaper, m);
     const rect = this.viewport.canvas.getBoundingClientRect();
-    const f = 0 <= m[0] && m[0] <= rect.width && 0 <= m[1] && m[1] <= rect.height;
+    const f = 0 <= mm[0] && mm[0] <= rect.width && 0 <= mm[1] && mm[1] <= rect.height;
     return f;
   }
 }

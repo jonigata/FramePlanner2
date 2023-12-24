@@ -170,7 +170,7 @@ export function createPage(source: Storyboard.Page, imagePromptPrefix: string): 
   const n = source.scenes.length;
   page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
   pourScenario(page, source, imagePromptPrefix);
-  commitPage(page, page.frameTree, page.bubbles, null);
+  commitPage(page, null);
   return page;
 }
 
