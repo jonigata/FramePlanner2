@@ -166,7 +166,7 @@ export class PaperRendererLayer extends Layer {
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    if (element.image || 0 < embeddedBubbles.has(layout)) {
+    if (element.image || element.scribble || 0 < embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
       if (!element.focused) {
@@ -309,6 +309,9 @@ export class PaperRendererLayer extends Layer {
     ctx.rotate(-element.rotation * Math.PI / 180);
     ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
     ctx.drawImage(element.image, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
+    if (element.scribble) {
+      ctx.drawImage(element.scribble, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
+    }
     ctx.restore();
   }
 

@@ -171,12 +171,27 @@
     bubbleLayer.interactable = false;
   }
 
-  export function scribbleDone() {
+  export async function scribbleDone(element: FrameElement) {
     console.log("scribbleDone");
     painterActive = false;
     inlinePainterLayer.setElement(null);
     frameLayer.interactable = true;
     bubbleLayer.interactable = true;
+
+    // merge
+    await element.scribble.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = element.image.width;
+    canvas.height = element.image.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(element.image, 0, 0);
+    ctx.drawImage(element.scribble, 0, 0);
+    element.image.src = canvas.toDataURL();
+    await element.image.decode();
+
+    element.gallery = element.gallery.filter((e) => e !== element.scribble);
+    element.scribble = null;
+
     commit(null);
   }
   

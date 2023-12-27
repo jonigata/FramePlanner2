@@ -88,7 +88,7 @@
 
   function onScribbleDone() {
     console.log("onScribbleDone")
-    paper.scribbleDone();
+    paper.scribbleDone(painterElement);
     painterActive = false;
   }
 
@@ -98,8 +98,8 @@
 
   function onAutoGenerate(e_: CustomEvent) {
     if (!painterAutoGenerate) { return; }
+    if (!autoGeneration) { return; }
     painterAutoGenerate.doScribble(
-      autoGeneration,
       url,
       painterElement.scribble,
       painterElement.prompt,
