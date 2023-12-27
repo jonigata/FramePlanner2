@@ -160,6 +160,7 @@
       constraintElement(element, true);
     }
     if (!element.scribble) {
+      console.log(`make scribble ${element.image.naturalWidth}x${element.image.naturalHeight}`);
       element.scribble = await makePlainImage(element.image.naturalWidth, element.image.naturalHeight, false);
       element.gallery.push(element.scribble);
     }
@@ -181,8 +182,8 @@
     // merge
     await element.scribble.decode();
     const canvas = document.createElement('canvas');
-    canvas.width = element.image.width;
-    canvas.height = element.image.height;
+    canvas.width = element.image.naturalWidth;
+    canvas.height = element.image.naturalHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(element.image, 0, 0);
     ctx.drawImage(element.scribble, 0, 0);
