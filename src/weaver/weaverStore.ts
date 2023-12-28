@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { type Page, newPage, commitPage } from "../bookeditor/book";
+import { type Page, newPage, commitBook } from "../bookeditor/book";
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { measureVerticalText } from '../lib/layeredCanvas/tools/draw/verticalText';
@@ -166,11 +166,9 @@ export class WeaverNode {
 export const weaverRefreshToken = writable(false);
 
 export function createPage(source: Storyboard.Page, imagePromptPrefix: string): Page {
-  const page = newPage("ai-", 2);
   const n = source.scenes.length;
-  page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
+  const page = newPage(FrameElement.compile(aiTemplates[n - 2]));
   pourScenario(page, source, imagePromptPrefix);
-  commitPage(page, null);
   return page;
 }
 

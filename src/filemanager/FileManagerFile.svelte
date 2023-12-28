@@ -30,9 +30,8 @@
   let renameEdit = null;
   let renaming = false;
 
-  $: onSelectionChanged($mainPage);
-  function onSelectionChanged(page: Page) {
-    selected = page.revision.id === nodeId;
+  $: if ($mainPage) {
+    selected = $mainPage.revision.id === nodeId;
   }
 
   $: ondrag($fileManagerDragging);

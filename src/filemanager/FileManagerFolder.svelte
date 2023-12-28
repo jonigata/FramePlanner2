@@ -3,7 +3,7 @@
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
   import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime } from "./fileManagerStore";
-  import { newPage } from "../bookeditor/book";
+  import { newBook } from "../bookeditor/book";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
@@ -69,8 +69,8 @@
 
   async function addFile() {
     console.log("add file");
-    const page = newPage("add-", 0);
-    await newFile(fileSystem, node, getCurrentDateTime(), page);
+    const book = newBook("not visited", "add-in-folder-", 0);
+    await newFile(fileSystem, node, getCurrentDateTime(), book);
     node = node;
   }
 

@@ -4,8 +4,8 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
-  import { type Page, incrementRevision, commitPage, newImagePage } from '../bookeditor/book';
-  import { mainPage } from '../bookeditor/bookStore';
+  import { type Page, incrementRevision, commitBook, newImageBook } from '../bookeditor/book';
+  import { mainPage, mainBook } from '../bookeditor/bookStore';
   import { saveToken, clipboardToken, scale } from '../bookeditor/paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
@@ -18,7 +18,7 @@
   import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-  import { newFileToken, sharePageToken } from '../filemanager/fileManagerStore';
+  import { newBookToken, shareBookToken } from '../filemanager/fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { batchImagingOpen } from '../generator/batchImagingStore';
@@ -37,29 +37,35 @@
   let frameColor: string = null;
   let frameWidth: number = 2;
 
-  $:onUpdateMainPage($mainPage);
-  function onUpdateMainPage(page: Page) {
+  let page: Page;
+
+  $: page = $mainPage;
+
+  $: if (page) {
+    console.log("A");
     paperSize[0] = page.paperSize[0];
     paperSize[1] = page.paperSize[1];
     paperColor = page.paperColor;
     frameColor = page.frameColor;
     frameWidth = page.frameWidth;
+    console.log("B");
   }
 
   $:onUpdatePaperProperty(paperSize, paperColor, frameColor, frameWidth);
   function onUpdatePaperProperty(_a: [number, number], _b: string, _c: string, _d: number) {
+    console.log("ControlPanel.onUpdatePaperProperty");
     const mp = $mainPage;
+    if (!mp) { return; }
     if (mp.paperSize[0] === paperSize[0] && mp.paperSize[1] === paperSize[1] &&
         mp.paperColor === paperColor && mp.frameColor === frameColor && mp.frameWidth === frameWidth) {
       return;
     }
-    console.log("ControlPanel.onUpdatePaperProperty");
-    $mainPage.paperSize[0] = paperSize[0];
-    $mainPage.paperSize[1] = paperSize[1];
-    $mainPage.paperColor = paperColor;
-    $mainPage.frameColor = frameColor;
-    $mainPage.frameWidth = frameWidth;
-    incrementRevision($mainPage.revision);
+    mp.paperSize[0] = paperSize[0];
+    mp.paperSize[1] = paperSize[1];
+    mp.paperColor = paperColor;
+    mp.frameColor = frameColor;
+    mp.frameWidth = frameWidth;
+    commitBook($mainBook, "page-attribute");
   }
 
   function setDimensions(w: number, h: number) {
@@ -69,12 +75,10 @@
   }
 
   function applyTemplate(event: CustomEvent<any>) {
-    const page = $mainPage;
     page.frameTree = FrameElement.compile(event.detail);
     page.bubbles = [];
-    incrementRevision(page.revision);
     page.paperColor = page.frameTree.bgColor;
-    commitPage(page, null);
+    commitBook($mainBook, "page-attribute");
   }
 
   function save() {
@@ -117,8 +121,8 @@
         await imageLoaded;
         URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
 
-        const page = newImagePage(image, "drop-")
-        $newFileToken = page;
+        const book = newImageBook('not visited', image, "drop-")
+        $newBookToken = book;
       } else if (file.type.startsWith("text/") || file.type.startsWith("application/json")) {
         const text = await readFileAsText(file);
         const json = JSON.parse(text);
@@ -161,9 +165,9 @@
     $saveToken = "psd";
   }
 
-  async function sharePage() {
+  async function shareBook() {
     $commitIfDirtyToken = true;
-    $sharePageToken = $mainPage;
+    $shareBookToken = $mainBook;
   }
 
   async function contact() {
@@ -191,6 +195,7 @@
 
 </script>
 
+{#if page}
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="px-2">
@@ -276,7 +281,7 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
       Download JSON
     </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={sharePage}>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareBook}>
       Share
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
@@ -292,6 +297,7 @@
     </button>
   </div>  
 </div>
+{/if}
 
 <style>
   .control-panel {

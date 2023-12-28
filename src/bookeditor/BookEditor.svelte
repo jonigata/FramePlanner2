@@ -6,16 +6,19 @@
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
-  import { type Page, type BookOperators, undoPageHistory, redoPageHistory, commitPage, revertPage } from './book';
+  import type { Book, Page, BookOperators, HistoryTag} from './book';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook } from './book';
   import { mainBook, mainPage, bookEditor } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
-  let book = $mainBook;
+  let book: Book = null;
   let bubbleSnapshot: string = null;
   let painterActive = false;
+
+  $: book = $mainBook;
 
   function isPainting() {
     return painterActive;
@@ -33,23 +36,22 @@
 
   // TODO: alwaysフラグ無視してる
   // TODO: bubbleのsnapshotのこと忘れてる
-  export function commit(page: Page, tag: string) {
-    commitPage(page, tag);
-    console.tag("commit", "cyan", page.revision, page.history[page.historyIndex-1])
-    console.log([...page.history], page.historyIndex)
+  export function commit(tag: HistoryTag) {
+    commitBook(book, tag);
+    console.tag("commit", "cyan", book.revision, book.history.entries[book.history.cursor-1])
   }
 
-  function revert(page: Page) {
+  function revert() {
     console.log("revert");
-    revertPage(page);
+    revertBook(book);
   }
 
   function undo(page: Page) {
     if (isPainting()) {
       // inlinePainterLayer.undo(); // TODO
     } else {
-      undoPageHistory(page);
-      revert(page);
+      undoBookHistory(book);
+      revert();
     }
   }
 
@@ -57,12 +59,12 @@
     if (isPainting()) {
       // inlinePainterLayer.redo(); // TODO
     } else {
-      redoPageHistory(page);
-      revert(page);
+      redoBookHistory(book);
+      revert();
     }
   }
 
-  $: if (canvas) {
+  $: if (canvas && book) {
     console.log("*********** buildBookEditor from BookEditor");
     if (layeredCanvas) {
       layeredCanvas.cleanup();
@@ -70,8 +72,8 @@
 
     const bookEditorInstance: BookOperators = {
       hint: onHint,
-      commit: (page: Page, tag: string) => commit(page, tag),
-      revert: (page: Page) => revert(page),
+      commit: (_page: Page, tag: HistoryTag) => commit(tag),
+      revert: (_page: Page) => revert(),
       undo: undo,
       redo: redo,
       modalGenerate: () => {},

@@ -1,6 +1,7 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page } from "../bookeditor/book.js";
+import type { Page, Book } from "../bookeditor/book.js";
+import { commitBook } from "../bookeditor/book.js";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 
@@ -9,64 +10,59 @@ export type Dragging = {
   parent: string;
 }
 
-export type Book = {
-  title: string;
-  pages: Page[];
-}
-
 export const fileManagerOpen = writable(false);
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
-export const newFileToken: Writable<Page> = writable(null);
+export const newPageToken: Writable<Page> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);
 export const newBubbleToken: Writable<Bubble> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 export const fileSystem: Writable<FileSystem> = writable(null);
-export const sharePageToken: Writable<Page> = writable(null);
+export const shareBookToken: Writable<Book> = writable(null);
 
 const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
 
 type SerializedPage = {
-  revision: {id: string, revision: number, prefix: string},
   frameTree: any,
   bubbles: any[],
   paperSize: [number, number],
   paperColor: string,
   frameColor: string,
   frameWidth: number,
-  desktopPosition?: [number, number],
-  history: any[],
-  historyIndex: number;
 }
 
-export async function savePageTo(page: Page, fileSystem: FileSystem, file: File): Promise<void> {
+type SerializedBook = {
+  revision: {id: string, revision: number, prefix: string},
+  pages: SerializedPage[],
+}
+
+export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
+  console.tag("saveBookTo", "cyan");
+
   const root = await fileSystem.getRoot();
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
 
-  const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
-  const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
-
-  const history = [];
-  for (const entry of page.history) {
-    const markUp = await packFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
-    const bubbles = await packBubbleImages(entry.bubbles, fileSystem, imageFolder, page.paperSize);
-    history.push({frameTree: markUp, bubbles: bubbles});
+  const serializedBook: SerializedBook = {
+    revision: book.revision,
+    pages: [],
+  };
+  for (const page of book.pages) {
+    const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
+    const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
+    
+    const serializedPage: SerializedPage = {
+      frameTree: markUp,
+      bubbles: bubbles,
+      paperSize: page.paperSize,
+      paperColor: page.paperColor,
+      frameColor: page.frameColor,
+      frameWidth: page.frameWidth,
+    }
+    serializedBook.pages.push(serializedPage);    
   }
 
-  const serializedPage: SerializedPage = {
-    revision: { ...page.revision, id: file.id },
-    frameTree: markUp,
-    bubbles: bubbles,
-    paperSize: page.paperSize,
-    paperColor: page.paperColor,
-    frameColor: page.frameColor,
-    frameWidth: page.frameWidth,
-    desktopPosition: page.desktopPosition,
-    history: history,
-    historyIndex: page.historyIndex,
-  }
-  const json = JSON.stringify(serializedPage);
+  const json = JSON.stringify(serializedBook);
   await file.write(json);
 }
 
@@ -112,39 +108,73 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
 }
 
 
-export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<Page> {
-  console.log("*********** loadPageFrom");
+export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
+  console.tag("loadBookFrom", "cyan");
   const content = await file.read();
-  const serializedPage = JSON.parse(content);
+  const serializedBook = JSON.parse(content);
 
   const root = await fileSystem.getRoot();
   const imageFolder = await root.getNodeByName('画像') as Folder;
 
-  const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
-  const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
-
-  const history = [];
-  for (const entry of serializedPage.history) {
-    const frameTree = await unpackFrameImages(entry.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(entry.bubbles, fileSystem, serializedPage.paperSize);
-    history.push({frameTree, bubbles});
+  // マイグレーションとして、BookではなくPageのみを保存している場合がある
+  if (!serializedBook.pages) {
+    const serializedPage = serializedBook;
+    const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
+    return await wrapPageAsBook(serializedBook, frameTree, bubbles);
   }
 
+  const book: Book = {
+    revision: serializedBook.revision,
+    pages: [],
+    history: {
+      entries: [],
+      cursor: 0,
+    },
+  };
+
+  for (const serializedPage of serializedBook.pages) {
+    const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
+
+    const page: Page = {
+      frameTree: frameTree,
+      bubbles: bubbles,
+      paperSize: serializedPage.paperSize,
+      paperColor: serializedPage.paperColor,
+      frameColor: serializedPage.frameColor,
+      frameWidth: serializedPage.frameWidth,
+    };
+    book.pages.push(page);
+  }
+  commitBook(book, null);
+
+  return book;
+}
+
+async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubbles: Bubble[]): Promise<Book> {
   const page: Page = {
-    revision: serializedPage.revision,
     frameTree: frameTree,
     bubbles: bubbles,
     paperSize: serializedPage.paperSize,
     paperColor: serializedPage.paperColor,
     frameColor: serializedPage.frameColor,
     frameWidth: serializedPage.frameWidth,
-    desktopPosition: serializedPage.desktopPosition,
-    history: history,
-    historyIndex: serializedPage.historyIndex,
   };
 
-  return page;
+  const book: Book = {
+    revision: serializedPage.revision,
+    pages: [page],
+    history: {
+      entries: [],
+      cursor: 0,
+    },
+  };
+  commitBook(book, null);
+
+  return book;
 }
+
 
 async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
@@ -179,13 +209,13 @@ async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperS
   return unpackedBubbles;
 }
 
-export async function newFile(fs: FileSystem, folder: Folder, name: string, page: Page): Promise<{file: File, bindId: BindId}> {
+export async function newFile(fs: FileSystem, folder: Folder, name: string, book: Book): Promise<{file: File, bindId: BindId}> {
   const file = await fs.createFile();
-  page.revision.id = file.id;
+  book.revision.id = file.id;
 
-  console.log("*********** savePageTo from newFile");
+  console.tag("newFile", "cyan");
   // console.trace();
-  await savePageTo(page, fs, file);
+  await saveBookTo(book, fs, file);
   const bindId = await folder.link(name, file.id);
   return { file, bindId };
 }

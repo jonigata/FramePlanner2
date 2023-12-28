@@ -12,7 +12,8 @@ export const scale = writable(1);
 export const redrawToken = writable(false);
 */
 
-export const mainBook = writable<Book>(
+export const mainBook = writable<Book>(null
+/*
   {
     id: "bootstrap",
     pages: [
@@ -30,8 +31,9 @@ export const mainBook = writable<Book>(
       }
     ]
   }
-);
+*/
+  );
 
-export const mainPage = derived(mainBook, $mainBook => $mainBook.pages[0]);
+export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
 export const viewport: Writable<Viewport> = writable(null);
 export const bookEditor: Writable<BookOperators> = writable(null);

@@ -1,19 +1,20 @@
 <script lang="ts">
   import newFileIcon from '../assets/new-file.png';
-  import { newFileToken } from "../filemanager/fileManagerStore";
-  import { newPage, newImagePage } from "../bookeditor/book";
+  import { newBookToken } from "../filemanager/fileManagerStore";
+  import { newBook, newImageBook } from "../bookeditor/book";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { hoverKey } from '../utils/hoverKeyStore';
+  import { mainBook } from '../bookeditor/bookStore';
 
   async function createNewFile(e: MouseEvent) {
     if (e.ctrlKey) {
-      await createNewImageFile();
+      await createNewImageFileUsingClipboard();
     } else {
-      $newFileToken = newPage("shortcut-", 0);
+      $newBookToken = newBook("not visited", "shortcut-", 0);
     }
   }
 
-  async function createNewImageFile() {
+  async function createNewImageFileUsingClipboard() {
     const items = await navigator.clipboard.read();
     for (let item of items) {
       for (let type of item.types) {
@@ -28,8 +29,8 @@
           await imageLoaded;
           URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
 
-          const page = newImagePage(image, "paste-")
-          $newFileToken = page;
+          const book = newImageBook("not visited", image, "paste-")
+          $newBookToken = book;
           return;
         }
       }
@@ -58,20 +59,21 @@
         await imageLoaded;
         URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
 
-        const page = newImagePage(image, "drop-")
-        $newFileToken = page;
+        const page = newImageBook("not visited", image, "drop-")
+        $newBookToken = page;
       }
     }
   }
 
   async function onKeyDown(e: KeyboardEvent) {
     if (e.ctrlKey && e.key === "v") {
-      await createNewImageFile();
+      await createNewImageFileUsingClipboard();
     }
   }
 
 </script>
 
+{#if $mainBook}
 <button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 new-file-button hbox" 
   on:click={createNewFile}
   on:dragover={onDragOver}
@@ -80,6 +82,7 @@
   use:hoverKey={onKeyDown}>
   <img src={newFileIcon} alt="file manager" draggable="false"/>
 </button>
+{/if}
 
 <style>
   .new-file-button {

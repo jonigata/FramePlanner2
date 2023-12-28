@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { type Book, fileManagerOpen, fileManagerRefreshKey, savePageTo, loadPageFrom, getCurrentDateTime, newFileToken, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, sharePageToken } from "./fileManagerStore";
+  import { fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
-  import { type Page, revisionEqual, commitPage } from '../bookeditor/book';
+  import type { Page, Book } from '../bookeditor/book';
+  import { newBook, revisionEqual, commitBook } from '../bookeditor/book';
   import { mainBook, mainPage } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
@@ -30,62 +31,54 @@
   // let templates: [BindId, string, Node] = null;
   let currentRevision: Revision = null;
 
-  $:onUpdatePage($mainPage);
-  async function onUpdatePage(page: Page) {
-    console.log("onUpdatePage");
-    if (revisionEqual(page.revision, currentRevision)) {
-      return;
-    }
-
-    if (page.revision.id === "bootstrap") { 
+  $:onUpdateBook($mainBook);
+  async function onUpdateBook(book: Book) {
+    console.log("onUpdateBook");
+    if (book == null) {
       modalStore.trigger({ type: 'component',component: 'waiting' });    
 
       const currentFileId = (await fetchCurrentFileId()) as NodeId;
-      let currentFile = null;
-      if (currentFileId) {
-        currentFile = await fileSystem.getNode(currentFileId); // 存在しない場合null
-      }
+      let currentFile = currentFileId ? await fileSystem.getNode(currentFileId) : null; // 存在しない場合null
 
-      const sharedPage = await loadSharedPage();
-      if (sharedPage) {
+      const sharedBook = await loadSharedBook();
+      if (sharedBook) {
         currentFile = null;
-        page = sharedPage;
+        book = sharedBook;
       }
 
       if (currentFile) {
-        console.log("*********** loadPageFrom from FileManagerRoot", currentFile);
-        const newPage = await loadPageFrom(fileSystem, currentFile.asFile());
-        currentRevision = {...newPage.revision};
-        $mainBook = { id: 'dummy', pages: [newPage] };
+        const newBook = await loadBookFrom(fileSystem, currentFile.asFile());
+        currentRevision = {...newBook.revision};
+        $mainBook = newBook;
       } else {
-        // 初期化時は仮ファイルをセーブする
+        // 初起動の場合、またはsharedPageを読んでいる場合はデスクトップにセーブ
         const root = await fileSystem.getRoot();
         const desktop = await root.getNodeByName("デスクトップ");
-        const file = await fileSystem.createFile();
-        console.log("*********** savePageTo from FileManagerRoot(1)", currentRevision);
-        await savePageTo(page, fileSystem, file);
-        await desktop.asFolder().link(getCurrentDateTime(), file.id);
-        commitPage(page, null);
-        page.revision.id = file.id;
-        page.revision.prefix = "standard";
-        currentRevision = {...page.revision};
-        $mainBook = { id: 'dummy', pages: [page] };
+        book = newBook('not visited', sharedBook ? "shared-" : "initial-", 0);
+        await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
+
+        currentRevision = {...book.revision};
+        $mainBook = book;
         $fileManagerRefreshKey++;
-        await recordCurrentFileId(file.id);
+        await recordCurrentFileId(book.revision.id);
         logEvent(getAnalytics(), 'new_page');
       }
 
       modalStore.close();
     } else {
-      const file = await fileSystem.getNode(page.revision.id as NodeId);
-      console.log("*********** savePageTo from FileManagerRoot(2)");
-      await savePageTo(page, fileSystem, file.asFile());
-      currentRevision = {...page.revision};
-      await recordCurrentFileId(page.revision.id as NodeId);
+      if (revisionEqual(book.revision, currentRevision)) {
+        return;
+      }
+
+      // 普通のオートセーブ
+      const file = await fileSystem.getNode(book.revision.id as NodeId);
+      await saveBookTo(book, fileSystem, file.asFile());
+      currentRevision = {...book.revision};
+      await recordCurrentFileId(book.revision.id as NodeId);
     }
   }
 
-  async function loadSharedPage(): Promise<Page> {
+  async function loadSharedBook(): Promise<Book> {
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
     if (urlParams.has('user') && urlParams.get('key')) {
@@ -95,8 +88,8 @@
 
       const fileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
       const file = await fileSystem.getNode(key as NodeId);
-      const page = await loadPageFrom(fileSystem, file.asFile());
-      return page;
+      const book = await loadBookFrom(fileSystem, file.asFile());
+      return book;
     }
     if (urlParams.has('build')) {
       logEvent(getAnalytics(), 'gpt-build');
@@ -105,11 +98,19 @@
 
       console.log(storyboard.pages[0]);
       const page = createPage(storyboard.pages[0], '');
-      return page;
+
+      const book: Book = {
+        revision: { id: 'gpt-build', revision:1, prefix: 'gpt-build-' },
+        pages: [page],
+        history: { entries: [], cursor: 0 },
+      }
+      commitBook(book, null);
+      return book;
     }
     return null;
   }
 
+/* BookEditor行きか？
   $:onNewFileRequest($newFileToken);
   async function onNewFileRequest(page: Page) {
     if (page) {
@@ -124,72 +125,57 @@
       $fileManagerRefreshKey++;
     }
   }
+*/
 
   $:onNewBookRequest($newBookToken);
   async function onNewBookRequest(book: Book) {
     if (book) {
-      console.log("onNewBookRequest");
+      console.tag("new book request", "green");
       $newBookToken = null;
       const root = await fileSystem.getRoot();
       const cabinet = await root.getNodeByName("キャビネット");
-
-      // フォルダ
-      const folder = await fileSystem.createFolder();
-      await cabinet.asFolder().link(book.title, folder.id);
-
-      // ファイル
-      for (let i = 0; i < book.pages.length; i++) {
-        const file = await fileSystem.createFile();
-        await newFile(fileSystem, folder, getCurrentDateTime(), book.pages[i]);
-      }
-
-      currentRevision = {...book.pages[0].revision};
-      $mainPage = book.pages[0];
-
+      await newFile(fileSystem, cabinet.asFolder(), getCurrentDateTime(), book);
+      currentRevision = {...book.revision};
+      $mainBook = book;
       $fileManagerRefreshKey++;
     }
   }
 
   $:onNewBubbleRequest($newBubbleToken);
   async function onNewBubbleRequest(bubble: Bubble) {
-    if (bubble) {
-      console.log("onNewBalloonRequest");
-      $newBubbleToken = null;
-      const root = await fileSystem.getRoot();
-      const folder = await root.getNodeByName("テンプレート");
-      const file = await fileSystem.createFile();
-      await saveBubbleTo(bubble, file);
-      await folder.asFolder().link(getCurrentDateTime(), file.id);
-    }
+    if (!bubble) { return; }
+    console.log("onNewBalloonRequest");
+    $newBubbleToken = null;
+    const root = await fileSystem.getRoot();
+    const folder = await root.getNodeByName("テンプレート");
+    const file = await fileSystem.createFile();
+    await saveBubbleTo(bubble, file);
+    await folder.asFolder().link(getCurrentDateTime(), file.id);
   }
 
-  $:onSharePageRequest($sharePageToken);
-  async function onSharePageRequest(p: Page) {
-    if (p) {
-      modalStore.trigger({ type: 'component',component: 'waiting' });    
+  $:onSharePageRequest($shareBookToken);
+  async function onSharePageRequest(book: Book) {
+    if (!book) { return; }
+    modalStore.trigger({ type: 'component',component: 'waiting' });    
 
-      const page = {...p};
-      page.history = [];
-      page.historyIndex = 0;
-      console.log("onSharePageRequest");
-      $sharePageToken = null;
-      const fileSystem = (await buildShareFileSystem(null)) as FirebaseFileSystem;
-      const file = await fileSystem.createFile('text');
-      await savePageTo(page, fileSystem, file);
-      console.log(file.id);
+    console.log("onSharePageRequest");
+    $shareBookToken = null;
+    const fileSystem = (await buildShareFileSystem(null)) as FirebaseFileSystem;
+    const file = await fileSystem.createFile('text');
+    await saveBookTo(book, fileSystem, file);
+    console.log(file.id);
 
-      // URL作成
-      const url = new URL(window.location.href);
-      const params = url.searchParams;
-      params.set('user', fileSystem.userId);
-      params.set('key', file.id);
-      url.search = params.toString();
-      const shareUrl = url.toString();
-      navigator.clipboard.writeText(shareUrl);
+    // URL作成
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    params.set('user', fileSystem.userId);
+    params.set('key', file.id);
+    url.search = params.toString();
+    const shareUrl = url.toString();
+    navigator.clipboard.writeText(shareUrl);
 
-      modalStore.close();
-      toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
-    }
+    modalStore.close();
+    toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
   }
 
   onMount(async () => {
