@@ -22,7 +22,7 @@ export type Page = {
   frameWidth: number,
 }
 
-export type HistoryTag = 'bubble-text' | 'page-attribute' | null;
+export type HistoryTag = 'bubble' | 'page-attribute' | null;
 
 export type HistoryEntry = {
   pages: Page[];
@@ -137,10 +137,10 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
 
 export interface BookOperators {
   hint: (p: [number, number], s: String) => void;
-  commit: (page: Page, tag: HistoryTag) => void;
-  revert: (page: Page) => void;
-  undo: (page: Page) => void;
-  redo: (page: Page) => void;
+  commit: (tag: HistoryTag) => void;
+  revert: () => void;
+  undo: () => void;
+  redo: () => void;
   modalGenerate: (page: Page, frameElement: FrameElement) => void;
   modalScribble: (page: Page, frameElement: FrameElement) => void;
   insert: (page: Page, frameElement: FrameElement) => void;

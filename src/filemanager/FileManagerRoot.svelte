@@ -21,7 +21,6 @@
 
   export let fileSystem: FileSystem;
 
-  // TODO: 未確認
   // TODO: ヒストリの最後にタグがついてるときは少し待つ
 
   let root = null;

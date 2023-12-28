@@ -172,7 +172,7 @@ export function createPage(source: Storyboard.Page, imagePromptPrefix: string): 
   return page;
 }
 
-function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string) { // TODO: 型が雑
+function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string) {
   const paperLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   console.log(page.frameTree);
   const leaves = collectLeaves(page.frameTree);

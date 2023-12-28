@@ -5,7 +5,7 @@
   import { Toast } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
   import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
-  import { copyIndexedDB } from './lib/backUpIndexedDB';
+  import { copyIndexedDB } from './utils/backUpIndexedDB';
   import * as Sentry from "@sentry/svelte";
 
   //import '../app.postcss';  

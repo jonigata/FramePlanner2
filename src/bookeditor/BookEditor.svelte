@@ -11,12 +11,19 @@
   import { mainBook, mainPage, bookEditor } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
+  import { DelayedCommiter } from '../utils/cancelableTask';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
   let book: Book = null;
-  let bubbleSnapshot: string = null;
   let painterActive = false;
+  let bubbleSnapshot: string = null;
+  let delayedCommiter = new DelayedCommiter(
+    () => {
+      console.log("commiting");
+      commit("bubble"); 
+      layeredCanvas.redraw(); 
+    });
 
   $: book = $mainBook;
 
@@ -34,19 +41,19 @@
     }
   }
 
-  // TODO: alwaysフラグ無視してる
-  // TODO: bubbleのsnapshotのこと忘れてる
   export function commit(tag: HistoryTag) {
+    delayedCommiter.force();
     commitBook(book, tag);
     console.tag("commit", "cyan", book.revision, book.history.entries[book.history.cursor-1])
   }
 
   function revert() {
     console.log("revert");
+    delayedCommiter.cancel();
     revertBook(book);
   }
 
-  function undo(page: Page) {
+  function undo() {
     if (isPainting()) {
       // inlinePainterLayer.undo(); // TODO
     } else {
@@ -55,7 +62,7 @@
     }
   }
 
-  function redo(page: Page) {
+  function redo() {
     if (isPainting()) {
       // inlinePainterLayer.redo(); // TODO
     } else {
@@ -72,8 +79,8 @@
 
     const bookEditorInstance: BookOperators = {
       hint: onHint,
-      commit: (_page: Page, tag: HistoryTag) => commit(tag),
-      revert: (_page: Page) => revert(),
+      commit: (tag: HistoryTag) => commit(tag),
+      revert: () => revert(),
       undo: undo,
       redo: redo,
       modalGenerate: () => {},
@@ -91,20 +98,31 @@
     layeredCanvas.redraw();
   }
 
-  $: if ($bubble && layeredCanvas) {
+  $: onBubbleModified($bubble);
+  function onBubbleModified(bubble: Bubble) {
+    if (!layeredCanvas) { return; }
+
+    console.log("bubble changed");
     layeredCanvas.redraw();
-    // フォント読み込みが遅れるようなのでヒューリスティック
-    setTimeout(() => layeredCanvas.redraw(), 2000);
-    setTimeout(() => layeredCanvas.redraw(), 5000);
+
+    if (bubbleSnapshot && bubble) {
+      const snapshot = JSON.stringify(Bubble.decompile([512, 512], bubble));
+      if (bubbleSnapshot !== snapshot) {
+        console.log("bubbleSnapshot actually changed");
+        delayedCommiter.schedule(2000);
+        setTimeout(() => layeredCanvas.redraw(), 5000);
+      }
+    }
   }
 
   function focusBubble(page: Page, bubble: Bubble, p: Vector) {
     console.log("focusBubble");
+    delayedCommiter.force();
     if (bubble) {
       const [cx, cy] = p;
       const offset = canvas.height / 2 < cy ? -1 : 1;
       
-      bubbleSnapshot = JSON.stringify(Bubble.decompile(page.paperSize, bubble));
+      bubbleSnapshot = JSON.stringify(Bubble.decompile([512, 512], bubble)); // サイズは比較時に合致してればいいので適当に
       $bubble = bubble;
       $bubbleInspectorPosition = {
         center: convertPointFromNodeToPage(canvas, cx, cy),

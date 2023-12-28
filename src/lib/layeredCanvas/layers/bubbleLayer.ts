@@ -20,7 +20,7 @@ export class BubbleLayer extends Layer {
   renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
   onFocus: (bubble: Bubble) => void;
-  onCommit: (always: boolean) => void;
+  onCommit: () => void;
   onRevert: () => void;
   defaultBubble: Bubble;
   creatingBubble: Bubble;
@@ -45,7 +45,7 @@ export class BubbleLayer extends Layer {
     renderLayer: PaperRendererLayer,
     bubbles: Bubble[],
     onFocus: (bubble: Bubble) => void,
-    onCommit: (always: boolean) => void,
+    onCommit: () => void,
     onRevert: () => void) {
 
     super();
@@ -437,7 +437,7 @@ export class BubbleLayer extends Layer {
     bubble.text = "";
     bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
     this.bubbles.push(bubble);
-    this.onCommit(true);
+    this.onCommit();
     this.selectBubble(bubble);
     console.log(bubble.p0, bubble.p1);
   }
@@ -574,7 +574,6 @@ export class BubbleLayer extends Layer {
 
   unfocus(): void {
     if (this.selected) {
-      this.onCommit(false);
       this.onFocus(null);
       this.selected = null;
       this.redraw();
@@ -647,14 +646,14 @@ export class BubbleLayer extends Layer {
 
     if (this.createBubbleIcon.contains(position)) {
       this.createImageBubble(image);
-      this.onCommit(true);
+      this.onCommit();
       return true;
     }
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(position)) {
         this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1], scaleLock: false };
-        this.onCommit(true);
+        this.onCommit();
         return true;
       }
     }
@@ -667,7 +666,7 @@ export class BubbleLayer extends Layer {
     for (let bubble of this.bubbles) {
       if (bubble.contains(p)) {
         bubble.size = this.calculateFitBubbleSize(bubble.text, bubble);
-        this.onCommit(true);
+        this.onCommit();
         return true;
       }
     }
@@ -679,7 +678,7 @@ export class BubbleLayer extends Layer {
     bubble.initOptions();
     bubble.text = getHaiku();
     this.bubbles.push(bubble);
-    this.onCommit(true);
+    this.onCommit();
     this.selectBubble(bubble);
     return true;
   }
@@ -721,7 +720,7 @@ export class BubbleLayer extends Layer {
       bubble.regularize();
       if (bubble.hasEnoughSize()) {
         this.bubbles.push(bubble);
-        this.onCommit(true);
+        this.onCommit();
         // this.selectBubble(bubble);
       }
     } catch (e) {
@@ -745,7 +744,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      this.onCommit(true);
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -774,7 +773,7 @@ export class BubbleLayer extends Layer {
         const b = this.bubbles[i];
         if (b.contains(last)) {
           b.copyStyleFrom(bubble);
-          this.onCommit(true);
+          this.onCommit();
           break;
         }
       }  
@@ -795,7 +794,7 @@ export class BubbleLayer extends Layer {
         bubble.rotation = Math.max(-180, Math.min(180, originalRotation + op * 0.2));
         this.redraw();
       }
-      this.onCommit(true);
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -815,7 +814,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      this.onCommit(true);
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -846,7 +845,7 @@ export class BubbleLayer extends Layer {
         throw "cancel";
       }
       console.log(bubble.image);
-      this.onCommit(true);
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -1055,7 +1054,7 @@ export class BubbleLayer extends Layer {
               this.mergeGroup(this.getGroup(bubble), this.getGroup(b));
               this.redraw();
             }
-            this.onCommit(true);
+            this.onCommit();
             break;
           }
         }

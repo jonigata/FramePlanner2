@@ -242,7 +242,6 @@ async function saveImage(fileSystem: FileSystem, image: HTMLImageElement, imageF
 
   const fileId = image["fileId"][fileSystem.id];
   if (imageCache[fileSystem.id][fileId]) {
-    // TODO: 画像のピクセル更新対応
     return;
   }
   const file = await fileSystem.createFile();

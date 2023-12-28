@@ -49,7 +49,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, u
   const paper = new Paper(page.paperSize);
 
   // undo
-  const undoLayer = new UndoLayer(() => undo(page), () => redo(page));
+  const undoLayer = new UndoLayer(() => undo(), () => redo());
   paper.addLayer(undoLayer);
 
   // renderer
@@ -62,8 +62,8 @@ function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, u
   const frameLayer = new FrameLayer(
     paperRendererLayer,
     page.frameTree,
-    () => { commit(page, null); },
-    () => { revert(page); },
+    () => { commit(null); },
+    () => { revert(); },
     (e: FrameElement) => { modalGenerate(page, e); },
     (e: FrameElement) => { modalScribble(page, e); },
     (e: FrameElement) => { insert(page, e); },
@@ -83,8 +83,8 @@ function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, u
         focusBubble(page, null, null);
       }
     },
-    (always: boolean) => { commit(page, null); },
-    () => { revert(page); });
+    () => { commit(null); },
+    () => { revert(); });
   paper.addLayer(bubbleLayer);
 
   return paper;

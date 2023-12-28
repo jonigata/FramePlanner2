@@ -143,7 +143,7 @@ export class Bubble {
     return b;
   }
 
-  static decompile(canvasSize, b): any {
+  static decompile(canvasSize: [number, number], b: Bubble): any {
     return {
       p0: this.normalizedPosition(canvasSize, b.p0),
       p1: this.normalizedPosition(canvasSize, b.p1),
