@@ -42,18 +42,15 @@
   $: page = $mainPage;
 
   $: if (page) {
-    console.log("A");
     paperSize[0] = page.paperSize[0];
     paperSize[1] = page.paperSize[1];
     paperColor = page.paperColor;
     frameColor = page.frameColor;
     frameWidth = page.frameWidth;
-    console.log("B");
   }
 
   $:onUpdatePaperProperty(paperSize, paperColor, frameColor, frameWidth);
   function onUpdatePaperProperty(_a: [number, number], _b: string, _c: string, _d: number) {
-    console.log("ControlPanel.onUpdatePaperProperty");
     const mp = $mainPage;
     if (!mp) { return; }
     if (mp.paperSize[0] === paperSize[0] && mp.paperSize[1] === paperSize[1] &&

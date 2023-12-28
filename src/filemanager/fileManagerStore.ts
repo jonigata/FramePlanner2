@@ -39,6 +39,7 @@ type SerializedBook = {
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
   console.tag("saveBookTo", "cyan");
+  console.trace();
 
   const root = await fileSystem.getRoot();
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;

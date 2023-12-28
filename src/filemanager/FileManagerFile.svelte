@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { loadPageFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
+  import { loadBookFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
   import type { Page } from '../bookeditor/book';
-  import { mainPage } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
@@ -30,8 +30,8 @@
   let renameEdit = null;
   let renaming = false;
 
-  $: if ($mainPage) {
-    selected = $mainPage.revision.id === nodeId;
+  $: if ($mainBook) {
+    selected = $mainBook.revision.id === nodeId;
   }
 
   $: ondrag($fileManagerDragging);
@@ -45,8 +45,8 @@
   async function onDoubleClick() {
     modalStore.trigger({ type: 'component',component: 'waiting' });    
     const file = await parent.getNode(bindId) as File;
-    const page = await loadPageFrom(fileSystem, file);
-    $mainPage = page;
+    const book = await loadBookFrom(fileSystem, file);
+    $mainBook = book; // TDOO: ここで無駄なセーブが走っている
     modalStore.close();
   }
 

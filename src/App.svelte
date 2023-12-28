@@ -5,6 +5,7 @@
   import { Toast } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
   import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
+  import { copyIndexedDB } from './lib/backUpIndexedDB';
   import * as Sentry from "@sentry/svelte";
 
   //import '../app.postcss';  
@@ -43,6 +44,21 @@
 
   onMount(async () => {
     document.body.style.overflow = 'hidden'; // HACK
+
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log("URLParams", urlParams);
+
+    if (urlParams.has('saveFiles')) {
+      const data: any = await copyIndexedDB('FileSystemDB');
+      const json = JSON.stringify(data);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'FileSystemDB.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
     /*
     // Initialize the Sentry SDK here

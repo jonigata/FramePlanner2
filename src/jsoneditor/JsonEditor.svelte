@@ -8,7 +8,7 @@
   import { shareTemplate } from '../firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makeFilename } from '../lib/layeredCanvas/tools/saveCanvas.js';
-  import { type Page, type Revision, revisionEqual, commitPage, incrementRevision } from '../bookeditor/book';
+  import { type Page, type Revision, revisionEqual, commitBook, incrementRevision } from '../bookeditor/book';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { mainPage } from '../bookeditor/bookStore';

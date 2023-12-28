@@ -20,5 +20,5 @@ declare global {
 
 console.tag = function(tag, color, ...args) {
   console.log(`%c${tag}`, `color:white; background-color:${color}; padding:2px 4px; border-radius:4px;`, ...args);
-  console.trace();
+  // console.trace();
 }
