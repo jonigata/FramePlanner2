@@ -61,17 +61,15 @@ export class ArrayLayer extends Layer {
 
   prerender(): void {
     for (let i = 0; i < this.array.papers.length; i++) {
-
+      this.array.papers[i].paper.prerender();
     }
   }
 
   render(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    for (let i = 0; i < this.array.papers.length; i++) {
-      const center = this.array.papers[i].center;
-      ctx.translate(center[0], center[1]);
-      const e = this.array.papers[i];
-      e.paper.render(ctx);
+    for (let paper of this.array.papers) {
+      ctx.translate(...paper.center);
+      paper.paper.render(ctx);
     }
     ctx.restore();
   }
