@@ -1,4 +1,4 @@
-import { Layer, Paper, type Dragging } from '../system/layeredCanvas';
+import { Layer, Paper, type Dragging, type Viewport } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 
@@ -8,6 +8,13 @@ export class ArrayLayer extends Layer {
   constructor(papers: Paper[], gap: number) {
     super();
     this.array = new PaperArray(papers, gap);
+  }
+
+  calculateLayout(matrix: DOMMatrix) {
+    for (let paper of this.array.papers) {
+      let m = matrix.translate(...paper.center);
+      paper.paper.calculateLayout(m);
+    }
   }
 
   pointerHover(point: Vector): boolean {
@@ -102,6 +109,12 @@ export class ArrayLayer extends Layer {
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     paper.handleWheel(position, delta);
     return false; // TODO: 実際問題として使われないと考えられるため
+  }
+
+  flushHints(viewport: Viewport): void {
+    for (let paper of this.array.papers) {
+      paper.paper.flushHints(viewport);
+    }
   }
 
   get redrawRequired(): boolean {

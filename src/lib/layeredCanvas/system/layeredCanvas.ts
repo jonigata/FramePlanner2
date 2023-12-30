@@ -10,6 +10,7 @@ export interface Viewport {
   translate: Vector;
   viewTranslate: Vector;
   scale: Vector;
+  dirty: boolean;
   onHint: OnHint;
 };
 
@@ -20,12 +21,14 @@ export interface Dragging {
 
 export class Layer {
   paper: Paper = null;
-  hint: OnHint = null;
+  hint: (position: Vector, message: string) => void; // bind(this)しないと面倒なので
 
-  constructor() {}
+  constructor() { this.hint = this.showHint.bind(this); }
 
   getPaperSize() {return this.paper.size;}
+  calculateLayout(matrix: DOMMatrix) {}
   redraw() { this.redrawRequired = true; }
+  showHint(position: Vector, message: string) {this.paper.showHint(position, message); }
 
   pointerHover(position: Vector): boolean { return false; }
   accepts(position: Vector) { return null; }
@@ -41,6 +44,7 @@ export class Layer {
   doubleClicked(position: Vector) { return false; }
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
   wheel(position: Vector, delta: number) { return false; }
+  flushHints(viewport: Viewport) {}
 
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
@@ -48,8 +52,10 @@ export class Layer {
 }
 
 export class Paper {
+  matrix: DOMMatrix;
   size: Vector;
   layers: Layer[];
+  hint: { position: Vector, message: string } = null;
 
   constructor(size: Vector) {
     this.size = size;
@@ -170,7 +176,7 @@ export class Paper {
 
   render(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    ctx.translate(-this.size[0] * 0.5, -this.size[1] * 0.5);  // 紙面左上
+    ctx.setTransform(this.matrix);
     for (let layer of this.layers) {
       layer.render(ctx);
     }
@@ -195,11 +201,31 @@ export class Paper {
   
   addLayer(layer: Layer): void {
     layer.paper = this
-    layer.hint = (p, s) => {
-      const q = this.paperPositionToViewportPosition(p);
-      // this.viewport.onHint(q, s); // TODO:
-    }
     this.layers.push(layer);
+  }
+
+  calculateLayout(matrix: DOMMatrix): void {
+    const m = matrix.translate(this.size[0] * -0.5, this.size[1] * -0.5);
+    this.matrix = m;
+    for (let layer of this.layers) {
+      layer.calculateLayout(m);
+    }
+  }
+
+  showHint(position: Vector, message: string): void {
+    this.hint = {position, message};
+  }
+
+  flushHints(viewport: Viewport) {
+    if (this.hint) {
+      const p = this.paperPositionToViewportPosition(this.hint.position);
+      viewport.onHint(p, this.hint.message);
+      this.hint = null;
+    }
+
+    for (let layer of this.layers) {
+      layer.flushHints(viewport);
+    }
   }
 
 };
@@ -220,6 +246,7 @@ export class LayeredCanvas {
       translate: [0, 0],
       viewTranslate: [0, 0], 
       scale: [1, 1], 
+      dirty: true,
       onHint: (p, s) => {
         const q: Vector = p ? this.viewportPositionToCanvasPosition(p) : [-1,-1];
         onHint(q, s);
@@ -227,11 +254,27 @@ export class LayeredCanvas {
     };
     this.rootPaper = new Paper([0,0]);
 
-    const addEventListener = (name: string, handler: (event: Event) => void) =>  {
-      const f = handler.bind(this);
-      c.addEventListener(name, f)
-      this.listeners.push([name, f]);
+    const beforeHandler = () => {
+      this.calculateLayout();
     }
+
+    const afterHandler = () => {
+      this.calculateLayout();
+      this.redrawIfRequired();
+      this.rootPaper.flushHints(this.viewport);
+    }
+
+    const addEventListener = (name: string, handler: (event: Event) => void) => {
+      const wrappedHandler = (event: Event) => {
+        beforeHandler();
+        handler.bind(this)(event);
+        afterHandler();
+      };
+  
+      const f = wrappedHandler.bind(this);
+      c.addEventListener(name, f);
+      this.listeners.push([name, f]);
+    };
 
     if (editable) {
       addEventListener('pointerdown', this.handlePointerDown);
@@ -312,8 +355,6 @@ export class LayeredCanvas {
       this.rootPaper.handlePointerDown(p, this.dragging);
     }
     this.rootPaper.changeFocus(this.dragging);
-
-    this.redrawIfRequired();
   }
       
   handlePointerMove(event: PointerEvent): void {
@@ -324,7 +365,6 @@ export class LayeredCanvas {
     } else {
       this.rootPaper.handlePointerHover(p);
     }
-    this.redrawIfRequired();
   }
     
   handlePointerUp(event: PointerEvent): void {
@@ -333,7 +373,6 @@ export class LayeredCanvas {
       this.rootPaper.handlePointerUp(p, this.dragging);
       this.viewport.canvas.releasePointerCapture(event.pointerId);
       this.dragging = null;
-      this.redrawIfRequired();
     }
   }
       
@@ -343,7 +382,6 @@ export class LayeredCanvas {
       this.rootPaper.handlePointerLeave(p, this.dragging);
       this.viewport.canvas.releasePointerCapture(event.pointerId);
       this.dragging = null;
-      this.redrawIfRequired();
     }
     this.pointerCursor = null;
     this.viewport.onHint(null, null);
@@ -354,7 +392,6 @@ export class LayeredCanvas {
       const p = this.pagePositionToPaperPosition(event);
       this.pointerCursor = p;
       this.rootPaper.handleCancel(p, this.dragging);
-      this.redrawIfRequired();
     }
   }
         
@@ -384,10 +421,17 @@ export class LayeredCanvas {
     this.pointerCursor = p;
     this.rootPaper.handleBeforeDoubleClick(p);
     this.rootPaper.handleDoubleClicked(p);
-    this.redrawIfRequired();
+  }
+
+  handleWheel(event: WheelEvent): void {
+    const delta = event.deltaY;
+    const p = this.pagePositionToPaperPosition(event);
+    this.rootPaper.handleWheel(p, delta);
   }
 
   async handleKeyDown(event: KeyboardEvent): Promise<void> {
+    // このハンドラだけはdocumentに登録する
+    this.calculateLayout();
     if (!this.isPointerOnCanvas()) {
       return;
     }
@@ -396,32 +440,17 @@ export class LayeredCanvas {
     this.redrawIfRequired();
   }
 
-  handleWheel(event: WheelEvent): void {
-    const delta = event.deltaY;
-    const p = this.pagePositionToPaperPosition(event);
-    this.rootPaper.handleWheel(p, delta);
-    this.redrawIfRequired();
-  }
-
   render(): void {
+    this.calculateLayout();
+
     const canvas = this.viewport.canvas;
     const ctx = this.viewport.ctx;
 
     ctx.fillStyle = "rgb(240,240,240)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.save();
-    ctx.translate(canvas.width * 0.5, canvas.height * 0.5);   // 画面中央
-    ctx.translate(...this.viewport.translate);                     // パン
-    ctx.translate(...this.viewport.viewTranslate);                 // パン(一時)
-    ctx.scale(...this.viewport.scale);                             // 拡大縮小
-
     this.rootPaper.prerender();
     this.rootPaper.render(ctx);
-
-    ctx.restore();
-
-
   }
 
   redraw(): void {
@@ -443,6 +472,22 @@ export class LayeredCanvas {
     const rect = this.viewport.canvas.getBoundingClientRect();
     const f = 0 <= mm[0] && mm[0] <= rect.width && 0 <= mm[1] && mm[1] <= rect.height;
     return f;
+  }
+
+  calculateLayout(): void {
+    if (!this.viewport.dirty) { return; }
+
+    this.viewport.dirty = false;
+    const canvas = this.viewport.canvas;
+    let matrix = new DOMMatrix();
+
+    // root
+    matrix = matrix.translate(canvas.width * 0.5, canvas.height * 0.5); // Centering on screen
+    matrix = matrix.translate(...this.viewport.translate);             // Pan
+    matrix = matrix.translate(...this.viewport.viewTranslate);         // Temporary Pan
+    matrix = matrix.scale(...this.viewport.scale);          
+
+    this.rootPaper.calculateLayout(matrix);
   }
 }
 

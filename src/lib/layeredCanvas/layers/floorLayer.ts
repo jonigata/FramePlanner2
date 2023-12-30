@@ -19,6 +19,7 @@ export class FloorLayer extends Layer {
     if (scale > 10) scale = 10;
     scale = Math.round(scale * 100) / 100;
     this.viewport.scale = [scale, scale];
+    this.viewport.dirty = true;
     this.redraw();
     return true;
   }
@@ -38,6 +39,7 @@ export class FloorLayer extends Layer {
           (p[1] - dragStart[1]) * scale[1]
         ];
         this.viewport.viewTranslate = dragOffset;
+        this.viewport.dirty = true;
         this.redraw();
       }
     }
@@ -51,6 +53,7 @@ export class FloorLayer extends Layer {
     const v = this.viewport.viewTranslate;
     this.viewport.translate = [t[0] + v[0], t[1] + v[1]];
     this.viewport.viewTranslate = [0, 0];
+    this.viewport.dirty = true;
   }
 
 }
