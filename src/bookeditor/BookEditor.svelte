@@ -8,10 +8,11 @@
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag} from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook } from './book';
-  import { mainBook, mainPage, bookEditor } from './bookStore';
+  import { mainBook, bookEditor, viewport } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
+  import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -26,6 +27,12 @@
     });
 
   $: book = $mainBook;
+
+  $: if ($viewport && !$viewport.dirty) {
+    console.log("BookEditor", $viewport);    
+    $viewport.dirty = true;
+    layeredCanvas.redraw();
+  }
 
   function isPainting() {
     return painterActive;
@@ -96,6 +103,8 @@
       book.pages,
       $bookEditor);
     layeredCanvas.redraw();
+
+    $viewport = layeredCanvas.viewport;
   }
 
   $: onBubbleModified($bubble);
@@ -140,10 +149,17 @@
     layeredCanvas.cleanup();
   });
 
+  function onResize(e: CustomEvent) {
+    console.log("onResize", e.detail);
+    if (!layeredCanvas || !$viewport) { return; }
+    $viewport.dirty = true;
+    layeredCanvas.redraw();
+  }
+
 </script>
 
 <div class="main-paper-container">
-  <AutoSizeCanvas bind:canvas={canvas}>
+  <AutoSizeCanvas bind:canvas={canvas} on:resize={onResize}>
   <!--
     {#if bubbleLayer?.defaultBubble}
     <p style={getFontStyle2(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!- 事前読み込み、ローカルフォントだと多分エラー出る ->

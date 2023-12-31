@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
   export let canvas: HTMLCanvasElement;
 
   let containerWidth: number;
@@ -6,11 +8,14 @@
   let canvasWidth: number;
   let canvasHeight: number;
 
+  const dispatch = createEventDispatcher();
+
   $:onChangeContainerSize(containerWidth, containerHeight);
   function onChangeContainerSize(w: number, h: number) {
     if (!w || !h) return;
     canvasWidth = w;
     canvasHeight = h;
+    dispatch('resize', { width: w, height: h });
   }
 </script>
 

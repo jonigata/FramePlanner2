@@ -9,7 +9,7 @@ export interface Viewport {
   ctx: CanvasRenderingContext2D;
   translate: Vector;
   viewTranslate: Vector;
-  scale: Vector;
+  scale: number;
   dirty: boolean;
   onHint: OnHint;
 };
@@ -245,7 +245,7 @@ export class LayeredCanvas {
       ctx: c.getContext('2d'),
       translate: [0, 0],
       viewTranslate: [0, 0], 
-      scale: [1, 1], 
+      scale: 1,
       dirty: true,
       onHint: (p, s) => {
         const q: Vector = p ? this.viewportPositionToCanvasPosition(p) : [-1,-1];
@@ -316,7 +316,7 @@ export class LayeredCanvas {
       this.viewport.canvas.height * 0.5 + v.translate[1],
     ];
     const [tx, ty] = [p[0] - centering[0], p[1] - centering[1]];
-    const [sx, sy] = [tx / v.scale[0], ty / v.scale[1]];
+    const [sx, sy] = [tx / v.scale, ty / v.scale];
     return [sx, sy];
   }
 
@@ -337,7 +337,7 @@ export class LayeredCanvas {
       this.viewport.canvas.width * 0.5 + v.translate[0],
       this.viewport.canvas.height * 0.5 + v.translate[1],
     ];
-    const [tx, ty] = [sx * v.scale[0], sy * v.scale[1]];
+    const [tx, ty] = [sx * v.scale, sy * v.scale];
     const [x, y] = [tx + centering[0], ty + centering[1]];
     return [x, y];
   }
@@ -485,7 +485,7 @@ export class LayeredCanvas {
     matrix = matrix.translate(canvas.width * 0.5, canvas.height * 0.5); // Centering on screen
     matrix = matrix.translate(...this.viewport.translate);             // Pan
     matrix = matrix.translate(...this.viewport.viewTranslate);         // Temporary Pan
-    matrix = matrix.scale(...this.viewport.scale);          
+    matrix = matrix.scale(this.viewport.scale, this.viewport.scale);
 
     this.rootPaper.calculateLayout(matrix);
   }

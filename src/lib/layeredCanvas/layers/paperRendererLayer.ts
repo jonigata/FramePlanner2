@@ -18,7 +18,7 @@ export class PaperRendererLayer extends Layer {
     super();
   }
 
-  render(ctx) {
+  render(ctx: CanvasRenderingContext2D) {
     const size = this.getPaperSize();
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
 

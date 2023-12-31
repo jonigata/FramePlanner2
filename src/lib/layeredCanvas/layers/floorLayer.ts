@@ -13,12 +13,12 @@ export class FloorLayer extends Layer {
 
   wheel(_position: Vector, delta: number) {
     console.log("FloorLayer wheel", delta);
-    let scale = this.viewport.scale[0];
+    let scale = this.viewport.scale;
     scale -= delta * 0.0001;
     if (scale < 0.1) scale = 0.1;
     if (scale > 10) scale = 10;
     scale = Math.round(scale * 100) / 100;
-    this.viewport.scale = [scale, scale];
+    this.viewport.scale = scale;
     this.viewport.dirty = true;
     this.redraw();
     return true;
@@ -35,8 +35,8 @@ export class FloorLayer extends Layer {
     try {
       while (p = yield) {
         const dragOffset: Vector = [
-          (p[0] - dragStart[0]) * scale[0],
-          (p[1] - dragStart[1]) * scale[1]
+          (p[0] - dragStart[0]) * scale,
+          (p[1] - dragStart[1]) * scale
         ];
         this.viewport.viewTranslate = dragOffset;
         this.viewport.dirty = true;

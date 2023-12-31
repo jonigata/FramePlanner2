@@ -5,8 +5,9 @@
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
   import { type Page, incrementRevision, commitBook, newImageBook } from '../bookeditor/book';
-  import { mainPage, mainBook } from '../bookeditor/bookStore';
-  import { saveToken, clipboardToken, scale } from '../bookeditor/paperStore';
+  import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
+  import { mainPage, mainBook, viewport } from '../bookeditor/bookStore';
+  import { saveToken, clipboardToken } from '../bookeditor/paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
@@ -192,7 +193,7 @@
 
 </script>
 
-{#if page}
+{#if page && $viewport}
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="px-2">
@@ -240,8 +241,8 @@
     幅<RangeSlider name="line" bind:value={frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
-    拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
-    <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
+    拡大率<RangeSlider name="scale" bind:value={$viewport.scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
+    <button class="btn btn-sm variant-filled paper-size" on:click={() => $viewport.scale=1}>100%</button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
