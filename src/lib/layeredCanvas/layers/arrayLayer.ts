@@ -1,9 +1,13 @@
 import { Layer, Paper, type Dragging, type Viewport } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
+import { ClickableIcon } from "../tools/draw/clickableIcon";
 
 export class ArrayLayer extends Layer {
   array: PaperArray;
+
+  trashIcon: ClickableIcon;
+  insertIcon: ClickableIcon;
 
   constructor(papers: Paper[], gap: number) {
     super();
@@ -15,6 +19,9 @@ export class ArrayLayer extends Layer {
       let m = matrix.translate(...paper.center);
       paper.paper.calculateLayout(m);
     }
+
+    this.trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", null);
+    this.insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
   }
 
   pointerHover(point: Vector): boolean {
@@ -77,6 +84,10 @@ export class ArrayLayer extends Layer {
     for (let paper of this.array.papers) {
       ctx.translate(...paper.center);
       paper.paper.render(ctx);
+      ctx.translate(0, paper.paper.size[1]*0.5 + 32);
+      this.trashIcon.render(ctx);
+      ctx.translate(paper.paper.size[0]*-0.5 - 32, 0);
+      this.insertIcon.render(ctx);
     }
     ctx.restore();
   }

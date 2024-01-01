@@ -12,7 +12,6 @@
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
-  import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -31,6 +30,7 @@
   $: if ($viewport && !$viewport.dirty) {
     console.log("BookEditor", $viewport);    
     $viewport.dirty = true;
+    $viewport = $viewport;
     layeredCanvas.redraw();
   }
 
