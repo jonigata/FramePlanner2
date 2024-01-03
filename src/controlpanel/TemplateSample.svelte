@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas'
+  import { LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
@@ -9,9 +9,9 @@
   let canvas: HTMLCanvasElement;
 
   onMount(() => {
+    const viewport = new Viewport(canvas, (p: [number, number], s: String) => {});
     const layeredCanvas = new LayeredCanvas(
-      canvas, 
-      (p: [number, number], s: String) => {},
+      viewport, 
       false);
 
     const paperRendererLayer = new PaperRendererLayer();

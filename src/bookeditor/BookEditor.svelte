@@ -4,7 +4,7 @@
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-  import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
+  import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
@@ -97,12 +97,21 @@
     console.log("deletePage", index);
   }
 
-  $: if (canvas && book) {
+  $: onChangeBook(canvas, book);
+  function onChangeBook(canvas, book) {
+    if (!canvas || !book) { return; }
+
     console.log("*********** buildBookEditor from BookEditor");
     if (layeredCanvas) {
       layeredCanvas.cleanup();
     }
 
+    if (!$viewport) {
+      console.log("================ viewport remake");
+      $viewport = new Viewport(canvas, hint);
+    }
+    $viewport.dirty = true;
+    
     const bookEditorInstance: BookOperators = {
       hint,
       commit,
@@ -121,12 +130,10 @@
     $bookEditor = bookEditorInstance;
 
     layeredCanvas = buildBookEditor(
-      canvas, 
+      $viewport,
       book.pages,
       $bookEditor);
     layeredCanvas.redraw();
-
-    $viewport = layeredCanvas.viewport;
   }
 
   $: onBubbleModified($bubble);

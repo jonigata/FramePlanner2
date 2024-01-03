@@ -4,7 +4,7 @@ import type { Vector } from "../tools/geometry/geometry";
 
 type OnHint = (p: Vector, s: string | null) => void;
 
-export interface Viewport {
+export class Viewport {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   translate: Vector;
@@ -12,7 +12,44 @@ export interface Viewport {
   scale: number;
   dirty: boolean;
   onHint: OnHint;
+
+  constructor(c: HTMLCanvasElement, onHint: OnHint) {
+    this.canvas = c;
+    this.ctx = c.getContext('2d');
+    this.translate = [0, 0];
+    this.viewTranslate = [0, 0];
+    this.scale = 1;
+    this.dirty = true;
+    this.onHint = (p, s) => {
+      const q: Vector = p ? this.viewportPositionToCanvasPosition(p) : [-1,-1];
+      onHint(q, s);
+    };
+  }
+
+  viewportPositionToCanvasPosition(p: Vector): Vector {
+    const [sx, sy] = p;
+    const centering = [
+      this.canvas.width * 0.5 + this.translate[0],
+      this.canvas.height * 0.5 + this.translate[1],
+    ];
+    const [tx, ty] = [sx * this.scale, sy * this.scale];
+    const [x, y] = [tx + centering[0], ty + centering[1]];
+    return [x, y];
+  }
+    
+  canvasPositionToViewportPosition(p: Vector): Vector {
+    const centering = [
+      this.canvas.width * 0.5 + this.translate[0],
+      this.canvas.height * 0.5 + this.translate[1],
+    ];
+    const [tx, ty] = [p[0] - centering[0], p[1] - centering[1]];
+    const [sx, sy] = [tx / this.scale, ty / this.scale];
+    return [sx, sy];
+  }
+
+
 };
+
 
 export interface Dragging {
   layer: Layer;
@@ -239,19 +276,8 @@ export class LayeredCanvas {
   listeners: [string, ((event: Event) => void)][] = [];
   dragging: Dragging;
 
-  constructor(c: HTMLCanvasElement, onHint: OnHint, editable: boolean) {
-    this.viewport = { 
-      canvas: c,
-      ctx: c.getContext('2d'),
-      translate: [0, 0],
-      viewTranslate: [0, 0], 
-      scale: 1,
-      dirty: true,
-      onHint: (p, s) => {
-        const q: Vector = p ? this.viewportPositionToCanvasPosition(p) : [-1,-1];
-        onHint(q, s);
-      }
-    };
+  constructor(viewport: Viewport, editable: boolean) {
+    this.viewport = viewport;
     this.rootPaper = new Paper([0,0]);
 
     const beforeHandler = () => {
@@ -272,7 +298,7 @@ export class LayeredCanvas {
       };
   
       const f = wrappedHandler.bind(this);
-      c.addEventListener(name, f);
+      this.viewport.canvas.addEventListener(name, f);
       this.listeners.push([name, f]);
     };
 
@@ -309,42 +335,19 @@ export class LayeredCanvas {
     return [Math.floor(p.x), Math.floor(p.y)];
   }
 
-  canvasPositionToViewportPosition(p: Vector): Vector {
-    const v = this.viewport;
-    const centering = [
-      this.viewport.canvas.width * 0.5 + v.translate[0],
-      this.viewport.canvas.height * 0.5 + v.translate[1],
-    ];
-    const [tx, ty] = [p[0] - centering[0], p[1] - centering[1]];
-    const [sx, sy] = [tx / v.scale, ty / v.scale];
-    return [sx, sy];
-  }
-
   viewportPositionToPaperPosition(p: Vector) {
     return this.rootPaper.viewportPositionToPaperPosition(p);
   }
 
   pagePositionToPaperPosition(event: { pageX: number, pageY: number }): Vector {
     const p = this.pagePositionToCanvasPosition(event);
-    const q = this.canvasPositionToViewportPosition(p);
+    const q = this.viewport.canvasPositionToViewportPosition(p);
     return this.viewportPositionToPaperPosition(q);
   }
 
-  viewportPositionToCanvasPosition(p: Vector): Vector {
-    const [sx, sy] = p;
-    const v = this.viewport;
-    const centering = [
-      this.viewport.canvas.width * 0.5 + v.translate[0],
-      this.viewport.canvas.height * 0.5 + v.translate[1],
-    ];
-    const [tx, ty] = [sx * v.scale, sy * v.scale];
-    const [x, y] = [tx + centering[0], ty + centering[1]];
-    return [x, y];
-  }
-    
   paperPositionToCanvasPosition(paper: Paper, p: Vector): Vector {
     const [sx, sy] = [p[0] - paper.size[0] * 0.5, p[1] - paper.size[1] * 0.5];
-    return this.viewportPositionToCanvasPosition([sx, sy]);
+    return this.viewport.viewportPositionToCanvasPosition([sx, sy]);
   }
     
   handlePointerDown(event: PointerEvent): void {

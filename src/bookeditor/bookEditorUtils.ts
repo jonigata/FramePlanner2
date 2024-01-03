@@ -1,4 +1,4 @@
-import { LayeredCanvas, Paper, type Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
+import { LayeredCanvas, Paper, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
 import { FloorLayer } from '../lib/layeredCanvas/layers/floorLayer';
 // import { SampleLayer } from '../lib/layeredCanvas/layers/SampleLayer';
 import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
@@ -13,11 +13,11 @@ import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
 
 export function buildBookEditor(
-  canvas: HTMLCanvasElement,
+  viewport: Viewport,
   pages: Page[],
   editor: BookOperators) {
 
-  const layeredCanvas = new LayeredCanvas(canvas,editor.hint,true);
+  const layeredCanvas = new LayeredCanvas(viewport, true);
 
   const floorLayer = new FloorLayer(layeredCanvas.viewport, editor.viewportChanged);
   layeredCanvas.rootPaper.addLayer(floorLayer);
@@ -32,7 +32,7 @@ export function buildBookEditor(
 
   // layeredCanvas.rootPaper.addLayer(new SampleLayer());
 
-  initializeKeyCache(canvas, (code: string) => {
+  initializeKeyCache(viewport.canvas, (code: string) => {
     return code === "AltLeft" || code === "AltRight" ||
         code === "ControlLeft" || code === "ControlRight" ||
         code === "ShiftLeft" || code === "ShiftRight" ||

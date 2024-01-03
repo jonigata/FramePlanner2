@@ -18,6 +18,12 @@ export class ArrayLayer extends Layer {
     console.log(onInsert, onDelete);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
+
+    const s = this.array.papers[0].paper.size;
+    this.trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
+    this.trashIcon.position = [0, s[1] * 0.5 + 32];
+    this.insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
+    this.insertIcon.position = [s[0] * -0.5 - 32, s[1] * 0.5 + 32];
   }
 
   calculateLayout(matrix: DOMMatrix) {
@@ -25,13 +31,6 @@ export class ArrayLayer extends Layer {
       let m = matrix.translate(...paper.center);
       paper.paper.calculateLayout(m);
     }
-
-    const s = this.array.papers[0].paper.size;
-    this.trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
-    this.trashIcon.position = [0, s[1] * 0.5 + 32];
-    this.insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
-    this.insertIcon.position = [s[0] * -0.5 - 32, s[1] * 0.5 + 32];
-
   }
 
   pointerHover(point: Vector): boolean {
