@@ -9,8 +9,8 @@ export class ArrayLayer extends Layer {
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
 
-  trashIcon: ClickableIcon;
-  insertIcon: ClickableIcon;
+  trashIcons: ClickableIcon[] = [];
+  insertIcons: ClickableIcon[] = [];
 
   constructor(papers: Paper[], gap: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
     super();
@@ -19,11 +19,21 @@ export class ArrayLayer extends Layer {
     this.onInsert = onInsert;
     this.onDelete = onDelete;
 
-    const s = this.array.papers[0].paper.size;
-    this.trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
-    this.trashIcon.position = [0, s[1] * 0.5 + 32];
-    this.insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
-    this.insertIcon.position = [s[0] * -0.5 - 32, s[1] * 0.5 + 32];
+    console.log(this.array.papers.length);
+    this.insertIcons = [];
+    this.trashIcons = [];
+    for (let i = 0; i < this.array.papers.length; i++) {
+      const paper = this.array.papers[i];
+      const s = paper.paper.size;
+      const c = paper.center;
+      const trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
+      trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
+      const insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
+      insertIcon.position = [c[0] + s[0] * -0.5 - 32, c[1] + s[1] * 0.5 + 32];
+      this.trashIcons.push(trashIcon);
+      this.insertIcons.push(insertIcon);
+    }
+
   }
 
   calculateLayout(matrix: DOMMatrix) {
@@ -33,23 +43,43 @@ export class ArrayLayer extends Layer {
     }
   }
 
-  pointerHover(point: Vector): boolean {
-    const {paper, position} = this.array.parentPositionToNearestChildPosition(point);
+  pointerHover(p: Vector): boolean {
+    this.insertIcons.forEach((e, i) => {
+      if (e.contains(p)) {
+        const q = e.center;
+        this.hint([q[0], q[1] - 32],"ページ挿入")
+        return true;
+      }      
+    });
+    this.trashIcons.forEach((e, i) => {
+      if (e.contains(p)) {
+        const q = e.center;
+        this.hint([q[0], q[1] - 32],"ページ削除")
+        return true;
+      }      
+    });
+
+    this.hint([0,0], null);
+
+    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     paper.handlePointerHover(position);    
-    return false; // TODO: 実際問題として使われないと考えられるため
+    return false;
   }
 
   accepts(p: Vector): any { 
     if (keyDownFlags["Space"]) {return null;}
-    if (this.insertIcon.contains(p)) {
-      console.log(this.onInsert);
-      this.onInsert(0);
-      return null;
-    }
-    if (this.trashIcon.contains(p)) {
-      this.onDelete(0);
-      return null;
-    }
+    this.insertIcons.forEach((e, i) => {
+      if (e.contains(p)) {
+        this.onInsert(i);
+        return null;
+      }      
+    });
+    this.trashIcons.forEach((e, i) => {
+      if (e.contains(p)) {
+        this.onDelete(i);
+        return null;
+      }      
+    });
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position);
@@ -100,12 +130,16 @@ export class ArrayLayer extends Layer {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
+    this.insertIcons.forEach(e => {
+      e.render(ctx);
+    });
+    this.trashIcons.forEach(e => {
+      e.render(ctx);
+    });
     ctx.save();
     for (let paper of this.array.papers) {
       ctx.translate(...paper.center);
       paper.paper.render(ctx);
-      this.trashIcon.render(ctx);
-      this.insertIcon.render(ctx);
     }
     ctx.restore();
   }
