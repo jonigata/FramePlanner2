@@ -146,6 +146,9 @@ export interface BookOperators {
   insert: (page: Page, frameElement: FrameElement) => void;
   splice: (page: Page, frameElement: FrameElement) => void;
   focusBubble: (page: Page, bubble: Bubble, p: Vector) => void;
+  viewportChanged: () => void;
+  insertPage: (index: number) => void;
+  deletePage: (index: number) => void;
 }
 
 export function clonePage(page: Page): Page {

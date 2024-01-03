@@ -5,10 +5,12 @@ import type { Viewport } from "../system/layeredCanvas";
 
 export class FloorLayer extends Layer {
   viewport: Viewport;
+  onViewportChanged: () => void; // ここで責任とれないこと（例えばsvelteUI)
 
-  constructor(viewport: Viewport) {
+  constructor(viewport: Viewport, onViewportChanged: () => void) {
     super();
     this.viewport = viewport;
+    this.onViewportChanged = onViewportChanged;
   }
 
   wheel(_position: Vector, delta: number) {
@@ -21,6 +23,7 @@ export class FloorLayer extends Layer {
     this.viewport.scale = scale;
     this.viewport.dirty = true;
     this.redraw();
+    this.onViewportChanged();
     return true;
   }
 

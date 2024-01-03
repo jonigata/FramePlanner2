@@ -19,7 +19,7 @@ export function buildBookEditor(
 
   const layeredCanvas = new LayeredCanvas(canvas,editor.hint,true);
 
-  const floorLayer = new FloorLayer(layeredCanvas.viewport);
+  const floorLayer = new FloorLayer(layeredCanvas.viewport, editor.viewportChanged);
   layeredCanvas.rootPaper.addLayer(floorLayer);
 
   let papers: Paper[] = [];
@@ -27,7 +27,7 @@ export function buildBookEditor(
   for (const page of pages) {
     papers.push(buildPaper(layeredCanvas, page, editor));
   }
-  const arrayLayer = new ArrayLayer(papers, 100);
+  const arrayLayer = new ArrayLayer(papers, 100, editor.insertPage, editor.deletePage);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   // layeredCanvas.rootPaper.addLayer(new SampleLayer());

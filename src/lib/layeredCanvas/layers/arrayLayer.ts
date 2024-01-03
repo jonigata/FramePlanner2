@@ -2,16 +2,22 @@ import { Layer, Paper, type Dragging, type Viewport } from '../system/layeredCan
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
+import { keyDownFlags } from "../system/keyCache";
 
 export class ArrayLayer extends Layer {
   array: PaperArray;
+  onInsert: (index: number) => void;
+  onDelete: (index: number) => void;
 
   trashIcon: ClickableIcon;
   insertIcon: ClickableIcon;
 
-  constructor(papers: Paper[], gap: number) {
+  constructor(papers: Paper[], gap: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
     super();
     this.array = new PaperArray(papers, gap);
+    console.log(onInsert, onDelete);
+    this.onInsert = onInsert;
+    this.onDelete = onDelete;
   }
 
   calculateLayout(matrix: DOMMatrix) {
@@ -20,8 +26,12 @@ export class ArrayLayer extends Layer {
       paper.paper.calculateLayout(m);
     }
 
-    this.trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", null);
+    const s = this.array.papers[0].paper.size;
+    this.trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
+    this.trashIcon.position = [0, s[1] * 0.5 + 32];
     this.insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
+    this.insertIcon.position = [s[0] * -0.5 - 32, s[1] * 0.5 + 32];
+
   }
 
   pointerHover(point: Vector): boolean {
@@ -31,6 +41,17 @@ export class ArrayLayer extends Layer {
   }
 
   accepts(p: Vector): any { 
+    if (keyDownFlags["Space"]) {return null;}
+    if (this.insertIcon.contains(p)) {
+      console.log(this.onInsert);
+      this.onInsert(0);
+      return null;
+    }
+    if (this.trashIcon.contains(p)) {
+      this.onDelete(0);
+      return null;
+    }
+
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position);
     return innerDragging ? { paper, index, innerDragging } : null;
@@ -84,9 +105,7 @@ export class ArrayLayer extends Layer {
     for (let paper of this.array.papers) {
       ctx.translate(...paper.center);
       paper.paper.render(ctx);
-      ctx.translate(0, paper.paper.size[1]*0.5 + 32);
       this.trashIcon.render(ctx);
-      ctx.translate(paper.paper.size[0]*-0.5 - 32, 0);
       this.insertIcon.render(ctx);
     }
     ctx.restore();

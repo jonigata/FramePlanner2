@@ -1,13 +1,15 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
+  import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+  import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
-  import type { Book, Page, BookOperators, HistoryTag} from './book';
-  import { undoBookHistory, redoBookHistory, commitBook, revertBook } from './book';
+  import type { Book, Page, BookOperators, HistoryTag } from './book';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage } from './book';
   import { mainBook, bookEditor, viewport } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
@@ -31,14 +33,14 @@
     console.log("BookEditor", $viewport);    
     $viewport.dirty = true;
     $viewport = $viewport;
-    layeredCanvas.redraw();
+    layeredCanvas?.redraw();
   }
 
   function isPainting() {
     return painterActive;
   }
 
-  function onHint(p: [number, number], s: String) {
+  function hint(p: [number, number], s: String) {
     if (s) {
       const q = convertPointFromNodeToPage(canvas, ...p);
       q.y -= 25;
@@ -78,6 +80,23 @@
     }
   }
 
+  function viewportChanged() {
+    console.log("viewportChanged");
+    $viewport = $viewport;
+  }
+
+  function insertPage(index: number) {
+    console.log("insertPage", index);
+    const frameTree = FrameElement.compile(frameExamples[0]);
+    const page = newPage(frameTree);
+    $mainBook.pages.splice(index+1, 0, page);
+    book = $mainBook;
+  }
+
+  function deletePage(index: number) {
+    console.log("deletePage", index);
+  }
+
   $: if (canvas && book) {
     console.log("*********** buildBookEditor from BookEditor");
     if (layeredCanvas) {
@@ -85,16 +104,19 @@
     }
 
     const bookEditorInstance: BookOperators = {
-      hint: onHint,
-      commit: (tag: HistoryTag) => commit(tag),
-      revert: () => revert(),
-      undo: undo,
-      redo: redo,
+      hint,
+      commit,
+      revert,
+      undo,
+      redo,
       modalGenerate: () => {},
       modalScribble: () => {},
       insert: () => {},
       splice: () => {},
-      focusBubble
+      focusBubble,
+      viewportChanged,
+      insertPage,
+      deletePage,
     };
     $bookEditor = bookEditorInstance;
 
