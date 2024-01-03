@@ -95,6 +95,8 @@
 
   function deletePage(index: number) {
     console.log("deletePage", index);
+    $mainBook.pages.splice(index, 1);
+    book = $mainBook;
   }
 
   $: onChangeBook(canvas, book);
@@ -111,7 +113,7 @@
       $viewport = new Viewport(canvas, hint);
     }
     $viewport.dirty = true;
-    
+
     const bookEditorInstance: BookOperators = {
       hint,
       commit,
