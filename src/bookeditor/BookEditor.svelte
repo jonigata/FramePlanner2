@@ -52,6 +52,7 @@
 
   export function commit(tag: HistoryTag) {
     delayedCommiter.force();
+    console.trace();
     commitBook(book, tag);
     console.tag("commit", "cyan", book.revision, book.history.entries[book.history.cursor-1])
   }
@@ -60,6 +61,7 @@
     console.log("revert");
     delayedCommiter.cancel();
     revertBook(book);
+    $mainBook = book;
   }
 
   function undo() {
@@ -90,12 +92,14 @@
     const frameTree = FrameElement.compile(frameExamples[0]);
     const page = newPage(frameTree);
     $mainBook.pages.splice(index+1, 0, page);
+    commit(null);
     book = $mainBook;
   }
 
   function deletePage(index: number) {
     console.log("deletePage", index);
     $mainBook.pages.splice(index, 1);
+    commit(null);
     book = $mainBook;
   }
 

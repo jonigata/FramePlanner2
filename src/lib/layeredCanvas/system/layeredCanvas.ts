@@ -265,6 +265,13 @@ export class Paper {
     }
   }
 
+  contains(v: Vector) {
+    const [x, y] = v;
+    const [w, h] = this.size;
+    const f = 0 <= x && x <= w && 0 <= y && y <= h;
+    return f;
+  }
+
 };
 
 

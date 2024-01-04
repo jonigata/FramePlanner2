@@ -21,7 +21,7 @@
   import ShapeChooser from './bookeditor/bubbleinspector/ShapeChooser.svelte';
   import ImageGenerator from './generator/ImageGenerator.svelte';
   import FileManager from './filemanager/FileManager.svelte';
-  import NewFileButton from './rootelements/NewFileButton.svelte';
+  import NewBookButton from './rootelements/NewBookButton.svelte';
   import CabinetButton from './rootelements/CabinetButton.svelte';
   import Waiting from './utils/Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
@@ -80,7 +80,7 @@
 <div class="control-panel-container">
   <ControlPanel />
   <PassiveToolTip />
-  <NewFileButton  />
+  <NewBookButton  />
   <CabinetButton />
 </div>
 

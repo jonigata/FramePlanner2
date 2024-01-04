@@ -15,11 +15,9 @@ export class ArrayLayer extends Layer {
   constructor(papers: Paper[], gap: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
     super();
     this.array = new PaperArray(papers, gap);
-    console.log(onInsert, onDelete);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
 
-    console.log(this.array.papers.length);
     this.insertIcons = [];
     this.trashIcons = [];
     for (let i = 0; i < this.array.papers.length; i++) {
@@ -158,7 +156,9 @@ export class ArrayLayer extends Layer {
 
   doubleClicked(p: Vector): boolean { 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    paper.handleDoubleClicked(position);
+    if (paper.contains(position)) {
+      paper.handleDoubleClicked(position);
+    }
     return false; // TODO: 実際問題として使われないと考えられるため
   }
 
