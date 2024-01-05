@@ -4,8 +4,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
-  import { type Page, incrementRevision, commitBook, newImageBook } from '../bookeditor/book';
-  import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
+  import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { mainPage, mainBook, viewport } from '../bookeditor/bookStore';
   import { saveToken, clipboardToken } from '../bookeditor/paperStore';
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -38,11 +37,13 @@
   let frameColor: string = null;
   let frameWidth: number = 2;
 
-  let page: Page;
-
-  $: page = $mainPage;
-
-  $: if (page) {
+  $:onUpdateFirstPage($mainBook?.pages[0]);
+  function onUpdateFirstPage(page: Page) {
+    if (!page) { return; }
+    if (paperSize[0] === page.paperSize[0] && paperSize[1] === page.paperSize[1] &&
+        paperColor === page.paperColor && frameColor === page.frameColor && frameWidth === page.frameWidth) {
+      return;
+    }
     paperSize[0] = page.paperSize[0];
     paperSize[1] = page.paperSize[1];
     paperColor = page.paperColor;
@@ -51,19 +52,28 @@
   }
 
   $:onUpdatePaperProperty(paperSize, paperColor, frameColor, frameWidth);
-  function onUpdatePaperProperty(_a: [number, number], _b: string, _c: string, _d: number) {
-    const mp = $mainPage;
-    if (!mp) { return; }
-    if (mp.paperSize[0] === paperSize[0] && mp.paperSize[1] === paperSize[1] &&
-        mp.paperColor === paperColor && mp.frameColor === frameColor && mp.frameWidth === frameWidth) {
-      return;
+  function onUpdatePaperProperty(ps: [number, number], pc: string, fc: string, fw: number) {
+    if (!$mainBook) { return; }
+
+    let changed = false;
+    for (let p of $mainBook.pages) {
+      if (p.paperSize[0] === ps[0] && p.paperSize[1] === ps[1] &&
+          p.paperColor === pc && p.frameColor === fc && p.frameWidth === fw) {
+        continue;
+      }
+
+      p.paperSize[0] = ps[0];
+      p.paperSize[1] = ps[1];
+      p.paperColor = pc;
+      p.frameColor = fc;
+      p.frameWidth = fw;
+      changed = true;
     }
-    mp.paperSize[0] = paperSize[0];
-    mp.paperSize[1] = paperSize[1];
-    mp.paperColor = paperColor;
-    mp.frameColor = frameColor;
-    mp.frameWidth = frameWidth;
-    commitBook($mainBook, "page-attribute");
+    console.log(changed);
+    if (changed) {
+      commitBook($mainBook, "page-attribute");
+      $mainBook = $mainBook;
+    }
   }
 
   function setDimensions(w: number, h: number) {
@@ -72,11 +82,15 @@
     paperSize[1] = h;
   }
 
-  function applyTemplate(event: CustomEvent<any>) {
-    page.frameTree = FrameElement.compile(event.detail);
-    page.bubbles = [];
-    page.paperColor = page.frameTree.bgColor;
-    commitBook($mainBook, "page-attribute");
+  function applyTemplate(event: CustomEvent<FrameElement>) {
+    const page = newPage(event.detail);
+    page.paperSize = [...paperSize];
+    page.paperColor = paperColor;
+    page.frameColor = frameColor;
+    page.frameWidth = frameWidth;
+    $mainBook.pages.push(page);
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
   }
 
   function save() {
@@ -193,7 +207,7 @@
 
 </script>
 
-{#if page && $viewport}
+{#if $viewport}
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="px-2">

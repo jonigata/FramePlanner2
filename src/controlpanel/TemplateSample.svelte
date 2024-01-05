@@ -1,12 +1,18 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher, onDestroy } from "svelte";
   import { LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
+  const dispatch = createEventDispatcher();
+
   export let frameTree: FrameElement;
 
   let canvas: HTMLCanvasElement;
+
+  function onClick() {
+    dispatch('click', frameTree);
+  }
 
   onMount(() => {
     const viewport = new Viewport(canvas, (p: [number, number], s: String) => {});
@@ -21,6 +27,12 @@
     paperRendererLayer.setFrameTree(frameTree);
     paperRendererLayer.setBubbles([]);
     layeredCanvas.redraw();
+
+    canvas.addEventListener('click', onClick);
+  });
+
+  onDestroy(() => {
+    canvas.removeEventListener('click', onClick);
   });
   
 </script>

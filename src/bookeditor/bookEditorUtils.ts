@@ -59,6 +59,9 @@ function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, u
   paper.addLayer(paperRendererLayer);
 
   // frame
+  page.frameTree.bgColor = page.paperColor;
+  page.frameTree.borderColor = page.frameColor;
+  page.frameTree.borderWidth = page.frameWidth;
   const frameLayer = new FrameLayer(
     paperRendererLayer,
     page.frameTree,

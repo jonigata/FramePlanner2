@@ -132,7 +132,7 @@
       console.tag("new book request", "green");
       $newBookToken = null;
       const root = await fileSystem.getRoot();
-      const cabinet = await root.getNodeByName("キャビネット");
+      const cabinet = await root.getNodeByName("デスクトップ");
       await newFile(fileSystem, cabinet.asFolder(), getCurrentDateTime(), book);
       currentRevision = {...book.revision};
       $mainBook = book;
