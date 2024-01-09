@@ -7,6 +7,7 @@
   import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { mainPage, mainBook, viewport } from '../bookeditor/bookStore';
   import { saveToken, clipboardToken } from '../bookeditor/paperStore';
+  import { bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
@@ -95,7 +96,8 @@
 
   function save() {
     logEvent(getAnalytics(), 'download');
-    $saveToken = "download";
+    $bookArchiver.push('download');
+    $bookArchiver = $bookArchiver;
   }
 
   function postAIPictors() {

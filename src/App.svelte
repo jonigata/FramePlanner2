@@ -26,7 +26,8 @@
   import Waiting from './utils/Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
-  
+  import BookArchiver from './utils/BookArchiver.svelte';
+
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
       ref: Comic,
@@ -95,6 +96,7 @@
 <About/>
 <BatchImaging/>
 <Toast/>
+<BookArchiver/>
 
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>
 
