@@ -68,7 +68,7 @@ export class Layer {
   showHint(position: Vector, message: string) {this.paper.showHint(position, message); }
 
   pointerHover(position: Vector): boolean { return false; }
-  accepts(position: Vector) { return null; }
+  accepts(position: Vector, button: number) { return null; }
   changeFocus(dragging: Dragging) {}
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
@@ -110,11 +110,11 @@ export class Paper {
     return [sx, sy];
   }
 
-  handleAccepts(p: Vector): Dragging {
+  handleAccepts(p: Vector, button: number): Dragging {
     var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      const payload = layer.accepts(p);
+      const payload = layer.accepts(p, button);
       if (payload) {
         result = {layer, payload};
         break;
@@ -359,7 +359,7 @@ export class LayeredCanvas {
     
   handlePointerDown(event: PointerEvent): void {
     const p = this.pagePositionToPaperPosition(event);
-    this.dragging = this.rootPaper.handleAccepts(p);
+    this.dragging = this.rootPaper.handleAccepts(p, event.button);
     if (this.dragging) {
       this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);
@@ -398,6 +398,7 @@ export class LayeredCanvas {
   }
 
   handleContextMenu(event: PointerEvent): void {
+    event.preventDefault();
     if (this.dragging) {
       const p = this.pagePositionToPaperPosition(event);
       this.pointerCursor = p;

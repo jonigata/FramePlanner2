@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { saveAsZip } from "./saveAsZip";
+  import { saveAsZip } from "./saver/saveAsZip";
+  import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
-  import { copyCanvasToClipboard } from "../lib/layeredCanvas/tools/saveCanvas";
   import { mainBook } from "../bookeditor/bookStore";
 
   $: onTask($bookArchiver);
@@ -13,6 +13,7 @@
           await saveAsZip($mainBook);
           break;
         case 'copy':
+          await copyToClipboard($mainBook.pages[0])
           break;
         case 'export-psd':
           break;

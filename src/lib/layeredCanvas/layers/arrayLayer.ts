@@ -64,8 +64,9 @@ export class ArrayLayer extends Layer {
     return false;
   }
 
-  accepts(p: Vector): any { 
-    if (keyDownFlags["Space"]) {return null;}
+  accepts(p: Vector, button: number): any { 
+    if (keyDownFlags["Space"] || 0 < button) {return null;}
+
     this.insertIcons.forEach((e, i) => {
       if (e.contains(p)) {
         this.onInsert(i);
@@ -80,7 +81,7 @@ export class ArrayLayer extends Layer {
     });
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
-    const innerDragging = paper.handleAccepts(position);
+    const innerDragging = paper.handleAccepts(position, button);
     return innerDragging ? { paper, index, innerDragging } : null;
   }
 

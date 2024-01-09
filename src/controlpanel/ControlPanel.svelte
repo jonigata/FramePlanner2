@@ -7,7 +7,7 @@
   import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { mainPage, mainBook, viewport } from '../bookeditor/bookStore';
   import { saveToken, clipboardToken } from '../bookeditor/paperStore';
-  import { bookArchiver } from "../utils/bookArchiverStore";
+  import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
@@ -94,22 +94,31 @@
     $mainBook = $mainBook;
   }
 
-  function save() {
+  function download() {
     logEvent(getAnalytics(), 'download');
-    $bookArchiver.push('download');
-    $bookArchiver = $bookArchiver;
+    archive('download');
   }
 
   function postAIPictors() {
     logEvent(getAnalytics(), 'post_to_aipictors');
-    $saveToken = "aipictors";
+    archive('aipictors');
   }
 
   function copyToClipboard() {
     logEvent(getAnalytics(), 'copy_to_clipboard');
-    $clipboardToken = true;
+    archive('copy');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
 
+  }
+
+  async function downloadPSD() {
+    logEvent(getAnalytics(), 'export_psd');
+    archive('export-psd');
+  }
+
+  function archive(op: BookArchiveOperation) {
+    $bookArchiver.push(op);
+    $bookArchiver = $bookArchiver;
   }
 
   function openStoryWeaver() {
@@ -173,10 +182,6 @@
   async function downloadJson() {
     $commitIfDirtyToken = true;
     $downloadJsonToken = true;
-  }
-
-  async function downloadPSD() {
-    $saveToken = "psd";
   }
 
   async function shareBook() {
@@ -268,7 +273,7 @@
   <div class="variant-soft-tertiary mt-2 mx-2 p-2 pt-0 rounded-container-token">
     出版！
     <div class="hbox mx-2 gap">
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={save}>
+      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={download}>
         <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
       </button>
       <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
