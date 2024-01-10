@@ -24,8 +24,13 @@ export function buildBookEditor(
 
   let papers: Paper[] = [];
   // pages.push(pages[0]);
+  let pageNumber = 0;
   for (const page of pages) {
+    for (const bubble of page.bubbles) {
+      bubble.pageNumber = pageNumber;
+    }
     papers.push(buildPaper(layeredCanvas, page, editor));
+    pageNumber++;
   }
   const arrayLayer = new ArrayLayer(papers, 100, editor.insertPage, editor.deletePage);
   layeredCanvas.rootPaper.addLayer(arrayLayer);

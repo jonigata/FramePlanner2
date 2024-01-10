@@ -9,7 +9,7 @@
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag } from './book';
-  import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage } from './book';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
   import { mainBook, bookEditor, viewport } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
@@ -93,14 +93,30 @@
     const page = newPage(frameTree);
     $mainBook.pages.splice(index+1, 0, page);
     commit(null);
-    book = $mainBook;
+    $mainBook = book;
   }
 
   function deletePage(index: number) {
     console.log("deletePage", index);
     $mainBook.pages.splice(index, 1);
     commit(null);
-    book = $mainBook;
+    $mainBook = book;
+  }
+
+  function insert(_page: Page, element: FrameElement) {
+    console.log("insert", element);
+    const frameContents = collectBookContents($mainBook);
+    dealBookContents($mainBook, frameContents, element, null);
+    commit(null);
+    $mainBook = book;
+  }
+
+  function splice(_page: Page, element: FrameElement) {
+    console.log("splice", element);
+    const frameContents = collectBookContents($mainBook);
+    dealBookContents($mainBook, frameContents, null, element);
+    commit(null);
+    $mainBook = book;
   }
 
   $: onChangeBook(canvas, book);
@@ -126,8 +142,8 @@
       redo,
       modalGenerate: () => {},
       modalScribble: () => {},
-      insert: () => {},
-      splice: () => {},
+      insert,
+      splice,
       focusBubble,
       viewportChanged,
       insertPage,

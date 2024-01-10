@@ -30,6 +30,7 @@ export class Bubble {
   creationContext: string;
   image: any;
   optionContext: any;
+  pageNumber: number; // for debug
 
   constructor() {
     this.reset();
@@ -186,12 +187,8 @@ export class Bubble {
   }
 
   forceEnoughSize() {
-    if (this.p1[0] - this.p0[0] < minimumBubbleSize + 1) {
-      this.p1[0] = this.p0[0] + minimumBubbleSize + 1;
-    }
-    if (this.p1[1] - this.p0[1] < minimumBubbleSize + 1) {
-      this.p1[1] = this.p0[1] + minimumBubbleSize + 1;
-    }
+    const enoughSize = Bubble.forceEnoughSize(this.size);
+    this.size.splice(0, 2, ...enoughSize);
   }
 
   contains(p: Vector): boolean {
@@ -308,6 +305,12 @@ export class Bubble {
 
   get center(): Vector {
     return [(this.p0[0] + this.p1[0]) / 2, (this.p0[1] + this.p1[1]) / 2];
+  }
+
+  set center(p: Vector) {
+    const size = this.size;
+    this.p0 = [p[0] - size[0] / 2, p[1] - size[1] / 2];
+    this.p1 = [p[0] + size[0] / 2, p[1] + size[1] / 2];
   }
 
   get size(): Vector {

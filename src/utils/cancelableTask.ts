@@ -36,9 +36,9 @@ export class DelayedCommiter {
   force() {
     if (this.timerId !== null) {
       clearTimeout(this.timerId);
-      this.commit();
       this.when = 0;
       this.timerId = null;
+      this.commit();
     }
   }
   

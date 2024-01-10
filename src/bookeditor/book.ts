@@ -1,7 +1,9 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
+import type { ImageFile } from "../lib/layeredCanvas/dataModels/imageFile";
+import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 
 // history処理では基本的にすべてdeep copyを使う
 
@@ -159,5 +161,119 @@ export function clonePage(page: Page): Page {
     paperColor: page.paperColor,
     frameColor: page.frameColor,
     frameWidth: page.frameWidth,
+  }
+}
+
+export type FrameContent = {
+  image: ImageFile,
+  translation: Vector,
+  scale: Vector,
+  rotation: number,
+  bubbles: Bubble[], // ただしpositionはコマ正規化座標
+}
+
+export function collectBookContents(book: Book): FrameContent[] {
+  const contents: FrameContent[] = [];
+  for (const page of book.pages) {
+    contents.push(...collectPageContents(page));
+  }
+  return contents;
+}
+
+function collectPageContents(page: Page): FrameContent[] {
+  const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
+  return collectFrameContents(page, page.frameTree, layout);
+}
+
+function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layout): FrameContent[] {
+  const contents: FrameContent[] = [];
+  if (!frameTree.children || frameTree.children.length === 0) {
+    if (0 < frameTree.visibility) {
+      const leafLayout = findLayoutOf(layout, frameTree);
+      const r = trapezoidBoundingRect(leafLayout.corners);
+      const [w, h] = [r[2] - r[0], r[3] - r[1]];
+
+      // centerがtrapezoidに含まれるbubbleを抽出
+      const selected: Bubble[] = [];
+      const unselected: Bubble[] = [];  
+      for (let b of page.bubbles) {
+        if (isPointInTrapezoid(b.center, leafLayout.corners)) {
+          // 座標の正規化
+          b.center = [(b.center[0] - r[0]) / w, (b.center[1] - r[1]) / h];
+          selected.push(b);
+        } else {
+          unselected.push(b);
+        }
+      }
+      page.bubbles = unselected;
+
+      contents.push({
+        image: frameTree.image,
+        translation: frameTree.translation,
+        scale: frameTree.scale,
+        rotation: frameTree.rotation,
+        bubbles: selected,
+      });
+    }
+  } else {
+    for (let i = 0; i < frameTree.children.length; i++) {
+      const child = frameTree.children[i];
+      contents.push(...collectFrameContents(page, child, layout));
+    }
+  }
+  return contents;  
+}
+
+export function dealBookContents(book: Book, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement): void {
+  let pageNumber = 0;
+  for (const page of book.pages) {
+    dealPageContents(book, page, contents, insertElement, spliceElement, pageNumber);
+    pageNumber++;
+  }
+}
+
+function dealPageContents(book: Book, page: Page, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
+  const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
+  dealFrameContents(book, page, page.frameTree, layout, contents, insertElement, spliceElement, pageNumber);
+} 
+
+function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layout: Layout, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
+  if (!frameTree.children || frameTree.children.length === 0) {
+    if (0 < frameTree.visibility) {
+
+      if (frameTree === spliceElement) {
+        contents.shift();
+      } 
+      if (frameTree === insertElement || contents.length === 0) {
+        frameTree.image = null;
+        frameTree.translation = [0, 0];
+        frameTree.scale = [1, 1];
+        frameTree.rotation = 0;
+        return;
+      }
+    
+      const leafLayout = findLayoutOf(layout, frameTree);
+      const r = trapezoidBoundingRect(leafLayout.corners);
+      const [w, h] = [r[2] - r[0], r[3] - r[1]];
+
+      const content = contents.shift();
+      frameTree.image = content.image;
+      frameTree.translation = content.translation;
+      frameTree.scale = content.scale;
+      frameTree.rotation = content.rotation;
+
+      // 座標の復元
+      for (let b of content.bubbles) {
+        b.center = [b.center[0] * w + r[0], b.center[1] * h + r[1]];
+        b.pageNumber = pageNumber;
+        page.bubbles.push(b);
+      }
+
+      constraintLeaf(leafLayout);
+    }
+  } else {
+    for (let child of frameTree.children) {
+      dealFrameContents(book, page, child, layout, contents, insertElement, spliceElement, pageNumber);
+    }
   }
 }

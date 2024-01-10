@@ -660,7 +660,7 @@ function makeVerticalBorderTrapezoid(layout: Layout, index: number): Trapezoid {
   return corners;
 }
 
-type CollectedImage = {
+export type CollectedImage = {
   image: ImageFile,
   translation: Vector,
   scale: Vector,
