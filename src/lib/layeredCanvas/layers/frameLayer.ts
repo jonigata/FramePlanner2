@@ -738,6 +738,8 @@ export class FrameLayer extends Layer {
   beforeDoubleClick(p: Vector): boolean {
     console.log("beforeDoubleClick", p);
     for (let e of this.frameIcons) {
+      const r = e.boudingRect();
+      console.log(r)
       if (e.contains(p)) {
         console.log("beforeDoubleClick(true): ", e);
         return true;

@@ -1,5 +1,5 @@
 export type Vector = [number, number];
-export type Rect = [number, number, number, number];
+export type Rect = [number, number, number, number]; // x, y, w, h
 
 export function add2D(v0: Vector, v1: Vector): Vector {
   return [v0[0] + v1[0], v0[1] + v1[1]];

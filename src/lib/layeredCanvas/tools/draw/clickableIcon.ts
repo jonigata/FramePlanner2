@@ -10,6 +10,9 @@ export class BaseIcon {
   contains(p: Vector): boolean {
     throw new Error("Method not implemented.");
   }
+  boudingRect(): Rect {
+    throw new Error("Method not implemented.");
+  }
 }
 
 export class ClickableIcon extends BaseIcon {
@@ -59,14 +62,13 @@ export class ClickableIcon extends BaseIcon {
 
   contains(p: Vector): boolean {
     if (!this.isVisible()) return false;
-    let [x,y] = this.pivotPosition;
-    const [w,h] = this.size;
+    const [x, y, w, h] = this.boudingRect();
     const f = x <= p[0] && p[0] <= x + w && y <= p[1] && p[1] <= y + h;
     return f;
   }
 
   get center(): Vector {
-    let [x,y] = this.pivotPosition;
+    const [x,y] = this.pivotPosition;
     const [w,h] = this.size;
     return [x + w / 2, y + h / 2];
   }
@@ -101,6 +103,14 @@ export class ClickableIcon extends BaseIcon {
       return true;
     }
     return false;
+  }
+
+  boudingRect(): Rect {
+    let [x, y] = [...this.position];
+    x -= this.pivot[0] * this.size[0];
+    y -= this.pivot[1] * this.size[1];
+    const [w, h] = this.size;
+    return [x, y, w, h];
   }
 
   static calcPosition(rect: Rect, unit: Vector, regularizedOrigin: Vector, offsetUnit: Vector): Vector {
@@ -148,10 +158,7 @@ export class MultistateIcon extends BaseIcon {
 
   contains(p: Vector): boolean {
     if (!this.isVisible()) return false;
-    let [x, y] = [...this.position];
-    x -= this.pivot[0] * this.size[0];
-    y -= this.pivot[1] * this.size[1];
-    const [w, h] = this.size;
+    const [x, y, w, h] = this.boudingRect();
     const f = x <= p[0] && p[0] <= x + w && y <= p[1] && p[1] <= y + h;
     return f;
   }
@@ -193,6 +200,14 @@ export class MultistateIcon extends BaseIcon {
 
   reset(): void {
     this.index = 0;
+  }
+
+  boudingRect(): Rect {
+    let [x, y] = [...this.position];
+    x -= this.pivot[0] * this.size[0];
+    y -= this.pivot[1] * this.size[1];
+    const [w, h] = this.size;
+    return [x, y, w, h];
   }
 
 }

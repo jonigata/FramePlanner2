@@ -278,11 +278,14 @@ export class Paper {
 
 export class LayeredCanvas {
   keyDownHandler: (event: KeyboardEvent) => void;
-  pointerCursor: Vector;
   viewport: Viewport;
   rootPaper: Paper;
   listeners: [string, ((event: Event) => void)][] = [];
   dragging: Dragging;
+
+  // layeredCanvasより長い寿命を持つ
+  get pointerCursor(): Vector {return this.viewport.canvas["pointerCursor"];}
+  set pointerCursor(p: Vector) {this.viewport.canvas["pointerCursor"] = p;}
 
   constructor(viewport: Viewport, editable: boolean) {
     this.viewport = viewport;
@@ -324,6 +327,14 @@ export class LayeredCanvas {
       this.keyDownHandler = this.handleKeyDown.bind(this);
       document.addEventListener('keydown', this.keyDownHandler);
       setInterval(() => {this.redrawIfRequired();}, 33);
+    }
+  }
+
+  takeOver() {
+    if (this.listeners.length === 0) { return; }
+    console.log(this.pointerCursor);
+    if (this.pointerCursor) {
+      this.rootPaper.handlePointerHover(this.pointerCursor);
     }
   }
 

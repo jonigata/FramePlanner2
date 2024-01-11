@@ -35,6 +35,8 @@ export function buildBookEditor(
   const arrayLayer = new ArrayLayer(papers, 100, editor.insertPage, editor.deletePage);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
+  layeredCanvas.takeOver();
+
   // layeredCanvas.rootPaper.addLayer(new SampleLayer());
 
   initializeKeyCache(viewport.canvas, (code: string) => {
