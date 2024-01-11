@@ -168,13 +168,14 @@ export class Paper {
     }
   }
 
-  handleBeforeDoubleClick(p: Vector): void {
+  handleBeforeDoubleClick(p: Vector): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.beforeDoubleClick(p)) {
-        return;
+        return true;
       }
     }
+    return false;
   }
 
   handleDoubleClicked(p: Vector): void {
@@ -430,7 +431,7 @@ export class LayeredCanvas {
   handleDoubleClick(event: PointerEvent): void {
     const p = this.pagePositionToPaperPosition(event);
     this.pointerCursor = p;
-    this.rootPaper.handleBeforeDoubleClick(p);
+    if (this.rootPaper.handleBeforeDoubleClick(p)) { return; }
     this.rootPaper.handleDoubleClicked(p);
   }
 

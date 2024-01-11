@@ -151,8 +151,7 @@ export class ArrayLayer extends Layer {
 
   beforeDoubleClick(p: Vector): boolean { 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    paper.handleBeforeDoubleClick(position);
-    return false; // TODO: 実際問題として使われないと考えられるため
+    return paper.handleBeforeDoubleClick(position);
   }
 
   doubleClicked(p: Vector): boolean { 
