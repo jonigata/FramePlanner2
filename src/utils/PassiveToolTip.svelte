@@ -1,7 +1,5 @@
 <script lang="ts">
   import { toolTipRequest } from "./passiveToolTipStore";
-  import { fontChooserOpen } from '../bookeditor/bubbleinspector/fontStore';
-  import { aboutOpen } from '../about/aboutStore';
   import { tick } from "svelte";
 
   // TODO: fontChooserOpenとかaboutOpen見に行ってるの見苦しい
@@ -31,7 +29,7 @@
   bind:this={tooltip}
   >
   <div class="tooltip">
-    {#if $toolTipRequest && !$fontChooserOpen && !$aboutOpen}
+    {#if $toolTipRequest}
       {$toolTipRequest.message}
     {/if}
   </div>
