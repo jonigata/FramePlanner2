@@ -1,14 +1,31 @@
-import { reverse2D } from "../tools/geometry/geometry";
+import { type Vector, reverse2D } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
 import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
+import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText } from "../tools/draw/drawText";
 import { Layer } from "../system/layeredCanvas";
-import type { Bubble } from "../dataModels/bubble";
+import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
 
-// NOTICE: 現状、bubbleのuniteは破壊的
-// ただしデータ構造の手抜きをしているだけで、
-// フレームをまたいで維持する必要はない
+type InheritanceContext = {
+  borderColor: string, 
+  borderWidth: number 
+};
+
+type EmbeddedBubbles = Map<Layout, Bubble[]>;
+
+type RenderData = {
+  backgrounds: {
+    layout: Layout, 
+    inheritanceContext: InheritanceContext
+  }[], 
+  foregrounds: {
+    layout: Layout, 
+    inheritanceContext: InheritanceContext
+  }[], 
+  embeddedBubbles: EmbeddedBubbles,
+  floatingBubbles: Bubble[]
+};
 
 export class PaperRendererLayer extends Layer {
   frameTree: FrameElement;
@@ -26,8 +43,8 @@ export class PaperRendererLayer extends Layer {
 
     this.cutOut(ctx);
 
-    for (let { layout, inheritanceContext } of backgrounds) {
-      this.renderFrameBackground(ctx, layout, inheritanceContext);
+    for (let { layout } of backgrounds) {
+      this.renderFrameBackground(ctx, layout);
     }
 
     foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
@@ -38,7 +55,7 @@ export class PaperRendererLayer extends Layer {
     this.renderBubbles(ctx, floatingBubbles);
   }
 
-  cutOut(ctx) {
+  cutOut(ctx: CanvasRenderingContext2D) {
     // 外側を透明にする
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
@@ -47,14 +64,14 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  setUpRenderData(layout) {
+  setUpRenderData(layout: Layout): RenderData {
     const inheritanceContext = { borderColor: "black", borderWidth: 1 };
     const { backgrounds, foregrounds } = this.setUpFrameTree(layout, inheritanceContext);
     const { embeddedBubbles, floatingBubbles } = this.setUpBubbles(layout, this.rawBubbles);
     return { backgrounds, foregrounds, embeddedBubbles, floatingBubbles };
   }
 
-  setUpFrameTree(layout, inheritanceContext) {
+  setUpFrameTree(layout: Layout, inheritanceContext: InheritanceContext) {
     // leafでないframeのバックグラウンド(単色)
     const backgrounds = []; // [{layout, inheritanceContext}] leafは含まない
     // leafの背景(単色)、画像、embedフキダシ、枠線
@@ -82,10 +99,10 @@ export class PaperRendererLayer extends Layer {
     return { backgrounds, foregrounds };
   }
 
-  setUpBubbles(layout, bubbles) {
+  setUpBubbles(layout: Layout, bubbles: Bubble[]) {
     this.resolveLinkages(bubbles);
 
-    const embeddedBubbles = new Map();
+    const embeddedBubbles: EmbeddedBubbles = new Map();
     const floatingBubbles = [];
 
     for (let bubble of bubbles) {
@@ -107,70 +124,72 @@ export class PaperRendererLayer extends Layer {
     return { embeddedBubbles, floatingBubbles };
   }
 
-  resolveLinkages(bubbles) {
+  resolveLinkages(bubbles: Bubble[]) {
     // 親子関係解決
     // ちょっとお行儀が悪く、path, unitedPath, childrenを書き換えている
-    const bubbleDic = {};
+    const bubbleDic: {[key: string]: Bubble} = {};
     for (let bubble of bubbles) {
-      bubble.unitedPath = null;
-      bubble.children = [];
+      bubble.renderInfo = {} as BubbleRenderInfo;
+      bubble.renderInfo.unitedPath = null;
+      bubble.renderInfo.children = [];
       bubbleDic[bubble.uuid] = bubble;
     }
 
     for (let bubble of bubbles) {
       if (bubble.parent) {
-        bubbleDic[bubble.parent].children.push(bubble);
+        bubbleDic[bubble.parent].renderInfo.children.push(bubble);
       }
     }
 
     // パス作成
     for (let bubble of bubbles) {
+      const ri = bubble.renderInfo;
       const c = {
         shape: bubble.shape,
         size: bubble.size,
         optionContext: bubble.optionContext,
-        seed: bubble.seed,
         rotation: bubble.rotation,
       }
       const json = JSON.stringify(c);
       // console.log(`${c} took ${performance.now() - startTime} ms, ${json.length} bytes`);
-      if (bubble.pathJson != json) {
+      if (ri.pathJson != json) {
         // 変更が起きたときのみ
         // const startTime = performance.now();
-        bubble.pathJson = json;
-        bubble.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
-        bubble.path?.rotate(-bubble.rotation);
+        ri.pathJson = json;
+        ri.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
+        ri.path?.rotate(-bubble.rotation);
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
       }
     }
 
     // 結合
     for (let bubble of bubbles) {
+      const ri = bubble.renderInfo;
       if (bubble.parent) {
-        bubble.unitedPath = null;
-      } else if (bubble.path) {
-        bubble.unitedPath = bubble.path.clone();
-        bubble.unitedPath.translate(bubble.center);
-        for (let child of bubble.children) {
-          const path2 = child.path.clone();
+        ri.unitedPath = null;
+      } else if (ri.path) {
+        ri.unitedPath = ri.path.clone();
+        ri.unitedPath.translate(bubble.center);
+        for (let child of ri.children) {
+          const path2 = ri.path.clone();
           path2.translate(child.center);
-          bubble.unitedPath = bubble.unitedPath.unite(path2);
+          ri.unitedPath = ri.unitedPath.unite(path2);
         }
-        bubble.unitedPath.rotate(bubble.rotation, bubble.center);
-        bubble.unitedPath.translate(reverse2D(bubble.center));
+        ri.unitedPath.rotate(bubble.rotation, bubble.center);
+        ri.unitedPath.translate(reverse2D(bubble.center));
       }
     }
   }
 
-  renderFrame(ctx, layout, inheritanceContext, embeddedBubbles) {
+  renderFrame(ctx: CanvasRenderingContext2D, layout: Layout, inheritanceContext: InheritanceContext, embeddedBubbles: EmbeddedBubbles) {
     // ■■■ visibility 0;
-    this.renderFrameBackground(ctx, layout, inheritanceContext);
+    this.renderFrameBackground(ctx, layout);
 
     const element = layout.element;
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    if (element.image || 0 < embeddedBubbles.has(layout)) {
+    if (element.image || embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
       if (!element.focused) {
@@ -207,8 +226,8 @@ export class PaperRendererLayer extends Layer {
     }
   }
 
-  renderFrameBackground(ctx, layout, inheritanceContext) {
-    if (layout.element.visibilty === 0) { return; }
+  renderFrameBackground(ctx: CanvasRenderingContext2D, layout: Layout) {
+    if (layout.element.visibility === 0) { return; }
 
     ctx.beginPath();
     ctx.lineJoin = "miter";
@@ -219,7 +238,7 @@ export class PaperRendererLayer extends Layer {
     ctx.fill();
   }
 
-  renderBubbles(ctx, bubbles) {
+  renderBubbles(ctx: CanvasRenderingContext2D, bubbles: Bubble[]) {
     for (let bubble of bubbles) {
       this.renderBubbleBackground(ctx, bubble);
       this.renderBubbleForeground(ctx, bubble, false);
@@ -229,7 +248,7 @@ export class PaperRendererLayer extends Layer {
     }
   }
 
-  renderBubbleBackground(ctx, bubble) {
+  renderBubbleBackground(ctx: CanvasRenderingContext2D, bubble: Bubble) {
     if (bubble.parent) { return; }
 
     const size = bubble.size;
@@ -260,7 +279,7 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  renderBubbleForeground(ctx, bubble, drawsUnited) {
+  renderBubbleForeground(ctx: CanvasRenderingContext2D, bubble: Bubble, drawsUnited: boolean) {
     if (bubble.parent) {
       if (!drawsUnited) { return; }
     } else {
@@ -290,20 +309,21 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  drawBubble(ctx, size, method, bubble) {
-    ctx.bubbleDrawMethod = method; // 行儀が悪い
-    if (bubble.unitedPath) {
-      drawPath(ctx, bubble.unitedPath, bubble.optionContext);
+  drawBubble(ctx: CanvasRenderingContext2D, size: Vector, method: string, bubble: Bubble) {
+    ctx['bubbleDrawMethod'] = method; // 行儀が悪い
+    const ri = bubble.renderInfo;
+    if (ri.unitedPath) {
+      drawPath(ctx, ri.unitedPath, bubble.optionContext);
     } else if (!bubble.parent) {
-      if (bubble.path) {
-        drawPath(ctx, bubble.path, bubble.optionContext);
+      if (ri.path) {
+        drawPath(ctx, ri.path, bubble.optionContext);
       } else {
         drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
       }
     }
   }
 
-  drawImage(ctx, layout) {
+  drawImage(ctx: CanvasRenderingContext2D, layout: Layout) {
     const element = layout.element;
     const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
 
@@ -316,7 +336,7 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  drawImageFrame(ctx, layout) {
+  drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {
     const element = layout.element;
     const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
 
@@ -333,7 +353,7 @@ export class PaperRendererLayer extends Layer {
   }
 
 
-  drawText(targetCtx, bubble) {
+  drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
     const [w, h] = bubble.size;
     if (w <= 0 || h <= 0) { return; }
 
@@ -341,14 +361,14 @@ export class PaperRendererLayer extends Layer {
     const charSkip = bubble.fontSize;
 
     // TODO: キャッシュにつかえる
-    if (!bubble.tmpCanvas) {
-      bubble.tmpCanvas = document.createElement('canvas');
-      //bubble.tmpCanvas = document.getElementById('tmpCanvas');
-      bubble.tmpCtx = bubble.tmpCanvas.getContext('2d');
+    const ri = bubble.renderInfo;
+    if (!ri.tmpCanvas) {
+      ri.tmpCanvas = document.createElement('canvas');
+      ri.tmpCtx = ri.tmpCanvas.getContext('2d');
     }
 
-    const canvas = bubble.tmpCanvas;
-    const ctx = bubble.tmpCtx;
+    const canvas = ri.tmpCanvas;
+    const ctx = ri.tmpCtx;
 
     canvas.width = w;
     canvas.height = h;
@@ -397,11 +417,11 @@ export class PaperRendererLayer extends Layer {
     }
   }
 
-  setBubbles(bubbles) {
+  setBubbles(bubbles: Bubble[]) {
     this.rawBubbles = bubbles;
   }
 
-  setFrameTree(frameTree) {
+  setFrameTree(frameTree: FrameElement) {
     this.frameTree = frameTree;
   }
 
@@ -418,7 +438,7 @@ export class PaperRendererLayer extends Layer {
 
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
 
-    const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.setUpRenderData(layout);
+    const { foregrounds, embeddedBubbles, floatingBubbles } = this.setUpRenderData(layout);
 
     const canvases = [];
 
@@ -430,10 +450,11 @@ export class PaperRendererLayer extends Layer {
       canvases.push(canvas);
     }
 
-    const bubbles = [...embeddedBubbles.values(), ...floatingBubbles];
+    const bubbles: Bubble[] = [...[...embeddedBubbles.values()].flat(), ...floatingBubbles];
     const bubbleCanvases = {};
 
     for (let bubble of bubbles) {
+      const ri = bubble.renderInfo;
       if (bubble.parent != null) { continue; }
       const { canvas, ctx } = makeCanvas();
       this.renderBubbleBackground(ctx, bubble);

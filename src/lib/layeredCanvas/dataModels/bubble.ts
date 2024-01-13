@@ -5,6 +5,16 @@ import type { V } from 'vitest/dist/types-fe79687a';
 const minimumBubbleSize = 72;
 const threshold = 10;
 
+export class BubbleRenderInfo { // serializeしない
+  pathJson: string;
+  textJson: string;
+  path: paper.PathItem;
+  unitedPath: paper.PathItem;
+  children: Bubble[];
+  tmpCanvas: HTMLCanvasElement;
+  tmpCtx: CanvasRenderingContext2D;
+}
+
 export class Bubble {
   p0: Vector;
   p1: Vector;
@@ -31,6 +41,8 @@ export class Bubble {
   image: any;
   optionContext: any;
   pageNumber: number; // for debug
+
+  renderInfo: BubbleRenderInfo;
 
   constructor() {
     this.reset();
