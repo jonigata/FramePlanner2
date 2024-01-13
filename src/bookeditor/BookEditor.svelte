@@ -14,6 +14,7 @@
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
+  import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -26,6 +27,7 @@
       layeredCanvas.redraw(); 
     });
   let editingBookId: string = null;
+  let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
 
   $: if ($viewport && !$viewport.dirty) {
     console.log("BookEditor", $viewport);    
@@ -153,7 +155,8 @@
     layeredCanvas = buildBookEditor(
       $viewport,
       book.pages,
-      $bookEditor);
+      $bookEditor,
+      defaultBubbleSlot);
     layeredCanvas.redraw();
   }
 
@@ -188,6 +191,7 @@
         height: bubble.size[1],
         offset
       };
+      defaultBubbleSlot.bubble = bubble;
     } else {
       console.log("hiding");
       bubbleSnapshot = null;

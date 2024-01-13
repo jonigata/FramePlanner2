@@ -14,6 +14,13 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 
 const iconUnit: Vector = [20, 20];
 
+export class DefaultBubbleSlot {
+  bubble: Bubble;
+  constructor(bubble: Bubble) {
+    this.bubble = bubble;
+  }
+}
+
 export class BubbleLayer extends Layer {
   viewport: Viewport;
   interactable: boolean;
@@ -22,7 +29,7 @@ export class BubbleLayer extends Layer {
   onFocus: (bubble: Bubble) => void;
   onCommit: () => void;
   onRevert: () => void;
-  defaultBubble: Bubble;
+  defaultBubbleSlot: DefaultBubbleSlot;
   creatingBubble: Bubble;
   optionEditActive: Record<string, boolean>;
   selected: Bubble;
@@ -43,6 +50,7 @@ export class BubbleLayer extends Layer {
   constructor(
     viewport: Viewport,
     renderLayer: PaperRendererLayer,
+    defaultBubbleSlot: DefaultBubbleSlot,
     bubbles: Bubble[],
     onFocus: (bubble: Bubble) => void,
     onCommit: () => void,
@@ -56,7 +64,7 @@ export class BubbleLayer extends Layer {
     this.onFocus = onFocus;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
-    this.defaultBubble = new Bubble();
+    this.defaultBubbleSlot = defaultBubbleSlot;
     this.creatingBubble = null;
     this.optionEditActive = {}
 
@@ -379,8 +387,8 @@ export class BubbleLayer extends Layer {
       let lastBubble = null;
       const bubbles = [];
       for (let s of text.split(/\n\s*\n/)) {
-        const size = this.calculateFitBubbleSize(s, this.defaultBubble);
-        const b = this.defaultBubble.clone();
+        const size = this.calculateFitBubbleSize(s, this.defaultBubbleSlot.bubble);
+        const b = this.defaultBubbleSlot.bubble.clone();
         b.image = null;
 
         if (cursorX + size[0] > paperSize[0]) {
@@ -671,7 +679,7 @@ export class BubbleLayer extends Layer {
       }
     }
 
-    const bubble = this.defaultBubble.clone();
+    const bubble = this.defaultBubbleSlot.bubble.clone();
     bubble.image = null;
     bubble.p0 = [p[0] - 100, p[1] - 100];
     bubble.p1 = [p[0] + 100, p[1] + 100];
@@ -701,7 +709,7 @@ export class BubbleLayer extends Layer {
 
   async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
     this.unfocus();
-    const bubble = this.defaultBubble.clone();
+    const bubble = this.defaultBubbleSlot.bubble.clone();
     bubble.image = null;
     bubble.p0 = dragStart;
     bubble.p1 = dragStart;

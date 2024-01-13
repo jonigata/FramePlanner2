@@ -3,19 +3,20 @@ import { FloorLayer } from '../lib/layeredCanvas/layers/floorLayer';
 // import { SampleLayer } from '../lib/layeredCanvas/layers/SampleLayer';
 import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
-import { BubbleLayer } from '../lib/layeredCanvas/layers/bubbleLayer';
+import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { initializeKeyCache, keyDownFlags } from '../lib/layeredCanvas/system/keyCache';
 import type { Page, BookOperators } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
-import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
 
 export function buildBookEditor(
   viewport: Viewport,
   pages: Page[],
-  editor: BookOperators) {
+  editor: BookOperators,
+  defaultBubbleSlot: DefaultBubbleSlot) {
 
   const layeredCanvas = new LayeredCanvas(viewport, true);
 
@@ -29,7 +30,7 @@ export function buildBookEditor(
     for (const bubble of page.bubbles) {
       bubble.pageNumber = pageNumber;
     }
-    papers.push(buildPaper(layeredCanvas, page, editor));
+    papers.push(buildPaper(layeredCanvas, page, editor, defaultBubbleSlot));
     pageNumber++;
   }
   const arrayLayer = new ArrayLayer(papers, 100, editor.insertPage, editor.deletePage);
@@ -52,7 +53,7 @@ export function buildBookEditor(
   return layeredCanvas;
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble}: BookOperators) {
+function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble}: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize);
 
   // undo
@@ -84,6 +85,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, page: Page, {commit, revert, u
   const bubbleLayer = new BubbleLayer(
     layeredCanvas.viewport,
     paperRendererLayer,
+    defaultBubbleSlot,
     page.bubbles,
     (bubble: Bubble) => { 
       if (bubble) {
