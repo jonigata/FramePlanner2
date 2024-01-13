@@ -17,7 +17,6 @@
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
-  let book: Book = null;
   let painterActive = false;
   let bubbleSnapshot: string = null;
   let delayedCommiter = new DelayedCommiter(
@@ -26,8 +25,6 @@
       commit("bubble"); 
       layeredCanvas.redraw(); 
     });
-
-  $: book = $mainBook;
 
   $: if ($viewport && !$viewport.dirty) {
     console.log("BookEditor", $viewport);    
@@ -53,22 +50,22 @@
   export function commit(tag: HistoryTag) {
     delayedCommiter.force();
     console.trace();
-    commitBook(book, tag);
-    console.tag("commit", "cyan", book.revision, book.history.entries[book.history.cursor-1])
+    commitBook($mainBook, tag);
+    console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
   }
 
   function revert() {
     console.log("revert");
     delayedCommiter.cancel();
-    revertBook(book);
-    $mainBook = book;
+    revertBook($mainBook);
+    $mainBook = $mainBook;
   }
 
   function undo() {
     if (isPainting()) {
       // inlinePainterLayer.undo(); // TODO
     } else {
-      undoBookHistory(book);
+      undoBookHistory($mainBook);
       revert();
     }
   }
@@ -77,7 +74,7 @@
     if (isPainting()) {
       // inlinePainterLayer.redo(); // TODO
     } else {
-      redoBookHistory(book);
+      redoBookHistory($mainBook);
       revert();
     }
   }
@@ -93,14 +90,14 @@
     const page = newPage(frameTree);
     $mainBook.pages.splice(index+1, 0, page);
     commit(null);
-    $mainBook = book;
+    $mainBook = $mainBook;
   }
 
   function deletePage(index: number) {
     console.log("deletePage", index);
     $mainBook.pages.splice(index, 1);
     commit(null);
-    $mainBook = book;
+    $mainBook = $mainBook;
   }
 
   function insert(_page: Page, element: FrameElement) {
@@ -108,7 +105,7 @@
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, element, null);
     commit(null);
-    $mainBook = book;
+    $mainBook = $mainBook;
   }
 
   function splice(_page: Page, element: FrameElement) {
@@ -116,11 +113,11 @@
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, null, element);
     commit(null);
-    $mainBook = book;
+    $mainBook = $mainBook;
   }
 
-  $: onChangeBook(canvas, book);
-  function onChangeBook(canvas, book) {
+  $: onChangeBook(canvas, $mainBook);
+  function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
 
     console.log("*********** buildBookEditor from BookEditor");
