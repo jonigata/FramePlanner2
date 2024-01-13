@@ -273,6 +273,15 @@ export class Paper {
     return f;
   }
 
+  findLayer<T extends Layer>(type: { new(...args:any[]): T }): T {
+    for (let layer of this.layers) {
+      if (layer instanceof type) {
+        return layer;
+      }
+    }
+    return null;
+  }
+
 };
 
 

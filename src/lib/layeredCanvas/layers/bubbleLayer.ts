@@ -29,6 +29,7 @@ export class BubbleLayer extends Layer {
   onFocus: (bubble: Bubble) => void;
   onCommit: () => void;
   onRevert: () => void;
+  onPotentialCrossPage: (bubble: Bubble) => void;
   defaultBubbleSlot: DefaultBubbleSlot;
   creatingBubble: Bubble;
   optionEditActive: Record<string, boolean>;
@@ -54,7 +55,8 @@ export class BubbleLayer extends Layer {
     bubbles: Bubble[],
     onFocus: (bubble: Bubble) => void,
     onCommit: () => void,
-    onRevert: () => void) {
+    onRevert: () => void,
+    onPotentialCrossPage: (bubble: Bubble) => void) {
 
     super();
     this.viewport = viewport;
@@ -64,6 +66,7 @@ export class BubbleLayer extends Layer {
     this.onFocus = onFocus;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
+    this.onPotentialCrossPage = onPotentialCrossPage;
     this.defaultBubbleSlot = defaultBubbleSlot;
     this.creatingBubble = null;
     this.optionEditActive = {}
@@ -752,6 +755,7 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
+      this.onPotentialCrossPage(bubble);
       this.onCommit();
     } catch (e) {
       if (e === "cancel") {
@@ -853,6 +857,7 @@ export class BubbleLayer extends Layer {
         throw "cancel";
       }
       console.log(bubble.image);
+      this.onPotentialCrossPage(bubble);
       this.onCommit();
     } catch (e) {
       if (e === "cancel") {

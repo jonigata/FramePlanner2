@@ -62,6 +62,13 @@ export class PaperArray {
     return {index, position, paper: this.papers[index].paper};
   }
 
+  childPositionToParentPosition(index: number, childPosition: Vector): Vector {
+    const e = this.papers[index];
+    const x0 = e.center[0] - e.paper.size[0] * 0.5;
+    const y0 = e.center[1] - e.paper.size[1] * 0.5;
+    return [x0 + childPosition[0], y0 + childPosition[1]];
+  }
+
   get redrawRequired(): boolean {
     return this.papers.some(e => e.paper.redrawRequired);
   }

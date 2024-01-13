@@ -52,7 +52,6 @@
 
   export function commit(tag: HistoryTag) {
     delayedCommiter.force();
-    console.trace();
     commitBook($mainBook, tag);
     console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
   }
@@ -152,11 +151,12 @@
     };
     $bookEditor = bookEditorInstance;
 
-    layeredCanvas = buildBookEditor(
+    const builtBook = buildBookEditor(
       $viewport,
-      book.pages,
+      book,
       $bookEditor,
       defaultBubbleSlot);
+    layeredCanvas = builtBook.layeredCanvas;
     layeredCanvas.redraw();
   }
 

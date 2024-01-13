@@ -375,7 +375,6 @@ export class PaperRendererLayer extends Layer {
     const json = JSON.stringify(c);
     // console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);
     if (ri.textJson != json) {
-      console.log(ri.textJson, json);
       // startTime = performance.now();
 
       // 変更が起きたときのみ
