@@ -111,10 +111,9 @@ export class FrameLayer extends Layer {
     this.renderLayer.setFrameTree(this.frameTree);
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
-    if (!this.interactable) {
-      return;
-    }
+  render(ctx: CanvasRenderingContext2D, depth: number): void {
+    if (!this.interactable) { return; }
+    if (depth !== 0) { return; }
 
     if (0 < this.focusedLayout?.element.visibility) {  // z値を表示
       ctx.font = '24px serif';
@@ -755,5 +754,6 @@ export class FrameLayer extends Layer {
     return false;
   }
 
+  renderDepths(): number[] { return [0]; }
 }
 sequentializePointer(FrameLayer);

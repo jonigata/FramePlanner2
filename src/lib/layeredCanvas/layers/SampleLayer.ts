@@ -7,7 +7,9 @@ export class SampleLayer extends Layer {
     super();
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D, depth: number): void {
+    if (depth !== 0) { return; }
+    
     // 中央に三角形
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -18,4 +20,6 @@ export class SampleLayer extends Layer {
     ctx.fill();
     
   }
+
+  renderDepths(): number[] { return [0]; }
 }

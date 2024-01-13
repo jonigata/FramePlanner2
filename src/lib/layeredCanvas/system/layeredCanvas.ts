@@ -75,13 +75,14 @@ export class Layer {
   pointerUp(position: Vector, payload: any) {}
   pointerCancel(position: Vector, payload: any) {}
   prerender() {}
-  render(ctx: CanvasRenderingContext2D) {}
+  render(ctx: CanvasRenderingContext2D, depth: number) {}
   dropped(position: Vector, image: HTMLImageElement) { return false; }
   beforeDoubleClick(position: Vector) { return false; }
   doubleClicked(position: Vector) { return false; }
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
   wheel(position: Vector, delta: number) { return false; }
   flushHints(viewport: Viewport) {}
+  renderDepths(): number[] { return []; }
 
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
@@ -212,11 +213,11 @@ export class Paper {
     }
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D, depth: number): void {
     ctx.save();
     ctx.setTransform(this.matrix);
     for (let layer of this.layers) {
-      layer.render(ctx);
+      layer.render(ctx, depth);
     }
     ctx.restore();
   }
@@ -280,6 +281,14 @@ export class Paper {
       }
     }
     return null;
+  }
+
+  renderDepths(): number[] { 
+    // layer全部から集めてsort/uniq
+    const depths = this.layers.flatMap(e => e.renderDepths());
+    const uniq = [...new Set(depths)];
+    uniq.sort((a, b) => a - b);
+    return uniq;
   }
 
 };
@@ -481,7 +490,11 @@ export class LayeredCanvas {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     this.rootPaper.prerender();
-    this.rootPaper.render(ctx);
+
+    const depths = this.rootPaper.renderDepths();
+    for (let depth of depths) {
+      this.rootPaper.render(ctx, depth);
+    }
   }
 
   redraw(): void {

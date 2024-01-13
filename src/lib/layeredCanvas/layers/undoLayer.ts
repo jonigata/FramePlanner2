@@ -23,5 +23,4 @@ export class UndoLayer extends Layer {
     }
     return false;
   }
-
 }

@@ -35,24 +35,28 @@ export class PaperRendererLayer extends Layer {
     super();
   }
 
-  render(ctx: CanvasRenderingContext2D) {
+  render(ctx: CanvasRenderingContext2D, depth: number) {
     const size = this.getPaperSize();
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
 
     const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.setUpRenderData(layout);
 
-    this.cutOut(ctx);
+    if (depth === 0) {
+      this.cutOut(ctx);
 
-    for (let { layout } of backgrounds) {
-      this.renderFrameBackground(ctx, layout);
+      for (let { layout } of backgrounds) {
+        this.renderFrameBackground(ctx, layout);
+      }
+
+      foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
+      for (let { layout, inheritanceContext } of foregrounds) {
+        this.renderFrame(ctx, layout, inheritanceContext, embeddedBubbles);
+      }
     }
 
-    foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
-    for (let { layout, inheritanceContext } of foregrounds) {
-      this.renderFrame(ctx, layout, inheritanceContext, embeddedBubbles);
+    if (depth === 1) {
+      this.renderBubbles(ctx, floatingBubbles);
     }
-
-    this.renderBubbles(ctx, floatingBubbles);
   }
 
   cutOut(ctx: CanvasRenderingContext2D) {
@@ -493,4 +497,6 @@ export class PaperRendererLayer extends Layer {
 
     return { frames: canvases, bubbles: Object.values(bubbleCanvases) };
   }
+
+  renderDepths(): number[] { return [0,1]; }
 }

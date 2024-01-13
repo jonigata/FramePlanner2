@@ -104,7 +104,8 @@ export class BubbleLayer extends Layer {
     this.renderLayer.setBubbles(bubbles);
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D, depth: number): void {
+    if (depth !== 1) { return; }
     this.createBubbleIcon.render(ctx);
     this.dragIcon.render(ctx);
     this.offsetIcon.render(ctx);
@@ -1230,6 +1231,8 @@ export class BubbleLayer extends Layer {
 
     this.redraw();
   }
+
+  renderDepths(): number[] { return [1]; }
 }
 sequentializePointer(BubbleLayer);
 

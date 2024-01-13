@@ -39,8 +39,9 @@ export class InlinePainterLayer extends Layer {
     this.drawsBackground = false;
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.image) {return;}
+    if (depth !== 0) { return; }
 
     this.drawImage(ctx, this.layout)
     // ctx.drawImage(this.image, 0, 0);
@@ -209,5 +210,6 @@ export class InlinePainterLayer extends Layer {
     ctx.restore();
   }
 
+  renderDepths(): number[] { return [0]; }
 
 }

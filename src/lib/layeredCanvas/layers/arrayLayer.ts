@@ -128,7 +128,7 @@ export class ArrayLayer extends Layer {
     }
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D, depth: number): void {
     this.insertIcons.forEach(e => {
       e.render(ctx);
     });
@@ -138,7 +138,7 @@ export class ArrayLayer extends Layer {
     ctx.save();
     for (let paper of this.array.papers) {
       ctx.translate(...paper.center);
-      paper.paper.render(ctx);
+      paper.paper.render(ctx, depth);
     }
     ctx.restore();
   }
@@ -178,6 +178,12 @@ export class ArrayLayer extends Layer {
     for (let paper of this.array.papers) {
       paper.paper.flushHints(viewport);
     }
+  }
+
+  renderDepths(): number[] { 
+    // paper全部から集めてsort/uniq
+    const depths = this.array.papers.flatMap(p => p.paper.renderDepths());
+    return [...new Set(depths)].sort((a,b) => a - b);
   }
 
   get redrawRequired(): boolean {
