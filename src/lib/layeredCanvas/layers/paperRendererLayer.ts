@@ -129,7 +129,7 @@ export class PaperRendererLayer extends Layer {
     // ちょっとお行儀が悪く、path, unitedPath, childrenを書き換えている
     const bubbleDic: {[key: string]: Bubble} = {};
     for (let bubble of bubbles) {
-      bubble.renderInfo = {} as BubbleRenderInfo;
+      bubble.renderInfo ??= {} as BubbleRenderInfo;
       bubble.renderInfo.unitedPath = null;
       bubble.renderInfo.children = [];
       bubbleDic[bubble.uuid] = bubble;
@@ -357,50 +357,75 @@ export class PaperRendererLayer extends Layer {
     const [w, h] = bubble.size;
     if (w <= 0 || h <= 0) { return; }
 
-    const baselineSkip = bubble.fontSize * 1.5;
-    const charSkip = bubble.fontSize;
-
-    // TODO: キャッシュにつかえる
     const ri = bubble.renderInfo;
-    if (!ri.tmpCanvas) {
-      ri.tmpCanvas = document.createElement('canvas');
-      ri.tmpCtx = ri.tmpCanvas.getContext('2d');
-    }
 
-    const canvas = ri.tmpCanvas;
-    const ctx = ri.tmpCtx;
+    let startTime = performance.now();
 
-    canvas.width = w;
-    canvas.height = h;
+    const c = {
+      size: bubble.size,
+      offset: bubble.offset,
+      fontStyle: bubble.fontStyle,
+      fontWeight: bubble.fontWeight,
+      fontSize: bubble.fontSize,
+      fontFamily: bubble.fontFamily,
+      text: bubble.text,
+      direction: bubble.direction,
+      autoNewline: bubble.autoNewline,
+    };
+    const json = JSON.stringify(c);
+    console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);
+    if (ri.textJson != json) {
+      console.log(ri.textJson, json);
+      startTime = performance.now();
 
-    ctx.translate(w * 0.5, h * 0.5);
-    ctx.translate(...bubble.offset);
+      // 変更が起きたときのみ
+      ri.textJson = json;
 
-    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
-    ctx.font = ss; // horizontal measureより先にないとだめ
-    //const text = `${bubble.text}:${bubble.pageNumber}`;
-    const text = bubble.text;
+      if (!ri.textCanvas) {
+        ri.textCanvas = document.createElement('canvas');
+        ri.textCtx = ri.textCanvas.getContext('2d');
+      }
+  
+      const canvas = ri.textCanvas;
+      const ctx = ri.textCtx;
+  
+      canvas.width = w;
+      canvas.height = h;
+  
+      ctx.translate(w * 0.5, h * 0.5);
+      ctx.translate(...bubble.offset);
+  
+      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+      ctx.font = ss; // horizontal measureより先にないとだめ
+      //const text = `${bubble.text}:${bubble.pageNumber}`;
+      const text = bubble.text;
+  
+      const baselineSkip = bubble.fontSize * 1.5;
+      const charSkip = bubble.fontSize;
+      const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
+      const [tw, th] = [m.width, m.height];
+      const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
+  
+      // 本体
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = bubble.fontColor;
+      drawText(bubble.direction, ctx, 'fill', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
+  
+      // フチ
+      if (0 < bubble.outlineWidth) {
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.strokeStyle = bubble.outlineColor;
+        ctx.lineWidth = bubble.outlineWidth;
+        ctx.font = ss;
+        ctx.lineJoin = 'round';
+        drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
+      }
 
-    const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
-    const [tw, th] = [m.width, m.height];
-    const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
-
-    // 本体
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = bubble.fontColor;
-    drawText(bubble.direction, ctx, 'fill', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
-
-    // フチ
-    if (0 < bubble.outlineWidth) {
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.strokeStyle = bubble.outlineColor;
-      ctx.lineWidth = bubble.outlineWidth;
-      ctx.font = ss;
-      ctx.lineJoin = 'round';
-      drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
+      console.log(`rendering took ${performance.now() - startTime} ms`);
     }
 
     // 描き戻し
+    const canvas = ri.textCanvas;
     try {
       const rotation = Math.round(bubble.rotation * 10) / 10;
 

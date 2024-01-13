@@ -7,12 +7,13 @@ const threshold = 10;
 
 export class BubbleRenderInfo { // serializeしない
   pathJson: string;
-  textJson: string;
   path: paper.PathItem;
   unitedPath: paper.PathItem;
   children: Bubble[];
-  tmpCanvas: HTMLCanvasElement;
-  tmpCtx: CanvasRenderingContext2D;
+
+  textJson: string;
+  textCanvas: HTMLCanvasElement;
+  textCtx: CanvasRenderingContext2D;
 }
 
 export class Bubble {
