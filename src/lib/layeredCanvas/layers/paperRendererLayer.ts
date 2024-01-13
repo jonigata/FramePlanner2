@@ -175,7 +175,8 @@ export class PaperRendererLayer extends Layer {
         ri.unitedPath = ri.path.clone();
         ri.unitedPath.translate(bubble.center);
         for (let child of ri.children) {
-          const path2 = ri.path.clone();
+          const ri2 = child.renderInfo;
+          const path2 = ri2.path.clone();
           path2.translate(child.center);
           ri.unitedPath = ri.unitedPath.unite(path2);
         }
