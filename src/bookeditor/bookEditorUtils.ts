@@ -9,7 +9,7 @@ import { initializeKeyCache, keyDownFlags } from '../lib/layeredCanvas/system/ke
 import type { Page, BookOperators } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
-import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
 
 export function buildBookEditor(

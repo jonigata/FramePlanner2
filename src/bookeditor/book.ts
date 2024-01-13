@@ -4,6 +4,7 @@ import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ImageFile } from "../lib/layeredCanvas/dataModels/imageFile";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
+import { v4 as uuidv4 } from 'uuid';
 
 // history処理では基本的にすべてdeep copyを使う
 
@@ -16,6 +17,7 @@ export type Revision = {
 }
 
 export type Page = {
+  id: string;
   frameTree: FrameElement,
   bubbles: Bubble[],
   paperSize: [number, number],
@@ -102,6 +104,7 @@ export function revertBook(book: Book): void {
 
 export function newPage(frameTree: FrameElement) {
   const page: Page = {
+    id: uuidv4(),
     frameTree,
     bubbles:[], 
     paperSize: [840, 1188],
@@ -155,6 +158,7 @@ export interface BookOperators {
 
 export function clonePage(page: Page): Page {
   return {
+    id: uuidv4(),
     frameTree: page.frameTree.clone(),
     bubbles: page.bubbles.map(b => b.clone()),
     paperSize: [...page.paperSize],
