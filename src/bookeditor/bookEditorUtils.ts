@@ -116,5 +116,11 @@ function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page
     book.pages[index].bubbles.push(b);
     b.pageNumber = index;
     b.center = arrayLayer.array.parentPositionToChildPosition(index, q);
+    b.parent = null;
+    book.pages[currentPageIndex].bubbles.forEach(e => {
+      if (e.parent === b.uuid) {
+        e.parent = null;
+      }
+    });
   }
 }
