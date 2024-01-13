@@ -25,6 +25,7 @@
       commit("bubble"); 
       layeredCanvas.redraw(); 
     });
+  let editingBookId: string = null;
 
   $: if ($viewport && !$viewport.dirty) {
     console.log("BookEditor", $viewport);    
@@ -125,11 +126,12 @@
       layeredCanvas.cleanup();
     }
 
-    if (!$viewport) {
+    if (!$viewport || editingBookId !== book.revision.id) {
       console.log("================ viewport remake");
       $viewport = new Viewport(canvas, hint);
     }
     $viewport.dirty = true;
+    editingBookId = book.revision.id;
 
     const bookEditorInstance: BookOperators = {
       hint,

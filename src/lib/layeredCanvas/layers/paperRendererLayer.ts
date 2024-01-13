@@ -359,7 +359,7 @@ export class PaperRendererLayer extends Layer {
 
     const ri = bubble.renderInfo;
 
-    let startTime = performance.now();
+    // let startTime = performance.now();
 
     const c = {
       size: bubble.size,
@@ -373,10 +373,10 @@ export class PaperRendererLayer extends Layer {
       autoNewline: bubble.autoNewline,
     };
     const json = JSON.stringify(c);
-    console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);
+    // console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);
     if (ri.textJson != json) {
       console.log(ri.textJson, json);
-      startTime = performance.now();
+      // startTime = performance.now();
 
       // 変更が起きたときのみ
       ri.textJson = json;
@@ -421,7 +421,7 @@ export class PaperRendererLayer extends Layer {
         drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
       }
 
-      console.log(`rendering took ${performance.now() - startTime} ms`);
+      // console.log(`rendering took ${performance.now() - startTime} ms`);
     }
 
     // 描き戻し

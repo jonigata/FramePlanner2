@@ -332,7 +332,6 @@ export class LayeredCanvas {
 
   takeOver() {
     if (this.listeners.length === 0) { return; }
-    console.log(this.pointerCursor);
     if (this.pointerCursor) {
       this.rootPaper.handlePointerHover(this.pointerCursor);
     }
