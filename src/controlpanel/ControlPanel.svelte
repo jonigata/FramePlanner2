@@ -5,7 +5,7 @@
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
   import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
-  import { mainPage, mainBook, viewport } from '../bookeditor/bookStore';
+  import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty } from '../bookeditor/bookStore';
   import { saveToken, clipboardToken } from '../bookeditor/paperStore';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -33,41 +33,38 @@
   let exponentialMin = 4096;
   let max = 9410;
   let contactText = "";
-  let paperSize: [number, number] = [0, 0];
-  let paperColor: string = null;
-  let frameColor: string = null;
-  let frameWidth: number = 2;
 
   $:onUpdateFirstPage($mainBook?.pages[0]);
   function onUpdateFirstPage(page: Page) {
+    const p = $newPageProperty;
     if (!page) { return; }
-    if (paperSize[0] === page.paperSize[0] && paperSize[1] === page.paperSize[1] &&
-        paperColor === page.paperColor && frameColor === page.frameColor && frameWidth === page.frameWidth) {
+    if (p.paperSize[0] === page.paperSize[0] && p.paperSize[1] === page.paperSize[1] &&
+        p.paperColor === page.paperColor && p.frameColor === page.frameColor && p.frameWidth === page.frameWidth) {
       return;
     }
-    paperSize[0] = page.paperSize[0];
-    paperSize[1] = page.paperSize[1];
-    paperColor = page.paperColor;
-    frameColor = page.frameColor;
-    frameWidth = page.frameWidth;
+    p.paperSize[0] = page.paperSize[0];
+    p.paperSize[1] = page.paperSize[1];
+    p.paperColor = page.paperColor;
+    p.frameColor = page.frameColor;
+    p.frameWidth = page.frameWidth;
   }
 
-  $:onUpdatePaperProperty(paperSize, paperColor, frameColor, frameWidth);
-  function onUpdatePaperProperty(ps: [number, number], pc: string, fc: string, fw: number) {
+  $:onUpdatePaperProperty($newPageProperty);
+  function onUpdatePaperProperty(q: NewPageProperty) {
     if (!$mainBook) { return; }
 
     let changed = false;
     for (let p of $mainBook.pages) {
-      if (p.paperSize[0] === ps[0] && p.paperSize[1] === ps[1] &&
-          p.paperColor === pc && p.frameColor === fc && p.frameWidth === fw) {
+      if (p.paperSize[0] === q.paperSize[0] && p.paperSize[1] === q.paperSize[1] &&
+          p.paperColor === q.paperColor && p.frameColor === q.frameColor && p.frameWidth === q.frameWidth) {
         continue;
       }
 
-      p.paperSize[0] = ps[0];
-      p.paperSize[1] = ps[1];
-      p.paperColor = pc;
-      p.frameColor = fc;
-      p.frameWidth = fw;
+      p.paperSize[0] = q.paperSize[0];
+      p.paperSize[1] = q.paperSize[1];
+      p.paperColor = q.paperColor;
+      p.frameColor = q.frameColor;
+      p.frameWidth = q.frameWidth;
       changed = true;
     }
     console.log(changed);
@@ -79,16 +76,18 @@
 
   function setDimensions(w: number, h: number) {
     // 入れ物ごと交換するとbindが崩れる模様
-    paperSize[0] = w;
-    paperSize[1] = h;
+    const p = $newPageProperty;
+    p.paperSize[0] = w;
+    p.paperSize[1] = h;
   }
 
   function applyTemplate(event: CustomEvent<FrameElement>) {
+    const p = $newPageProperty;
     const page = newPage(event.detail);
-    page.paperSize = [...paperSize];
-    page.paperColor = paperColor;
-    page.frameColor = frameColor;
-    page.frameWidth = frameWidth;
+    page.paperSize = [...p.paperSize];
+    page.paperColor = p.paperColor;
+    page.frameColor = p.frameColor;
+    page.frameWidth = p.frameWidth;
     $mainBook.pages.push(page);
     commitBook($mainBook, null);
     $mainBook = $mainBook;
@@ -225,20 +224,20 @@
       <div class="hbox">
         <div class="font-bold slider-label">W</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={paperSize[0]}/></div>
+          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[0]}/></div>
           / {max}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label">H</div>
         <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={paperSize[1]}/></div>
+          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[1]}/></div>
            / {max}
         </div>
       </div>
@@ -257,9 +256,9 @@
     </div>
   </div>
   <div class="hbox gap mx-2 paper-color-picker">
-    背景色<ColorPicker bind:hex={paperColor} label=""/>
-    枠色<ColorPicker bind:hex={frameColor} label="" />
-    幅<RangeSlider name="line" bind:value={frameWidth} max={10} step={1} style="width:100px;"/>
+    背景色<ColorPicker bind:hex={$newPageProperty.paperColor} label=""/>
+    枠色<ColorPicker bind:hex={$newPageProperty.frameColor} label="" />
+    幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
     拡大率<RangeSlider name="scale" bind:value={$viewport.scale} min={0.1} max={10} step={0.01} style="width:250px;"/>

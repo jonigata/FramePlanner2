@@ -3,7 +3,6 @@
   import { register } from 'swiper/element/bundle';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-  import type { Page } from '../bookeditor/book'
   import TemplateSample from './TemplateSample.svelte';
 
   register();

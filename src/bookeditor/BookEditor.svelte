@@ -10,7 +10,7 @@
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
-  import { mainBook, bookEditor, viewport } from './bookStore';
+  import { mainBook, bookEditor, viewport, newPageProperty } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
@@ -89,7 +89,12 @@
   function insertPage(index: number) {
     console.log("insertPage", index);
     const frameTree = FrameElement.compile(frameExamples[0]);
+    const p = $newPageProperty;
     const page = newPage(frameTree);
+    page.paperSize = [...p.paperSize];
+    page.paperColor = p.paperColor;
+    page.frameColor = p.frameColor;
+    page.frameWidth = p.frameWidth;
     $mainBook.pages.splice(index+1, 0, page);
     commit(null);
     $mainBook = $mainBook;
