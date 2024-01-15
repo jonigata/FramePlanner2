@@ -160,13 +160,14 @@ export class Paper {
     dragging.layer.pointerCancel(p, dragging.payload);
   }
         
-  handleDrop(p: Vector, image: HTMLImageElement): void {
+  handleDrop(p: Vector, image: HTMLImageElement): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.dropped(p, image)) {
-        break;
+        return true;
       }
     }
+    return false;
   }
 
   handleBeforeDoubleClick(p: Vector): boolean {
@@ -179,32 +180,35 @@ export class Paper {
     return false;
   }
 
-  handleDoubleClicked(p: Vector): void {
+  handleDoubleClicked(p: Vector): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.doubleClicked(p)) {
-        break;
+        return true;
       }
     }
+    return false;
   }
 
-  async handleKeyDown(p: Vector, event: KeyboardEvent): Promise<void> {
+  async handleKeyDown(p: Vector, event: KeyboardEvent): Promise<boolean> {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (await layer.keyDown(p, event)) {
         event.preventDefault();
-        break;
+        return true;
       }
     }
+    return false;
   }
 
-  handleWheel(p: Vector, delta: number): void {
+  handleWheel(p: Vector, delta: number): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.wheel(p, delta)) {
-        break;
+        return true;
       }
     }
+    return false;
   }
 
   prerender(): void {

@@ -145,8 +145,7 @@ export class ArrayLayer extends Layer {
 
   dropped(p: Vector, image: HTMLImageElement): boolean {
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    paper.handleDrop(position, image);
-    return false; // TODO: 実際問題として使われないと考えられるため
+    return paper.handleDrop(position, image);
   }
 
   beforeDoubleClick(p: Vector): boolean { 
@@ -157,21 +156,19 @@ export class ArrayLayer extends Layer {
   doubleClicked(p: Vector): boolean { 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     if (paper.contains(position)) {
-      paper.handleDoubleClicked(position);
+      return paper.handleDoubleClicked(position);
     }
-    return false; // TODO: 実際問題として使われないと考えられるため
+    return false;
   }
 
   async keyDown(p: Vector, event: KeyboardEvent): Promise<boolean> { 
     const {index, paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    await paper.handleKeyDown(position, event);
-    return false; // TODO: 実際問題として使われないと考えられるため
+    return await paper.handleKeyDown(position, event);
   }
 
   wheel(p: Vector, delta: number): boolean { 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    paper.handleWheel(position, delta);
-    return false; // TODO: 実際問題として使われないと考えられるため
+    return paper.handleWheel(position, delta);
   }
 
   flushHints(viewport: Viewport): void {
