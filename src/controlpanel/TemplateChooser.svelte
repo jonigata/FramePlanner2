@@ -4,14 +4,25 @@
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import TemplateSample from './TemplateSample.svelte';
+  import { Splide, SplideSlide } from '@splidejs/svelte-splide';
+  import '@splidejs/svelte-splide/css';
 
   register();
+
+  function onSlideChange(e: CustomEvent<{activeIndex: number}>) {
+    console.log(e.detail.activeIndex);
+  }
 
   const dispatch = createEventDispatcher();
 
   function onClick(e: CustomEvent<FrameElement>) {
     dispatch('apply', e.detail);
   }
+
+  const onProgress = (e) => {
+    const [swiper, progress] = e.detail;
+    console.log(progress)
+  };
 
   let style: string = null;
   onMount(() => {
@@ -21,13 +32,13 @@
 </script>
 
 <div class="template-selector rounded-container-token">
-  <swiper-container style="{style}" navigation="true" pagination="true" slides-per-view="2" centered-slides="true" grab-cursor="true">
+  <Splide options={{fixedWidth: 150, focus: 'center', trimSpace: false, arrows: true, pagination: true, pagenationDirection: 'ltr' }}>
     {#each frameExamples as frame}
-      <swiper-slide style="height: 100%;display: flex;align-items: center;justify-content: center;">
+      <SplideSlide style="height: 100%;display: flex;align-items: center;justify-content: center;">
         <TemplateSample frameTree={FrameElement.compile(frame)} on:click={onClick}/>
-      </swiper-slide>
+      </SplideSlide>
     {/each}
-  </swiper-container>
+  </Splide>
 </div>
 
 <style>

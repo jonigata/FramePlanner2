@@ -34,6 +34,7 @@
   "dependencies": {
     "@neodrag/svelte": "^2.0.3",
     "@sentry/svelte": "^7.74.0",
+    "@splidejs/svelte-splide": "^0.2.9",
     "@svelte-web-fonts/google": "^1.0.4",
     "@types/uuid": "^9.0.7",
     "@xyflow/svelte": "^0.0.26",
