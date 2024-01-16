@@ -3,15 +3,24 @@
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import TemplateSample from './TemplateSample.svelte';
-  import { Splide, SplideSlide } from '@splidejs/svelte-splide';
+  import { Splide, SplideSlide, type Options } from '@splidejs/svelte-splide';
   import '@splidejs/svelte-splide/css';
   // import '@splidejs/splide/css/skyblue';
 
-  function onSlideChange(e: CustomEvent<{activeIndex: number}>) {
-    console.log(e.detail.activeIndex);
-  }
-
   const dispatch = createEventDispatcher();
+
+  const swiperOptions: Options = {
+    fixedWidth: 150,
+    focus: 'center', 
+    trimSpace: false, 
+    arrows: true, 
+    pagination: true, 
+    pagenationDirection: 'ltr' 
+  };
+
+  function onSlideChange(e: CustomEvent<{Slide: SplideSlide}>) {
+    dispatch('change', e.detail.Slide.index);
+  }
 
   function onClick(e: CustomEvent<FrameElement>) {
     dispatch('apply', e.detail);
@@ -30,7 +39,7 @@
 </script>
 
 <div class="template-selector rounded-container-token">
-  <Splide options={{fixedWidth: 150, focus: 'center', trimSpace: false, arrows: true, pagination: true, pagenationDirection: 'ltr' }}>
+  <Splide options={swiperOptions} on:active={onSlideChange}>
     {#each frameExamples as frame}
       <SplideSlide style="height: 100%;display: flex;align-items: center;justify-content: center;">
         <TemplateSample frameTree={FrameElement.compile(frame)} on:click={onClick}/>

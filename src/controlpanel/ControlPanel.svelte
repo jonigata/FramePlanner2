@@ -28,6 +28,7 @@
   import downloadIcon from '../assets/get.png';
   import clipboardIcon from '../assets/clipboard.png';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
+  import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -67,7 +68,6 @@
       p.frameWidth = q.frameWidth;
       changed = true;
     }
-    console.log(changed);
     if (changed) {
       commitBook($mainBook, "page-attribute");
       $mainBook = $mainBook;
@@ -91,6 +91,10 @@
     $mainBook.pages.push(page);
     commitBook($mainBook, null);
     $mainBook = $mainBook;
+  }
+
+  function changeTemplate(event: CustomEvent<number>) {
+    $newPageProperty.template = FrameElement.compile(frameExamples[event.detail]);    
   }
 
   function download() {
@@ -217,7 +221,7 @@
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="px-2">
-    <TemplateChooser on:apply={applyTemplate} />
+    <TemplateChooser on:apply={applyTemplate} on:change={changeTemplate}/>
   </div>
   <div class="hbox space-around canvas-size-container">
     <div class="vbox expand">

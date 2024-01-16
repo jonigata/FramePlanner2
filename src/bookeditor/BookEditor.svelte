@@ -88,9 +88,8 @@
 
   function insertPage(index: number) {
     console.log("insertPage", index);
-    const frameTree = FrameElement.compile(frameExamples[0]);
     const p = $newPageProperty;
-    const page = newPage(frameTree);
+    const page = newPage(p.template);
     page.paperSize = [...p.paperSize];
     page.paperColor = p.paperColor;
     page.frameColor = p.frameColor;
