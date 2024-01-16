@@ -1,7 +1,7 @@
 import { writePsd } from 'ag-psd';
 import { saveAs } from 'file-saver';
 import type { Page } from '../../bookeditor/book';
-import { LayeredCanvas } from '../../lib/layeredCanvas/system/layeredCanvas'
+import { LayeredCanvas, Viewport } from '../../lib/layeredCanvas/system/layeredCanvas'
 import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
 
 interface CustomCanvasElement extends HTMLCanvasElement {
@@ -9,19 +9,14 @@ interface CustomCanvasElement extends HTMLCanvasElement {
 }
 
 export function saveAsPSD(page: Page) {
-  const canvas = document.createElement("canvas") as CustomCanvasElement;
+  const canvas = document.createElement("canvas");
   canvas.width = page.paperSize[0]
   canvas.height = page.paperSize[1]
-  canvas.paper = {};
-  canvas.paper.size = page.paperSize;
-  canvas.paper.translate = [0,0];
-  canvas.paper.viewTranslate = [0,0];
-  canvas.paper.scale = [1,1];
 
-  const layeredCanvas = new LayeredCanvas(
-    canvas, 
-    (p: [number, number], s: String) => {},
-    false);
+  const viewport = new Viewport(canvas, () => {});
+
+  const layeredCanvas = new LayeredCanvas(viewport, true);
+  layeredCanvas.rootPaper.size = page.paperSize;
 
   const paperRendererLayer = new PaperRendererLayer();
   layeredCanvas.rootPaper.addLayer(paperRendererLayer);

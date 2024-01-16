@@ -3,6 +3,7 @@
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
   import { mainBook } from "../bookeditor/bookStore";
+  import { saveAsPSD } from "./saver/saveAsPSD";
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -16,6 +17,7 @@
           await copyToClipboard($mainBook.pages[0])
           break;
         case 'export-psd':
+          saveAsPSD($mainBook.pages[0]);
           break;
       }
     }
