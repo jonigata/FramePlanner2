@@ -1,13 +1,11 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import { register } from 'swiper/element/bundle';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import TemplateSample from './TemplateSample.svelte';
   import { Splide, SplideSlide } from '@splidejs/svelte-splide';
   import '@splidejs/svelte-splide/css';
-
-  register();
+  // import '@splidejs/splide/css/skyblue';
 
   function onSlideChange(e: CustomEvent<{activeIndex: number}>) {
     console.log(e.detail.activeIndex);
