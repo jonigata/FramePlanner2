@@ -53,7 +53,7 @@ export function buildBookEditor(
 }
 
 function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
-  const paper = new Paper(page.paperSize);
+  const paper = new Paper(page.paperSize, false);
 
   // undo
   const undoLayer = new UndoLayer(() => undo(), () => redo());

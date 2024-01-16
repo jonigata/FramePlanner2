@@ -176,3 +176,7 @@ export function isPointInTriangle(p: Vector, t: [Vector, Vector, Vector]) {
 
   return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
 }
+
+export function rectIntersectsRect(r0: Rect, r1: Rect): boolean {
+  return r0[0] < r1[0] + r1[2] && r0[0] + r0[2] > r1[0] && r0[1] < r1[1] + r1[3] && r0[1] + r0[3] > r1[1];
+}

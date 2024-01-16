@@ -1,6 +1,6 @@
-import { bodyDragging } from "../../../uiStore";
 import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
-import type { Vector } from "../tools/geometry/geometry";
+import type { Vector, Rect } from "../tools/geometry/geometry";
+import { rectIntersectsRect } from "../tools/geometry/geometry";
 
 type OnHint = (p: Vector, s: string | null) => void;
 
@@ -93,9 +93,11 @@ export class Paper {
   size: Vector;
   layers: Layer[];
   hint: { position: Vector, message: string } = null;
+  root: boolean;
 
-  constructor(size: Vector) {
+  constructor(size: Vector, root: boolean) {
     this.size = size;
+    this.root = root;
     this.layers = [];
   }
 
@@ -206,6 +208,16 @@ export class Paper {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
+    // canvasの外なら表示しない
+    if (!this.root) {
+      const q0 = this.matrix.transformPoint({x:0, y:0});
+      const q1 = this.matrix.transformPoint({x:this.size[0], y:this.size[1]});
+      const r: Rect = [q0.x, q0.y, q1.x - q0.x, q1.y - q0.y];
+      if (!rectIntersectsRect(r, [0, 0, ctx.canvas.width, ctx.canvas.height])) {
+        return;
+      }
+    }
+
     ctx.save();
     ctx.setTransform(this.matrix);
     for (let layer of this.layers) {
@@ -300,7 +312,7 @@ export class LayeredCanvas {
 
   constructor(viewport: Viewport, editable: boolean) {
     this.viewport = viewport;
-    this.rootPaper = new Paper([0,0]);
+    this.rootPaper = new Paper([0,0], true);
 
     const beforeHandler = () => {
       this.calculateLayout();
