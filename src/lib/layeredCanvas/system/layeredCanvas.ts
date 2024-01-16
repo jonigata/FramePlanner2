@@ -99,17 +99,6 @@ export class Paper {
     this.layers = [];
   }
 
-  viewportPositionToPaperPosition(p: Vector): Vector {
-    const [sx, sy] = p;
-    const [x, y] = [sx + this.size[0] * 0.5, sy + this.size[1] * 0.5];
-    return [x, y];
-  }
-
-  paperPositionToViewportPosition(p: Vector): Vector {
-    const [sx, sy] = [p[0] - this.size[0] * 0.5, p[1] - this.size[1] * 0.5];
-    return [sx, sy];
-  }
-
   handleAccepts(p: Vector, button: number): Dragging {
     var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
@@ -375,8 +364,11 @@ export class LayeredCanvas {
     return [Math.floor(p.x), Math.floor(p.y)];
   }
 
-  viewportPositionToPaperPosition(p: Vector) {
-    return this.rootPaper.viewportPositionToPaperPosition(p);
+  viewportPositionToPaperPosition(p: Vector): Vector {
+    const size = this.rootPaper.size;
+    const [sx, sy] = p;
+    const [x, y] = [sx + size[0] * 0.5, sy + size[1] * 0.5];
+    return [x, y];
   }
 
   pagePositionToPaperPosition(event: { pageX: number, pageY: number }): Vector {
