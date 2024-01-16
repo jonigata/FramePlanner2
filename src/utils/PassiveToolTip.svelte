@@ -45,7 +45,7 @@
     font-family: "Noto Sans JP", sans-serif;
     font-size: 18px;
     font-weight: 900;
-    color: #5a5153;
+    color: #000;
     z-index: 9999;
     padding: 8px;
   }

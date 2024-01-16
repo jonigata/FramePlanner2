@@ -21,8 +21,7 @@ export class Viewport {
     this.scale = 1;
     this.dirty = true;
     this.onHint = (p, s) => {
-      const q: Vector = p ? this.viewportPositionToCanvasPosition(p) : [-1,-1];
-      onHint(q, s);
+      onHint(p ?? [-1,-1], s);
     };
   }
 
@@ -261,8 +260,9 @@ export class Paper {
 
   flushHints(viewport: Viewport) {
     if (this.hint) {
-      const p = this.paperPositionToViewportPosition(this.hint.position);
-      viewport.onHint(p, this.hint.message);
+      const q = this.hint.position;
+      const qq = this.matrix.transformPoint({x:q[0], y:q[1]});
+      viewport.onHint([qq.x, qq.y], this.hint.message);
       this.hint = null;
     }
 
