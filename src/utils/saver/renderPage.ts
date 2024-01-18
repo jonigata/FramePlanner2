@@ -2,7 +2,19 @@ import type { Page } from '../../bookeditor/book';
 import { LayeredCanvas, Viewport } from '../../lib/layeredCanvas/system/layeredCanvas'
 import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
 
-export async function renderPage(page: Page): Promise<Blob> {
+export async function renderPageToBlob(page: Page): Promise<Blob> {
+  const canvas = await renderPage(page);
+  const png: Blob = await new Promise((r) => {canvas.toBlob(r, 'image/png')});
+  return png;
+}
+
+export async function renderPageToDataUrl(page: Page): Promise<string> {
+  const canvas = await renderPage(page);
+  const png: string = canvas.toDataURL('image/png');
+  return png;
+}
+
+async function renderPage(page: Page): Promise<HTMLCanvasElement> {
   const canvas = document.createElement("canvas");
   canvas.width = page.paperSize[0]
   canvas.height = page.paperSize[1]
@@ -19,7 +31,5 @@ export async function renderPage(page: Page): Promise<Blob> {
   layeredCanvas.rootPaper.addLayer(paperRendererLayer);
 
   layeredCanvas.render();
-
-  const png: Blob = await new Promise((r) => {canvas.toBlob(r, 'image/png')});
-  return png;
+  return canvas;
 }
