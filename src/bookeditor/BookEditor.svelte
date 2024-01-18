@@ -181,6 +181,48 @@
     }
   }
 
+  $:onSplitCursor($bubbleSplitCursor);
+  function onSplitCursor(cursor: number | null) {
+    if (cursor == null || layeredCanvas == null) { return; }
+    $bubbleSplitCursor = null;
+
+    const text = $bubble.text;
+    console.log(text.slice(cursor));
+    console.log(text.slice(0,cursor));
+
+    const width = $bubble.size[0];
+    const center = $bubble.center;
+
+    const newBubble = defaultBubbleSlot.bubble.clone();
+    newBubble.p0 = $bubble.p0;
+    newBubble.p1 = $bubble.p1;
+    newBubble.initOptions();
+    newBubble.text = text.slice(cursor).trimStart();
+    findBubblePage($mainBook, $bubble).bubbles.push(newBubble);
+
+    $bubble.text = text.slice(0, cursor).trimEnd();
+
+    if ($bubble.direction === 'v') {
+      $bubble.move([center[0] + width / 2, center[1]]);
+      newBubble.move([center[0] - width / 2, center[1]]);
+    } else {
+      $bubble.move([center[0] - width / 2, center[1]]);
+      newBubble.move([center[0] + width / 2, center[1]]);
+    }
+
+    commit(null);
+    $bubble = newBubble;
+  }
+
+  function findBubblePage(book: Book, bubble: Bubble) {
+    for (const page of book.pages) {
+      if (page.bubbles.includes(bubble)) {
+        return page;
+      }
+    }
+    return null;
+  }
+
   function focusBubble(page: Page, bubble: Bubble, p: Vector) {
     console.log("focusBubble");
     delayedCommiter.force();
