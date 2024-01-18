@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-  import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
@@ -15,6 +14,7 @@
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
+  import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -122,6 +122,10 @@
     $mainBook = $mainBook;
   }
 
+  function modalGenerate(page: Page, e: FrameElement) {
+    $imageGeneratorTarget = e;
+  }
+
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
@@ -144,7 +148,7 @@
       revert,
       undo,
       redo,
-      modalGenerate: () => {},
+      modalGenerate,
       modalScribble: () => {},
       insert,
       splice,

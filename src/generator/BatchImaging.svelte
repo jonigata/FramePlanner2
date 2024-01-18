@@ -10,7 +10,8 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { redrawToken } from '../bookeditor/paperStore';
   import { commitToken } from '../undoStore';
-  import { mainPage } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/bookStore';
+  import type { Page } from '../bookeditor/book';
 
   let totalCount = 1;
   let filledCount = 0;
@@ -31,10 +32,14 @@
   }
 
   function updateImageInfo() {
-    const page = $mainPage;
-    const leaves = collectLeaves(page.frameTree);
-    let n = leaves.filter((leaf) => leaf.image).length;
-    totalCount = leaves.length;
+    let m = 0;
+    let n = 0;
+    for (const page of $mainBook.pages) {
+      const leaves = collectLeaves(page.frameTree);
+      m += leaves.length;
+      n += leaves.filter((leaf) => leaf.image).length;
+    }
+    totalCount = m;
     filledCount = n;
   }
 
@@ -65,10 +70,10 @@
     }
   }
 
-  async function generateAll() {
+  async function generateAll(page: Page) {
 
     busy = true;
-    const leaves = collectLeaves($mainPage.frameTree);
+    const leaves = collectLeaves(page.frameTree);
     const promises = [];
     for (const leaf of leaves) {
       if (leaf.image) { continue; }
@@ -76,7 +81,7 @@
     }
     await Promise.all(promises);
 
-    const pageLayout = calculatePhysicalLayout($mainPage.frameTree, $mainPage.paperSize, [0,0]);
+    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     for (const leaf of leaves) {
       if (!leaf.image) { continue; }
       const layout = findLayoutOf(pageLayout, leaf);
@@ -87,6 +92,13 @@
     busy = false;
     updateImageInfo();
     $redrawToken = true;
+  }
+
+  async function generateAllPages() {
+    const pages = $mainBook.pages;
+    for (const page of pages) {
+      await generateAll(page);
+    }
     $commitToken = true;
   }
 
@@ -106,7 +118,7 @@
         <ProgressRadial width={"w-16"}/>
       {:else}
         <div class="hbox gap-2">API key <input type="password" autocomplete="off" bind:value={apiKey}/></div>
-        <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={generateAll}>開始</button>
+        <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={generateAllPages}>開始</button>
       {/if}
     </div>
   </Drawer>  
