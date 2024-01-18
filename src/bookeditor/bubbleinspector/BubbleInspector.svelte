@@ -25,12 +25,24 @@
   import unembeddedIcon from '../../assets/unembedded.png';
   import resetIcon from '../../assets/reset.png';
 
+  let innerWidth = window.innerWidth;
+  let innerHeight = window.innerHeight;
   let oldBubble = null;
-  let adjustedPosition = { x: 50, y: 720 };
+  let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let pinned = true;
   let textarea = null;
   let inspectorSize = [0, 0];
   let inspector = null;
+
+  $:onWindowResize(innerWidth, innerHeight);
+  function onWindowResize(w: number, h: number) {
+    if (w < adjustedPosition.x + inspectorSize[0] + 16) {
+      adjustedPosition.x = w - inspectorSize[0] - 16;
+    }
+    if (h < adjustedPosition.y + inspectorSize[1] + 16) {
+      adjustedPosition.y = h - inspectorSize[1] - 16;
+    }
+  }
 
   $:move($bubbleInspectorPosition, inspectorSize);
   function move(p: BubbleInspectorPosition, dialogSize) {
@@ -104,6 +116,8 @@
   }
 
 </script>
+
+<svelte:window bind:innerWidth bind:innerHeight/>
 
 {#if $bubble}
 <div class="bubble-inspector-container">
