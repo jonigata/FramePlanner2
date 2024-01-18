@@ -34,7 +34,7 @@
         paper.save();
         break;
       case 'aipictors':
-        paper.postToSNS();
+        paper.postToAIPictors();
         break;
       case 'psd':
         saveAsPSD($mainPage);
