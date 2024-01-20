@@ -13,7 +13,6 @@ const iconUnit: Vector = [32,32];
 export class FrameLayer extends Layer {
   renderLayer: PaperRendererLayer;
   frameTree: FrameElement;
-  interactable: boolean;
   onCommit: () => void;
   onRevert: () => void;
   onGenerate: (element: FrameElement) => void;
@@ -64,7 +63,6 @@ export class FrameLayer extends Layer {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
-    this.interactable = true;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
     this.onGenerate = onGenerate;
@@ -755,5 +753,7 @@ export class FrameLayer extends Layer {
   }
 
   renderDepths(): number[] { return [0]; }
+
+  get interactable(): boolean { return this.mode == null; }
 }
 sequentializePointer(FrameLayer);

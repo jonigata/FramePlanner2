@@ -42,9 +42,8 @@
     const targetTool = tools.find(tool => tool.id === e.detail.id);
     targetTool.strokeStyle = e.detail.strokeStyle;
     targetTool.lineWidth = e.detail.lineWidth;
-    if (targetTool.selected) {
-      dispatch('setTool', targetTool);
-    }
+    tools = tools.map(tool => ({ ...tool, selected: tool.id === e.detail.id }));
+    dispatch('setTool', targetTool);
   }
 
   function onDone() {

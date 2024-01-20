@@ -5,6 +5,7 @@ import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
 import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
+import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
 import { initializeKeyCache, keyDownFlags } from '../lib/layeredCanvas/system/keyCache';
 import type { Book, Page, BookOperators } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
@@ -98,6 +99,10 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     () => { revert(); },
     (bubble: Bubble) => { potentialCrossPage(layeredCanvas, book, page, bubble); });
   paper.addLayer(bubbleLayer);
+
+  // inline painter
+  const inlinePainterLayer = new InlinePainterLayer(frameLayer, () => {});
+  paper.addLayer(inlinePainterLayer);
 
   return paper;
 }

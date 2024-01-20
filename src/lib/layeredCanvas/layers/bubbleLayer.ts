@@ -23,7 +23,6 @@ export class DefaultBubbleSlot {
 
 export class BubbleLayer extends Layer {
   viewport: Viewport;
-  interactable: boolean;
   renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
   onFocus: (bubble: Bubble) => void;
@@ -61,7 +60,6 @@ export class BubbleLayer extends Layer {
     super();
     this.viewport = viewport;
     this.renderLayer = renderLayer;
-    this.interactable = true;
     this.bubbles = bubbles;
     this.onFocus = onFocus;
     this.onCommit = onCommit;
@@ -1233,6 +1231,8 @@ export class BubbleLayer extends Layer {
   }
 
   renderDepths(): number[] { return [1]; }
+
+  get interactable(): boolean { return this.mode == null; }
 }
 sequentializePointer(BubbleLayer);
 

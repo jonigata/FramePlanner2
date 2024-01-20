@@ -42,6 +42,8 @@ export class ArrayLayer extends Layer {
   }
 
   pointerHover(p: Vector): boolean {
+    if (!this.interactable) {return false;}
+
     this.insertIcons.forEach((e, i) => {
       if (e.contains(p)) {
         const q = e.center;
@@ -129,12 +131,14 @@ export class ArrayLayer extends Layer {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    this.insertIcons.forEach(e => {
-      e.render(ctx);
-    });
-    this.trashIcons.forEach(e => {
-      e.render(ctx);
-    });
+    if (this.interactable) {
+      this.insertIcons.forEach(e => {
+        e.render(ctx);
+      });
+      this.trashIcons.forEach(e => {
+        e.render(ctx);
+      });
+    }
     ctx.save();
     for (let paper of this.array.papers) {
       ctx.translate(...paper.center);
@@ -189,4 +193,12 @@ export class ArrayLayer extends Layer {
   set redrawRequired(value: boolean) {
     this.array.redrawRequired = value;
   }
+
+  set mode(mode: any) { 
+    super.mode = mode;
+    this.array.mode = mode; 
+  }
+  get mode() { return super.mode; }
+
+  get interactable(): boolean {return this.mode == null; }
 }

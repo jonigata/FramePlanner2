@@ -2,6 +2,7 @@
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { constraintLeaf, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -15,10 +16,16 @@
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
+  import { makePlainImage } from '../utils/imageUtil';
+  import Painter from '../painter/Painter.svelte';
+  import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
+  import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
+  import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
+  import { BubbleLayer } from '../lib/layeredCanvas/layers/bubbleLayer';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
-  let painterActive = false;
+  let arrayLayer: ArrayLayer;
   let bubbleSnapshot: string = null;
   let delayedCommiter = new DelayedCommiter(
     () => {
@@ -28,16 +35,13 @@
     });
   let editingBookId: string = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
+  let painter: Painter;
 
   $: if ($viewport && !$viewport.dirty) {
     console.log("BookEditor", $viewport);    
     $viewport.dirty = true;
     $viewport = $viewport;
     layeredCanvas?.redraw();
-  }
-
-  function isPainting() {
-    return painterActive;
   }
 
   function hint(p: [number, number], s: String) {
@@ -64,8 +68,8 @@
   }
 
   function undo() {
-    if (isPainting()) {
-      // inlinePainterLayer.undo(); // TODO
+    if (painter.isPainting()) {
+      painter.undo();
     } else {
       undoBookHistory($mainBook);
       revert();
@@ -73,8 +77,8 @@
   }
 
   function redo() {
-    if (isPainting()) {
-      // inlinePainterLayer.redo(); // TODO
+    if (painter.isPainting()) {
+      painter.redo();
     } else {
       redoBookHistory($mainBook);
       revert();
@@ -149,7 +153,7 @@
       undo,
       redo,
       modalGenerate,
-      modalScribble: () => {},
+      modalScribble,
       insert,
       splice,
       focusBubble,
@@ -166,6 +170,7 @@
       defaultBubbleSlot);
     layeredCanvas = builtBook.layeredCanvas;
     layeredCanvas.redraw();
+    arrayLayer = builtBook.arrayLayer;
   }
 
   $: onBubbleModified($bubble);
@@ -249,6 +254,10 @@
     }
   }
 
+  function modalScribble(page: Page, element: FrameElement) {
+    painter.start(page, element);
+  }
+
   onDestroy(() => {
     layeredCanvas.cleanup();
   });
@@ -271,6 +280,8 @@
   -->
   </AutoSizeCanvas>
 </div>
+
+<Painter bind:this={painter} on:done={() => commit(null)} bind:layeredCanvas bind:arrayLayer/>
 
 <style>
   .main-paper-container {

@@ -1,4 +1,4 @@
-import { Layer } from "../system/layeredCanvas";
+import { Layer, sequentializePointer } from "../system/layeredCanvas";
 import { type FrameElement, type Layout, calculatePhysicalLayout, constraintLeaf, findLayoutOf } from '../dataModels/frameTree';
 import type { Vector } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
@@ -213,3 +213,4 @@ export class InlinePainterLayer extends Layer {
   renderDepths(): number[] { return [0]; }
 
 }
+sequentializePointer(InlinePainterLayer);

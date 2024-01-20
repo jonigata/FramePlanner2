@@ -194,7 +194,7 @@ export class PaperRendererLayer extends Layer {
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    if (element.image || embeddedBubbles.has(layout)) {
+    if (element.image || element.scribble || embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
       if (!element.focused) {

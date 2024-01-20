@@ -77,4 +77,8 @@ export class PaperArray {
     this.papers.forEach(e => e.paper.redrawRequired = value);
   }
 
+  set mode(value: any) {
+    this.papers.forEach(e => e.paper.mode = value);
+  }
+
 }

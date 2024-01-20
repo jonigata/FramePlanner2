@@ -86,6 +86,10 @@ export class Layer {
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
   set redrawRequired(f: boolean) { this.redrawRequired_ = f; }
+
+  mode_: any = null;
+  set mode(mode: any) { this.mode_ = mode; }
+  get mode(): any { return this.mode_; }
 }
 
 export class Paper {
@@ -296,6 +300,9 @@ export class Paper {
     return uniq;
   }
 
+  mode_: any = null;
+  set mode(mode: any) { this.mode_ = mode; this.layers.forEach(e => e.mode = mode); }
+  get mode(): any { return this.mode_; }
 };
 
 
@@ -541,6 +548,9 @@ export class LayeredCanvas {
 
     this.rootPaper.calculateLayout(matrix);
   }
+
+  set mode(mode: any) {this.rootPaper.mode = mode;}
+  get mode(): any {return this.rootPaper.mode;}
 }
 
 interface LayerPointerMethods {

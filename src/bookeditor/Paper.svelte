@@ -19,7 +19,7 @@
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { makePlainImage } from '../utils/imageUtil';
-  import { postToAiPictors } from '../utils/postToAiPictors.js'
+  import { postToAiPictors } from '../utils/saver/postToAiPictors.js'
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type Page, type Revision, commitPage, revertPage, revisionEqual, undoPageHistory, redoPageHistory } from './book';
 
