@@ -338,6 +338,9 @@ export class PaperRendererLayer extends Layer {
     ctx.rotate(-element.rotation * Math.PI / 180);
     ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
     ctx.drawImage(element.image, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
+    if (!element.image && element.scribble) {
+      ctx.drawImage(element.scribble, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
+    }
     ctx.restore();
   }
 

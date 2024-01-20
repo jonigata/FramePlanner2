@@ -186,6 +186,7 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<F
 
   if (markUp.image) {
     frameTree.image = await loadImage(fileSystem, markUp.image);
+    frameTree.gallery = [frameTree.image];
   }
 
   const children = markUp.column ?? markUp.row;
