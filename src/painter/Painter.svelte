@@ -20,7 +20,16 @@
   let autoGeneration: boolean = false;
   let lcm: boolean = false;
   let painterAutoGenerate: PainterAutoGenerate = null;
+  let url: string = "http://192.168.68.111:7860";
   
+  $: onChangeAutoGeneration(autoGeneration);
+  function onChangeAutoGeneration(autoGeneration: boolean) {
+    if (layeredCanvas == null) { return; }
+    console.log("onChangeAutoGeneration", autoGeneration);
+    findLayer().drawsBackground = autoGeneration;
+    layeredCanvas.redraw();
+  }
+
   export async function start(page: Page, element: FrameElement) {
     painterPage = page;
     painterElement = element;
@@ -109,6 +118,20 @@
 
   function indexOfPage(page: Page) {
     return $mainBook.pages.indexOf(page);
+  }
+
+  export function chase() {
+    console.log("chase");
+    if (painterAutoGenerate == null) { return; }
+    if (painterElement == null) { return; }
+    if (!autoGeneration) { return; }
+
+    painterAutoGenerate.doScribble(
+      url,
+      painterElement.scribble,
+      painterElement.prompt,
+      lcm,
+      painterElement.image);
   }
 
 </script>

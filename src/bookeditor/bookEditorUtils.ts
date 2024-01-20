@@ -53,7 +53,7 @@ export function buildBookEditor(
   return { arrayLayer, layeredCanvas};
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
+function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize, false);
 
   // undo
@@ -101,7 +101,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
   paper.addLayer(bubbleLayer);
 
   // inline painter
-  const inlinePainterLayer = new InlinePainterLayer(frameLayer, () => {});
+  const inlinePainterLayer = new InlinePainterLayer(frameLayer, chase);
   paper.addLayer(inlinePainterLayer);
 
   return paper;

@@ -2,7 +2,6 @@
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
-  import { constraintLeaf, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -10,18 +9,14 @@
   import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
-  import { mainBook, bookEditor, viewport, newPageProperty } from './bookStore';
+  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken } from './bookStore';
   import { buildBookEditor } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
-  import { makePlainImage } from '../utils/imageUtil';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
-  import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
-  import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
-  import { BubbleLayer } from '../lib/layeredCanvas/layers/bubbleLayer';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -44,6 +39,12 @@
     layeredCanvas?.redraw();
   }
 
+  $: if ($redrawToken) {
+    console.log("BookEditor", $redrawToken);
+    $redrawToken = false;
+    layeredCanvas?.redraw();
+  }
+
   function hint(p: [number, number], s: String) {
     if (s) {
       const q = convertPointFromNodeToPage(canvas, ...p);
@@ -58,6 +59,7 @@
     delayedCommiter.force();
     commitBook($mainBook, tag);
     console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
+    $mainBook = $mainBook;
   }
 
   function revert() {
@@ -160,6 +162,7 @@
       viewportChanged,
       insertPage,
       deletePage,
+      chase,
     };
     $bookEditor = bookEditorInstance;
 
@@ -267,6 +270,10 @@
     if (!layeredCanvas || !$viewport) { return; }
     $viewport.dirty = true;
     layeredCanvas.redraw();
+  }
+
+  function chase() {
+    painter.chase();
   }
 
 </script>

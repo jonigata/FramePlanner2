@@ -6,7 +6,6 @@
   import '../box.css';
   import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty } from '../bookeditor/bookStore';
-  import { saveToken, clipboardToken } from '../bookeditor/paperStore';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';

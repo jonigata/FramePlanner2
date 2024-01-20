@@ -8,9 +8,8 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { redrawToken } from '../bookeditor/paperStore';
   import { commitToken } from '../undoStore';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook, redrawToken } from '../bookeditor/bookStore';
   import type { Page } from '../bookeditor/book';
 
   let totalCount = 1;

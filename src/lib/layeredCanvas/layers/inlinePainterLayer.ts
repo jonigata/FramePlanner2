@@ -100,9 +100,10 @@ export class InlinePainterLayer extends Layer {
       ctx.restore();
     }
 
-    this.image.src = canvas.toDataURL();
+    const dataUrl = canvas.toDataURL();
+    this.image.src = dataUrl;
     this.history.length = this.historyIndex;
-    this.history.push(this.image.src);
+    this.history.push(dataUrl);
     this.historyIndex++;
     console.log("snapshot", this.historyIndex, this.history.length);
     await this.image.decode();
@@ -171,24 +172,28 @@ export class InlinePainterLayer extends Layer {
     return this.element?.scribble;
   }
 
-  undo(): void {
+  async undo() {
     console.log("inlinePainterLayer.undo", this.historyIndex, this.history.length)
     if (this.historyIndex <= 1) { return; }
 
     this.historyIndex--;
     this.image.src = this.history[this.historyIndex - 1];
+    await this.image.decode();
+    this.offscreenContext.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+    this.offscreenContext.drawImage(this.image, 0, 0, this.image.naturalWidth, this.image.naturalHeight);
     this.redraw();
-    this.onAutoGenerate();
   }
 
-  redo(): void {
+  async redo() {
     console.log("inlinePainterLayer.redo", this.historyIndex, this.history.length)
     if (this.history.length <= this.historyIndex) { return; }
 
     this.historyIndex++;
     this.image.src = this.history[this.historyIndex - 1];
+    await this.image.decode();
+    this.offscreenContext.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+    this.offscreenContext.drawImage(this.image, 0, 0, this.image.naturalWidth, this.image.naturalHeight);
     this.redraw();
-    this.onAutoGenerate();
   }
 
   // paperRenderLayerからコピペ

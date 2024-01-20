@@ -1,24 +1,11 @@
 <script lang="ts">
-  import { redrawToken } from '../bookeditor/paperStore';
   import { generateImageWithScribble } from "../generator/sdwebui";
+  import { redrawToken } from "../bookeditor/bookStore";
 
   let busy: boolean;
   let queued: boolean;
 
-  export async function doScribble(callGeneration, url, refered, prompt, lcm, target) {
-    if (!callGeneration) {
-      const canvas = document.createElement('canvas');
-      canvas.width = target.width;
-      canvas.height = target.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(target, 0, 0);
-      ctx.drawImage(refered, 0, 0);
-      target.src = canvas.toDataURL();
-      await target.decode();
-      $redrawToken = true;
-      return;
-    }
-
+  export async function doScribble(url, refered, prompt, lcm, target) {
     if (busy) { 
       queued = true;
       return; 
@@ -50,7 +37,7 @@
 
     if (queued) {
       queued = false;
-      doScribble(callGeneration, url, refered, prompt, lcm, target);
+      doScribble(url, refered, prompt, lcm, target);
     }
   }
 </script>

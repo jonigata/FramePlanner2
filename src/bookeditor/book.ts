@@ -154,6 +154,7 @@ export interface BookOperators {
   viewportChanged: () => void;
   insertPage: (index: number) => void;
   deletePage: (index: number) => void;
+  chase: () => void;
 }
 
 export function clonePage(page: Page): Page {

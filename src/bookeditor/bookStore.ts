@@ -8,6 +8,7 @@ export const mainBook = writable<Book>(null);
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
 export const viewport: Writable<Viewport> = writable(null);
 export const bookEditor: Writable<BookOperators> = writable(null);
+export const redrawToken = writable(false);
 
 export type NewPageProperty = {
   paperSize: [number, number],

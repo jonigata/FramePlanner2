@@ -40,7 +40,7 @@ type SerializedBook = {
 }
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
-  console.tag("saveBookTo", "cyan");
+  console.tag("saveBookTo", "cyan", file.id);
 
   const root = await fileSystem.getRoot();
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
@@ -112,7 +112,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
 
 
 export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
-  console.tag("loadBookFrom", "cyan");
+  console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
   const serializedBook = JSON.parse(content);
 
