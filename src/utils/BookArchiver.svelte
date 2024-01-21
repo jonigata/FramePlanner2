@@ -3,6 +3,7 @@
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
   import { mainBook } from "../bookeditor/bookStore";
+  import { saveAsPng } from "./saver/saveAsPng";
   import { saveAsPSD } from "./saver/saveAsPSD";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { postToAiPictors } from "./saver/postToAiPictors";
@@ -14,7 +15,11 @@
       for (let operation of ba) {
         switch (operation) {
           case 'download':
-            await saveAsZip($mainBook);
+            if ($mainBook.pages.length === 1) {
+              await saveAsPng($mainBook.pages[0]);
+            } else {
+              await saveAsZip($mainBook);
+            }
             break;
           case 'copy':
             await copyToClipboard($mainBook.pages[0])
