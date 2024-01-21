@@ -10,6 +10,7 @@
   import { mainBook, bookEditor, viewport, newPageProperty } from '../bookeditor/bookStore';
   import PainterToolBox from './PainterToolBox.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
+  import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 
   const dispatch = createEventDispatcher();
 
@@ -35,19 +36,26 @@
     painterElement = element;
 
     console.log("START", element.showsScribble);
-    /*
-    if (!element.image) { 
-      element.image = await makePlainImage(512, 512, true);
-      element.gallery.push(element.image);
-      constraintElement(page, element, true);
-    }
-    */
     if (!element.scribble) {
-      const width = element.image ? element.image.naturalWidth : 512;
-      const height = element.image ? element.image.naturalHeight : 512;
+      let width;
+      let height;
+      if (element.image) {
+        width = element.image.naturalWidth;
+        height = element.image.naturalHeight;
+      } else {
+        const layout = calculatePhysicalLayout(painterPage.frameTree, painterPage.paperSize, [0,0]);
+        const thisLayout = findLayoutOf(layout, element);
+        const [x0, y0, x1, y1] = trapezoidBoundingRect(thisLayout.corners);
+        // 256の倍数で切り上げ
+        let [w, h] = [Math.abs(x1 - x0), Math.abs(y1 - y0)];
+        if (w === 0) { w = 1; }
+        if (h === 0) { h = 1; }
+        width = Math.ceil(w / 256) * 256;
+        height = Math.ceil(h / 256) * 256;
+      }
       element.scribble = await makePlainImage(width, height, false);
       element.gallery.push(element.scribble);
-      constraintElement(true);
+      constraintElement();
     }
 
     layeredCanvas.mode = "scribble";
@@ -57,23 +65,6 @@
 
   async function onDone() {
     console.log("onScribbleDone")
-
-    /*
-    // merge
-    const element = painterElement;
-    await element.scribble.decode();
-    const canvas = document.createElement('canvas');
-    canvas.width = element.image.naturalWidth;
-    canvas.height = element.image.naturalHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(element.image, 0, 0);
-    ctx.drawImage(element.scribble, 0, 0);
-    element.image.src = canvas.toDataURL();
-    await element.image.decode();
-
-    element.gallery = element.gallery.filter((e) => e !== element.scribble);
-    element.scribble = null;
-    */
 
     painterElement = null;
     layeredCanvas.mode = null;
@@ -129,6 +120,10 @@
     if (painterAutoGenerate == null) { return; }
     if (painterElement == null) { return; }
     if (!autoGeneration) { return; }
+
+    if (painterElement.image == null) {
+      painterElement.image = document.createElement('img');
+    }
 
     painterAutoGenerate.doScribble(
       url,
