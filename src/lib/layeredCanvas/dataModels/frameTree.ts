@@ -749,19 +749,22 @@ export function constraintRecursive(layout: Layout): void {
     for (const child of layout.children) {
       constraintRecursive(child);
     }
-  } else if (layout.element && layout.element.image) {
+  } else if (layout.element && (layout.element.image || layout.element.scribble)) {
     constraintLeaf(layout);
   }
 }
 
 export function constraintLeaf(layout: Layout): void {
   if (!layout.corners) {return; }
-  if (!layout.element.image) { return; }
+  if (!layout.element.image && !layout.element.scribble) { return; }
+
+  const imageWidth = layout.element.image?.naturalWidth ?? layout.element.scribble?.naturalWidth;
+  const imageHeight = layout.element.image?.naturalHeight ?? layout.element.scribble?.naturalHeight;
 
   const element = layout.element;
   const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
   const [w, h] = [x1 - x0, y1 - y0];
-  const [iw, ih] = [element.image.naturalWidth, element.image.naturalHeight];
+  const [iw, ih] = [imageWidth, imageHeight];
   console.log('constraintLeaf', iw, ih, w, h, element.scale);
 
   let scale = element.scale[0];

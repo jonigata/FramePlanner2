@@ -82,7 +82,7 @@
 
   function applyTemplate(event: CustomEvent<FrameElement>) {
     const p = $newPageProperty;
-    const page = newPage(event.detail);
+    const page = newPage(event.detail.clone());
     page.paperSize = [...p.paperSize];
     page.paperColor = p.paperColor;
     page.frameColor = p.frameColor;
