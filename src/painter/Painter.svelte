@@ -34,17 +34,21 @@
     painterPage = page;
     painterElement = element;
 
+    console.log("START", element.showsScribble);
+    /*
     if (!element.image) { 
       element.image = await makePlainImage(512, 512, true);
       element.gallery.push(element.image);
       constraintElement(page, element, true);
     }
+    */
     if (!element.scribble) {
-      element.scribble = await makePlainImage(element.image.naturalWidth, element.image.naturalHeight, false);
+      const width = element.image ? element.image.naturalWidth : 512;
+      const height = element.image ? element.image.naturalHeight : 512;
+      element.scribble = await makePlainImage(width, height, false);
       element.gallery.push(element.scribble);
+      constraintElement(true);
     }
-
-    element.image.fileId = undefined;
 
     layeredCanvas.mode = "scribble";
 
@@ -54,6 +58,7 @@
   async function onDone() {
     console.log("onScribbleDone")
 
+    /*
     // merge
     const element = painterElement;
     await element.scribble.decode();
@@ -68,6 +73,7 @@
 
     element.gallery = element.gallery.filter((e) => e !== element.scribble);
     element.scribble = null;
+    */
 
     painterElement = null;
     layeredCanvas.mode = null;
@@ -106,13 +112,11 @@
     return arrayLayer.array.papers[indexOfPage(painterPage)].paper;
   }
 
-  function constraintElement(page: Page, element: FrameElement, shrinkBeforeConstraint: boolean) {
-    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-    const layout = findLayoutOf(pageLayout, element);
+  function constraintElement() {
+    const pageLayout = calculatePhysicalLayout(painterPage.frameTree, painterPage.paperSize, [0,0]);
+    const layout = findLayoutOf(pageLayout, painterElement);
     if (!layout) { return; }
-    if (shrinkBeforeConstraint) {
-      element.scale = [0.001, 0.001];
-    }
+    painterElement.scale = [0.001, 0.001];
     constraintLeaf(layout);
   }
 
@@ -138,7 +142,13 @@
 
 <div>
 {#if painterElement != null}
-  <PainterToolBox on:setTool={onSetTool} on:done={onDone} on:redraw={onRedraw} bind:element={painterElement} bind:autoGeneration={autoGeneration} bind:lcm={lcm}/>
+  <PainterToolBox 
+    on:setTool={onSetTool} 
+    on:done={onDone} 
+    on:redraw={onRedraw} 
+    bind:element={painterElement} 
+    bind:autoGeneration={autoGeneration} 
+    bind:lcm={lcm}/>
   <PainterAutoGenerate bind:this={painterAutoGenerate}/>
 {/if}
 </div>

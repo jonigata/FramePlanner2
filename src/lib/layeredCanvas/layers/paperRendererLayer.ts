@@ -201,11 +201,9 @@ export class PaperRendererLayer extends Layer {
         ctx.clip(); // this.renderFrameBackgroundで描画したものをクリップ
       }
 
-      if (element.image) {
-        this.drawImage(ctx, layout);
-        if (element.focused) {
-          this.drawImageFrame(ctx, layout);
-        }
+      this.drawImage(ctx, layout);
+      if (element.focused) {
+        this.drawImageFrame(ctx, layout);
       }
 
       if (embeddedBubbles.has(layout)) {
@@ -330,17 +328,24 @@ export class PaperRendererLayer extends Layer {
 
   drawImage(ctx: CanvasRenderingContext2D, layout: Layout) {
     const element = layout.element;
+    if (!element.image && !element.scribble) { return; }
+
     const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
 
     ctx.save();
     ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
     ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
     ctx.rotate(-element.rotation * Math.PI / 180);
-    ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
-    ctx.drawImage(element.image, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
-    if (!element.image && element.scribble) {
-      ctx.drawImage(element.scribble, 0, 0, element.image.naturalWidth, element.image.naturalHeight);
+
+    function drawIt(img: HTMLImageElement) {
+      ctx.save();
+      ctx.translate(-img.naturalWidth * 0.5, -img.naturalHeight * 0.5);
+      ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+      ctx.restore();
     }
+
+    if (element.image) {drawIt(element.image);}
+    if (element.showsScribble && element.scribble) {drawIt(element.scribble);}
     ctx.restore();
   }
 
@@ -351,9 +356,9 @@ export class PaperRendererLayer extends Layer {
     ctx.save();
     ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
     ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-    ctx.translate(-element.image.naturalWidth * 0.5, -element.image.naturalHeight * 0.5);
+    ctx.translate(-element.scribble.naturalWidth * 0.5, -element.scribble.naturalHeight * 0.5);
     ctx.beginPath();
-    ctx.rect(0, 0, element.image.naturalWidth, element.image.naturalHeight);
+    ctx.rect(0, 0, element.scribble.naturalWidth, element.scribble.naturalHeight);
     ctx.strokeStyle = "rgb(0, 0, 255)";
     ctx.lineWidth = 2;
     ctx.stroke();

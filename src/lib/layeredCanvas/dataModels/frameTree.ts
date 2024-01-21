@@ -37,6 +37,7 @@ export class FrameElement {
   semantics: string | null;
   prompt: string | null;
   gallery: ImageFile[];
+  showsScribble: boolean;
 
   image: ImageFile;
   scribble: ImageFile;
@@ -63,6 +64,7 @@ export class FrameElement {
     this.visibility = 2;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
     this.gallery = [];
+    this.showsScribble = true;
     this.semantics = null;
 
     // リーフ要素の場合は絵がある可能性がある
@@ -87,10 +89,13 @@ export class FrameElement {
     element.borderColor = this.borderColor;
     element.borderWidth = this.borderWidth;
     element.image = this.image;
+    element.scribble = this.scribble;
+    element.gallery = [...this.gallery];
     element.z = this.z;
     element.visibility = this.visibility;
     element.semantics = this.semantics;
     element.prompt = this.prompt;
+    element.showsScribble = this.showsScribble;
     return element;
   }
 
@@ -122,6 +127,7 @@ export class FrameElement {
     element.visibility = markUp.visibility ?? 2;
     element.semantics = markUp.semantics;
     element.prompt = markUp.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+    element.showsScribble = markUp.showsScribble ?? true;
 
     const children = markUp.column ?? markUp.row;
     if (!children) {
@@ -169,6 +175,7 @@ export class FrameElement {
     if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
     if (element.semantics) { markUpElement.semantics = element.semantics; }
     if (element.prompt) { markUpElement.prompt = element.prompt; }
+    if (element.showsScribble !== true) { markUpElement.showsScribble = element.showsScribble; }
     if (element.direction) {
       const dir = element.direction == 'h' ? 'row' : 'column';
       markUpElement[dir] = [];

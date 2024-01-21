@@ -28,6 +28,7 @@
       const img = await generateImageWithScribble(url, source, prompt, lcm);
       target.src = img.src;
       await target.decode();
+      target.fileId = undefined;
     } catch (e) {
       console.log(e);
       // toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});

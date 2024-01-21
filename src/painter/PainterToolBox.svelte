@@ -10,7 +10,6 @@
   export let autoGeneration = false;
 
   let chosenTool = null;
-  let canvas;
   
   const dispatch = createEventDispatcher();
 

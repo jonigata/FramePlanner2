@@ -73,12 +73,18 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
   const image = frameTree.image;
+  const scribble = frameTree.scribble;
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
 
   if (image) {
     await saveImage(fileSystem, image, imageFolder);
     const fileId = image["fileId"][fileSystem.id];
     markUp.image = fileId;
+  }
+  if (scribble) {
+    await saveImage(fileSystem, scribble, imageFolder);
+    const fileId = scribble["fileId"][fileSystem.id];
+    markUp.scribble = fileId;
   }
 
   const children = [];
@@ -184,10 +190,15 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
 async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
+  frameTree.gallery = [];
   if (markUp.image) {
     frameTree.image = await loadImage(fileSystem, markUp.image);
-    frameTree.gallery = [frameTree.image];
+    frameTree.gallery.push(frameTree.image);
   }
+  if (markUp.scribble) {
+    frameTree.scribble = await loadImage(fileSystem, markUp.scribble);
+    frameTree.gallery.push(frameTree.scribble);
+  } 
 
   const children = markUp.column ?? markUp.row;
   if (children) {
