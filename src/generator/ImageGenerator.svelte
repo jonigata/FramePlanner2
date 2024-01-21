@@ -6,6 +6,8 @@
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { tick } from "svelte";
   import type { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+  import { mainBook } from '../bookeditor/bookStore';
+  import { commitBook } from '../bookeditor/book';
 
   let busy: boolean;
   let tabSet: number = 0;
@@ -38,6 +40,8 @@
       chosen = null;
       t.prompt = prompt;
       t.image = c;
+      commitBook($mainBook, null);
+      $mainBook = $mainBook;
     }
   }
 

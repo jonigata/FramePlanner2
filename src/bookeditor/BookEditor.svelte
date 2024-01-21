@@ -129,6 +129,7 @@
   }
 
   function modalGenerate(page: Page, e: FrameElement) {
+    delayedCommiter.force();
     $imageGeneratorTarget = e;
   }
 
