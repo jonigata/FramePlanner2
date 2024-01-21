@@ -283,7 +283,8 @@ export class FrameElement {
         const index = parent.children.indexOf(target);
         const spacing = target.divider.spacing;
         const length = target.rawSize;
-        const newElement = new FrameElement((length - spacing) / 2);
+        const newElement = target.clone();
+        newElement.rawSize = (length - spacing) / 2;
         newElement.divider = {...target.divider};
         newElement.calculateLengthAndBreadth();
         target.rawSize = newElement.rawSize;
@@ -297,15 +298,9 @@ export class FrameElement {
         const length = target.rawSize;
         newElement.direction = splitDirection;
         for (let i = 0; i < 2; i++) {
-          const newChild = new FrameElement(target.rawSize);
+          const newChild = target.clone();
           newChild.calculateLengthAndBreadth();
           newElement.children.push(newChild);
-        }
-        if (target.image) {
-          newElement.children[0].image = target.image;
-          newElement.children[0].translation = target.translation;
-          newElement.children[0].scale = target.scale;
-          newElement.children[0].rotation = target.rotation;
         }
         newElement.divider = {...target.divider};
         newElement.children[0].divider.spacing = length * 0.05;
