@@ -20,6 +20,8 @@ export class FloorLayer extends Layer {
     if (scale < 0.1) scale = 0.1;
     if (scale > 10) scale = 10;
     scale = Math.round(scale * 100) / 100;
+    this.viewport.translate[0] *= scale / this.viewport.scale;
+    this.viewport.translate[1] *= scale / this.viewport.scale;
     this.viewport.scale = scale;
     this.viewport.dirty = true;
     this.redraw();
