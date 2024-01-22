@@ -50,14 +50,19 @@
 
       const sharedBook = await loadSharedBook();
       if (sharedBook) {
+        console.log("sharedBook", sharedBook);
         currentFile = null;
         book = sharedBook;
-      }
-
-      if (currentFile) {
+        currentRevision = {...book.revision};
+        $mainBook = book;
+        $fileManagerRefreshKey++;
+        await recordCurrentFileId(book.revision.id);
+        logEvent(getAnalytics(), 'shared_page');
+      } else if (currentFile) {
         const newBook = await loadBookFrom(fileSystem, currentFile.asFile());
         currentRevision = {...newBook.revision};
         $mainBook = newBook;
+        logEvent(getAnalytics(), 'continue_page');
       } else {
         // 初起動の場合、またはsharedPageを読んでいる場合はデスクトップにセーブ
         const root = await fileSystem.getRoot();
@@ -117,23 +122,6 @@
     }
     return null;
   }
-
-/* BookEditor行きか？
-  $:onNewFileRequest($newFileToken);
-  async function onNewFileRequest(page: Page) {
-    if (page) {
-      console.log("onNewFileRequest", page);
-      $newFileToken = null;
-      const root = await fileSystem.getRoot();
-      const desktop = await root.getNodeByName("デスクトップ");
-      await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), page);
-      currentRevision = {...page.revision};
-      $mainPage = page;
-
-      $fileManagerRefreshKey++;
-    }
-  }
-*/
 
   $:onNewBookRequest($newBookToken);
   async function onNewBookRequest(book: Book) {
