@@ -1,6 +1,6 @@
-import { writable } from "svelte/store";
+import { type Writable, writable } from "svelte/store";
 
-export const toolTipRequest = writable(null);
+export const toolTipRequest: Writable<{message: string, position: {x: number, y: number}}> = writable(null);
 
 export function toolTip(node, message) {
   let timeoutId = null;

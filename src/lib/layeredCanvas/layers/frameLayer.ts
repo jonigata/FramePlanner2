@@ -1,11 +1,11 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromBox, type Padding } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromBox } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { BaseIcon, ClickableIcon, MultistateIcon } from "../tools/draw/clickableIcon";
 import { trapezoidPath } from "../tools/geometry/trapezoid";
-import type { Vector, Rect } from '../tools/geometry/geometry';
+import type { Vector } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 
 const iconUnit: Vector = [32,32];
@@ -167,7 +167,17 @@ export class FrameLayer extends Layer {
   updateFocus(point: Vector): void {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
-    const setUpFocusedLayout = () => {
+    this.focusedPadding = null;
+    this.focusedBorder = null;
+    this.focusedLayout = null;
+
+    if (keyDownFlags["KeyB"]) {
+      this.focusedPadding = findPaddingAt(layout, point);
+      return;
+    }
+
+    this.focusedLayout = findLayoutAt(layout, point);
+    if (this.focusedLayout) {
       const cp = (ro, ou) => ClickableIcon.calcPosition([origin[0]+10, origin[1]+10, size[0]-20, size[1]-20],iconUnit, ro, ou);
       const origin = this.focusedLayout.origin;
       const size = this.focusedLayout.size;
@@ -194,39 +204,10 @@ export class FrameLayer extends Layer {
       this.scribbleIcon.position = cp([0,1], [0,-3]);
       this.redraw();
 
-      const x = origin[0] + size[0] / 2;
-      if (this.hintIfContains(point, this.frameIcons)) {
-      } else if (this.focusedLayout.element.image) {
-        this.hint([x, origin[1] - 8],"ドラッグで移動、Ctrl+ドラッグでスケール、Alt+ドラッグで回転");
-      } else if (0 < this.focusedLayout.element.visibility) {
-        this.hint([x, origin[1] + 48], "画像をドロップ");
-      } else {
-        this.hint([x, origin[1] + 48], null);
-      }
-      return;
-    }
-
-    this.focusedPadding = null;
-    this.focusedBorder = null;
-    this.focusedLayout = null;
-
-    if (keyDownFlags["KeyB"]) {
-      this.focusedPadding = findPaddingAt(layout, point);
-      if (this.focusedPadding) {
-        this.hint(point, "ドラッグでパディング変更");
-        this.redraw();
-      }
-      return;
-    }
-
-    this.focusedLayout = findLayoutAt(layout, point);
-    if (this.focusedLayout) {
-      setUpFocusedLayout();
-
       // アイコンはボーダーに優先
       for (let e of this.frameIcons) {
         if (e.contains(point)) {
-          return ;
+          return;
         }
       }
     }
@@ -236,11 +217,6 @@ export class FrameLayer extends Layer {
       this.focusedLayout = null;
       this.updateBorderIconPositions(this.focusedBorder);
       this.redraw();
-
-      if (!this.hintIfContains(point, this.borderIcons)) {
-        this.hint(point, null);
-      }
-      return;
     } 
   }
 
@@ -252,7 +228,27 @@ export class FrameLayer extends Layer {
     }
     if (keyDownFlags["Space"]) { return; }
     this.updateFocus(position);
-  }
+
+    if (this.focusedLayout) {
+      const origin = this.focusedLayout.origin;
+      const size = this.focusedLayout.size;
+      const x = origin[0] + size[0] / 2;
+      if (this.hintIfContains(position, this.frameIcons)) {
+      } else if (this.focusedLayout.element.image) {
+        this.hint([x, origin[1] - 8],"ドラッグで移動、Ctrl+ドラッグでスケール、Alt+ドラッグで回転");
+      } else if (0 < this.focusedLayout.element.visibility) {
+        this.hint([x, origin[1] + 48], "画像をドロップ");
+      } else {
+        this.hint([x, origin[1] + 48], null);
+      }
+    } else if (this.focusedPadding) {
+      this.hint(position, "ドラッグでパディング変更");
+      this.redraw();
+    } else if (!this.hintIfContains(position, this.borderIcons)) {
+      this.hint(position, null);
+    }
+    return;
+}
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (event.code === "KeyV" && event.ctrlKey) {

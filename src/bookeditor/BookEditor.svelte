@@ -33,14 +33,12 @@
   let painter: Painter;
 
   $: if ($viewport && !$viewport.dirty) {
-    console.log("BookEditor", $viewport);    
     $viewport.dirty = true;
     $viewport = $viewport;
     layeredCanvas?.redraw();
   }
 
   $: if ($redrawToken) {
-    console.log("BookEditor", $redrawToken);
     $redrawToken = false;
     layeredCanvas?.redraw();
   }
@@ -259,6 +257,7 @@
   }
 
   function modalScribble(page: Page, element: FrameElement) {
+    toolTipRequest.set(null);
     painter.start(page, element);
   }
 

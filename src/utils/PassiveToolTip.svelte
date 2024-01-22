@@ -2,17 +2,15 @@
   import { toolTipRequest } from "./passiveToolTipStore";
   import { tick } from "svelte";
 
-  // TODO: fontChooserOpenとかaboutOpen見に行ってるの見苦しい
-
   let tooltip = null;
   let position = { x: 0, y: 0 };
 
   $: onRequest($toolTipRequest);
-  async function onRequest($toolTipRequest: any) {
-    if (!$toolTipRequest || !tooltip) return;
-
-    await tick();
-    position = $toolTipRequest.position;
+  async function onRequest(r: any) {
+    if (!r || !tooltip) return;
+    
+    await tick(); // 多分要素の内容が更新されるまで待っている
+    position = r.position;
 
     // ツールチップの幅の半分が指定したx位置よりも大きい場合、left位置を調整
     if (position.x < tooltip.clientWidth / 2) {

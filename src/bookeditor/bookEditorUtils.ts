@@ -6,7 +6,7 @@ import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
 import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
-import { initializeKeyCache, keyDownFlags } from '../lib/layeredCanvas/system/keyCache';
+import { initializeKeyCache } from '../lib/layeredCanvas/system/keyCache';
 import type { Book, Page, BookOperators } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
