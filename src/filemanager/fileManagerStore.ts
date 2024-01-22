@@ -21,6 +21,7 @@ export const newBubbleToken: Writable<Bubble> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 export const fileSystem: Writable<FileSystem> = writable(null);
 export const shareBookToken: Writable<Book> = writable(null);
+export const fileManagerUsedSize: Writable<number> = writable(null);
 
 const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
 
@@ -122,9 +123,6 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   const content = await file.read();
   const serializedBook = JSON.parse(content);
 
-  const root = await fileSystem.getRoot();
-  const imageFolder = await root.getNodeByName('画像') as Folder;
-
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
   if (!serializedBook.pages) {
     const serializedPage = serializedBook;
@@ -185,7 +183,6 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
 
   return book;
 }
-
 
 async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
@@ -292,3 +289,47 @@ export async function loadBubbleFrom(file: File): Promise<Bubble> {
   const bubble = Bubble.compile([64, 96], markUp);
   return bubble;
 }
+
+export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images: NodeId[]) { // ガベコレの調査用
+  const content = await file.read();
+  let serializedBook = JSON.parse(content);
+
+  const root = await fileSystem.getRoot();
+  const imageFolder = await root.getNodeByName('画像') as Folder;
+
+  // マイグレーションとして、BookではなくPageのみを保存している場合がある
+  if (!serializedBook.pages) {
+    serializedBook = {
+      pages: [serializedBook],
+    }
+  }
+
+  for (const serializedPage of serializedBook.pages) {
+    const frameTree = dryUnpackFrameImages(serializedPage.frameTree, images);
+    const bubbles = dryUnpackBubbleImages(serializedPage.bubbles, images);
+  }
+}
+
+function dryUnpackFrameImages(markUp: any, images: NodeId[]) {
+  const frameTree = FrameElement.compileNode(markUp);
+
+  if (markUp.image) {images.push(markUp.image);}
+  if (markUp.scribble) {images.push(markUp.scribble);} 
+
+  const children = markUp.column ?? markUp.row;
+  if (children) {
+    for (let child of children) {
+      dryUnpackFrameImages(child, images);
+    }
+  }
+}
+
+function dryUnpackBubbleImages(bubbles: any[], images: NodeId[]) {
+  const unpackedBubbles: Bubble[] = [];
+  for (const src of bubbles) {
+    const image = src.image;
+    if (image) {images.push(image.image);}
+  }
+}
+
+

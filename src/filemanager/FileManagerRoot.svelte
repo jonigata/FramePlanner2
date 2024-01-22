@@ -1,14 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken } from "./fileManagerStore";
+  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
-  import type { Page, Book } from '../bookeditor/book';
+  import type { Book } from '../bookeditor/book';
   import { newBook, revisionEqual, commitBook } from '../bookeditor/book';
-  import { mainBook, mainPage } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
-  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
-  import { modalStore } from '@skeletonlabs/skeleton';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
   import type { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
@@ -18,6 +17,8 @@
   import { createPage } from '../weaver/weaverStore';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
+  import { collectGarbage } from '../utils/garbageCollection';
+  import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
 
   export let fileSystem: FileSystem;
 
@@ -29,6 +30,14 @@
   let trash = null;
   // let templates: [BindId, string, Node] = null;
   let currentRevision: Revision = null;
+
+  $: onOpen($fileManagerOpen);
+  async function onOpen(open: boolean) {
+    if (open) {
+      $fileManagerUsedSize = await fileSystem.collectTotalSize();
+      console.log("used size updated");
+    }
+  }
 
   $:onUpdateBook($mainBook);
   async function onUpdateBook(book: Book) {
@@ -177,12 +186,49 @@
     toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
   }
 
+  async function displayStoredImages() {
+    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
+
+    const usedImages = [];
+    for (const imageFile of usedImageFiles) {
+      const file = await fileSystem.getNode(imageFile as NodeId);
+      const image = await file.asFile().readImage();
+      await image.decode();
+      console.log("loaded image", imageFile);
+      usedImages.push(image);
+    }
+
+    const strayImages = [];
+    for (const imageFile of strayImageFiles) {
+      const file = await fileSystem.getNode(imageFile as NodeId);
+      const image = await file.asFile().readImage();
+      await image.decode();
+      console.log("loaded image", imageFile);
+      strayImages.push(image);
+    }
+
+    $browserUsedImages = usedImages;
+    $browserStrayImages = strayImages;
+    modalStore.close();
+
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'fileBrowser',
+    };
+    modalStore.trigger(d);    
+  }
+
+  function formatMillions(number) {
+    return (number / 1000000).toFixed(2) + 'M';
+  }
+
   onMount(async () => {
     root = await fileSystem.getRoot();
-    desktop = await root.getEntryByName("デスクトップ");
-    cabinet = await root.getEntryByName("キャビネット");
-    trash = await root.getEntryByName("ごみ箱");
-    // templates = await root.getEntryByName("テンプレート");
+    desktop = await root.getEmbodiedEntryByName("デスクトップ");
+    cabinet = await root.getEmbodiedEntryByName("キャビネット");
+    trash = await root.getEmbodiedEntryByName("ごみ箱");
+    // const templates = await root.getEmbodiedEntryByName("テンプレート");
   });
 </script>
 
@@ -228,10 +274,8 @@
   -->
         </div>
       <div class="toolbar">
-        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={$filenameDisplayMode} name="filenameDisplayMode" value={'filename'}>ファイル名</RadioItem>
-          <RadioItem bind:group={$filenameDisplayMode} name="filenameDisplayMode" value={'index'}>ページ番号</RadioItem>
-        </RadioGroup>
+        <button class="button variant-filled-primary" on:click={displayStoredImages}>埋め込み画像一覧</button>
+        <p>ファイルシステム使用量: {formatMillions($fileManagerUsedSize)}</p>
       </div>
     {/key}
   </Drawer>
@@ -243,6 +287,7 @@
     justify-content: flex-start;
     flex-direction: row;
     margin: 8px;
+    gap: 16px;
   }
   .cabinet {
     margin: 8px;
@@ -250,5 +295,8 @@
   }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
+  }
+  .button {
+    width: 160px;
   }
 </style>

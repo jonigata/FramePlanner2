@@ -43,7 +43,7 @@
     layeredCanvas?.redraw();
   }
 
-  function hint(p: [number, number], s: String) {
+  function hint(p: [number, number], s: string) {
     if (s) {
       const q = convertPointFromNodeToPage(canvas, ...p);
       q.y -= 25;

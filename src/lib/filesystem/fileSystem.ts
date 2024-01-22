@@ -22,6 +22,8 @@ export class FileSystem {
   async getNode(id: NodeId): Promise<Node> {return null;}
 
   async getRoot(): Promise<Folder> { return null; }
+
+  async collectTotalSize(): Promise<number> { return 0; }
 }
 
 export class Node {

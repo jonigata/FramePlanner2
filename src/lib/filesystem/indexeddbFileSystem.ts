@@ -78,6 +78,22 @@ export class IndexedDBFileSystem extends FileSystem {
     const rootId = "/" as NodeId;
     return this.getNode(rootId) as Promise<Folder>;
   }
+
+  async collectTotalSize(): Promise<number> {
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
+    let cursor = await store.openCursor();
+    let total = 0;
+    while (cursor) {
+      if (cursor.value.type === 'file') {
+        total += cursor.value.content.length;
+      }
+      cursor = await cursor.continue();
+    }
+    await tx.done;
+    return total;
+  }
+
 }
 
 export class IndexedDBFile extends File {

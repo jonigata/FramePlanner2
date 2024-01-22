@@ -27,6 +27,7 @@
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
+  import FileBrowser from './utils/FileBrowser.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -40,6 +41,9 @@
     },
     weaver: {
       ref: StoryWeaver,
+    },
+    fileBrowser: {
+      ref: FileBrowser,
     },
   };
 
