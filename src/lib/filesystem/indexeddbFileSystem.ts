@@ -26,8 +26,12 @@ export class IndexedDBFileSystem extends FileSystem {
 
   async createFile(_type: string): Promise<File> {
     console.log("createFile", _type);
+    return this.createFileWithId(ulid() as NodeId, _type);
+  }
+
+  async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
+    console.log("createFile", _type);
     try {
-      const id = ulid() as NodeId;
       const file = new IndexedDBFile(this, id, this.db);
       const tx = this.db.transaction("nodes", "readwrite");
       const store = tx.store;

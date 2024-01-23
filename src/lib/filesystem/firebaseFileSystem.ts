@@ -36,7 +36,10 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async createFile(_type: string): Promise<File> {
-    const id = push(this.nodesRef).key as NodeId;
+    return this.createFileWithId(push(this.nodesRef).key as NodeId, _type);
+  }
+
+  async createFileWithId(id: NodeId, _type: string): Promise<File> {
     const fileRef = child(this.nodesRef, id);
     await set(child(fileRef, 'type'), 'file');
     const file = new FirebaseFile(this, id);

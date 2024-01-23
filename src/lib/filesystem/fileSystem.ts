@@ -16,6 +16,7 @@ export class FileSystem {
   }
 
   async createFile(type: string = 'text'): Promise<File> {return null;}
+  async createFileWithId(id: NodeId, type: string = 'text'): Promise<File> {return null;}
   async createFolder(): Promise<Folder> {return null;}
   async destroyNode(id: NodeId): Promise<void> {}
 

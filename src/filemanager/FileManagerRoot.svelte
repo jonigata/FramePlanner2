@@ -19,6 +19,7 @@
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { collectGarbage } from '../utils/garbageCollection';
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
+  import { ulid } from 'ulid';
 
   export let fileSystem: FileSystem;
 
@@ -45,36 +46,31 @@
     if (book == null) {
       modalStore.trigger({ type: 'component',component: 'waiting' });    
 
+      if (await loadSharedBook()) {
+        // shared bookがある場合、内部でリダイレクトする
+        return;
+      }
+
       const currentFileId = (await fetchCurrentFileId()) as NodeId;
       let currentFile = currentFileId ? await fileSystem.getNode(currentFileId) : null; // 存在しない場合null
 
-      const sharedBook = await loadSharedBook();
-      if (sharedBook) {
-        console.log("sharedBook", sharedBook);
-        currentFile = null;
-        book = sharedBook;
-        currentRevision = {...book.revision};
-        $mainBook = book;
-        $fileManagerRefreshKey++;
-        await recordCurrentFileId(book.revision.id);
-        logEvent(getAnalytics(), 'shared_page');
-      } else if (currentFile) {
+      if (currentFile) {
         const newBook = await loadBookFrom(fileSystem, currentFile.asFile());
         currentRevision = {...newBook.revision};
         $mainBook = newBook;
-        logEvent(getAnalytics(), 'continue_page');
+        logEvent(getAnalytics(), 'continue_book');
       } else {
-        // 初起動の場合、またはsharedPageを読んでいる場合はデスクトップにセーブ
+        // 初起動の場合はデスクトップにセーブ
         const root = await fileSystem.getRoot();
         const desktop = await root.getNodeByName("デスクトップ");
-        book = newBook('not visited', sharedBook ? "shared-" : "initial-", 0);
+        book = newBook('not visited', "initial-", 0);
         await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
+        await recordCurrentFileId(book.revision.id);
 
         currentRevision = {...book.revision};
         $mainBook = book;
         $fileManagerRefreshKey++;
-        await recordCurrentFileId(book.revision.id);
-        logEvent(getAnalytics(), 'new_page');
+        logEvent(getAnalytics(), 'new_book');
       }
 
       modalStore.close();
@@ -91,36 +87,61 @@
     }
   }
 
-  async function loadSharedBook(): Promise<Book> {
+  async function loadSharedBook(): Promise<boolean> {
+    const root = await fileSystem.getRoot();
+    const desktop = (await root.getNodeByName("デスクトップ")).asFolder();
+
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
     if (urlParams.has('user') && urlParams.get('key')) {
+      logEvent(getAnalytics(), 'shared');
       const user = urlParams.get('user');
       const key = urlParams.get('key');
       console.log("user:key = ", user, key);
 
-      const fileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
-      const file = await fileSystem.getNode(key as NodeId);
-      const book = await loadBookFrom(fileSystem, file.asFile());
-      return book;
-    }
-    if (urlParams.has('build')) {
-      logEvent(getAnalytics(), 'gpt-build');
+      if (await fileSystem.getNode(key as NodeId) == null) {
+        // 読んだことがなければ読み込んでローカルに保存
+        console.log("shared page load from server", window.location.href);
+        const remoteFileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
+        const remoteFile = await remoteFileSystem.getNode(key as NodeId);
+        const book = await loadBookFrom(remoteFileSystem, remoteFile.asFile());
+
+        // ここでidはulidではなくfirebaseのpushで与えられるidになるが、
+        // 重なることはほぼないので、そのまま使う
+        const localFile = await fileSystem.createFileWithId(key as NodeId);
+        await saveBookTo(book, fileSystem, localFile);
+        await desktop.link(getCurrentDateTime(), localFile.id);
+      }
+      await recordCurrentFileId(key as NodeId);
+    } else if (urlParams.has('build')) {
+      logEvent(getAnalytics(), 'gpt_build');
       const build = urlParams.get('build');
       const storyboard = await getLayover(build);
 
       console.log(storyboard.pages[0]);
       const page = createPage(storyboard.pages[0], '');
 
+      const localFile = await fileSystem.createFile();
       const book: Book = {
-        revision: { id: 'gpt-build', revision:1, prefix: 'gpt-build-' },
+        revision: { id: localFile.id, revision:1, prefix: 'gpt-build-' },
         pages: [page],
         history: { entries: [], cursor: 0 },
       }
       commitBook(book, null);
-      return book;
+      await saveBookTo(book, fileSystem, localFile);
+      await desktop.link(getCurrentDateTime(), localFile.id);
+      await recordCurrentFileId(localFile.id as NodeId);
+    } else {
+      return false;
     }
-    return null;
+  
+    // いずれにせよリダイレクト
+    let currentUrl = new URL(window.location.href);
+    let urlWithoutQuery = currentUrl.origin + currentUrl.pathname;      
+
+    window.history.replaceState(null, null, urlWithoutQuery);
+    window.location.href = urlWithoutQuery;
+    return true;
   }
 
   $:onNewBookRequest($newBookToken);
@@ -134,6 +155,7 @@
       currentRevision = {...book.revision};
       $mainBook = book;
       $fileManagerRefreshKey++;
+      logEvent(getAnalytics(), 'new_book');
     }
   }
 
