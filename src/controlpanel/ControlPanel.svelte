@@ -78,6 +78,7 @@
     const p = $newPageProperty;
     p.paperSize[0] = w;
     p.paperSize[1] = h;
+    $newPageProperty = p;
   }
 
   function applyTemplate(event: CustomEvent<FrameElement>) {
