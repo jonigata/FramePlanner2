@@ -294,27 +294,29 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
       About
     </button>
+    <!--
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={toggleJsonEditor}>
       JSON Editor
     </button>
-  </div>  
-  <div class="hbox gap mx-2" style="margin-top: 8px;">
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
-      Download JSON
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareBook}>
-      Share
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
-      Export PSD
-    </button>
-  </div>  
-  <div class="hbox gap mx-2" style="margin-top: 8px;">
+    -->
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={batchImaging}>
       Batch imaging
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
       Weaver
+    </button>
+  </div>  
+  <div class="hbox gap mx-2" style="margin-top: 8px;">
+    <!--
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
+      Download JSON
+    </button>
+    -->
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareBook}>
+      Share
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
+      Export PSD
     </button>
   </div>  
 </div>
@@ -324,7 +326,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 740px;
+    height: 720px;
     display: flex;
     flex-direction: column;
     top: 20px;
