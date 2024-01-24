@@ -110,7 +110,7 @@
         // 重なることはほぼないので、そのまま使う
         const localFile = await fileSystem.createFileWithId(key as NodeId);
         await saveBookTo(book, fileSystem, localFile);
-        await desktop.link(getCurrentDateTime(), localFile.id);
+        await desktop.link("シェア " + getCurrentDateTime(), localFile.id);
       }
       await recordCurrentFileId(key as NodeId);
     } else if (urlParams.has('build')) {

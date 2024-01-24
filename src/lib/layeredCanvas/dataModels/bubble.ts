@@ -191,7 +191,6 @@ export class Bubble {
     );
   }
 
-  // TODO: どっちか不要？
   static forceEnoughSize(size: Vector): Vector {
     return [
       Math.max(size[0], minimumBubbleSize + 1),
@@ -201,7 +200,7 @@ export class Bubble {
 
   forceEnoughSize() {
     const enoughSize = Bubble.forceEnoughSize(this.size);
-    this.size.splice(0, 2, ...enoughSize);
+    this.size = enoughSize;
   }
 
   contains(p: Vector): boolean {

@@ -204,6 +204,7 @@ function calculateFitBubbleSize(bubble: Bubble) {
   size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
   bubble.size = size;
   bubble.forceEnoughSize();
+  console.log(bubble.size);
 }
 
 export type NodePack = {

@@ -430,6 +430,7 @@ export class BubbleLayer extends Layer {
       const m = measureHorizontalText(ctx, Infinity, s, baselineSkip, false);
       size = [Math.floor(m.width*1.4), Math.floor(m.height*1.2)];
     }
+    console.log(size);
     return Bubble.forceEnoughSize(size);
   }
 
