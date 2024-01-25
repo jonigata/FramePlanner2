@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { derived } from "svelte/store";
+  import writableDerived from "svelte-writable-derived";
   import { draggable } from '@neodrag/svelte';
   import NumberEdit from '../../utils/NumberEdit.svelte';
   import '../../box.css';
@@ -13,7 +15,7 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
-  import { type BubbleInspectorPosition, bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
+  import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
 
   import bubbleIcon from '../../assets/title-bubble.png';
@@ -33,6 +35,41 @@
   let textarea = null;
   let inspectorSize = [0, 0];
   let inspector = null;
+
+  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
+  const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
+  const fontSize = writableDerived(
+  	bubbleInspectorTarget,
+  	(bit) => bit?.bubble.getPhysicalFontSize(bit.page.paperSize),
+  	(fs, bit) => {
+      bit.bubble.setPhysicalFontSize(bit.page.paperSize, fs);
+      return bit;
+    }
+  );
+  const outlineWidth = writableDerived(
+  	bubbleInspectorTarget,
+  	(bit) => bit?.bubble.getPhysicalOutlineWidth(bit.page.paperSize),
+  	(ow, bit) => {
+      bit.bubble.setPhysicalOutlineWidth(bit.page.paperSize, ow);
+      return bit;
+    }
+  );
+  const strokeWidth = writableDerived(
+  	bubbleInspectorTarget,
+  	(bit) => bit?.bubble.getPhysicalStrokeWidth(bit.page.paperSize),
+  	(sw, bit) => {
+      bit.bubble.setPhysicalStrokeWidth(bit.page.paperSize, sw);
+      return bit;
+    }
+  );
+  const text = writableDerived(
+  	bubbleInspectorTarget,
+  	(bit) => bit?.bubble.text,
+  	(t, bit) => {
+      bit.bubble.text = t;
+      return bit;
+    }
+  );
 
   $:onWindowResize(innerWidth, innerHeight);
   function onWindowResize(w: number, h: number) {
@@ -120,11 +157,12 @@
 <svelte:window bind:innerWidth bind:innerHeight/>
 
 {#if $bubble}
+{@const bubbleSize = $bubble.getPhysicalSize($bubblePage.paperSize)}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    
     <div class="title-bar variant-filled-surface rounded-container-token">
       <img class="title-image" src={bubbleIcon} alt="title"/>
-      <div class="bubble-size">{Math.round($bubble.size[0])}x{Math.round($bubble.size[1])}</div>
+      <div class="bubble-size">{Math.round(bubbleSize[0])}x{Math.round(bubbleSize[1])}</div>
       {#if pinned}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -152,16 +190,16 @@
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">T</div>
       <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
-        <ExponentialRangeSlider name="fontsize" bind:value={$bubble.fontSize} exponentialMin={100} step={1}/>
+        <ExponentialRangeSlider name="fontsize" bind:value={$fontSize} exponentialMin={100} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$bubble.fontSize}/></div>
+          <div class="number-box"><NumberEdit bind:value={$fontSize}/></div>
         </div>  
         <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={$bubble.fontColor} label="" /></span>
       </div>
       <span class="mx-2">/</span>
       <div class="hbox gap-0.5" use:toolTip={"フチの太さ"}>
         <span>フチ</span>
-        <RangeSlider name="outlinewidth" bind:value={$bubble.outlineWidth} max={20} step={1} style="width:50px;"/>
+        <RangeSlider name="outlinewidth" bind:value={$outlineWidth} max={20} step={1} style="width:50px;"/>
         <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={$bubble.outlineColor} label="" /></span>
       </div>
     </div>
@@ -169,7 +207,7 @@
     <div class="hbox expand gap-2">
       <textarea
         class="my-2 rounded-container-token textarea" 
-        bind:value={$bubble.text}
+        bind:value={$text}
         bind:this={textarea}
         on:keypress={onKeyPress}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
@@ -189,7 +227,7 @@
         <ColorPicker bind:hex={$bubble.strokeColor} label="" />
       </div>
       <div class="hbox" use:toolTip={"フキダシ枠の太さ"}>
-        <RangeSlider name="line" bind:value={$bubble.strokeWidth} max={10} step={1} style="width:100px;"/>
+        <RangeSlider name="line" bind:value={$strokeWidth} max={10} step={1} style="width:100px;"/>
       </div>
       <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">

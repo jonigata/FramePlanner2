@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { derived } from "svelte/store";
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../../utils/NumberEdit.svelte';
-  import { bubble } from './bubbleInspectorStore';
+  import { bubbleInspectorTarget } from './bubbleInspectorStore';
+
+  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
 </script>
 
 <div class="container">

@@ -89,7 +89,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     page.bubbles,
     (bubble: Bubble) => { 
       if (bubble) {
-        const cp = layeredCanvas.paperPositionToCanvasPosition(paper, bubble.center);
+        const cp = layeredCanvas.paperPositionToCanvasPosition(paper, bubble.getPhysicalCenter(page.paperSize));
         focusBubble(page, bubble, cp);
       } else {
         focusBubble(page, null, null);
@@ -111,7 +111,8 @@ function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page
   console.log("potentialCrossPage");
   const arrayLayer = layeredCanvas.rootPaper.findLayer(ArrayLayer);
   const currentPageIndex = book.pages.findIndex(p => p.id === page.id);
-  const p = b.center; // page coordinate
+  const paperSize = book.pages[currentPageIndex].paperSize;
+  const p = b.getPhysicalCenter(paperSize); // paper coordinate
   const q = arrayLayer.array.childPositionToParentPosition(currentPageIndex, p); // array coordinate
   const index = arrayLayer.array.findNearestPaperIndex(q);
   if (index !== currentPageIndex) {
@@ -120,7 +121,7 @@ function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page
       book.pages[currentPageIndex].bubbles.findIndex(e => e.uuid === b.uuid), 1);
     book.pages[index].bubbles.push(b);
     b.pageNumber = index;
-    b.center = arrayLayer.array.parentPositionToChildPosition(index, q);
+    b.setPhysicalCenter(book.pages[index].paperSize, arrayLayer.array.parentPositionToChildPosition(index, q));
     b.parent = null;
     book.pages[currentPageIndex].bubbles.forEach(e => {
       if (e.parent === b.uuid) {

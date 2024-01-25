@@ -1,16 +1,18 @@
 <script lang="ts">
+  import { derived } from "svelte/store";
   import Drawer from '../../utils/Drawer.svelte'
   import { shapeChooserOpen, chosenShape } from "./shapeStore";
   import BubbleSample from "./BubbleSample.svelte";
   import BubbleTemplateSample from './BubbleTemplateSample.svelte';
   import type { BindId } from "../../lib/filesystem/fileSystem";
   import { fileSystem, loadBubbleFrom } from '../../filemanager/fileManagerStore';
-  import { bubble } from './bubbleInspectorStore';
+  import { bubbleInspectorTarget } from './bubbleInspectorStore';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
 
   export let paperWidth = 96;
   export let paperHeight = 96;
 
+  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
 
   let templateBubbles: [Bubble, BindId][] = [];
 
@@ -50,14 +52,14 @@
     $bubble.embedded = b.embedded;
     $bubble.fontStyle = b.fontStyle;
     $bubble.fontWeight = b.fontWeight;
-    $bubble.fontSize = b.fontSize;
+    $bubble.n_fontSize = b.n_fontSize;
     $bubble.fontFamily = b.fontFamily;
     $bubble.direction = b.direction;
     $bubble.fontColor = b.fontColor;
     $bubble.fillColor = b.fillColor;
     $bubble.strokeColor = b.strokeColor;
-    $bubble.strokeWidth = b.strokeWidth;
-    $bubble.outlineWidth = b.outlineWidth;
+    $bubble.n_strokeWidth = b.n_strokeWidth;
+    $bubble.n_outlineWidth = b.n_outlineWidth;
     $bubble.outlineColor = b.outlineColor;
     $bubble.autoNewline = b.autoNewline;
     $bubble.optionContext = b.optionContext;

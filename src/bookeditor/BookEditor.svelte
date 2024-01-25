@@ -1,12 +1,14 @@
+
 <script lang="ts">
   import { onDestroy } from 'svelte';
+  import { derived } from "svelte/store";
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { bubble, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleinspector/bubbleInspectorStore';
+  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken } from './bookStore';
@@ -32,6 +34,9 @@
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
 
+  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
+  const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
+
   $: if ($viewport && !$viewport.dirty) {
     $viewport.dirty = true;
     $viewport = $viewport;
@@ -39,7 +44,7 @@
   }
 
   $: if ($redrawToken) {
-    $redrawToken = false;
+    $redrawToken = false; 
     layeredCanvas?.redraw();
   }
 
@@ -201,24 +206,28 @@
     console.log(text.slice(cursor));
     console.log(text.slice(0,cursor));
 
-    const width = $bubble.size[0];
-    const center = $bubble.center;
+    const paperSize = $bubblePage.paperSize;
+    const bubbleSize = $bubble.getPhysicalSize(paperSize)
+    const width = bubbleSize[0];
+    const center = $bubble.getPhysicalCenter(paperSize);
 
     const newBubble = defaultBubbleSlot.bubble.clone();
-    newBubble.p0 = $bubble.p0;
-    newBubble.p1 = $bubble.p1;
+    newBubble.n_p0 = $bubble.n_p0;
+    newBubble.n_p1 = $bubble.n_p1;
     newBubble.initOptions();
     newBubble.text = text.slice(cursor).trimStart();
     findBubblePage($mainBook, $bubble).bubbles.push(newBubble);
 
     $bubble.text = text.slice(0, cursor).trimEnd();
 
+    const c0: Vector = [center[0] + width / 2, center[1]];
+    const c1: Vector = [center[0] - width / 2, center[1]];
     if ($bubble.direction === 'v') {
-      $bubble.move([center[0] + width / 2, center[1]]);
-      newBubble.move([center[0] - width / 2, center[1]]);
+      $bubble.setPhysicalCenter(paperSize, c0);
+      newBubble.setPhysicalCenter(paperSize, c1);
     } else {
-      $bubble.move([center[0] - width / 2, center[1]]);
-      newBubble.move([center[0] + width / 2, center[1]]);
+      $bubble.setPhysicalCenter(paperSize, c1);
+      newBubble.setPhysicalCenter(paperSize, c0);
     }
 
     commit(null);
@@ -234,25 +243,29 @@
     return null;
   }
 
-  function focusBubble(page: Page, bubble: Bubble, p: Vector) {
+  function focusBubble(page: Page, b: Bubble, p: Vector) {
     console.log("focusBubble");
     delayedCommiter.force();
-    if (bubble) {
+    if (b) {
       const [cx, cy] = p;
       const offset = canvas.height / 2 < cy ? -1 : 1;
+      const bubbleSize = b.getPhysicalSize(page.paperSize);
       
-      bubbleSnapshot = JSON.stringify(Bubble.decompile([512, 512], bubble)); // サイズは比較時に合致してればいいので適当に
-      $bubble = bubble;
+      bubbleSnapshot = JSON.stringify(Bubble.decompile([512, 512], b)); // サイズは比較時に合致してればいいので適当に
+      $bubbleInspectorTarget = {
+        bubble: b,
+        page,
+      };
       $bubbleInspectorPosition = {
         center: convertPointFromNodeToPage(canvas, cx, cy),
-        height: bubble.size[1],
+        height: bubbleSize[1],
         offset
       };
-      defaultBubbleSlot.bubble = bubble;
+      defaultBubbleSlot.bubble = b;
     } else {
       console.log("hiding");
       bubbleSnapshot = null;
-      $bubble = null;
+      $bubbleInspectorTarget = null;
     }
   }
 

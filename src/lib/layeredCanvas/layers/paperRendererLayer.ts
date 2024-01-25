@@ -104,6 +104,8 @@ export class PaperRendererLayer extends Layer {
   }
 
   setUpBubbles(layout: Layout, bubbles: Bubble[]) {
+    const paperSize = this.getPaperSize();
+
     this.resolveLinkages(bubbles);
 
     const embeddedBubbles: EmbeddedBubbles = new Map();
@@ -111,7 +113,7 @@ export class PaperRendererLayer extends Layer {
 
     for (let bubble of bubbles) {
       if (bubble.embedded) {
-        const thisLayout = findLayoutAt(layout, bubble.center);
+        const thisLayout = findLayoutAt(layout, bubble.getPhysicalCenter(paperSize));
         if (thisLayout && 0 < thisLayout.element.visibility && thisLayout.element.isLeaf()) {
           if (!embeddedBubbles.has(thisLayout)) {
             embeddedBubbles.set(thisLayout, []);
@@ -129,6 +131,8 @@ export class PaperRendererLayer extends Layer {
   }
 
   resolveLinkages(bubbles: Bubble[]) {
+    const paperSize = this.getPaperSize();
+
     // 親子関係解決
     // ちょっとお行儀が悪く、path, unitedPath, childrenを書き換えている
     const bubbleDic: {[key: string]: Bubble} = {};
@@ -147,10 +151,11 @@ export class PaperRendererLayer extends Layer {
 
     // パス作成
     for (let bubble of bubbles) {
+      const n_size = [bubble.n_p1[0] - bubble.n_p0[0], bubble.n_p1[1] - bubble.n_p0[1]];
       const ri = bubble.renderInfo;
       const c = {
         shape: bubble.shape,
-        size: bubble.size,
+        size: n_size,
         optionContext: bubble.optionContext,
         rotation: bubble.rotation,
       }
@@ -159,8 +164,9 @@ export class PaperRendererLayer extends Layer {
       if (ri.pathJson != json) {
         // 変更が起きたときのみ
         // const startTime = performance.now();
+        const size = bubble.getPhysicalSize(paperSize);
         ri.pathJson = json;
-        ri.path = getPath(bubble.shape, bubble.size, bubble.optionContext, bubble.text);
+        ri.path = getPath(bubble.shape, size, bubble.optionContext, bubble.text);
         ri.path?.rotate(-bubble.rotation);
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
       }
@@ -168,20 +174,22 @@ export class PaperRendererLayer extends Layer {
 
     // 結合
     for (let bubble of bubbles) {
+      const center = bubble.getPhysicalCenter(paperSize);
       const ri = bubble.renderInfo;
       if (bubble.parent) {
         ri.unitedPath = null;
       } else if (ri.path) {
+        // TODO: childrenが0のとき無駄なことしてない？
         ri.unitedPath = ri.path.clone();
-        ri.unitedPath.translate(bubble.center);
+        ri.unitedPath.translate(center);
         for (let child of ri.children) {
           const ri2 = child.renderInfo;
           const path2 = ri2.path.clone();
-          path2.translate(child.center);
+          path2.translate(child.getPhysicalCenter(paperSize));
           ri.unitedPath = ri.unitedPath.unite(path2);
         }
-        ri.unitedPath.rotate(bubble.rotation, bubble.center);
-        ri.unitedPath.translate(reverse2D(bubble.center));
+        ri.unitedPath.rotate(bubble.rotation, center);
+        ri.unitedPath.translate(reverse2D(center));
       }
     }
   }
@@ -254,16 +262,18 @@ export class PaperRendererLayer extends Layer {
   renderBubbleBackground(ctx: CanvasRenderingContext2D, bubble: Bubble) {
     if (bubble.parent) { return; }
 
-    const size = bubble.size;
+    const paperSize = this.getPaperSize();
+    const size = bubble.getPhysicalSize(paperSize);
+    const strokeWidth = bubble.getPhysicalStrokeWidth(paperSize);
 
     ctx.save();
-    ctx.translate(...bubble.center);
+    ctx.translate(...bubble.getPhysicalCenter(paperSize));
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
     // fill/stroke設定
-    ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
-    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.strokeWidth;
+    ctx.fillStyle = bubble.hasEnoughSize(paperSize) ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
+    ctx.strokeStyle = 0 < strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
+    ctx.lineWidth = strokeWidth;
     
     // shape背景描画
     this.drawBubble(ctx, size, 'fill', bubble);
@@ -289,10 +299,13 @@ export class PaperRendererLayer extends Layer {
       if (drawsUnited) { return; }
     }
 
-    const size = bubble.size;
+    const paperSize = this.getPaperSize();
+    const size = bubble.getPhysicalSize(paperSize);
+    const center = bubble.getPhysicalCenter(paperSize);
+    const strokeWidth = bubble.getPhysicalStrokeWidth(paperSize);
 
     ctx.save();
-    ctx.translate(...bubble.center);
+    ctx.translate(...center);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
     ctx.save();
@@ -305,8 +318,8 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
 
     // shape枠描画
-    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.strokeWidth;
+    ctx.strokeStyle = 0 < strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
+    ctx.lineWidth = strokeWidth;
     this.drawBubble(ctx, size, 'stroke', bubble);
 
     ctx.restore();
@@ -367,19 +380,25 @@ export class PaperRendererLayer extends Layer {
 
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
-    const [w, h] = bubble.size;
-    if (w <= 0 || h <= 0) { return; }
+    const paperSize = this.getPaperSize();
+    const size = bubble.getPhysicalSize(paperSize);
+    const fontSize = bubble.getPhysicalFontSize(paperSize);
+    const offset = bubble.getPhysicalOffset(paperSize);
+    const outlineWidth = bubble.getPhysicalOutlineWidth(paperSize);
+
+    const [w, h] = size;
+    if (w < 1 || h < 1) { return; }
 
     const ri = bubble.renderInfo;
 
     // let startTime = performance.now();
 
     const c = {
-      size: bubble.size,
-      offset: bubble.offset,
+      size: size,
+      offset: offset,
       fontStyle: bubble.fontStyle,
       fontWeight: bubble.fontWeight,
-      fontSize: bubble.fontSize,
+      fontSize: fontSize,
       fontFamily: bubble.fontFamily,
       text: bubble.text,
       direction: bubble.direction,
@@ -405,15 +424,15 @@ export class PaperRendererLayer extends Layer {
       canvas.height = h;
   
       ctx.translate(w * 0.5, h * 0.5);
-      ctx.translate(...bubble.offset);
+      ctx.translate(...offset);
   
-      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss; // horizontal measureより先にないとだめ
       //const text = `${bubble.text}:${bubble.pageNumber}`;
       const text = bubble.text;
   
-      const baselineSkip = bubble.fontSize * 1.5;
-      const charSkip = bubble.fontSize;
+      const baselineSkip = fontSize * 1.5;
+      const charSkip = fontSize;
       const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
       const [tw, th] = [m.width, m.height];
       const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
@@ -424,10 +443,10 @@ export class PaperRendererLayer extends Layer {
       drawText(bubble.direction, ctx, 'fill', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
   
       // フチ
-      if (0 < bubble.outlineWidth) {
+      if (0 < outlineWidth) {
         ctx.globalCompositeOperation = 'destination-over';
         ctx.strokeStyle = bubble.outlineColor;
-        ctx.lineWidth = bubble.outlineWidth;
+        ctx.lineWidth = outlineWidth;
         ctx.font = ss;
         ctx.lineJoin = 'round';
         drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
@@ -445,11 +464,11 @@ export class PaperRendererLayer extends Layer {
       if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
         targetCtx.imageSmoothingEnabled = false;
       } 
-      targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5, ...bubble.size);
+      targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5, ...size);
       targetCtx.restore();
     }
     catch (e) {
-      console.log(w, h, canvas.width, canvas.height, bubble.size);
+      console.log(w, h, canvas.width, canvas.height, size);
       throw e;
     }
   }

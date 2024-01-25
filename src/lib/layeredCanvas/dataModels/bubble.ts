@@ -1,11 +1,21 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Vector, Rect } from '../tools/geometry/geometry';
-import type { V } from 'vitest/dist/types-fe79687a';
+import { rectContains } from '../tools/geometry/geometry';
 
 const minimumBubbleSize = 72;
 const threshold = 10;
 
-export class BubbleRenderInfo { // serializeしない
+export type BubbleBorderHandle = 
+  "top-left"|
+  "top-right"|
+  "bottom-left"|
+  "bottom-right"|
+  "top"|
+  "bottom"|
+  "left"|
+  "right";
+
+  export class BubbleRenderInfo { // serializeしない
   pathJson: string;
   path: paper.PathItem;
   unitedPath: paper.PathItem;
@@ -17,29 +27,35 @@ export class BubbleRenderInfo { // serializeしない
 }
 
 export class Bubble {
-  p0: Vector;
-  p1: Vector;
-  offset: Vector;
+  // n_p0, n_p1, n_offset, n_fontSize, n_strokeWidth, n_outlineWidthはnormalized
+  n_p0: Vector;
+  n_p1: Vector;
+  n_offset: Vector;
   rotation: number;
   text: string;
   shape: string;
   embedded: boolean;
   fontStyle: string;
   fontWeight: string;
-  fontSize: number;
+  n_fontSize: number;
   fontFamily: string;
   direction: string;
   fontColor: string;
   fillColor: string;
   strokeColor: string;
-  strokeWidth: number;
+  n_strokeWidth: number;
   outlineColor: string;
-  outlineWidth: number;
+  n_outlineWidth: number;
   autoNewline: boolean;
   uuid: string;
   parent: string;
   creationContext: string;
-  image: any;
+  image: { 
+    image: HTMLImageElement, 
+    scale: Vector,
+    translation: Vector,
+    scaleLock: boolean,
+  } | null;
   optionContext: any;
   pageNumber: number; // for debug
 
@@ -47,8 +63,8 @@ export class Bubble {
 
   constructor() {
     this.reset();
-    this.p0 = [0, 0];
-    this.p1 = [128, 128];
+    this.n_p0 = [0, 0];
+    this.n_p1 = [0.1, 0.1];
     this.text = "empty";
     this.uuid = uuidv4();
     this.parent = null;
@@ -59,20 +75,21 @@ export class Bubble {
   }
 
   reset() {
-    this.offset = [0, 0];
+    const unit = 1 / 880;
+    this.n_offset = [0, 0];
     this.rotation = 0;
     this.shape = "rounded";
     this.embedded = false;
     this.fontStyle = "normal";
     this.fontWeight = "400";
-    this.fontSize = 32;
+    this.n_fontSize = 32 * unit;
     this.fontFamily = "源暎アンチック";
     this.direction = 'v';
     this.fontColor = '#000000FF';
     this.fillColor = '#ffffffE6';
     this.strokeColor = "#000000FF";
-    this.strokeWidth = 3;
-    this.outlineWidth = 0;
+    this.n_strokeWidth = 3 * unit;
+    this.n_outlineWidth = 0;
     this.outlineColor = "#000000FF";
     this.autoNewline = false;
   }
@@ -83,24 +100,24 @@ export class Bubble {
 
   clone(): Bubble {
     const b = new Bubble();
-    b.p0 = [...this.p0];
-    b.p1 = [...this.p1];
-    b.offset = [...this.offset];
+    b.n_p0 = [...this.n_p0];
+    b.n_p1 = [...this.n_p1];
+    b.n_offset = [...this.n_offset];
     b.rotation = this.rotation;
     b.text = this.text;
     b.shape = this.shape;
     b.embedded = this.embedded;
     b.fontStyle = this.fontStyle;
     b.fontWeight = this.fontWeight;
-    b.fontSize = this.fontSize;
+    b.n_fontSize = this.n_fontSize;
     b.fontFamily = this.fontFamily;
     b.direction = this.direction;
     b.fontColor = this.fontColor;
     b.fillColor = this.fillColor;
     b.strokeColor = this.strokeColor;
-    b.strokeWidth = this.strokeWidth;
+    b.n_strokeWidth = this.n_strokeWidth;
     b.outlineColor = this.outlineColor;
-    b.outlineWidth = this.outlineWidth;
+    b.n_outlineWidth = this.n_outlineWidth;
     b.autoNewline = this.autoNewline;
     b.uuid = uuidv4();
     b.parent = null;
@@ -110,29 +127,42 @@ export class Bubble {
     return b;
   }
 
-  copyStyleFrom(c): void {
+  copyStyleFrom(c: Bubble): void {
     this.shape = c.shape;
     this.embedded = c.embedded;
     this.fontStyle = c.fontStyle;
     this.fontWeight = c.fontWeight;
-    this.fontSize = c.fontSize;
+    this.n_fontSize = c.n_fontSize;
     this.fontFamily = c.fontFamily;
     this.direction = c.direction;
     this.fontColor = c.fontColor;
     this.fillColor = c.fillColor;
     this.strokeColor = c.strokeColor;
-    this.strokeWidth = c.strokeWidth;
+    this.n_strokeWidth = c.n_strokeWidth;
     this.outlineColor = c.outlineColor;
-    this.outlineWidth = c.outlineWidth;
+    this.n_outlineWidth = c.n_outlineWidth;
     this.autoNewline = c.autoNewline;
     this.optionContext = {...c.optionContext};
   }
 
-  static compile(canvasSize, json): Bubble {
+  static getUnit(paperSize: Vector): number {
+    return  1 / Math.min(paperSize[0], paperSize[1]);
+  }
+
+  static compile(paperSize: Vector, json: any): Bubble {
+    // 古いjsonはn_に一貫性がない
+    const unit = Bubble.getUnit(paperSize);
+    const normalizedNumber = (v1, v2, v3) => { if (v1) { return v1; } else if (v2) { return v2 * unit; } else { return v3 * unit; }}
+
     const b = new Bubble();
-    b.p0 = this.denormalizedPosition(canvasSize, json.p0);
-    b.p1 = this.denormalizedPosition(canvasSize, json.p1);
-    b.offset = json.offset ?? [0,0];
+    b.n_p0 = json.p0 ?? json.n_p0;
+    b.n_p1 = json.p1 ?? json.n_p1;
+    b.n_offset = [0,0];
+    if (json.n_offset) {
+      b.n_offset = json.n_offset;
+    } else if (json.offset) {
+      b.n_offset = this.denormalizedPosition(paperSize, json.offset);
+    }
     b.rotation = json.rotation ?? 0;
     b.text = json.text ?? "";
     b.shape = json.shape ?? "square";
@@ -140,15 +170,15 @@ export class Bubble {
     b.embedded = json.embedded ?? false;
     b.fontStyle = json.fontStyle ?? "normal";
     b.fontWeight = json.fontWeight ?? "400";
-    b.fontSize = json.fontSize ? json.fontSize * Math.min(canvasSize[0], canvasSize[1]) : 26;
+    b.n_fontSize = normalizedNumber(json.n_fontSize, json.fontSize, 26);
     b.fontFamily = json.fontFamily ?? "Noto Sans JP";
     b.direction = json.direction ?? 'v';
     b.fontColor = json.fontColor ?? '#000000FF';
     b.fillColor = json.fillColor ?? '#ffffffE6';
     b.strokeColor = json.strokeColor ?? "#000000FF";
-    b.strokeWidth = json.strokeWidth ?? 1;
+    b.n_strokeWidth = normalizedNumber(json.n_strokeWidth, json.strokeWidth, 1);
     b.outlineColor = json.outlineColor ?? "#000000FF";
-    b.outlineWidth = json.outlineWidth ?? 0;
+    b.n_outlineWidth = normalizedNumber(json.n_outlineWidth, json.outlineWidth, 0);
     b.autoNewline = json.autoNewline ?? true;
     b.uuid = json.uuid ?? uuidv4();
     b.parent = json.parent;
@@ -157,26 +187,28 @@ export class Bubble {
     return b;
   }
 
-  static decompile(canvasSize: [number, number], b: Bubble): any {
+  static decompile(paperSize: Vector, b: Bubble): any {
+    const unit = Bubble.getUnit(paperSize);
+    const equalNumber = (v1, v2) => { return Math.abs(v1 - v2) < 0.0001; }
     return {
-      p0: this.normalizedPosition(canvasSize, b.p0),
-      p1: this.normalizedPosition(canvasSize, b.p1),
-      offset: b.offset[0] == 0 && b.offset[1] == 0 ? undefined : b.offset,
+      n_p0: b.n_p0,
+      n_p1: b.n_p0,
+      n_offset: b.n_offset[0] == 0 && b.n_offset[1] == 0 ? undefined : b.n_offset,
       rotation: b.rotation == 0 ? undefined : b.rotation,
       text: b.text == "" ? undefined : b.text,
       shape: b.shape == "square" ? undefined : b.shape,
       embedded: b.embedded == false ? undefined : b.embedded,
       fontStyle: b.fontStyle == "normal" ? undefined : b.fontStyle,
       fontWeight: b.fontWeight == "400" ? undefined : b.fontWeight,
-      fontSize: b.fontSize == 26 ? undefined : b.fontSize / Math.min(canvasSize[0], canvasSize[1]),
+      n_fontSize: equalNumber(b.n_fontSize, 26 * unit) ? undefined : b.n_fontSize,
       fontFamily: b.fontFamily == "Noto Sans JP" ? undefined : b.fontFamily,
       direction: b.direction == 'v' ? undefined : b.direction,
       fontColor: b.fontColor == '#000000FF' ? undefined : b.fontColor,
       fillColor: b.fillColor == '#ffffffE6' ? undefined : b.fillColor,
       strokeColor: b.strokeColor == "#000000FF" ? undefined : b.strokeColor,
-      strokeWidth: b.strokeWidth == 1 ? undefined : b.strokeWidth,
+      n_strokeWidth: equalNumber(b.n_strokeWidth, 1 * unit) ? undefined : b.n_strokeWidth,
       outlineColor: b.outlineColor == "#000000FF" ? undefined : b.outlineColor,
-      outlineWidth: b.outlineWidth == 0 ? undefined : b.outlineWidth,
+      n_outlineWidth: equalNumber(b.n_outlineWidth, 0 * unit) ? undefined : b.n_outlineWidth,
       autoNewline: b.autoNewline ? undefined : b.autoNewline,
       uuid: b.uuid,
       parent: b.parent,
@@ -184,35 +216,119 @@ export class Bubble {
     };
   }
 
-  hasEnoughSize(): boolean {
-    return (
-      minimumBubbleSize <= Math.abs(this.p1[0] - this.p0[0]) &&
-      minimumBubbleSize <= Math.abs(this.p1[1] - this.p0[1])
-    );
+  static getPhysicalPoint(paperSize: Vector, n_p: Vector): Vector {
+    return [n_p[0] * paperSize[0], n_p[1] * paperSize[1]];
   }
 
-  static forceEnoughSize(size: Vector): Vector {
+  getPhysicalRect(paperSize: Vector): Rect {
+    const [x0, y0] = Bubble.getPhysicalPoint(paperSize, this.n_p0);
+    const [x1, y1] = Bubble.getPhysicalPoint(paperSize, this.n_p1);
+    return [x0, y0, x1 - x0, y1 - y0];
+  }
+
+  getPhysicalBox(paperSize: Vector): [Vector, Vector] {
+    return [Bubble.getPhysicalPoint(paperSize, this.n_p0), Bubble.getPhysicalPoint(paperSize, this.n_p1)];
+  }
+
+  getPhysicalCenter(paperSize: Vector): Vector {
+    const r = this.getPhysicalRect(paperSize);
+    return [r[0] + r[2] / 2, r[1] + r[3] / 2];
+  }
+
+  getPhysicalSize(paperSize: Vector): Vector {
+    const r = this.getPhysicalRect(paperSize);
+    return [r[2], r[3]];
+  }
+
+  getPhysicalOffset(paperSize: Vector): Vector {
+    return Bubble.denormalizedPosition(paperSize, this.n_offset);
+  }
+
+  getPhysicalFontSize(paperSize: Vector): number {
+    return this.n_fontSize / Bubble.getUnit(paperSize);
+  }
+
+  getPhysicalStrokeWidth(paperSize: Vector): number {
+    return this.n_strokeWidth / Bubble.getUnit(paperSize);
+  }
+
+  getPhysicalOutlineWidth(paperSize: Vector): number {
+    return this.n_outlineWidth / Bubble.getUnit(paperSize);
+  }
+
+  getPhysicalRegularizedRect(paperSize: Vector): Rect {
+    const [p0, p1] = this.regularized();
+    const [x0, y0] = Bubble.getPhysicalPoint(paperSize, p0);
+    const [x1, y1] = Bubble.getPhysicalPoint(paperSize, p1);
+    return [x0, y0, x1 - x0, y1 - y0];
+  }
+
+  getPhysicalRegularizedBox(paperSize: Vector): [Vector, Vector] {
+    const [n_p0, n_p1] = this.regularized();
+    return [Bubble.getPhysicalPoint(paperSize, n_p0), Bubble.getPhysicalPoint(paperSize, n_p1)];
+  }
+
+  hasEnoughSize(paperSize: Vector): boolean {
+    const r = this.getPhysicalRect(paperSize);
+    return minimumBubbleSize <= r[2] && minimumBubbleSize <= r[3];
+  }
+
+  static enoughSize(size: Vector): Vector {
     return [
       Math.max(size[0], minimumBubbleSize + 1),
       Math.max(size[1], minimumBubbleSize + 1),
     ];
   }
 
-  forceEnoughSize() {
-    const enoughSize = Bubble.forceEnoughSize(this.size);
-    this.size = enoughSize;
+  setPhysicalCenter(paperSize: Vector, p: Vector) {
+    const [x, y] = p;
+    const [w, h] = this.getPhysicalSize(paperSize);
+    this.n_p0 = Bubble.normalizedPosition(paperSize, [x - w / 2, y - h / 2]);
+    this.n_p1 = Bubble.normalizedPosition(paperSize, [x + w / 2, y + h / 2]);
   }
 
-  contains(p: Vector): boolean {
-    const [px, py] = p;
-    const [rx0, ry0] = this.p0;
-    const [rx1, ry1] = this.p1;
-
-    return rx0 <= px && px <= rx1 && ry0 <= py && py <= ry1;
+  setPhysicalSize(paperSize:Vector, size: Vector) {
+    const center = [(this.n_p0[0] + this.n_p1[0]) / 2, (this.n_p0[1] + this.n_p1[1]) / 2];
+    this.n_p0 = [center[0] - size[0] / paperSize[0] / 2, center[1] - size[1] / paperSize[1] / 2];
+    this.n_p1 = [center[0] + size[0] / paperSize[0] / 2, center[1] + size[1] / paperSize[1] / 2];
   }
 
-  getHandleAt(p: Vector): string {
-    const handles = [
+  setPhysicalRect(paperSize: Vector, rect: Rect) {
+    this.n_p0 = [rect[0] / paperSize[0], rect[1] / paperSize[1]];
+    this.n_p1 = [(rect[0] + rect[2]) / paperSize[0], (rect[1] + rect[3]) / paperSize[1]];
+  }
+
+  setPhysicalFontSize(paperSize: Vector, n: number) {
+    this.n_fontSize = n * Bubble.getUnit(paperSize);
+  }
+
+  setPhysicalStrokeWidth(paperSize: Vector, n: number) {
+    this.n_strokeWidth = n * Bubble.getUnit(paperSize);
+  }
+
+  setPhysicalOutlineWidth(paperSize: Vector, n: number) {
+    this.n_outlineWidth = n * Bubble.getUnit(paperSize);
+  }
+
+  setPhysicalOffset(paperSize: Vector, p: Vector) {
+    this.n_offset = Bubble.normalizedPosition(paperSize, p);
+  }
+
+  forceEnoughSize(paperSize: Vector) {
+    const r = this.getPhysicalRect(paperSize);
+    const enoughSize = Bubble.enoughSize([r[2], r[3]]);
+    this.setPhysicalSize(paperSize, enoughSize);
+  }
+
+  contains(paperSize, p: Vector): boolean {
+    const [x, y] = p;
+    const [x0, y0] = Bubble.getPhysicalPoint(paperSize, this.n_p0);
+    const [x1, y1] = Bubble.getPhysicalPoint(paperSize, this.n_p1);
+    return x0 <= x && x <= x1 && y0 <= y && y <= y1;
+  }
+
+  getHandleAt(paperSize: Vector, p: Vector): BubbleBorderHandle {
+    const handles: BubbleBorderHandle[] = [
       "top-left",
       "top-right",
       "bottom-left",
@@ -223,23 +339,16 @@ export class Bubble {
       "right",
     ];
     for (let handle of handles) {
-      const rect = this.getHandleRect(handle);
-      if (this.rectContains(rect, p)) {
+      const rect = this.getHandleRect(paperSize, handle);
+      if (rectContains(rect, p)) {
         return handle;
       }
     }
     return null;
   }
 
-  rectContains(rect: Rect, p: Vector): boolean {
-    const [x, y] = p;
-    const [rx, ry, rw, rh] = rect;
-    return rx <= x && x <= rx + rw && ry <= y && y <= ry + rh;
-  }
-
-  getHandleRect(handle: string): Rect {
-    const [x, y] = this.p0;
-    const [w, h] = [this.p1[0] - this.p0[0], this.p1[1] - this.p0[1]];
+  getHandleRect(paperSize: Vector, handle: BubbleBorderHandle): Rect {
+    const [x, y, w, h] = this.getPhysicalRect(paperSize);
 
     switch (handle) {
       case "top-left":
@@ -278,22 +387,15 @@ export class Bubble {
   }
 
   regularized(): [Vector, Vector] {
-    const p0: Vector = [Math.min(this.p0[0], this.p1[0]), Math.min(this.p0[1], this.p1[1])];
-    const p1: Vector = [Math.max(this.p0[0], this.p1[0]), Math.max(this.p0[1], this.p1[1])];
+    const p0: Vector = [Math.min(this.n_p0[0], this.n_p1[0]), Math.min(this.n_p0[1], this.n_p1[1])];
+    const p1: Vector = [Math.max(this.n_p0[0], this.n_p1[0]), Math.max(this.n_p0[1], this.n_p1[1])];
     return [p0, p1];
   }
 
   regularize(): void {
-    [this.p0, this.p1] = this.regularized();
+    [this.n_p0, this.n_p1] = this.regularized();
   }
 
-  regularizedBox(): [Vector, Vector] {
-    const [p0, p1] = this.regularized();
-    const [x, y] = p0;
-    const [w, h] = [p1[0] - p0[0], p1[1] - p0[1]];
-    return [p0, [w, h]];
-  }
-  
   canLink(): boolean {
     console.log(this.optionSet);
     return !!this.optionSet.link;
@@ -307,32 +409,12 @@ export class Bubble {
     return this.parent === b.uuid || b.parent === this.uuid;
   }
 
-  static normalizedPosition(canvasSize: Vector, p: Vector): Vector {
-    return [p[0] / canvasSize[0], p[1] / canvasSize[1]];
+  static normalizedPosition(paperSize: Vector, p: Vector): Vector {
+    return [p[0] / paperSize[0], p[1] / paperSize[1]];
   }
 
-  static denormalizedPosition(canvasSize: Vector, p: Vector): Vector {
-    return [p[0] * canvasSize[0], p[1] * canvasSize[1]];
-  }
-
-  get center(): Vector {
-    return [(this.p0[0] + this.p1[0]) / 2, (this.p0[1] + this.p1[1]) / 2];
-  }
-
-  set center(p: Vector) {
-    const size = this.size;
-    this.p0 = [p[0] - size[0] / 2, p[1] - size[1] / 2];
-    this.p1 = [p[0] + size[0] / 2, p[1] + size[1] / 2];
-  }
-
-  get size(): Vector {
-    return [Math.abs(this.p1[0] - this.p0[0]), Math.abs(this.p1[1] - this.p0[1])];
-  }
-
-  set size(s: Vector) {
-    const center = this.center;
-    this.p0 = [center[0] - s[0] / 2, center[1] - s[1] / 2];
-    this.p1 = [center[0] + s[0] / 2, center[1] + s[1] / 2];
+  static denormalizedPosition(paperSize: Vector, p: Vector): Vector {
+    return [p[0] * paperSize[0], p[1] * paperSize[1]];
   }
 
   get imageSize(): Vector {
@@ -341,11 +423,6 @@ export class Bubble {
 
   get optionSet(): any {
     return bubbleOptionSets[this.shape];
-  }
-
-  get centeredRect(): Rect {
-    const s = this.size;
-    return [- s[0] / 2, - s[1] / 2, s[0], s[1]];
   }
 
   initOptions(): void {
@@ -364,12 +441,6 @@ export class Bubble {
       }
     }
     return options;
-  }
-
-  move(p: Vector): void {
-    const size = this.size;
-    this.p0 = [p[0] - size[0] / 2, p[1] - size[1] / 2];
-    this.p1 = [p[0] + size[0] / 2, p[1] + size[1] / 2];
   }
 
 }

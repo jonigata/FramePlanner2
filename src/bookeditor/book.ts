@@ -202,9 +202,8 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
       const selected: Bubble[] = [];
       const unselected: Bubble[] = [];  
       for (let b of page.bubbles) {
-        if (isPointInTrapezoid(b.center, leafLayout.corners)) {
-          // 座標の正規化
-          b.center = [(b.center[0] - r[0]) / w, (b.center[1] - r[1]) / h];
+        const bc = b.getPhysicalCenter(page.paperSize);
+        if (isPointInTrapezoid(bc, leafLayout.corners)) {
           selected.push(b);
         } else {
           unselected.push(b);
@@ -267,9 +266,7 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
       frameTree.scale = content.scale;
       frameTree.rotation = content.rotation;
 
-      // 座標の復元
       for (let b of content.bubbles) {
-        b.center = [b.center[0] * w + r[0], b.center[1] * h + r[1]];
         b.pageNumber = pageNumber;
         page.bubbles.push(b);
       }

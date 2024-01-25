@@ -3,7 +3,7 @@ import { keyDownFlags } from "../system/keyCache";
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 import { getPath } from "../tools/draw/bubbleGraphic";
 import { ClickableIcon, MultistateIcon } from "../tools/draw/clickableIcon";
-import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
+import { Bubble, bubbleOptionSets, type BubbleBorderHandle } from "../dataModels/bubble";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
 import { type Vector, type Rect, add2D } from "../tools/geometry/geometry";
@@ -34,7 +34,7 @@ export class BubbleLayer extends Layer {
   optionEditActive: Record<string, boolean>;
   selected: Bubble;
   lit: Bubble;
-  handle: string;
+  handle: BubbleBorderHandle;
 
   createBubbleIcon: ClickableIcon;
   dragIcon: ClickableIcon;
@@ -82,8 +82,8 @@ export class BubbleLayer extends Layer {
     this.removeIcon = new ClickableIcon("remove.png",unit,[1,0],"削除", () => this.interactable && this.selected != null);
     this.rotateIcon = new ClickableIcon("bubble-rotate.png",unit,[0.5,1],"左右ドラッグで回転", () => this.interactable && this.selected != null);
 
-    this.imageDropIcon = new ClickableIcon("bubble-drop.png",unit,[0,1],"画像除去", () => this.interactable && this.selected?.image);
-    this.imageScaleLockIcon = new MultistateIcon(["bubble-unlock.png","bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && this.selected?.image);
+    this.imageDropIcon = new ClickableIcon("bubble-drop.png",unit,[0,1],"画像除去", () => this.interactable && this.selected?.image != null);
+    this.imageScaleLockIcon = new MultistateIcon(["bubble-unlock.png","bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && this.selected?.image != null);
     this.imageScaleLockIcon.index = 0;
 
     this.optionIcons = {};
@@ -134,7 +134,7 @@ export class BubbleLayer extends Layer {
   }
 
   drawLitUI(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
-    const [[x, y], [w, h]] = bubble.regularizedBox();
+    const [x, y, w, h] = bubble.getPhysicalRegularizedRect(this.getPaperSize());
 
     // 選択枠描画
     ctx.save();
@@ -145,7 +145,8 @@ export class BubbleLayer extends Layer {
   }
 
   drawSelectedUI(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
-    const [[x, y], [w, h]] = bubble.regularizedBox();
+    const paperSize = this.getPaperSize();
+    const [x, y, w, h] = bubble.getPhysicalRegularizedRect(paperSize);
 
     // 選択枠描画
     ctx.save();
@@ -158,7 +159,7 @@ export class BubbleLayer extends Layer {
     if (this.handle != null) {
       ctx.save();
       ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
-      const handleRect = bubble.getHandleRect(this.handle);
+      const handleRect = bubble.getHandleRect(paperSize, this.handle);
       if (handleRect) {
         ctx.fillRect(...handleRect);
       }
@@ -167,10 +168,12 @@ export class BubbleLayer extends Layer {
   }
 
   drawOptionHandles(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
-    const [cx,cy] = bubble.center;
-    const cp = (ro, ou) => ClickableIcon.calcPosition([...bubble.p0,...bubble.size], iconUnit, ro, ou);
-    const rp = (p) => [cx + p[0], cy + p[1]];
-    const tailMidCoord = () => tailCoordToWorldCoord(bubble.center, bubble.optionContext.tailTip, bubble.optionContext.tailMid);
+    const paperSize = this.getPaperSize();
+    const bubbleCenter = bubble.getPhysicalCenter(paperSize);
+    const bubbleRect = bubble.getPhysicalRegularizedRect(paperSize);
+    const cp = (ro, ou) => ClickableIcon.calcPosition(bubbleRect, iconUnit, ro, ou);
+    const rp = (p) => [bubbleCenter[0] + p[0], bubbleCenter[1] + p[1]];
+    const tailMidCoord = () => tailCoordToWorldCoord(bubbleCenter, bubble.optionContext.tailTip, bubble.optionContext.tailMid);
 
     const optionSet = bubble.optionSet;
     for (const option of Object.keys(optionSet)) {
@@ -212,8 +215,11 @@ export class BubbleLayer extends Layer {
   }
 
   drawOptionUI(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
+    const paperSize = this.getPaperSize();
+    const bubbleCenter = bubble.getPhysicalCenter(paperSize);
+
     if (this.optionEditActive.tail) {
-      const [cx, cy] = bubble.center;
+      const [cx, cy] = bubbleCenter;
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
       ctx.beginPath();
@@ -222,7 +228,7 @@ export class BubbleLayer extends Layer {
       ctx.stroke();
     } 
     if (this.optionEditActive.focal) {
-      const [cx, cy] = bubble.center;
+      const [cx, cy] = bubbleCenter;
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
       ctx.beginPath();
@@ -236,12 +242,13 @@ export class BubbleLayer extends Layer {
     for (let b of this.bubbles) {
       if (b === bubble) {continue;}
 
+      const c = b.getPhysicalCenter(paperSize);
       if (this.getGroupMaster(b) === this.getGroupMaster(bubble)) {
         ctx.strokeStyle = "rgba(255, 0, 255, 0.3)";
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(...b.center);
-        ctx.lineTo(...bubble.center);
+        ctx.moveTo(...c);
+        ctx.lineTo(...bubbleCenter);
         ctx.stroke();
       }
     }
@@ -253,7 +260,8 @@ export class BubbleLayer extends Layer {
         if (!b.optionSet.link) {continue;}
         if (this.getGroupMaster(b) === this.getGroupMaster(bubble)) {continue;}
         ctx.lineWidth = 5;
-        ctx.strokeRect(...b.p0, ...b.size);
+        const rect = b.getPhysicalRegularizedRect(paperSize);
+        ctx.strokeRect(...rect);
       }
 
       const [cx, cy] = this.optionIcons[bubble.optionSet.link.icon].center;
@@ -276,8 +284,9 @@ export class BubbleLayer extends Layer {
       return true;      
     }
 
+    const paperSize = this.getPaperSize();
     if (this.selected) {
-      this.handle = this.selected.getHandleAt(p);
+      this.handle = this.selected.getHandleAt(paperSize, p);
 
       if (this.removeIcon.hintIfContains(p, this.hint) ||
         this.rotateIcon.hintIfContains(p, this.hint) ||
@@ -289,21 +298,20 @@ export class BubbleLayer extends Layer {
         this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
-      } else if (this.selected.contains(p)) {
+      } else if (this.selected.contains(paperSize, p)) {
         this.hint(p, null);
       }
 
-      if (this.handle || this.selected.contains(p)) {
+      if (this.handle || this.selected.contains(paperSize, p)) {
         this.redraw();
         return true;
       }
     }
 
     for (let bubble of this.bubbles) {
-      if (bubble.contains(p)) {
-        const [x0, y0] = bubble.p0;
-        const [x1, y1] = bubble.p1;
-        this.hint([(x0 + x1) / 2, y0 - 20],"Alt+ドラッグで移動、クリックで選択");
+      if (bubble.contains(paperSize, p)) {
+        const [x,y,w,h] = bubble.getPhysicalRegularizedRect(paperSize);
+        this.hint([x + w / 2, y - 20],"Alt+ドラッグで移動、クリックで選択");
         this.lit = bubble;
         this.redraw();
         return true;
@@ -370,13 +378,12 @@ export class BubbleLayer extends Layer {
     try {
       const paperSize = this.getPaperSize();
       const b = Bubble.compile(paperSize, JSON.parse(text));
+      const bubbleSize = b.getPhysicalSize(paperSize);
       b.parent = null;
       b.uuid = uuidv4();
-      const size = b.size;
-      const x = Math.random() * (paperSize[0] - size[0]);
-      const y = Math.random() * (paperSize[1] - size[1]);
-      b.p0 = [x, y];
-      b.p1 = [x + size[0], y + size[1]];
+      const x = Math.random() * (paperSize[0] - bubbleSize[0]);
+      const y = Math.random() * (paperSize[1] - bubbleSize[1]);
+      b.setPhysicalRect(paperSize, [x, y, ...bubbleSize]);
       this.bubbles.push(b);
       this.selectBubble(b);
       return [b];
@@ -401,8 +408,7 @@ export class BubbleLayer extends Layer {
         const x = cursorX;
         const y = cursorY;
 
-        b.p0 = [x, y];
-        b.p1 = [x + size[0], y + size[1]];
+        b.setPhysicalRect(paperSize, [x, y, ...size]);
         b.text = s;
         b.initOptions();
         bubbles.push(b);        
@@ -417,21 +423,22 @@ export class BubbleLayer extends Layer {
   }
 
   calculateFitBubbleSize(s: string, bubble: Bubble) {
-    const baselineSkip = bubble.fontSize * 1.5;
-    const charSkip = bubble.fontSize;
+    const fontSize = bubble.getPhysicalFontSize(this.getPaperSize());
+    const baselineSkip = fontSize * 1.5;
+    const charSkip = fontSize;
     const ctx = this.viewport.canvas.getContext('2d');
     let size: Vector =[0,0];
     if (bubble.direction == 'v') {
       const m = measureVerticalText(ctx, Infinity, s, baselineSkip, charSkip, false);
       size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
     } else {
-      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${bubble.fontSize}px '${bubble.fontFamily}'`;
+      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss;
       const m = measureHorizontalText(ctx, Infinity, s, baselineSkip, false);
       size = [Math.floor(m.width*1.4), Math.floor(m.height*1.2)];
     }
     console.log(size);
-    return Bubble.forceEnoughSize(size);
+    return Bubble.enoughSize(size);
   }
 
   createImageBubble(image: HTMLImageElement): void {
@@ -440,9 +447,8 @@ export class BubbleLayer extends Layer {
     const imageSize = [image.naturalWidth, image.naturalHeight];
     const x = Math.random() * (paperSize[0] - imageSize[0]);
     const y = Math.random() * (paperSize[1] - imageSize[1]);
-    bubble.p0 = [x, y];
-    bubble.p1 = [x + imageSize[0], y + imageSize[1]];
-    bubble.forceEnoughSize();
+    bubble.setPhysicalRect(paperSize, [x, y, ...imageSize] as Rect);
+    bubble.forceEnoughSize(paperSize);
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
@@ -450,7 +456,6 @@ export class BubbleLayer extends Layer {
     this.bubbles.push(bubble);
     this.onCommit();
     this.selectBubble(bubble);
-    console.log(bubble.p0, bubble.p1);
   }
 
   removeBubble(bubble: Bubble): void {
@@ -503,6 +508,8 @@ export class BubbleLayer extends Layer {
       return { action: "create" };
     }
 
+    const paperSize = this.getPaperSize();
+
     if (this.selected) {
       const bubble = this.selected;
 
@@ -529,13 +536,13 @@ export class BubbleLayer extends Layer {
         }
       }
 
-      const handle = bubble.getHandleAt(point);
+      const handle = bubble.getHandleAt(paperSize, point);
       if (handle) {
         return { action: "resize", bubble, handle };
       }
 
       const gm = this.getGroupMaster(bubble);
-      if (gm.image && bubble.contains(point)) {
+      if (gm.image && bubble.contains(paperSize, point)) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble: gm };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
@@ -545,7 +552,7 @@ export class BubbleLayer extends Layer {
     }
 
     for (let bubble of [...this.bubbles].reverse()) {
-      if (bubble.contains(point)) {
+      if (bubble.contains(paperSize, point)) {
         if (keyDownFlags["KeyQ"]) {
           return { action: "remove", bubble };
         } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
@@ -556,7 +563,7 @@ export class BubbleLayer extends Layer {
           return { action: "select", bubble };
         }
       }
-      const handle = bubble.getHandleAt(point);
+      const handle = bubble.getHandleAt(paperSize, point);
       if (handle) {
         return { action: "resize", bubble, handle };
       }
@@ -661,8 +668,10 @@ export class BubbleLayer extends Layer {
       return true;
     }
 
+    const paperSize = this.getPaperSize();
+
     for (let bubble of this.bubbles) {
-      if (bubble.contains(position)) {
+      if (bubble.contains(paperSize, position)) {
         this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1], scaleLock: false };
         this.onCommit();
         return true;
@@ -674,9 +683,12 @@ export class BubbleLayer extends Layer {
   doubleClicked(p: Vector): boolean {
     if (!this.interactable) { return false; }
 
+    const paperSize = this.getPaperSize();
+
     for (let bubble of this.bubbles) {
-      if (bubble.contains(p)) {
-        bubble.size = this.calculateFitBubbleSize(bubble.text, bubble);
+      if (bubble.contains(paperSize, p)) {
+        const size = this.calculateFitBubbleSize(bubble.text, bubble);
+        bubble.setPhysicalSize(paperSize, size);
         this.onCommit();
         return true;
       }
@@ -684,8 +696,9 @@ export class BubbleLayer extends Layer {
 
     const bubble = this.defaultBubbleSlot.bubble.clone();
     bubble.image = null;
-    bubble.p0 = [p[0] - 100, p[1] - 100];
-    bubble.p1 = [p[0] + 100, p[1] + 100];
+    //bubble.setPhysicalRect(paperSize, [p[0] -100, p[1] - 100, 200, 100]);
+    bubble.n_p0 = [0,0];
+    bubble.n_p1 = [1,1];
     bubble.initOptions();
     bubble.text = getHaiku();
     this.bubbles.push(bubble);
@@ -695,11 +708,13 @@ export class BubbleLayer extends Layer {
   }
 
   setIconPositions(): void {
-    const rect: Rect = [this.selected.p0[0] + 10, this.selected.p0[1] + 10, this.selected.size[0] - 20, this.selected.size[1] - 20];
+    const paperSize = this.getPaperSize();
+    const [x, y, w, h] = this.selected.getPhysicalRegularizedRect(paperSize);
+    const rect: Rect = [x+10, y+10, w-20, h-20];
     const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
 
     this.dragIcon.position = cp([0.5, 0], [0, 0]);
-    this.offsetIcon.position = add2D(cp([0.5, 0.25], [0, 0]), this.selected.offset);
+    this.offsetIcon.position = add2D(cp([0.5, 0.25], [0, 0]), this.selected.getPhysicalOffset(paperSize));
     this.zPlusIcon.position = cp([0,0], [1,0]);
     this.zMinusIcon.position = cp([0,0], [0,0]);
     this.removeIcon.position = cp([1,0], [0, 0]);
@@ -711,11 +726,11 @@ export class BubbleLayer extends Layer {
   }
 
   async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
+    const paperSize = this.getPaperSize();
     this.unfocus();
     const bubble = this.defaultBubbleSlot.bubble.clone();
     bubble.image = null;
-    bubble.p0 = dragStart;
-    bubble.p1 = dragStart;
+    bubble.setPhysicalRect(paperSize, [dragStart[0], dragStart[1], 0, 0]);
     bubble.text = getHaiku();
     bubble.initOptions();
     this.creatingBubble = bubble;
@@ -723,13 +738,13 @@ export class BubbleLayer extends Layer {
     let p: Vector;
     try {
       while ((p = yield)) {
-        bubble.p1 = p;
+        bubble.n_p1 = Bubble.normalizedPosition(paperSize, p);
         this.redraw();
       }
 
       this.creatingBubble = null;
       bubble.regularize();
-      if (bubble.hasEnoughSize()) {
+      if (bubble.hasEnoughSize(paperSize)) {
         this.bubbles.push(bubble);
         this.onCommit();
         // this.selectBubble(bubble);
@@ -742,21 +757,21 @@ export class BubbleLayer extends Layer {
   }
 
   *moveBubble(dragStart: Vector, bubble: Bubble): Generator<void, void, Vector> {
-    const [dx, dy] = [dragStart[0] - bubble.p0[0], dragStart[1] - bubble.p0[1]];
-    const [w, h] = [bubble.p1[0] - bubble.p0[0], bubble.p1[1] - bubble.p0[1]];
+    const paperSize = this.getPaperSize();
+    const [x, y, w, h] = bubble.getPhysicalRegularizedRect(paperSize);
+    const [dx, dy] = [dragStart[0] - x, dragStart[1] - y];
 
     let p: Vector;
     try {
       while ((p = yield)) {
-        bubble.p0 = [p[0] - dx, p[1] - dy];
-        bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
+        bubble.setPhysicalRect(paperSize, [p[0] - dx, p[1] - dy, w, h]);
         if (bubble === this.selected) {
           this.setIconPositions();
         }
         this.redraw();
       }
-      this.onPotentialCrossPage(bubble);
-      this.onCommit();
+      // this.onPotentialCrossPage(bubble);
+      // this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
@@ -766,6 +781,7 @@ export class BubbleLayer extends Layer {
   }
 
   *copyStyle(_dragStart: Vector, bubble: Bubble): Generator<void, void, Vector> {
+    const paperSize = this.getPaperSize();
     let p, last;
     try {
       while (p = yield) {
@@ -773,7 +789,7 @@ export class BubbleLayer extends Layer {
         this.lit = null;
         for (let i = this.bubbles.length - 1; 0 <= i; i--) {
           const b = this.bubbles[i];
-          if (b.contains(last)) {
+          if (b.contains(paperSize, last)) {
             this.lit = b;
             break;
           }
@@ -783,7 +799,7 @@ export class BubbleLayer extends Layer {
       this.lit = null;
       for (let i = this.bubbles.length - 1; 0 <= i; i--) {
         const b = this.bubbles[i];
-        if (b.contains(last)) {
+        if (b.contains(paperSize, last)) {
           b.copyStyleFrom(bubble);
           this.onCommit();
           break;
@@ -815,12 +831,13 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *offsetBubbleText(dragStart, bubble) {
-    const q = bubble.offset;
+  *offsetBubbleText(dragStart: Vector, bubble: Bubble) {
+    const paperSize = this.getPaperSize();
+    const q = bubble.getPhysicalOffset(paperSize);
     let p;
     try {
       while ((p = yield)) {
-        bubble.offset = [q[0] + p[0] - dragStart[0], q[1] + p[1] - dragStart[1]];
+        bubble.setPhysicalOffset(paperSize, [q[0] + p[0] - dragStart[0], q[1] + p[1] - dragStart[1]]);
         if (bubble === this.selected) {
           this.setIconPositions();
         }
@@ -835,25 +852,28 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *resizeBubble(dragStart, bubble, handle) {
-    const oldRect = [bubble.p0, bubble.p1];
-    let p;
+  *resizeBubble(dragStart: Vector, bubble: Bubble, handle: string) {
     try {
-      const [q0, q1] = [bubble.p0, bubble.p1];
+      const paperSize = this.getPaperSize();
+      const [q0, q1] = bubble.regularized();
+
+      let p;
       while ((p = yield)) {
-        this.resizeBubbleAux(bubble, handle, q0, q1, p);
+        const pp = Bubble.normalizedPosition(paperSize, p);
+        this.resizeBubbleAux(bubble, handle, q0, q1, pp);
 
         if (bubble.image?.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
+          const bubbleSize = bubble.getPhysicalSize(paperSize);
           bubble.image.translation = [0,0];
-          bubble.image.scale = [bubble.size[0] / bubble.image.image.naturalWidth, bubble.size[1] / bubble.image.image.naturalHeight];
+          bubble.image.scale = [bubbleSize[0] / bubble.image.image.naturalWidth, bubbleSize[1] / bubble.image.image.naturalHeight];
         }
   
         this.setIconPositions();
         this.redraw();
       }
       bubble.regularize();
-      if (!bubble.hasEnoughSize()) {
+      if (!bubble.hasEnoughSize(paperSize)) {
         throw "cancel";
       }
       console.log(bubble.image);
@@ -867,102 +887,107 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  resizeBubbleAux(bubble, handle, q0, q1, p) {
+  resizeBubbleAux(bubble: Bubble, handle: string, q0: Vector, q1: Vector, p: Vector) {
+    const paperSize = this.getPaperSize();
+
     if (bubble.image?.scaleLock) {
-      const [cx, cy] = [(bubble.p0[0] + bubble.p1[0]) / 2, (bubble.p0[1] + bubble.p1[1]) / 2];
-      const originalSize = [q1[0] - q0[0], q1[1] - q0[1]];
-      let w,h, scale;
+      const rwfar = (os: Vector, ns: Vector) => {
+        return this.resizeWithFixedAspectRatio(os, ns);
+      }
+  
+      const qq0 = Bubble.denormalizedPosition(paperSize, q0);
+      const qq1 = Bubble.denormalizedPosition(paperSize, q1);
+      const pp = Bubble.denormalizedPosition(paperSize, p);
+      const [cx, cy] = [(qq0[0] + qq1[0]) / 2, (qq0[1] + qq1[1]) / 2];
+      const originalSize: Vector = [qq1[0] - qq0[0], qq1[1] - qq0[1]];
+
+      let userSize: Vector;
+      let w: number, h: number, scale: number;
       switch (handle) {
         case "top-left":
-          bubble.p0 = [p[0], p[1]];
-          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
-          bubble.p0 = [bubble.p1[0] - w, bubble.p1[1] - h];
+          userSize = [qq1[0] - pp[0], qq1[1] - pp[1]];
+          [w,h] = rwfar(originalSize, userSize);
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq1[0] - w, qq1[1] - h]);
           break;
         case "top-right":
-          bubble.p0 = [bubble.p0[0], p[1]];
-          bubble.p1 = [p[0], bubble.p1[1]];
-          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
-          bubble.p0 = [bubble.p0[0], bubble.p1[1] - h];
-          bubble.p1 = [bubble.p0[0] + w, bubble.p1[1]];
+          userSize = [pp[0] - qq0[0], qq1[1] - pp[1]];
+          [w,h] = rwfar(originalSize, userSize);
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq0[0], qq1[1] - h]);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq0[0] + w, qq1[1]]);
           break;
         case "bottom-left":
-          bubble.p0 = [p[0], bubble.p0[1]];
-          bubble.p1 = [bubble.p1[0], p[1]];
-          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
-          bubble.p0 = [bubble.p1[0] - w, bubble.p0[1]];
-          bubble.p1 = [bubble.p1[0], bubble.p0[1] + h];
+          userSize = [qq1[0] - pp[0], pp[1] - qq0[1]];
+          [w,h] = rwfar(originalSize, userSize);
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq1[0] - w, qq0[1]]);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq1[0], qq0[1] + h]);
           break;
         case "bottom-right":
-          bubble.p1 = [p[0], p[1]];
-          [w,h] = this.resizeWithFixedAspectRatio(originalSize, bubble.size);
-          bubble.p1 = [bubble.p0[0] + w, bubble.p0[1] + h];
+          userSize = [pp[0] - qq0[0], pp[1] - qq0[1]];
+          [w,h] = rwfar(originalSize, userSize);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq0[0] + w, qq0[1] + h]);
           break;
         case "top":
-          bubble.p0 = [q0[0], p[1]];
-          bubble.p1 = [...q1];
-          scale = bubble.size[1] / originalSize[1];
-          [w, h] = [originalSize[0] * scale, bubble.size[1]];
-          bubble.p0 = [cx - w / 2, bubble.p1[1] - h];
-          bubble.p1 = [cx + w / 2, bubble.p1[1]];
+          userSize = [originalSize[0], qq1[1] - pp[1]];
+          scale = userSize[1] / originalSize[1];
+          [w, h] = [originalSize[0] * scale, userSize[1]];
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w / 2, qq1[1] - h]);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w / 2, qq1[1]]);
           break;
         case "bottom":
-          bubble.p0 = [...q0];
-          bubble.p1 = [q1[0], p[1]];
-          scale = bubble.size[1] / originalSize[1];
-          [w, h] = [originalSize[0] * scale, bubble.size[1]];
-          bubble.p0 = [cx - w / 2, bubble.p0[1]];
-          bubble.p1 = [cx + w / 2, bubble.p0[1] + h];
+          userSize = [originalSize[0], pp[1] - qq0[1]];
+          scale = userSize[1] / originalSize[1];
+          [w, h] = [originalSize[0] * scale, userSize[1]];
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w / 2, qq0[1]]);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w / 2, qq0[1] + h]);
           break;
         case "left":
-          bubble.p0 = [p[0], q0[1]];
-          bubble.p1 = [...q1];
-          scale = bubble.size[0] / originalSize[0];
-          [w, h] = [bubble.size[0], originalSize[1] * scale];
-          bubble.p0 = [bubble.p1[0] - w, cy - h / 2];
-          bubble.p1 = [bubble.p1[0], cy + h / 2];
+          userSize = [qq1[0] - pp[0], originalSize[1]];
+          scale = userSize[0] / originalSize[0];
+          [w, h] = [userSize[0], originalSize[1] * scale];
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq1[0] - w, cy - h / 2]);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq1[0], cy + h / 2]);
           break;
         case "right":
-          bubble.p0 = [...q0];
-          bubble.p1 = [p[0], q1[1]];
-          scale = bubble.size[0] / originalSize[0];
-          [w, h] = [bubble.size[0], originalSize[1] * scale];
-          bubble.p0 = [bubble.p0[0], cy - h / 2];
-          bubble.p1 = [bubble.p0[0] + w, cy + h / 2];
+          userSize = [pp[0] - qq0[0], originalSize[1]];
+          scale = userSize[0] / originalSize[0];
+          [w, h] = [userSize[0], originalSize[1] * scale];
+          bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq0[0], cy - h / 2]);
+          bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq0[0] + w, cy + h / 2]);
           break;
       }    
     } else {
       switch (handle) {
         case "top-left":
-          bubble.p0 = [p[0], p[1]];
+          bubble.n_p0 = p;
           break;
         case "top-right":
-          bubble.p0 = [bubble.p0[0], p[1]];
-          bubble.p1 = [p[0], bubble.p1[1]];
+          bubble.n_p0 = [q0[0], p[1]];
+          bubble.n_p1 = [p[0], q1[1]];
           break;
         case "bottom-left":
-          bubble.p0 = [p[0], bubble.p0[1]];
-          bubble.p1 = [bubble.p1[0], p[1]];
+          bubble.n_p0 = [p[0], q0[1]];
+          bubble.n_p1 = [q1[0], p[1]];
           break;
         case "bottom-right":
-          bubble.p1 = [p[0], p[1]];
+          bubble.n_p1 = p;
           break;
         case "top":
-          bubble.p0 = [bubble.p0[0], p[1]];
+          bubble.n_p0 = [q0[0], p[1]];
           break;
         case "bottom":
-          bubble.p1 = [bubble.p1[0], p[1]];
+          bubble.n_p1 = [q1[0], p[1]];
           break;
         case "left":
-          bubble.p0 = [p[0], bubble.p0[1]];
+          bubble.n_p0 = [p[0], q0[1]];
           break;
         case "right":
-          bubble.p1 = [p[0], bubble.p1[1]];
+          bubble.n_p1 = [p[0], q1[1]];
           break;
       }
     }
   }    
 
-  *translateImage(dragStart, bubble) {
+  *translateImage(dragStart: Vector, bubble: Bubble) {
     const origin = bubble.image.translation;
 
     try {
@@ -979,7 +1004,7 @@ export class BubbleLayer extends Layer {
   }
 
 
-  *scaleImage(dragStart, bubble) {
+  *scaleImage(dragStart: Vector, bubble: Bubble) {
     const origin = bubble.image.scale[0];
 
     try {
@@ -996,7 +1021,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *optionsTailTip(p, bubble) {
+  *optionsTailTip(p: Vector, bubble: Bubble) {
     const s = bubble.optionContext.tailTip;
     try {
       const q = p;
@@ -1016,7 +1041,8 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *optionsTailMid(p, bubble) {
+  *optionsTailMid(p: Vector, bubble: Bubble) {
+    const paperSize = this.getPaperSize();
     console.log("optionsTailMid");
     // bubble.centerを原点(O)とし、
     // X軸: O->tailTip Y軸: O->pependicular(O->tailTip)座標系の座標
@@ -1025,7 +1051,8 @@ export class BubbleLayer extends Layer {
     try {
       while (p = yield) {
         this.optionEditActive.tail = true;
-        bubble.optionContext.tailMid = worldCoordToTailCoord(bubble.center, bubble.optionContext.tailTip, p);
+        const c = bubble.getPhysicalCenter(paperSize);
+        bubble.optionContext.tailMid = worldCoordToTailCoord(c, bubble.optionContext.tailTip, p);
         this.redraw();
       }
     } catch (e) {
@@ -1040,7 +1067,8 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *optionsLink(p, bubble) {
+  *optionsLink(p: Vector, bubble: Bubble) {
+    const paperSize = this.getPaperSize();
     try {
       const q = p;
       let drop = null;
@@ -1055,7 +1083,7 @@ export class BubbleLayer extends Layer {
         console.log("drop");
         for (let i = this.bubbles.length - 1; 0 <= i; i--) {
           const b = this.bubbles[i];
-          if (b !== bubble && b.contains(drop) && b.canLink()) {
+          if (b !== bubble && b.contains(paperSize, drop) && b.canLink()) {
             if (this.getGroupMaster(bubble) === this.getGroupMaster(b)) {
               if (b.parent) {
                 b.parent = null;
@@ -1082,7 +1110,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *optionsFocalPoint(p, bubble) {
+  *optionsFocalPoint(p: Vector, bubble: Bubble) {
     const s = bubble.optionContext.focalPoint;
     try {
       const q = p;
@@ -1102,7 +1130,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *optionsFocalRange(p, bubble) {
+  *optionsFocalRange(p: Vector, bubble: Bubble) {
     const s = bubble.optionContext.focalRange;
     try {
       const q = p;
@@ -1122,13 +1150,15 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  uniteBubble(bubbles) {
+  uniteBubble(bubbles: Bubble[]) {
+    const paperSize = this.getPaperSize();
     let path: paper.PathItem = null;
     for (let bubble of bubbles) {
-      const [x, y, w, h] = bubble.regularizedPositionAndSize();
+      const [x, y, w, h] = bubble.getPhysicalRegularizedRect(paperSize);
       const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
       if (path2) {
-        path2.rotate(-bubble.rotation, bubble.center);
+        const c = bubble.getPhysicalCenter(paperSize);
+        path2.rotate(-bubble.rotation, c);
         path = path ? path.unite(path2) : path2;
       } else {
         // シェイプ変更などでリンクが解けている
@@ -1138,12 +1168,13 @@ export class BubbleLayer extends Layer {
         return null;
       }
     }
-    path.rotate(bubbles[0].rotation, bubbles[0].center);
-    path.translate(new paper.Point(bubbles[0].center).multiply(-1));
+    const c0 = bubbles[0].getPhysicalCenter(paperSize);
+    path.rotate(bubbles[0].rotation, c0);
+    path.translate(new paper.Point(c0).multiply(-1));
     return path;
   }
 
-  getGroup(bubble) {
+  getGroup(bubble: Bubble) {
     const group = [bubble];
 
     let modified = true;
@@ -1164,7 +1195,7 @@ export class BubbleLayer extends Layer {
     return group;
   }
 
-  regularizeGroup(g) {
+  regularizeGroup(g: Bubble[]) {
     // parent1つに集約する
     const parent = g[0];
     for (let i = 1; i < g.length; i++) {
@@ -1173,12 +1204,12 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  mergeGroup(g1, g2) {
+  mergeGroup(g1: Bubble[], g2: Bubble[]) {
     const g = g1.concat(g2);
     this.regularizeGroup(g);
   }
 
-  getGroupMaster(bubble) {
+  getGroupMaster(bubble: Bubble) {
     if (bubble.parent) {
       const parent =  this.bubbles.find((b) => b.uuid === bubble.parent);
       if (parent) {return parent;}
@@ -1186,7 +1217,7 @@ export class BubbleLayer extends Layer {
     return bubble;
   }
 
-  resizeWithFixedAspectRatio(originalSize, newSize) {
+  resizeWithFixedAspectRatio(originalSize: Vector, newSize: Vector) {
     const [originalWidth, originalHeight] = originalSize;
     const [newWidth, newHeight] = newSize;
   
@@ -1201,21 +1232,23 @@ export class BubbleLayer extends Layer {
     return [scaledWidth, scaledHeight];
   }
 
-  toggleScaleLock(bubble) {
+  toggleScaleLock(bubble: Bubble) {
+    const paperSize = this.getPaperSize();
     bubble.image.scaleLock = !bubble.image.scaleLock;
     this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
     if (bubble.image.scaleLock) {
-      const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubble.size);
-      const [cx,cy] = bubble.center;
-      bubble.p0 = [cx - w/2, cy - h/2];
-      bubble.p1 = [cx + w/2, cy + h/2];
+      const bubbleSize = bubble.getPhysicalSize(paperSize);
+      const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubbleSize);
+      const [cx,cy] = bubble.getPhysicalCenter(paperSize);
+      bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w/2, cy - h/2]);
+      bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w/2, cy + h/2]);
       bubble.image.scale = [w / bubble.imageSize[0], h / bubble.imageSize[1]];
       this.setIconPositions();
     }
     this.redraw();
   }
 
-  selectBubble(bubble) {
+  selectBubble(bubble: Bubble) {
     for (let a of Object.keys(this.optionEditActive)) {
       if (this.optionEditActive[a]) {
         this.redraw();
