@@ -26,7 +26,6 @@
   let bubbleSnapshot: string = null;
   let delayedCommiter = new DelayedCommiter(
     () => {
-      console.log("commiting");
       commit("bubble"); 
       layeredCanvas.redraw(); 
     });
@@ -67,7 +66,6 @@
   }
 
   function revert() {
-    console.log("revert");
     delayedCommiter.cancel();
     revertBook($mainBook);
     $mainBook = $mainBook;
@@ -94,12 +92,10 @@
   }
 
   function viewportChanged() {
-    console.log("viewportChanged");
     $viewport = $viewport;
   }
 
   function insertPage(index: number) {
-    console.log("insertPage", index);
     shouldBuild = true;
     const p = $newPageProperty;
     const page = newPage(p.template);
@@ -113,7 +109,6 @@
   }
 
   function deletePage(index: number) {
-    console.log("deletePage", index);
     shouldBuild = true;
     $mainBook.pages.splice(index, 1);
     commit(null);
@@ -121,7 +116,6 @@
   }
 
   function insert(_page: Page, element: FrameElement) {
-    console.log("insert", element);
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, element, null);
     commit(null);
@@ -129,7 +123,6 @@
   }
 
   function splice(_page: Page, element: FrameElement) {
-    console.log("splice", element);
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, null, element);
     commit(null);
@@ -190,7 +183,6 @@
   function onBubbleModified(bubble: Bubble) {
     if (!layeredCanvas) { return; }
 
-    console.log("bubble changed");
     layeredCanvas.redraw();
 
     if (bubbleSnapshot && bubble) {
@@ -209,8 +201,6 @@
     $bubbleSplitCursor = null;
 
     const text = $bubble.text;
-    console.log(text.slice(cursor));
-    console.log(text.slice(0,cursor));
 
     const paperSize = $bubblePage.paperSize;
     const bubbleSize = $bubble.getPhysicalSize(paperSize)
@@ -250,7 +240,6 @@
   }
 
   function focusBubble(page: Page, b: Bubble, p: Vector) {
-    console.log("focusBubble");
     delayedCommiter.force();
     if (b) {
       const [cx, cy] = p;
@@ -269,7 +258,6 @@
       };
       defaultBubbleSlot.bubble = b;
     } else {
-      console.log("hiding");
       bubbleSnapshot = null;
       $bubbleInspectorTarget = null;
     }
@@ -285,7 +273,6 @@
   });
 
   function onResize(e: CustomEvent) {
-    console.log("onResize", e.detail);
     if (!layeredCanvas || !$viewport) { return; }
     $viewport.dirty = true;
     layeredCanvas.redraw();

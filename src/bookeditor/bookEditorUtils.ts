@@ -108,7 +108,6 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
 }
 
 function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page, b: Bubble): void {
-  console.log("potentialCrossPage");
   const arrayLayer = layeredCanvas.rootPaper.findLayer(ArrayLayer);
   const currentPageIndex = book.pages.findIndex(p => p.id === page.id);
   const paperSize = book.pages[currentPageIndex].paperSize;
@@ -116,7 +115,6 @@ function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page
   const q = arrayLayer.array.childPositionToParentPosition(currentPageIndex, p); // array coordinate
   const index = arrayLayer.array.findNearestPaperIndex(q);
   if (index !== currentPageIndex) {
-    console.log("cross page");
     book.pages[currentPageIndex].bubbles.splice(
       book.pages[currentPageIndex].bubbles.findIndex(e => e.uuid === b.uuid), 1);
     book.pages[index].bubbles.push(b);
@@ -128,5 +126,6 @@ function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page
         e.parent = null;
       }
     });
+    layeredCanvas.redraw();
   }
 }
