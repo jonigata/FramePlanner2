@@ -75,7 +75,7 @@ export class Bubble {
   }
 
   reset() {
-    const unit = 1 / 880;
+    const unit = 1 / 840;
     this.n_offset = [0, 0];
     this.rotation = 0;
     this.shape = "rounded";

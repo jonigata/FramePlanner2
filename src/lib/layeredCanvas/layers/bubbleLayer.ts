@@ -696,9 +696,9 @@ export class BubbleLayer extends Layer {
 
     const bubble = this.defaultBubbleSlot.bubble.clone();
     bubble.image = null;
-    //bubble.setPhysicalRect(paperSize, [p[0] -100, p[1] - 100, 200, 100]);
-    bubble.n_p0 = [0,0];
-    bubble.n_p1 = [1,1];
+    bubble.setPhysicalRect(paperSize, [p[0] -100, p[1] - 100, 200, 200]);
+    //bubble.n_p0 = [0,0];
+    //bubble.n_p1 = [1,1];
     bubble.initOptions();
     bubble.text = getHaiku();
     this.bubbles.push(bubble);
