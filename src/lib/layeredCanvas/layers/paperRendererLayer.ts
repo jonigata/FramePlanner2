@@ -137,16 +137,17 @@ export class PaperRendererLayer extends Layer {
   resolveLinkages(bubbles: Bubble[]) {
     const paperSize = this.getPaperSize();
 
-    // 親子関係解決
-    // ちょっとお行儀が悪く、path, unitedPath, childrenを書き換えている
+    // 初期化
     const bubbleDic: {[key: string]: Bubble} = {};
     for (let bubble of bubbles) {
       bubble.renderInfo ??= {} as BubbleRenderInfo;
       bubble.renderInfo.unitedPath = null;
       bubble.renderInfo.children = [];
+      // pathJsonは持ち越す
       bubbleDic[bubble.uuid] = bubble;
     }
 
+    // 親子関係解決
     for (let bubble of bubbles) {
       if (bubble.parent) {
         bubbleDic[bubble.parent].renderInfo.children.push(bubble);
@@ -178,12 +179,9 @@ export class PaperRendererLayer extends Layer {
 
     // 結合
     for (let bubble of bubbles) {
-      const center = bubble.getPhysicalCenter(paperSize);
       const ri = bubble.renderInfo;
-      if (bubble.parent) {
-        ri.unitedPath = null;
-      } else if (ri.path) {
-        // TODO: childrenが0のとき無駄なことしてない？
+      if (!bubble.parent && ri.path) {
+        const center = bubble.getPhysicalCenter(paperSize);
         ri.unitedPath = ri.path.clone();
         ri.unitedPath.translate(center);
         for (let child of ri.children) {
