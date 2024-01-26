@@ -33,6 +33,7 @@
   let editingBookId: string = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
+  let shouldBuild = true;
 
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
@@ -76,6 +77,7 @@
     if (painter.isPainting()) {
       painter.undo();
     } else {
+      shouldBuild = true;
       undoBookHistory($mainBook);
       revert();
     }
@@ -85,6 +87,7 @@
     if (painter.isPainting()) {
       painter.redo();
     } else {
+      shouldBuild = true;
       redoBookHistory($mainBook);
       revert();
     }
@@ -97,6 +100,7 @@
 
   function insertPage(index: number) {
     console.log("insertPage", index);
+    shouldBuild = true;
     const p = $newPageProperty;
     const page = newPage(p.template);
     page.paperSize = [...p.paperSize];
@@ -110,6 +114,7 @@
 
   function deletePage(index: number) {
     console.log("deletePage", index);
+    shouldBuild = true;
     $mainBook.pages.splice(index, 1);
     commit(null);
     $mainBook = $mainBook;
@@ -138,7 +143,8 @@
 
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
-    if (!canvas || !book) { return; }
+    if (!canvas || !book || !shouldBuild) { return; }
+    shouldBuild = false;
 
     console.log("*********** buildBookEditor from BookEditor");
     if (layeredCanvas) {

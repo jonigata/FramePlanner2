@@ -694,9 +694,12 @@ export class BubbleLayer extends Layer {
       }
     }
 
+    const q = Bubble.normalizedPosition(paperSize, p);
+
     const bubble = this.defaultBubbleSlot.bubble.clone();
     bubble.image = null;
-    bubble.setPhysicalRect(paperSize, [p[0] -100, p[1] - 100, 200, 200]);
+    bubble.n_p0 = [q[0] - 0.12, q[1] - 0.12];
+    bubble.n_p1 = [q[0] + 0.12, q[1] + 0.12];
     //bubble.n_p0 = [0,0];
     //bubble.n_p1 = [1,1];
     bubble.initOptions();
@@ -770,8 +773,8 @@ export class BubbleLayer extends Layer {
         }
         this.redraw();
       }
-      // this.onPotentialCrossPage(bubble);
-      // this.onCommit();
+      this.onPotentialCrossPage(bubble);
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
