@@ -30,16 +30,20 @@ type RenderData = {
 export class PaperRendererLayer extends Layer {
   frameTree: FrameElement;
   rawBubbles: Bubble[];
+  thisFrameRenderData: RenderData;
 
   constructor() {
     super();
   }
 
-  render(ctx: CanvasRenderingContext2D, depth: number) {
+  prerender() {
     const size = this.getPaperSize();
     const layout = calculatePhysicalLayout(this.frameTree, size, [0, 0]);
+    this.thisFrameRenderData = this.setUpRenderData(layout);
+  }
 
-    const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.setUpRenderData(layout);
+  render(ctx: CanvasRenderingContext2D, depth: number) {
+    const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.thisFrameRenderData;
 
     if (depth === 0) {
       this.cutOut(ctx);
