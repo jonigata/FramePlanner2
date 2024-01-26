@@ -13,13 +13,19 @@ export class PaperArray {
   constructor(papers: Paper[], gap: number) {
     this.gap = gap;
 
-    let center = 0; // yは常に0
-    this.papers = [];
-    for (let i = 0; i < papers.length; i++) {
-      this.papers.push({ paper: papers[i], center: [center, 0] })
-      center -= papers[i].size[0] * 0.5 + gap;
-      if (i < papers.length - 1) {
-        center -= papers[i + 1].size[0] * 0.5;
+    this.papers = papers.map(e => ({ paper: e, center: [0, 0] }));
+    this.recalculatePaperCenter();
+  }
+
+  recalculatePaperCenter() {
+    console.log("recalculatePaperCenter");
+    let x = 0; // yは常に0
+    for (let i = 0; i < this.papers.length; i++) {
+      this.papers[i].center = [x, 0];
+      x -= this.papers[i].paper.size[0] * 0.5;
+      x -= this.gap;
+      if (i < this.papers.length - 1) {
+        x -= this.papers[i + 1].paper.size[0] * 0.5;
       }
     }
   }

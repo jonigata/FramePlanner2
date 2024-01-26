@@ -1,11 +1,12 @@
 <script lang="ts">
+  import writableDerived from "svelte-writable-derived";
   import { draggable } from '@neodrag/svelte';
   import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
   import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
-  import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty } from '../bookeditor/bookStore';
+  import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { FileDropzone } from '@skeletonlabs/skeleton';
@@ -34,20 +35,16 @@
   let max = 9410;
   let contactText = "";
 
-  $:onUpdateFirstPage($mainBook?.pages[0]);
-  function onUpdateFirstPage(page: Page) {
-    const p = $newPageProperty;
-    if (!page) { return; }
-    if (p.paperSize[0] === page.paperSize[0] && p.paperSize[1] === page.paperSize[1] &&
-        p.paperColor === page.paperColor && p.frameColor === page.frameColor && p.frameWidth === page.frameWidth) {
-      return;
+  const scale = writableDerived(
+  	viewport,
+  	(v) => v?.scale,
+  	(s, v) => {
+      v.scale = s;
+      v.dirty = true;
+      $redrawToken = true;
+      return v;
     }
-    p.paperSize[0] = page.paperSize[0];
-    p.paperSize[1] = page.paperSize[1];
-    p.paperColor = page.paperColor;
-    p.frameColor = page.frameColor;
-    p.frameWidth = page.frameWidth;
-  }
+  );
 
   $:onUpdatePaperProperty($newPageProperty);
   function onUpdatePaperProperty(q: NewPageProperty) {
@@ -70,6 +67,8 @@
     if (changed) {
       commitBook($mainBook, "page-attribute");
       $mainBook = $mainBook;
+      $viewport.dirty = true;
+      $redrawToken = true;
     }
   }
 
@@ -265,8 +264,8 @@
     幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
-    拡大率<RangeSlider name="scale" bind:value={$viewport.scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
-    <button class="btn btn-sm variant-filled paper-size" on:click={() => $viewport.scale=1}>100%</button>
+    拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
+    <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>

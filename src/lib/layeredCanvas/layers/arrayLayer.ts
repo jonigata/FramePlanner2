@@ -31,13 +31,23 @@ export class ArrayLayer extends Layer {
       this.trashIcons.push(trashIcon);
       this.insertIcons.push(insertIcon);
     }
-
   }
 
   calculateLayout(matrix: DOMMatrix) {
+    this.array.recalculatePaperCenter();
     for (let paper of this.array.papers) {
       let m = matrix.translate(...paper.center);
       paper.paper.calculateLayout(m);
+    }
+
+    for (let i = 0; i < this.array.papers.length; i++) {
+      const paper = this.array.papers[i];
+      const s = paper.paper.size;
+      const c = paper.center;
+      const trashIcon = this.trashIcons[i];
+      trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
+      const insertIcon = this.insertIcons[i];
+      insertIcon.position = [c[0] + s[0] * -0.5 - 32, c[1] + s[1] * 0.5 + 32];
     }
   }
 

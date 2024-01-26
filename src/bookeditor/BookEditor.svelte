@@ -38,12 +38,6 @@
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
 
-  $: if ($viewport && !$viewport.dirty) {
-    $viewport.dirty = true;
-    $viewport = $viewport;
-    layeredCanvas?.redraw();
-  }
-
   $: if ($redrawToken) {
     $redrawToken = false; 
     layeredCanvas?.redraw();
