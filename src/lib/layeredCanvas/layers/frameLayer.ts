@@ -291,7 +291,6 @@ export class FrameLayer extends Layer {
 
     if (this.focusedBorder) {
       if (keyDownFlags["KeyT"]) {
-        console.log("transpose border", this.focusedBorder.index)
         const target = this.focusedBorder.layout.element.children[this.focusedBorder.index-1];
         FrameElement.transposeDivider(this.frameTree, target);
         this.onCommit();
@@ -500,13 +499,11 @@ export class FrameLayer extends Layer {
   }
 
   *rotateImage(p: Vector, layout: Layout) {
-    console.log("rotate");
     const element = layout.element;
     const originalRotation = element.rotation;
     try {
       yield* rotate(p, (q) => {
         element.rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
-        console.log("rotate: ", element.rotation);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(layout);
         }
@@ -741,22 +738,17 @@ export class FrameLayer extends Layer {
   }
 
   beforeDoubleClick(p: Vector): boolean {
-    console.log("beforeDoubleClick", p);
     for (let e of this.frameIcons) {
       const r = e.boudingRect();
-      console.log(r)
       if (e.contains(p)) {
-        console.log("beforeDoubleClick(true): ", e);
         return true;
       }
     }
     for (let e of this.borderIcons) {
       if (e.contains(p)) {
-        console.log("beforeDoubleClick(true): ", e);
         return true;
       }
     }
-    console.log("beforeDoubleClick(false)");
     return false;
   }
 

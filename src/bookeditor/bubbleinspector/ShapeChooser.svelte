@@ -47,6 +47,8 @@
   }
 
   function chooseTemplate(e: CustomEvent<MouseEvent>, b: Bubble) {
+    console.log($bubble);
+    console.log(b);
     $bubble.rotation = b.rotation;
     $bubble.shape = b.shape;
     $bubble.embedded = b.embedded;

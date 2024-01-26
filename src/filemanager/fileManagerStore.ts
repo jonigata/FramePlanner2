@@ -4,7 +4,7 @@ import type { Page, Book } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-import { v4 as uuidv4 } from 'uuid';
+import { ulid } from 'ulid';
 
 export type Dragging = {
   bindId: string;
@@ -145,7 +145,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
 
     const page: Page = {
-      id: serializedPage.id ?? uuidv4(),
+      id: serializedPage.id ?? ulid(),
       frameTree: frameTree,
       bubbles: bubbles,
       paperSize: serializedPage.paperSize,
@@ -162,7 +162,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
 
 async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubbles: Bubble[]): Promise<Book> {
   const page: Page = {
-    id: serializedPage.id ?? uuidv4(),
+    id: serializedPage.id ?? ulid(),
     frameTree: frameTree,
     bubbles: bubbles,
     paperSize: serializedPage.paperSize,

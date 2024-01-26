@@ -19,13 +19,15 @@
     opts['tailTip'] = [-width*0.5, height*0.4];
     opts['tailMid'] = [0.5, 0];
 
+    const paperSize: [number, number] = [width, height];
+
     const ctx = canvas.getContext("2d");
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.translate(width * 0.5, height * 0.5);
-    ctx.fillStyle = bubble.hasEnoughSize() ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
-    ctx.strokeStyle = 0 < bubble.strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.strokeWidth / 2;
+    ctx.fillStyle = bubble.fillColor;
+    ctx.strokeStyle = 0 < bubble.n_strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
+    ctx.lineWidth = bubble.getPhysicalStrokeWidth(paperSize) / 2;
     ctx["bubbleDrawMethod"] = "fill";
     drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
     ctx["bubbleDrawMethod"] = "stroke";

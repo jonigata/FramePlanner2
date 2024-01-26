@@ -7,10 +7,10 @@ import { Bubble, bubbleOptionSets, type BubbleBorderHandle } from "../dataModels
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
 import { type Vector, type Rect, add2D } from "../tools/geometry/geometry";
-import { v4 as uuidv4 } from 'uuid';
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
+import { ulid } from 'ulid';
 
 const iconUnit: Vector = [20, 20];
 
@@ -380,7 +380,7 @@ export class BubbleLayer extends Layer {
       const b = Bubble.compile(paperSize, JSON.parse(text));
       const bubbleSize = b.getPhysicalSize(paperSize);
       b.parent = null;
-      b.uuid = uuidv4();
+      b.uuid = ulid();
       const x = Math.random() * (paperSize[0] - bubbleSize[0]);
       const y = Math.random() * (paperSize[1] - bubbleSize[1]);
       b.setPhysicalRect(paperSize, [x, y, ...bubbleSize]);

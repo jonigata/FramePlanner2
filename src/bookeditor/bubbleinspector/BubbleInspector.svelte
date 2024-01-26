@@ -36,8 +36,26 @@
   let inspectorSize = [0, 0];
   let inspector = null;
 
+/*
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
+*/
+  const bubble = writableDerived(
+    bubbleInspectorTarget,
+    (bit) => bit?.bubble,
+    (b, bit) => {
+      bit.bubble = b;
+      return bit;
+    }
+  );
+  const bubblePage = writableDerived(
+    bubbleInspectorTarget,
+    (bit) => bit?.page,
+    (b, bit) => {
+      bit.page = b;
+      return bit;
+    }
+  );
   const fontSize = writableDerived(
   	bubbleInspectorTarget,
   	(bit) => bit?.bubble.getPhysicalFontSize(bit.page.paperSize),
@@ -59,14 +77,6 @@
   	(bit) => bit?.bubble.getPhysicalStrokeWidth(bit.page.paperSize),
   	(sw, bit) => {
       bit.bubble.setPhysicalStrokeWidth(bit.page.paperSize, sw);
-      return bit;
-    }
-  );
-  const text = writableDerived(
-  	bubbleInspectorTarget,
-  	(bit) => bit?.bubble.text,
-  	(t, bit) => {
-      bit.bubble.text = t;
       return bit;
     }
   );
@@ -109,6 +119,7 @@
   $:onChangeShape($chosenShape);
   function onChangeShape(s: string) {
     if ($bubble && $bubble.shape !== s) {
+      console.log("onChangeShape", s);
       $bubble.shape = s;
       $bubble.initOptions();
     }
@@ -131,8 +142,9 @@
   }
 
   function reset() {
-    $bubble?.reset();
-    $bubble?.initOptions();
+    if (!$bubble) { return; }
+    $bubble.reset();
+    $bubble.initOptions();
     $bubble = $bubble;    
     $chosenShape = $bubble.shape;
   }
@@ -207,7 +219,7 @@
     <div class="hbox expand gap-2">
       <textarea
         class="my-2 rounded-container-token textarea" 
-        bind:value={$text}
+        bind:value={$bubble.text}
         bind:this={textarea}
         on:keypress={onKeyPress}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->

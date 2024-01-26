@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { ulid } from 'ulid';
 import type { Vector, Rect } from '../tools/geometry/geometry';
 import { rectContains } from '../tools/geometry/geometry';
 
@@ -66,7 +66,7 @@ export class Bubble {
     this.n_p0 = [0, 0];
     this.n_p1 = [0.1, 0.1];
     this.text = "empty";
-    this.uuid = uuidv4();
+    this.uuid = ulid();
     this.parent = null;
     this.creationContext = this.getStackTrace();
 
@@ -119,7 +119,7 @@ export class Bubble {
     b.outlineColor = this.outlineColor;
     b.n_outlineWidth = this.n_outlineWidth;
     b.autoNewline = this.autoNewline;
-    b.uuid = uuidv4();
+    b.uuid = ulid();
     b.parent = null;
 
     b.image = this.image ? {...this.image} : null;

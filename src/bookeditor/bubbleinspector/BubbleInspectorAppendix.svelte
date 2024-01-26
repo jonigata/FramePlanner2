@@ -1,10 +1,17 @@
 <script lang="ts">
-  import { derived } from "svelte/store";
+  import writableDerived from "svelte-writable-derived";
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../../utils/NumberEdit.svelte';
   import { bubbleInspectorTarget } from './bubbleInspectorStore';
 
-  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
+  const bubble = writableDerived(
+    bubbleInspectorTarget,
+    (bit) => bit?.bubble,
+    (b, bit) => {
+      bit.bubble = b;
+      return bit;
+    }
+  );
 </script>
 
 <div class="container">
