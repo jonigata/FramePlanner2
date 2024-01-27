@@ -143,7 +143,7 @@ export class PaperRendererLayer extends Layer {
       bubble.renderInfo ??= {} as BubbleRenderInfo;
       bubble.renderInfo.unitedPath = null;
       bubble.renderInfo.children = [];
-      // pathJsonは持ち越す
+      // pathJson, pathは持ち越す
       bubbleDic[bubble.uuid] = bubble;
     }
 
@@ -180,7 +180,7 @@ export class PaperRendererLayer extends Layer {
     // 結合
     for (let bubble of bubbles) {
       const ri = bubble.renderInfo;
-      if (!bubble.parent && ri.path) {
+      if (bubble.parent == null && ri.path) {
         const center = bubble.getPhysicalCenter(paperSize);
         ri.unitedPath = ri.path.clone();
         ri.unitedPath.translate(center);

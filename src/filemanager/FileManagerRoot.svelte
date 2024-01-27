@@ -19,7 +19,6 @@
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { collectGarbage } from '../utils/garbageCollection';
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
-  import { ulid } from 'ulid';
 
   export let fileSystem: FileSystem;
 
@@ -132,6 +131,8 @@
       await saveBookTo(book, fileSystem, localFile);
       await desktop.link(getCurrentDateTime(), localFile.id);
       await recordCurrentFileId(localFile.id as NodeId);
+    } else if (urlParams.has('reset')) {
+      await recordCurrentFileId(undefined);
     } else {
       return false;
     }

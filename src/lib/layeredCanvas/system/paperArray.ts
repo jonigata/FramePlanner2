@@ -18,7 +18,6 @@ export class PaperArray {
   }
 
   recalculatePaperCenter() {
-    console.log("recalculatePaperCenter");
     let x = 0; // yは常に0
     for (let i = 0; i < this.papers.length; i++) {
       this.papers[i].center = [x, 0];

@@ -184,6 +184,7 @@ export class Bubble {
     b.parent = json.parent;
     b.optionContext = Bubble.getInitialOptions(b);
     Object.assign(b.optionContext, json.optionContext ?? {});
+    b.forceEnoughSize(paperSize);
     return b;
   }
 
@@ -192,7 +193,7 @@ export class Bubble {
     const equalNumber = (v1, v2) => { return Math.abs(v1 - v2) < 0.0001; }
     return {
       n_p0: b.n_p0,
-      n_p1: b.n_p0,
+      n_p1: b.n_p1,
       n_offset: b.n_offset[0] == 0 && b.n_offset[1] == 0 ? undefined : b.n_offset,
       rotation: b.rotation == 0 ? undefined : b.rotation,
       text: b.text == "" ? undefined : b.text,
