@@ -3,7 +3,7 @@
   import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
-  import { newBook, revisionEqual, commitBook } from '../bookeditor/book';
+  import { newBook, revisionEqual, commitBook, getHistoryWeight } from '../bookeditor/book';
   import { mainBook } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
@@ -20,6 +20,7 @@
   import { collectGarbage } from '../utils/garbageCollection';
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
+  import { DelayedCommiter } from '../utils/cancelableTask';
 
   export let fileSystem: FileSystem;
 
@@ -31,6 +32,14 @@
   let trash = null;
   // let templates: [BindId, string, Node] = null;
   let currentRevision: Revision = null;
+  let delayedCommiter = new DelayedCommiter(
+    async () => {
+      const book = $mainBook;
+      const file = await fileSystem.getNode(book.revision.id as NodeId);
+      await saveBookTo(book, fileSystem, file.asFile());
+      currentRevision = {...book.revision};
+      await recordCurrentFileId(book.revision.id as NodeId);
+    });
 
   $: onOpen($fileManagerOpen);
   async function onOpen(open: boolean) {
@@ -81,10 +90,12 @@
       }
 
       // 普通のオートセーブ
-      const file = await fileSystem.getNode(book.revision.id as NodeId);
-      // await saveBookTo(book, fileSystem, file.asFile());
-      currentRevision = {...book.revision};
-      await recordCurrentFileId(book.revision.id as NodeId);
+      if (getHistoryWeight(book) == 'heavy') {
+        delayedCommiter.cancel();
+        delayedCommiter.schedule(0);
+      } else {
+        delayedCommiter.schedule(2000);
+      }
     }
   }
 

@@ -159,6 +159,7 @@ export class PaperRendererLayer extends Layer {
       const n_size = [bubble.n_p1[0] - bubble.n_p0[0], bubble.n_p1[1] - bubble.n_p0[1]];
       const ri = bubble.renderInfo;
       const c = {
+        paperSize: paperSize,
         shape: bubble.shape,
         size: n_size,
         optionContext: bubble.optionContext,

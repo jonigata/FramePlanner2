@@ -1,6 +1,13 @@
 export const keyDownFlags = {};
 
+let initialized = false;
+
 export function initializeKeyCache(canvas: HTMLCanvasElement, consume: (code: string) => boolean) {
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+  
   function getCanvasPosition(event: MouseEvent) {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;

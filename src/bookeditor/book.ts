@@ -28,6 +28,8 @@ export type Page = {
 
 export type HistoryTag = 'bubble' | 'page-attribute' | null;
 
+export type HistoryWeight = "light" | "heavy";
+
 export type HistoryEntry = {
   pages: Page[];
   tag: HistoryTag;
@@ -51,6 +53,12 @@ export function incrementRevision(revision: Revision): void {
 export function revisionEqual(a: Revision, b: Revision): boolean {
   if (!a || !b) return false;
   return a.id === b.id && a.revision === b.revision;
+}
+
+export function getHistoryWeight(book: Book): HistoryWeight {
+  const h = book.history;
+  const i = h.cursor;
+  return h.entries[i-1].tag == null ? 'heavy' : 'light';
 }
 
 export function addBookHistory(book: Book, tag: HistoryTag): void {
