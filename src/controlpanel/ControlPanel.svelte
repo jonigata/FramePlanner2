@@ -23,12 +23,13 @@
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { batchImagingOpen } from '../generator/batchImagingStore';
+  import { fileSystem } from '../filemanager/fileManagerStore';
+  import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
   import clipboardIcon from '../assets/clipboard.png';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
-  import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -145,6 +146,22 @@
       component: 'weaver',
     };
     modalStore.trigger(d);    
+  }
+
+  async function dumpFileSystem() {
+    await ($fileSystem as IndexedDBFileSystem).dump();
+  }
+
+  let dumpFiles;
+  $: onUndumpFileSystem(dumpFiles);
+  async function onUndumpFileSystem(dumpFiles) {
+    if (dumpFiles) {
+      for (const file of dumpFiles) {
+        const s = await readFileAsText(file);
+        await ($fileSystem as IndexedDBFileSystem).undump(s);
+        console.log("undump done");
+      }
+    }
   }
 
   let files: FileList;
@@ -335,6 +352,11 @@
       Export PSD
     </button>
   </div>  
+  <!--
+  <div class="hbox gap mx-2" style="margin-top: 8px;">
+    <input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
+  </div>
+  -->
 </div>
 {/if}
 
