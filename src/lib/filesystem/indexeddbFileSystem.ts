@@ -3,6 +3,7 @@ import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { imageToBase64 } from "./../layeredCanvas/saveCanvas";
+import { saveAs } from 'file-saver';
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;
@@ -77,6 +78,31 @@ export class IndexedDBFileSystem extends FileSystem {
     // Assuming root folder ID is known or is a constant
     const rootId = "/" as NodeId;
     return this.getNode(rootId) as Promise<Folder>;
+  }
+  
+  async dump(): Promise<void> {
+    // すべてのノードを取得
+    const allNodes = await this.db.getAll('nodes');
+  
+    // ノードをJSON形式に変換
+    const json = JSON.stringify(allNodes, null, 2);
+  
+    // ファイルに保存 (file-saverを使用)
+    const blob = new Blob([json], { type: 'application/json' });
+    saveAs(blob, 'filesystem-dump.json');
+  }
+  
+  async undump(json: string): Promise<void> {
+    // ファイルからJSONを読み込む
+    const nodes = JSON.parse(json);
+  
+    // すべてのノードをIndexedDBに保存
+    const tx = this.db.transaction('nodes', 'readwrite');
+    await tx.store.clear();
+    for (const node of nodes) {
+      await tx.store.put(node);
+    }
+    await tx.done;
   }
 }
 

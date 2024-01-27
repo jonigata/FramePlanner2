@@ -21,10 +21,11 @@
   import aiPictorsIcon from './assets/aipictors_logo_0.png'
   import { FrameElement } from './lib/layeredCanvas/frameTree';
   import { Bubble } from './lib/layeredCanvas/bubble';
-  import { newFileToken, sharePageToken } from './filemanager/fileManagerStore';
+  import { fileSystem, newFileToken, sharePageToken } from './filemanager/fileManagerStore';
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { batchImagingOpen } from './generator/batchImagingStore';
+  import type { IndexedDBFileSystem } from './lib/filesystem/indexeddbFileSystem';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -98,6 +99,22 @@
       component: 'weaver',
     };
     modalStore.trigger(d);    
+  }
+
+  async function dumpFileSystem() {
+    await ($fileSystem as IndexedDBFileSystem).dump();
+  }
+
+  let dumpFiles;
+  $: onUndumpFileSystem(dumpFiles);
+  async function onUndumpFileSystem(dumpFiles) {
+    if (dumpFiles) {
+      for (const file of dumpFiles) {
+        const s = await readFileAsText(file);
+        await ($fileSystem as IndexedDBFileSystem).undump(s);
+        console.log("undump done");
+      }
+    }
   }
 
   let files: FileList;
@@ -288,6 +305,7 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
       Weaver
     </button>
+    <input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
   </div>  
 </div>
 
