@@ -180,7 +180,7 @@ export class Bubble {
     b.outlineColor = json.outlineColor ?? "#000000FF";
     b.n_outlineWidth = normalizedNumber(json.n_outlineWidth, json.outlineWidth, 0);
     b.autoNewline = json.autoNewline ?? true;
-    b.uuid = json.uuid ?? uuidv4();
+    b.uuid = json.uuid ?? ulid();
     b.parent = json.parent;
     b.optionContext = Bubble.getInitialOptions(b);
     Object.assign(b.optionContext, json.optionContext ?? {});

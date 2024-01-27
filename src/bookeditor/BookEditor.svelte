@@ -3,7 +3,7 @@
   import { onDestroy } from 'svelte';
   import { derived } from "svelte/store";
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
-  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -19,6 +19,7 @@
   import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
+  import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -90,7 +91,7 @@
 
   function insertPage(index: number) {
     const p = $newPageProperty;
-    const page = newPage(p.template);
+    const page = newPage(FrameElement.compile(frameExamples[p.templateIndex]));
     page.paperSize = [...p.paperSize];
     page.paperColor = p.paperColor;
     page.frameColor = p.frameColor;

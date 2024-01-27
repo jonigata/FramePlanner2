@@ -5,7 +5,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
-  import { type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
+  import { type Book, type Page, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -41,13 +41,23 @@
   	(s, v) => {
       v.scale = s;
       v.dirty = true;
+      console.log("ControlPanel.scale", s, v);
       $redrawToken = true;
       return v;
     }
   );
 
+  $:onUpdateMainBook($mainBook);
+  function onUpdateMainBook(book: Book) {
+    if (!$mainBook) { return; }
+    console.log("#### mainBook")
+  }
+
   $:onUpdatePaperProperty($newPageProperty);
   function onUpdatePaperProperty(q: NewPageProperty) {
+    if (!$newPageProperty) { return; }
+    console.log("#### newPageProperty")
+/*
     if (!$mainBook) { return; }
 
     let changed = false;
@@ -68,8 +78,12 @@
       commitBook($mainBook, "page-attribute");
       $mainBook = $mainBook;
       $viewport.dirty = true;
+      console.log("ControlPanel.onUpdatePaperProperty", q);
+      console.log($newPageProperty);
+      console.log($mainBook);
       $redrawToken = true;
     }
+*/
   }
 
   function setDimensions(w: number, h: number) {
@@ -93,7 +107,9 @@
   }
 
   function changeTemplate(event: CustomEvent<number>) {
-    $newPageProperty.template = FrameElement.compile(frameExamples[event.detail]);    
+    if ($newPageProperty.templateIndex != event.detail) {
+      $newPageProperty.templateIndex = event.detail;    
+    }
   }
 
   function download() {

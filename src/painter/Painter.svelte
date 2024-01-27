@@ -1,13 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
-  import type { Book, Page, BookOperators, HistoryTag } from '../bookeditor/book';
+  import type { Page } from '../bookeditor/book';
   import { makePlainImage } from '../utils/imageUtil';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
   import { constraintLeaf, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
-  import { mainBook, bookEditor, viewport, newPageProperty } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/bookStore';
   import PainterToolBox from './PainterToolBox.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";

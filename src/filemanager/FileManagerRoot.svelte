@@ -57,6 +57,7 @@
       if (currentFile) {
         const newBook = await loadBookFrom(fileSystem, currentFile.asFile());
         currentRevision = {...newBook.revision};
+        console.snapshot(newBook.pages[0]);
         $mainBook = newBook;
         logEvent(getAnalytics(), 'continue_book');
       } else {

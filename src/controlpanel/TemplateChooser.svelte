@@ -18,7 +18,7 @@
     pagenationDirection: 'ltr' 
   };
 
-  function onSlideChange(e: CustomEvent<{Slide: SplideSlide}>) {
+  function onSlideChange(e) { // : CustomEvent<SlideEventDetail>
     dispatch('change', e.detail.Slide.index);
   }
 
