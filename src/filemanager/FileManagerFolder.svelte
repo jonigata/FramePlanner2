@@ -166,9 +166,13 @@
     await recycleNode(node);
     modalStore.trigger({ type: 'component',component: 'waiting' });    
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
-    await purgeCollectedGarbage(fileSystem, strayImageFiles);
+    console.log("usedImageFiles", usedImageFiles);
+    console.log("strayImageFiles", strayImageFiles);
+    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
     modalStore.close();
     $fileManagerUsedSize = await fileSystem.collectTotalSize();
+    $fileManagerRefreshKey++;
     node = node;
   }
 

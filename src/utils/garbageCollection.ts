@@ -13,16 +13,25 @@ export async function collectGarbage(fileSystem: FileSystem) {
   await listFiles(cabinet[2].asFolder(), allFiles, allFolders);
   await listFiles(trash[2].asFolder(), allFiles, allFolders);
 
-  const allImageFiles: string[] = [];
-  const allImageFolder = await root.getNodeByName("画像");
-  await listFiles(allImageFolder.asFolder(), allImageFiles, []);
-
   const usedImageFiles = [];
   for (const file of allFiles) {
     await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId)).asFile(), usedImageFiles);
   }
 
-  const strayImageFiles = allImageFiles.filter((image) => !usedImageFiles.includes(image));
+  const allImageFolder = await root.getNodeByName("画像");
+  const allImageFiles = (await allImageFolder.asFolder().list()).map((entry) => entry[2]);
+
+  function difference(setA, setB) {
+    const _difference = new Set(setA);
+    for (const elem of setB) {
+      _difference.delete(elem);
+    }
+    return _difference;
+  }
+
+  const usedImageSet = new Set(usedImageFiles);
+  const allImageSet = new Set(allImageFiles);
+  const strayImageFiles = Array.from(difference(allImageSet, usedImageSet));
   
   console.log("files", allFiles);
   console.log("folders", allFolders);
@@ -34,7 +43,9 @@ export async function collectGarbage(fileSystem: FileSystem) {
   return { usedImageFiles, strayImageFiles };
 }
 
-export async function purgeCollectedGarbage(fileSystem: FileSystem, strayImageFiles: string[]) {
+export async function purgeCollectedGarbage(fileSystem: FileSystem, imageFolder: Folder, strayImageFiles: string[]) {
+  const imageList = await imageFolder.list();
+
   for (const imageFile of strayImageFiles) {
     /*
     const file = (await fileSystem.getNode(imageFile as NodeId)).asFile();
@@ -43,6 +54,8 @@ export async function purgeCollectedGarbage(fileSystem: FileSystem, strayImageFi
     await file.writeImage(image);
     */
     await fileSystem.destroyNode(imageFile as NodeId);
+    const bindId = imageList.find((entry) => entry[2] === imageFile)[0];
+    await imageFolder.unlink(bindId);
     console.log("purge image", imageFile);
   }
   console.log("purge done");

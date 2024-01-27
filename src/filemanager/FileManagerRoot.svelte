@@ -19,6 +19,7 @@
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { collectGarbage } from '../utils/garbageCollection';
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
+  import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
 
   export let fileSystem: FileSystem;
 
@@ -235,6 +236,36 @@
     return (number / 1000000).toFixed(2) + 'M';
   }
 
+  async function dumpFileSystem() {
+    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    await (fileSystem as IndexedDBFileSystem).dump();
+    modalStore.close();
+  }
+
+  let dumpFiles;
+  $: onUndumpFileSystem(dumpFiles);
+  async function onUndumpFileSystem(dumpFiles) {
+    if (dumpFiles) {
+      modalStore.trigger({ type: 'component',component: 'waiting' });    
+      for (const file of dumpFiles) {
+        const s = await readFileAsText(file);
+        await (fileSystem as IndexedDBFileSystem).undump(s);
+      }
+      console.log("undump done");
+      $fileManagerRefreshKey++;
+      modalStore.close();
+    }
+  }
+
+  function readFileAsText(file: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file);
+    });
+  }
+
   onMount(async () => {
     root = await fileSystem.getRoot();
     desktop = await root.getEmbodiedEntryByName("デスクトップ");
@@ -284,10 +315,16 @@
           {/if}
         </div>
   -->
-        </div>
+      </div>
       <div class="toolbar">
-        <button class="button variant-filled-primary" on:click={displayStoredImages}>埋め込み画像一覧</button>
         <p>ファイルシステム使用量: {formatMillions($fileManagerUsedSize)}</p>
+        <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
+      </div> 
+      <div class="toolbar">
+        <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
+        <div class="hbox gap mx-2" style="margin-top: 8px;">
+          リストア<input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
+        </div>
       </div>
     {/key}
   </Drawer>
@@ -300,6 +337,7 @@
     flex-direction: row;
     margin: 8px;
     gap: 16px;
+    height: 32px;
   }
   .cabinet {
     margin: 8px;
