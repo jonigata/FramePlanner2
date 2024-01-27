@@ -67,7 +67,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   }
 
   const json = JSON.stringify(serializedBook);
-  await file.write(json);
+  //await file.write(json);
 }
 
 async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {

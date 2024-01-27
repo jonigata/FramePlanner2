@@ -150,7 +150,7 @@ export class Bubble {
   }
 
   static compile(paperSize: Vector, json: any): Bubble {
-    // 古いjsonはn_に一貫性がない
+    // 古いjsonはn_に一貫性がない 古い"fontsize"はn_fontsize相当
     const unit = Bubble.getUnit(paperSize);
     const normalizedNumber = (v1, v2, v3) => { if (v1) { return v1; } else if (v2) { return v2 * unit; } else { return v3 * unit; }}
 
@@ -161,7 +161,7 @@ export class Bubble {
     if (json.n_offset) {
       b.n_offset = json.n_offset;
     } else if (json.offset) {
-      b.n_offset = this.denormalizedPosition(paperSize, json.offset);
+      b.n_offset = this.normalizedPosition(paperSize, json.offset);
     }
     b.rotation = json.rotation ?? 0;
     b.text = json.text ?? "";
@@ -170,7 +170,13 @@ export class Bubble {
     b.embedded = json.embedded ?? false;
     b.fontStyle = json.fontStyle ?? "normal";
     b.fontWeight = json.fontWeight ?? "400";
-    b.n_fontSize = normalizedNumber(json.n_fontSize, json.fontSize, 26);
+    b.n_fontSize = 26 * unit;
+    if (json.n_fontSize) {
+      b.n_fontSize = json.n_fontSize;
+    } else if (json.fontSize) {
+      b.n_fontSize = json.fontSize;
+    }
+    console.log(b.n_fontSize, json.n_fontSize, json.fontSize);
     b.fontFamily = json.fontFamily ?? "Noto Sans JP";
     b.direction = json.direction ?? 'v';
     b.fontColor = json.fontColor ?? '#000000FF';

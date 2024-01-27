@@ -352,11 +352,11 @@
       Export PSD
     </button>
   </div>  
-  <!--
+
   <div class="hbox gap mx-2" style="margin-top: 8px;">
     <input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
   </div>
-  -->
+
 </div>
 {/if}
 
