@@ -67,7 +67,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   }
 
   const json = JSON.stringify(serializedBook);
-  //await file.write(json);
+  await file.write(json);
 }
 
 async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
@@ -121,6 +121,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
 export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
   console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
+  console.log(content);
   const serializedBook = JSON.parse(content);
 
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
@@ -228,7 +229,6 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, book
   book.revision.id = file.id;
 
   console.tag("newFile", "cyan");
-  // console.trace();
   await saveBookTo(book, fs, file);
   const bindId = await folder.link(name, file.id);
   return { file, bindId };

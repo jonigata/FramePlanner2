@@ -18,9 +18,9 @@ export type NewPageProperty = {
 };
 
 export const newPageProperty: Writable<NewPageProperty> = writable({
-  paperSize: [0, 0],
-  paperColor: null, 
-  frameColor: null, 
+  paperSize: [840, 1188],
+  paperColor: "#FFFFFF", 
+  frameColor: "#000000", 
   frameWidth: 2, 
   templateIndex: 0,
 });

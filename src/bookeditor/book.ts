@@ -88,7 +88,7 @@ export function redoBookHistory(book: Book): void {
 }
 
 export function commitBook(book: Book, tag: HistoryTag): void {
-  console.tag("commitBook", "orange");
+  console.tag("commitBook", "orange", tag);
   addBookHistory(book, tag);
   incrementRevision(book.revision);
 }

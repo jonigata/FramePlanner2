@@ -380,14 +380,14 @@ export class FrameElement {
   static visibilityCandidates = ["none", "background", "full"];
 }
 
-function paddedBox(rawOrigin: Vector, rawSize: Vector, padding: Padding): [Vector, Vector] {
+function paddedSquare(rawOrigin: Vector, rawSize: Vector, padding: Padding): [Vector, Vector] {
   const origin: Vector = [rawOrigin[0] + padding.left * rawSize[0], rawOrigin[1] + padding.top * rawSize[1]];
   const size: Vector = [rawSize[0] * (1 - padding.left - padding.right), rawSize[1] * (1 - padding.top - padding.bottom)];
   return [origin, size];
 }
 
 export function calculatePhysicalLayout(element: FrameElement, rawSize: Vector, rawOrigin: Vector): Layout {
-  const [origin, size] = paddedBox(rawOrigin, rawSize, element.padding);
+  const [origin, size] = paddedSquare(rawOrigin, rawSize, element.padding);
 
   const corners: Trapezoid = {
     topLeft: [origin[0], origin[1]],
@@ -408,7 +408,7 @@ function calculatePhysicalLayoutAux(element: FrameElement, size: Vector, origin:
 
 function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector, rawOrigin: Vector, corners: Trapezoid): Layout {
   const padding = element.padding;
-  const [origin, size] = paddedBox(rawOrigin, rawSize, padding);
+  const [origin, size] = paddedSquare(rawOrigin, rawSize, padding);
 
   const dir = element.direction;
   const psize = element.localLength;
@@ -475,7 +475,7 @@ function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector,
 
 function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, rawOrigin: Vector, rawCorners: Trapezoid): Layout {
   const padding = element.padding;
-  const [origin, size] = paddedBox(rawOrigin, rawSize, padding);
+  const [origin, size] = paddedSquare(rawOrigin, rawSize, padding);
   const [w, h] = rawSize;
 
   const topLine = line(rawCorners.topLeft, rawCorners.topRight, [0, padding.top * h]);
@@ -494,7 +494,7 @@ function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, raw
   return { size, origin, rawSize, rawOrigin, element, corners };
 }
 
-export function rectFromBox(position: Vector, size: Vector): Rect {
+export function rectFromSquare(position: Vector, size: Vector): Rect {
   const [x, y] = position;
   const [w, h] = size;
   return [x, y, x + w, y + h];

@@ -58,7 +58,6 @@
   function onUpdatePaperProperty(q: NewPageProperty) {
     if (!$newPageProperty) { return; }
     console.log("#### newPageProperty")
-/*
     if (!$mainBook) { return; }
 
     let changed = false;
@@ -73,6 +72,9 @@
       p.paperColor = q.paperColor;
       p.frameColor = q.frameColor;
       p.frameWidth = q.frameWidth;
+      p.frameTree.bgColor = p.paperColor;
+      p.frameTree.borderColor = p.frameColor;
+      p.frameTree.borderWidth = p.frameWidth;
       changed = true;
     }
     if (changed) {
@@ -84,7 +86,6 @@
       console.log($mainBook);
       $redrawToken = true;
     }
-*/
   }
 
   function setDimensions(w: number, h: number) {
@@ -294,7 +295,7 @@
   <div class="hbox gap mx-2 paper-color-picker">
     背景色<ColorPicker bind:hex={$newPageProperty.paperColor} label=""/>
     枠色<ColorPicker bind:hex={$newPageProperty.frameColor} label="" />
-    幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
+    枠の幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
     拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:250px;"/>

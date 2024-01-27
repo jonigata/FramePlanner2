@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromBox } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromSquare } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -656,8 +656,8 @@ export class FrameLayer extends Layer {
     const child0 = layout.children[index - 1];
     const child1 = layout.children[index];
 
-    const rect0 = rectFromBox(child0.origin, child0.size);
-    const rect1 = rectFromBox(child1.origin, child1.size);
+    const rect0 = rectFromSquare(child0.origin, child0.size);
+    const rect1 = rectFromSquare(child1.origin, child1.size);
 
     let t; // 0.0 - 1.0, 0.0: top or left of rect0, 1.0: right or bottom of rect1
     if (layout.dir == "h") {
