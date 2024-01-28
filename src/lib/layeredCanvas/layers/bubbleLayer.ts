@@ -452,7 +452,7 @@ export class BubbleLayer extends Layer {
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
-    bubble.image = { image, translation: [0,0], n_scale: 1, scaleLock: true };
+    bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
     this.bubbles.push(bubble);
     this.onCommit();
     this.selectBubble(bubble);
@@ -675,7 +675,7 @@ export class BubbleLayer extends Layer {
       if (bubble.contains(paperSize, position)) {
         this.getGroupMaster(bubble).image = {
            image, 
-           translation: [0,0], 
+           n_translation: [0,0], 
            n_scale: 1, 
            scaleLock: false 
           };
@@ -874,7 +874,7 @@ export class BubbleLayer extends Layer {
         if (bubble.image?.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
           const bubbleSize = bubble.getPhysicalSize(paperSize);
-          bubble.image.translation = [0,0];
+          bubble.image.n_translation = [0,0];
           // TODO:
           // bubble.image.scale = [bubbleSize[0] / bubble.image.image.naturalWidth, bubbleSize[1] / bubble.image.image.naturalHeight];
         }
@@ -998,16 +998,18 @@ export class BubbleLayer extends Layer {
   }    
 
   *translateImage(dragStart: Vector, bubble: Bubble) {
-    const origin = bubble.image.translation;
+    const paperSize = this.getPaperSize();
+    const n_origin = bubble.image.n_translation;
+    const origin = bubble.getPhysicalImageTranslation(paperSize);
 
     try {
       yield* translate(dragStart, (q) => {
-        bubble.image.translation = [origin[0] + q[0], origin[1] + q[1]];
+        bubble.setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
         this.redraw();
       });
     } catch (e) {
       if (e === "cancel") {
-        bubble.image.translation = origin;
+        bubble.image.n_translation = n_origin;
         this.redraw();
       }
     }

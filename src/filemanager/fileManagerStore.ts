@@ -5,6 +5,7 @@ import { commitBook } from "../bookeditor/book.js";
 import { constraintLeaf, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
+import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 
 export type Dragging = {
   bindId: string;
@@ -73,19 +74,34 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
 async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
-  const image = frameTree.image;
-  const scribble = frameTree.scribble;
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
+  if (frameTree.image) {
+    const image = frameTree.image.image;
+    const scribble = frameTree.image.scribble;
 
-  if (image) {
-    await saveImage(fileSystem, image, imageFolder);
-    const fileId = image["fileId"][fileSystem.id];
-    markUp.image = fileId;
-  }
-  if (scribble) {
-    await saveImage(fileSystem, scribble, imageFolder);
-    const fileId = scribble["fileId"][fileSystem.id];
-    markUp.scribble = fileId;
+    let markUpImage = null;
+    let markUpScribble = null;
+    
+    if (image) {
+      await saveImage(fileSystem, image, imageFolder);
+      const fileId = image["fileId"][fileSystem.id];
+      markUpImage = fileId;
+    }
+    if (scribble) {
+      await saveImage(fileSystem, scribble, imageFolder);
+      const fileId = scribble["fileId"][fileSystem.id];
+      markUpScribble = fileId;
+    }
+
+    markUp.image = {
+      image: markUpImage,
+      scribble: markUpScribble,
+      n_scale: frameTree.image.n_scale,
+      n_translation: [...frameTree.image.n_translation],
+      rotation: frameTree.image.rotation,
+      reverse: [...frameTree.image.reverse],
+      scaleLock: frameTree.image.scaleLock,
+    }
   }
 
   const children = [];
@@ -113,7 +129,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
       markUp.image = {
         image: fileId,
         n_scale: bubble.image.n_scale,
-        translation: bubble.image.translation,
+        n_translation: bubble.image.n_translation,
         scaleLock: bubble.image.scaleLock,
       };
     }
@@ -127,12 +143,14 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
   const serializedBook = JSON.parse(content);
+  console.log(serializedBook);
 
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
   if (!serializedBook.pages) {
+    console.log("A");
     const serializedPage = serializedBook;
-    const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
+    const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
     return await wrapPageAsBook(serializedBook, frameTree, bubbles);
   }
 
@@ -146,8 +164,10 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   };
 
   for (const serializedPage of serializedBook.pages) {
-    const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
+    console.log("B");
+    console.log(serializedPage);
+    const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
 
     const page: Page = {
       id: serializedPage.id ?? ulid(),
@@ -189,25 +209,75 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
   return book;
 }
 
-async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
+async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
   frameTree.gallery = [];
-  if (markUp.image) {
-    frameTree.image = await loadImage(fileSystem, markUp.image);
-    frameTree.gallery.push(frameTree.image);
+  if (markUp.image || markUp.scribble) {
+    if (typeof markUp.image === 'string') {
+      // 旧バージョン処理
+      let image = null;
+      let scribble = null;
+      if (markUp.image) {
+        image = await loadImage(fileSystem, markUp.image);
+        frameTree.gallery.push(image);
+      }
+      if (markUp.scribble) {
+        scribble = await loadImage(fileSystem, markUp.scribble);
+        frameTree.gallery.push(scribble);
+      } 
+
+      const anyImage = image ?? scribble;
+      const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
+      const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+      const scale = s_imageSize / s_pageSize;
+
+      const markUpScale = (markUp.scale ?? [1,1])[0];
+      const n_scale = scale * markUpScale;
+      
+      const markUpTranlation = markUp.translation ?? [0,0];
+      const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
+
+      frameTree.image = {
+        image,
+        scribble,
+        n_scale,
+        n_translation,
+        rotation: markUp.rotation,
+        reverse: [...(markUp.reverse ?? [1,1])] as Vector,
+        scaleLock: markUp.scaleLock,
+      };
+    } else {
+      // 新バージョン処理
+      let image = null;
+      let scribble = null;
+      if (markUp.image.image) {
+        image = await loadImage(fileSystem, markUp.image.image);
+        frameTree.gallery.push(image);
+      }
+      if (markUp.scribble) {
+        scribble = await loadImage(fileSystem, markUp.image.scribble);
+        frameTree.gallery.push(scribble);
+      } 
+      
+      frameTree.image = {
+        image,
+        scribble,
+        n_scale: markUp.image.n_scale,
+        n_translation: [...markUp.image.n_translation] as Vector,
+        rotation: markUp.image.rotation,
+        reverse: [...markUp.image.reverse] as Vector,
+        scaleLock: markUp.image.scaleLock,
+      };
+    }
   }
-  if (markUp.scribble) {
-    frameTree.scribble = await loadImage(fileSystem, markUp.scribble);
-    frameTree.gallery.push(frameTree.scribble);
-  } 
 
   const children = markUp.column ?? markUp.row;
   if (children) {
     frameTree.direction = markUp.column ? 'v' : 'h';
     frameTree.children = [];
     for (let child of children) {
-      frameTree.children.push(await unpackFrameImages(child, fileSystem));
+      frameTree.children.push(await unpackFrameImages(paperSize, child, fileSystem));
     }
     frameTree.calculateLengthAndBreadth();
   }
@@ -215,25 +285,32 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<F
   return frameTree;
 }
 
-async function unpackBubbleImages(markUps: any[], fileSystem: FileSystem, paperSize: [number, number]): Promise<Bubble[]> {
+async function unpackBubbleImages(paperSize: Vector, markUps: any[], fileSystem: FileSystem): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
   for (const markUp of markUps) {
     const imageMarkUp = markUp.image;
     const bubble: Bubble = Bubble.compile(paperSize, markUp);
     if (imageMarkUp) {
       const image = await loadImage(fileSystem, imageMarkUp.image);
+      const s_imageSize = Math.min(image.width, image.height) ;
+      const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+
       let n_scale = imageMarkUp.n_scale;
       if (!n_scale) {
         const markUpScaleVector = imageMarkUp.scale ?? [1,1];
         const markUpScale = markUpScaleVector[0];
-        const imageSize = Math.min(image.width, image.height) ;
-        const pageSize = Math.min(paperSize[0], paperSize[1]);
-        n_scale = imageSize / pageSize * markUpScale;
+        n_scale = s_imageSize / s_pageSize * markUpScale;
+      }
+      let n_translation = imageMarkUp.n_translation;
+      if (!n_translation) {
+        const markUpTranslationVector = imageMarkUp.translation ?? [0,0];
+        const scale = s_imageSize / s_pageSize;
+        n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
       }
       bubble.image = { 
         image,
         n_scale,
-        translation: imageMarkUp.translation,
+        n_translation,
         scaleLock: imageMarkUp.scaleLock,
       };
     }

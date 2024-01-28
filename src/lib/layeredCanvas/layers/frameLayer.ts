@@ -281,6 +281,8 @@ export class FrameLayer extends Layer {
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
+    const paperSize = this.getPaperSize();
+
     this.updateFocus(point);
 
     if (keyDownFlags["KeyB"]) {
@@ -333,17 +335,17 @@ export class FrameLayer extends Layer {
         return null;
       }
       if (keyDownFlags["KeyT"]) {
-        layout.element.reverse[0] *= -1;
+        layout.element.image.reverse[0] *= -1;
         this.redraw();
         return null;
       }
       if (keyDownFlags["KeyY"]) {
-        layout.element.reverse[1] *= -1;
+        layout.element.image.reverse[1] *= -1;
         this.redraw();
         return null;
       }
       if (keyDownFlags["KeyE"]) {
-        constraintLeaf(layout);
+        constraintLeaf(paperSize, layout);
         this.redraw();
         return null;
       }
@@ -423,14 +425,14 @@ export class FrameLayer extends Layer {
         this.onCommit();
         this.redraw();
       } else if (this.flipHorizontalIcon.contains(point)) {
-        layout.element.reverse[0] *= -1;
+        layout.element.image.reverse[0] *= -1;
         this.redraw();
       } else if (this.flipVerticalIcon.contains(point)) {
-        layout.element.reverse[1] *= -1;
+        layout.element.image.reverse[1] *= -1;
         this.redraw();
       } else if (this.fitIcon.contains(point)) {
-        layout.element.scale = [0.001, 0.001];
-        constraintLeaf(layout);
+        layout.element.image.n_scale = 0.001;
+        constraintLeaf(paperSize, layout);
         this.onCommit();
         this.redraw();
       } else if (this.generateIcon.contains(point)) {
@@ -478,15 +480,16 @@ export class FrameLayer extends Layer {
   }
 
   *scaleImage(p: Vector, layout: Layout) {
+    const paperSize = this.getPaperSize();
     const element = layout.element;
-    const origin = element.scale[0];
-    const size = layout.size;
+    const origin = element.getPhysicalImageScale(paperSize);
+
     try {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
-        element.scale = [origin * s, origin * s];
+        element.setPhysicalImageScale(paperSize, origin * s);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
-          constraintLeaf(layout);
+          constraintLeaf(paperSize, layout);
         }
         this.redraw();
       });
@@ -499,13 +502,15 @@ export class FrameLayer extends Layer {
   }
 
   *rotateImage(p: Vector, layout: Layout) {
+    const paperSize = this.getPaperSize();
     const element = layout.element;
-    const originalRotation = element.rotation;
+    const originalRotation = element.image.rotation;
+
     try {
       yield* rotate(p, (q) => {
-        element.rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
+        element.image.rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
-          constraintLeaf(layout);
+          constraintLeaf(paperSize, layout);
         }
         this.redraw();
       });
@@ -518,13 +523,16 @@ export class FrameLayer extends Layer {
   }
 
   *translateImage(p: Vector, layout: Layout) {
+    const paperSize = this.getPaperSize();
     const element = layout.element;
-    const origin = element.translation;
+    const origin = element.getPhysicalImageTranslation(paperSize);
+    const n_origin = element.image.n_translation;
+
     try {
       yield* translate(p, (q) => {
-        element.translation = [origin[0] + q[0], origin[1] + q[1]];
+        element.setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
-          constraintLeaf(layout);
+          constraintLeaf(paperSize, layout);
         }
         this.redraw();
       });
@@ -533,7 +541,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
-    if (element.translation !== origin) {
+    if (element.image.n_translation !== n_origin) {
       this.onCommit();
     }
   }
@@ -669,29 +677,30 @@ export class FrameLayer extends Layer {
   }
 
   constraintAll(): void {
+    const paperSize = this.getPaperSize();
     const layout = calculatePhysicalLayout(
       this.frameTree,
-      this.getPaperSize(),
+      paperSize,
       [0, 0]
     );
-    constraintRecursive(layout);
+    constraintRecursive(paperSize, layout);
   }
 
   importImage(layoutlet: Layout, image: HTMLImageElement): void {
-    const size = [image.naturalWidth, image.naturalHeight];
+    const paperSize = this.getPaperSize();
     // calc expansion to longer size
-    const scale = Math.max(
-      layoutlet.size[0] / size[0],
-      layoutlet.size[1] / size[1]
-    );
 
-    layoutlet.element.translation = [0, 0];
-    layoutlet.element.scale = [scale, scale];
-    layoutlet.element.image = image;
-    layoutlet.element.rotation = 0;
-    layoutlet.element.gallery.push(image);
+    layoutlet.element.image = {
+      image: image,
+      scribble: null,
+      n_scale: 1,
+      rotation: 0,
+      reverse: [1, 1],
+      n_translation: [0, 0],
+      scaleLock: true,
+    };
       
-    constraintLeaf(layoutlet);
+    constraintLeaf(paperSize, layoutlet);
     this.redraw();
   }
 

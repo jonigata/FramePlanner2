@@ -53,7 +53,7 @@ export class Bubble {
   image: { 
     image: HTMLImageElement, 
     n_scale: number,
-    translation: Vector,
+    n_translation: Vector,
     scaleLock: boolean,
   } | null;
   optionContext: any;
@@ -452,16 +452,34 @@ export class Bubble {
   }
 
   static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
-    const imageSize = Math.min(image.width, image.height) ;
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize * n_scale;
-    return scale;
+    const scale = pageSize / imageSize
+    return n_scale * scale;
   }
 
   getPhysicalImageScale(paperSize: Vector): number {
     return Bubble.getPhysicalImageScale(paperSize, this.image.image, this.image.n_scale);
   }
 
+  static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize;
+    const translation: Vector = [n_translation[0] * scale, n_translation[1] * scale];
+    return translation;
+  }
+
+  getPhysicalImageTranslation(paperSize: Vector): Vector {
+    return Bubble.getPhysicalImageTranslation(paperSize, this.image.image, this.image.n_translation);
+  }
+
+  setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
+    const imageSize = Math.min(this.image.image.naturalWidth, this.image.image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize;
+    this.image.n_translation = [translation[0] / scale, translation[1] / scale];
+  }
 }
 
 export const bubbleOptionSets = {

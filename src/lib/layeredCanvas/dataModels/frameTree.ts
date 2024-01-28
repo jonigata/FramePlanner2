@@ -17,6 +17,16 @@ export type Layout = {
   corners?: Trapezoid;
 };
 
+export type ImageSlot = {
+  image: ImageFile;
+  scribble: ImageFile;
+  n_scale: number,
+  n_translation: Vector,
+  rotation: number,
+  reverse: [number, number];
+  scaleLock: boolean,
+}
+
 export class FrameElement {
   rawSize: number;
   direction: 'h' | 'v' | null;
@@ -25,10 +35,6 @@ export class FrameElement {
   localBreadth: number; // 交差軸サイズ
   divider: { spacing: number, slant: number };
   padding: { top: number, bottom: number, left: number, right: number};
-  translation: [number, number];
-  scale: [number, number];
-  rotation: number;
-  reverse: [number, number];
   bgColor: string | null;
   borderColor: string | null;
   borderWidth: number | null;
@@ -39,8 +45,7 @@ export class FrameElement {
   gallery: ImageFile[];
   showsScribble: boolean;
 
-  image: ImageFile;
-  scribble: ImageFile;
+  image: ImageSlot | null;
   focused: boolean;
 
   constructor(size: number) {
@@ -53,10 +58,6 @@ export class FrameElement {
     this.localBreadth = 0;
     this.divider = { spacing: 0, slant: 0 };
     this.padding = { top: 0, bottom: 0, left: 0, right: 0};
-    this.translation = [0, 0];
-    this.scale = [1, 1]; 
-    this.rotation = 0;
-    this.reverse = [1, 1];
     this.bgColor = null;
     this.borderColor = null;
     this.borderWidth = null;
@@ -69,7 +70,6 @@ export class FrameElement {
 
     // リーフ要素の場合は絵がある可能性がある
     this.image = null;
-    this.scribble = null;
     this.focused = false;
   }
 
@@ -81,21 +81,26 @@ export class FrameElement {
     element.localBreadth = this.localBreadth;
     element.divider = { ...this.divider };
     element.padding = { ...this.padding };
-    element.translation = [...this.translation];
-    element.scale = [...this.scale];
-    element.rotation = this.rotation;
-    element.reverse = [...this.reverse];
     element.bgColor = this.bgColor;
     element.borderColor = this.borderColor;
     element.borderWidth = this.borderWidth;
-    element.image = this.image;
-    element.scribble = this.scribble;
     element.gallery = [...this.gallery];
     element.z = this.z;
     element.visibility = this.visibility;
     element.semantics = this.semantics;
     element.prompt = this.prompt;
     element.showsScribble = this.showsScribble;
+    if (this.image) {
+      element.image = {
+        image: this.image.image,
+        scribble: this.image.scribble,
+        n_translation: [...this.image.n_translation],
+        n_scale: this.image.n_scale,
+        rotation: this.image.rotation,
+        reverse: [...this.image.reverse],
+        scaleLock: this.image.scaleLock,
+      };
+    }
     return element;
   }
 
@@ -128,15 +133,6 @@ export class FrameElement {
     element.semantics = markUp.semantics;
     element.prompt = markUp.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
     element.showsScribble = markUp.showsScribble ?? true;
-
-    const children = markUp.column ?? markUp.row;
-    if (!children) {
-      element.translation = markUp.translation ?? [0, 0];
-      element.scale = markUp.scale ?? [1, 1]; 
-      element.rotation = markUp.rotation ?? 0;
-      element.reverse = markUp.reverse ?? [1, 1];
-    }
-
     return element;
   }
 
@@ -181,19 +177,6 @@ export class FrameElement {
       markUpElement[dir] = [];
       for (let i = 0; i < element.children.length; i++) {
         markUpElement[dir].push(this.decompileAux(element.children[i], element.direction));
-      }
-    } else {
-      if (element.translation[0] !== 0 || element.translation[1] !== 0) {
-        markUpElement.translation = element.translation;
-      }
-      if (element.scale[0] !== 1 || element.scale[1] !== 1) {
-        markUpElement.scale = element.scale;
-      }
-      if (element.rotation !== 0) {
-        markUpElement.rotation = element.rotation;
-      }
-      if (element.reverse[0] !== 1 || element.reverse[1] !== 1) {
-        markUpElement.reverse = element.reverse;
       }
     }
     if (element.divider.spacing !== 0 || element.divider.slant !== 0) {
@@ -377,7 +360,44 @@ export class FrameElement {
     return this.children.length === 0;
   }
 
-  static visibilityCandidates = ["none", "background", "full"];
+  static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize
+    return n_scale * scale;
+  }
+
+  getPhysicalImageScale(paperSize: Vector): number {
+    return FrameElement.getPhysicalImageScale(paperSize, this.image.image ?? this.image.scribble, this.image.n_scale);
+  }
+
+  setPhysicalImageScale(paperSize: Vector, scale: number): void {
+    const image = this.image.image ?? this.image.scribble;
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    this.image.n_scale = scale / (pageSize / imageSize);
+  }
+
+  static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize;
+    const translation: Vector = [n_translation[0] * scale, n_translation[1] * scale];
+    return translation;
+  }
+
+  getPhysicalImageTranslation(paperSize: Vector): Vector {
+    return FrameElement.getPhysicalImageTranslation(paperSize, this.image.image ?? this.image.scribble, this.image.n_translation);
+  }
+
+  setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
+    const image = this.image.image ?? this.image.scribble;
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize;
+    this.image.n_translation = [translation[0] / scale, translation[1] / scale];
+  }
+
 }
 
 function paddedSquare(rawOrigin: Vector, rawSize: Vector, padding: Padding): [Vector, Vector] {
@@ -662,23 +682,11 @@ function makeVerticalBorderTrapezoid(layout: Layout, index: number): Trapezoid {
   return corners;
 }
 
-export type CollectedImage = {
-  image: ImageFile,
-  translation: Vector,
-  scale: Vector,
-  rotation: number,
-}
-
-export function collectImages(frameTree: FrameElement): CollectedImage[] {
+export function collectImages(frameTree: FrameElement): ImageSlot[] {
   const images = [];
   if (!frameTree.children || frameTree.children.length === 0) {
     if (0 < frameTree.visibility) {
-      images.push({
-        image: frameTree.image,
-        translation: frameTree.translation,
-        scale: frameTree.scale,
-        rotation: frameTree.rotation,
-      });
+      images.push(frameTree.image);
     }
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
@@ -689,7 +697,7 @@ export function collectImages(frameTree: FrameElement): CollectedImage[] {
   return images;
 }
 
-export function dealImages(frameTree: FrameElement, images: CollectedImage[], insertElement: FrameElement, spliceElement: FrameElement): void {
+export function dealImages(frameTree: FrameElement, images: ImageSlot[], insertElement: FrameElement, spliceElement: FrameElement): void {
   if (!frameTree.children || frameTree.children.length === 0) {
     if (frameTree.visibility === 0) { return; }
 
@@ -698,16 +706,10 @@ export function dealImages(frameTree: FrameElement, images: CollectedImage[], in
     } 
     if (frameTree === insertElement || images.length === 0) {
       frameTree.image = null;
-      frameTree.translation = [0, 0];
-      frameTree.scale = [1, 1];
-      frameTree.rotation = 0;
       return;
     }
-    const { image, scale, translation, rotation } = images.shift();
-    frameTree.image = image;
-    frameTree.translation = translation;
-    frameTree.scale = scale;
-    frameTree.rotation = rotation;
+    const image = images.shift();
+    frameTree.image = {...image};
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
       dealImages(frameTree.children[i], images, insertElement, spliceElement);
@@ -730,49 +732,48 @@ export function collectLeaves(frameTree: FrameElement): FrameElement[] {
   return leaves;
 }
 
-export function constraintTree(layout: Layout): void {
+export function constraintTree(paperSize: Vector, layout: Layout): void {
   const newLayout = calculatePhysicalLayout(
     layout.element,
     layout.size,
     layout.origin
   );
-  constraintRecursive(newLayout);
+  constraintRecursive(paperSize, newLayout);
 }
 
-export function constraintRecursive(layout: Layout): void {
+export function constraintRecursive(paperSize: Vector, layout: Layout): void {
   if (layout.children) {
     for (const child of layout.children) {
-      constraintRecursive(child);
+      constraintRecursive(paperSize,child);
     }
-  } else if (layout.element && (layout.element.image || layout.element.scribble)) {
-    constraintLeaf(layout);
+  } else if (layout.element && layout.element.image) {
+    constraintLeaf(paperSize, layout);
   }
 }
 
-export function constraintLeaf(layout: Layout): void {
+export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   if (!layout.corners) {return; }
-  if (!layout.element.image && !layout.element.scribble) { return; }
+  if (!layout.element.image) { return; }
 
-  const imageWidth = layout.element.image?.naturalWidth ?? layout.element.scribble?.naturalWidth;
-  const imageHeight = layout.element.image?.naturalHeight ?? layout.element.scribble?.naturalHeight;
+  const image = layout.element.image.image ?? layout.element.image.scribble;
 
   const element = layout.element;
   const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
   const [w, h] = [x1 - x0, y1 - y0];
-  const [iw, ih] = [imageWidth, imageHeight];
-  console.log('constraintLeaf', iw, ih, w, h, element.scale);
+  const [iw, ih] = [image.naturalWidth, image.naturalHeight];
 
-  let scale = element.scale[0];
+  let scale = FrameElement.getPhysicalImageScale(paperSize, image, element.image.n_scale);
   if (iw * scale < w) { scale = w / iw; }
   if (ih * scale < h) { scale = h / ih; }
-  element.scale = [scale, scale];
+  element.setPhysicalImageScale(paperSize, scale);
 
   const [rw, rh] = [iw * scale, ih * scale];
-  const x = (x0 + x1) * 0.5 + element.translation[0];
-  const y = (y0 + y1) * 0.5 + element.translation[1];
+  const [px,py] = element.getPhysicalImageTranslation(paperSize);
+  let [x,y] = [(x0 + x1) * 0.5 + px, (y0 + y1) * 0.5 + py];
 
-  if (x0 < x - rw / 2) { element.translation[0] = - (w - rw) / 2; }
-  if (x + rw / 2 < x1) { element.translation[0] = (w - rw) / 2; }
-  if (y0 < y - rh / 2) { element.translation[1] = - (h - rh) / 2; }
-  if (y1 > y + rh / 2) { element.translation[1] = (h - rh) / 2; }
+  if (x0 < x - rw / 2) { x = - (w - rw) / 2; }
+  if (x + rw / 2 < x1) { x = (w - rw) / 2; }
+  if (y0 < y - rh / 2) { y = - (h - rh) / 2; }
+  if (y1 > y + rh / 2) { y = (h - rh) / 2; }
+  element.setPhysicalImageTranslation(paperSize, [x, y]);
 }

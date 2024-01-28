@@ -205,7 +205,7 @@ export class PaperRendererLayer extends Layer {
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    if (element.image || element.scribble || embeddedBubbles.has(layout)) {
+    if (element.image || embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
       if (!element.focused) {
@@ -286,10 +286,12 @@ export class PaperRendererLayer extends Layer {
     if (bubble.image) {
       const img = bubble.image;
       const scale = bubble.getPhysicalImageScale(paperSize);
+      const translation = bubble.getPhysicalImageTranslation(paperSize);
+
       let iw = img.image.naturalWidth * scale;
       let ih = img.image.naturalHeight * scale;
-      let ix = - iw * 0.5 + img.translation[0];
-      let iy = - ih * 0.5 + img.translation[1];
+      let ix = - iw * 0.5 + translation[0];
+      let iy = - ih * 0.5 + translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
     }
 
@@ -345,14 +347,18 @@ export class PaperRendererLayer extends Layer {
 
   drawImage(ctx: CanvasRenderingContext2D, layout: Layout) {
     const element = layout.element;
-    if (!element.image && !element.scribble) { return; }
+    if (!element.image) { return; }
 
     const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
 
+    const paperSize = this.getPaperSize();
+    const scale = element.getPhysicalImageScale(paperSize);
+    const translation = element.getPhysicalImageTranslation(paperSize);
+
     ctx.save();
-    ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
-    ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-    ctx.rotate(-element.rotation * Math.PI / 180);
+    ctx.translate((x0 + x1) * 0.5 + translation[0], (y0 + y1) * 0.5 + translation[1]);
+    ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
+    ctx.rotate(-element.image.rotation * Math.PI / 180);
 
     function drawIt(img: HTMLImageElement) {
       ctx.save();
@@ -361,8 +367,8 @@ export class PaperRendererLayer extends Layer {
       ctx.restore();
     }
 
-    if (element.image) {drawIt(element.image);}
-    if (element.showsScribble && element.scribble) {drawIt(element.scribble);}
+    if (element.image.image) {drawIt(element.image.image);}
+    if (element.showsScribble && element.image.scribble) {drawIt(element.image.scribble);}
     ctx.restore();
   }
 
@@ -370,12 +376,16 @@ export class PaperRendererLayer extends Layer {
     const element = layout.element;
     const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
 
+    const paperSize = this.getPaperSize();
+    const scale = element.getPhysicalImageScale(paperSize);
+    const translation = element.getPhysicalImageTranslation(paperSize);
+
     ctx.save();
-    ctx.translate((x0 + x1) * 0.5 + element.translation[0], (y0 + y1) * 0.5 + element.translation[1]);
-    ctx.scale(element.scale[0] * element.reverse[0], element.scale[1] * element.reverse[1]);
-    ctx.translate(-element.scribble.naturalWidth * 0.5, -element.scribble.naturalHeight * 0.5);
+    ctx.translate((x0 + x1) * 0.5 + translation[0], (y0 + y1) * 0.5 + translation[1]);
+    ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
+    ctx.translate(-element.image.scribble.naturalWidth * 0.5, -element.image.scribble.naturalHeight * 0.5);
     ctx.beginPath();
-    ctx.rect(0, 0, element.scribble.naturalWidth, element.scribble.naturalHeight);
+    ctx.rect(0, 0, element.image.scribble.naturalWidth, element.image.scribble.naturalHeight);
     ctx.strokeStyle = "rgb(0, 0, 255)";
     ctx.lineWidth = 2;
     ctx.stroke();

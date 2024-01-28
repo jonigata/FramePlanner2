@@ -1,5 +1,5 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type ImageSlot } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ImageFile } from "../lib/layeredCanvas/dataModels/imageFile";
@@ -137,7 +137,15 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
 
 export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix): Book {
   const frameTree = FrameElement.compile(frameExamples[2]);
-  frameTree.children[0].image = image;
+  frameTree.children[0].image = {
+    image,
+    scribble: null,
+    n_translation: [0, 0],
+    n_scale: 1,
+    rotation: 0,
+    reverse: [1, 1],
+    scaleLock: true,
+  }
   const page = newPage(frameTree);
   const book = {
     revision: { id, revision:1, prefix },
@@ -178,10 +186,7 @@ export function clonePage(page: Page): Page {
 }
 
 export type FrameContent = {
-  image: ImageFile,
-  translation: Vector,
-  scale: Vector,
-  rotation: number,
+  imageSlot: ImageSlot,
   bubbles: Bubble[], // ただしpositionはコマ正規化座標
 }
 
@@ -220,10 +225,7 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
       page.bubbles = unselected;
 
       contents.push({
-        image: frameTree.image,
-        translation: frameTree.translation,
-        scale: frameTree.scale,
-        rotation: frameTree.rotation,
+        imageSlot: frameTree.image,
         bubbles: selected,
       });
     }
@@ -258,9 +260,6 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
       } 
       if (frameTree === insertElement || contents.length === 0) {
         frameTree.image = null;
-        frameTree.translation = [0, 0];
-        frameTree.scale = [1, 1];
-        frameTree.rotation = 0;
         return;
       }
     
@@ -269,17 +268,14 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
       const [w, h] = [r[2] - r[0], r[3] - r[1]];
 
       const content = contents.shift();
-      frameTree.image = content.image;
-      frameTree.translation = content.translation;
-      frameTree.scale = content.scale;
-      frameTree.rotation = content.rotation;
+      frameTree.image = content.imageSlot;
 
       for (let b of content.bubbles) {
         b.pageNumber = pageNumber;
         page.bubbles.push(b);
       }
 
-      constraintLeaf(leafLayout);
+     constraintLeaf(page.paperSize, leafLayout);
     }
   } else {
     for (let child of frameTree.children) {
