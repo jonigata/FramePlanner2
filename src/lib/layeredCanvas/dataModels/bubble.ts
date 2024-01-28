@@ -52,7 +52,7 @@ export class Bubble {
   creationContext: string;
   image: { 
     image: HTMLImageElement, 
-    scale: Vector,
+    n_scale: number,
     translation: Vector,
     scaleLock: boolean,
   } | null;
@@ -220,6 +220,7 @@ export class Bubble {
       uuid: b.uuid,
       parent: b.parent,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
+
     };
   }
 
@@ -448,6 +449,17 @@ export class Bubble {
       }
     }
     return options;
+  }
+
+  static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
+    const imageSize = Math.min(image.width, image.height) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize * n_scale;
+    return scale;
+  }
+
+  getPhysicalImageScale(paperSize: Vector): number {
+    return Bubble.getPhysicalImageScale(paperSize, this.image.image, this.image.n_scale);
   }
 
 }

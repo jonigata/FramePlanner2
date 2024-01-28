@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { derived } from "svelte/store";
   import writableDerived from "svelte-writable-derived";
   import { draggable } from '@neodrag/svelte';
   import NumberEdit from '../../utils/NumberEdit.svelte';
@@ -36,10 +35,6 @@
   let inspectorSize = [0, 0];
   let inspector = null;
 
-/*
-  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
-  const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
-*/
   const bubble = writableDerived(
     bubbleInspectorTarget,
     (bit) => bit?.bubble,

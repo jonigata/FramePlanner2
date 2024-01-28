@@ -285,8 +285,9 @@ export class PaperRendererLayer extends Layer {
     // 画像描画
     if (bubble.image) {
       const img = bubble.image;
-      let iw = img.image.naturalWidth * img.scale[0];
-      let ih = img.image.naturalHeight * img.scale[1];
+      const scale = bubble.getPhysicalImageScale(paperSize);
+      let iw = img.image.naturalWidth * scale;
+      let ih = img.image.naturalHeight * scale;
       let ix = - iw * 0.5 + img.translation[0];
       let iy = - ih * 0.5 + img.translation[1];
       ctx.drawImage(bubble.image.image, ix, iy, iw, ih);

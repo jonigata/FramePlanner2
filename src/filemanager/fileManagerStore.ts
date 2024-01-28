@@ -2,7 +2,7 @@ import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
 import type { Page, Book } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
-import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { constraintLeaf, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 
@@ -104,15 +104,20 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
 
 async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, paperSize: [number, number]): Promise<any[]> {
   const packedBubbles = [];
-  for (const src of bubbles) {
-    const image = src.image;
-    const bubble = Bubble.decompile(paperSize, src);
+  for (const bubble of bubbles) {
+    const image = bubble.image;
+    const markUp = Bubble.decompile(paperSize, bubble);
     if (image) {
       await saveImage(fileSystem, image.image, imageFolder);
       const fileId = image.image["fileId"][fileSystem.id];
-      bubble.image = { ...src.image, image: fileId };
+      markUp.image = {
+        image: fileId,
+        n_scale: bubble.image.n_scale,
+        translation: bubble.image.translation,
+        scaleLock: bubble.image.scaleLock,
+      };
     }
-    packedBubbles.push(bubble);
+    packedBubbles.push(markUp);
   }
   return packedBubbles;
 }
@@ -121,7 +126,6 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
 export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
   console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
-  console.log(content);
   const serializedBook = JSON.parse(content);
 
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
@@ -211,13 +215,27 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<F
   return frameTree;
 }
 
-async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperSize: [number, number]): Promise<Bubble[]> {
+async function unpackBubbleImages(markUps: any[], fileSystem: FileSystem, paperSize: [number, number]): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
-  for (const src of bubbles) {
-    const image = src.image;
-    const bubble: Bubble = Bubble.compile(paperSize, src);
-    if (image) {
-      bubble.image = { ...image, image: await loadImage(fileSystem, image.image) };
+  for (const markUp of markUps) {
+    const imageMarkUp = markUp.image;
+    const bubble: Bubble = Bubble.compile(paperSize, markUp);
+    if (imageMarkUp) {
+      const image = await loadImage(fileSystem, imageMarkUp.image);
+      let n_scale = imageMarkUp.n_scale;
+      if (!n_scale) {
+        const markUpScaleVector = imageMarkUp.scale ?? [1,1];
+        const markUpScale = markUpScaleVector[0];
+        const imageSize = Math.min(image.width, image.height) ;
+        const pageSize = Math.min(paperSize[0], paperSize[1]);
+        n_scale = imageSize / pageSize * markUpScale;
+      }
+      bubble.image = { 
+        image,
+        n_scale,
+        translation: imageMarkUp.translation,
+        scaleLock: imageMarkUp.scaleLock,
+      };
     }
     unpackedBubbles.push(bubble);
   }

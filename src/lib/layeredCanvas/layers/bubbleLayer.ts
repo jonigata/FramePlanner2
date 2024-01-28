@@ -452,7 +452,7 @@ export class BubbleLayer extends Layer {
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
-    bubble.image = { image, translation: [0,0], scale: [1,1], scaleLock: true };
+    bubble.image = { image, translation: [0,0], n_scale: 1, scaleLock: true };
     this.bubbles.push(bubble);
     this.onCommit();
     this.selectBubble(bubble);
@@ -543,6 +543,7 @@ export class BubbleLayer extends Layer {
 
       const gm = this.getGroupMaster(bubble);
       if (gm.image && bubble.contains(paperSize, point)) {
+        console
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble: gm };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
@@ -672,7 +673,12 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, position)) {
-        this.getGroupMaster(bubble).image = { image, translation: [0,0], scale: [1,1], scaleLock: false };
+        this.getGroupMaster(bubble).image = {
+           image, 
+           translation: [0,0], 
+           n_scale: 1, 
+           scaleLock: false 
+          };
         this.onCommit();
         return true;
       }
@@ -869,7 +875,8 @@ export class BubbleLayer extends Layer {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
           const bubbleSize = bubble.getPhysicalSize(paperSize);
           bubble.image.translation = [0,0];
-          bubble.image.scale = [bubbleSize[0] / bubble.image.image.naturalWidth, bubbleSize[1] / bubble.image.image.naturalHeight];
+          // TODO:
+          // bubble.image.scale = [bubbleSize[0] / bubble.image.image.naturalWidth, bubbleSize[1] / bubble.image.image.naturalHeight];
         }
   
         this.setIconPositions();
@@ -1008,17 +1015,17 @@ export class BubbleLayer extends Layer {
 
 
   *scaleImage(dragStart: Vector, bubble: Bubble) {
-    const origin = bubble.image.scale[0];
+    const origin = bubble.image.n_scale;
 
     try {
       yield* scale(this.getPaperSize(), dragStart, (q) => {
         const s = Math.max(q[0], q[1]);
-        bubble.image.scale = [origin * s, origin * s];
+        bubble.image.n_scale = origin * s;
         this.redraw();
       });
     } catch (e) {
       if (e === "cancel") {
-        bubble.image.scale = [origin, origin];
+        bubble.image.n_scale = origin;
         this.redraw();
       }
     }
@@ -1245,7 +1252,7 @@ export class BubbleLayer extends Layer {
       const [cx,cy] = bubble.getPhysicalCenter(paperSize);
       bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w/2, cy - h/2]);
       bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w/2, cy + h/2]);
-      bubble.image.scale = [w / bubble.imageSize[0], h / bubble.imageSize[1]];
+      bubble.image.n_scale = Math.max(w / bubble.imageSize[0], h / bubble.imageSize[1]);
       this.setIconPositions();
     }
     this.redraw();
