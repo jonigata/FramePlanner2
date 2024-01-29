@@ -1,7 +1,7 @@
 import type { FileSystem, NodeId, File, Folder } from '../lib/filesystem/fileSystem';
 import { dryLoadBookFrom } from "../filemanager/fileManagerStore";
 
-export async function collectGarbage(fileSystem: FileSystem) {
+export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImageFiles: NodeId[], strayImageFiles: NodeId[] }> {
   const root = await fileSystem.getRoot();
   const desktop = await root.getEmbodiedEntryByName("デスクトップ");
   const cabinet = await root.getEmbodiedEntryByName("キャビネット");
@@ -31,7 +31,7 @@ export async function collectGarbage(fileSystem: FileSystem) {
 
   const usedImageSet = new Set(usedImageFiles);
   const allImageSet = new Set(allImageFiles);
-  const strayImageFiles = Array.from(difference(allImageSet, usedImageSet));
+  const strayImageFiles = Array.from(difference(allImageSet, usedImageSet)) as NodeId[];
   
   console.log("files", allFiles);
   console.log("folders", allFolders);

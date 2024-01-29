@@ -7,6 +7,7 @@
   import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
   import { copyIndexedDB } from './utils/backUpIndexedDB';
   import * as Sentry from "@sentry/svelte";
+  import { Modals } from 'svelte-modals'
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -23,11 +24,11 @@
   import FileManager from './filemanager/FileManager.svelte';
   import NewBookButton from './rootelements/NewBookButton.svelte';
   import CabinetButton from './rootelements/CabinetButton.svelte';
-  import Waiting from './utils/Waiting.svelte'
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
+  import FullScreenLoading from './utils/FullScreenLoading.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -35,9 +36,6 @@
     },
     license: {
       ref: License,
-    },
-    waiting: {
-      ref: Waiting,
     },
     weaver: {
       ref: StoryWeaver,
@@ -102,7 +100,14 @@
 <Toast/>
 <BookArchiver/>
 
+<!-- skeletonのModal -->
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>
+
+<!-- svelte-modals -->
+<Modals>
+  <div slot="backdrop" class="backdrop"/>
+</Modals>
+<FullScreenLoading/>
 
 <style>
   :global(body) {
@@ -120,5 +125,15 @@
     pointer-events: none;
   }
 
+  .backdrop {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: rgba(0,0,0,0.50);
+    z-index: 999;
+  }
+  
 </style>
 

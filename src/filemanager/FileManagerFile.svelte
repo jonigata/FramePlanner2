@@ -12,6 +12,7 @@
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
   import fileIcon from '../assets/fileManager/file.png';
+  import { loading } from '../utils/loadingStore'
 
   const dispatch = createEventDispatcher();
 
@@ -43,11 +44,11 @@
   }
 
   async function onDoubleClick() {
-    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    $loading = true;
     const file = await parent.getNode(bindId) as File;
     const book = await loadBookFrom(fileSystem, file);
     $mainBook = book; // TDOO: ここで無駄なセーブが走っている
-    modalStore.close();
+    $loading = false;
   }
 
 	async function onDragStart (ev: DragEvent) {

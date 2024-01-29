@@ -21,6 +21,8 @@
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { DelayedCommiter } from '../utils/cancelableTask';
+  import { loading } from '../utils/loadingStore'
+  import { toolTip } from '../utils/passiveToolTipStore';
 
   export let fileSystem: FileSystem;
 
@@ -40,6 +42,7 @@
       currentRevision = {...book.revision};
       await recordCurrentFileId(book.revision.id as NodeId);
     });
+  let undumpCounter = 0;
 
   $: onOpen($fileManagerOpen);
   async function onOpen(open: boolean) {
@@ -53,7 +56,7 @@
   async function onUpdateBook(book: Book) {
     console.log("onUpdateBook");
     if (book == null) {
-      modalStore.trigger({ type: 'component',component: 'waiting' });    
+      $loading = true;
 
       if (await loadSharedBook()) {
         // shared bookがある場合、内部でリダイレクトする
@@ -83,7 +86,7 @@
         logEvent(getAnalytics(), 'new_book');
       }
 
-      modalStore.close();
+      $loading = false;
     } else {
       if (revisionEqual(book.revision, currentRevision)) {
         return;
@@ -188,7 +191,7 @@
   $:onSharePageRequest($shareBookToken);
   async function onSharePageRequest(book: Book) {
     if (!book) { return; }
-    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    $loading = true;
 
     console.log("onSharePageRequest");
     $shareBookToken = null;
@@ -206,12 +209,12 @@
     const shareUrl = url.toString();
     navigator.clipboard.writeText(shareUrl);
 
-    modalStore.close();
+    $loading = false;
     toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
   }
 
   async function displayStoredImages() {
-    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    $loading = true;
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
 
     const usedImages = [];
@@ -234,7 +237,7 @@
 
     $browserUsedImages = usedImages;
     $browserStrayImages = strayImages;
-    modalStore.close();
+    $loading = false;
 
     const d: ModalSettings = {
       type: 'component',
@@ -248,23 +251,31 @@
   }
 
   async function dumpFileSystem() {
-    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    $loading = true;
     await (fileSystem as IndexedDBFileSystem).dump();
-    modalStore.close();
+    $loading = false;
   }
 
   let dumpFiles;
   $: onUndumpFileSystem(dumpFiles);
   async function onUndumpFileSystem(dumpFiles) {
     if (dumpFiles) {
-      modalStore.trigger({ type: 'component',component: 'waiting' });    
+      undumpCounter = 0;
+    }
+  }
+
+  async function onUndumpCounter() {
+    undumpCounter++;
+    if (undumpCounter == 5) {
+      $loading = true;
       for (const file of dumpFiles) {
         const s = await readFileAsText(file);
         await (fileSystem as IndexedDBFileSystem).undump(s);
       }
       console.log("undump done");
       $fileManagerRefreshKey++;
-      modalStore.close();
+      $loading = false;
+      dumpFiles = null;
     }
   }
 
@@ -336,6 +347,9 @@
         <div class="hbox gap mx-2" style="margin-top: 8px;">
           リストア<input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
         </div>
+        {#if dumpFiles}
+          <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
+        {/if}
       </div>
     {/key}
   </Drawer>

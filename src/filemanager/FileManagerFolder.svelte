@@ -8,7 +8,7 @@
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { modalStore } from '@skeletonlabs/skeleton';
+  import { loading } from '../utils/loadingStore'
 
   import newFileIcon from '../assets/fileManager/new-file.png';
   import newFolderIcon from '../assets/fileManager/new-folder.png';
@@ -164,13 +164,13 @@
 
   async function recycle() {
     await recycleNode(node);
-    modalStore.trigger({ type: 'component',component: 'waiting' });    
+    $loading = true;
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
     console.log("usedImageFiles", usedImageFiles);
     console.log("strayImageFiles", strayImageFiles);
     const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
-    modalStore.close();
+    $loading = false;
     $fileManagerUsedSize = await fileSystem.collectTotalSize();
     $fileManagerRefreshKey++;
     node = node;
