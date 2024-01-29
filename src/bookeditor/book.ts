@@ -1,4 +1,4 @@
-import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type ImageSlot } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -282,7 +282,7 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
         page.bubbles.push(b);
       }
 
-      //constraintLeaf(page.paperSize, leafLayout);
+      constraintLeaf(page.paperSize, leafLayout);
     }
   } else {
     for (let child of frameTree.children) {

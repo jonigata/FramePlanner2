@@ -759,20 +759,23 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
 
   const element = layout.element;
   const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+  const [x1, y1] = [x0 + w, y0 + h];
   const [iw, ih] = [image.naturalWidth, image.naturalHeight];
 
-  let scale = FrameElement.getPhysicalImageScale(paperSize, image, element.image.n_scale);
+  let scale = element.getPhysicalImageScale(paperSize);
   if (iw * scale < w) { scale = w / iw; }
   if (ih * scale < h) { scale = h / ih; }
   element.setPhysicalImageScale(paperSize, scale);
 
   const [rw, rh] = [iw * scale, ih * scale];
-  const [px,py] = element.getPhysicalImageTranslation(paperSize);
-  let [x,y] = [(x0 + x1) * 0.5 + px, (y0 + y1) * 0.5 + py];
+  const [rw2, rh2] = [rw / 2, rh / 2];
+  const translation = element.getPhysicalImageTranslation(paperSize);
+  const x = x0 + w * 0.5 + translation[0];
+  const y = y0 + h * 0.5 + translation[1];
 
-  if (x0 < x - rw / 2) { x = - (w - rw) / 2; }
-  if (x + rw / 2 < x1) { x = (w - rw) / 2; }
-  if (y0 < y - rh / 2) { y = - (h - rh) / 2; }
-  if (y1 > y + rh / 2) { y = (h - rh) / 2; }
-  element.setPhysicalImageTranslation(paperSize, [x, y]);
+  if (x0 < x - rw2) { translation[0] = - (w - rw) / 2; }
+  if (x + rw2 < x1) { translation[0] = (w - rw) / 2; }
+  if (y0 < y - rh2) { translation[1] = - (h - rh) / 2; }
+  if (y1 > y + rh2) { translation[1] = (h - rh) / 2; }
+  element.setPhysicalImageTranslation(paperSize, translation);
 }
