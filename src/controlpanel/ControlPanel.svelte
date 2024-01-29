@@ -46,12 +46,6 @@
     }
   );
 
-  $:onUpdateMainBook($mainBook);
-  function onUpdateMainBook(book: Book) {
-    if (!$mainBook) { return; }
-    console.log("#### mainBook")
-  }
-
   $:onUpdatePaperProperty($newPageProperty);
   function onUpdatePaperProperty(q: NewPageProperty) {
     if (!$newPageProperty) { return; }
@@ -84,6 +78,21 @@
       console.log($mainBook);
       $redrawToken = true;
     }
+  }
+
+  $:onUpdateMainBook($mainBook);
+  function onUpdateMainBook(book: Book) {
+    if (!$mainBook) { return; }
+    console.log("#### mainBook")
+    const p = $newPageProperty;
+    const q = $mainBook.pages[0];
+    
+    p.paperSize[0] = q.paperSize[0];
+    p.paperSize[1] = q.paperSize[1];
+    p.paperColor = q.paperColor;
+    p.frameColor = q.frameColor;
+    p.frameWidth = q.frameWidth;
+    $newPageProperty = p;
   }
 
   function setDimensions(w: number, h: number) {
