@@ -61,7 +61,15 @@
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
 
-      frame.image = img;
+      frame.image = {
+        image: img,
+        scribble: null,
+        n_scale: 1,
+        n_translation: [0, 0],
+        rotation: 0,
+        reverse: [1, 1],
+        scaleLock: false,
+      };
       frame.gallery.push(img);
     } catch (e) {
       console.log(e);
@@ -84,8 +92,8 @@
     for (const leaf of leaves) {
       if (!leaf.image) { continue; }
       const layout = findLayoutOf(pageLayout, leaf);
-      leaf.scale = [0.001, 0.001];
-      constraintLeaf(layout);
+      leaf.image.n_scale = 0.001;
+      constraintLeaf(page.paperSize, layout);
     }
 
     busy = false;
