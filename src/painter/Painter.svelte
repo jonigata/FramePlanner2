@@ -36,12 +36,23 @@
     painterElement = element;
 
     console.log("START", element.showsScribble);
-    if (!element.scribble) {
-      let width;
-      let height;
-      if (element.image) {
-        width = element.image.naturalWidth;
-        height = element.image.naturalHeight;
+    if (!element.image?.scribble) {
+      if (!element.image) {
+        element.image = {
+          image: null,
+          scribble: null,
+          n_scale: 1,
+          n_translation: [0, 0],
+          rotation: 0,
+          reverse: [1, 1],
+          scaleLock: false,
+        };
+      }
+      let width: number;
+      let height: number;
+      if (element.image.image) {
+        width = element.image.image.naturalWidth;
+        height = element.image.image.naturalHeight;
       } else {
         const layout = calculatePhysicalLayout(painterPage.frameTree, painterPage.paperSize, [0,0]);
         const thisLayout = findLayoutOf(layout, element);
@@ -53,8 +64,8 @@
         width = Math.ceil(w / 256) * 256;
         height = Math.ceil(h / 256) * 256;
       }
-      element.scribble = await makePlainImage(width, height, false);
-      element.gallery.push(element.scribble);
+      element.image.scribble = await makePlainImage(width, height, false);
+      element.gallery.push(element.image.scribble);
       constraintElement();
     }
 
@@ -104,11 +115,12 @@
   }
 
   function constraintElement() {
-    const pageLayout = calculatePhysicalLayout(painterPage.frameTree, painterPage.paperSize, [0,0]);
+    const paperSize = painterPage.paperSize;
+    const pageLayout = calculatePhysicalLayout(painterPage.frameTree, paperSize, [0,0]);
     const layout = findLayoutOf(pageLayout, painterElement);
     if (!layout) { return; }
-    painterElement.scale = [0.001, 0.001];
-    constraintLeaf(layout);
+    painterElement.image.n_scale = 0.001;
+    constraintLeaf(paperSize, layout);
   }
 
   function indexOfPage(page: Page) {
@@ -122,15 +134,15 @@
     if (!autoGeneration) { return; }
 
     if (painterElement.image == null) {
-      painterElement.image = document.createElement('img');
+      painterElement.image.image = document.createElement('img');
     }
 
     painterAutoGenerate.doScribble(
       url,
-      painterElement.scribble,
+      painterElement.image.scribble,
       painterElement.prompt,
       lcm,
-      painterElement.image);
+      painterElement.image.image);
   }
 
 </script>

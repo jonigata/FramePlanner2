@@ -349,14 +349,14 @@ export class PaperRendererLayer extends Layer {
     const element = layout.element;
     if (!element.image) { return; }
 
-    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
     const paperSize = this.getPaperSize();
     const scale = element.getPhysicalImageScale(paperSize);
     const translation = element.getPhysicalImageTranslation(paperSize);
 
     ctx.save();
-    ctx.translate((x0 + x1) * 0.5 + translation[0], (y0 + y1) * 0.5 + translation[1]);
+    ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
     ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
     ctx.rotate(-element.image.rotation * Math.PI / 180);
 
@@ -374,14 +374,14 @@ export class PaperRendererLayer extends Layer {
 
   drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {
     const element = layout.element;
-    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
     const paperSize = this.getPaperSize();
     const scale = element.getPhysicalImageScale(paperSize);
     const translation = element.getPhysicalImageTranslation(paperSize);
 
     ctx.save();
-    ctx.translate((x0 + x1) * 0.5 + translation[0], (y0 + y1) * 0.5 + translation[1]);
+    ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
     ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
     ctx.translate(-element.image.scribble.naturalWidth * 0.5, -element.image.scribble.naturalHeight * 0.5);
     ctx.beginPath();

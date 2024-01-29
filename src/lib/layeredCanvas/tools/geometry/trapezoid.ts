@@ -13,12 +13,13 @@ export function trapezoidPath(ctx, corners: Trapezoid): void {
 }
 
 export function trapezoidBoundingRect(corners: Trapezoid): Rect {
-  return [
+  const box = [
     Math.min(corners.topLeft[0], corners.bottomLeft[0]),
     Math.min(corners.topLeft[1], corners.topRight[1]),
     Math.max(corners.topRight[0], corners.bottomRight[0]),
     Math.max(corners.bottomLeft[1], corners.bottomRight[1]),
   ];
+  return [box[0], box[1], box[2] - box[0], box[3] - box[1]];
 }
 
 export function trapezoidCenter(corners: Trapezoid): Vector {

@@ -57,7 +57,7 @@ export class Bubble {
     scaleLock: boolean,
   } | null;
   optionContext: any;
-  pageNumber: number; // for debug
+  pageNumber: number; // 一時的、当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
 
   renderInfo: BubbleRenderInfo;
 

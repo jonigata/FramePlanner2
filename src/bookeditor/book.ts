@@ -1,8 +1,7 @@
-import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type ImageSlot } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
-import type { ImageFile } from "../lib/layeredCanvas/dataModels/imageFile";
+import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { ulid } from 'ulid';
 
@@ -186,6 +185,8 @@ export function clonePage(page: Page): Page {
 }
 
 export type FrameContent = {
+  sourcePage: Page,
+  sourceRect: Rect, // 元のコマのtrapezoidBoudingRect
   imageSlot: ImageSlot,
   bubbles: Bubble[], // ただしpositionはコマ正規化座標
 }
@@ -208,12 +209,10 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
   if (!frameTree.children || frameTree.children.length === 0) {
     if (0 < frameTree.visibility) {
       const leafLayout = findLayoutOf(layout, frameTree);
-      const r = trapezoidBoundingRect(leafLayout.corners);
-      const [w, h] = [r[2] - r[0], r[3] - r[1]];
 
       // centerがtrapezoidに含まれるbubbleを抽出
       const selected: Bubble[] = [];
-      const unselected: Bubble[] = [];  
+      const unselected: Bubble[] = [];
       for (let b of page.bubbles) {
         const bc = b.getPhysicalCenter(page.paperSize);
         if (isPointInTrapezoid(bc, leafLayout.corners)) {
@@ -222,9 +221,11 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
           unselected.push(b);
         }
       }
-      page.bubbles = unselected;
+      page.bubbles.splice(0, page.bubbles.length, ...unselected)
 
       contents.push({
+        sourcePage: page,
+        sourceRect: trapezoidBoundingRect(leafLayout.corners),
         imageSlot: frameTree.image,
         bubbles: selected,
       });
@@ -264,18 +265,24 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
       }
     
       const leafLayout = findLayoutOf(layout, frameTree);
-      const r = trapezoidBoundingRect(leafLayout.corners);
-      const [w, h] = [r[2] - r[0], r[3] - r[1]];
+      const [sx, sy, sw, sh] = contents[0].sourceRect;
+      const [tx, ty, tw, th] = trapezoidBoundingRect(leafLayout.corners);
 
       const content = contents.shift();
       frameTree.image = content.imageSlot;
 
       for (let b of content.bubbles) {
         b.pageNumber = pageNumber;
+        const bc = b.getPhysicalCenter(page.paperSize);
+        const cc: Vector = [
+          tx + tw * (bc[0] - sx) / sw,
+          ty + th * (bc[1] - sy) / sh,
+        ];
+        b.setPhysicalCenter(page.paperSize, cc);
         page.bubbles.push(b);
       }
 
-     constraintLeaf(page.paperSize, leafLayout);
+      //constraintLeaf(page.paperSize, leafLayout);
     }
   } else {
     for (let child of frameTree.children) {

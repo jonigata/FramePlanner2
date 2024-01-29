@@ -124,23 +124,27 @@ export class InlinePainterLayer extends Layer {
     this.element = element;
     this.maskPath = null;
 
-    const img = this.image;
+    const img = element.image?.scribble
     if (img) {
       this.element.focused = true;
       console.log("setElement");
 
-      this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, this.frameLayer.getPaperSize(), [0,0]);
+      const paperSize = this.frameLayer.getPaperSize();
+      this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, paperSize, [0,0]);
       const layout = findLayoutOf(this.paperLayout, element);
       this.layout = layout;
-      constraintLeaf(layout);
-      const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
+      constraintLeaf(paperSize, layout);
+
+      const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+      const elementTranslation = element.getPhysicalImageTranslation(paperSize);
+      const elementScale = element.getPhysicalImageScale(paperSize);
       const translation: Vector = [
-        (x0 + x1) * 0.5 + element.translation[0], 
-        (y0 + y1) * 0.5 + element.translation[1]
+        x0 + w * 0.5 + elementTranslation[0], 
+        y0 + h * 0.5 + elementTranslation[1]
       ];
       const scale: Vector = [
-        element.scale[0] * element.reverse[0],
-        element.scale[1] * element.reverse[1]
+        elementScale * element.image.reverse[0],
+        elementScale * element.image.reverse[1]
       ];
 
       this.translation = translation;
@@ -169,7 +173,7 @@ export class InlinePainterLayer extends Layer {
   }
 
   get image(): HTMLImageElement {
-    return this.element?.scribble;
+    return this.element?.image?.scribble;
   }
 
   async undo() {
@@ -198,7 +202,6 @@ export class InlinePainterLayer extends Layer {
 
   // paperRenderLayerからコピペ
   drawImage(ctx: CanvasRenderingContext2D, layout: Layout): void {
-    const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
     const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
 
     ctx.save();

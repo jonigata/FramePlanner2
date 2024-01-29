@@ -98,27 +98,25 @@
     page.frameWidth = p.frameWidth;
     $mainBook.pages.splice(index+1, 0, page);
     commit(null);
-    $mainBook = $mainBook;
   }
 
   function deletePage(index: number) {
     $mainBook.pages.splice(index, 1);
     commit(null);
-    $mainBook = $mainBook;
   }
 
   function insert(_page: Page, element: FrameElement) {
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, element, null);
+    layeredCanvas.redraw();
     commit(null);
-    $mainBook = $mainBook;
   }
 
   function splice(_page: Page, element: FrameElement) {
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, null, element);
+    layeredCanvas.redraw();
     commit(null);
-    $mainBook = $mainBook;
   }
 
   function modalGenerate(page: Page, e: FrameElement) {

@@ -758,8 +758,7 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   const image = layout.element.image.image ?? layout.element.image.scribble;
 
   const element = layout.element;
-  const [x0, y0, x1, y1] = trapezoidBoundingRect(layout.corners);
-  const [w, h] = [x1 - x0, y1 - y0];
+  const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
   const [iw, ih] = [image.naturalWidth, image.naturalHeight];
 
   let scale = FrameElement.getPhysicalImageScale(paperSize, image, element.image.n_scale);

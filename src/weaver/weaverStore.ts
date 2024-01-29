@@ -181,14 +181,14 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
     leaf.prompt = `${imagePromptPrefix} ${scene.composition}`;
 
     const layout = findLayoutOf(paperLayout, leaf);
-    const r = trapezoidBoundingRect(layout.corners);
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
     const n = scene.bubbles.length;
     scene.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
       const bubble = new Bubble();
       bubble.text = b.speech.replace(/\\n/g, '\n');
       bubble.fontSize = 24;
       bubble.initOptions();
-      const cc: Vector = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
+      const cc: Vector = [x0 + w * (n - i) / (n+1), h / 2];
       bubble.move(cc);
       calculateFitBubbleSize(bubble);
       page.bubbles.push(bubble);
