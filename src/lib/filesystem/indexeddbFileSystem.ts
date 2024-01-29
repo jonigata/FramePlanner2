@@ -26,12 +26,10 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async createFile(_type: string): Promise<File> {
-    console.log("createFile", _type);
     return this.createFileWithId(ulid() as NodeId, _type);
   }
 
   async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
-    console.log("createFile", _type);
     try {
       const file = new IndexedDBFile(this, id, this.db);
       const tx = this.db.transaction("nodes", "readwrite");
@@ -220,6 +218,19 @@ export class IndexedDBFolder extends Folder {
 
     if (value && Array.isArray(value.children)) {
       value.children = value.children.filter(([b, _, __]) => b !== bindId);
+      await store.put(value);
+    }
+
+    await tx.done;
+  }
+
+  async unlinkv(bindIds: BindId[]): Promise<void> {
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
+    const value = await store.get(this.id);
+
+    if (value && Array.isArray(value.children)) {
+      value.children = value.children.filter(([b, _, __]) => !bindIds.includes(b));
       await store.put(value);
     }
 

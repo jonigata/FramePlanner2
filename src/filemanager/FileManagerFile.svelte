@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { loadBookFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
+  import { loadBookFrom, fileManagerDragging, filenameDisplayMode, loadToken, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
   import type { Page } from '../bookeditor/book';
   import { mainBook } from '../bookeditor/bookStore';
@@ -44,11 +44,7 @@
   }
 
   async function onDoubleClick() {
-    $loading = true;
-    const file = await parent.getNode(bindId) as File;
-    const book = await loadBookFrom(fileSystem, file);
-    $mainBook = book; // TDOO: ここで無駄なセーブが走っている
-    $loading = false;
+    $loadToken = nodeId;
   }
 
 	async function onDragStart (ev: DragEvent) {

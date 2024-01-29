@@ -39,7 +39,6 @@
   ];
 
   function chooseShape(e: CustomEvent<MouseEvent>, s: string) {
-    console.log(e);
     $chosenShape = s;
     if (!e.detail.ctrlKey) {
       $shapeChooserOpen = false;
@@ -47,8 +46,6 @@
   }
 
   function chooseTemplate(e: CustomEvent<MouseEvent>, b: Bubble) {
-    console.log($bubble);
-    console.log(b);
     $bubble.rotation = b.rotation;
     $bubble.shape = b.shape;
     $bubble.embedded = b.embedded;
@@ -72,7 +69,6 @@
   }
 
   async function deleteTemplate(e: CustomEvent<MouseEvent>, bindId: BindId) {
-    console.log("deleteTemplate", bindId);
     const root = await $fileSystem.getRoot();
     const folder = (await root.getNodeByName("テンプレート")).asFolder();
     const entry = await folder.getEntry(bindId);
@@ -83,7 +79,6 @@
 
   $: onOpen($shapeChooserOpen);
   async function onOpen(open: boolean) {
-    console.log("onOpen", open);
     if (open) {
       await buildTemplateBubbles();
     }

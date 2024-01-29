@@ -33,11 +33,8 @@ export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImag
   const allImageSet = new Set(allImageFiles);
   const strayImageFiles = Array.from(difference(allImageSet, usedImageSet)) as NodeId[];
   
-  console.log("files", allFiles);
-  console.log("folders", allFolders);
-  console.log("images", allImageFiles);
-  console.log("usedImages", usedImageFiles);
-  console.log("strayImages", strayImageFiles);
+  console.log("usedImages", usedImageFiles.length);
+  console.log("strayImages", strayImageFiles.length);
 
   console.log("garbage collection done");
   return { usedImageFiles, strayImageFiles };
@@ -45,6 +42,9 @@ export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImag
 
 export async function purgeCollectedGarbage(fileSystem: FileSystem, imageFolder: Folder, strayImageFiles: string[]) {
   const imageList = await imageFolder.list();
+  // sort & uniq
+  const uniqList = [...new Set(imageList.map((entry) => entry[2]))];
+  console.log("imageList", imageList.length, "uniqList", uniqList.length);
 
   for (const imageFile of strayImageFiles) {
     /*
@@ -54,8 +54,8 @@ export async function purgeCollectedGarbage(fileSystem: FileSystem, imageFolder:
     await file.writeImage(image);
     */
     await fileSystem.destroyNode(imageFile as NodeId);
-    const bindId = imageList.find((entry) => entry[2] === imageFile)[0];
-    await imageFolder.unlink(bindId);
+    const bindIds = imageList.filter((entry) => entry[2] === imageFile).map(e => e[0]);
+    await imageFolder.unlinkv(bindIds);
     console.log("purge image", imageFile);
   }
   console.log("purge done");

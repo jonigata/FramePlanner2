@@ -5,11 +5,9 @@ export function hoverKey(node, onKeyDown) {
   let timeoutId = null;
 
   const handleMouseEnter = (event) => {
-    console.log("hoverKey: enter");
     document.addEventListener("keydown", onKeyDown);
   }
   const handleMouseLeave = (event) => {
-    console.log("hoverKey: leave");
     document.removeEventListener("keydown", onKeyDown);
   }
   

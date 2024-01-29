@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken } from "./fileManagerStore";
+  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight } from '../bookeditor/book';
@@ -23,10 +23,9 @@
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { loading } from '../utils/loadingStore'
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { onLoad } from '@sentry/svelte';
 
   export let fileSystem: FileSystem;
-
-  // TODO: ヒストリの最後にタグがついてるときは少し待つ
 
   let root = null;
   let desktop = null;
@@ -38,7 +37,7 @@
     async () => {
       const book = $mainBook;
       const file = await fileSystem.getNode(book.revision.id as NodeId);
-      // await saveBookTo(book, fileSystem, file.asFile());
+      await saveBookTo(book, fileSystem, file.asFile());
       currentRevision = {...book.revision};
       await recordCurrentFileId(book.revision.id as NodeId);
     });
@@ -54,7 +53,6 @@
 
   $:onUpdateBook($mainBook);
   async function onUpdateBook(book: Book) {
-    console.log("onUpdateBook");
     if (book == null) {
       $loading = true;
 
@@ -213,6 +211,19 @@
     toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
   }
 
+  $:onLoadRequest($loadToken);
+  async function onLoadRequest(nodeId: NodeId) {
+    if (!nodeId) { return; }
+    $loadToken = null;
+
+    $loading = true;
+    const file = (await fileSystem.getNode(nodeId)).asFile();
+    const book = await loadBookFrom(fileSystem, file);
+    currentRevision = {...book.revision};
+    $mainBook = book; // TODO: ここで無駄なセーブが走っている
+    $loading = false;
+  }
+
   async function displayStoredImages() {
     $loading = true;
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
@@ -222,7 +233,7 @@
       const file = await fileSystem.getNode(imageFile as NodeId);
       const image = await file.asFile().readImage();
       await image.decode();
-      console.log("loaded image", imageFile);
+      console.log("loaded used image", imageFile);
       usedImages.push(image);
     }
 
@@ -231,7 +242,7 @@
       const file = await fileSystem.getNode(imageFile as NodeId);
       const image = await file.asFile().readImage();
       await image.decode();
-      console.log("loaded image", imageFile);
+      console.log("loaded stray image", imageFile);
       strayImages.push(image);
     }
 

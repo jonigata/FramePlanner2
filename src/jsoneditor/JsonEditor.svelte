@@ -55,7 +55,6 @@
   $:onUpdateOuterPage($mainPage);
   async function onUpdateOuterPage(page: Page) {
     if (!page) { return; }
-    console.log("Json/onUpdateOuterPage", page);
     if (revisionEqual(page.revision, pageRevision)) { 
       console.log("%csame revision", "color:white; background-color:orange; padding:2px 4px; border-radius:4px;")
       return; 

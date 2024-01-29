@@ -12,6 +12,7 @@ export type Dragging = {
   parent: string;
 }
 
+// TODO: 要らないの混じってると思う
 export const fileManagerOpen = writable(false);
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
@@ -23,6 +24,7 @@ export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('fil
 export const fileSystem: Writable<FileSystem> = writable(null);
 export const shareBookToken: Writable<Book> = writable(null);
 export const fileManagerUsedSize: Writable<number> = writable(null);
+export const loadToken: Writable<NodeId> = writable(null);
 
 const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
 
@@ -143,11 +145,9 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
   const serializedBook = JSON.parse(content);
-  console.log(serializedBook);
 
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
   if (!serializedBook.pages) {
-    console.log("A");
     const serializedPage = serializedBook;
     const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
     const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
@@ -164,8 +164,6 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   };
 
   for (const serializedPage of serializedBook.pages) {
-    console.log("B");
-    console.log(serializedPage);
     const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
     const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
 

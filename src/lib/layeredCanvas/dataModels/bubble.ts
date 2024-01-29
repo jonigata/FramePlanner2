@@ -176,7 +176,6 @@ export class Bubble {
     } else if (json.fontSize) {
       b.n_fontSize = json.fontSize;
     }
-    console.log(b.n_fontSize, json.n_fontSize, json.fontSize);
     b.fontFamily = json.fontFamily ?? "Noto Sans JP";
     b.direction = json.direction ?? 'v';
     b.fontColor = json.fontColor ?? '#000000FF';
