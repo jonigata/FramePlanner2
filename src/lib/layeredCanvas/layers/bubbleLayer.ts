@@ -542,8 +542,7 @@ export class BubbleLayer extends Layer {
       }
 
       const gm = this.getGroupMaster(bubble);
-      if (gm.image && bubble.contains(paperSize, point)) {
-        console
+      if (gm.image && !gm.image.scaleLock && bubble.contains(paperSize, point)) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble: gm };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
@@ -875,8 +874,7 @@ export class BubbleLayer extends Layer {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
           const bubbleSize = bubble.getPhysicalSize(paperSize);
           bubble.image.n_translation = [0,0];
-          // TODO:
-          // bubble.image.scale = [bubbleSize[0] / bubble.image.image.naturalWidth, bubbleSize[1] / bubble.image.image.naturalHeight];
+          bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
         }
   
         this.setIconPositions();
@@ -1249,12 +1247,14 @@ export class BubbleLayer extends Layer {
     bubble.image.scaleLock = !bubble.image.scaleLock;
     this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
     if (bubble.image.scaleLock) {
-      const bubbleSize = bubble.getPhysicalSize(paperSize);
+      let bubbleSize = bubble.getPhysicalSize(paperSize);
       const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubbleSize);
       const [cx,cy] = bubble.getPhysicalCenter(paperSize);
       bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w/2, cy - h/2]);
       bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w/2, cy + h/2]);
-      bubble.image.n_scale = Math.max(w / bubble.imageSize[0], h / bubble.imageSize[1]);
+      bubble.image.n_translation = [0,0];
+      bubbleSize = bubble.getPhysicalSize(paperSize);
+      bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
       this.setIconPositions();
     }
     this.redraw();

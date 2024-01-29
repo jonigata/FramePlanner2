@@ -462,6 +462,12 @@ export class Bubble {
     return Bubble.getPhysicalImageScale(paperSize, this.image.image, this.image.n_scale);
   }
 
+  setPhysicalImageScale(paperSize: Vector, scale: number): void {
+    const imageSize = Math.min(this.image.image.naturalWidth, this.image.image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    this.image.n_scale = scale / (pageSize / imageSize);
+  }
+
   static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
