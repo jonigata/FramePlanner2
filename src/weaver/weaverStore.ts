@@ -188,7 +188,7 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
       bubble.text = b.speech.replace(/\\n/g, '\n');
       bubble.setPhysicalFontSize(page.paperSize, 24);
       bubble.initOptions();
-      const cc: Vector = [x0 + w * (n - i) / (n+1), h / 2];
+      const cc: Vector = [x0 + w * (n - i) / (n+1), y0 + h / 2];
       bubble.setPhysicalCenter(page.paperSize, cc);
       calculateFitBubbleSize(page.paperSize, bubble);
       page.bubbles.push(bubble);
