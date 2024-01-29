@@ -124,7 +124,7 @@ export class InlinePainterLayer extends Layer {
     this.element = element;
     this.maskPath = null;
 
-    const img = element.image?.scribble
+    const img = element?.image?.scribble
     if (img) {
       this.element.focused = true;
       console.log("setElement");

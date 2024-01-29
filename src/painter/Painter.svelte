@@ -37,34 +37,36 @@
 
     console.log("START", element.showsScribble);
     if (!element.image?.scribble) {
-      if (!element.image) {
-        element.image = {
+      let image = element.image;
+      if (!image) {
+        image = {
           image: null,
           scribble: null,
           n_scale: 1,
           n_translation: [0, 0],
-          rotation: 0,
+          rotation: 75,
           reverse: [1, 1],
           scaleLock: false,
         };
       }
       let width: number;
       let height: number;
-      if (element.image.image) {
-        width = element.image.image.naturalWidth;
-        height = element.image.image.naturalHeight;
+      if (image.image) {
+        width = image.image.naturalWidth;
+        height = image.image.naturalHeight;
       } else {
         const layout = calculatePhysicalLayout(painterPage.frameTree, painterPage.paperSize, [0,0]);
         const thisLayout = findLayoutOf(layout, element);
-        const [x0, y0, x1, y1] = trapezoidBoundingRect(thisLayout.corners);
+        let [x0, y0, w, h] = trapezoidBoundingRect(thisLayout.corners);
+        [w, h] = [Math.abs(w), Math.abs(h)];
         // 256の倍数で切り上げ
-        let [w, h] = [Math.abs(x1 - x0), Math.abs(y1 - y0)];
-        if (w === 0) { w = 1; }
-        if (h === 0) { h = 1; }
+        if (w < 1) { w = 1; }
+        if (h < 1) { h = 1; }
         width = Math.ceil(w / 256) * 256;
         height = Math.ceil(h / 256) * 256;
       }
-      element.image.scribble = await makePlainImage(width, height, false);
+      image.scribble = await makePlainImage(width, height, false);
+      element.image = image;      
       element.gallery.push(element.image.scribble);
       constraintElement();
     }

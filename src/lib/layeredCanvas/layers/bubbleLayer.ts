@@ -453,6 +453,7 @@ export class BubbleLayer extends Layer {
     bubble.initOptions();
     bubble.text = "";
     bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
+    bubble.setPhysicalImageScale(paperSize, 1);
     this.bubbles.push(bubble);
     this.onCommit();
     this.selectBubble(bubble);

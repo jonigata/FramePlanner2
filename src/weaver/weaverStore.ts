@@ -186,25 +186,25 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
     scene.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
       const bubble = new Bubble();
       bubble.text = b.speech.replace(/\\n/g, '\n');
-      bubble.fontSize = 24;
+      bubble.setPhysicalFontSize(page.paperSize, 24);
       bubble.initOptions();
       const cc: Vector = [x0 + w * (n - i) / (n+1), h / 2];
-      bubble.move(cc);
-      calculateFitBubbleSize(bubble);
+      bubble.setPhysicalCenter(page.paperSize, cc);
+      calculateFitBubbleSize(page.paperSize, bubble);
       page.bubbles.push(bubble);
     })
   });
 }
 
-function calculateFitBubbleSize(bubble: Bubble) {
-  const baselineSkip = bubble.fontSize * 1.5;
-  const charSkip = bubble.fontSize;
+function calculateFitBubbleSize(paperSize: Vector, bubble: Bubble) {
+  const fontSize = bubble.getPhysicalFontSize(paperSize);
+  const baselineSkip = fontSize * 1.5;
+  const charSkip = fontSize;
   let size: Vector =[0,0];
   const m = measureVerticalText(null, Infinity, bubble.text, baselineSkip, charSkip, false);
   size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
-  bubble.size = size;
-  bubble.forceEnoughSize();
-  console.log(bubble.size);
+  bubble.setPhysicalSize(paperSize, size);
+  bubble.forceEnoughSize(paperSize);
 }
 
 export type NodePack = {
