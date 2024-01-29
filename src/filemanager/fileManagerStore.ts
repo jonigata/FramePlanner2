@@ -1,86 +1,109 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page } from "../pageStore.js";
-import { FrameElement } from "../lib/layeredCanvas/frameTree.js";
-import { Bubble } from "../lib/layeredCanvas/bubble.js";
-import { frameExamples } from '../lib/layeredCanvas/frameExamples.js';
+import type { Page, Book } from "../bookeditor/book.js";
+import { commitBook } from "../bookeditor/book.js";
+import { constraintLeaf, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
+import { ulid } from 'ulid';
+import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 
 export type Dragging = {
   bindId: string;
   parent: string;
 }
 
-export type Book = {
-  title: string;
-  pages: Page[];
-}
-
+// TODO: 要らないの混じってると思う
 export const fileManagerOpen = writable(false);
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
-export const newFileToken: Writable<Page> = writable(null);
+export const newPageToken: Writable<Page> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);
 export const newBubbleToken: Writable<Bubble> = writable(null);
 export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 export const fileSystem: Writable<FileSystem> = writable(null);
-export const sharePageToken: Writable<Page> = writable(null);
+export const shareBookToken: Writable<Book> = writable(null);
+export const fileManagerUsedSize: Writable<number> = writable(null);
+export const loadToken: Writable<NodeId> = writable(null);
 
 const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
 
 type SerializedPage = {
-  revision: {id: string, revision: number, prefix: string},
+  id: string,
   frameTree: any,
   bubbles: any[],
   paperSize: [number, number],
   paperColor: string,
   frameColor: string,
   frameWidth: number,
-  desktopPosition?: [number, number],
-  history: any[],
-  historyIndex: number;
 }
 
-export async function savePageTo(page: Page, fileSystem: FileSystem, file: File): Promise<void> {
+type SerializedBook = {
+  revision: {id: string, revision: number, prefix: string},
+  pages: SerializedPage[],
+}
+
+export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
+  console.tag("saveBookTo", "cyan", file.id);
+
   const root = await fileSystem.getRoot();
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
 
-  const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
-  const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
-
-  const history = [];
-  for (const entry of page.history) {
-    const markUp = await packFrameImages(entry.frameTree, fileSystem, imageFolder, 'v');
-    const bubbles = await packBubbleImages(entry.bubbles, fileSystem, imageFolder, page.paperSize);
-    history.push({frameTree: markUp, bubbles: bubbles});
+  const serializedBook: SerializedBook = {
+    revision: book.revision,
+    pages: [],
+  };
+  for (const page of book.pages) {
+    const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
+    const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
+    
+    const serializedPage: SerializedPage = {
+      id: page.id,
+      frameTree: markUp,
+      bubbles: bubbles,
+      paperSize: page.paperSize,
+      paperColor: page.paperColor,
+      frameColor: page.frameColor,
+      frameWidth: page.frameWidth,
+    }
+    serializedBook.pages.push(serializedPage);    
   }
 
-  const serializedPage: SerializedPage = {
-    revision: { ...page.revision, id: file.id },
-    frameTree: markUp,
-    bubbles: bubbles,
-    paperSize: page.paperSize,
-    paperColor: page.paperColor,
-    frameColor: page.frameColor,
-    frameWidth: page.frameWidth,
-    desktopPosition: page.desktopPosition,
-    history: history,
-    historyIndex: page.historyIndex,
-  }
-  const json = JSON.stringify(serializedPage);
+  const json = JSON.stringify(serializedBook);
   await file.write(json);
 }
 
 async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
-  const image = frameTree.image;
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
+  if (frameTree.image) {
+    const image = frameTree.image.image;
+    const scribble = frameTree.image.scribble;
 
-  if (image) {
-    await saveImage(fileSystem, image, imageFolder);
-    const fileId = image["fileId"][fileSystem.id];
-    markUp.image = fileId;
+    let markUpImage = null;
+    let markUpScribble = null;
+    
+    if (image) {
+      await saveImage(fileSystem, image, imageFolder);
+      const fileId = image["fileId"][fileSystem.id];
+      markUpImage = fileId;
+    }
+    if (scribble) {
+      await saveImage(fileSystem, scribble, imageFolder);
+      const fileId = scribble["fileId"][fileSystem.id];
+      markUpScribble = fileId;
+    }
+
+    markUp.image = {
+      image: markUpImage,
+      scribble: markUpScribble,
+      n_scale: frameTree.image.n_scale,
+      n_translation: [...frameTree.image.n_translation],
+      rotation: frameTree.image.rotation,
+      reverse: [...frameTree.image.reverse],
+      scaleLock: frameTree.image.scaleLock,
+    }
   }
 
   const children = [];
@@ -99,59 +122,152 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
 
 async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, paperSize: [number, number]): Promise<any[]> {
   const packedBubbles = [];
-  for (const src of bubbles) {
-    const image = src.image;
-    const bubble = Bubble.decompile(paperSize, src);
+  for (const bubble of bubbles) {
+    const image = bubble.image;
+    const markUp = Bubble.decompile(paperSize, bubble);
     if (image) {
       await saveImage(fileSystem, image.image, imageFolder);
       const fileId = image.image["fileId"][fileSystem.id];
-      bubble.image = { ...src.image, image: fileId };
+      markUp.image = {
+        image: fileId,
+        n_scale: bubble.image.n_scale,
+        n_translation: bubble.image.n_translation,
+        scaleLock: bubble.image.scaleLock,
+      };
     }
-    packedBubbles.push(bubble);
+    packedBubbles.push(markUp);
   }
   return packedBubbles;
 }
 
 
-export async function loadPageFrom(fileSystem: FileSystem, file: File): Promise<Page> {
-  console.log("*********** loadPageFrom");
+export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
+  console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
-  const serializedPage = JSON.parse(content);
+  const serializedBook = JSON.parse(content);
 
-  const root = await fileSystem.getRoot();
-  const imageFolder = await root.getNodeByName('画像') as Folder;
-
-  const frameTree = await unpackFrameImages(serializedPage.frameTree, fileSystem);
-  const bubbles = await unpackBubbleImages(serializedPage.bubbles, fileSystem, serializedPage.paperSize);
-
-  const history = [];
-  for (const entry of serializedPage.history) {
-    const frameTree = await unpackFrameImages(entry.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(entry.bubbles, fileSystem, serializedPage.paperSize);
-    history.push({frameTree, bubbles});
+  // マイグレーションとして、BookではなくPageのみを保存している場合がある
+  if (!serializedBook.pages) {
+    const serializedPage = serializedBook;
+    const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
+    return await wrapPageAsBook(serializedBook, frameTree, bubbles);
   }
 
+  const book: Book = {
+    revision: serializedBook.revision,
+    pages: [],
+    history: {
+      entries: [],
+      cursor: 0,
+    },
+  };
+
+  for (const serializedPage of serializedBook.pages) {
+    const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
+
+    const page: Page = {
+      id: serializedPage.id ?? ulid(),
+      frameTree: frameTree,
+      bubbles: bubbles,
+      paperSize: serializedPage.paperSize,
+      paperColor: serializedPage.paperColor,
+      frameColor: serializedPage.frameColor,
+      frameWidth: serializedPage.frameWidth,
+    };
+    book.pages.push(page);
+  }
+  commitBook(book, null);
+
+  return book;
+}
+
+async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubbles: Bubble[]): Promise<Book> {
   const page: Page = {
-    revision: serializedPage.revision,
+    id: serializedPage.id ?? ulid(),
     frameTree: frameTree,
     bubbles: bubbles,
     paperSize: serializedPage.paperSize,
     paperColor: serializedPage.paperColor,
     frameColor: serializedPage.frameColor,
     frameWidth: serializedPage.frameWidth,
-    desktopPosition: serializedPage.desktopPosition,
-    history: history,
-    historyIndex: serializedPage.historyIndex,
   };
 
-  return page;
+  const book: Book = {
+    revision: serializedPage.revision,
+    pages: [page],
+    history: {
+      entries: [],
+      cursor: 0,
+    },
+  };
+  commitBook(book, null);
+
+  return book;
 }
 
-async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
+async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
-  if (markUp.image) {
-    frameTree.image = await loadImage(fileSystem, markUp.image);
+  frameTree.gallery = [];
+  if (markUp.image || markUp.scribble) {
+    if (typeof markUp.image === 'string') {
+      // 旧バージョン処理
+      let image = null;
+      let scribble = null;
+      if (markUp.image) {
+        image = await loadImage(fileSystem, markUp.image);
+        frameTree.gallery.push(image);
+      }
+      if (markUp.scribble) {
+        scribble = await loadImage(fileSystem, markUp.scribble);
+        frameTree.gallery.push(scribble);
+      } 
+
+      const anyImage = image ?? scribble;
+      const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
+      const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+      const scale = s_imageSize / s_pageSize;
+
+      const markUpScale = (markUp.scale ?? [1,1])[0];
+      const n_scale = scale * markUpScale;
+      
+      const markUpTranlation = markUp.translation ?? [0,0];
+      const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
+
+      frameTree.image = {
+        image,
+        scribble,
+        n_scale,
+        n_translation,
+        rotation: markUp.rotation,
+        reverse: [...(markUp.reverse ?? [1,1])] as Vector,
+        scaleLock: markUp.scaleLock,
+      };
+    } else {
+      // 新バージョン処理
+      let image = null;
+      let scribble = null;
+      if (markUp.image.image) {
+        image = await loadImage(fileSystem, markUp.image.image);
+        frameTree.gallery.push(image);
+      }
+      if (markUp.scribble) {
+        scribble = await loadImage(fileSystem, markUp.image.scribble);
+        frameTree.gallery.push(scribble);
+      } 
+      
+      frameTree.image = {
+        image,
+        scribble,
+        n_scale: markUp.image.n_scale,
+        n_translation: [...markUp.image.n_translation] as Vector,
+        rotation: markUp.image.rotation,
+        reverse: [...markUp.image.reverse] as Vector,
+        scaleLock: markUp.image.scaleLock,
+      };
+    }
   }
 
   const children = markUp.column ?? markUp.row;
@@ -159,7 +275,7 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<F
     frameTree.direction = markUp.column ? 'v' : 'h';
     frameTree.children = [];
     for (let child of children) {
-      frameTree.children.push(await unpackFrameImages(child, fileSystem));
+      frameTree.children.push(await unpackFrameImages(paperSize, child, fileSystem));
     }
     frameTree.calculateLengthAndBreadth();
   }
@@ -167,26 +283,46 @@ async function unpackFrameImages(markUp: any, fileSystem: FileSystem): Promise<F
   return frameTree;
 }
 
-async function unpackBubbleImages(bubbles: any[], fileSystem: FileSystem, paperSize: [number, number]): Promise<Bubble[]> {
+async function unpackBubbleImages(paperSize: Vector, markUps: any[], fileSystem: FileSystem): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
-  for (const src of bubbles) {
-    const image = src.image;
-    const bubble: Bubble = Bubble.compile(paperSize, src);
-    if (image) {
-      bubble.image = { ...image, image: await loadImage(fileSystem, image.image) };
+  for (const markUp of markUps) {
+    const imageMarkUp = markUp.image;
+    const bubble: Bubble = Bubble.compile(paperSize, markUp);
+    if (imageMarkUp) {
+      const image = await loadImage(fileSystem, imageMarkUp.image);
+      const s_imageSize = Math.min(image.width, image.height) ;
+      const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+
+      let n_scale = imageMarkUp.n_scale;
+      if (!n_scale) {
+        const markUpScaleVector = imageMarkUp.scale ?? [1,1];
+        const markUpScale = markUpScaleVector[0];
+        n_scale = s_imageSize / s_pageSize * markUpScale;
+      }
+      let n_translation = imageMarkUp.n_translation;
+      if (!n_translation) {
+        const markUpTranslationVector = imageMarkUp.translation ?? [0,0];
+        const scale = s_imageSize / s_pageSize;
+        n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
+      }
+      bubble.image = { 
+        image,
+        n_scale,
+        n_translation,
+        scaleLock: imageMarkUp.scaleLock,
+      };
     }
     unpackedBubbles.push(bubble);
   }
   return unpackedBubbles;
 }
 
-export async function newFile(fs: FileSystem, folder: Folder, name: string, page: Page): Promise<{file: File, bindId: BindId}> {
+export async function newFile(fs: FileSystem, folder: Folder, name: string, book: Book): Promise<{file: File, bindId: BindId}> {
   const file = await fs.createFile();
-  page.revision.id = file.id;
+  book.revision.id = file.id;
 
-  console.log("*********** savePageTo from newFile");
-  // console.trace();
-  await savePageTo(page, fs, file);
+  console.tag("newFile", "cyan");
+  await saveBookTo(book, fs, file);
   const bindId = await folder.link(name, file.id);
   return { file, bindId };
 }
@@ -212,7 +348,6 @@ async function saveImage(fileSystem: FileSystem, image: HTMLImageElement, imageF
 
   const fileId = image["fileId"][fileSystem.id];
   if (imageCache[fileSystem.id][fileId]) {
-    // TODO: 画像のピクセル更新対応
     return;
   }
   const file = await fileSystem.createFile();
@@ -247,3 +382,47 @@ export async function loadBubbleFrom(file: File): Promise<Bubble> {
   const bubble = Bubble.compile([64, 96], markUp);
   return bubble;
 }
+
+export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images: NodeId[]) { // ガベコレの調査用
+  const content = await file.read();
+  let serializedBook = JSON.parse(content);
+
+  const root = await fileSystem.getRoot();
+  const imageFolder = await root.getNodeByName('画像') as Folder;
+
+  // マイグレーションとして、BookではなくPageのみを保存している場合がある
+  if (!serializedBook.pages) {
+    serializedBook = {
+      pages: [serializedBook],
+    }
+  }
+
+  for (const serializedPage of serializedBook.pages) {
+    const frameTree = dryUnpackFrameImages(serializedPage.frameTree, images);
+    const bubbles = dryUnpackBubbleImages(serializedPage.bubbles, images);
+  }
+}
+
+function dryUnpackFrameImages(markUp: any, images: NodeId[]) {
+  const frameTree = FrameElement.compileNode(markUp);
+
+  if (markUp.image) {images.push(markUp.image);}
+  if (markUp.scribble) {images.push(markUp.scribble);} 
+
+  const children = markUp.column ?? markUp.row;
+  if (children) {
+    for (let child of children) {
+      dryUnpackFrameImages(child, images);
+    }
+  }
+}
+
+function dryUnpackBubbleImages(bubbles: any[], images: NodeId[]) {
+  const unpackedBubbles: Bubble[] = [];
+  for (const src of bubbles) {
+    const image = src.image;
+    if (image) {images.push(image.image);}
+  }
+}
+
+

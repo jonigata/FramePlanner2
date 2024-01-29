@@ -2,7 +2,11 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
+<<<<<<< HEAD
 import { imageToBase64 } from "./../layeredCanvas/saveCanvas";
+=======
+import { imageToBase64 } from "./../layeredCanvas/tools/saveCanvas";
+>>>>>>> rewrite_layeredCanvas
 import { saveAs } from 'file-saver';
 
 export class IndexedDBFileSystem extends FileSystem {
@@ -26,9 +30,11 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async createFile(_type: string): Promise<File> {
-    console.log("createFile", _type);
+    return this.createFileWithId(ulid() as NodeId, _type);
+  }
+
+  async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
     try {
-      const id = ulid() as NodeId;
       const file = new IndexedDBFile(this, id, this.db);
       const tx = this.db.transaction("nodes", "readwrite");
       const store = tx.store;
@@ -79,6 +85,24 @@ export class IndexedDBFileSystem extends FileSystem {
     const rootId = "/" as NodeId;
     return this.getNode(rootId) as Promise<Folder>;
   }
+<<<<<<< HEAD
+=======
+
+  async collectTotalSize(): Promise<number> {
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
+    let cursor = await store.openCursor();
+    let total = 0;
+    while (cursor) {
+      if (cursor.value.type === 'file') {
+        total += cursor.value.content.length;
+      }
+      cursor = await cursor.continue();
+    }
+    await tx.done;
+    return total;
+  }
+>>>>>>> rewrite_layeredCanvas
   
   async dump(): Promise<void> {
     // すべてのノードを取得
@@ -201,6 +225,19 @@ export class IndexedDBFolder extends Folder {
 
     if (value && Array.isArray(value.children)) {
       value.children = value.children.filter(([b, _, __]) => b !== bindId);
+      await store.put(value);
+    }
+
+    await tx.done;
+  }
+
+  async unlinkv(bindIds: BindId[]): Promise<void> {
+    const tx = this.db.transaction("nodes", "readwrite");
+    const store = tx.store;
+    const value = await store.get(this.id);
+
+    if (value && Array.isArray(value.children)) {
+      value.children = value.children.filter(([b, _, __]) => !bindIds.includes(b));
       await store.put(value);
     }
 

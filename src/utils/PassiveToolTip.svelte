@@ -1,18 +1,16 @@
 <script lang="ts">
   import { toolTipRequest } from "./passiveToolTipStore";
-  import { fontChooserOpen } from '../fontStore';
-  import { aboutOpen } from '../aboutStore';
   import { tick } from "svelte";
 
   let tooltip = null;
   let position = { x: 0, y: 0 };
 
   $: onRequest($toolTipRequest);
-  async function onRequest($toolTipRequest: any) {
-    if (!$toolTipRequest || !tooltip) return;
-
-    await tick();
-    position = $toolTipRequest.position;
+  async function onRequest(r: any) {
+    if (!r || !tooltip) return;
+    
+    await tick(); // 多分要素の内容が更新されるまで待っている
+    position = r.position;
 
     // ツールチップの幅の半分が指定したx位置よりも大きい場合、left位置を調整
     if (position.x < tooltip.clientWidth / 2) {
@@ -29,7 +27,7 @@
   bind:this={tooltip}
   >
   <div class="tooltip">
-    {#if $toolTipRequest && !$fontChooserOpen && !$aboutOpen}
+    {#if $toolTipRequest}
       {$toolTipRequest.message}
     {/if}
   </div>
@@ -45,7 +43,7 @@
     font-family: "Noto Sans JP", sans-serif;
     font-size: 18px;
     font-weight: 900;
-    color: #5a5153;
+    color: #000;
     z-index: 9999;
     padding: 8px;
   }

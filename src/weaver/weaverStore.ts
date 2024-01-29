@@ -1,9 +1,11 @@
 import { writable } from "svelte/store";
-import { type Page, newPage, commitPage } from "../pageStore";
-import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf, makeTrapezoidRect } from '../lib/layeredCanvas/frameTree.js';
-import { Bubble } from '../lib/layeredCanvas/bubble';
-import { measureVerticalText } from '../lib/layeredCanvas/verticalText';
-import { aiTemplates } from '../lib/layeredCanvas/frameExamples';
+import { type Page, newPage, commitBook } from "../bookeditor/book";
+import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import { measureVerticalText } from '../lib/layeredCanvas/tools/draw/verticalText';
+import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
+import { aiTemplates } from '../lib/layeredCanvas/tools/frameExamples';
+import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import type * as Storyboard from './storyboard';
 
 // drafter: 原案を出力する 引数：お題
@@ -164,15 +166,13 @@ export class WeaverNode {
 export const weaverRefreshToken = writable(false);
 
 export function createPage(source: Storyboard.Page, imagePromptPrefix: string): Page {
-  const page = newPage("ai-", 2);
   const n = source.scenes.length;
-  page.frameTree = FrameElement.compile(aiTemplates[n - 2]); // ページ数に応じたテンプレ
+  const page = newPage(FrameElement.compile(aiTemplates[n - 2]));
   pourScenario(page, source, imagePromptPrefix);
-  commitPage(page, page.frameTree, page.bubbles, null);
   return page;
 }
 
-function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string) { // TODO: 型が雑
+function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string) {
   const paperLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   console.log(page.frameTree);
   const leaves = collectLeaves(page.frameTree);
@@ -181,30 +181,30 @@ function pourScenario(page: Page, s: Storyboard.Page, imagePromptPrefix: string)
     leaf.prompt = `${imagePromptPrefix} ${scene.composition}`;
 
     const layout = findLayoutOf(paperLayout, leaf);
-    const r = makeTrapezoidRect(layout.corners);
-    const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
     const n = scene.bubbles.length;
     scene.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
       const bubble = new Bubble();
       bubble.text = b.speech.replace(/\\n/g, '\n');
-      bubble.fontSize = 24;
+      bubble.setPhysicalFontSize(page.paperSize, 24);
       bubble.initOptions();
-      const cc = [r[0] + (r[2] - r[0]) * (n - i) / (n+1), (r[1] + r[3]) / 2];
-      bubble.move(cc);
-      calculateFitBubbleSize(bubble);
+      const cc: Vector = [x0 + w * (n - i) / (n+1), y0 + h / 2];
+      bubble.setPhysicalCenter(page.paperSize, cc);
+      calculateFitBubbleSize(page.paperSize, bubble);
       page.bubbles.push(bubble);
     })
   });
 }
 
-function calculateFitBubbleSize(bubble: Bubble) {
-  const baselineSkip = bubble.fontSize * 1.5;
-  const charSkip = bubble.fontSize;
-  let size =[0,0];
+function calculateFitBubbleSize(paperSize: Vector, bubble: Bubble) {
+  const fontSize = bubble.getPhysicalFontSize(paperSize);
+  const baselineSkip = fontSize * 1.5;
+  const charSkip = fontSize;
+  let size: Vector =[0,0];
   const m = measureVerticalText(null, Infinity, bubble.text, baselineSkip, charSkip, false);
   size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
-  bubble.size = size;
-  bubble.forceEnoughSize();
+  bubble.setPhysicalSize(paperSize, size);
+  bubble.forceEnoughSize(paperSize);
 }
 
 export type NodePack = {

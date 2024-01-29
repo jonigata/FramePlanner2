@@ -2,18 +2,20 @@
   import type { FileSystem, Folder, NodeId, BindId, Node } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime } from "./fileManagerStore";
-  import { newPage } from "../pageStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize } from "./fileManagerStore";
+  import { newBook } from "../bookeditor/book";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { loading } from '../utils/loadingStore'
 
   import newFileIcon from '../assets/fileManager/new-file.png';
   import newFolderIcon from '../assets/fileManager/new-folder.png';
   import trashIcon from '../assets/fileManager/trash.png';
   import folderIcon from '../assets/fileManager/folder.png';
   import renameIcon from '../assets/fileManager/rename.png';
+  import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
 
   export let fileSystem: FileSystem;
   export let filename: string;
@@ -69,8 +71,8 @@
 
   async function addFile() {
     console.log("add file");
-    const page = newPage("add-", 0);
-    await newFile(fileSystem, node, getCurrentDateTime(), page);
+    const book = newBook("not visited", "add-in-folder-", 0);
+    await newFile(fileSystem, node, getCurrentDateTime(), book);
     node = node;
   }
 
@@ -162,6 +164,15 @@
 
   async function recycle() {
     await recycleNode(node);
+    $loading = true;
+    const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
+    console.log("usedImageFiles", usedImageFiles);
+    console.log("strayImageFiles", strayImageFiles);
+    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
+    $loading = false;
+    $fileManagerUsedSize = await fileSystem.collectTotalSize();
+    $fileManagerRefreshKey++;
     node = node;
   }
 

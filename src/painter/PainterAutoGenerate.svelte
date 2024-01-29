@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { redrawToken } from '../paperStore';
   import { generateImageWithScribble } from "../generator/sdwebui";
+  import { redrawToken } from "../bookeditor/bookStore";
 
   let busy: boolean;
   let queued: boolean;
@@ -28,6 +28,7 @@
       const img = await generateImageWithScribble(url, source, prompt, lcm);
       target.src = img.src;
       await target.decode();
+      target.fileId = undefined;
     } catch (e) {
       console.log(e);
       // toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
@@ -37,7 +38,7 @@
 
     if (queued) {
       queued = false;
-      doScribble(callGeneration, url, refered, prompt, lcm, target);
+      doScribble(url, refered, prompt, lcm, target);
     }
   }
 </script>

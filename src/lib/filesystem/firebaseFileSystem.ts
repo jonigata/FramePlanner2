@@ -5,7 +5,7 @@ import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithE
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
-import { imageToBase64  } from '../layeredCanvas/saveCanvas';
+import { imageToBase64  } from '../layeredCanvas/tools/saveCanvas';
 
 // 仮
 import { app } from '../../firebase';
@@ -36,7 +36,10 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async createFile(_type: string): Promise<File> {
-    const id = push(this.nodesRef).key as NodeId;
+    return this.createFileWithId(push(this.nodesRef).key as NodeId, _type);
+  }
+
+  async createFileWithId(id: NodeId, _type: string): Promise<File> {
     const fileRef = child(this.nodesRef, id);
     await set(child(fileRef, 'type'), 'file');
     const file = new FirebaseFile(this, id);

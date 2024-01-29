@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { loadPageFrom, fileManagerDragging, filenameDisplayMode, type Dragging } from "./fileManagerStore";
+  import { loadBookFrom, fileManagerDragging, filenameDisplayMode, loadToken, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
-  import { type Page, mainPage } from '../pageStore';
+  import type { Page } from '../bookeditor/book';
+  import { mainBook } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
@@ -11,6 +12,7 @@
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
   import fileIcon from '../assets/fileManager/file.png';
+  import { loading } from '../utils/loadingStore'
 
   const dispatch = createEventDispatcher();
 
@@ -29,9 +31,8 @@
   let renameEdit = null;
   let renaming = false;
 
-  $: onSelectionChanged($mainPage);
-  function onSelectionChanged(page: Page) {
-    selected = page.revision.id === nodeId;
+  $: if ($mainBook) {
+    selected = $mainBook.revision.id === nodeId;
   }
 
   $: ondrag($fileManagerDragging);
@@ -43,11 +44,7 @@
   }
 
   async function onDoubleClick() {
-    modalStore.trigger({ type: 'component',component: 'waiting' });    
-    const file = await parent.getNode(bindId) as File;
-    const page = await loadPageFrom(fileSystem, file);
-    $mainPage = page;
-    modalStore.close();
+    $loadToken = nodeId;
   }
 
 	async function onDragStart (ev: DragEvent) {

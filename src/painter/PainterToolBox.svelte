@@ -3,23 +3,22 @@
   import PainterTool from './PainterTool.svelte';
   import { createEventDispatcher, onMount } from 'svelte';
   // import PainterCanvas from './PainterCanvas.svelte';
-  import type { FrameElement } from '../lib/layeredCanvas/frameTree';
+  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
   export let element: FrameElement;
   export let lcm = true;
   export let autoGeneration = false;
 
   let chosenTool = null;
-  let canvas;
   
   const dispatch = createEventDispatcher();
 
   let tools = [
-    { id: 0, name: "pen", strokeStyle: '#000000', lineWidth: 2, selected: true },
-    { id: 1, name: "pen", strokeStyle: '#000000', lineWidth: 5, selected: false  },
-    { id: 2, name: "green", strokeStyle: '#31CC00', lineWidth: 5, selected: false  },
-    { id: 3, name: "blue", strokeStyle: '#1600B9', lineWidth: 5, selected: false  },
-    { id: 4, name: "eraser", strokeStyle: '#ffffff', lineWidth: 80, selected: false  },
+    { id: 0, name: "pen", strokeStyle: '#000000', lineWidth: 2, selected: true, globalCompositeOperation: 'source-over' },
+    { id: 1, name: "pen", strokeStyle: '#000000', lineWidth: 5, selected: false, globalCompositeOperation: 'source-over'   },
+    { id: 2, name: "green", strokeStyle: '#31CC00', lineWidth: 5, selected: false, globalCompositeOperation: 'source-over'   },
+    { id: 3, name: "blue", strokeStyle: '#1600B9', lineWidth: 5, selected: false, globalCompositeOperation: 'source-over'   },
+    { id: 4, name: "eraser", strokeStyle: '#ffffff', lineWidth: 80, selected: false, globalCompositeOperation: 'destination-out' },
   ];
 
   function reset() {
@@ -42,9 +41,8 @@
     const targetTool = tools.find(tool => tool.id === e.detail.id);
     targetTool.strokeStyle = e.detail.strokeStyle;
     targetTool.lineWidth = e.detail.lineWidth;
-    if (targetTool.selected) {
-      dispatch('setTool', targetTool);
-    }
+    tools = tools.map(tool => ({ ...tool, selected: tool.id === e.detail.id }));
+    dispatch('setTool', targetTool);
   }
 
   function onDone() {

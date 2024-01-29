@@ -16,12 +16,15 @@ export class FileSystem {
   }
 
   async createFile(type: string = 'text'): Promise<File> {return null;}
+  async createFileWithId(id: NodeId, type: string = 'text'): Promise<File> {return null;}
   async createFolder(): Promise<Folder> {return null;}
   async destroyNode(id: NodeId): Promise<void> {}
 
   async getNode(id: NodeId): Promise<Node> {return null;}
 
   async getRoot(): Promise<Folder> { return null; }
+
+  async collectTotalSize(): Promise<number> { return 0; }
 }
 
 export class Node {
@@ -63,6 +66,11 @@ export class Folder extends Node {
   async list(): Promise<Entry[]> {return [];}
   async link(name: string, nodeId: NodeId): Promise<BindId> { return null;}
   async unlink(bindId: BindId): Promise<void> {}
+  async unlinkv(bindIds: BindId[]): Promise<void> {
+    for (const bindId of bindIds) {
+      await this.unlink(bindId);
+    }
+  }
   async rename(bindId: BindId, newname: string): Promise<void> {}
   async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> { return null; }
   async getEntry(bindId: BindId): Promise<Entry> { return null; }

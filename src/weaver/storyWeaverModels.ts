@@ -3,6 +3,7 @@ import { newBookToken } from "../filemanager/fileManagerStore";
 import { toastStore } from '@skeletonlabs/skeleton';
 import OpenAI from 'openai';
 import { parse as JSONCParse } from 'jsonc-parser';
+import type { Book } from '../bookeditor/book';
 
 export function buildStoryWeaverGraph() {
   let aiDrafter = new WeaverNode(
@@ -95,7 +96,11 @@ export function buildStoryWeaverGraph() {
     async (m) => {
       const storyboard = JSONCParse(m.getInput(0));
 
-      const book = { title: 'AI作成', pages: [] };
+      const book: Book = {
+        revision: { id: 'ai generated', revision:1, prefix: 'weaved-' },
+        pages: [],
+        history: { entries: [], cursor: 0 },
+      };
       for (let i = 0; i < storyboard.pages.length; i++) {
         console.log(storyboard.pages[i]);
         const page = createPage(storyboard.pages[i], m.args[0].value);

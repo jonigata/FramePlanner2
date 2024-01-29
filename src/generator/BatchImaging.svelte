@@ -3,14 +3,14 @@
   import { batchImagingOpen } from "./batchImagingStore";
   import "../box.css"  
   import { onMount } from 'svelte';
-  import { mainPage } from '../pageStore';
   import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/frameTree.js';
+  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { redrawToken } from '../paperStore';
   import { commitToken } from '../undoStore';
+  import { mainBook, redrawToken } from '../bookeditor/bookStore';
+  import type { Page } from '../bookeditor/book';
 
   let totalCount = 1;
   let filledCount = 0;
@@ -31,10 +31,14 @@
   }
 
   function updateImageInfo() {
-    const page = $mainPage;
-    const leaves = collectLeaves(page.frameTree);
-    let n = leaves.filter((leaf) => leaf.image).length;
-    totalCount = leaves.length;
+    let m = 0;
+    let n = 0;
+    for (const page of $mainBook.pages) {
+      const leaves = collectLeaves(page.frameTree);
+      m += leaves.length;
+      n += leaves.filter((leaf) => leaf.image).length;
+    }
+    totalCount = m;
     filledCount = n;
   }
 
@@ -57,7 +61,15 @@
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
 
-      frame.image = img;
+      frame.image = {
+        image: img,
+        scribble: null,
+        n_scale: 1,
+        n_translation: [0, 0],
+        rotation: 0,
+        reverse: [1, 1],
+        scaleLock: false,
+      };
       frame.gallery.push(img);
     } catch (e) {
       console.log(e);
@@ -65,10 +77,10 @@
     }
   }
 
-  async function generateAll() {
+  async function generateAll(page: Page) {
 
     busy = true;
-    const leaves = collectLeaves($mainPage.frameTree);
+    const leaves = collectLeaves(page.frameTree);
     const promises = [];
     for (const leaf of leaves) {
       if (leaf.image) { continue; }
@@ -76,17 +88,24 @@
     }
     await Promise.all(promises);
 
-    const pageLayout = calculatePhysicalLayout($mainPage.frameTree, $mainPage.paperSize, [0,0]);
+    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     for (const leaf of leaves) {
       if (!leaf.image) { continue; }
       const layout = findLayoutOf(pageLayout, leaf);
-      leaf.scale = [0.001, 0.001];
-      constraintLeaf(layout);
+      leaf.image.n_scale = 0.001;
+      constraintLeaf(page.paperSize, layout);
     }
 
     busy = false;
     updateImageInfo();
     $redrawToken = true;
+  }
+
+  async function generateAllPages() {
+    const pages = $mainBook.pages;
+    for (const page of pages) {
+      await generateAll(page);
+    }
     $commitToken = true;
   }
 
@@ -106,7 +125,7 @@
         <ProgressRadial width={"w-16"}/>
       {:else}
         <div class="hbox gap-2">API key <input type="password" autocomplete="off" bind:value={apiKey}/></div>
-        <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={generateAll}>開始</button>
+        <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={generateAllPages}>開始</button>
       {/if}
     </div>
   </Drawer>  

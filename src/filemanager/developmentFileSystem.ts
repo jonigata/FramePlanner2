@@ -1,8 +1,8 @@
 import type { FileSystem } from '../lib/filesystem/fileSystem';
 import { MockFileSystem } from '../lib/filesystem/mockFileSystem';
-import { frameExamples } from '../lib/layeredCanvas/frameExamples.js';
+import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import { newFile } from "./fileManagerStore";
-import { newPage } from "../pageStore";
+import { newPage } from "../bookeditor/book";
 
 export async function buildFileSystem(): Promise<FileSystem> {
   const fs = new MockFileSystem();

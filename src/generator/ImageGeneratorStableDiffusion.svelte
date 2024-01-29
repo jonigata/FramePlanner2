@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { imageGeneratorTarget } from "./imageGeneratorStore";
   import { generateImages, getProgression } from "./sdwebui";
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
@@ -8,7 +7,7 @@
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makePlainImage } from "../utils/imageUtil";
-  import { imageToBase64 } from "../lib/layeredCanvas/saveCanvas";
+  import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas";
 
   export let busy: boolean;
   export let prompt: string;

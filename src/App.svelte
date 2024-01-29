@@ -1,29 +1,35 @@
 <script lang="ts">
   import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
   import '@skeletonlabs/skeleton/styles/all.css';
-  //import '../app.postcss';  
-  import ControlPanel from './ControlPanel.svelte';
-  import MainPaper from './MainPaper.svelte';
+
   import { Toast } from '@skeletonlabs/skeleton';
-  import PassiveToolTip from './utils/PassiveToolTip.svelte';
-  import About from './About.svelte';
-  import BubbleInspector from './BubbleInspector.svelte';
-  import JsonEditor from './JsonEditor.svelte';
   import { onMount } from 'svelte';
-  import * as Sentry from "@sentry/svelte";
   import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
-  import Comic from './Comic.svelte'; 
-  import License from './License.svelte';
-  import FontChooser from './FontChooser.svelte';
-  import ShapeChooser from './ShapeChooser.svelte';
+  import { copyIndexedDB } from './utils/backUpIndexedDB';
+  import * as Sentry from "@sentry/svelte";
+  import { Modals } from 'svelte-modals'
+
+  //import '../app.postcss';  
+  import ControlPanel from './controlpanel/ControlPanel.svelte';
+  import BookEditor from './bookeditor/BookEditor.svelte';
+  import PassiveToolTip from './utils/PassiveToolTip.svelte';
+  import About from './about/About.svelte';
+  import BubbleInspector from './bookeditor/bubbleinspector/BubbleInspector.svelte';
+  import JsonEditor from './jsoneditor/JsonEditor.svelte';
+  import Comic from './utils/Comic.svelte'; 
+  import License from './utils/License.svelte';
+  import FontChooser from './bookeditor/bubbleinspector/FontChooser.svelte';
+  import ShapeChooser from './bookeditor/bubbleinspector/ShapeChooser.svelte';
   import ImageGenerator from './generator/ImageGenerator.svelte';
   import FileManager from './filemanager/FileManager.svelte';
-  import NewFileButton from './NewFileButton.svelte';
-  import CabinetButton from './CabinetButton.svelte';
-  import Waiting from './Waiting.svelte'
+  import NewBookButton from './rootelements/NewBookButton.svelte';
+  import CabinetButton from './rootelements/CabinetButton.svelte';
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
-  
+  import BookArchiver from './utils/BookArchiver.svelte';
+  import FileBrowser from './utils/FileBrowser.svelte';
+  import FullScreenLoading from './utils/FullScreenLoading.svelte';
+
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
       ref: Comic,
@@ -31,16 +37,31 @@
     license: {
       ref: License,
     },
-    waiting: {
-      ref: Waiting,
-    },
     weaver: {
       ref: StoryWeaver,
+    },
+    fileBrowser: {
+      ref: FileBrowser,
     },
   };
 
   onMount(async () => {
     document.body.style.overflow = 'hidden'; // HACK
+
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log("URLParams", urlParams);
+
+    if (urlParams.has('saveFiles')) {
+      const data: any = await copyIndexedDB('FileSystemDB');
+      const json = JSON.stringify(data);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'FileSystemDB.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
     /*
     // Initialize the Sentry SDK here
@@ -57,12 +78,12 @@
   });
 </script>
 
-<MainPaper/>
+<BookEditor />
 
 <div class="control-panel-container">
   <ControlPanel />
   <PassiveToolTip />
-  <NewFileButton  />
+  <NewBookButton  />
   <CabinetButton />
 </div>
 
@@ -77,8 +98,16 @@
 <About/>
 <BatchImaging/>
 <Toast/>
+<BookArchiver/>
 
+<!-- skeletonのModal -->
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>
+
+<!-- svelte-modals -->
+<Modals>
+  <div slot="backdrop" class="backdrop"/>
+</Modals>
+<FullScreenLoading/>
 
 <style>
   :global(body) {
@@ -96,5 +125,15 @@
     pointer-events: none;
   }
 
+  .backdrop {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: rgba(0,0,0,0.50);
+    z-index: 999;
+  }
+  
 </style>
 
