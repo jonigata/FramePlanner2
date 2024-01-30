@@ -347,7 +347,6 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
       Weaver
     </button>
-    <input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">
     <!--

@@ -2,11 +2,7 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-<<<<<<< HEAD
-import { imageToBase64 } from "./../layeredCanvas/saveCanvas";
-=======
 import { imageToBase64 } from "./../layeredCanvas/tools/saveCanvas";
->>>>>>> rewrite_layeredCanvas
 import { saveAs } from 'file-saver';
 
 export class IndexedDBFileSystem extends FileSystem {
@@ -85,8 +81,6 @@ export class IndexedDBFileSystem extends FileSystem {
     const rootId = "/" as NodeId;
     return this.getNode(rootId) as Promise<Folder>;
   }
-<<<<<<< HEAD
-=======
 
   async collectTotalSize(): Promise<number> {
     const tx = this.db.transaction("nodes", "readonly");
@@ -102,7 +96,6 @@ export class IndexedDBFileSystem extends FileSystem {
     await tx.done;
     return total;
   }
->>>>>>> rewrite_layeredCanvas
   
   async dump(): Promise<void> {
     // すべてのノードを取得
