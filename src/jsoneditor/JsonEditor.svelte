@@ -30,7 +30,7 @@
       const jsonPage = toJSONContent(updatedContent).json as any;
       const page = $mainPage;
       page.frameTree = FrameElement.decompile(jsonPage.frameTree);
-      page.bubbles = jsonPage.bubbles.map(b => Bubble.decompile(jsonPage.paperSize, b));
+      page.bubbles = jsonPage.bubbles.map(b => Bubble.decompile(b));
       commitPage(page, "JsonEdit");
       page.paperSize = jsonPage.paperSize;
       page.paperColor = jsonPage.paperColor;
@@ -66,7 +66,7 @@
 
     const displayPage = {
       frameTree: FrameElement.decompile(page.frameTree),
-      bubbles: page.bubbles.map(b => Bubble.decompile(page.paperSize, b)),
+      bubbles: page.bubbles.map(b => Bubble.decompile(b)),
       paperSize: page.paperSize,
       paperColor: page.paperColor,
       frameColor: page.frameColor,

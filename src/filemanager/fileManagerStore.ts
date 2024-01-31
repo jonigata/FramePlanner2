@@ -124,7 +124,7 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
   const packedBubbles = [];
   for (const bubble of bubbles) {
     const image = bubble.image;
-    const markUp = Bubble.decompile(paperSize, bubble);
+    const markUp = Bubble.decompile(bubble);
     if (image) {
       await saveImage(fileSystem, image.image, imageFolder);
       const fileId = image.image["fileId"][fileSystem.id];
@@ -371,15 +371,16 @@ export function getCurrentDateTime() {
 }  
 
 export async function saveBubbleTo(bubble: Bubble, file: File) {
-  const markUp = Bubble.decompile([64, 96], bubble);
+  const markUp = Bubble.decompile(bubble);
   const json = JSON.stringify(markUp);
   await file.write(json);
 }
 
-export async function loadBubbleFrom(file: File): Promise<Bubble> {
+// 歴史的事情により、古いバージョンから読み込むときはpaperSizeを指定する必要がある
+export async function loadBubbleFrom(paperSize: Vector, file: File): Promise<Bubble> {
   const content = await file.read();
   const markUp = JSON.parse(content);
-  const bubble = Bubble.compile([64, 96], markUp);
+  const bubble = Bubble.compile(paperSize, markUp);
   return bubble;
 }
 

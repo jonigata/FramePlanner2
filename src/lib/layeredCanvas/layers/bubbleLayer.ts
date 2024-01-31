@@ -345,7 +345,7 @@ export class BubbleLayer extends Layer {
 
   copyBubble(): void {
     if (this.selected) {
-      const t = Bubble.decompile(this.getPaperSize(), this.selected);
+      const t = Bubble.decompile(this.selected);
       navigator.clipboard.writeText(JSON.stringify(t, null, 2)).then(() => {
         console.log("copied");
       });

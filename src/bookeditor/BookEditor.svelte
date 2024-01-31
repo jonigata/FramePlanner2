@@ -181,7 +181,7 @@
     layeredCanvas.redraw();
 
     if (bubbleSnapshot && bubble) {
-      const snapshot = JSON.stringify(Bubble.decompile([512, 512], bubble));
+      const snapshot = JSON.stringify(Bubble.decompile(bubble));
       if (bubbleSnapshot !== snapshot) {
         console.log("bubbleSnapshot actually changed");
         delayedCommiter.schedule(2000);
@@ -244,7 +244,7 @@
       const offset = canvas.height / 2 < cy ? -1 : 1;
       const bubbleSize = b.getPhysicalSize(page.paperSize);
       
-      bubbleSnapshot = JSON.stringify(Bubble.decompile([512, 512], b)); // サイズは比較時に合致してればいいので適当に
+      bubbleSnapshot = JSON.stringify(Bubble.decompile(b)); // サイズは比較時に合致してればいいので適当に
       $bubbleInspectorTarget = {
         bubble: b,
         page,

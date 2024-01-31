@@ -2,9 +2,9 @@
   import { onMount, createEventDispatcher } from 'svelte';
   import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import { drawBubble } from "../../lib/layeredCanvas/tools/draw/bubbleGraphic";
+  import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
 
-  export let width = 64;
-  export let height = 96;
+  export let size: Vector = [64, 96];
   export let shape = 'rounded';
 
   let canvas: HTMLCanvasElement;
@@ -24,15 +24,15 @@
   function redraw(p: string) {
     if (!canvas) return;
 
-    const opts = Bubble.getInitialOptions({ shape, size: [width, height] }, true);
+    const opts = Bubble.getInitialOptions({ shape, size }, true);
 
-    opts.tailTip = [-width*0.5, height*0.4];
+    opts.tailTip = [-size[0]*0.5, size[1]*0.4];
     opts.tailMid = [0.5, 0];
 
     const ctx = canvas.getContext("2d");
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.translate(width * 0.5, height * 0.5);
+    ctx.translate(size[0] * 0.5, size[1] * 0.5);
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     ctx["bubbleDrawMethod"] = "fill";
@@ -44,8 +44,8 @@
 
 </script>
 
-<div class="canvas-container" style="width: {width}px; height: {height}px;">
-  <canvas width="{width}px" height="{height}px" bind:this={canvas} on:click={click}/>
+<div class="canvas-container" style="width: {size[0]}px; height: {size[1]}px;">
+  <canvas width="{size[0]}px" height="{size[1]}px" bind:this={canvas} on:click={click}/>
 </div>
 
 <style>

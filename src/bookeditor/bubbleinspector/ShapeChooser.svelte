@@ -8,9 +8,9 @@
   import { fileSystem, loadBubbleFrom } from '../../filemanager/fileManagerStore';
   import { bubbleInspectorTarget } from './bubbleInspectorStore';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
+  import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
 
-  export let paperWidth = 96;
-  export let paperHeight = 96;
+  export let itemSize: Vector = [64,96];
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -48,11 +48,12 @@
   function chooseShape(e: CustomEvent<MouseEvent>, s: string) {
     $chosenShape = s;
     if (!e.detail.ctrlKey) {
-      $shapeChooserOpen = false;
+      $shapeChooserOpen = null;
     }
   }
 
   function chooseTemplate(e: CustomEvent<MouseEvent>, b: Bubble) {
+    console.log(b);
     const q = $bubble;
     q.rotation = b.rotation;
     q.shape = b.shape;
@@ -73,7 +74,7 @@
     $bubble = q;
 
     if (!e.detail.ctrlKey) {
-      $shapeChooserOpen = false;
+      $shapeChooserOpen = null;
     }
   }
 
@@ -87,22 +88,23 @@
   }
 
   $: onOpen($shapeChooserOpen);
-  async function onOpen(open: boolean) {
-    if (open) {
+  async function onOpen(f) {
+    if (f) {
       await buildTemplateBubbles();
     }
   }
 
   async function buildTemplateBubbles() {
     templateBubbles = [];
+    const paperSize = $bubbleInspectorTarget?.page?.paperSize;
+    if (paperSize == null) return;
     const root = await $fileSystem.getRoot();
     const folder = (await root.getNodeByName("テンプレート")).asFolder();
     const entries = await folder.listEmbodied();
     for (const entry of entries) {
-      const bubble = await loadBubbleFrom(entry[2].asFile());
+      const bubble = await loadBubbleFrom([840, 1188], entry[2].asFile()); // セーブされたときのドキュメントサイズがわからないので、デフォルト値
       templateBubbles.push([bubble, entry[0]]);
     }
-    console.log(templateBubbles);
     templateBubbles = templateBubbles;
   }
 </script>
@@ -118,16 +120,14 @@
       ctrlキーを押しながらクリックで閉じずに選択
       {#each shapes as s}
         <BubbleSample
-          width={paperWidth}
-          height={paperHeight}
+          size={itemSize}
           shape={s}
           on:click={(e) => chooseShape(e, s)}
         />
       {/each}
       {#each templateBubbles as [bubble, bindId]}
         <BubbleTemplateSample
-          width={paperWidth}
-          height={paperHeight}
+          size={itemSize}
           bubble={bubble}
           on:click={(e) => chooseTemplate(e, bubble)}
           on:delete={(e) => deleteTemplate(e, bindId)}

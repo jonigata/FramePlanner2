@@ -89,7 +89,7 @@
 
 <BubbleInspector/>
 <FontChooser/>
-<ShapeChooser paperWidth={64} paperHeight={96}/>
+<ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
 <FileManager/>
 

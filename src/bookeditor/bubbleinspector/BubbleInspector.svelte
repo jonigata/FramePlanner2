@@ -219,7 +219,7 @@
         on:keypress={onKeyPress}/>
       <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
       <div class="vbox gap-2">
-        <BubbleSample width={64} height={96} bind:shape={$chosenShape} on:click={chooseShape}/>
+        <BubbleSample size={[64,96]} bind:shape={$chosenShape} on:click={chooseShape}/>
         <button class="save-button btn btn-sm variant-filled paper-size" on:click={saveTemplate}>SAVE</button>
       </div>
     </div>

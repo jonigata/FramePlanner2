@@ -152,9 +152,12 @@ export class Bubble {
   }
 
   static compile(paperSize: Vector, json: any): Bubble {
+    // paperSizeはほぼ後方互換性のために存在している
+    // 一旦Bubbleにしたあとはすべて正規化されている
     // 古いjsonはn_に一貫性がない 古い"fontsize"はn_fontsize相当
+    const defaultUnit = 1 / 840;
     const unit = Bubble.getUnit(paperSize);
-    const normalizedNumber = (v1, v2, v3) => { if (v1) { return v1; } else if (v2) { return v2 * unit; } else { return v3 * unit; }}
+    const normalizedNumber = (v1, v2, v3) => { if (v1) { return v1; } else if (v2) { return v2 * unit; } else { return v3 * defaultUnit; }}
 
     const b = new Bubble();
     b.n_p0 = json.p0 ?? json.n_p0;
@@ -195,8 +198,8 @@ export class Bubble {
     return b;
   }
 
-  static decompile(paperSize: Vector, b: Bubble): any {
-    const unit = Bubble.getUnit(paperSize);
+  static decompile(b: Bubble): any {
+    const unit = 1 / 840;
     const equalNumber = (v1, v2) => { return Math.abs(v1 - v2) < 0.0001; }
     return {
       n_p0: b.n_p0,
@@ -221,7 +224,6 @@ export class Bubble {
       uuid: b.uuid,
       parent: b.parent,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
-
     };
   }
 
@@ -489,6 +491,7 @@ export class Bubble {
   }
 }
 
+// TODO: tailTip正規化してなかった……
 export const bubbleOptionSets = {
   "rounded": {
     link: {hint:"結合", icon:"unite"}, 
@@ -575,9 +578,9 @@ export const bubbleOptionSets = {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 36 },
     superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.15 },
+    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.14 },
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 9 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
     extract: {label: "食い込み", type:"boolean", init: b => false},

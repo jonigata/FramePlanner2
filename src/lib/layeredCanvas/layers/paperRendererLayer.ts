@@ -425,8 +425,6 @@ export class PaperRendererLayer extends Layer {
     const json = JSON.stringify(c);
     // console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);
     if (ri.textJson != json) {
-      console.log("draw text, difference detected");
-
       // startTime = performance.now();
 
       // 変更が起きたときのみ
@@ -473,8 +471,6 @@ export class PaperRendererLayer extends Layer {
       }
 
       // console.log(`rendering took ${performance.now() - startTime} ms`);
-    } else {
-      console.log("draw text, difference not detected");
     }
 
     // 描き戻し
