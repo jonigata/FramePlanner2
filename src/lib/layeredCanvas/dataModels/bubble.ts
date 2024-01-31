@@ -58,6 +58,7 @@ export class Bubble {
   } | null;
   optionContext: any;
   pageNumber: number; // 一時的、当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
+  fontRenderVersion: number; // 一時的、フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
 
   renderInfo: BubbleRenderInfo;
 
@@ -72,6 +73,7 @@ export class Bubble {
 
     this.image = null;
     this.optionContext = {};
+    this.fontRenderVersion = 0;
   }
 
   reset() {
