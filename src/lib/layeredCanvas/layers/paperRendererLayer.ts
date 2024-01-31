@@ -420,6 +420,7 @@ export class PaperRendererLayer extends Layer {
       fontColor: bubble.fontColor,
       outlineWidh: outlineWidth,
       outlineColor: bubble.outlineColor,
+      fontRenderVersion: bubble.fontRenderVersion,
     };
     const json = JSON.stringify(c);
     // console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);

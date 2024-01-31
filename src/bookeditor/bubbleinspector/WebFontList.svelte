@@ -48,7 +48,6 @@
     "'Shippori Antique B1', sans-serif",
     "'Shippori Mincho', serif",
     "'Shippori Mincho B1', serif",
-    "'Shizuru', system-ui",
     "'Stick', sans-serif",
     "'Yomogi', cursive",
     "'Yuji Boku', serif",
@@ -62,6 +61,10 @@
     "'Zen Kurenaido', sans-serif",
     "'Zen Maru Gothic', sans-serif",
     "'Zen Old Mincho', serif",
+    "'Shizuru', system-ui",
+    "'Cherry Bomb One', system-ui",
+    "'Slackside One', cursive",
+    "'Darumadrop One', sans-serif",
   ];
 
   const boldFontFamilies_google = [

@@ -185,7 +185,10 @@
       if (bubbleSnapshot !== snapshot) {
         console.log("bubbleSnapshot actually changed");
         delayedCommiter.schedule(2000);
-        setTimeout(() => layeredCanvas.redraw(), 5000);
+        setTimeout(() => {
+          bubble.fontRenderVersion++;
+          layeredCanvas.redraw()
+        }, 5000);
       }
     }
   }

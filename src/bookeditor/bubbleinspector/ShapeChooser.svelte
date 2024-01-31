@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { derived } from "svelte/store";
+  import writableDerived from "svelte-writable-derived";
   import Drawer from '../../utils/Drawer.svelte'
   import { shapeChooserOpen, chosenShape } from "./shapeStore";
   import BubbleSample from "./BubbleSample.svelte";
@@ -12,7 +12,14 @@
   export let paperWidth = 96;
   export let paperHeight = 96;
 
-  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
+  const bubble = writableDerived(
+    bubbleInspectorTarget,
+    (bit) => bit?.bubble,
+    (b, bit) => {
+      bit.bubble = b;
+      return bit;
+    }
+  );
 
   let templateBubbles: [Bubble, BindId][] = [];
 
@@ -46,22 +53,24 @@
   }
 
   function chooseTemplate(e: CustomEvent<MouseEvent>, b: Bubble) {
-    $bubble.rotation = b.rotation;
-    $bubble.shape = b.shape;
-    $bubble.embedded = b.embedded;
-    $bubble.fontStyle = b.fontStyle;
-    $bubble.fontWeight = b.fontWeight;
-    $bubble.n_fontSize = b.n_fontSize;
-    $bubble.fontFamily = b.fontFamily;
-    $bubble.direction = b.direction;
-    $bubble.fontColor = b.fontColor;
-    $bubble.fillColor = b.fillColor;
-    $bubble.strokeColor = b.strokeColor;
-    $bubble.n_strokeWidth = b.n_strokeWidth;
-    $bubble.n_outlineWidth = b.n_outlineWidth;
-    $bubble.outlineColor = b.outlineColor;
-    $bubble.autoNewline = b.autoNewline;
-    $bubble.optionContext = b.optionContext;
+    const q = $bubble;
+    q.rotation = b.rotation;
+    q.shape = b.shape;
+    q.embedded = b.embedded;
+    q.fontStyle = b.fontStyle;
+    q.fontWeight = b.fontWeight;
+    q.n_fontSize = b.n_fontSize;
+    q.fontFamily = b.fontFamily;
+    q.direction = b.direction;
+    q.fontColor = b.fontColor;
+    q.fillColor = b.fillColor;
+    q.strokeColor = b.strokeColor;
+    q.n_strokeWidth = b.n_strokeWidth;
+    q.n_outlineWidth = b.n_outlineWidth;
+    q.outlineColor = b.outlineColor;
+    q.autoNewline = b.autoNewline;
+    q.optionContext = b.optionContext;
+    $bubble = q;
 
     if (!e.detail.ctrlKey) {
       $shapeChooserOpen = false;
