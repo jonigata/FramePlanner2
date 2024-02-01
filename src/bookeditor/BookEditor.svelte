@@ -12,7 +12,7 @@
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken } from './bookStore';
-  import { buildBookEditor, getFoldAndGapFromWrapMode } from './bookEditorUtils';
+  import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
@@ -137,7 +137,9 @@
       readingDirection = $mainBook.direction;
       wrapMode = $mainBook.wrapMode;
 
+      const direction = getDirectionFromReadingDirection(book.direction);
       const [fold, gap] = getFoldAndGapFromWrapMode(wrapMode);
+      arrayLayer.array.direction = direction;
       arrayLayer.array.fold = fold;
       arrayLayer.array.gap = gap;
 

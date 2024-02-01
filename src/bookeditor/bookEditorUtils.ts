@@ -7,7 +7,7 @@ import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubb
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
 import { initializeKeyCache } from '../lib/layeredCanvas/system/keyCache';
-import type { Book, Page, BookOperators, WrapMode } from './book';
+import type { Book, Page, BookOperators, WrapMode, ReadingDirection } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
@@ -33,8 +33,9 @@ export function buildBookEditor(
     papers.push(buildPaper(layeredCanvas, book, page, editor, defaultBubbleSlot));
     pageNumber++;
   }
+  const direction = getDirectionFromReadingDirection(book.direction);
   const [fold, gap] = getFoldAndGapFromWrapMode(book.wrapMode);
-  const arrayLayer = new ArrayLayer(papers, fold, gap, editor.insertPage, editor.deletePage);
+  const arrayLayer = new ArrayLayer(papers, fold, gap, direction, editor.insertPage, editor.deletePage);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   layeredCanvas.takeOver();
@@ -62,6 +63,15 @@ export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): [number, number] 
       return [2, 100];
     case "one-page":
       return [1, 0];
+  }
+}
+
+export function getDirectionFromReadingDirection(readingDirection: ReadingDirection): number {
+  switch (readingDirection) {
+    case "left-to-right":
+      return 1;
+    case "right-to-left":
+      return -1;
   }
 }
 

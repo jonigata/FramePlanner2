@@ -10,10 +10,12 @@ export class PaperArray {
   papers: {paper: Paper, center: Vector}[];
   fold: number;
   gap: number;
+  direction: number;
 
-  constructor(papers: Paper[], fold: number, gap: number) {
+  constructor(papers: Paper[], fold: number, gap: number, direction: number) {
     this.fold = fold;
     this.gap = gap;
+    this.direction = direction;
 
     this.papers = papers.map(e => ({ paper: e, center: [0, 0] }));
     this.recalculatePaperCenter();
@@ -42,10 +44,10 @@ export class PaperArray {
         y += this.gap;
       }
       this.papers[i].center = [x, y];
-      x -= this.papers[i].paper.size[0] * 0.5;
-      x -= this.gap;
+      x += this.papers[i].paper.size[0] * 0.5 * this.direction;
+      x += this.gap * this.direction;
       if (i < this.papers.length - 1) {
-        x -= this.papers[i + 1].paper.size[0] * 0.5;
+        x += this.papers[i + 1].paper.size[0] * 0.5 * this.direction;
       }
     }
   }

@@ -12,9 +12,9 @@ export class ArrayLayer extends Layer {
   trashIcons: ClickableIcon[] = [];
   insertIcons: ClickableIcon[] = [];
 
-  constructor(papers: Paper[], fold: number, gap: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
+  constructor(papers: Paper[], fold: number, gap: number, direction: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
     super();
-    this.array = new PaperArray(papers, fold, gap);
+    this.array = new PaperArray(papers, fold, gap, direction);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
 
