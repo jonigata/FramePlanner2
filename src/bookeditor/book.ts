@@ -146,6 +146,7 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
     scaleLock: true,
   }
   const page = newPage(frameTree);
+  page.paperSize = [image.naturalWidth, image.naturalHeight];
   const book = {
     revision: { id, revision:1, prefix },
     pages: [page],
