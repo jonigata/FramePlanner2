@@ -40,6 +40,7 @@ export class ArrayLayer extends Layer {
       paper.paper.calculateLayout(m);
     }
 
+    const gap = this.array.gap;
     for (let i = 0; i < this.array.papers.length; i++) {
       const paper = this.array.papers[i];
       const s = paper.paper.size;
@@ -47,7 +48,7 @@ export class ArrayLayer extends Layer {
       const trashIcon = this.trashIcons[i];
       trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
       const insertIcon = this.insertIcons[i];
-      insertIcon.position = [c[0] + s[0] * -0.5 - 32, c[1] + s[1] * 0.5 + 32];
+      insertIcon.position = [c[0] + s[0] * -0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
     }
   }
 

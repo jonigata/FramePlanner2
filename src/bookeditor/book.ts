@@ -43,6 +43,8 @@ export type Book = {
   revision: Revision;
   pages: Page[];
   history: History;
+  fold: number,
+  foldGap: number,
 }
 
 export function incrementRevision(revision: Revision): void {

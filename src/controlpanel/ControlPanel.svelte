@@ -305,6 +305,12 @@
     枠色<ColorPicker bind:hex={$newPageProperty.frameColor} label="" />
     枠の幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
+  <div class="hbox gap" style="margin-top: 4px;">
+    ページ折返し
+    <div class="number-box"><NumberEdit bind:value={$mainBook.fold}/></div>
+    ギャップ<RangeSlider name="line" bind:value={$mainBook.foldGap} min={1} max={200} step={1} style="width:60px;"/>
+    <div class="number-box"><NumberEdit bind:value={$mainBook.foldGap}/></div>
+  </div>
   <div class="hbox gap" style="margin-top: 16px;">
     拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
     <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>

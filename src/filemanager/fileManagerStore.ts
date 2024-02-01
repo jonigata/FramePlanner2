@@ -41,6 +41,8 @@ type SerializedPage = {
 type SerializedBook = {
   revision: {id: string, revision: number, prefix: string},
   pages: SerializedPage[],
+  fold: number,
+  foldGap: number,
 }
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
@@ -52,6 +54,8 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   const serializedBook: SerializedBook = {
     revision: book.revision,
     pages: [],
+    fold: book.fold,
+    foldGap: book.foldGap,
   };
   for (const page of book.pages) {
     const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
@@ -161,6 +165,8 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
       entries: [],
       cursor: 0,
     },
+    fold: serializedBook.fold ?? 0,
+    foldGap: serializedBook.foldGap ?? 100,
   };
 
   for (const serializedPage of serializedBook.pages) {
@@ -201,6 +207,8 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
       entries: [],
       cursor: 0,
     },
+    fold: 0,
+    foldGap: 100,
   };
   commitBook(book, null);
 

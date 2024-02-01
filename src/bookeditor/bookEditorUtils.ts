@@ -33,7 +33,7 @@ export function buildBookEditor(
     papers.push(buildPaper(layeredCanvas, book, page, editor, defaultBubbleSlot));
     pageNumber++;
   }
-  const arrayLayer = new ArrayLayer(papers, 100, editor.insertPage, editor.deletePage);
+  const arrayLayer = new ArrayLayer(papers, book.foldGap, editor.insertPage, editor.deletePage);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   layeredCanvas.takeOver();

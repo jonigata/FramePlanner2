@@ -128,6 +128,12 @@
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
 
+    if (arrayLayer && arrayLayer.array.gap != $mainBook.foldGap) {
+      arrayLayer.array.gap = $mainBook.foldGap
+      $viewport.dirty = true;
+      layeredCanvas.redraw();
+    }
+
     const newPageIds = book.pages.map(p => p.id);
     if (pageIds.join(",") === newPageIds.join(",")) {
       return;
