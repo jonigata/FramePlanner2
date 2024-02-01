@@ -184,3 +184,13 @@ export function rectIntersectsRect(r0: Rect, r1: Rect): boolean {
 export function rectContains(r: Rect, p: Vector) {
   return p[0] >= r[0] && p[0] <= r[0] + r[2] && p[1] >= r[1] && p[1] <= r[1] + r[3];
 }
+
+export function rectToPointDistance(r: Rect, p: Vector): number {
+  const [x, y] = p;
+  const [x0, y0, w, h] = r;
+  const [x1, y1] = [x0 + w, y0 + h];
+
+  var dx = Math.max(x0 - x, 0, x - x1);
+  var dy = Math.max(y0 - y, 0, y - y1);
+  return Math.sqrt(dx*dx + dy*dy);
+}

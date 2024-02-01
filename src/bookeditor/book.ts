@@ -39,12 +39,15 @@ export type History  = {
   cursor: number;
 }
 
+export type ReadingDirection = 'left-to-right' | 'right-to-left';
+export type WrapMode = 'none' | 'two-pages' | 'one-page';
+
 export type Book = {
   revision: Revision;
   pages: Page[];
   history: History;
-  fold: number,
-  foldGap: number,
+  direction: ReadingDirection;
+  wrapMode: WrapMode;
 }
 
 export function incrementRevision(revision: Revision): void {
@@ -127,10 +130,12 @@ export function newPage(frameTree: FrameElement) {
 export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book {
   const frameTree = FrameElement.compile(frameExamples[exampleIndex]);
   const page = newPage(frameTree);
-  const book = {
+  const book: Book = {
     revision: { id, revision:1, prefix },
     pages: [page],
     history: { entries: [], cursor: 0 },
+    direction: 'right-to-left',
+    wrapMode: 'two-pages',
   }
   commitBook(book, null);
   return book;
@@ -149,10 +154,12 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
   }
   const page = newPage(frameTree);
   page.paperSize = [image.naturalWidth, image.naturalHeight];
-  const book = {
+  const book: Book = {
     revision: { id, revision:1, prefix },
     pages: [page],
     history: { entries: [], cursor: 0 },
+    direction: 'right-to-left',
+    wrapMode: 'one-page',
   }
   commitBook(book, null);
   return book;

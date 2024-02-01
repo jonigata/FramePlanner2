@@ -10,6 +10,7 @@
 .hbox.space-around {justify-content: space-around;}
 .hbox.top {align-items: start;}
 .hbox.bottom {align-items: end;}
+.hobx.vcenter { align-items: center; }
 .hbox.gap {gap: 12px;}
 .hbox.stretch-child {align-items: stretch;}
 .hbox .expand {align-self: stretch;}
@@ -23,6 +24,9 @@
 .vbox.top {justify-content: flex-start;}
 .vbox.bottom {justify-content: flex-end;}
 .vbox.center {justify-content: center;}
+.vbox.left {align-items: start;}
+.vbox.right {align-items: end;}
+.vbox.hcenter { align-items: center; }
 .vbox.gap {gap: 12px;}
 .vbox.stretch-child {align-items: stretch;}
 .vbox.space-around {justify-content: space-around;}

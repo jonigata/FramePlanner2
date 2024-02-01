@@ -24,6 +24,7 @@
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { batchImagingOpen } from '../generator/batchImagingStore';
+  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
@@ -305,15 +306,24 @@
     枠色<ColorPicker bind:hex={$newPageProperty.frameColor} label="" />
     枠の幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
-  <div class="hbox gap" style="margin-top: 4px;">
-    ページ折返し
-    <div class="number-box"><NumberEdit bind:value={$mainBook.fold}/></div>
-    ギャップ<RangeSlider name="line" bind:value={$mainBook.foldGap} min={1} max={200} step={1} style="width:60px;"/>
-    <div class="number-box"><NumberEdit bind:value={$mainBook.foldGap}/></div>
-  </div>
-  <div class="hbox gap" style="margin-top: 16px;">
-    拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:250px;"/>
-    <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
+  <div class="hbox gap my-1">
+    ページ配置
+    <div class="radio-box hbox">
+      <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+        <RadioItem bind:group={$mainBook.direction} name="direction" value={'right-to-left'}><span class="radio-text">左</span></RadioItem>
+        <RadioItem bind:group={$mainBook.direction} name="direction" value={'left-to-right'}><span class="radio-text">右</span></RadioItem>
+      </RadioGroup>
+    </div>
+    折返し
+    <div class="radio-box hbox">
+      <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+        <RadioItem bind:group={$mainBook.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">なし</span></RadioItem>
+        <RadioItem bind:group={$mainBook.wrapMode} name="wrap-mode" value={'two-pages'}><span class="radio-text">2p</span></RadioItem>
+        <RadioItem bind:group={$mainBook.wrapMode} name="wrap-omde" value={'one-page'}><span class="radio-text">1p</span></RadioItem>
+      </RadioGroup>
+    </div>
+
+
   </div>
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
@@ -436,4 +446,18 @@
   .function-button {
     width: 125px;
   }
+  .radio-text {
+    height: 10px;
+  }
+  .radio-box {
+    height: 35px;
+  }
+
+  .radio-box :global(.radio-item) {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
 </style>

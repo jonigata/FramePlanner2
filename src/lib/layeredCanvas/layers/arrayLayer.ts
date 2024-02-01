@@ -12,25 +12,21 @@ export class ArrayLayer extends Layer {
   trashIcons: ClickableIcon[] = [];
   insertIcons: ClickableIcon[] = [];
 
-  constructor(papers: Paper[], gap: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
+  constructor(papers: Paper[], fold: number, gap: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
     super();
-    this.array = new PaperArray(papers, gap);
+    this.array = new PaperArray(papers, fold, gap);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
 
     this.insertIcons = [];
     this.trashIcons = [];
     for (let i = 0; i < this.array.papers.length; i++) {
-      const paper = this.array.papers[i];
-      const s = paper.paper.size;
-      const c = paper.center;
       const trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
-      trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
       const insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
-      insertIcon.position = [c[0] + s[0] * -0.5 - 32, c[1] + s[1] * 0.5 + 32];
       this.trashIcons.push(trashIcon);
       this.insertIcons.push(insertIcon);
     }
+    this.calculateIconPositions();
   }
 
   calculateLayout(matrix: DOMMatrix) {
@@ -40,15 +36,24 @@ export class ArrayLayer extends Layer {
       paper.paper.calculateLayout(m);
     }
 
+    this.calculateIconPositions();
+  }
+
+  calculateIconPositions() {
     const gap = this.array.gap;
     for (let i = 0; i < this.array.papers.length; i++) {
       const paper = this.array.papers[i];
       const s = paper.paper.size;
       const c = paper.center;
       const trashIcon = this.trashIcons[i];
-      trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
       const insertIcon = this.insertIcons[i];
-      insertIcon.position = [c[0] + s[0] * -0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
+      if (this.array.fold === 1) {
+        trashIcon.position = [c[0] + s[0] * 0.5 + 40, c[1]];
+        insertIcon.position = [c[0] + s[0] * 0.5 + 40, c[1] + s[1] * 0.5 + gap * 0.5];
+      } else {
+        trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
+        insertIcon.position = [c[0] + s[0] * -0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
+      }
     }
   }
 
@@ -144,7 +149,14 @@ export class ArrayLayer extends Layer {
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (this.interactable) {
       this.insertIcons.forEach(e => {
+        ctx.save();
+        if (this.array.fold === 1) {
+          ctx.translate(...e.center);
+          ctx.rotate(-Math.PI * 0.5);
+          ctx.translate(-e.center[0], -e.center[1]);
+        }
         e.render(ctx);
+        ctx.restore();
       });
       this.trashIcons.forEach(e => {
         e.render(ctx);

@@ -9,10 +9,10 @@
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
-  import type { Book, Page, BookOperators, HistoryTag } from './book';
+  import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken } from './bookStore';
-  import { buildBookEditor } from './bookEditorUtils';
+  import { buildBookEditor, getFoldAndGapFromWrapMode } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
@@ -35,6 +35,8 @@
   let painter: Painter;
 
   let pageIds: string[] = [];
+  let readingDirection: ReadingDirection;
+  let wrapMode: WrapMode;
 
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
@@ -128,8 +130,17 @@
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
 
-    if (arrayLayer && arrayLayer.array.gap != $mainBook.foldGap) {
-      arrayLayer.array.gap = $mainBook.foldGap
+    if (arrayLayer && 
+        (readingDirection != $mainBook.direction ||
+         wrapMode != $mainBook.wrapMode)) {
+
+      readingDirection = $mainBook.direction;
+      wrapMode = $mainBook.wrapMode;
+
+      const [fold, gap] = getFoldAndGapFromWrapMode(wrapMode);
+      arrayLayer.array.fold = fold;
+      arrayLayer.array.gap = gap;
+
       $viewport.dirty = true;
       layeredCanvas.redraw();
     }

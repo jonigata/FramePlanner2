@@ -1,5 +1,5 @@
 import type { Paper, Layer, Dragging } from '../system/layeredCanvas';
-import type { Vector } from "../tools/geometry/geometry";
+import { type Vector, type Rect, rectContains, rectToPointDistance } from "../tools/geometry/geometry";
 
 // PaperArray: 複数のPaperをまとめて扱う
 // 原点(0,0)は1枚目の中心
@@ -8,9 +8,11 @@ import type { Vector } from "../tools/geometry/geometry";
 
 export class PaperArray {
   papers: {paper: Paper, center: Vector}[];
+  fold: number;
   gap: number;
 
-  constructor(papers: Paper[], gap: number) {
+  constructor(papers: Paper[], fold: number, gap: number) {
+    this.fold = fold;
     this.gap = gap;
 
     this.papers = papers.map(e => ({ paper: e, center: [0, 0] }));
@@ -18,9 +20,28 @@ export class PaperArray {
   }
 
   recalculatePaperCenter() {
-    let x = 0; // yは常に0
+    // まず格段の高さを計算(その段のpaperの高さの最大値)
+    const heights: number[] = [];
+    let height = 0;
     for (let i = 0; i < this.papers.length; i++) {
-      this.papers[i].center = [x, 0];
+      if (0 < i && i % this.fold === 0) {
+        heights.push(height);
+        height = 0;
+      }
+      height = Math.max(height, this.papers[i].paper.size[1]);
+    }
+    heights.push(height);
+
+    let x = 0;
+    let y = 0;
+    for (let i = 0; i < this.papers.length; i++) {
+      if (0 < i && i % this.fold === 0) {
+        x = 0;
+        const j = i / this.fold;
+        y += heights[j-1] * 0.5 + heights[j] * 0.5;
+        y += this.gap;
+      }
+      this.papers[i].center = [x, y];
       x -= this.papers[i].paper.size[0] * 0.5;
       x -= this.gap;
       if (i < this.papers.length - 1) {
@@ -33,15 +54,13 @@ export class PaperArray {
     let minDist = Infinity;
     let minIndex = -1;
     for (let i = 0; i < this.papers.length; i++) {
-      // 紙の中にあれば断定
       const e = this.papers[i];
       const x0 = e.center[0] - e.paper.size[0] * 0.5;
-      const x1 = e.center[0] + e.paper.size[0] * 0.5;
-      if (x0 <= parentPosition[0] && parentPosition[0] <= x1) {
-        return i;
-      }
+      const y0 = e.center[1] - e.paper.size[1] * 0.5;
+      const r: Rect = [x0, y0, ...e.paper.size];
+      
       // 紙の端との距離を計算
-      const dist = Math.min(Math.abs(x0 - parentPosition[0]), Math.abs(x1 - parentPosition[0]));
+      const dist = rectToPointDistance(r, parentPosition);
       if (dist < minDist) {
         minDist = dist;
         minIndex = i;

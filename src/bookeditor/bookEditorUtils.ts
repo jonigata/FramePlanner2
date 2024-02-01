@@ -7,7 +7,7 @@ import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubb
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
 import { initializeKeyCache } from '../lib/layeredCanvas/system/keyCache';
-import type { Book, Page, BookOperators } from './book';
+import type { Book, Page, BookOperators, WrapMode } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
@@ -33,7 +33,8 @@ export function buildBookEditor(
     papers.push(buildPaper(layeredCanvas, book, page, editor, defaultBubbleSlot));
     pageNumber++;
   }
-  const arrayLayer = new ArrayLayer(papers, book.foldGap, editor.insertPage, editor.deletePage);
+  const [fold, gap] = getFoldAndGapFromWrapMode(book.wrapMode);
+  const arrayLayer = new ArrayLayer(papers, fold, gap, editor.insertPage, editor.deletePage);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   layeredCanvas.takeOver();
@@ -51,6 +52,17 @@ export function buildBookEditor(
   });
 
   return { arrayLayer, layeredCanvas};
+}
+
+export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): [number, number] {
+  switch (wrapMode) {
+    case "none":
+      return [0, 100];
+    case "two-pages":
+      return [2, 100];
+    case "one-page":
+      return [1, 0];
+  }
 }
 
 function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {

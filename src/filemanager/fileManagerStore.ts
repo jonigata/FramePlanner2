@@ -1,8 +1,8 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page, Book } from "../bookeditor/book.js";
+import type { Page, Book, WrapMode, ReadingDirection } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
-import { constraintLeaf, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -41,8 +41,8 @@ type SerializedPage = {
 type SerializedBook = {
   revision: {id: string, revision: number, prefix: string},
   pages: SerializedPage[],
-  fold: number,
-  foldGap: number,
+  direction: ReadingDirection,
+  wrapMode: WrapMode,
 }
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
@@ -54,8 +54,8 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   const serializedBook: SerializedBook = {
     revision: book.revision,
     pages: [],
-    fold: book.fold,
-    foldGap: book.foldGap,
+    direction: book.direction,
+    wrapMode: book.wrapMode,
   };
   for (const page of book.pages) {
     const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
@@ -165,8 +165,8 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
       entries: [],
       cursor: 0,
     },
-    fold: serializedBook.fold ?? 0,
-    foldGap: serializedBook.foldGap ?? 100,
+    direction: serializedBook.direction ?? 'right-to-left',
+    wrapMode: serializedBook.wrapMode ?? 'none',
   };
 
   for (const serializedPage of serializedBook.pages) {
@@ -207,8 +207,8 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
       entries: [],
       cursor: 0,
     },
-    fold: 0,
-    foldGap: 100,
+    direction: 'right-to-left',
+    wrapMode: 'none',
   };
   commitBook(book, null);
 

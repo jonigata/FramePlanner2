@@ -138,6 +138,8 @@
         revision: { id: localFile.id, revision:1, prefix: 'gpt-build-' },
         pages: [page],
         history: { entries: [], cursor: 0 },
+        direction: 'right-to-left',
+        wrapMode: 'none',
       }
       commitBook(book, null);
       await saveBookTo(book, fileSystem, localFile);
