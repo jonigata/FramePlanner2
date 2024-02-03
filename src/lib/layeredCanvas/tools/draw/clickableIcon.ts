@@ -1,9 +1,9 @@
 import type { Vector, Rect } from "../geometry/geometry";
 
 export class BaseIcon {
-  render(ctx: CanvasRenderingContext2D) {
-    throw new Error("Method not implemented.");
-  }
+  static tmpCanvas = null;
+  static tmpCtx = null;
+
   hintIfContains(point: Vector, f: (v:Vector,h:string)=>void): boolean {
     throw new Error("Method not implemented.");
   }
@@ -13,12 +13,33 @@ export class BaseIcon {
   boudingRect(): Rect {
     throw new Error("Method not implemented.");
   }
+
+  renderImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, position: Vector, size: Vector, pivot: Vector) {
+    if (image.width === 0 || image.height === 0) return;
+    if (!BaseIcon.tmpCanvas) {
+      BaseIcon.tmpCanvas = document.createElement("canvas");
+      BaseIcon.tmpCtx = BaseIcon.tmpCanvas.getContext("2d");
+    }
+    BaseIcon.tmpCanvas.width = image.width;
+    BaseIcon.tmpCanvas.height = image.height;
+    BaseIcon.tmpCtx.drawImage(image, 0, 0);
+
+    ctx.save();
+    const matrix = ctx.getTransform();
+    const scale = matrix.a; // 1:1と仮定
+    const rscale = 1 / scale;
+    let [x,y] = position;
+    x -= pivot[0] * size[0] * rscale;
+    y -= pivot[1] * size[1] * rscale;
+    let [sx, sy] = [size[0] * rscale, size[1] * rscale];
+    ctx.shadowColor = '#404040';
+    ctx.shadowBlur = 3;
+    ctx.drawImage(ClickableIcon.tmpCanvas, x, y, sx, sy);
+    ctx.restore();
+  }
 }
 
 export class ClickableIcon extends BaseIcon {
-  static tmpCanvas = null;
-  static tmpCtx = null;
-
   src: string;
   position: Vector;
   size: Vector;
@@ -42,22 +63,8 @@ export class ClickableIcon extends BaseIcon {
 
   render(ctx: CanvasRenderingContext2D) {
     if (!this.isVisible()) return;
-    if (this.image.width === 0 || this.image.height === 0) return;
-    if (!ClickableIcon.tmpCanvas) {
-      ClickableIcon.tmpCanvas = document.createElement("canvas");
-      ClickableIcon.tmpCtx = ClickableIcon.tmpCanvas.getContext("2d");
-    }
-    ClickableIcon.tmpCanvas.width = this.image.width;
-    ClickableIcon.tmpCanvas.height = this.image.height;
 
-    ClickableIcon.tmpCtx.drawImage(this.image, 0, 0);
-
-    ctx.save();
-    const position = this.pivotPosition;
-    ctx.shadowColor = '#404040';
-    ctx.shadowBlur = 3;
-    ctx.drawImage(ClickableIcon.tmpCanvas, ...position, ...this.size);
-    ctx.restore();
+    this.renderImage(ctx, this.image, this.position, this.size, this.pivot);
   }
 
   contains(p: Vector): boolean {
@@ -146,14 +153,7 @@ export class MultistateIcon extends BaseIcon {
 
   render(ctx: CanvasRenderingContext2D) { // Add type annotation for ctx parameter
     if (!this.isVisible()) return;
-    ctx.save();
-    ctx.shadowColor = "white";
-    ctx.shadowBlur = 5;
-    const position = [...this.position];
-    position[0] -= this.pivot[0] * this.size[0];
-    position[1] -= this.pivot[1] * this.size[1];
-    ctx.drawImage(this.images[this.index], position[0], position[1], this.size[0], this.size[1]);
-    ctx.restore();
+    this.renderImage(ctx, this.images[this.index], this.position, this.size, this.pivot);
   }
 
   contains(p: Vector): boolean {
