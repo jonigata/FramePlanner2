@@ -718,7 +718,15 @@ export class BubbleLayer extends Layer {
 
   setIconPositions(): void {
     const paperSize = this.getPaperSize();
-    const [x, y, w, h] = this.selected.getPhysicalRegularizedRect(paperSize);
+    let [x, y, w, h] = this.selected.getPhysicalRegularizedRect(paperSize);
+    const minSize = 160;
+    const nw = Math.max(w, minSize);
+    const nh = Math.max(h, minSize);
+    x = x + (w - nw) / 2;
+    y = y + (h - nh) / 2;
+    w = nw;
+    h = nh;
+
     const rect: Rect = [x+10, y+10, w-20, h-20];
     const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
 

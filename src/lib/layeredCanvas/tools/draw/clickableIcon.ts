@@ -25,9 +25,7 @@ export class BaseIcon {
     BaseIcon.tmpCtx.drawImage(image, 0, 0);
 
     ctx.save();
-    const matrix = ctx.getTransform();
-    const scale = matrix.a; // 1:1と仮定
-    const rscale = 1 / scale;
+    const rscale = this.getRscale(ctx);
     let [x,y] = position;
     x -= pivot[0] * size[0] * rscale;
     y -= pivot[1] * size[1] * rscale;
@@ -36,6 +34,11 @@ export class BaseIcon {
     ctx.shadowBlur = 3;
     ctx.drawImage(ClickableIcon.tmpCanvas, x, y, sx, sy);
     ctx.restore();
+  }
+
+  getRscale(ctx: CanvasRenderingContext2D): number {
+    const matrix = ctx.getTransform();
+    return 1 / matrix.a;
   }
 }
 
