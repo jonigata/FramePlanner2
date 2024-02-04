@@ -468,6 +468,7 @@ export class BubbleLayer extends Layer {
       }
     }
     this.unfocus();
+    this.onCommit();
   }
   
   hintOptionIcon(shape: string, p: Vector): boolean {
