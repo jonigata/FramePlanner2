@@ -152,7 +152,7 @@ export class ArrayLayer extends Layer {
         ctx.save();
         if (this.array.fold === 1) {
           ctx.translate(...e.center);
-          ctx.rotate(-Math.PI * 0.5);
+          //ctx.rotate(-Math.PI * 0.5);
           ctx.translate(-e.center[0], -e.center[1]);
         }
         e.render(ctx);

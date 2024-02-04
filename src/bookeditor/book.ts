@@ -199,6 +199,7 @@ export type FrameContent = {
   sourceRect: Rect, // 元のコマのtrapezoidBoudingRect
   imageSlot: ImageSlot,
   bubbles: Bubble[], // ただしpositionはコマ正規化座標
+  prompt: string | null,
 }
 
 export function collectBookContents(book: Book): FrameContent[] {
@@ -238,6 +239,7 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
         sourceRect: trapezoidBoundingRect(leafLayout.corners),
         imageSlot: frameTree.image,
         bubbles: selected,
+        prompt: frameTree.prompt,
       });
     }
   } else {
@@ -271,6 +273,7 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
       } 
       if (frameTree === insertElement || contents.length === 0) {
         frameTree.image = null;
+        frameTree.prompt = null;
         return;
       }
     
@@ -280,6 +283,7 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
 
       const content = contents.shift();
       frameTree.image = content.imageSlot;
+      frameTree.prompt = content.prompt;
 
       for (let b of content.bubbles) {
         b.pageNumber = pageNumber;
