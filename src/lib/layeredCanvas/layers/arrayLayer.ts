@@ -20,9 +20,10 @@ export class ArrayLayer extends Layer {
 
     this.insertIcons = [];
     this.trashIcons = [];
+    const mp = () => this.paper.matrix;
     for (let i = 0; i < this.array.papers.length; i++) {
-      const trashIcon = new ClickableIcon(["page-trash.png"],[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
-      const insertIcon = new ClickableIcon(["page-insert.png"],[48,48],[0.5,0],"ページ挿入", null);
+      const trashIcon = new ClickableIcon(["page-trash.png"],[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
+      const insertIcon = new ClickableIcon(["page-insert.png"],[48,48],[0.5,0],"ページ挿入", null, mp);
       this.trashIcons.push(trashIcon);
       this.insertIcons.push(insertIcon);
     }
@@ -151,9 +152,10 @@ export class ArrayLayer extends Layer {
       this.insertIcons.forEach(e => {
         ctx.save();
         if (this.array.fold === 1) {
-          ctx.translate(...e.center);
+          const c = e.center();
+          ctx.translate(...c);
           //ctx.rotate(-Math.PI * 0.5);
-          ctx.translate(-e.center[0], -e.center[1]);
+          ctx.translate(-c[0], -c[1]);
         }
         e.render(ctx);
         ctx.restore();

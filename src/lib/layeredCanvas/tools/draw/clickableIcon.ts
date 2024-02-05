@@ -10,9 +10,10 @@ export class ClickableIcon {
   pivot: Vector;
   hint: string;
   visibleConditionProvider: () => boolean;
+  matrixProvider: () => DOMMatrix;
   index: number;
   
-  constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: () => boolean) {
+  constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: () => boolean, matrixProvider: () => DOMMatrix) {
     this.images = srcs.map(src => {
         const image = new Image();
         image.src = new URL(`../../../../assets/${src}`, import.meta.url).href;
@@ -23,7 +24,12 @@ export class ClickableIcon {
     this.pivot = pivot;
     this.hint = hint;
     this.visibleConditionProvider = visibleConditionProvider;
+    this.matrixProvider = matrixProvider;
     this.index = 0;
+  }
+
+  isVisible(): boolean {
+    return !this.visibleConditionProvider || this.visibleConditionProvider();
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -38,24 +44,12 @@ export class ClickableIcon {
     return f;
   }
 
-  get center(): Vector {
-    const x = this.position[0] + this.size[0] / 2;
-    const y = this.position[1] + this.size[1] / 2;
-    return [x, y];
-  }
-
-  get hintPosition(): Vector {
-    const p = this.center;
-    return [p[0], p[1] - 32];
-  }
-
-  isVisible(): boolean {
-    return !this.visibleConditionProvider || this.visibleConditionProvider();
-  }
-
   hintIfContains(point: Vector, f: (v: Vector, h: string) => void): boolean {
     if (this.contains(point)) {
-      f(this.hintPosition, this.hint);
+      const [x, y, w, h] = this.boudingRect();
+      const hintPosition: Vector = [x + w / 2, y + h / 2 - 32];
+  
+      f(hintPosition, this.hint);
       return true;
     }
     return false;
@@ -77,14 +71,6 @@ export class ClickableIcon {
     this.index = 0;
   }
 
-  boudingRect(): Rect {
-    let [x, y] = [...this.position];
-    x -= this.pivot[0] * this.size[0];
-    y -= this.pivot[1] * this.size[1];
-    const [w, h] = this.size;
-    return [x, y, w, h];
-  }
-
   renderImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, position: Vector, size: Vector, pivot: Vector) {
     if (image.width === 0 || image.height === 0) return;
     if (!ClickableIcon.tmpCanvas) {
@@ -96,20 +82,29 @@ export class ClickableIcon {
     ClickableIcon.tmpCtx.drawImage(image, 0, 0);
 
     ctx.save();
-    const rscale = this.getRscale(ctx);
-    let [x,y] = position;
-    x -= pivot[0] * size[0] * rscale;
-    y -= pivot[1] * size[1] * rscale;
-    let [sx, sy] = [size[0] * rscale, size[1] * rscale];
+    const [x, y, w, h] = this.boudingRect();
     ctx.shadowColor = '#404040';
     ctx.shadowBlur = 3;
-    ctx.drawImage(ClickableIcon.tmpCanvas, x, y, sx, sy);
+    ctx.drawImage(ClickableIcon.tmpCanvas, x, y, w, h);
     ctx.restore();
   }
 
-  getRscale(ctx: CanvasRenderingContext2D): number {
-    const matrix = ctx.getTransform();
-    return 1 / matrix.a;
+  boudingRect(): Rect {
+    const rscale = this.rscale;
+    let [x, y] = this.position;
+    x -= this.pivot[0] * this.size[0] * rscale;
+    y -= this.pivot[1] * this.size[1] * rscale;
+    const [w, h] = [this.size[0] * rscale, this.size[1] * rscale];
+    return [x, y, w, h];
+  }
+
+  center(): Vector {
+    const [x, y, w, h] = this.boudingRect();
+    return [x + w / 2, y + h / 2];
+  }
+
+  get rscale(): number {
+    return 1 / this.matrixProvider().a;
   }
 
   static calcPosition(rect: Rect, unit: Vector, regularizedOrigin: Vector, offsetUnit: Vector): Vector {
