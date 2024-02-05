@@ -21,8 +21,8 @@ export class ArrayLayer extends Layer {
     this.insertIcons = [];
     this.trashIcons = [];
     for (let i = 0; i < this.array.papers.length; i++) {
-      const trashIcon = new ClickableIcon("page-trash.png",[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
-      const insertIcon = new ClickableIcon("page-insert.png",[48,48],[0.5,0],"ページ挿入", null);
+      const trashIcon = new ClickableIcon(["page-trash.png"],[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length);
+      const insertIcon = new ClickableIcon(["page-insert.png"],[48,48],[0.5,0],"ページ挿入", null);
       this.trashIcons.push(trashIcon);
       this.insertIcons.push(insertIcon);
     }

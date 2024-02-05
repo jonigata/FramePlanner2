@@ -3,7 +3,7 @@ import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhy
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
-import { BaseIcon, ClickableIcon, MultistateIcon } from "../tools/draw/clickableIcon";
+import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { trapezoidPath } from "../tools/geometry/trapezoid";
 import type { Vector } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
@@ -29,7 +29,7 @@ export class FrameLayer extends Layer {
   spliceIcon: ClickableIcon;
   zplusIcon: ClickableIcon;
   zminusIcon: ClickableIcon;
-  visibilityIcon: MultistateIcon;
+  visibilityIcon: ClickableIcon;
   scaleIcon: ClickableIcon;
   rotateIcon: ClickableIcon;
   dropIcon: ClickableIcon;
@@ -42,10 +42,10 @@ export class FrameLayer extends Layer {
   slantHorizontalIcon: ClickableIcon;
   expandVerticalIcon: ClickableIcon;
   slantVerticalIcon: ClickableIcon;
-  showsScribbleIcon: MultistateIcon;
+  showsScribbleIcon: ClickableIcon;
 
-  frameIcons: BaseIcon[];
-  borderIcons: BaseIcon[];
+  frameIcons: ClickableIcon[];
+  borderIcons: ClickableIcon[];
 
   focusedLayout: Layout;
   focusedBorder: Border;
@@ -75,34 +75,34 @@ export class FrameLayer extends Layer {
     const unit = iconUnit;
     const isFrameActive = () => this.interactable && this.focusedLayout && !this.pointerHandler;
     const isFrameActiveAndVisible = () => this.interactable && 0 < this.focusedLayout?.element.visibility && !this.pointerHandler;
-    this.splitHorizontalIcon = new ClickableIcon("split-horizontal.png",unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible);
-    this.splitVerticalIcon = new ClickableIcon("split-vertical.png",unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible);
-    this.deleteIcon = new ClickableIcon("delete.png",unit,[1,0],"削除", isFrameActive);
-    this.duplicateIcon = new ClickableIcon("duplicate.png",unit,[1,0],"複製", isFrameActive);
-    this.insertIcon = new ClickableIcon("insert.png",unit,[1,0],"画像のシフト", isFrameActive);
-    this.spliceIcon = new ClickableIcon("splice.png",unit,[1,0],"画像のアンシフト", isFrameActive);
-    this.zplusIcon = new ClickableIcon("zplus.png",unit,[0,0],"手前に", isFrameActiveAndVisible);
-    this.zminusIcon = new ClickableIcon("zminus.png",unit,[0,0],"奥に", isFrameActiveAndVisible);
-    this.visibilityIcon = new MultistateIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive);
+    this.splitHorizontalIcon = new ClickableIcon(["split-horizontal.png"],unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible);
+    this.splitVerticalIcon = new ClickableIcon(["split-vertical.png"],unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible);
+    this.deleteIcon = new ClickableIcon(["delete.png"],unit,[1,0],"削除", isFrameActive);
+    this.duplicateIcon = new ClickableIcon(["duplicate.png"],unit,[1,0],"複製", isFrameActive);
+    this.insertIcon = new ClickableIcon(["insert.png"],unit,[1,0],"画像のシフト", isFrameActive);
+    this.spliceIcon = new ClickableIcon(["splice.png"],unit,[1,0],"画像のアンシフト", isFrameActive);
+    this.zplusIcon = new ClickableIcon(["zplus.png"],unit,[0,0],"手前に", isFrameActiveAndVisible);
+    this.zminusIcon = new ClickableIcon(["zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible);
+    this.visibilityIcon = new ClickableIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive);
     this.visibilityIcon.index = 2;
-    this.showsScribbleIcon = new MultistateIcon(["scribble-hide.png","scribble-show.png"],unit,[0,1], "落書きの表示/非表示", isFrameActiveAndVisible);
+    this.showsScribbleIcon = new ClickableIcon(["scribble-hide.png","scribble-show.png"],unit,[0,1], "落書きの表示/非表示", isFrameActiveAndVisible);
     this.showsScribbleIcon.index = 1;
 
     const isImageActive = () => this.interactable && this.focusedLayout?.element.image && !this.pointerHandler;
-    this.scaleIcon = new ClickableIcon("scale.png",unit,[1,1],"スケール", () => this.interactable && this.focusedLayout?.element.image != null);
-    this.rotateIcon = new ClickableIcon("rotate.png",unit,[1,1],"回転", () => this.interactable && this.focusedLayout?.element.image != null);
-    this.dropIcon = new ClickableIcon("drop.png",unit,[0,1],"画像除去", isImageActive);
-    this.flipHorizontalIcon = new ClickableIcon("flip-horizontal.png",unit,[0,1],"左右反転", isImageActive);
-    this.flipVerticalIcon = new ClickableIcon("flip-vertical.png",unit,[0,1],"上下反転", isImageActive);
-    this.fitIcon = new ClickableIcon("fit.png",unit,[0,1],"フィット", isImageActive);
-    this.generateIcon = new ClickableIcon("generate-image.png",unit,[0,1],"画像生成", isFrameActiveAndVisible);
-    this.scribbleIcon = new ClickableIcon("scribble.png",unit,[0,1],"落書き", isFrameActiveAndVisible);
+    this.scaleIcon = new ClickableIcon(["scale.png"],unit,[1,1],"スケール", () => this.interactable && this.focusedLayout?.element.image != null);
+    this.rotateIcon = new ClickableIcon(["rotate.png"],unit,[1,1],"回転", () => this.interactable && this.focusedLayout?.element.image != null);
+    this.dropIcon = new ClickableIcon(["drop.png"],unit,[0,1],"画像除去", isImageActive);
+    this.flipHorizontalIcon = new ClickableIcon(["flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive);
+    this.flipVerticalIcon = new ClickableIcon(["flip-vertical.png"],unit,[0,1],"上下反転", isImageActive);
+    this.fitIcon = new ClickableIcon(["fit.png"],unit,[0,1],"フィット", isImageActive);
+    this.generateIcon = new ClickableIcon(["generate-image.png"],unit,[0,1],"画像生成", isFrameActiveAndVisible);
+    this.scribbleIcon = new ClickableIcon(["scribble.png"],unit,[0,1],"落書き", isFrameActiveAndVisible);
 
     const isBorderActive = (dir) => this.interactable && this.focusedBorder?.layout.dir === dir;
-    this.expandHorizontalIcon = new ClickableIcon("expand-horizontal.png",unit,[0.5,1],"幅を変更", () => isBorderActive('h'));
-    this.slantHorizontalIcon = new ClickableIcon("slant-horizontal.png", unit,[0.5,0],"傾き", () => isBorderActive('h'));
-    this.expandVerticalIcon = new ClickableIcon("expand-vertical.png",unit,[1,0.5],"幅を変更", () => isBorderActive('v'));
-    this.slantVerticalIcon = new ClickableIcon("slant-vertical.png", unit,[0,0.5],"傾き", () => isBorderActive('v'));
+    this.expandHorizontalIcon = new ClickableIcon(["expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'));
+    this.slantHorizontalIcon = new ClickableIcon(["slant-horizontal.png"], unit,[0.5,0],"傾き", () => isBorderActive('h'));
+    this.expandVerticalIcon = new ClickableIcon(["expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'));
+    this.slantVerticalIcon = new ClickableIcon(["slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'));
 
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon, this.showsScribbleIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
@@ -704,7 +704,7 @@ export class FrameLayer extends Layer {
     this.redraw();
   }
 
-  hintIfContains(p: Vector, a: BaseIcon[]): boolean {
+  hintIfContains(p: Vector, a: ClickableIcon[]): boolean {
     for (let e of a) {
       if (e.hintIfContains(p, this.hint)) {
         return true;
