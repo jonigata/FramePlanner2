@@ -42,7 +42,17 @@
   	(s, v) => {
       v.scale = s;
       v.dirty = true;
-      console.log("ControlPanel.scale", s, v);
+      $redrawToken = true;
+      return v;
+    }
+  );
+
+  const scalePercent = writableDerived(
+  	viewport,
+  	(v) => (v?.scale ?? 1) * 100,
+  	(s, v) => {
+      v.scale = s / 100;
+      v.dirty = true;
       $redrawToken = true;
       return v;
     }
@@ -105,9 +115,12 @@
     $newPageProperty = p;
   }
 
-  function applyTemplate(event: CustomEvent<FrameElement>) {
+  function applyTemplate(event: CustomEvent<{ frameTree: any, bubbles: any }>) {
     const p = $newPageProperty;
-    const page = newPage(event.detail.clone());
+    const sample = event.detail;
+    const frameTree = FrameElement.compile(sample.frameTree);
+    const bubbles = sample.bubbles.map(b => Bubble.compile(p.paperSize, b));
+    const page = newPage(frameTree, bubbles);
     page.paperSize = [...p.paperSize];
     page.paperColor = p.paperColor;
     page.frameColor = p.frameColor;
@@ -322,9 +335,13 @@
         <RadioItem bind:group={$mainBook.wrapMode} name="wrap-omde" value={'one-page'}><span class="radio-text">1p</span></RadioItem>
       </RadioGroup>
     </div>
-
-
   </div>
+  <div class="hbox gap" style="margin-top: 16px;">
+    拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:200px;"/>
+    <div class="number-box"><NumberEdit bind:value={$scalePercent}/></div>
+    <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
+  </div>
+
   <div class="hbox gap mx-2" style="margin-top: 16px;">
     <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
     	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
@@ -384,7 +401,7 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 720px;
+    height: 750px;
     display: flex;
     flex-direction: column;
     top: 20px;

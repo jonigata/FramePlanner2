@@ -118,7 +118,7 @@ export function newPage(frameTree: FrameElement, bubbles: Bubble[]) {
   const page: Page = {
     id: ulid(),
     frameTree,
-    bubbles:[], 
+    bubbles, 
     paperSize: [840, 1188],
     paperColor: '#ffffff',
     frameColor: '#000000',

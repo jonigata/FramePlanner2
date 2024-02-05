@@ -22,7 +22,7 @@
     dispatch('change', e.detail.Slide.index);
   }
 
-  function onClick(e: CustomEvent<FrameElement>) {
+  function onClick(e: CustomEvent<{ frameTree: any, bubbles: any }>) {
     dispatch('apply', e.detail);
   }
 
@@ -40,9 +40,9 @@
 
 <div class="template-selector rounded-container-token">
   <Splide options={swiperOptions} on:active={onSlideChange}>
-    {#each frameExamples as frame}
+    {#each frameExamples as sample}
       <SplideSlide style="height: 100%;display: flex;align-items: center;justify-content: center;">
-        <TemplateSample frameTree={FrameElement.compile(frame.frameTree)} on:click={onClick}/>
+        <TemplateSample sample={sample} on:click={onClick}/>
       </SplideSlide>
     {/each}
   </Splide>

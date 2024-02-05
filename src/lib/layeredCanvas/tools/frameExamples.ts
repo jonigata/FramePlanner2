@@ -113,7 +113,17 @@ export const frameExamples = [
         { height: 4, visibility: 0  },
       ]
     },
-    bubbles: []
+    bubbles: [
+      {
+        n_p0: [0.25,0.026],
+        n_p1: [0.75,0.089],
+        text: "タイトル",
+        shape: "none",
+        direction: "h",
+        autoNewline: false,
+        embedded: true,
+      }
+    ]
   },
   {
     frameTree: { // 4コマ2段
@@ -190,7 +200,26 @@ export const frameExamples = [
         { height: 4, visibility: 0  },
       ]
     },
-    bubbles: []
+    bubbles: [
+      {
+        n_p0: [0.04,0.026],
+        n_p1: [0.50,0.089],
+        text: "タイトル",
+        shape: "none",
+        direction: "h",
+        autoNewline: false,
+        embedded: true,
+      },
+      {
+        n_p0: [0.50,0.026],
+        n_p1: [0.96,0.089],
+        text: "タイトル",
+        shape: "none",
+        direction: "h",
+        autoNewline: false,
+        embedded: true,
+      }
+    ]
   },
   {
     frameTree: { // オーソドックス2

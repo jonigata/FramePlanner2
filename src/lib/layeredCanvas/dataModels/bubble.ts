@@ -152,6 +152,7 @@ export class Bubble {
   }
 
   static compile(paperSize: Vector, json: any): Bubble {
+    console.log(json);
     // paperSizeはほぼ後方互換性のために存在している
     // 一旦Bubbleにしたあとはすべて正規化されている
     // 古いjsonはn_に一貫性がない 古い"fontsize"はn_fontsize相当

@@ -74,6 +74,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   }
 
   const json = JSON.stringify(serializedBook);
+  console.log(json);
   await file.write(json);
 }
 

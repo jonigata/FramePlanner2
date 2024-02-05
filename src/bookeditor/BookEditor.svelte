@@ -94,7 +94,9 @@
   function insertPage(index: number) {
     const p = $newPageProperty;
     const example = frameExamples[p.templateIndex];
-    const page = newPage(FrameElement.compile(example.frameTree), []);
+    const bubbles = example.bubbles.map(b => Bubble.compile(p.paperSize, b));
+    console.log(bubbles);
+    const page = newPage(FrameElement.compile(example.frameTree), bubbles);
     page.paperSize = [...p.paperSize];
     page.paperColor = p.paperColor;
     page.frameColor = p.frameColor;

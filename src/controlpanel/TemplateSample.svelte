@@ -2,16 +2,17 @@
   import { onMount, createEventDispatcher, onDestroy } from "svelte";
   import { LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
-  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
   const dispatch = createEventDispatcher();
 
-  export let frameTree: FrameElement;
+  export let sample: { frameTree: any, bubbles: any };
 
   let canvas: HTMLCanvasElement;
 
   function onClick() {
-    dispatch('click', frameTree);
+    dispatch('click', sample);
   }
 
   onMount(() => {
@@ -24,7 +25,7 @@
     layeredCanvas.rootPaper.size = [140, 198];
     layeredCanvas.rootPaper.addLayer(paperRendererLayer);
 
-    paperRendererLayer.setFrameTree(frameTree);
+    paperRendererLayer.setFrameTree(FrameElement.compile(sample.frameTree));
     paperRendererLayer.setBubbles([]);
     layeredCanvas.redraw();
 
