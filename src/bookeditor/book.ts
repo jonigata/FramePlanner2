@@ -114,7 +114,7 @@ export function revertBook(book: Book): void {
   incrementRevision(book.revision);
 }
 
-export function newPage(frameTree: FrameElement) {
+export function newPage(frameTree: FrameElement, bubbles: Bubble[]) {
   const page: Page = {
     id: ulid(),
     frameTree,
@@ -128,8 +128,9 @@ export function newPage(frameTree: FrameElement) {
 }
 
 export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book {
-  const frameTree = FrameElement.compile(frameExamples[exampleIndex]);
-  const page = newPage(frameTree);
+  const example = frameExamples[exampleIndex];
+  const frameTree = FrameElement.compile(example.frameTree);
+  const page = newPage(frameTree, []);
   const book: Book = {
     revision: { id, revision:1, prefix },
     pages: [page],
@@ -142,7 +143,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
 }
 
 export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix): Book {
-  const frameTree = FrameElement.compile(frameExamples[2]);
+  const frameTree = FrameElement.compile(frameExamples[2].frameTree);
   frameTree.children[0].image = {
     image,
     scribble: null,
@@ -152,7 +153,7 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
     reverse: [1, 1],
     scaleLock: true,
   }
-  const page = newPage(frameTree);
+  const page = newPage(frameTree, []);
   page.paperSize = [image.naturalWidth, image.naturalHeight];
   const book: Book = {
     revision: { id, revision:1, prefix },

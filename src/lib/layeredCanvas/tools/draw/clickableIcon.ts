@@ -13,8 +13,11 @@ export class BaseIcon {
   boudingRect(): Rect {
     throw new Error("Method not implemented.");
   }
+  render(ctx: CanvasRenderingContext2D) {
+    throw new Error("Method not implemented.");
+  }
 
-  renderImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, position: Vector, size: Vector, pivot: Vector, rotation: number) {
+  renderImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, position: Vector, size: Vector, pivot: Vector) {
     if (image.width === 0 || image.height === 0) return;
     if (!BaseIcon.tmpCanvas) {
       BaseIcon.tmpCanvas = document.createElement("canvas");
@@ -64,10 +67,10 @@ export class ClickableIcon extends BaseIcon {
     this.visibleConditionProvider = visibleConditionProvider;
   }
 
-  render(ctx: CanvasRenderingContext2D, rotation: number = 0) {
+  render(ctx: CanvasRenderingContext2D) {
     if (!this.isVisible()) return;
 
-    this.renderImage(ctx, this.image, this.position, this.size, this.pivot, rotation);
+    this.renderImage(ctx, this.image, this.position, this.size, this.pivot);
   }
 
   contains(p: Vector): boolean {
@@ -154,9 +157,9 @@ export class MultistateIcon extends BaseIcon {
     this.index = 0;
   }
 
-  render(ctx: CanvasRenderingContext2D, rotation: number) {
+  render(ctx: CanvasRenderingContext2D) {
     if (!this.isVisible()) return;
-    this.renderImage(ctx, this.images[this.index], this.position, this.size, this.pivot, rotation);
+    this.renderImage(ctx, this.images[this.index], this.position, this.size, this.pivot);
   }
 
   contains(p: Vector): boolean {

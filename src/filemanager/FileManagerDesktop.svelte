@@ -11,9 +11,8 @@
 
   async function createNewFile() {
     const page: Page = {
-      frameTree: FrameElement.compile(frameExamples[2]),
+      frameTree: FrameElement.compile(frameExamples[2].frameTree),
       bubbles:[], 
-      revision: { id:'dummy', revision:1, prefix: 'dummy' }, 
       paperSize: [840, 1188],
       paperColor: '#ffffff',
       frameColor: '#000000',

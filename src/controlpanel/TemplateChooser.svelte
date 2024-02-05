@@ -42,7 +42,7 @@
   <Splide options={swiperOptions} on:active={onSlideChange}>
     {#each frameExamples as frame}
       <SplideSlide style="height: 100%;display: flex;align-items: center;justify-content: center;">
-        <TemplateSample frameTree={FrameElement.compile(frame)} on:click={onClick}/>
+        <TemplateSample frameTree={FrameElement.compile(frame.frameTree)} on:click={onClick}/>
       </SplideSlide>
     {/each}
   </Splide>
