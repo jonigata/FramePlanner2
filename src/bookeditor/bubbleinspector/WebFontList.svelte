@@ -238,7 +238,8 @@
   }
   @font-face {
     font-family: '源暎ぽっぷる';
-    src: url('./assets/fonts/GenEiPOPle-Bk.woff2') format('woff2');
+    src: url('../../assets/fonts/GenEiPOPle-Bk.woff2') format('woff2');
+    
     font-weight: normal;
     font-style: normal;
   }
