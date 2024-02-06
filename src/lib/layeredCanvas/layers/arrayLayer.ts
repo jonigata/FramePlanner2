@@ -23,7 +23,7 @@ export class ArrayLayer extends Layer {
     const mp = () => this.paper.matrix;
     for (let i = 0; i < this.array.papers.length; i++) {
       const trashIcon = new ClickableIcon(["page-trash.png"],[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
-      const insertIcon = new ClickableIcon(["page-insert.png"],[48,48],[0.5,0],"ページ挿入", null, mp);
+      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png"],[48,48],[0.5,0],"ページ挿入", null, mp);
       this.trashIcons.push(trashIcon);
       this.insertIcons.push(insertIcon);
     }
@@ -49,10 +49,16 @@ export class ArrayLayer extends Layer {
       const trashIcon = this.trashIcons[i];
       const insertIcon = this.insertIcons[i];
       if (this.array.fold === 1) {
-        trashIcon.position = [c[0] + s[0] * 0.5 + 40, c[1]];
-        insertIcon.position = [c[0] + s[0] * 0.5 + 40, c[1] + s[1] * 0.5 + gap * 0.5];
+        trashIcon.pivot = [0, 0.5];
+        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1]];
+        insertIcon.index = 1;
+        insertIcon.pivot = [0, 0.5];
+        insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + s[1] * 0.5 + gap * 0.5];
       } else {
+        trashIcon.pivot = [0.5, 0];
         trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
+        insertIcon.index = 0;
+        insertIcon.pivot = [0.5, 0];
         insertIcon.position = [c[0] + s[0] * -0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
       }
     }
@@ -150,15 +156,7 @@ export class ArrayLayer extends Layer {
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (this.interactable) {
       this.insertIcons.forEach(e => {
-        ctx.save();
-        if (this.array.fold === 1) {
-          const c = e.center();
-          ctx.translate(...c);
-          //ctx.rotate(-Math.PI * 0.5);
-          ctx.translate(-c[0], -c[1]);
-        }
         e.render(ctx);
-        ctx.restore();
       });
       this.trashIcons.forEach(e => {
         e.render(ctx);

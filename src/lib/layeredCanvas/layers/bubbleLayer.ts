@@ -25,6 +25,7 @@ export class BubbleLayer extends Layer {
   viewport: Viewport;
   renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
+  fold: number;
   onFocus: (bubble: Bubble) => void;
   onCommit: () => void;
   onRevert: () => void;
@@ -52,6 +53,7 @@ export class BubbleLayer extends Layer {
     renderLayer: PaperRendererLayer,
     defaultBubbleSlot: DefaultBubbleSlot,
     bubbles: Bubble[],
+    fold: number,
     onFocus: (bubble: Bubble) => void,
     onCommit: () => void,
     onRevert: () => void,
@@ -93,6 +95,8 @@ export class BubbleLayer extends Layer {
     this.optionIcons.unite = new ClickableIcon(["unite.png"],unit,[0.5,1],"ドラッグで他のフキダシと結合", () => this.interactable && this.selected != null, mp);
     this.optionIcons.circle = new ClickableIcon(["circle.png"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
     this.optionIcons.radius = new ClickableIcon(["radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
+
+    this.setFold(fold);
   }
 
   prerender(): void {
@@ -1290,6 +1294,15 @@ export class BubbleLayer extends Layer {
   renderDepths(): number[] { return [1]; }
 
   get interactable(): boolean { return this.mode == null; }
+
+  setFold(n: number) {
+    this.fold = n;
+    if (this.fold === 1) {
+      this.createBubbleIcon.pivot = [1,0];
+    } else {
+      this.createBubbleIcon.pivot = [0,1];
+    }
+  }
 }
 sequentializePointer(BubbleLayer);
 

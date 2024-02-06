@@ -15,7 +15,7 @@
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
-  import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
+  import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
@@ -145,6 +145,9 @@
       arrayLayer.array.direction = direction;
       arrayLayer.array.fold = fold;
       arrayLayer.array.gap = gap;
+      for (const paper of arrayLayer.array.papers) {
+        paper.paper.findLayer(BubbleLayer).setFold(fold);
+      } 
 
       $viewport.dirty = true;
       layeredCanvas.redraw();
