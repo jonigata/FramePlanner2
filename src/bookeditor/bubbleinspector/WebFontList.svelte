@@ -6,6 +6,10 @@
   import { createEventDispatcher } from 'svelte';
   import { parseFontFamily } from 'css-font-parser';
   import type { SearchOptions } from './fontStore';
+  import WebFontListItem from "./WebFontListItem.svelte";
+  import KeyValueStorage from "../../utils/KeyValueStorage.svelte";
+
+  let kvs: KeyValueStorage = null;
 
   type FontDefinition = GoogleFontDefinition & { isGothic: boolean, isBold: boolean, isLocal: boolean };
 
@@ -163,8 +167,8 @@
   let allFonts = [...localFonts, ...googleFonts];
   let filteredFonts = allFonts;
 
-  function chooseFont(mouseEvent: MouseEvent, fontFamily: string, fontWeight: string) {
-    dispatch('choose', { mouseEvent, fontFamily, fontWeight });
+  function chooseFont(e: CustomEvent<{ mouseEvent: MouseEvent, fontFamily: string, fontWeight: string }>) {
+    dispatch('choose', e.detail);
   }
 
   $:filterFonts(searchOptions);
@@ -184,14 +188,6 @@
     filteredFonts = ff;
   }
 
-  function getFontStyle2(font: FontDefinition, fontWeight: string) {
-    if (font.isLocal) {
-      return `font-family: '${font.family}'; font-weight: ${font.isBold ? 700 : 400}; font-style: normal;`;         
-    } else {
-      return getFontStyle(font.family as GoogleFontFamily, fontWeight as GoogleFontVariant);
-    }
-  }
-
 </script>
 
 <svelte:head>
@@ -200,21 +196,21 @@
     <GoogleFont fonts="{googleFonts}" display="swap" />
 </svelte:head>
 
+<KeyValueStorage bind:this={kvs} dbName={"WebFontList"} storeName={"local-fonts"}/>
+
 <!--
 <div class="font-sample" style="font-family: 'genei-antique'; font-weight: 400; font-style: normal;">
   <span on:click={e=>{}}>源暎アンチック(ローカル) 今日はいい天気ですね</span>
 </div>
 -->
 
-{#each filteredFonts as font}
+{#if kvs}
+  {#each filteredFonts as font}
     {#each font.variants as variant}
-        <div class="font-sample" style={getFontStyle2(font, variant)}>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
-        </div>
+      <WebFontListItem kvs={kvs} font={font} variant={variant} on:choose={chooseFont}/>
     {/each}
-{/each}
+  {/each}
+{/if}
 
 <style>
   .font-sample {
@@ -238,7 +234,7 @@
   }
   @font-face {
     font-family: '源暎ぽっぷる';
-    src: url('./assets/fonts/GenEiPOPle-Bk.woff2') format('woff2');
+    src: url('../../assets/fonts/GenEiPOPle-Bk.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
   }
