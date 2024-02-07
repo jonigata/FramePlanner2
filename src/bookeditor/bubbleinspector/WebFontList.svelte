@@ -167,7 +167,7 @@
   let allFonts = [...localFonts, ...googleFonts];
   let filteredFonts = allFonts;
 
-  function chooseFont(e: CustomEvent<{ mouseEvent: MouseEvent, fontFamily: string, fontWeight: string }>) {
+  function chooseFont(e: CustomEvent<{ mouseEvent: MouseEvent, font: FontDefinition }>) {
     dispatch('choose', e.detail);
   }
 
@@ -191,9 +191,9 @@
 </script>
 
 <svelte:head>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin={"anonymous"} />
-    <GoogleFont fonts="{googleFonts}" display="swap" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin={"anonymous"} />
+  <GoogleFont fonts="{googleFonts}" display="swap" />
 </svelte:head>
 
 <KeyValueStorage bind:this={kvs} dbName={"WebFontList"} storeName={"local-fonts"}/>
@@ -207,48 +207,10 @@
 {#if kvs}
   {#each filteredFonts as font}
     {#each font.variants as variant}
-      <WebFontListItem kvs={kvs} font={font} variant={variant} on:choose={chooseFont}/>
+      <WebFontListItem font={font} on:choose={chooseFont}/>
     {/each}
   {/each}
 {/if}
 
 <style>
-  .font-sample {
-    font-size: 22px;
-    cursor: pointer;
-  }
-  span:hover {
-    color: rgb(128, 93, 47);
-  }
-  @font-face {
-    font-family: '源暎アンチック';
-    src: url('../../assets/fonts/GenEiAntiqueNv5-M.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎エムゴ';
-    src: url('../../assets/fonts/GenEiMGothic2-Black.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎ぽっぷる';
-    src: url('../../assets/fonts/GenEiPOPle-Bk.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎ラテゴ';
-    src: url('../../assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎ラテミン';
-    src: url('../../assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-
 </style>

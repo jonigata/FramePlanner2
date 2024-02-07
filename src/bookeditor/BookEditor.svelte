@@ -11,7 +11,7 @@
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
-  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken } from './bookStore';
+  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
@@ -208,12 +208,9 @@
     if (bubbleSnapshot && bubble) {
       const snapshot = JSON.stringify(Bubble.decompile(bubble));
       if (bubbleSnapshot !== snapshot) {
+        $forceFontLoadToken = true;
         console.log("bubbleSnapshot actually changed");
         delayedCommiter.schedule(2000);
-        setTimeout(() => {
-          bubble.fontRenderVersion++;
-          layeredCanvas.redraw()
-        }, 5000);
       }
     }
   }
