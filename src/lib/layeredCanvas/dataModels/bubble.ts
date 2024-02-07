@@ -1,21 +1,12 @@
 import { ulid } from 'ulid';
 import type { Vector, Rect } from '../tools/geometry/geometry';
 import { rectContains } from '../tools/geometry/geometry';
+import { type RectHandle, rectHandles } from '../tools/rectHandle';
 
 const minimumBubbleSize = 72;
 const threshold = 10;
 
-export type BubbleBorderHandle = 
-  "top-left"|
-  "top-right"|
-  "bottom-left"|
-  "bottom-right"|
-  "top"|
-  "bottom"|
-  "left"|
-  "right";
-
-  export class BubbleRenderInfo { // serializeしない
+export class BubbleRenderInfo { // serializeしない
   pathJson: string;
   path: paper.PathItem;
   unitedPath: paper.PathItem;
@@ -339,18 +330,8 @@ export class Bubble {
     return x0 <= x && x <= x1 && y0 <= y && y <= y1;
   }
 
-  getHandleAt(paperSize: Vector, p: Vector): BubbleBorderHandle {
-    const handles: BubbleBorderHandle[] = [
-      "top-left",
-      "top-right",
-      "bottom-left",
-      "bottom-right",
-      "top",
-      "bottom",
-      "left",
-      "right",
-    ];
-    for (let handle of handles) {
+  getHandleAt(paperSize: Vector, p: Vector): RectHandle {
+    for (let handle of rectHandles) {
       const rect = this.getHandleRect(paperSize, handle);
       if (rectContains(rect, p)) {
         return handle;
@@ -359,7 +340,7 @@ export class Bubble {
     return null;
   }
 
-  getHandleRect(paperSize: Vector, handle: BubbleBorderHandle): Rect {
+  getHandleRect(paperSize: Vector, handle: RectHandle): Rect {
     const [x, y, w, h] = this.getPhysicalRect(paperSize);
 
     switch (handle) {

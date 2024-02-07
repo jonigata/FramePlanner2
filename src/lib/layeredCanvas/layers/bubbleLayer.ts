@@ -3,7 +3,8 @@ import { keyDownFlags } from "../system/keyCache";
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 import { getPath } from "../tools/draw/bubbleGraphic";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { Bubble, bubbleOptionSets, type BubbleBorderHandle } from "../dataModels/bubble";
+import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
+import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
 import { type Vector, type Rect, add2D } from "../tools/geometry/geometry";
@@ -35,7 +36,7 @@ export class BubbleLayer extends Layer {
   optionEditActive: Record<string, boolean>;
   selected: Bubble;
   lit: Bubble;
-  handle: BubbleBorderHandle;
+  handle: RectHandle;
 
   createBubbleIcon: ClickableIcon;
   dragIcon: ClickableIcon;
