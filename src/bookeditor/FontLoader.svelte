@@ -35,7 +35,9 @@
     console.log("load font", family, weight)
     const localFile = localFontFiles[family];
     if (localFile) {
-      const font = new FontFace(family, `url(src/assets/fonts/${localFile}.woff2) format('woff2')`, { style: 'normal', weight });
+      const url = new URL(`../assets/fonts/${localFile}.woff2`, import.meta.url).href;
+      const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
+
       document.fonts.add(font);
       $redrawToken = true;
     } else {
