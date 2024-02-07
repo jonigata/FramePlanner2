@@ -6,6 +6,10 @@
   import { createEventDispatcher } from 'svelte';
   import { parseFontFamily } from 'css-font-parser';
   import type { SearchOptions } from './fontStore';
+  import WebFontListItem from "./WebFontListItem.svelte";
+  import KeyValueStorage from "../../utils/KeyValueStorage.svelte";
+
+  let kvs: KeyValueStorage = null;
 
   type FontDefinition = GoogleFontDefinition & { isGothic: boolean, isBold: boolean, isLocal: boolean };
 
@@ -163,8 +167,8 @@
   let allFonts = [...localFonts, ...googleFonts];
   let filteredFonts = allFonts;
 
-  function chooseFont(mouseEvent: MouseEvent, fontFamily: string, fontWeight: string) {
-    dispatch('choose', { mouseEvent, fontFamily, fontWeight });
+  function chooseFont(e: CustomEvent<{ mouseEvent: MouseEvent, font: FontDefinition }>) {
+    dispatch('choose', e.detail);
   }
 
   $:filterFonts(searchOptions);
@@ -184,21 +188,15 @@
     filteredFonts = ff;
   }
 
-  function getFontStyle2(font: FontDefinition, fontWeight: string) {
-    if (font.isLocal) {
-      return `font-family: '${font.family}'; font-weight: ${font.isBold ? 700 : 400}; font-style: normal;`;         
-    } else {
-      return getFontStyle(font.family as GoogleFontFamily, fontWeight as GoogleFontVariant);
-    }
-  }
-
 </script>
 
 <svelte:head>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin={"anonymous"} />
-    <GoogleFont fonts="{googleFonts}" display="swap" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin={"anonymous"} />
+  <GoogleFont fonts="{googleFonts}" display="swap" />
 </svelte:head>
+
+<KeyValueStorage bind:this={kvs} dbName={"WebFontList"} storeName={"local-fonts"}/>
 
 <!--
 <div class="font-sample" style="font-family: 'genei-antique'; font-weight: 400; font-style: normal;">
@@ -206,54 +204,13 @@
 </div>
 -->
 
-{#each filteredFonts as font}
+{#if kvs}
+  {#each filteredFonts as font}
     {#each font.variants as variant}
-        <div class="font-sample" style={getFontStyle2(font, variant)}>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <span on:click={e=>chooseFont(e,font.family, variant)}>{font.family} 今日はいい天気ですね</span>
-        </div>
+      <WebFontListItem font={font} on:choose={chooseFont}/>
     {/each}
-{/each}
+  {/each}
+{/if}
 
 <style>
-  .font-sample {
-    font-size: 22px;
-    cursor: pointer;
-  }
-  span:hover {
-    color: rgb(128, 93, 47);
-  }
-  @font-face {
-    font-family: '源暎アンチック';
-    src: url('../../assets/fonts/GenEiAntiqueNv5-M.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎エムゴ';
-    src: url('../../assets/fonts/GenEiMGothic2-Black.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎ぽっぷる';
-    src: url('../../assets/fonts/GenEiPOPle-Bk.woff2') format('woff2');
-    
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎ラテゴ';
-    src: url('../../assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: '源暎ラテミン';
-    src: url('../../assets/fonts/GenEiLateMinN_v2.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-  }
-
 </style>

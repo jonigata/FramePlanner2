@@ -404,6 +404,7 @@ export class PaperRendererLayer extends Layer {
     if (w < 1 || h < 1) { return; }
 
     const ri = bubble.renderInfo;
+    const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
 
     // let startTime = performance.now();
 
@@ -421,6 +422,7 @@ export class PaperRendererLayer extends Layer {
       outlineWidh: outlineWidth,
       outlineColor: bubble.outlineColor,
       fontRenderVersion: bubble.fontRenderVersion,
+      fontCheck: document.fonts.check(ss),
     };
     const json = JSON.stringify(c);
     // console.log(`stringify took ${performance.now() - startTime} ms, ${json.length} bytes`);
@@ -444,11 +446,13 @@ export class PaperRendererLayer extends Layer {
       ctx.translate(w * 0.5, h * 0.5);
       ctx.translate(...offset);
   
-      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
       ctx.font = ss; // horizontal measureより先にないとだめ
       //const text = `${bubble.text}:${bubble.pageNumber}`;
-      const text = bubble.text;
-  
+      let text = bubble.text;
+      if (!document.fonts.check(ss)) {
+        text = "ロード中……";
+      }
+
       const baselineSkip = fontSize * 1.5;
       const charSkip = fontSize;
       const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);

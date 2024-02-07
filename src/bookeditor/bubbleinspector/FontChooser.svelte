@@ -23,8 +23,9 @@
     }
   }
 
-  function onChangeFont(event: { detail: { mouseEvent: MouseEvent, fontFamily: string, fontWeight: string } }) {
-    chosenFont.set(event.detail);
+  function onChangeFont(event: { detail: { mouseEvent: MouseEvent, font: { family: string, variants: string[] } } }) {
+    const font = event.detail.font;
+    chosenFont.set({ fontFamily: font.family, fontWeight: font.variants[0] });
     if (!event.detail.mouseEvent.ctrlKey) {
       $fontChooserOpen = false;
     }
@@ -93,14 +94,14 @@
       <div class="font-sample hbox" style="font-family: '{font}'">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <span on:click={mouseEvent=>onChangeFont({detail:{mouseEvent,fontWeight:"400",fontFamily:font}})}>{font}(ローカル) 今日はいい天気ですね</span>
+        <span on:click={mouseEvent=>onChangeFont({detail:{mouseEvent,font: {family:font, variants: ["400"]}}})}>{font}(ローカル) 今日はいい天気ですね</span>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <img src={trash} width="20" height="20" alt="trash" on:click={() => removeFromHistory(font)}/>
       </div>
     {/each}
   </div>
-</Drawer>
+  </Drawer>
 </div>
 
 <HistoryStorage bind:this={historyStorage}/>

@@ -29,6 +29,7 @@
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
+  import FontLoader from './bookeditor/FontLoader.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -99,6 +100,7 @@
 <BatchImaging/>
 <Toast/>
 <BookArchiver/>
+<FontLoader/>
 
 <!-- skeletonのModal -->
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>
