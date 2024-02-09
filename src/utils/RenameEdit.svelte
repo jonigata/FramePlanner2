@@ -1,4 +1,3 @@
-<!-- SliderEdit.svelte -->
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
 

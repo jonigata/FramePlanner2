@@ -209,7 +209,6 @@
       const snapshot = JSON.stringify(Bubble.decompile(bubble));
       if (bubbleSnapshot !== snapshot) {
         $forceFontLoadToken = true;
-        console.log("bubbleSnapshot actually changed");
         delayedCommiter.schedule(2000);
       }
     }

@@ -25,7 +25,9 @@
           min={value["min"]} 
           max={value["max"]} 
           step={value["step"]}/>
-        <div class="number-box"><NumberEdit bind:value={$bubble.optionContext[key]} allowDecimal={true}/></div>
+        <div class="number-box">
+          <NumberEdit bind:value={$bubble.optionContext[key]} min={value["min"]} max={value["max"]} allowDecimal={true}/>
+        </div>
       </div>
     {/if}
     {#if value["type"] === "boolean"}

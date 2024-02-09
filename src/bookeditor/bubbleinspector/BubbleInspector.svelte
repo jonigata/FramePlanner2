@@ -199,7 +199,7 @@
       <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
         <ExponentialRangeSlider name="fontsize" bind:value={$fontSize} exponentialMin={100} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$fontSize}/></div>
+          <div class="number-box"><NumberEdit bind:value={$fontSize} min={1} max={999}/></div>
         </div>  
         <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={$bubble.fontColor} label="" /></span>
       </div>

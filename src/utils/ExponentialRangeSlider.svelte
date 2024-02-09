@@ -19,12 +19,12 @@
   }
 
   $:onChangeRawValue(rawValue);
-  function onChangeRawValue(rawValue: number) {
+  function onChangeRawValue(rv: number) {
     if (!ready) { return; }
-    if (rawValue < exponentialMin) {
-      value = rawValue;
+    if (rv < exponentialMin) {
+      value = rv;
     } else {
-      value = Math.pow(exponentialMin, 1 + (rawValue - exponentialMin) * powPerStep);
+      value = Math.pow(exponentialMin, 1 + (rv - exponentialMin) * powPerStep);
       if (max != null && max < value) {
         value = max;
       }
@@ -32,11 +32,11 @@
   }
 
   $:onChangeValue(value);
-  function onChangeValue(value: number) {
-    if (value < exponentialMin) {
-      rawValue = value;
+  function onChangeValue(v: number) {
+    if (v < exponentialMin) {
+      rawValue = v;
     } else {
-      rawValue = exponentialMin + (Math.log(value) / Math.log(exponentialMin) - 1)/ powPerStep;
+      rawValue = exponentialMin + (Math.log(v) / Math.log(exponentialMin) - 1)/ powPerStep;
     }
   }
 

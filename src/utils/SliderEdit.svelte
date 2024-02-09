@@ -15,7 +15,7 @@
     <RangeSlider name="batch-count" bind:value={value} min={min} max={max} step={step}/>
   </div>
   <div class="text-xs number-box">
-    <NumberEdit bind:value={value}/>
+    <NumberEdit bind:value={value} min={min} max={max}/>
   </div>  
 </div>
 
