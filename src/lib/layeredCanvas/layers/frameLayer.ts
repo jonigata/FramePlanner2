@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromSquare } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderTrapezoid, makePaddingTrapezoid, rectFromSquare, calculateOffsettedCorners } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -7,6 +7,7 @@ import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { trapezoidPath } from "../tools/geometry/trapezoid";
 import type { Vector } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
+import type { RectHandle } from "../tools/rectHandle";
 
 const iconUnit: Vector = [32,32];
 
@@ -634,24 +635,87 @@ export class FrameLayer extends Layer {
   }
 
   *expandPadding(p: Vector, padding: PaddingHandle) {
+    // TODO: padding.handleはRectHandleになったので、ここも修正が必要
+    // 頂点のみの移動などがありうる
     const element = padding.layout.element;
-    const dir = padding.handle === "top" || padding.handle === "bottom" ? 1 : 0;
-    const deltaFactor = padding.handle === "right" || padding.handle === "bottom" ? -1 : 1;
     const rawSize = padding.layout.rawSize;
-    const s = p;
-    const initialPadding = element.padding[padding.handle] * rawSize[dir];
+    const rawCorners = padding.layout.corners;
+
+    const cornerHandles: RectHandle[] = ["topLeft", "topRight", "bottomLeft", "bottomRight"];
 
     try {
-      while ((p = yield)) {
-        const delta = p[dir] - s[dir];
-        const currentPadding = initialPadding + delta * deltaFactor;
-        element.padding[padding.handle] = currentPadding / rawSize[dir];
-        this.updatePadding(padding);
-        this.redraw();
+      console.log("A");
+      if (cornerHandles.indexOf(padding.handle) !== -1) {
+        console.log("B");
+        // padding.handleが角の場合
+        const q = rawCorners[padding.handle];
+        while ((p = yield)) {
+          const delta = [p[0] - q[0], p[1] - q[1]];
+          element.cornerOffsets[padding.handle] = [delta[0] / rawSize[0], delta[1] / rawSize[1]];
+          this.updatePadding(padding);
+          this.redraw();
+        }
+      } else {
+        console.log("C");
+        // padding.handleが辺の場合
+        let c0: string, c1: string;
+        let direction: string;
+        switch (padding.handle) {
+          case "top":
+            c0 = "topLeft";
+            c1 = "topRight";
+            direction = "vertical";
+            break;
+          case "bottom":
+            c0 = "bottomLeft";
+            c1 = "bottomRight";
+            direction = "vertical";
+            break;
+          case "left":
+            c0 = "topLeft";
+            c1 = "bottomLeft";
+            direction = "horizontal";
+            break;
+          case "right":
+            c0 = "topRight";
+            c1 = "bottomRight";
+            direction = "horizontal";
+            break;
+          default:
+            throw new Error("unknown handle");
+        }
+
+        const offsettedCorners = calculateOffsettedCorners(rawSize, rawCorners, element.cornerOffsets);
+
+        const s = p;
+        if (direction === "vertical") {
+          const y0 = offsettedCorners[c0][1] - rawCorners[c0][1];
+          const y1 = offsettedCorners[c1][1] - rawCorners[c1][1];
+          while ((p = yield)) {
+            const delta = p[1] - s[1];
+            element.cornerOffsets[c0][1] = (y0 + delta) / rawSize[1];
+            element.cornerOffsets[c1][1] = (y1 + delta) / rawSize[1];
+            this.updatePadding(padding);
+            this.redraw();
+          }
+        } else {
+          const x0 = offsettedCorners[c0][0] - rawCorners[c0][0];
+          const x1 = offsettedCorners[c1][0] - rawCorners[c1][0];
+          while ((p = yield)) {
+            const delta = p[0] - s[0];
+            element.cornerOffsets[c0][0] = (x0 + delta) / rawSize[0];
+            element.cornerOffsets[c1][0] = (x1 + delta) / rawSize[0];
+            this.updatePadding(padding);
+            this.redraw();
+          }
+        }
       }
+  
     } catch (e) {
       if (e === 'cancel') {
         this.onRevert();
+      } else {
+        console.error(e);
       }
     }
 

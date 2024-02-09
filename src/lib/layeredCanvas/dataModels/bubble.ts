@@ -344,13 +344,13 @@ export class Bubble {
     const [x, y, w, h] = this.getPhysicalRect(paperSize);
 
     switch (handle) {
-      case "top-left":
+      case "topLeft":
         return [x - threshold, y - threshold, threshold * 2, threshold * 2];
-      case "top-right":
+      case "topRight":
         return [x + w - threshold, y - threshold, threshold * 2, threshold * 2];
-      case "bottom-left":
+      case "bottomLeft":
         return [x - threshold, y + h - threshold, threshold * 2, threshold * 2];
-      case "bottom-right":
+      case "bottomRight":
         return [
           x + w - threshold,
           y + h - threshold,

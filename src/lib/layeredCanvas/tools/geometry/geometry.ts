@@ -194,3 +194,11 @@ export function rectToPointDistance(r: Rect, p: Vector): number {
   var dy = Math.max(y0 - y, 0, y - y1);
   return Math.sqrt(dx*dx + dy*dy);
 }
+
+export function vectorEquals(v0: Vector, v1: Vector): boolean {
+  return v0[0] === v1[0] && v0[1] === v1[1];
+}
+
+export function isVectorZero(v: Vector): boolean {
+  return v[0] === 0 && v[1] === 0;
+}
