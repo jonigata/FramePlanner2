@@ -286,7 +286,7 @@
           <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[0]}/></div>
+          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[0]} min={min} max={max}/></div>
           / {max}
         </div>
       </div>
@@ -296,7 +296,7 @@
           <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[1]}/></div>
+          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[1]} min={min} max={max}/></div>
            / {max}
         </div>
       </div>
@@ -338,7 +338,7 @@
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
     拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:200px;"/>
-    <div class="number-box"><NumberEdit bind:value={$scalePercent}/></div>
+    <div class="number-box"><NumberEdit bind:value={$scalePercent} min={10} max={1000}/></div>
     <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
   </div>
 

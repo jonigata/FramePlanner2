@@ -1,8 +1,9 @@
-<!-- SliderEdit.svelte -->
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
 
   export let value: number;
+  export let min: number = 1;
+  export let max: number = 100;
   export let allowDecimal = false;
   export let id = null;
 
@@ -16,17 +17,19 @@
   let key = 0; // undo防止
 
   $: onChangeValue(value);
-  function onChangeValue(value: number) {
-    if (value == null) { return; }
-    let s = allowDecimal ? value.toFixed(2) : value.toString();
+  function onChangeValue(v: number) {
+    if (v == null) { return; }
+    let s = allowDecimal ? v.toFixed(2) : v.toString();
     if (textValue != s) {
       textValue = s;
     }
   }
 
   $: onChangeTextValue(textValue);
-  function onChangeTextValue(textValue: string) {
-    let n = allowDecimal ? parseFloat(textValue) : parseInt(textValue, 10);
+  function onChangeTextValue(tv: string) {
+    if (tv == '' || tv == null) { tv = '0'; }
+    let n = allowDecimal ? parseFloat(tv) : parseInt(tv, 10);
+    n = Math.max(min, Math.min(max, n));
     if (value != n) {
       value = n;
     }
@@ -40,7 +43,6 @@
   });
 
   function edit(event: FocusEvent) {
-    console.log(event);
     (event.target as HTMLInputElement).select();
   }
 
@@ -76,6 +78,7 @@
   <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
     {#key key}
     <input
+      type="number"
       bind:value={textValue}
       on:focus="{edit}"
       on:keydown="{keydown}"
@@ -114,5 +117,10 @@
     justify-content: center;
     width: 100%;
     height: 100%;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
   }
 </style>
