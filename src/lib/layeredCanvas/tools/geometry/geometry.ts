@@ -1,5 +1,6 @@
 export type Vector = [number, number];
 export type Rect = [number, number, number, number]; // x, y, w, h
+export type Box = [Vector, Vector]; // [topLeft, bottomRight
 
 export function add2D(v0: Vector, v1: Vector): Vector {
   return [v0[0] + v1[0], v0[1] + v1[1]];
@@ -201,4 +202,12 @@ export function vectorEquals(v0: Vector, v1: Vector): boolean {
 
 export function isVectorZero(v: Vector): boolean {
   return v[0] === 0 && v[1] === 0;
+}
+
+export function rect2Box(r: Rect): Box {
+  return [[r[0], r[1]], [r[0] + r[2], r[1] + r[3]]];
+}
+
+export function box2Rect(b: Box): Rect {
+  return [b[0][0], b[0][1], b[1][0] - b[0][0], b[1][1] - b[0][1]];
 }

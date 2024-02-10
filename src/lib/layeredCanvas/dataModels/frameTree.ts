@@ -3,9 +3,10 @@ import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid } from "../to
 import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
 
+// formal～はoffsetが含まれない値
 export type CornerOffsets = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
-export type Border = { layout: Layout, index: number, trapezoid: Trapezoid };
-export type PaddingHandle = { layout: Layout, handle: RectHandle, trapezoid: Trapezoid };
+export type Border = { layout: Layout, index: number, corners: Trapezoid, formalCorners: Trapezoid };
+export type PaddingHandle = { layout: Layout, handle: RectHandle, corners: Trapezoid };
 
 export type Layout = {
   size: Vector;
@@ -15,7 +16,8 @@ export type Layout = {
   children?: Layout[];
   element?: FrameElement;
   dir?: 'h' | 'v';
-  corners?: Trapezoid;
+  corners: Trapezoid; // offsetted
+  formalCorners: Trapezoid; 
 };
 
 export type ImageSlot = {
@@ -81,7 +83,12 @@ export class FrameElement {
     element.localLength = this.localLength;
     element.localBreadth = this.localBreadth;
     element.divider = { ...this.divider };
-    element.cornerOffsets = { ...this.cornerOffsets };
+    element.cornerOffsets = {
+      topLeft: [...this.cornerOffsets.topLeft],
+      topRight: [...this.cornerOffsets.topRight],
+      bottomLeft: [...this.cornerOffsets.bottomLeft],
+      bottomRight: [...this.cornerOffsets.bottomRight],
+    };
     element.bgColor = this.bgColor;
     element.borderColor = this.borderColor;
     element.borderWidth = this.borderWidth;
@@ -527,13 +534,13 @@ function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector,
       y += child.rawSize + child.divider.spacing;
     }
   }
-  return { size, origin, rawSize, rawOrigin, children, element, dir, corners };
+  return { size, origin, rawSize, rawOrigin, children, element, dir, corners, formalCorners: corners };
 }
 
-function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, rawOrigin: Vector, rawCorners: Trapezoid): Layout {
+function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, rawOrigin: Vector, formalCorners: Trapezoid): Layout {
   const [origin, size] = paddedSquare(rawOrigin, rawSize, element.cornerOffsets);
 
-  const offsettedCorners = calculateOffsettedCorners(rawSize, rawCorners, element.cornerOffsets);
+  const offsettedCorners = calculateOffsettedCorners(rawSize, formalCorners, element.cornerOffsets);
 
   const topLine = line(offsettedCorners.topLeft, offsettedCorners.topRight);
   const bottomLine = line(offsettedCorners.bottomLeft, offsettedCorners.bottomRight);
@@ -542,19 +549,13 @@ function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, raw
 
   // 長さが0のときは交点を作れない
   const corners = {
-    topLeft: intersection(topLine, leftLine) || rawCorners.topLeft,
-    topRight: intersection(topLine, rightLine) || rawCorners.topRight,
-    bottomLeft: intersection(bottomLine, leftLine) || rawCorners.bottomLeft,
-    bottomRight: intersection(bottomLine, rightLine) || rawCorners.bottomRight, 
+    topLeft: intersection(topLine, leftLine) || formalCorners.topLeft,
+    topRight: intersection(topLine, rightLine) || formalCorners.topRight,
+    bottomLeft: intersection(bottomLine, leftLine) || formalCorners.bottomLeft,
+    bottomRight: intersection(bottomLine, rightLine) || formalCorners.bottomRight, 
   }
 
-  return { size, origin, rawSize, rawOrigin, element, corners };
-}
-
-export function rectFromSquare(position: Vector, size: Vector): Rect {
-  const [x, y] = position;
-  const [w, h] = size;
-  return [x, y, x + w, y + h];
+  return { size, origin, rawSize, rawOrigin, element, corners, formalCorners };
 }
 
 export function findLayoutAt(layout: Layout, position: Vector): Layout {
@@ -593,18 +594,19 @@ export function findLayoutOf(layout: Layout, element: FrameElement): Layout {
   return null;
 }
 
-export function findBorderAt(layout: Layout, position: Vector): Border {
+export function findBorderAt(layout: Layout, position: Vector, margin: number): Border {
   const [x,y] = position;
 
   if (layout.children) {
     for (let i = 1; i < layout.children.length; i++) {
-      const bt = makeBorderTrapezoid(layout, i);
-      if (isPointInTrapezoid([x, y], bt)) {
-        return { layout, index: i, trapezoid: bt };
+      const corners = makeBorderCorners(layout, i, margin);
+      if (isPointInTrapezoid([x, y], corners)) {
+        const formalCorners = makeBorderFormalCorners(layout, i);
+        return { layout, index: i, corners, formalCorners};
       }
     }
     for (let i = 0; i < layout.children.length; i++) {
-      const found = findBorderAt(layout.children[i], position);
+      const found = findBorderAt(layout.children[i], position, margin);
       if (found) { return found; }
     }
     return null;
@@ -632,7 +634,7 @@ function findPaddingOn(layout: Layout, position: Vector): PaddingHandle {
   for (let handle of rectHandles) {
     const paddingTrapezoid = makePaddingTrapezoid(layout, handle);
     if (isPointInTrapezoid([x, y], paddingTrapezoid)) {
-      return { layout, handle, trapezoid: paddingTrapezoid } as PaddingHandle;
+      return { layout, handle, corners: paddingTrapezoid } as PaddingHandle;
     }
   }
   return null;
@@ -691,17 +693,53 @@ function trapezoidAroundPoint(p: Vector, width: number): Trapezoid {
   };
 }
 
-const BORDER_WIDTH = 10;
-
-export function makeBorderTrapezoid(layout: Layout, index: number): Trapezoid {
+export function makeBorderFormalCorners(layout: Layout, index: number): Trapezoid {
   if (layout.dir == 'h') {
-    return makeHorizontalBorderTrapezoid(layout, index);
+    return makeHorizontalBorderFormalCorners(layout, index);
   } else {
-    return makeVerticalBorderTrapezoid(layout, index);
+    return makeVerticalBorderFormalCorners(layout, index);
   }
 }
 
-function makeHorizontalBorderTrapezoid(layout: Layout, index: number): Trapezoid {
+function makeHorizontalBorderFormalCorners(layout: Layout, index: number): Trapezoid {
+  const prev = layout.children[index - 1];
+  const curr = layout.children[index];
+
+  const corners: Trapezoid = {
+    topLeft: [...curr.formalCorners.topRight],
+    topRight: [...prev.formalCorners.topLeft],
+    bottomLeft: [...curr.formalCorners.bottomRight],
+    bottomRight: [...prev.formalCorners.bottomLeft],
+  }
+
+  return corners;
+}
+
+function makeVerticalBorderFormalCorners(layout: Layout, index: number): Trapezoid {
+  const prev = layout.children[index - 1];
+  const curr = layout.children[index];
+
+  const corners: Trapezoid = {
+    topLeft: [...prev.formalCorners.bottomLeft],
+    topRight: [...prev.formalCorners.bottomRight],
+    bottomLeft: [...curr.formalCorners.topLeft],
+    bottomRight: [...curr.formalCorners.topRight],
+  }
+
+  return corners;
+}
+
+const BORDER_WIDTH = 10;
+
+export function makeBorderCorners(layout: Layout, index: number, margin: number): Trapezoid {
+  if (layout.dir == 'h') {
+    return makeHorizontalBorderCorners(layout, index, margin);
+  } else {
+    return makeVerticalBorderCorners(layout, index, margin);
+  }
+}
+
+function makeHorizontalBorderCorners(layout: Layout, index: number, margin: number): Trapezoid {
   const prev = layout.children[index - 1];
   const curr = layout.children[index];
 
@@ -711,15 +749,16 @@ function makeHorizontalBorderTrapezoid(layout: Layout, index: number): Trapezoid
     bottomLeft: [...curr.corners.bottomRight],
     bottomRight: [...prev.corners.bottomLeft],
   }
-  corners.topLeft[0] -= BORDER_WIDTH;
-  corners.topRight[0] += BORDER_WIDTH;
-  corners.bottomLeft[0] -= BORDER_WIDTH;
-  corners.bottomRight[0] += BORDER_WIDTH;
+
+  corners.topLeft[0] -= margin;
+  corners.topRight[0] += margin;
+  corners.bottomLeft[0] -= margin;
+  corners.bottomRight[0] += margin;
 
   return corners;
 }
 
-function makeVerticalBorderTrapezoid(layout: Layout, index: number): Trapezoid {
+function makeVerticalBorderCorners(layout: Layout, index: number, margin: number): Trapezoid {
   const prev = layout.children[index - 1];
   const curr = layout.children[index];
 
@@ -729,10 +768,11 @@ function makeVerticalBorderTrapezoid(layout: Layout, index: number): Trapezoid {
     bottomLeft: [...curr.corners.topLeft],
     bottomRight: [...curr.corners.topRight],
   }
-  corners.topLeft[1] -= BORDER_WIDTH;
-  corners.topRight[1] -= BORDER_WIDTH;
-  corners.bottomLeft[1] += BORDER_WIDTH;
-  corners.bottomRight[1] += BORDER_WIDTH;
+
+  corners.topLeft[1] -= margin;
+  corners.topRight[1] -= margin;
+  corners.bottomLeft[1] += margin;
+  corners.bottomRight[1] += margin;
 
   return corners;
 }

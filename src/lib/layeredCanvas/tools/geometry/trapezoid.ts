@@ -2,6 +2,8 @@ import { isPointInTriangle } from "./geometry";
 import type { Vector, Rect } from "./geometry";
 
 export type Trapezoid = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
+export type TrapezoidCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+export const trapezoidCorners = ["topLeft", "topRight", "bottomLeft", "bottomRight"] as const;
 
 export function trapezoidPath(ctx, corners: Trapezoid): void {
   ctx.moveTo(...corners.topLeft);
