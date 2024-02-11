@@ -36,3 +36,11 @@ export function isPointInTrapezoid(p: Vector, t: Trapezoid) {
     isPointInTriangle(p, [t.topLeft, t.bottomRight, t.bottomLeft]);
 }
 
+export function extendTrapezoid(t: Trapezoid, x: number, y: number): Trapezoid {
+  return {
+    topLeft: [t.topLeft[0] - x, t.topLeft[1] - y],
+    topRight: [t.topRight[0] + x, t.topRight[1] - y],
+    bottomLeft: [t.bottomLeft[0] - x, t.bottomLeft[1] + y],
+    bottomRight: [t.bottomRight[0] + x, t.bottomRight[1] + y],
+  };
+}

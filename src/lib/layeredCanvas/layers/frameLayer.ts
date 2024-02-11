@@ -1,10 +1,10 @@
 import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingAt, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { isPointInTrapezoid, trapezoidCorners, trapezoidPath } from "../tools/geometry/trapezoid";
+import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, type Box, box2Rect, add2D, vectorEquals } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
@@ -243,8 +243,9 @@ export class FrameLayer extends Layer {
     this.litLayout = null;
 
     if (this.selectedLayout) {
-      const padding = findPaddingAt(layout, point);
-      if (padding?.layout.element == this.selectedLayout.element) {
+      const corners = extendTrapezoid(this.selectedLayout.corners, 20, 20);
+      if (isPointInTrapezoid(point, corners)) {
+        const padding = findPaddingOn(this.selectedLayout, point);
         this.focusedPadding = padding;
         return;
       }

@@ -1,5 +1,5 @@
 import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D } from "../tools/geometry/geometry";
-import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid } from "../tools/geometry/trapezoid";
+import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
 import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
 
@@ -628,7 +628,7 @@ export function findPaddingAt(layout: Layout, position: Vector): PaddingHandle {
   }
 }
 
-function findPaddingOn(layout: Layout, position: Vector): PaddingHandle {
+export function findPaddingOn(layout: Layout, position: Vector): PaddingHandle {
   if (layout.element.visibility === 0) { return null; }
   const [x,y] = position;
   for (let handle of rectHandles) {
@@ -750,12 +750,7 @@ function makeHorizontalBorderCorners(layout: Layout, index: number, margin: numb
     bottomRight: [...prev.corners.bottomLeft],
   }
 
-  corners.topLeft[0] -= margin;
-  corners.topRight[0] += margin;
-  corners.bottomLeft[0] -= margin;
-  corners.bottomRight[0] += margin;
-
-  return corners;
+  return extendTrapezoid(corners, margin, 0);
 }
 
 function makeVerticalBorderCorners(layout: Layout, index: number, margin: number): Trapezoid {
@@ -769,12 +764,7 @@ function makeVerticalBorderCorners(layout: Layout, index: number, margin: number
     bottomRight: [...curr.corners.topRight],
   }
 
-  corners.topLeft[1] -= margin;
-  corners.topRight[1] -= margin;
-  corners.bottomLeft[1] += margin;
-  corners.bottomRight[1] += margin;
-
-  return corners;
+  return extendTrapezoid(corners, 0, margin);
 }
 
 export function collectImages(frameTree: FrameElement): ImageSlot[] {
