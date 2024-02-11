@@ -396,6 +396,10 @@ export class FrameLayer extends Layer {
           const target = this.litBorder.layout.element.children[this.litBorder.index-1];
           FrameElement.transposeDivider(this.frameTree, target);
           this.onCommit();
+          this.selectedLayout = null;
+          this.litLayout = null;
+          this.selectedBorder = null;
+          this.litBorder = null;
           this.redraw();
           return null;
         } else {
