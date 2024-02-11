@@ -242,9 +242,12 @@ export class FrameLayer extends Layer {
     this.litBorder = null;
     this.litLayout = null;
 
-    if (keyDownFlags["KeyB"]) {
-      this.focusedPadding = findPaddingAt(layout, point);
-      return;
+    if (this.selectedLayout) {
+      const padding = findPaddingAt(layout, point);
+      if (padding?.layout.element == this.selectedLayout.element) {
+        this.focusedPadding = padding;
+        return;
+      }
     }
 
     if (this.selectedBorder) {
@@ -363,12 +366,9 @@ export class FrameLayer extends Layer {
 
     this.updateLit(point);
 
-    // B押し(パディング編集が最優先)
-    // TODO: そのうちなくす
-    if (keyDownFlags["KeyB"]) {
-      if (this.focusedPadding) {
-        return { padding: this.focusedPadding };
-      }
+    // パディング操作
+    if (this.focusedPadding) {
+      return { padding: this.focusedPadding };
     }
 
     // 選択ボーダー操作
