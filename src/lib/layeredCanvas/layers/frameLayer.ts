@@ -311,26 +311,56 @@ export class FrameLayer extends Layer {
     this.updateLit(position);
     this.redraw();
 
-    if (this.selectedLayout) {
+    const hint = this.decideHint(position);
+    if (hint) {
+      this.hint(hint.position, hint.message);
+    }
+  }
+
+  decideHint(position: Vector): { position: Vector, message: string } {
+    const hintIfContains = (a: ClickableIcon[]): { position: Vector, message: string } => {
+      for (let e of a) {
+        if (e.contains(position)) {
+          return { position: e.center(), message: e.hint };
+        }
+      }
+      return null;
+    }
+
+    if (this.selectedBorder) {
+      const hint = hintIfContains(this.borderIcons);
+      if (hint) { 
+        return hint;
+      }
+      if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
+        return { position, message: "ドラッグで移動" };
+      }
+      return null;
+    } else if (this.selectedLayout) { 
       const origin = this.selectedLayout.origin;
       const size = this.selectedLayout.size;
       const x = origin[0] + size[0] / 2;
-      if (this.hintIfContains(position, this.frameIcons)) {
-      } else if (this.selectedLayout.element.image) {
-        this.hint([x, origin[1] - 8],"ドラッグで移動、Ctrl+ドラッグでスケール、Alt+ドラッグで回転");
-      } else if (0 < this.selectedLayout.element.visibility) {
-        this.hint([x, origin[1] + 48], "画像をドロップ");
-      } else {
-        this.hint([x, origin[1] + 48], null);
+      const y = origin[1];
+      if (this.focusedPadding) {
+        return { position: [x, y-8], message: "ドラッグでパディング変更" };
       }
-    } else if (this.focusedPadding) {
-      this.hint(position, "ドラッグでパディング変更");
-      this.redraw();
-    } else if (!this.hintIfContains(position, this.borderIcons)) {
-      this.hint(position, null);
+      if (isPointInTrapezoid(position, this.selectedLayout.corners)) {
+        const hint = hintIfContains(this.frameIcons);
+        if (hint) {
+          return hint;
+        }
+        if (this.selectedLayout.element.image) {
+          return { position: [x, y +48], message: "ドラッグで移動" };
+        } else if (0 < this.selectedLayout.element.visibility) {
+          return { position: [x, y +48], message: "画像をドロップ" };
+        } else {
+          return null;
+        }
+      }
     }
-    return;
-}
+    
+    return null;
+  }
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (event.code === "KeyV" && event.ctrlKey) {
@@ -940,15 +970,6 @@ export class FrameLayer extends Layer {
       
     constraintLeaf(paperSize, layoutlet);
     this.redraw();
-  }
-
-  hintIfContains(p: Vector, a: ClickableIcon[]): boolean {
-    for (let e of a) {
-      if (e.hintIfContains(p, this.hint)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   updateSelectedLayout(): void {
