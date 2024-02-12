@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -955,6 +955,10 @@ export class FrameLayer extends Layer {
     if (!this.selectedLayout) { return; }
     const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
     this.selectedLayout = findLayoutOf(rootLayout, this.selectedLayout.element);
+    if (this.focusedPadding) {
+      const handle = this.focusedPadding.handle;
+      this.focusedPadding = findPaddingOf(this.selectedLayout, handle);
+    }
   }
 
   updateBorder(border: Border): void {

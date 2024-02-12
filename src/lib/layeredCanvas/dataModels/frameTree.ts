@@ -640,6 +640,11 @@ export function findPaddingOn(layout: Layout, position: Vector): PaddingHandle {
   return null;
 }
 
+export function findPaddingOf(layout: Layout, handle: RectHandle) {
+  const corners = makePaddingTrapezoid(layout, handle);
+  return { layout, handle, corners };
+}
+
 export function makePaddingTrapezoid(layout: Layout, handle: RectHandle): Trapezoid {
   const PADDING_WIDTH = 20;
 
