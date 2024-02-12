@@ -30,6 +30,7 @@ export class FrameLayer extends Layer {
   duplicateIcon: ClickableIcon;
   insertIcon: ClickableIcon;
   spliceIcon: ClickableIcon;
+  resetPaddingIcon: ClickableIcon;
   zplusIcon: ClickableIcon;
   zminusIcon: ClickableIcon;
   visibilityIcon: ClickableIcon;
@@ -88,6 +89,7 @@ export class FrameLayer extends Layer {
     this.duplicateIcon = new ClickableIcon(["duplicate.png"],unit,[1,0],"複製", isFrameActive, mp);
     this.insertIcon = new ClickableIcon(["insert.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
     this.spliceIcon = new ClickableIcon(["splice.png"],unit,[1,0],"画像のアンシフト", isFrameActive, mp);
+    this.resetPaddingIcon = new ClickableIcon(["reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActive, mp);
     this.zplusIcon = new ClickableIcon(["zplus.png"],unit,[0,0],"手前に", isFrameActiveAndVisible, mp);
     this.zminusIcon = new ClickableIcon(["zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible, mp);
     this.visibilityIcon = new ClickableIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
@@ -111,7 +113,7 @@ export class FrameLayer extends Layer {
     this.expandVerticalIcon = new ClickableIcon(["expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'), mp);
     this.slantVerticalIcon = new ClickableIcon(["slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon, this.showsScribbleIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon, this.showsScribbleIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
 
     this.makeCanvasPattern();
@@ -247,6 +249,7 @@ export class FrameLayer extends Layer {
       if (isPointInTrapezoid(point, corners)) {
         const padding = findPaddingOn(this.selectedLayout, point);
         this.focusedPadding = padding;
+        this.litLayout = this.selectedLayout;
         return;
       }
     }
@@ -262,42 +265,6 @@ export class FrameLayer extends Layer {
     if (!this.litBorder) {
       this.litLayout = findLayoutAt(layout, point);
     }
-  }
-
-  updateSelected() {
-    if (this.selectedLayout) {
-      const cp = (ro, ou) => ClickableIcon.calcPosition([origin[0]+10, origin[1]+10, size[0]-20, size[1]-20],iconUnit, ro, ou);
-      const origin = this.selectedLayout.rawOrigin;
-      const size = this.selectedLayout.rawSize;
-      this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
-      this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
-      this.deleteIcon.position = cp([1,0],[0,0]);
-      this.duplicateIcon.position = cp([1,0],[0,1]);
-      this.insertIcon.position = cp([1,0],[0,2]);
-      this.spliceIcon.position = cp([1,0],[0,3]);
-      this.zplusIcon.position = cp([0,0],[2.5,0]);
-      this.zminusIcon.position = cp([0,0],[1,0]);
-      this.visibilityIcon.position = cp([0,0],[0,0]);
-      this.visibilityIcon.index = this.selectedLayout.element.visibility;
-      this.showsScribbleIcon.position = cp([0,1],[0,-4]);
-      this.showsScribbleIcon.index = this.selectedLayout.element.showsScribble ? 1 : 0;
-
-      this.scaleIcon.position = cp([1,1],[0,0]);
-      this.rotateIcon.position = cp([1,1],[-1,0]);
-      this.dropIcon.position = cp([0,1],[0,0]);
-      this.flipHorizontalIcon.position = cp([0,1], [2,0]);
-      this.flipVerticalIcon.position = cp([0,1], [3,0]);
-      this.fitIcon.position = cp([0,1], [4,0]);
-      this.generateIcon.position = cp([0,1], [0,-2]);
-      this.scribbleIcon.position = cp([0,1], [0,-3]);
-      this.redraw();
-    }
-
-    if (this.selectedBorder) {
-      this.selectedLayout = null;
-      this.updateBorderIconPositions(this.selectedBorder);
-      this.redraw();
-    } 
   }
 
   pointerHover(position: Vector): boolean {
@@ -417,7 +384,7 @@ export class FrameLayer extends Layer {
         }
       } else { 
         this.selectedBorder = null;
-        this.updateSelected();
+        this.relayoutIcons();
         this.redraw();
       } 
       // return null; このあとフレーム選択処理が入るかもしれないので放棄しない
@@ -452,14 +419,14 @@ export class FrameLayer extends Layer {
       if (this.selectedLayout?.element != this.litLayout?.element) {
         console.log("litLayout", this.litLayout);
         this.selectedLayout = this.litLayout;
-        this.updateSelected();
+        this.relayoutIcons();
         this.redraw();
         return null;
       }
     } else {
       if (this.selectedLayout) {
         this.selectedLayout = null;
-        this.updateSelected();
+        this.relayoutIcons();
         this.redraw();
         return null;
       }
@@ -583,6 +550,12 @@ export class FrameLayer extends Layer {
         this.redraw();
         return "done";
       }
+      if (this.resetPaddingIcon.contains(point)) {
+        this.resetPadding();
+        this.onCommit();
+        this.redraw();
+        return "done";
+      }
       if (this.zplusIcon.contains(point)) {
         layout.element.z += 1;
         this.onCommit();
@@ -664,7 +637,8 @@ export class FrameLayer extends Layer {
       yield* this.expandPadding(p, payload.padding);
     } else {
       this.selectedBorder = payload.border;
-      this.updateSelected();
+      this.selectedLayout = null;
+      this.relayoutIcons();
       this.redraw();
       console.log("A", payload.border);
       if (payload.action === "expand") {
@@ -994,15 +968,68 @@ export class FrameLayer extends Layer {
     const formalCorners = makeBorderFormalCorners(border.layout, border.index);
     border.corners = corners;
     border.formalCorners = formalCorners;
-    this.updateBorderIconPositions(border);
+    this.relayoutBorderIcons(border);
   }
 
-  updateBorderIconPositions(border: Border): void {
+  relayoutIcons() {
+    if (this.selectedLayout) {
+      this.relayoutFrameIcons(this.selectedLayout);
+      this.redraw();
+    }
+
+    if (this.selectedBorder) {
+      this.relayoutBorderIcons(this.selectedBorder);
+      this.redraw();
+    } 
+  }
+
+  relayoutFrameIcons(layout: Layout): void {
+    const cp = (ro, ou) => ClickableIcon.calcPosition([origin[0]+10, origin[1]+10, size[0]-20, size[1]-20],iconUnit, ro, ou);
+    const origin = layout.rawOrigin;
+    const size = layout.rawSize;
+    this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
+    this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
+    this.deleteIcon.position = cp([1,0],[0,0]);
+    this.duplicateIcon.position = cp([1,0],[0,1]);
+    this.insertIcon.position = cp([1,0],[0,2]);
+    this.spliceIcon.position = cp([1,0],[0,3]);
+    this.resetPaddingIcon.position = cp([1,0],[0,4]);
+    this.zplusIcon.position = cp([0,0],[2.5,0]);
+    this.zminusIcon.position = cp([0,0],[1,0]);
+    this.visibilityIcon.position = cp([0,0],[0,0]);
+    this.visibilityIcon.index = layout.element.visibility;
+    this.showsScribbleIcon.position = cp([0,1],[0,-4]);
+    this.showsScribbleIcon.index = layout.element.showsScribble ? 1 : 0;
+
+    this.scaleIcon.position = cp([1,1],[0,0]);
+    this.rotateIcon.position = cp([1,1],[-1,0]);
+    this.dropIcon.position = cp([0,1],[0,0]);
+    this.flipHorizontalIcon.position = cp([0,1], [2,0]);
+    this.flipVerticalIcon.position = cp([0,1], [3,0]);
+    this.fitIcon.position = cp([0,1], [4,0]);
+    this.generateIcon.position = cp([0,1], [0,-2]);
+    this.scribbleIcon.position = cp([0,1], [0,-3]);
+}
+
+  relayoutBorderIcons(border: Border): void {
     const bt = border.corners;
     this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
     this.expandVerticalIcon.position = [bt.topRight[0],(bt.topRight[1] + bt.bottomRight[1]) * 0.5];
     this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]];
     this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5,bt.bottomLeft[1]];
+  }
+
+  resetPadding(): void {
+    if (!this.selectedLayout) { return; }
+    const element = this.selectedLayout.element;
+    element.cornerOffsets = {
+      topLeft: [0, 0],
+      topRight: [0, 0],
+      bottomLeft: [0, 0],
+      bottomRight: [0, 0],
+    }
+    this.updateSelectedLayout();
+    this.redraw();
   }
 
   beforeDoubleClick(p: Vector): boolean {
