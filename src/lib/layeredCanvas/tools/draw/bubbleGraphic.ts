@@ -506,13 +506,26 @@ function getSoftPath(size, opts, seed) {
   const points = subdividePointsWithBump(size, rawPoints, -opts.bumpDepth);
 
   const path = new paper.Path();
-  path.moveTo(points[0]);
-  for (let i = 0; i < points.length; i += 2) {
-    const p1 = points[i + 1];
-    const p2 = points[(i + 2) % points.length];
-    path.quadraticCurveTo(p1, p2);
+  if (opts.smoothing) {
+    for (let i = 0; i < points.length + 1; i++) {
+      const p0 = points[i % points.length];
+      const p1 = points[(i + 1)%points.length];
+      let cp: Vector = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
+      if (i == 0) { 
+        path.moveTo(cp);
+      } else {
+        path.quadraticCurveTo(p0, cp);
+      }
+    }
+  } else {
+    path.moveTo(points[0]);
+    for (let i = 0; i < points.length; i += 2) {
+      const p1 = points[i + 1];
+      const p2 = points[(i + 2) % points.length];
+      path.quadraticCurveTo(p1, p2);
+    }
+    path.closed = true;
   }
-  path.closed = true;
 
   return addTrivialTail(path, size, opts);
 }

@@ -568,6 +568,7 @@ export const bubbleOptionSets = {
     extract: {label: "食い込み", type:"boolean", init: b => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
+    smoothing: { label: "スムース", type: "boolean", init: b => true },
   },
   "heart" : {
     link: {hint:"結合", icon:"unite"},
@@ -617,6 +618,7 @@ export const bubbleOptionSets = {
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 8 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
+    smoothing: { label: "スムース", type: "boolean", init: b => true },
   },
   "rounded-mind": {
     link: {hint:"結合", icon:"unite"}, 
