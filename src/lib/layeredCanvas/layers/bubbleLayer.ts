@@ -876,7 +876,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  *resizeBubble(dragStart: Vector, bubble: Bubble, handle: string) {
+  *resizeBubble(dragStart: Vector, bubble: Bubble, handle: RectHandle) {
     try {
       const paperSize = this.getPaperSize();
       const [q0, q1] = bubble.regularized();
@@ -911,7 +911,7 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  resizeBubbleAux(bubble: Bubble, handle: string, q0: Vector, q1: Vector, p: Vector) {
+  resizeBubbleAux(bubble: Bubble, handle: RectHandle, q0: Vector, q1: Vector, p: Vector) {
     const paperSize = this.getPaperSize();
 
     if (bubble.image?.scaleLock) {
@@ -928,24 +928,24 @@ export class BubbleLayer extends Layer {
       let userSize: Vector;
       let w: number, h: number, scale: number;
       switch (handle) {
-        case "top-left":
+        case "topLeft":
           userSize = [qq1[0] - pp[0], qq1[1] - pp[1]];
           [w,h] = rwfar(originalSize, userSize);
           bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq1[0] - w, qq1[1] - h]);
           break;
-        case "top-right":
+        case "topRight":
           userSize = [pp[0] - qq0[0], qq1[1] - pp[1]];
           [w,h] = rwfar(originalSize, userSize);
           bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq0[0], qq1[1] - h]);
           bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq0[0] + w, qq1[1]]);
           break;
-        case "bottom-left":
+        case "bottomLeft":
           userSize = [qq1[0] - pp[0], pp[1] - qq0[1]];
           [w,h] = rwfar(originalSize, userSize);
           bubble.n_p0 = Bubble.normalizedPosition(paperSize, [qq1[0] - w, qq0[1]]);
           bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq1[0], qq0[1] + h]);
           break;
-        case "bottom-right":
+        case "bottomRight":
           userSize = [pp[0] - qq0[0], pp[1] - qq0[1]];
           [w,h] = rwfar(originalSize, userSize);
           bubble.n_p1 = Bubble.normalizedPosition(paperSize, [qq0[0] + w, qq0[1] + h]);
@@ -981,18 +981,18 @@ export class BubbleLayer extends Layer {
       }    
     } else {
       switch (handle) {
-        case "top-left":
+        case "topLeft":
           bubble.n_p0 = p;
           break;
-        case "top-right":
+        case "topRight":
           bubble.n_p0 = [q0[0], p[1]];
           bubble.n_p1 = [p[0], q1[1]];
           break;
-        case "bottom-left":
+        case "bottomLeft":
           bubble.n_p0 = [p[0], q0[1]];
           bubble.n_p1 = [q1[0], p[1]];
           break;
-        case "bottom-right":
+        case "bottomRight":
           bubble.n_p1 = p;
           break;
         case "top":
