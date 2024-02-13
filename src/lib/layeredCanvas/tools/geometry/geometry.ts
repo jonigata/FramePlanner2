@@ -211,3 +211,14 @@ export function rect2Box(r: Rect): Box {
 export function box2Rect(b: Box): Rect {
   return [b[0][0], b[0][1], b[1][0] - b[0][0], b[1][1] - b[0][1]];
 }
+
+export function ensureMinRectSize(minSize: number, r: Rect) {
+  let [x, y, w, h] = r;
+  const nw = Math.max(w, minSize);
+  const nh = Math.max(h, minSize);
+  x = x + (w - nw) / 2;
+  y = y + (h - nh) / 2;
+  w = nw;
+  h = nh;
+  return [x, y, w, h];
+}

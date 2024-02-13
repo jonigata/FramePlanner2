@@ -5,7 +5,7 @@ import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, type Box, box2Rect, add2D, vectorEquals } from '../tools/geometry/geometry';
+import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
@@ -977,9 +977,12 @@ export class FrameLayer extends Layer {
   }
 
   relayoutFrameIcons(layout: Layout): void {
-    const cp = (ro, ou) => ClickableIcon.calcPosition([origin[0]+10, origin[1]+10, size[0]-20, size[1]-20],iconUnit, ro, ou);
+    const minSize = 200;
     const origin = layout.rawOrigin;
     const size = layout.rawSize;
+    const [x, y, w, h] = ensureMinRectSize(minSize, [...origin, ...size]);
+
+    const cp = (ro, ou) => ClickableIcon.calcPosition([x+10, y+10, w-20, h-20],iconUnit, ro, ou);
     this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
     this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
     this.deleteIcon.position = cp([1,0],[0,0]);

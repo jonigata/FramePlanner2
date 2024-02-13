@@ -7,7 +7,7 @@ import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
-import { type Vector, type Rect, add2D } from "../tools/geometry/geometry";
+import { type Vector, type Rect, add2D, ensureMinRectSize } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
@@ -730,14 +730,8 @@ export class BubbleLayer extends Layer {
 
   setIconPositions(): void {
     const paperSize = this.getPaperSize();
-    let [x, y, w, h] = this.selected.getPhysicalRegularizedRect(paperSize);
     const minSize = 160;
-    const nw = Math.max(w, minSize);
-    const nh = Math.max(h, minSize);
-    x = x + (w - nw) / 2;
-    y = y + (h - nh) / 2;
-    w = nw;
-    h = nh;
+    const [x, y, w, h] = ensureMinRectSize(minSize, this.selected.getPhysicalRegularizedRect(paperSize));
 
     const rect: Rect = [x+10, y+10, w-20, h-20];
     const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
