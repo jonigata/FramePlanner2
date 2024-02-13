@@ -1,19 +1,19 @@
 import { type Trapezoid, trapezoidPath } from "../geometry/trapezoid";
 import type { Vector } from '../geometry/geometry';
 
-export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid) {
+export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid, nearLineWidth: number = 7, farLineWidth = 10) {
   ctx.save();
 
   // まず白で枠を描く
   ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-  ctx.lineWidth = 10;
+  ctx.lineWidth = farLineWidth;
   ctx.beginPath();
   trapezoidPath(ctx, trapezoid);
   ctx.stroke();
 
   // 指定された色で点線を描く
   ctx.strokeStyle = color;
-  ctx.lineWidth = 7;
+  ctx.lineWidth = nearLineWidth;
   ctx.setLineDash([20, 20]);
   ctx.beginPath();
   trapezoidPath(ctx, trapezoid);
@@ -22,7 +22,7 @@ export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string,
 
   const drawCircle = (p: Vector) => {
     ctx.beginPath();
-    ctx.arc(p[0], p[1], 10, 0, Math.PI * 2);
+    ctx.arc(p[0], p[1], farLineWidth, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }

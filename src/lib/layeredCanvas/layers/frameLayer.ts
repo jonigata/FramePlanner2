@@ -9,6 +9,7 @@ import { type Vector, type Rect, type Box, box2Rect, add2D, vectorEquals } from 
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
+import type { Trapezoid } from "../tools/geometry/trapezoid";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -152,58 +153,48 @@ export class FrameLayer extends Layer {
       ctx.fillText(l.element.z.toString(), l.rawOrigin[0]+74, l.rawOrigin[1]+38);
     }
 
-    if (this.focusedPadding) {
-      ctx.fillStyle = "rgba(200,200,0, 0.7)";
+    function fillTrapezoid(corners: Trapezoid, color: string) {
+      ctx.fillStyle = color;
       ctx.beginPath();
-      trapezoidPath(ctx, this.focusedPadding.corners);
+      trapezoidPath(ctx, corners);
       ctx.fill();
     }
 
+    function strokeTrapezoid(corners: Trapezoid, color: string, width: number) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      trapezoidPath(ctx, corners);
+      ctx.stroke();
+    }
+
+    function strokeConnectors(corners0: Trapezoid, corners1: Trapezoid, color: string, width: number) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      for (let position of trapezoidCorners) {
+        ctx.beginPath();
+        ctx.moveTo(...corners0[position]);
+        ctx.lineTo(...corners1[position]);
+        ctx.stroke();
+      }
+    }
+
+    if (this.focusedPadding) {
+      fillTrapezoid(this.focusedPadding.corners, "rgba(200,200,0, 0.7)");
+    }
+
     if (this.litBorder) {
-      ctx.fillStyle = "rgba(0, 200,200, 0.2)";
-      ctx.beginPath();
-      trapezoidPath(ctx, this.litBorder.formalCorners);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      trapezoidPath(ctx, this.litBorder.corners);
-      ctx.stroke();
-      for (let position of trapezoidCorners) {
-        ctx.moveTo(...this.litBorder.formalCorners[position]);
-        ctx.lineTo(...this.litBorder.corners[position]);
-      }
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(0, 200,200, 0.4)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      trapezoidPath(ctx, this.litBorder.corners);
-      ctx.stroke();
-      for (let position of trapezoidCorners) {
-        ctx.moveTo(...this.litBorder.formalCorners[position]);
-        ctx.lineTo(...this.litBorder.corners[position]);
-      }
-      ctx.stroke();
+      fillTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.2)");
+      strokeTrapezoid(this.litBorder.corners, "rgba(255, 255, 255, 1)", 6);
+      strokeConnectors(this.litBorder.formalCorners, this.litBorder.corners, "rgba(255, 255, 255, 1)", 6);
+      strokeTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.4)", 3);
+      strokeConnectors(this.litBorder.formalCorners, this.litBorder.corners, "rgba(0, 200,200, 0.4)", 3);
     } else if (this.litLayout) {
-      ctx.fillStyle = "rgba(0, 0, 255, 0.2)";
-      // ctx.fillRect(...this.litLayout.rawOrigin, ...this.litLayout.rawSize);
-      ctx.beginPath();
-      trapezoidPath(ctx, this.litLayout.formalCorners);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-      ctx.lineWidth = 6
-      for (let position of trapezoidCorners) {
-        ctx.moveTo(...this.litLayout.formalCorners[position]);
-        ctx.lineTo(...this.litLayout.corners[position]);
-      }
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(0, 0, 255, 0.4)";
-      ctx.lineWidth = 3;
-      for (let position of trapezoidCorners) {
-        ctx.moveTo(...this.litLayout.formalCorners[position]);
-        ctx.lineTo(...this.litLayout.corners[position]);
-      }
-      ctx.stroke();
+      fillTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.2)");
+      strokeTrapezoid(this.litLayout.formalCorners, "rgba(255, 255, 255, 1)", 6);
+      strokeTrapezoid(this.litLayout.corners, "rgba(0, 0, 255, 0.4)", 3);
+      strokeConnectors(this.litLayout.formalCorners, this.litLayout.corners, "rgba(255, 255, 255, 1)", 6);
+      strokeConnectors(this.litLayout.formalCorners, this.litLayout.corners, "rgba(0, 0, 255, 0.4)", 3);
     }
 
     if (this.selectedBorder) {

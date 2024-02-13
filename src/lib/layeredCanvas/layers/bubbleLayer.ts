@@ -12,6 +12,8 @@ import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
+import { drawSelectionFrame } from "../tools/draw/selectionFrame";
+import type { Trapezoid } from "../tools/geometry/trapezoid";
 
 const iconUnit: Vector = [20, 20];
 
@@ -155,11 +157,14 @@ export class BubbleLayer extends Layer {
     const [x, y, w, h] = bubble.getPhysicalRegularizedRect(paperSize);
 
     // 選択枠描画
-    ctx.save();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(0, 255, 0, 0.3)";
-    ctx.strokeRect(x, y, w, h);
-    ctx.restore();
+    const corners: Trapezoid = {
+      topLeft: [x, y],
+      topRight: [x + w, y],
+      bottomLeft: [x, y + h],
+      bottomRight: [x + w, y + h],
+    }
+    drawSelectionFrame(ctx, "rgba(0, 192, 0, 1)", corners, 3, 5);
+
 
     // 操作対象のハンドルを強調表示
     if (this.handle != null) {
