@@ -99,6 +99,7 @@ export class FrameElement {
     element.prompt = this.prompt;
     element.showsScribble = this.showsScribble;
     if (this.image) {
+      console.log('clone image', this.image);
       element.image = {
         image: this.image.image,
         scribble: this.image.scribble,

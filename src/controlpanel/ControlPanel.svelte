@@ -12,7 +12,7 @@
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
   import { aboutOpen } from '../about/aboutStore';
-  import { postContact } from '../firebase';
+  import { isPendingRedirect, postContact, prepareAuth, startAuth } from '../firebase';
   import { isJsonEditorOpen, downloadJsonToken } from '../jsoneditor/jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitIfDirtyToken } from '../undoStore';
@@ -25,16 +25,21 @@
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { batchImagingOpen } from '../generator/batchImagingStore';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { app } from "../firebase";
+  import { getAuth } from "firebase/auth";
+  import { accountUser } from "../utils/accountStore";
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
   import clipboardIcon from '../assets/clipboard.png';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
+  import { onMount } from "svelte";
 
   let min = 256;
   let exponentialMin = 4096;
   let max = 9410;
   let contactText = "";
+  let signInStatus: "unknown" | "signed-in" | "signed-out" = "unknown";
 
   const scale = writableDerived(
   	viewport,
@@ -158,6 +163,15 @@
     archive('export-psd');
   }
 
+  async function signIn() {
+    modalStore.trigger({ type: 'component', component: 'signIn' });
+  }
+
+  async function signOut() {
+    const auth = getAuth(app);
+    await auth.signOut();
+  }
+
   function archive(op: BookArchiveOperation) {
     $bookArchiver.push(op);
     $bookArchiver = $bookArchiver;
@@ -269,6 +283,26 @@
     e.preventDefault();
     files = e.dataTransfer.files;
   }
+
+  onMount(() => {
+    prepareAuth();
+    if (isPendingRedirect()) {
+      console.log("isPendingRedirect");
+      signIn();
+    }
+
+    const auth = getAuth(app);
+    auth.onAuthStateChanged((user) => {
+      console.log("onAuthStateChanged", user);
+      if (user) {
+        signInStatus = "signed-in";
+        $accountUser = user;
+      } else {
+        signInStatus = "signed-out";
+        $accountUser = null;
+      }
+    });
+  });
 
 </script>
 
@@ -393,7 +427,18 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
       Export PSD
     </button>
+    {#if signInStatus === "signed-out"}
+      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
+        Sign in
+      </button>
+    {/if}
+    {#if signInStatus === "signed-in"}
+      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signOut}>
+        Sign out
+      </button>
+    {/if}
   </div>  
+  <div class="dummy" id="signin-dummy"> </div>
 </div>
 {/if}
 
@@ -469,12 +514,14 @@
   .radio-box {
     height: 35px;
   }
-
   .radio-box :global(.radio-item) {
     padding-top: 0px;
     padding-bottom: 0px;
     padding-left: 10px;
     padding-right: 10px;
+  }
+  .dummy {
+    display: none;
   }
 
 </style>

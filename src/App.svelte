@@ -30,6 +30,8 @@
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
   import FontLoader from './bookeditor/FontLoader.svelte';
+  import SignIn from './utils/SignIn.svelte';
+  import Account from './utils/Account.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -44,6 +46,9 @@
     fileBrowser: {
       ref: FileBrowser,
     },
+    signIn: {
+      ref: SignIn,
+    }
   };
 
   onMount(async () => {
@@ -101,6 +106,7 @@
 <Toast/>
 <BookArchiver/>
 <FontLoader/>
+<Account/>
 
 <!-- skeletonのModal -->
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>

@@ -4,6 +4,9 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type * as Storyboard from "./weaver/storyboard";
+import firebase from 'firebase/compat/app';
+import * as firebaseui from 'firebaseui'
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
@@ -64,4 +67,63 @@ export async function getLayover(key: string): Promise<Storyboard.Storyboard> {
   const docRef = ref(database, `layover/${key}/data`);
   const snapshot = await get(docRef);
   return snapshot.val();
+}
+
+let ui = null;
+let uiConfig = null;
+
+export function prepareAuth() {
+  uiConfig = {
+    signInSuccessUrl: './',
+    signInOptions: [
+      // Leave the lines as is for the providers you want to offer your users.
+      firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+      firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    ],
+    // tosUrl and privacyPolicyUrl accept either url string or a callback
+    // function.
+    // Terms of service url/callback.
+    tosUrl: 'www.example.com', // TODO:
+    // Privacy policy url/callback.
+    privacyPolicyUrl: function() {
+      window.location.assign('www.example.com'); // TODO:
+    },
+  };
+
+  // Initialize the FirebaseUI Widget using Firebase.
+  if (ui) {
+    ui.reset();
+  } else {
+    const auth = getAuth(app);
+    ui = new firebaseui.auth.AuthUI(auth);
+  }
+}
+
+export function isPendingRedirect() {
+  return ui.isPendingRedirect();
+}
+
+export function startAuth(elementId: string) {
+  // The start method will wait until the DOM is loaded.
+  ui.start(elementId, uiConfig);  
+}
+
+export async function updateFeathral(): Promise<number> {
+  const functions = getFunctions(app);
+  const updateFeathral = httpsCallable(functions, 'updateFeathralIfNeeded');
+  const r = await updateFeathral();
+  console.tag("feathral", "cyan", r.data);
+  return (r.data as any).feathral;
+}
+
+export async function generateImageFromTextWithFeathral(data: any): Promise<HTMLImageElement> {
+  const functions = getFunctions(app);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+  const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateImageFromText');
+  const r = await generateImageFromTextWithFeathral(data);
+
+  const img = document.createElement('img');
+  img.src = "data:image/png;base64," + (r.data as any).image;
+
+  return img;
 }
