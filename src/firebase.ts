@@ -110,20 +110,23 @@ export function startAuth(elementId: string) {
 
 export async function updateFeathral(): Promise<number> {
   const functions = getFunctions(app);
+  connectFunctionsEmulator(functions, "localhost", 5001);
   const updateFeathral = httpsCallable(functions, 'updateFeathralIfNeeded');
   const r = await updateFeathral();
-  console.tag("feathral", "cyan", r.data);
+  console.tag("feathral", "cyan", r);
   return (r.data as any).feathral;
 }
 
-export async function generateImageFromTextWithFeathral(data: any): Promise<HTMLImageElement> {
+export async function generateImageFromTextWithFeathral(data: any): Promise<{ image: HTMLImageElement, feathral: number }> {
   const functions = getFunctions(app);
   connectFunctionsEmulator(functions, "localhost", 5001);
   const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateImageFromText');
   const r = await generateImageFromTextWithFeathral(data);
+  const result = (r.data as any);
+  console.log(r);
 
   const img = document.createElement('img');
-  img.src = "data:image/png;base64," + (r.data as any).image;
+  img.src = "data:image/png;base64," + (result.data as any).image;
 
-  return img;
+  return { image: img, feathral: result.feathral };
 }

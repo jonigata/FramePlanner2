@@ -5,6 +5,7 @@
 
   $: onSetAccount($accountUser);
   async function onSetAccount(user) {
+    if (!user) { return; }
     const userId = user.uid;
     const database = getDatabase(app);
     const accountsRef = ref(database, 'accounts');

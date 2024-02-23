@@ -7,6 +7,8 @@
   import { onMount } from 'svelte';
   import { updateFeathral, generateImageFromTextWithFeathral } from '../firebase';
 
+  export let busy: boolean;
+  export let prompt: string;
   export let gallery: HTMLImageElement[];
   export let chosen: HTMLImageElement;
 
@@ -32,10 +34,17 @@
   }
 
   async function generate() {
-    console.log(imageRequest);
-    const img = await generateImageFromTextWithFeathral(imageRequest);
-    gallery.push(img);
-    gallery = gallery;
+    busy = true;
+    try {
+      imageRequest.prompt = prompt;
+      const { image, feathral } = await generateImageFromTextWithFeathral(imageRequest);
+      $onlineAccount.feathral = feathral;
+      gallery.push(image);
+      gallery = gallery;
+    }
+    catch(error) {
+    }
+    busy = false;
   }
 
   onMount(async () => {
@@ -50,7 +59,7 @@
   <p><img src={feathralIcon} alt="feathral" width=24 height=24/>Feathral: {$onlineAccount.feathral}</p>
 
   <p>prompt</p>
-  <textarea bind:value={imageRequest.prompt}/>
+  <textarea bind:value={prompt}/>
   <p>negative prompt</p>
   <textarea bind:value={imageRequest.negative_prompt}/>
 
@@ -61,18 +70,23 @@
     </div>
 
     <div class="vbox">
-      <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/>
+<!--      <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/> -->
+      <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/>
     </div>
   </div>
 
+<!--
   <div class="hbox gap-5" style="width: 700px;">
-    <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/>
   </div>
+-->
 
   <div class="hbox gap-5">
-    <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
+    <button disabled={busy || $onlineAccount.feathral < 1} class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
       Generate
     </button>
+    {#if $onlineAccount.feathral < 1}
+    <div class="warning">Feathralが足りません</div>
+    {/if}
   </div>
   {:else}
   <p>サインインしてください</p>
@@ -104,5 +118,8 @@
   }
   img {
     display: inline-block;
+  }
+  .warning {
+    color: #d22;
   }
 </style>
