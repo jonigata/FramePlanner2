@@ -65,7 +65,7 @@
 
 <div class="drawer-outer">
   <Drawer
-    open={$imageGeneratorTarget}
+    open={$imageGeneratorTarget != null}
     placement="right"
     size="720px"
     on:clickAway={onClickAway}

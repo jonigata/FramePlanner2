@@ -12,6 +12,7 @@
 
   let progress = 0;
   let refered: HTMLImageElement = null;
+  let batchCount = 1;
 
   let imageRequest = {
     "model": "lcm-dark-sushi-mix-v2-25",
@@ -55,18 +56,17 @@
 
   <div class="hbox gap-5">
     <div class="vbox" style="width: 400px;">
-      <SliderEdit label="width" bind:value={imageRequest.width} min={512} max={2048} step={64}/>
-      <SliderEdit label="height" bind:value={imageRequest.height} min={512} max={2048} step={64}/>
+      <SliderEdit label="width" bind:value={imageRequest.width} min={512} max={1024} step={256}/>
+      <SliderEdit label="height" bind:value={imageRequest.height} min={512} max={1024} step={256}/>
     </div>
 
     <div class="vbox">
-      <SliderEdit label="image count" bind:value={imageRequest.batchCount} min={1} max={100} step={1}/>
+      <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/>
     </div>
   </div>
 
   <div class="hbox gap-5" style="width: 700px;">
     <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/>
-    <SliderEdit label="CFG Scale" bind:value={imageRequest.cfgScale} min={1} max={30} step={0.5}/>
   </div>
 
   <div class="hbox gap-5">
