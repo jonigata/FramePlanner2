@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, logEvent } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type * as Storyboard from "./weaver/storyboard";
@@ -76,18 +76,11 @@ export function prepareAuth() {
   uiConfig = {
     signInSuccessUrl: './',
     signInOptions: [
-      // Leave the lines as is for the providers you want to offer your users.
       firebase.auth.GoogleAuthProvider.PROVIDER_ID,
       firebase.auth.EmailAuthProvider.PROVIDER_ID,
     ],
-    // tosUrl and privacyPolicyUrl accept either url string or a callback
-    // function.
-    // Terms of service url/callback.
-    tosUrl: 'www.example.com', // TODO:
-    // Privacy policy url/callback.
-    privacyPolicyUrl: function() {
-      window.location.assign('www.example.com'); // TODO:
-    },
+    tosUrl: './termsOfService.html',
+    privacyPolicyUrl: './privacy.html',
   };
 
   // Initialize the FirebaseUI Widget using Firebase.
@@ -110,7 +103,7 @@ export function startAuth(elementId: string) {
 
 export async function updateFeathral(): Promise<number> {
   const functions = getFunctions(app);
-  connectFunctionsEmulator(functions, "localhost", 5001);
+  // connectFunctionsEmulator(functions, "localhost", 5001);
   const updateFeathral = httpsCallable(functions, 'updateFeathralIfNeeded');
   const r = await updateFeathral();
   console.tag("feathral", "cyan", r);
@@ -119,7 +112,7 @@ export async function updateFeathral(): Promise<number> {
 
 export async function generateImageFromTextWithFeathral(data: any): Promise<{ image: HTMLImageElement, feathral: number }> {
   const functions = getFunctions(app);
-  connectFunctionsEmulator(functions, "localhost", 5001);
+  // connectFunctionsEmulator(functions, "localhost", 5001);
   const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateImageFromText');
   const r = await generateImageFromTextWithFeathral(data);
   const result = (r.data as any);
@@ -127,6 +120,8 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<{ im
 
   const img = document.createElement('img');
   img.src = "data:image/png;base64," + (result.data as any).image;
+
+  logEvent(analytics, 'feathral_generate');
 
   return { image: img, feathral: result.feathral };
 }
