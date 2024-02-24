@@ -3,6 +3,7 @@
   import { aboutOpen } from '../about/aboutStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
+  import generateImageIcon from '../assets/generate-image.png'
 
   function showComic() {
     const d: ModalSettings = {
@@ -117,7 +118,7 @@
         </ol>
       </dd>
       <dt>URL入力</dt>
-      <dd>各コマの「<img style="display: inline;" width="18" height="18" src='./src/assets/generate-image.png' alt="generate"/>画像生成」   ボタンを押し、「URL」にsdwebuiのURLを入力する</dd>
+      <dd>各コマの「<img style="display: inline;" width="18" height="18" src={generateImageIcon} alt="generate"/>画像生成」   ボタンを押し、「URL」にsdwebuiのURLを入力する</dd>
       <dt>scribble</dt>
       <dd><a href="https://twitter.com/jonigata_ai/status/1659567680695992320">動画(Twitter)</a></dd>
     </dl>

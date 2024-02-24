@@ -104,7 +104,7 @@ export function startAuth(elementId: string) {
 export async function updateFeathral(): Promise<number> {
   const functions = getFunctions(app);
   // connectFunctionsEmulator(functions, "localhost", 5001);
-  const updateFeathral = httpsCallable(functions, 'updateFeathralIfNeeded');
+  const updateFeathral = httpsCallable(functions, 'updatefeathralifneeded');
   const r = await updateFeathral();
   console.tag("feathral", "cyan", r);
   return (r.data as any).feathral;
@@ -113,7 +113,7 @@ export async function updateFeathral(): Promise<number> {
 export async function generateImageFromTextWithFeathral(data: any): Promise<{ image: HTMLImageElement, feathral: number }> {
   const functions = getFunctions(app);
   // connectFunctionsEmulator(functions, "localhost", 5001);
-  const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateImageFromText');
+  const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateimagefromtext');
   const r = await generateImageFromTextWithFeathral(data);
   const result = (r.data as any);
   console.log(r);
