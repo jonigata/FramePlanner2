@@ -932,7 +932,6 @@ export class FrameLayer extends Layer {
       rotation: 0,
       reverse: [1, 1],
       n_translation: [0, 0],
-      scaleLock: true,
     };
       
     constraintLeaf(paperSize, layoutlet);

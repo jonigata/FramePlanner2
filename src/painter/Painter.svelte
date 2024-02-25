@@ -46,7 +46,6 @@
           n_translation: [0, 0],
           rotation: 75,
           reverse: [1, 1],
-          scaleLock: false,
         };
       }
       let width: number;

@@ -48,7 +48,6 @@
         n_scale: 1,
         rotation: 0,
         reverse: [1, 1],
-        scaleLock: true
       };
       commitBook($mainBook, null);
       $mainBook = $mainBook;

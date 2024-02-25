@@ -22,12 +22,10 @@ export type Layout = {
 
 export type ImageSlot = {
   image: ImageFile;
-  scribble: ImageFile;
   n_scale: number,
   n_translation: Vector,
   rotation: number,
   reverse: [number, number];
-  scaleLock: boolean,
 }
 
 export class FrameElement {
@@ -107,7 +105,6 @@ export class FrameElement {
         n_scale: this.image.n_scale,
         rotation: this.image.rotation,
         reverse: [...this.image.reverse],
-        scaleLock: this.image.scaleLock,
       };
     }
     return element;
