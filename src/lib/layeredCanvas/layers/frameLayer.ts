@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -10,6 +10,8 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
+
+// TODO: films[0]
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -98,9 +100,10 @@ export class FrameLayer extends Layer {
     this.showsScribbleIcon = new ClickableIcon(["scribble-hide.png","scribble-show.png"],unit,[0,1], "落書きの表示/非表示", isFrameActiveAndVisible, mp);
     this.showsScribbleIcon.index = 1;
 
-    const isImageActive = () => this.interactable && this.selectedLayout?.element.image && !this.pointerHandler;
-    this.scaleIcon = new ClickableIcon(["scale.png"],unit,[1,1],"スケール", () => this.interactable && this.selectedLayout?.element.image != null, mp);
-    this.rotateIcon = new ClickableIcon(["rotate.png"],unit,[1,1],"回転", () => this.interactable && this.selectedLayout?.element.image != null, mp);
+    const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
+    const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
+    this.scaleIcon = new ClickableIcon(["scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
+    this.rotateIcon = new ClickableIcon(["rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
     this.dropIcon = new ClickableIcon(["drop.png"],unit,[0,1],"画像除去", isImageActive, mp);
     this.flipHorizontalIcon = new ClickableIcon(["flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive, mp);
     this.flipVerticalIcon = new ClickableIcon(["flip-vertical.png"],unit,[0,1],"上下反転", isImageActive, mp);
@@ -309,7 +312,7 @@ export class FrameLayer extends Layer {
         if (hint) {
           return hint;
         }
-        if (this.selectedLayout.element.image) {
+        if (this.selectedLayout.element.filmStack.films.length !== 0) {
           return { position: [x, y +48], message: "ドラッグで移動" };
         } else if (0 < this.selectedLayout.element.visibility) {
           return { position: [x, y +48], message: "画像をドロップ" };
@@ -476,17 +479,17 @@ export class FrameLayer extends Layer {
         return "done";
       }
       if (keyDownFlags["KeyD"]) {
-        layout.element.image = null;
+        layout.element.filmStack.films = [];
         this.redraw();
         return "done";
       }
       if (keyDownFlags["KeyT"]) {
-        layout.element.image.reverse[0] *= -1;
+        layout.element.filmStack.films[0].reverse[0] *= -1;
         this.redraw();
         return "done";
       }
       if (keyDownFlags["KeyY"]) {
-        layout.element.image.reverse[1] *= -1;
+        layout.element.filmStack.films[0].reverse[1] *= -1;
         this.redraw();
         return "done";
       }
@@ -577,21 +580,20 @@ export class FrameLayer extends Layer {
       }
 
       if (this.dropIcon.contains(point)) {
-        layout.element.image = null;
+        layout.element.filmStack.films = [];
         this.onCommit();
         this.redraw();
         return "done";
       } else if (this.flipHorizontalIcon.contains(point)) {
-        layout.element.image.reverse[0] *= -1;
+        layout.element.filmStack.films[0].reverse[0] *= -1;
         this.redraw();
         return "done";
       } else if (this.flipVerticalIcon.contains(point)) {
-        layout.element.image.reverse[1] *= -1;
+        layout.element.filmStack.films[0].reverse[1] *= -1;
         this.redraw();
         return "done";
       } else if (this.fitIcon.contains(point)) {
-        layout.element.image.n_scale = 0.001;
-        constraintLeaf(paperSize, layout);
+        constraintLeaf(paperSize, layout); // TODO: さきに小さくしておく
         this.onCommit();
         this.redraw();
         return "done";
@@ -613,9 +615,9 @@ export class FrameLayer extends Layer {
 
   async *pointer(p: Vector, payload: any) {
     if (payload.layout) {
-      const layout = payload.layout;
-      const element = layout.element;
-      if (element.image) {
+      const layout: Layout = payload.layout;
+      const element: FrameElement = layout.element;
+      if (0< element.filmStack.films.length) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
             this.scaleIcon.contains(p)) {
           yield* this.scaleImage(p, layout);
@@ -647,12 +649,12 @@ export class FrameLayer extends Layer {
   *scaleImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const origin = element.getPhysicalImageScale(paperSize);
+    const origin = element.filmStack.films[0].getPhysicalImageScale(paperSize);
 
     try {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
-        element.setPhysicalImageScale(paperSize, origin * s);
+        element.filmStack.films[0].setPhysicalImageScale(paperSize, origin * s);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
@@ -669,11 +671,11 @@ export class FrameLayer extends Layer {
   *rotateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const originalRotation = element.image.rotation;
+    const originalRotation = element.filmStack.films[0].rotation;
 
     try {
       yield* rotate(p, (q) => {
-        element.image.rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
+        element.filmStack.films[0].rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
@@ -690,12 +692,12 @@ export class FrameLayer extends Layer {
   *translateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const origin = element.getPhysicalImageTranslation(paperSize);
-    const n_origin = element.image.n_translation;
+    const origin = element.filmStack.films[0].getPhysicalImageTranslation(paperSize);
+    const n_origin = element.filmStack.films[0].n_translation;
 
     try {
       yield* translate(p, (q) => {
-        element.setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
+        element.filmStack.films[0].setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
@@ -706,7 +708,7 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
-    if (element.image.n_translation !== n_origin) {
+    if (element.filmStack.films[0].n_translation !== n_origin) {
       this.onCommit();
     }
   }
@@ -925,14 +927,14 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
     // calc expansion to longer size
 
-    layoutlet.element.image = {
-      image: image,
-      scribble: null,
-      n_scale: 1,
-      rotation: 0,
-      reverse: [1, 1],
-      n_translation: [0, 0],
-    };
+    const film = new Film();
+    film.image = image;
+    film.n_scale = 1;
+    film.rotation = 0;
+    film.reverse = [1, 1];
+    film.n_translation = [0, 0];
+
+    layoutlet.element.filmStack.films = [film];
       
     constraintLeaf(paperSize, layoutlet);
     this.redraw();

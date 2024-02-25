@@ -1,5 +1,5 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type ImageSlot } from '../lib/layeredCanvas/dataModels/frameTree';
+import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type Film } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
@@ -198,7 +198,7 @@ export function clonePage(page: Page): Page {
 export type FrameContent = {
   sourcePage: Page,
   sourceRect: Rect, // 元のコマのtrapezoidBoudingRect
-  imageSlot: ImageSlot,
+  imageSlot: Film,
   bubbles: Bubble[], // ただしpositionはコマ正規化座標
   prompt: string | null,
 }

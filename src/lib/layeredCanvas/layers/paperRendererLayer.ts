@@ -205,7 +205,7 @@ export class PaperRendererLayer extends Layer {
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    if (element.image || embeddedBubbles.has(layout)) {
+    if (0 < element.filmStack.films.length || embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
       if (!element.focused) {
@@ -346,33 +346,36 @@ export class PaperRendererLayer extends Layer {
   }
 
   drawImage(ctx: CanvasRenderingContext2D, layout: Layout) {
-    const element = layout.element;
-    if (!element.image) { return; }
-
-    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-
     const paperSize = this.getPaperSize();
-    const scale = element.getPhysicalImageScale(paperSize);
-    const translation = element.getPhysicalImageTranslation(paperSize);
+    const element = layout.element;
 
-    ctx.save();
-    ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
-    ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
-    ctx.rotate(-element.image.rotation * Math.PI / 180);
+    for (let film of element.filmStack.films) {
+      const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
-    function drawIt(img: HTMLImageElement) {
+      const scale = film.getPhysicalImageScale(paperSize);
+      const translation = film.getPhysicalImageTranslation(paperSize);
+
       ctx.save();
-      ctx.translate(-img.naturalWidth * 0.5, -img.naturalHeight * 0.5);
-      ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+      ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
+      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
+      ctx.rotate(-film.rotation * Math.PI / 180);
+
+      function drawIt(img: HTMLImageElement) {
+        ctx.save();
+        ctx.translate(-img.naturalWidth * 0.5, -img.naturalHeight * 0.5);
+        ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+        ctx.restore();
+      }
+
+      if (film.image) {drawIt(film.image);}
+      if (element.showsScribble && film.scribble) {drawIt(film.scribble);}
       ctx.restore();
     }
-
-    if (element.image.image) {drawIt(element.image.image);}
-    if (element.showsScribble && element.image.scribble) {drawIt(element.image.scribble);}
-    ctx.restore();
   }
 
   drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {
+    // TODO:
+/*
     const element = layout.element;
     const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
@@ -390,6 +393,7 @@ export class PaperRendererLayer extends Layer {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
+*/
   }
 
 

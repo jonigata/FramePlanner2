@@ -20,12 +20,79 @@ export type Layout = {
   formalCorners: Trapezoid; 
 };
 
-export type ImageSlot = {
+export class Film  {
   image: ImageFile;
-  n_scale: number,
-  n_translation: Vector,
-  rotation: number,
+  scribble: ImageFile;
+  n_scale: number;
+  n_translation: Vector;
+  rotation: number;
   reverse: [number, number];
+
+  constructor() {
+    this.image = null;
+    this.scribble = null;
+    this.n_scale = 1;
+    this.n_translation = [0, 0];
+    this.rotation = 0;
+    this.reverse = [1, 1];
+  }
+
+  clone() {
+    const f = new Film();
+    f.image = this.image;
+    f.scribble = this.scribble;
+    f.n_translation = [...this.n_translation];
+    f.n_scale = this.n_scale;
+    f.rotation = this.rotation;
+    f.reverse = [...this.reverse];
+    return f;
+  }
+
+  static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize
+    return n_scale * scale;
+  }
+
+  get validImage(): HTMLImageElement {
+    return this.image ?? this.scribble;
+  }
+
+  getPhysicalImageScale(paperSize: Vector): number {
+    return Film.getPhysicalImageScale(paperSize, this.validImage, this.n_scale);
+  }
+
+  setPhysicalImageScale(paperSize: Vector, scale: number): void {
+    const image = this.validImage;
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    this.n_scale = scale / (pageSize / imageSize);
+  }
+
+  static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize;
+    const translation: Vector = [n_translation[0] * scale, n_translation[1] * scale];
+    return translation;
+  }
+
+  getPhysicalImageTranslation(paperSize: Vector): Vector {
+    return Film.getPhysicalImageTranslation(paperSize, this.validImage, this.n_translation);
+  }
+
+  setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
+    const image = this.validImage;
+    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const pageSize = Math.min(paperSize[0], paperSize[1]);
+    const scale = pageSize / imageSize;
+    this.n_translation = [translation[0] / scale, translation[1] / scale];
+  }
+}
+
+export type FilmStack = {
+  films: Film[];
 }
 
 export class FrameElement {
@@ -46,7 +113,7 @@ export class FrameElement {
   gallery: ImageFile[];
   showsScribble: boolean;
 
-  image: ImageSlot | null;
+  filmStack: FilmStack;
   focused: boolean;
 
   constructor(size: number) {
@@ -70,7 +137,7 @@ export class FrameElement {
     this.semantics = null;
 
     // リーフ要素の場合は絵がある可能性がある
-    this.image = null;
+    this.filmStack = { films: [] };
     this.focused = false;
   }
 
@@ -96,17 +163,10 @@ export class FrameElement {
     element.semantics = this.semantics;
     element.prompt = this.prompt;
     element.showsScribble = this.showsScribble;
-    if (this.image) {
-      console.log('clone image', this.image);
-      element.image = {
-        image: this.image.image,
-        scribble: this.image.scribble,
-        n_translation: [...this.image.n_translation],
-        n_scale: this.image.n_scale,
-        rotation: this.image.rotation,
-        reverse: [...this.image.reverse],
-      };
-    }
+
+    element.filmStack = { 
+      films: this.filmStack.films.map(film => film.clone())
+    };
     return element;
   }
 
@@ -378,44 +438,6 @@ export class FrameElement {
 
   isLeaf(): boolean {
     return this.children.length === 0;
-  }
-
-  static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize
-    return n_scale * scale;
-  }
-
-  getPhysicalImageScale(paperSize: Vector): number {
-    return FrameElement.getPhysicalImageScale(paperSize, this.image.image ?? this.image.scribble, this.image.n_scale);
-  }
-
-  setPhysicalImageScale(paperSize: Vector, scale: number): void {
-    const image = this.image.image ?? this.image.scribble;
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    this.image.n_scale = scale / (pageSize / imageSize);
-  }
-
-  static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize;
-    const translation: Vector = [n_translation[0] * scale, n_translation[1] * scale];
-    return translation;
-  }
-
-  getPhysicalImageTranslation(paperSize: Vector): Vector {
-    return FrameElement.getPhysicalImageTranslation(paperSize, this.image.image ?? this.image.scribble, this.image.n_translation);
-  }
-
-  setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
-    const image = this.image.image ?? this.image.scribble;
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize;
-    this.image.n_translation = [translation[0] / scale, translation[1] / scale];
   }
 
 }
@@ -770,11 +792,11 @@ function makeVerticalBorderCorners(layout: Layout, index: number, margin: number
   return extendTrapezoid(corners, 0, margin);
 }
 
-export function collectImages(frameTree: FrameElement): ImageSlot[] {
+export function collectImages(frameTree: FrameElement): FilmStack[] {
   const images = [];
   if (!frameTree.children || frameTree.children.length === 0) {
     if (0 < frameTree.visibility) {
-      images.push(frameTree.image);
+      images.push(frameTree.filmStack);
     }
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
@@ -785,22 +807,22 @@ export function collectImages(frameTree: FrameElement): ImageSlot[] {
   return images;
 }
 
-export function dealImages(frameTree: FrameElement, images: ImageSlot[], insertElement: FrameElement, spliceElement: FrameElement): void {
+export function dealImages(frameTree: FrameElement, filmStacks: FilmStack[], insertElement: FrameElement, spliceElement: FrameElement): void {
   if (!frameTree.children || frameTree.children.length === 0) {
     if (frameTree.visibility === 0) { return; }
 
     if (frameTree === spliceElement) {
-      images.shift();
+      filmStacks.shift();
     } 
-    if (frameTree === insertElement || images.length === 0) {
-      frameTree.image = null;
+    if (frameTree === insertElement || filmStacks.length === 0) {
+      frameTree.filmStack = { films: [] };
       return;
     }
-    const image = images.shift();
-    frameTree.image = {...image};
+    const filmStack = filmStacks.shift();
+    frameTree.filmStack = filmStack;
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
-      dealImages(frameTree.children[i], images, insertElement, spliceElement);
+      dealImages(frameTree.children[i], filmStacks, insertElement, spliceElement);
     }
   }
 }
@@ -834,36 +856,98 @@ export function constraintRecursive(paperSize: Vector, layout: Layout): void {
     for (const child of layout.children) {
       constraintRecursive(paperSize,child);
     }
-  } else if (layout.element && layout.element.image) {
+  } else if (layout.element) {
     constraintLeaf(paperSize, layout);
   }
 }
 
-export function constraintLeaf(paperSize: Vector, layout: Layout): void {
+export function constraintLeaf(paperSize: Vector, layout: Layout, ): void {
   if (!layout.corners) {return; }
-  if (!layout.element.image) { return; }
-
-  const image = layout.element.image.image ?? layout.element.image.scribble;
+  if (layout.element.filmStack.films.length == 0) { return; }
 
   const element = layout.element;
   const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
   const [x1, y1] = [x0 + w, y0 + h];
-  const [iw, ih] = [image.naturalWidth, image.naturalHeight];
+  const [ix, iy, iw, ih] = calculateMinimumBoundingRect(paperSize, element);
+  console.log("frame", [w, h], "image", [iw, ih]);
 
-  let scale = element.getPhysicalImageScale(paperSize);
-  if (iw * scale < w) { scale = w / iw; }
-  if (ih * scale < h) { scale = h / ih; }
-  element.setPhysicalImageScale(paperSize, scale);
+  let stackScale = 1;
+  if (iw * h < w * ih) { stackScale = w / iw; }
+  else { stackScale = h / ih; }
 
-  const [rw, rh] = [iw * scale, ih * scale];
-  const [rw2, rh2] = [rw / 2, rh / 2];
-  const translation = element.getPhysicalImageTranslation(paperSize);
-  const x = x0 + w * 0.5 + translation[0];
-  const y = y0 + h * 0.5 + translation[1];
+  const [nw, nh] = [iw * stackScale, ih * stackScale];
+  const [nx0, ny0] = [ix - (nw - w) / 2, iy - (nh - h) / 2];
+  const [nx1, ny1] = [nx0 + nw, ny0 + nh];
 
-  if (x0 < x - rw2) { translation[0] = - (w - rw) / 2; }
-  if (x + rw2 < x1) { translation[0] = (w - rw) / 2; }
-  if (y0 < y - rh2) { translation[1] = - (h - rh) / 2; }
-  if (y1 > y + rh2) { translation[1] = (h - rh) / 2; }
-  element.setPhysicalImageTranslation(paperSize, translation);
+  const stackTranslation = [0, 0];
+  if (x0 < nx0) { stackTranslation[0] -= nx0 - x0; }
+  if (y0 < ny0) { stackTranslation[1] -= ny0 - y0; }
+  if (nx1 < x1) { stackTranslation[0] += x1 - nx1; }
+  if (ny1 < y1) { stackTranslation[1] += y1 - ny1; }
+  console.log("newsize", [nw, nh], "scale", stackScale, "translation", stackTranslation);
+
+  // TODO: 多分translateにもscaleをかけるべき
+  const n_stackTranslation = [stackTranslation[0] / paperSize[0], stackTranslation[1] / paperSize[1]];
+
+  element.filmStack.films.forEach(film => {
+    film.n_scale *= stackScale;
+    film.n_translation[0] += n_stackTranslation[0];
+    film.n_translation[1] += n_stackTranslation[1];
+  });
+}
+
+function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement): Rect {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  element.filmStack.films.forEach(film => {
+    const transformedCorners = transformFilm(paperSize, film);
+    // 最小外接矩形の座標を更新
+    transformedCorners.forEach(corner => {
+      const [x, y] = corner;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    });
+  });
+
+  return [ minX, minY, maxX - minX, maxY - minY ];
+}
+
+function transformFilm(paperSize: Vector, film: Film): Vector[] {
+  const scale = film.getPhysicalImageScale(paperSize);
+
+  // 画像サイズを考慮して角の座標を計算
+  const halfWidth = film.image.width * scale * 0.5;
+  const halfHeight = film.image.height * scale * 0.5;
+  const corners = [
+    [ -halfWidth,  -halfHeight ],
+    [ halfWidth, -halfHeight ],
+    [ halfWidth, halfHeight ],
+    [ -halfWidth,  halfHeight ]
+  ];
+  console.log("film", [halfWidth*2, halfHeight*2], "scale", scale);
+
+  const cosTheta = Math.cos(film.rotation);
+  const sinTheta = Math.sin(film.rotation);
+
+  return corners.map(corner => {
+    // 反転
+    let x = film.reverse[0] * corner[0];
+    let y = film.reverse[1] * corner[1];
+
+    // TODO: 計算がくるう　最終的に外接矩形になるため？
+    // 回転
+    const rotatedX = x * cosTheta - y * sinTheta;
+    const rotatedY = x * sinTheta + y * cosTheta;
+
+    // 平行移動（n_translationを実座標に変換）
+    const realTranslationX = paperSize[0] * film.n_translation[0];
+    const realTranslationY = paperSize[1] * film.n_translation[1];
+
+    return [
+      rotatedX + realTranslationX,
+      rotatedY + realTranslationY
+    ];
+  });
 }

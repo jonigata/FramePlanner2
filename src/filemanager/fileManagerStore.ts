@@ -2,7 +2,7 @@ import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
 import type { Page, Book, WrapMode, ReadingDirection } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
-import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { Film, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -81,9 +81,9 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
-  if (frameTree.image) {
-    const image = frameTree.image.image;
-    const scribble = frameTree.image.scribble;
+  for (let film of frameTree.filmStack.films) {
+    const image = film.image;
+    const scribble = film.scribble;
 
     let markUpImage = null;
     let markUpScribble = null;
@@ -102,11 +102,10 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
     markUp.image = {
       image: markUpImage,
       scribble: markUpScribble,
-      n_scale: frameTree.image.n_scale,
-      n_translation: [...frameTree.image.n_translation],
-      rotation: frameTree.image.rotation,
-      reverse: [...frameTree.image.reverse],
-      scaleLock: frameTree.image.scaleLock,
+      n_scale: film.n_scale,
+      n_translation: [...film.n_translation],
+      rotation: film.rotation,
+      reverse: [...film.reverse],
     }
   }
 
@@ -244,15 +243,15 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
       const markUpTranlation = markUp.translation ?? [0,0];
       const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
 
-      frameTree.image = {
-        image,
-        scribble,
-        n_scale,
-        n_translation,
-        rotation: markUp.rotation,
-        reverse: [...(markUp.reverse ?? [1,1])] as Vector,
-        scaleLock: markUp.scaleLock,
-      };
+      const film = new Film();
+      film.image = image;
+      film.scribble = scribble;
+      film.n_scale = n_scale;
+      film.n_translation = n_translation;
+      film.rotation = markUp.rotation;
+      film.reverse = [...(markUp.reverse ?? [1,1])] as Vector;
+
+      frameTree.filmStack.films = [film];
     } else {
       // 新バージョン処理
       let image = null;
@@ -265,16 +264,16 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         scribble = await loadImage(fileSystem, markUp.image.scribble);
         frameTree.gallery.push(scribble);
       } 
+
+      const film = new Film();
+      film.image = image;
+      film.scribble = scribble;
+      film.n_scale = markUp.image.n_scale;
+      film.n_translation = markUp.image.n_translation;
+      film.rotation = markUp.image.rotation;
+      film.reverse = [...markUp.image.reverse] as Vector;
       
-      frameTree.image = {
-        image,
-        scribble,
-        n_scale: markUp.image.n_scale,
-        n_translation: [...markUp.image.n_translation] as Vector,
-        rotation: markUp.image.rotation,
-        reverse: [...markUp.image.reverse] as Vector,
-        scaleLock: markUp.image.scaleLock,
-      };
+      frameTree.filmStack.films = [film];
     }
   }
 
