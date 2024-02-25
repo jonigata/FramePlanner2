@@ -71,7 +71,7 @@
 
     <div class="vbox">
 <!--      <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/> -->
-      <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/>
+<!--      <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/> -->
     </div>
   </div>
 
