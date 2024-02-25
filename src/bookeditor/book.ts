@@ -1,5 +1,5 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type Film } from '../lib/layeredCanvas/dataModels/frameTree';
+import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, type FilmStack } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
@@ -144,15 +144,15 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
 
 export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix): Book {
   const frameTree = FrameElement.compile(frameExamples[2].frameTree);
-  frameTree.children[0].image = {
-    image,
-    scribble: null,
-    n_translation: [0, 0],
-    n_scale: 1,
-    rotation: 0,
-    reverse: [1, 1],
-    scaleLock: true,
-  }
+  const film = new Film();
+  film.image = image;
+  film.scribble = null;
+  film.n_translation = [0, 0];
+  film.n_scale = 1;
+  film.rotation = 0;
+  film.reverse = [1, 1];
+  frameTree.children[0].filmStack.films = [film];
+
   const page = newPage(frameTree, []);
   page.paperSize = [image.naturalWidth, image.naturalHeight];
   const book: Book = {
@@ -176,6 +176,7 @@ export interface BookOperators {
   modalScribble: (page: Page, frameElement: FrameElement) => void;
   insert: (page: Page, frameElement: FrameElement) => void;
   splice: (page: Page, frameElement: FrameElement) => void;
+  focusFrame: (page: Page, frame: FrameElement, p: Vector) => void;
   focusBubble: (page: Page, bubble: Bubble, p: Vector) => void;
   viewportChanged: () => void;
   insertPage: (index: number) => void;
@@ -198,7 +199,7 @@ export function clonePage(page: Page): Page {
 export type FrameContent = {
   sourcePage: Page,
   sourceRect: Rect, // 元のコマのtrapezoidBoudingRect
-  imageSlot: Film,
+  filmStack: FilmStack,
   bubbles: Bubble[], // ただしpositionはコマ正規化座標
   prompt: string | null,
 }
@@ -238,7 +239,7 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
       contents.push({
         sourcePage: page,
         sourceRect: trapezoidBoundingRect(leafLayout.corners),
-        imageSlot: frameTree.image,
+        filmStack: frameTree.filmStack,
         bubbles: selected,
         prompt: frameTree.prompt,
       });
@@ -273,7 +274,7 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
         contents.shift();
       } 
       if (frameTree === insertElement || contents.length === 0) {
-        frameTree.image = null;
+        frameTree.filmStack.films = [];
         frameTree.prompt = null;
         return;
       }
@@ -283,7 +284,7 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
       const [tx, ty, tw, th] = trapezoidBoundingRect(leafLayout.corners);
 
       const content = contents.shift();
-      frameTree.image = content.imageSlot;
+      frameTree.filmStack.films = [...content.filmStack.films];
       frameTree.prompt = content.prompt;
 
       for (let b of content.bubbles) {

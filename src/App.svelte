@@ -14,6 +14,7 @@
   import BookEditor from './bookeditor/BookEditor.svelte';
   import PassiveToolTip from './utils/PassiveToolTip.svelte';
   import About from './about/About.svelte';
+  import FrameInspector from './bookeditor/frameinspector/FrameInspector.svelte';
   import BubbleInspector from './bookeditor/bubbleinspector/BubbleInspector.svelte';
   import JsonEditor from './jsoneditor/JsonEditor.svelte';
   import Comic from './utils/Comic.svelte'; 
@@ -93,6 +94,7 @@
   <CabinetButton />
 </div>
 
+<FrameInspector/>
 <BubbleInspector/>
 <FontChooser/>
 <ShapeChooser itemSize={[64, 96]}/>

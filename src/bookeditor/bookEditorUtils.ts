@@ -9,8 +9,9 @@ import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLay
 import { initializeKeyCache } from '../lib/layeredCanvas/system/keyCache';
 import type { Book, Page, BookOperators, WrapMode, ReadingDirection } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
-import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+import type { FrameElement, Layout } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+import { trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 
 export function buildBookEditor(
   viewport: Viewport,
@@ -75,7 +76,7 @@ export function getDirectionFromReadingDirection(readingDirection: ReadingDirect
   }
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
+function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, modalGenerate, modalScribble, insert, splice, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize, false);
 
   // undo
@@ -95,6 +96,13 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
   const frameLayer = new FrameLayer(
     paperRendererLayer,
     page.frameTree,
+    (l: Layout) => { 
+      if (l) {
+        focusFrame(page, l.element, trapezoidCenter(l.corners));
+      } else {
+        focusFrame(page, null, null);
+      }
+    },
     () => { commit(null); },
     () => { revert(); },
     (e: FrameElement) => { modalGenerate(page, e); },

@@ -25,22 +25,3 @@ export const newPageProperty: Writable<NewPageProperty> = writable({
   frameWidth: 2, 
   templateIndex: 0,
 });
-
-/*
-export const newPageProperty2: Writable<NewPageProperty> = writable({
-  paperSize: [0, 0],
-  paperColor: null, 
-  frameColor: null, 
-  frameWidth: 2, 
-  template: FrameElement.compile(frameExamples[0]) 
-});
-
-export const newPageProperty = writableDerived(
-  newPageProperty2,
-  (npp) => npp,
-  (b, npp) => {
-    console.trace();
-    return npp;
-  }
-) 
-*/

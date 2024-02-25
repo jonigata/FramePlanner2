@@ -19,6 +19,7 @@ const BORDER_MARGIN = 10;
 export class FrameLayer extends Layer {
   renderLayer: PaperRendererLayer;
   frameTree: FrameElement;
+  onFocus: (layout: Layout) => void;
   onCommit: () => void;
   onRevert: () => void;
   onGenerate: (element: FrameElement) => void;
@@ -65,6 +66,7 @@ export class FrameLayer extends Layer {
   constructor(
     renderLayer: PaperRendererLayer,
     frameTree: FrameElement, 
+    onFocus: (layout: Layout) => void,
     onCommit: () => void, 
     onRevert: () => void, 
     onGenerate: (element: FrameElement) => void, 
@@ -74,6 +76,7 @@ export class FrameLayer extends Layer {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
+    this.onFocus = onFocus;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
     this.onGenerate = onGenerate;
@@ -372,8 +375,6 @@ export class FrameLayer extends Layer {
         return r;
       }
       if (this.litBorder) {
-        console.log(this.selectedBorder);
-        console.log(this.litBorder);
         if (this.litBorder.layout.element != this.selectedBorder.layout.element ||
             this.litBorder.index != this.selectedBorder.index) {
           return { border: this.litBorder };
@@ -394,6 +395,7 @@ export class FrameLayer extends Layer {
           this.litLayout = null;
           this.selectedBorder = null;
           this.litBorder = null;
+          this.onFocus(null);
           this.redraw();
           return null;
         } else {
@@ -413,8 +415,8 @@ export class FrameLayer extends Layer {
 
     if (this.litLayout) {
       if (this.selectedLayout?.element != this.litLayout?.element) {
-        console.log("litLayout", this.litLayout);
         this.selectedLayout = this.litLayout;
+        this.onFocus(this.selectedLayout);
         this.relayoutIcons();
         this.redraw();
         return null;
@@ -422,6 +424,7 @@ export class FrameLayer extends Layer {
     } else {
       if (this.selectedLayout) {
         this.selectedLayout = null;
+        this.onFocus(null);
         this.relayoutIcons();
         this.redraw();
         return null;
@@ -452,6 +455,7 @@ export class FrameLayer extends Layer {
         FrameElement.eraseElement(this.frameTree, layout.element);
         this.litLayout = null;
         this.selectedLayout = null;
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -463,6 +467,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -474,6 +479,7 @@ export class FrameLayer extends Layer {
           this.frameTree,
           layout.element
         );
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -505,6 +511,7 @@ export class FrameLayer extends Layer {
         );
         this.litLayout = null;
         this.selectedLayout = null;
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -516,6 +523,7 @@ export class FrameLayer extends Layer {
         );
         this.litLayout = null;
         this.selectedLayout = null;
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -524,6 +532,7 @@ export class FrameLayer extends Layer {
         FrameElement.eraseElement(this.frameTree, layout.element);
         this.litLayout = null;
         this.selectedLayout = null;
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -532,6 +541,7 @@ export class FrameLayer extends Layer {
         FrameElement.duplicateElement(this.frameTree, layout.element);
         this.litLayout = null;
         this.selectedLayout = null;
+        this.onFocus(null);
         this.onCommit();
         this.redraw();
         return "done";
@@ -633,9 +643,9 @@ export class FrameLayer extends Layer {
     } else {
       this.selectedBorder = payload.border;
       this.selectedLayout = null;
+      this.onFocus(null);
       this.relayoutIcons();
       this.redraw();
-      console.log("A", payload.border);
       if (payload.action === "expand") {
         yield* this.expandBorder(p, payload.border);
       } else if(payload.action === "slant") {
@@ -944,6 +954,8 @@ export class FrameLayer extends Layer {
     if (!this.selectedLayout) { return; }
     const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
     this.selectedLayout = findLayoutOf(rootLayout, this.selectedLayout.element);
+    this.onFocus(this.selectedLayout);
+
     if (this.focusedPadding) {
       const handle = this.focusedPadding.handle;
       this.focusedPadding = findPaddingOf(this.selectedLayout, handle);

@@ -9,6 +9,7 @@
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
+  import { frameInspectorTarget, frameInspectorPosition } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken } from './bookStore';
@@ -181,6 +182,7 @@
       modalScribble,
       insert,
       splice,
+      focusFrame,
       focusBubble,
       viewportChanged,
       insertPage,
@@ -256,6 +258,26 @@
       }
     }
     return null;
+  }
+
+  function focusFrame(page: Page, f: FrameElement, p: Vector) {
+    console.log("focusFrame", f);
+    if (f) {
+      const [cx, cy] = p;
+      const offset = canvas.height / 2 < cy ? -1 : 1;
+
+      $frameInspectorTarget = {
+        frame: f,
+        page,
+      };
+      $frameInspectorPosition = {
+        center: convertPointFromNodeToPage(canvas, cx, cy),
+        height: 100,
+        offset
+      };
+    } else {
+      $frameInspectorTarget = null;      
+    }
   }
 
   function focusBubble(page: Page, b: Bubble, p: Vector) {

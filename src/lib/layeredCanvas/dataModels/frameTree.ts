@@ -936,7 +936,6 @@ function transformFilm(paperSize: Vector, film: Film): Vector[] {
     let x = film.reverse[0] * corner[0];
     let y = film.reverse[1] * corner[1];
 
-    // TODO: 計算がくるう　最終的に外接矩形になるため？
     // 回転
     const rotatedX = x * cosTheta - y * sinTheta;
     const rotatedY = x * sinTheta + y * cosTheta;
