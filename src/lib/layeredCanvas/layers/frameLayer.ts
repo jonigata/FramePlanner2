@@ -364,15 +364,14 @@ export class FrameLayer extends Layer {
 
     this.updateLit(point);
 
-    console.log("A");
     if (this.selectedLayout) {
-      console.log("B");
       const q = this.acceptsOnSelectedFrameIcons(point);
       if (q) {
-        console.log("C");
+        if (q == "done") {
+          return null;
+        }
         return q;
       }
-      console.log("D");
     }
 
     // パディング操作
@@ -515,6 +514,9 @@ export class FrameLayer extends Layer {
       }
       const q = this.acceptsOnSelectedFrameIcons(point);
       if (q) {
+        if (q == "done") {
+          return null;
+        }
         return q;
       }
     }
@@ -575,6 +577,7 @@ export class FrameLayer extends Layer {
       return "done";
     }
     if (this.resetPaddingIcon.contains(point)) {
+      console.log("AAAAA");
       this.resetPadding();
       this.onCommit();
       this.redraw();
@@ -669,7 +672,6 @@ export class FrameLayer extends Layer {
       this.selectedLayout = null;
       this.relayoutIcons();
       this.redraw();
-      console.log("A", payload.border);
       if (payload.action === "expand") {
         yield* this.expandBorder(p, payload.border);
       } else if(payload.action === "slant") {
