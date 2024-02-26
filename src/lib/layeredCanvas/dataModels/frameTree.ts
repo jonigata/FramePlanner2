@@ -22,6 +22,7 @@ export type Layout = {
 
 export type ImageSlot = {
   image: ImageFile;
+  scribble: ImageFile;
   n_scale: number,
   n_translation: Vector,
   rotation: number,

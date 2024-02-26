@@ -238,6 +238,13 @@ export class FrameLayer extends Layer {
     this.litLayout = null;
 
     if (this.selectedLayout) {
+      for (let icon of this.frameIcons) {
+        if (icon.contains(point)) {
+          this.litLayout = this.selectedLayout;
+          return;
+        }
+      }
+
       const corners = extendTrapezoid(this.selectedLayout.corners, 20, 20);
       if (isPointInTrapezoid(point, corners)) {
         const padding = findPaddingOn(this.selectedLayout, point);
@@ -356,6 +363,17 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
 
     this.updateLit(point);
+
+    console.log("A");
+    if (this.selectedLayout) {
+      console.log("B");
+      const q = this.acceptsOnSelectedFrameIcons(point);
+      if (q) {
+        console.log("C");
+        return q;
+      }
+      console.log("D");
+    }
 
     // パディング操作
     if (this.focusedPadding) {
@@ -495,119 +513,137 @@ export class FrameLayer extends Layer {
         this.redraw();
         return "done";
       }
-      if (this.splitHorizontalIcon.contains(point)) {
-        FrameElement.splitElementHorizontal(
-          this.frameTree,
-          layout.element
-        );
-        this.litLayout = null;
-        this.selectedLayout = null;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.splitVerticalIcon.contains(point)) {
-        FrameElement.splitElementVertical(
-          this.frameTree,
-          layout.element
-        );
-        this.litLayout = null;
-        this.selectedLayout = null;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.deleteIcon.contains(point)) {
-        FrameElement.eraseElement(this.frameTree, layout.element);
-        this.litLayout = null;
-        this.selectedLayout = null;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.duplicateIcon.contains(point)) {
-        FrameElement.duplicateElement(this.frameTree, layout.element);
-        this.litLayout = null;
-        this.selectedLayout = null;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.insertIcon.contains(point)) {
-        this.onInsert(layout.element);
-        this.redraw();
-        return "done";
-      }
-      if (this.spliceIcon.contains(point)) {
-        this.onSplice(layout.element);
-        this.redraw();
-        return "done";
-      }
-      if (this.resetPaddingIcon.contains(point)) {
-        this.resetPadding();
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.zplusIcon.contains(point)) {
-        layout.element.z += 1;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.zminusIcon.contains(point)) {
-        layout.element.z -= 1;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.visibilityIcon.contains(point)) {
-        this.visibilityIcon.increment();
-        layout.element.visibility = this.visibilityIcon.index;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (this.showsScribbleIcon.contains(point)) {
-        this.showsScribbleIcon.increment();
-        layout.element.showsScribble = this.showsScribbleIcon.index === 1;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-
-      if (this.dropIcon.contains(point)) {
-        layout.element.image = null;
-        this.onCommit();
-        this.redraw();
-        return "done";
-      } else if (this.flipHorizontalIcon.contains(point)) {
-        layout.element.image.reverse[0] *= -1;
-        this.redraw();
-        return "done";
-      } else if (this.flipVerticalIcon.contains(point)) {
-        layout.element.image.reverse[1] *= -1;
-        this.redraw();
-        return "done";
-      } else if (this.fitIcon.contains(point)) {
-        layout.element.image.n_scale = 0.001;
-        constraintLeaf(paperSize, layout);
-        this.onCommit();
-        this.redraw();
-        return "done";
-      } else if (this.generateIcon.contains(point)) {
-        this.onGenerate(layout.element);
-        return "done";
-      } else if (this.scribbleIcon.contains(point)) {
-        this.onScribble(layout.element);
-        return "done";
-      } else {
-        if (isPointInTrapezoid(point, layout.corners)) {
-          return { layout: layout };
-        }
+      const q = this.acceptsOnSelectedFrameIcons(point);
+      if (q) {
+        return q;
       }
     }
 
+    return null;
+  }
+
+  acceptsOnSelectedFrameIcons(point: Vector): any {
+    const layout = this.selectedLayout;
+    if (!layout) { return null; }
+
+    if (this.splitHorizontalIcon.contains(point)) {
+      FrameElement.splitElementHorizontal(
+        this.frameTree,
+        layout.element
+      );
+      this.litLayout = null;
+      this.selectedLayout = null;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.splitVerticalIcon.contains(point)) {
+      FrameElement.splitElementVertical(
+        this.frameTree,
+        layout.element
+      );
+      this.litLayout = null;
+      this.selectedLayout = null;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.deleteIcon.contains(point)) {
+      FrameElement.eraseElement(this.frameTree, layout.element);
+      this.litLayout = null;
+      this.selectedLayout = null;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.duplicateIcon.contains(point)) {
+      FrameElement.duplicateElement(this.frameTree, layout.element);
+      this.litLayout = null;
+      this.selectedLayout = null;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.insertIcon.contains(point)) {
+      this.onInsert(layout.element);
+      this.redraw();
+      return "done";
+    }
+    if (this.spliceIcon.contains(point)) {
+      this.onSplice(layout.element);
+      this.redraw();
+      return "done";
+    }
+    if (this.resetPaddingIcon.contains(point)) {
+      this.resetPadding();
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.zplusIcon.contains(point)) {
+      layout.element.z += 1;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.zminusIcon.contains(point)) {
+      layout.element.z -= 1;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.visibilityIcon.contains(point)) {
+      this.visibilityIcon.increment();
+      layout.element.visibility = this.visibilityIcon.index;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (this.showsScribbleIcon.contains(point)) {
+      this.showsScribbleIcon.increment();
+      layout.element.showsScribble = this.showsScribbleIcon.index === 1;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+
+    if (this.dropIcon.contains(point)) {
+      layout.element.image = null;
+      this.onCommit();
+      this.redraw();
+      return "done";
+    } 
+    if (this.flipHorizontalIcon.contains(point)) {
+      layout.element.image.reverse[0] *= -1;
+      this.redraw();
+      return "done";
+    } 
+    if (this.flipVerticalIcon.contains(point)) {
+      layout.element.image.reverse[1] *= -1;
+      this.redraw();
+      return "done";
+    } 
+    if (this.fitIcon.contains(point)) {
+      layout.element.image.n_scale = 0.001;
+      constraintLeaf(this.getPaperSize(), layout);
+      this.onCommit();
+      this.redraw();
+      return "done";
+    } 
+    if (this.generateIcon.contains(point)) {
+      this.onGenerate(layout.element);
+      return "done";
+    } 
+    if (this.scribbleIcon.contains(point)) {
+      this.onScribble(layout.element);
+      return "done";
+    }
+    if (this.scaleIcon.contains(point) || this.rotateIcon.contains(point)) {
+      return { layout: layout };
+    }
+    if (isPointInTrapezoid(point, layout.corners)) {
+      return { layout: layout };
+    }
     return null;
   }
 
