@@ -548,6 +548,7 @@ export const bubbleOptionSets = {
   "shout": {
     link: {hint:"結合", icon:"unite"},
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]},
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 6, sampleInit: b => 6 },
     superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3, sampleInit: b => 3 },
     bumpSharp: { label: "でっぱりの鋭さ", type: "number", min: 0.01, max: 0.5, step: 0.01, init: b => 0.16, sampleInit: b => 0.2 },

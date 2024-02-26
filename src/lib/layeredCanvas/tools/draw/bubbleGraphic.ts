@@ -444,48 +444,25 @@ function getRoundedPath(size, opts, seed) {
 function getHarshPath(size, opts, seed) {
   const rng = seedrandom(seed);
 
-  let points;
-  if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
-    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
-    const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(size, rawPoints, opts.bumpDepth);
-    const v: Vector = [opts.tailTip[0], opts.tailTip[1]];
-    const tailIndex = findNearestIndex(points, v);
-    points[tailIndex] = v;
-  } else {
-
-    let angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(size, rawPoints, opts.bumpDepth);
-  }
+  let angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+  const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
+  let points = subdividePointsWithBump(size, rawPoints, opts.bumpDepth);
 
   const path = new paper.Path();
   path.addSegments(points);
   path.closed = true;
 
-  return path;
+  return addTrivialTail(path, size, opts);
 }
 
 function getShoutPath(size, opts, seed) {
   const bump = opts.bumpSharp;
   const rng = seedrandom(seed);
   let points;
-  if (opts?.tailTip && opts.tailTip[0] !== 0 && opts.tailTip[1] !== 0) {
-    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    const focusAngle = Math.atan2(opts.tailTip[1], opts.tailTip[0]);
-    const tailIndex = findNearestAngleIndex(angles, focusAngle);
-    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(size, points, bump);
-    points = jitterDistances(rng, points, bump, opts.depthJitter);
-    points = debumpPointsAroundIndex(points, 0.5 - opts.bumpSharp, tailIndex * 2);
-    points[tailIndex * 2] = opts.tailTip;
-  } else {
-    const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
-    points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
-    points = subdividePointsWithBump(size, points, bump);
-    points = jitterDistances(rng, points, bump, opts.depthJitter);
-  }
+  const angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
+  points = generateSuperEllipsePoints(size, angles, opts.superEllipse);
+  points = subdividePointsWithBump(size, points, bump);
+  points = jitterDistances(rng, points, bump, opts.depthJitter);
 
   const path = new paper.Path();
   path.moveTo(points[0]);
@@ -497,7 +474,7 @@ function getShoutPath(size, opts, seed) {
   }
   path.closed = true;
 
-  return path;
+  return addTrivialTail(path, size, opts);
 }
 
 function getSoftPath(size, opts, seed) {
@@ -657,6 +634,9 @@ function addTrivialTail(path, size, opts) {
 }
 
 function makeTrivialTailPath(size, m, v) {
+  if (m == null || (m[0] == 0 && m[1] == 0)) {
+    m = [0.5, 0];
+  }
   const a = size[0] * size[1];
   const l = Math.max(50000, Math.hypot(v[0], v[1]) ** 2);
   const vd1 = normalize2D(perpendicular2D(v), a * 35 / l);
@@ -677,6 +657,9 @@ function makeTrivialTailPath(size, m, v) {
 }
 
 function makeExtractTailPath(size, m, p, w) {
+  if (m == null || (m[0] == 0 && m[1] == 0)) {
+    m = [0.5, 0];
+  }
   const q = tailCoordToWorldCoord([0,0], p, m);
   const v: Vector = [p[0] - q[0], p[1] - q[1]];
   const l = Math.hypot(p[0], p[1]);
