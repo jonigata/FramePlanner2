@@ -33,9 +33,10 @@
     adjustedPosition = {x: offsetX, y: offsetY};
   }
 
-  function onNewFilm(e: CustomEvent<string>) {
+  async function onNewFilm(e: CustomEvent<string>) {
     const image = new Image();
     image.src = e.detail;
+    await image.decode();
 
     const film = new Film();
     film.image = image;
@@ -45,6 +46,7 @@
     film.reverse = [1, 1];
     $frame.filmStack.films.push(film);
     $redrawToken = true;
+    key++;
   }
 
   function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean }>) {
@@ -69,14 +71,14 @@
     <div class="title-bar variant-filled-surface rounded-container-token">
       コマ
     </div>
-    {#key key}
       <div class="film-stack vbox gap">
         <FrameInspectorFilm film={null} on:new-film={onNewFilm}/>
+        {#key key}
         {#each $frame.filmStack.films.toReversed() as film}
           <FrameInspectorFilm film={film} on:select-film={onSelectFilm}/>
         {/each}
+        {/key}
       </div>
-    {/key}
   </div>
 </div>
 {/if}

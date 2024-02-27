@@ -41,10 +41,15 @@
   on:dragover={onDragOver}
   on:drop={onDrop}>
   {#if !film}
-    <div class="new-film">
-      ＋
+    <div class="vbox">
+      <div class="new-film">
+        ＋
+      </div>
+      <div class="new-film-description">
+        ここに画像をドロップ
+      </div>
     </div>
-  {:else}
+    {:else}
     <img class="film-content" src={film.image.src} alt="film"/>
   {/if}
 </div>
@@ -56,6 +61,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
     gap: 8px;
   }
   .new-film {
@@ -64,7 +70,11 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100px;
+    height: 60px;
+    color: black;
+  }
+  .new-film-description {
+    color: black;
   }
   .film-content {
     width: 100%;
