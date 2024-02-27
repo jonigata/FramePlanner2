@@ -26,9 +26,8 @@
     }
   }
 
-  function onClick() {
-    film.selected = !film.selected;
-    film = film;
+  function onClick(e: MouseEvent) {
+    dispatch('select-film', { film, ctrlKey: e.ctrlKey });
   }
 </script>
 

@@ -10,6 +10,7 @@
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
   let inspector = null;
+  let key = 0;
 
   const frame = writableDerived(
     frameInspectorTarget,
@@ -46,6 +47,18 @@
     $redrawToken = true;
   }
 
+  function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean }>) {
+    const { film, ctrlKey } = e.detail;
+
+    if (!ctrlKey) {
+      $frame.filmStack.films.forEach(f => f.selected = false);
+      film.selected = true;
+    } else {
+      film.selected = !film.selected;
+    }
+    key++;
+  }
+
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -56,12 +69,14 @@
     <div class="title-bar variant-filled-surface rounded-container-token">
       コマ
     </div>
-    <div class="film-stack vbox gap">
-      <FrameInspectorFilm film={null} on:new-film={onNewFilm}/>
-      {#each $frame.filmStack.films.toReversed() as film}
-        <FrameInspectorFilm film={film}/>
-      {/each}
-    </div>
+    {#key key}
+      <div class="film-stack vbox gap">
+        <FrameInspectorFilm film={null} on:new-film={onNewFilm}/>
+        {#each $frame.filmStack.films.toReversed() as film}
+          <FrameInspectorFilm film={film} on:select-film={onSelectFilm}/>
+        {/each}
+      </div>
+    {/key}
   </div>
 </div>
 {/if}
