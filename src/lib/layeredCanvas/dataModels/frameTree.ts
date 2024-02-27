@@ -27,6 +27,7 @@ export class Film  {
   n_translation: Vector;
   rotation: number;
   reverse: [number, number];
+  selected: boolean; // 揮発性
 
   constructor() {
     this.image = null;
@@ -35,6 +36,7 @@ export class Film  {
     this.n_translation = [0, 0];
     this.rotation = 0;
     this.reverse = [1, 1];
+    this.selected = false;
   }
 
   clone() {
@@ -112,8 +114,8 @@ export class FrameElement {
   prompt: string | null;
   gallery: ImageFile[];
   showsScribble: boolean;
-
   filmStack: FilmStack;
+
   focused: boolean;
 
   constructor(size: number) {
@@ -438,6 +440,15 @@ export class FrameElement {
 
   isLeaf(): boolean {
     return this.children.length === 0;
+  }
+
+  getSelectedFilms(): Film[] {
+    return this.filmStack.films.filter(film => film.selected);
+  }
+
+  getOperationTargetFilms(): Film[] {
+    const films = this.getSelectedFilms();
+    return 0 < films.length ? films : this.filmStack.films;
   }
 
 }

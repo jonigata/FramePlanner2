@@ -25,12 +25,20 @@
       }
     }
   }
+
+  function onClick() {
+    film.selected = !film.selected;
+    film = film;
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  class="film variant-soft-tertiary"
+  class="film"
+  class:selected={film?.selected}
+  class:unselected={!film?.selected}
+  on:click={onClick}
   on:dragover={onDragOver}
   on:drop={onDrop}>
   {#if !film}
@@ -42,7 +50,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   .film {
     width: 100%;
     height: 100px;
@@ -64,5 +72,11 @@
     height: 100%;
     object-fit: contain;
   }
-  
+  .selected {
+    @apply variant-filled-primary;
+  }
+  .unselected {
+    @apply variant-soft-tertiary;
+  }
+
 </style>

@@ -659,12 +659,15 @@ export class FrameLayer extends Layer {
   *scaleImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const origin = element.filmStack.films[0].getPhysicalImageScale(paperSize);
+    const films = element.getOperationTargetFilms();
+    const origins = films.map(film => film.getPhysicalImageScale(paperSize));
 
     try {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
-        element.filmStack.films[0].setPhysicalImageScale(paperSize, origin * s);
+        films.forEach((film, i) => {
+          film.setPhysicalImageScale(paperSize, origins[i] * s);
+        });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
@@ -681,45 +684,52 @@ export class FrameLayer extends Layer {
   *rotateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const originalRotation = element.filmStack.films[0].rotation;
+    const films = element.getOperationTargetFilms();
+    const originalRotations = films.map(film => film.rotation);
 
     try {
       yield* rotate(p, (q) => {
-        element.filmStack.films[0].rotation = Math.max(-180, Math.min(180, originalRotation + -q * 0.2));
+        films.forEach((film, i) => {
+          film.rotation = Math.max(-180, Math.min(180, originalRotations[i] + -q * 0.2));
+        });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
         this.redraw();
       });
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.onRevert();
       }
     }
-    this.onCommit();
   }
 
   *translateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const origin = element.filmStack.films[0].getPhysicalImageTranslation(paperSize);
-    const n_origin = element.filmStack.films[0].n_translation;
+    const films = element.getOperationTargetFilms();
+    const origins = films.map(film => film.getPhysicalImageTranslation(paperSize));
 
     try {
+      let lastq = null;
       yield* translate(p, (q) => {
-        element.filmStack.films[0].setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
+        lastq = [...q];
+        films.forEach((film, i) => {
+          film.setPhysicalImageTranslation(paperSize, [origins[i][0] + q[0], origins[i][1] + q[1]]);
+        });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
         this.redraw();
       });
+      if (lastq[0] !== 0 || lastq[1] !== 0) {
+        this.onCommit();
+      }
     } catch (e) {
       if (e === "cancel") {
         this.onRevert();
       }
-    }
-    if (element.filmStack.films[0].n_translation !== n_origin) {
-      this.onCommit();
     }
   }
 
