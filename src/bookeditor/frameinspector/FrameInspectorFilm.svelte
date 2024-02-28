@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import trashIcon from '../../assets/trash.png';
 
   export let film: Film;
 
@@ -29,6 +30,11 @@
   function onClick(e: MouseEvent) {
     dispatch('select-film', { film, ctrlKey: e.ctrlKey });
   }
+
+  function onDelete() {
+    dispatch('delete-film', film);
+  }
+
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -50,6 +56,8 @@
       </div>
     </div>
     {:else}
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img class="trash-icon" src={trashIcon} alt="削除" on:click={onDelete}/>
     <img class="film-content" src={film.image.src} alt="film"/>
   {/if}
 </div>
@@ -63,6 +71,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    position: relative;
   }
   .new-film {
     font-size: 60px;
@@ -87,5 +96,12 @@
   .unselected {
     @apply variant-soft-tertiary;
   }
-
+  .trash-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    color: white;
+  }
 </style>

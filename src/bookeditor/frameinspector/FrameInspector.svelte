@@ -61,6 +61,13 @@
     key++;
   }
 
+  function onDeleteFilm(e: CustomEvent<Film>) {
+    const film = e.detail;
+    $frame.filmStack.films = $frame.filmStack.films.filter(f => f !== film);
+    $redrawToken = true;
+    key++;
+  }
+
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -75,7 +82,7 @@
         <FrameInspectorFilm film={null} on:new-film={onNewFilm}/>
         {#key key}
         {#each $frame.filmStack.films.toReversed() as film}
-          <FrameInspectorFilm film={film} on:select-film={onSelectFilm}/>
+          <FrameInspectorFilm film={film} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
         {/each}
         {/key}
       </div>

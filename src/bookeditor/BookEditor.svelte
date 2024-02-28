@@ -68,6 +68,9 @@
     delayedCommiter.cancel();
     revertBook($mainBook);
     $mainBook = $mainBook;
+    if ($frameInspectorTarget) {
+      $frameInspectorTarget.frame = null;
+    }
   }
 
   function undo() {
