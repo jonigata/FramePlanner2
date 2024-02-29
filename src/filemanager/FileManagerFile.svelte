@@ -1,18 +1,16 @@
 <script lang="ts">
-  import { loadBookFrom, fileManagerDragging, filenameDisplayMode, loadToken, type Dragging } from "./fileManagerStore";
-  import type { NodeId, BindId, FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
-  import type { Page } from '../bookeditor/book';
+  import { fileManagerDragging, filenameDisplayMode, loadToken, type Dragging } from "./fileManagerStore";
+  import type { NodeId, BindId, FileSystem, Folder } from "../lib/filesystem/fileSystem";
   import { mainBook } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { modalStore } from '@skeletonlabs/skeleton';
+  import { saveAs } from 'file-saver';
 
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
   import fileIcon from '../assets/fileManager/file.png';
-  import { loading } from '../utils/loadingStore'
 
   const dispatch = createEventDispatcher();
 
@@ -91,6 +89,16 @@
     $fileManagerDragging = null;
   }
 
+  async function onClick(e: MouseEvent) {
+    if (e.ctrlKey) {
+      if (!nodeId) { return; }
+      const file = (await fileSystem.getNode(nodeId)).asFile();
+      const s = await file.read();
+      const blob = new Blob([s], {type: "application/json"});
+      saveAs(blob, "file.json");
+    }
+  }
+
   onMount(async () => {
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
@@ -102,7 +110,7 @@
 <div class="file">
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="file-title" class:selected={selected} use:toolTip={"ドラッグで移動、ダブルクリックで編集"}
-    draggable={true} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
+    draggable={true} on:click={onClick} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
     <img class="button" src={fileIcon} alt="symbol"/>
     {#if isDiscardable}
       {#if $filenameDisplayMode === 'index'}
