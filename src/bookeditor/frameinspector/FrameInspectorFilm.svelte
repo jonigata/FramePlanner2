@@ -4,6 +4,7 @@
   import trashIcon from '../../assets/trash.png';
 
   export let film: Film;
+  export let index: number;
 
   const dispatch = createEventDispatcher();
 
@@ -34,6 +35,12 @@
   function onDelete() {
     dispatch('delete-film', film);
   }
+
+	async function onDragStart (ev: DragEvent) {
+		ev.dataTransfer.setData("index", index.toString());
+    ev.stopPropagation();
+	}
+
 
 </script>
 

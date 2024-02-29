@@ -5,6 +5,8 @@
   import FrameInspectorFilm from "./FrameInspectorFilm.svelte";
   import { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
   import { redrawToken } from "../bookStore"
+  import ListBox from "../../utils/listbox/ListBox.svelte";
+  import ListBoxItem from "../../utils/listbox/ListBox.svelte";
 
   let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let innerWidth = window.innerWidth;
@@ -78,15 +80,19 @@
     <div class="title-bar variant-filled-surface rounded-container-token">
       コマ
     </div>
-      <div class="film-stack vbox gap">
-        <FrameInspectorFilm film={null} on:new-film={onNewFilm}/>
-        {#key key}
-        {#each $frame.filmStack.films.toReversed() as film}
-          <FrameInspectorFilm film={film} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
+    <ListBox>
+      <ListBoxItem>
+        <FrameInspectorFilm film={null} index={-1} on:new-film={onNewFilm}/>
+      </ListBoxItem>
+      {#key key}
+        {#each $frame.filmStack.films.toReversed() as film, i}
+          <ListBoxItem>
+            <FrameInspectorFilm film={film} index={i} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
+          </ListBoxItem>
         {/each}
-        {/key}
-      </div>
-  </div>
+      {/key}
+    </ListBox>
+    </div>
 </div>
 {/if}
 
