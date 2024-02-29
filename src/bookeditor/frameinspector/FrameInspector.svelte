@@ -6,7 +6,7 @@
   import { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
   import { redrawToken } from "../bookStore"
   import ListBox from "../../utils/listbox/ListBox.svelte";
-  import ListBoxItem from "../../utils/listbox/ListBox.svelte";
+  import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";
 
   let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let innerWidth = window.innerWidth;
@@ -80,19 +80,19 @@
     <div class="title-bar variant-filled-surface rounded-container-token">
       コマ
     </div>
-    <ListBox>
-      <ListBoxItem>
-        <FrameInspectorFilm film={null} index={-1} on:new-film={onNewFilm}/>
-      </ListBoxItem>
-      {#key key}
+    {#key key}
+      <ListBox>
+        <ListBoxItem insertable={false}>
+          <FrameInspectorFilm film={null} index={-1} on:new-film={onNewFilm}/>
+        </ListBoxItem>
         {#each $frame.filmStack.films.toReversed() as film, i}
           <ListBoxItem>
             <FrameInspectorFilm film={film} index={i} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
           </ListBoxItem>
         {/each}
-      {/key}
-    </ListBox>
-    </div>
+      </ListBox>
+    {/key}
+  </div>
 </div>
 {/if}
 
@@ -111,6 +111,9 @@
     flex-direction: column;
     padding: 8px;
     gap: 2px;
+  }
+  .frame-inspector :global(.listbox) {
+    gap: 32px;
   }
   .title-bar {
     cursor: move;
