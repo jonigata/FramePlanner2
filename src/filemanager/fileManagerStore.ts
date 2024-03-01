@@ -102,17 +102,10 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
     markUp.image = {
       image: markUpImage,
       scribble: markUpScribble,
-<<<<<<< HEAD
       n_scale: film.n_scale,
       n_translation: [...film.n_translation],
       rotation: film.rotation,
       reverse: [...film.reverse],
-=======
-      n_scale: frameTree.image.n_scale,
-      n_translation: [...frameTree.image.n_translation],
-      rotation: frameTree.image.rotation,
-      reverse: [...frameTree.image.reverse],
->>>>>>> main
     }
   }
 
