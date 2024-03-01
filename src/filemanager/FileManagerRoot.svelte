@@ -166,8 +166,8 @@
       console.tag("new book request", "green");
       $newBookToken = null;
       const root = await fileSystem.getRoot();
-      const cabinet = await root.getNodeByName("デスクトップ");
-      await newFile(fileSystem, cabinet.asFolder(), getCurrentDateTime(), book);
+      const desktop = await root.getNodeByName("デスクトップ");
+      await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
       currentRevision = {...book.revision};
       $mainBook = book;
       $fileManagerRefreshKey++;
@@ -276,6 +276,19 @@
     }
   }
 
+  let importFiles;
+  $: onImportFile(importFiles);
+  async function onImportFile(importFiles) {
+    if (importFiles) {
+      const root = await fileSystem.getRoot();
+      const desktop = (await root.getNodeByName("デスクトップ")).asFolder();
+      const file = await fileSystem.createFile();
+      file.write(await importFiles[0].text());
+      await desktop.link("imported file", file.id)
+      $fileManagerRefreshKey++;
+    }
+  }
+
   async function onUndumpCounter() {
     undumpCounter++;
     if (undumpCounter == 5) {
@@ -363,6 +376,13 @@
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
         {/if}
       </div>
+<!--
+      <div class="toolbar">
+        <div class="hbox gap mx-2" style="margin-top: 8px;">
+          インポート<input accept="application/json" bind:files={importFiles} id="import" name="import" type="file" />
+        </div>
+      </div>
+-->
     {/key}
   </Drawer>
 </div>

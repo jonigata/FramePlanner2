@@ -46,6 +46,7 @@ function* kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex) {
 
     if (cursor === 0) { 
       cursor = 1;
+      lineSize = 1;
       continue;
     } else {
       const { size, wrap } = wrapDetector(buffer.slice(0, cursor+1));
