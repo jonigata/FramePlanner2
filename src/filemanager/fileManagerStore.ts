@@ -106,7 +106,6 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
       n_translation: [...frameTree.image.n_translation],
       rotation: frameTree.image.rotation,
       reverse: [...frameTree.image.reverse],
-      scaleLock: frameTree.image.scaleLock,
     }
   }
 
@@ -226,55 +225,64 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
       let scribble = null;
       if (markUp.image) {
         image = await loadImage(fileSystem, markUp.image);
-        frameTree.gallery.push(image);
+        if (image) {
+          frameTree.gallery.push(image);
+        }
       }
       if (markUp.scribble) {
         scribble = await loadImage(fileSystem, markUp.scribble);
-        frameTree.gallery.push(scribble);
+        if (scribble) {
+          frameTree.gallery.push(scribble);
+        }
       } 
 
       const anyImage = image ?? scribble;
-      const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
-      const s_pageSize = Math.min(paperSize[0], paperSize[1]);
-      const scale = s_imageSize / s_pageSize;
+      if (anyImage) {
+        const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
+        const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+        const scale = s_imageSize / s_pageSize;
 
-      const markUpScale = (markUp.scale ?? [1,1])[0];
-      const n_scale = scale * markUpScale;
-      
-      const markUpTranlation = markUp.translation ?? [0,0];
-      const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
+        const markUpScale = (markUp.scale ?? [1,1])[0];
+        const n_scale = scale * markUpScale;
+        
+        const markUpTranlation = markUp.translation ?? [0,0];
+        const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
 
-      frameTree.image = {
-        image,
-        scribble,
-        n_scale,
-        n_translation,
-        rotation: markUp.rotation,
-        reverse: [...(markUp.reverse ?? [1,1])] as Vector,
-        scaleLock: markUp.scaleLock,
-      };
+        frameTree.image = {
+          image,
+          scribble,
+          n_scale,
+          n_translation,
+          rotation: markUp.rotation,
+          reverse: [...(markUp.reverse ?? [1,1])] as Vector,
+        };
+      }
     } else {
       // 新バージョン処理
       let image = null;
       let scribble = null;
       if (markUp.image.image) {
         image = await loadImage(fileSystem, markUp.image.image);
-        frameTree.gallery.push(image);
+        if (image) {
+          frameTree.gallery.push(image);
+        }
       }
       if (markUp.scribble) {
         scribble = await loadImage(fileSystem, markUp.image.scribble);
-        frameTree.gallery.push(scribble);
+        if (scribble) {
+          frameTree.gallery.push(scribble);
+        }
       } 
-      
-      frameTree.image = {
-        image,
-        scribble,
-        n_scale: markUp.image.n_scale,
-        n_translation: [...markUp.image.n_translation] as Vector,
-        rotation: markUp.image.rotation,
-        reverse: [...markUp.image.reverse] as Vector,
-        scaleLock: markUp.image.scaleLock,
-      };
+      if (image || scribble) {
+        frameTree.image = {
+          image,
+          scribble,
+          n_scale: markUp.image.n_scale,
+          n_translation: [...markUp.image.n_translation] as Vector,
+          rotation: markUp.image.rotation,
+          reverse: [...markUp.image.reverse] as Vector,
+        };
+      }
     }
   }
 
@@ -298,27 +306,29 @@ async function unpackBubbleImages(paperSize: Vector, markUps: any[], fileSystem:
     const bubble: Bubble = Bubble.compile(paperSize, markUp);
     if (imageMarkUp) {
       const image = await loadImage(fileSystem, imageMarkUp.image);
-      const s_imageSize = Math.min(image.width, image.height) ;
-      const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+      if (image) {
+        const s_imageSize = Math.min(image.width, image.height) ;
+        const s_pageSize = Math.min(paperSize[0], paperSize[1]);
 
-      let n_scale = imageMarkUp.n_scale;
-      if (!n_scale) {
-        const markUpScaleVector = imageMarkUp.scale ?? [1,1];
-        const markUpScale = markUpScaleVector[0];
-        n_scale = s_imageSize / s_pageSize * markUpScale;
+        let n_scale = imageMarkUp.n_scale;
+        if (!n_scale) {
+          const markUpScaleVector = imageMarkUp.scale ?? [1,1];
+          const markUpScale = markUpScaleVector[0];
+          n_scale = s_imageSize / s_pageSize * markUpScale;
+        }
+        let n_translation = imageMarkUp.n_translation;
+        if (!n_translation) {
+          const markUpTranslationVector = imageMarkUp.translation ?? [0,0];
+          const scale = s_imageSize / s_pageSize;
+          n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
+        }
+        bubble.image = { 
+          image,
+          n_scale,
+          n_translation,
+          scaleLock: imageMarkUp.scaleLock,
+        };
       }
-      let n_translation = imageMarkUp.n_translation;
-      if (!n_translation) {
-        const markUpTranslationVector = imageMarkUp.translation ?? [0,0];
-        const scale = s_imageSize / s_pageSize;
-        n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
-      }
-      bubble.image = { 
-        image,
-        n_scale,
-        n_translation,
-        scaleLock: imageMarkUp.scaleLock,
-      };
     }
     unpackedBubbles.push(bubble);
   }
@@ -341,12 +351,18 @@ async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLI
   if (imageCache[fileSystem.id][imageId]) {
     return imageCache[fileSystem.id][imageId];
   } else {
-    const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
-    const image = await file.readImage();
-    image["fileId"] ??= {}
-    image["fileId"][fileSystem.id] = file.id
-    imageCache[fileSystem.id][imageId] = image;
-    return image;
+    try {
+      const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
+      const image = await file.readImage();
+      image["fileId"] ??= {}
+      image["fileId"][fileSystem.id] = file.id
+      imageCache[fileSystem.id][imageId] = image;
+      return image;
+    }
+    catch (e) {
+      console.log(e);
+      return null;
+    }
   }
 }
 
@@ -415,8 +431,19 @@ export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images
 function dryUnpackFrameImages(markUp: any, images: NodeId[]) {
   const frameTree = FrameElement.compileNode(markUp);
 
-  if (markUp.image) {images.push(markUp.image);}
-  if (markUp.scribble) {images.push(markUp.scribble);} 
+  if (markUp.image) {
+    if (typeof markUp.image !== 'string') {
+      // throw new Error('invalid image, ' + JSON.stringify(markUp.image)); 
+    } 
+    images.push(markUp.image);
+  }
+  if (markUp.scribble) {
+    if (typeof markUp.scribble !== 'string') { 
+      // throw new Error('invalid scribble' + JSON.stringify(markUp.scribble)); 
+    }
+    images.push(markUp.scribble);
+  }
+
 
   const children = markUp.column ?? markUp.row;
   if (children) {
@@ -430,7 +457,12 @@ function dryUnpackBubbleImages(bubbles: any[], images: NodeId[]) {
   const unpackedBubbles: Bubble[] = [];
   for (const src of bubbles) {
     const image = src.image;
-    if (image) {images.push(image.image);}
+    if (image) {
+      if (typeof image.image !== 'string') { 
+        // throw new Error('invalid image' + JSON.stringify(image.image)); 
+      }
+      images.push(image.image);
+    }
   }
 }
 

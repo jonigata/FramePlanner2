@@ -231,7 +231,7 @@
         <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       </div>
       {#if isTrash}
-        <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
+      <button class="btn btn-sm variant-filled recycle-button" on:click={recycle}>空にする</button>
       {/if}
       <div class="button-container">
         {#if spawnability === "file-spawnable"}
