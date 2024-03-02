@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, setContext, onMount } from 'svelte';
   import { writable } from 'svelte/store';
-  import type ListBoxItem from './ListBoxItem.svelte';
   import ListBoxInsertZone from './ListBoxInsertZone.svelte';
 
   const dispatch = createEventDispatcher();
@@ -9,7 +8,10 @@
   let tailZoneHeight = 0;
   let tailZone;
 
+  const dragCursor = writable(null);
+
   setContext('retrieveHandlers', retrieveHandlers);
+  setContext('dragCursor', dragCursor);
 
   function retrieveHandlers() {
     return {
@@ -37,11 +39,19 @@
   function onDragOver(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
+    dragCursor.set({x: ev.clientX, y: ev.clientY});
+  }
+
+  function onDragLeave(ev: DragEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    dragCursor.set(null);
   }
 
   async function onDrop(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
+    dragCursor.set(null);
 
     const index = getItemIndexAt(ev.clientX, ev.clientY);
     const dt = ev.dataTransfer;
@@ -52,7 +62,9 @@
       }
     } else {
       const sourceIndex = parseInt(dt.getData("text/list-item"));
-      dispatch("move", { index, sourceIndex });
+      if (index !== sourceIndex && index != sourceIndex + 1) {
+        dispatch("move", { index, sourceIndex });
+      }
     }
   }
 
@@ -77,25 +89,6 @@
   function isPointInRect(x: number, y: number, rect: DOMRect) {
     return rect.left < x && x < rect.right && rect.top < y && y < rect.bottom;
   }
-
-
-/*
-  function onImport(a: { index: number, files: FileList}) {
-    dispatch("import", a);
-  }
-
-  function onMove(a: { index: number, sourceIndex: number}) {
-    dispatch("move", a);
-  }
-
-  function onImportAtTail(e: CustomEvent<FileList>) {
-    dispatch("import", { index: items.length, files: e.detail });
-  }
-
-  function onMoveToTail(e: CustomEvent<number>) {
-    dispatch("move", { index: items.length, sourceIndex: e.detail });
-  }
-*/
 
 
   function getZoneHeight(index: number) {
@@ -128,7 +121,7 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="listbox" on:dragover={onDragOver} on:drop={onDrop}>
+<div class="listbox" on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop}>
   <slot/>
   <div class="tail">
     <ListBoxInsertZone zoneHeight={tailZoneHeight} insertPosition={0} bind:zone={tailZone}/>

@@ -113,7 +113,7 @@
     </div>
     {#key key}
       <ListBox on:import={onNewFilm} on:move={onMoveFilm}>
-        <ListBoxItem draggable={false}>
+        <ListBoxItem draggable={false} insertable={false}>
           <FrameInspectorFilm film={null}/>
         </ListBoxItem>
         {#each $frame.filmStack.films.toReversed() as film}
