@@ -64,11 +64,20 @@
   async function onMoveFilm(e: CustomEvent<{ index: number, sourceIndex: number }>) {
     console.log(e.detail);
     let { index, sourceIndex } = e.detail;
-    sourceIndex = $frame.filmStack.films.length - sourceIndex;
-    index = $frame.filmStack.films.length - index;
-    
-    const film = $frame.filmStack.films.splice(sourceIndex, 1)[0];
-    $frame.filmStack.films.splice(index, 0, film);
+
+    if (index < sourceIndex) {
+      sourceIndex = $frame.filmStack.films.length - sourceIndex;
+      index = $frame.filmStack.films.length - index;
+      
+      const film = $frame.filmStack.films.splice(sourceIndex, 1)[0];
+      $frame.filmStack.films.splice(index, 0, film);
+    } else {
+      sourceIndex = $frame.filmStack.films.length - sourceIndex;
+      index = $frame.filmStack.films.length - index;
+      
+      const film = $frame.filmStack.films.splice(sourceIndex, 1)[0];
+      $frame.filmStack.films.splice(index + 1, 0, film);
+    }
     $redrawToken = true;
     key++;
   }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getContext, onMount, onDestroy } from 'svelte';
+  import type { Writable } from 'svelte/store';
   import ListBoxInsertZone from './ListBoxInsertZone.svelte';
 
   type RegisterChildReuslt = {
@@ -9,10 +10,8 @@
   };
 
   type Handlers = {
-    register: (item: HTMLElement) => RegisterChildReuslt;
+    register: (item: HTMLElement, zone: HTMLElement) => RegisterChildReuslt;
     unregister: (item: HTMLElement) => void;
-    onImport: (a: { index: number, files: FileList}) => void,
-    onMove: (a: { index: number, sourceIndex: number}) => void,
   }
 
   const retrieveHandlers = getContext('retrieveHandlers') as () => Handlers;
@@ -22,15 +21,18 @@
   export let draggable: boolean = true;
 
   let item;
+  let zone;
   let index = -1;
   let zoneHeight = 0;
   let insertPosition = 0;
 
-	async function onDragStart (ev: DragEvent) {
-    console.log(index);
+	function onDragStart (ev: DragEvent) {
 		ev.dataTransfer.setData("text/list-item", index.toString());
     ev.stopPropagation();
-	}
+  }
+
+  function onDragEnd() {
+  }
 
   function onMouseDown(e: MouseEvent) {
     if (!draggable) {
@@ -38,16 +40,8 @@
     }
   }
 
-  function onImport(e: CustomEvent<FileList>) {
-    handlers.onImport({ index, files: e.detail });
-  }
-
-  function onMove(e: CustomEvent<number>) {
-    handlers.onMove({ index, sourceIndex: e.detail });
-  }
-
   onMount(() => {
-    const r = handlers.register(item);
+    const r = handlers.register(item, zone);
     index = r.index;
     zoneHeight = r.zoneHeight;
     const height = item.getBoundingClientRect().height;
@@ -61,16 +55,17 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div 
-  class="item" 
-  on:dragstart={onDragStart}
-  on:mousedown={(onMouseDown)}
-  bind:this={item} 
-  draggable={draggable}>
+<div class="item" bind:this={item}>
   {#if insertable}
-    <ListBoxInsertZone zoneHeight={zoneHeight} insertPosition={insertPosition} on:import={onImport} on:move={onMove}/>
+    <ListBoxInsertZone zoneHeight={zoneHeight} insertPosition={insertPosition} bind:zone={zone}/>
   {/if}
-  <slot/>
+  <div 
+    on:dragstart={onDragStart}
+    on:dragend={onDragEnd}
+    on:mousedown={(onMouseDown)}
+    draggable={draggable}>
+    <slot/>
+  </div>
 </div>
 
 <style>
