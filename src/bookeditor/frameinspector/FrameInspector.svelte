@@ -1,7 +1,7 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
   import { draggable } from '@neodrag/svelte';
-  import { type FrameInspectorPosition, frameInspectorTarget, frameInspectorPosition } from './frameInspectorStore';
+  import { frameInspectorTarget } from './frameInspectorStore';
   import FrameInspectorFilm from "./FrameInspectorFilm.svelte";
   import { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
   import { redrawToken } from "../bookStore"
@@ -35,18 +35,40 @@
     adjustedPosition = {x: offsetX, y: offsetY};
   }
 
-  async function onNewFilm(e: CustomEvent<string>) {
-    const image = new Image();
-    image.src = e.detail;
-    await image.decode();
+  async function onNewFilm(e: CustomEvent<{ index: number, files: FileList }>) {
+    let { index, files } = e.detail;
+    const file = files[0];
+    if (file.type.startsWith("image/")) {
+      const imageURL = URL.createObjectURL(file);
+      const image = new Image();
+      image.src = imageURL;
+      await image.decode();
 
-    const film = new Film();
-    film.image = image;
-    film.n_scale = 1;
-    film.n_translation = [0, 0];
-    film.rotation = 0;
-    film.reverse = [1, 1];
-    $frame.filmStack.films.push(film);
+      if (0 < index) {
+        index--;
+      }
+      index = $frame.filmStack.films.length - index;
+
+      const film = new Film();
+      film.image = image;
+      film.n_scale = 1;
+      film.n_translation = [0, 0];
+      film.rotation = 0;
+      film.reverse = [1, 1];
+      $frame.filmStack.films.splice(index, 0, film);
+      $redrawToken = true;
+      key++;
+    }
+  }
+
+  async function onMoveFilm(e: CustomEvent<{ index: number, sourceIndex: number }>) {
+    console.log(e.detail);
+    let { index, sourceIndex } = e.detail;
+    sourceIndex = $frame.filmStack.films.length - sourceIndex;
+    index = $frame.filmStack.films.length - index;
+    
+    const film = $frame.filmStack.films.splice(sourceIndex, 1)[0];
+    $frame.filmStack.films.splice(index, 0, film);
     $redrawToken = true;
     key++;
   }
@@ -81,13 +103,13 @@
       コマ
     </div>
     {#key key}
-      <ListBox>
-        <ListBoxItem insertable={false}>
-          <FrameInspectorFilm film={null} index={-1} on:new-film={onNewFilm}/>
+      <ListBox on:import={onNewFilm} on:move={onMoveFilm}>
+        <ListBoxItem draggable={false}>
+          <FrameInspectorFilm film={null}/>
         </ListBoxItem>
-        {#each $frame.filmStack.films.toReversed() as film, i}
+        {#each $frame.filmStack.films.toReversed() as film}
           <ListBoxItem>
-            <FrameInspectorFilm film={film} index={i} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
+            <FrameInspectorFilm film={film} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
           </ListBoxItem>
         {/each}
       </ListBox>

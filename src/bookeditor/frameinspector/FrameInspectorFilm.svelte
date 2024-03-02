@@ -4,29 +4,8 @@
   import trashIcon from '../../assets/trash.png';
 
   export let film: Film;
-  export let index: number;
 
   const dispatch = createEventDispatcher();
-
-  function onDragOver(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-  }
-
-  async function onDrop(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-    const dt = ev.dataTransfer;
-    const files = dt.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      console.log(file.type)
-      if (file.type.startsWith("image/")) {
-        const imageURL = URL.createObjectURL(file);
-        dispatch('new-film', imageURL);
-      }
-    }
-  }
 
   function onClick(e: MouseEvent) {
     dispatch('select-film', { film, ctrlKey: e.ctrlKey });
@@ -36,12 +15,6 @@
     dispatch('delete-film', film);
   }
 
-	async function onDragStart (ev: DragEvent) {
-		ev.dataTransfer.setData("index", index.toString());
-    ev.stopPropagation();
-	}
-
-
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -50,9 +23,8 @@
   class="film"
   class:selected={film?.selected}
   class:unselected={!film?.selected}
-  on:click={onClick}
-  on:dragover={onDragOver}
-  on:drop={onDrop}>
+  draggable={false}
+  on:click={onClick}>
   {#if !film}
     <div class="vbox">
       <div class="new-film">
@@ -64,8 +36,8 @@
     </div>
     {:else}
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img class="trash-icon" src={trashIcon} alt="削除" on:click={onDelete}/>
-    <img class="film-content" src={film.image.src} alt="film"/>
+    <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" on:click={onDelete}/>
+    <img draggable={false} class="film-content" src={film.image.src} alt="film"/>
   {/if}
 </div>
 
