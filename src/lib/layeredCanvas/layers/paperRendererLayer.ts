@@ -350,6 +350,8 @@ export class PaperRendererLayer extends Layer {
     const element = layout.element;
 
     for (let film of element.filmStack.films) {
+      if (!film.visible) { continue; }
+
       const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
       const scale = film.getPhysicalImageScale(paperSize);

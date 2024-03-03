@@ -2,6 +2,8 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
   import trashIcon from '../../assets/trash.png';
+  import visibleIcon from '../../assets/eye.png';
+  import { redrawToken } from '../bookStore';
 
   export let film: Film;
 
@@ -11,8 +13,17 @@
     dispatch('select-film', { film, ctrlKey: e.ctrlKey });
   }
 
-  function onDelete() {
+  function onDelete(ev: MouseEvent) {
+    ev.stopPropagation();
+    ev.preventDefault();
     dispatch('delete-film', film);
+  }
+
+  function onToggleVisible(ev: MouseEvent) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    film.visible = !film.visible;
+    $redrawToken = true;
   }
 
 </script>
@@ -34,9 +45,11 @@
         ここに画像をドロップ
       </div>
     </div>
-    {:else}
+  {:else}
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" on:click={onDelete}/>
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" on:click={onToggleVisible}/>
     <img draggable={false} class="film-content" src={film.image.src} alt="film"/>
   {/if}
 </div>
@@ -77,10 +90,23 @@
   }
   .trash-icon {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 50%;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    transform: translateY(-70%);
+    color: white;
+  }
+  .visible-icon {
+    position: absolute;
+    left: 4px;
+    top: 50%;
     width: 32px;
     height: 32px;
     color: white;
+    transform: translateY(-50%);
+  }
+  .visible-icon.off {
+    filter: opacity(0.3);
   }
 </style>

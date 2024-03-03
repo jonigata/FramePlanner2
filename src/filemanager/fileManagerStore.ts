@@ -106,6 +106,7 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
       n_translation: [...film.n_translation],
       rotation: film.rotation,
       reverse: [...film.reverse],
+      visible: film.visible,
     }
   }
 
@@ -283,6 +284,7 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         film.n_translation = markUp.image.n_translation;
         film.rotation = markUp.image.rotation;
         film.reverse = [...markUp.image.reverse] as Vector;
+        film.visible = markUp.image.visible;
         
         frameTree.filmStack.films = [film];
       }

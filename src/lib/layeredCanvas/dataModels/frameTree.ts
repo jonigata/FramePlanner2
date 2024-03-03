@@ -27,6 +27,7 @@ export class Film  {
   n_translation: Vector;
   rotation: number;
   reverse: [number, number];
+  visible: boolean;
   selected: boolean; // 揮発性
 
   constructor() {
@@ -36,6 +37,7 @@ export class Film  {
     this.n_translation = [0, 0];
     this.rotation = 0;
     this.reverse = [1, 1];
+    this.visible = true;
     this.selected = false;
   }
 
