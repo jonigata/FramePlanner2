@@ -86,8 +86,9 @@
     const { film, ctrlKey } = e.detail;
 
     if (!ctrlKey) {
+      const oldSelected = film.selected;
       $frame.filmStack.films.forEach(f => f.selected = false);
-      film.selected = true;
+      film.selected = !oldSelected;
     } else {
       film.selected = !film.selected;
     }
@@ -99,6 +100,16 @@
     $frame.filmStack.films = $frame.filmStack.films.filter(f => f !== film);
     $redrawToken = true;
     key++;
+  }
+
+  function onScribble(e: CustomEvent<Film>) {
+    console.log("onScribble", e.detail);
+    $frameInspectorTarget.command = "scribble";
+  }
+
+  function onGenerate(e: CustomEvent<Film>) {
+    console.log("onGenerate", e.detail);
+    $frameInspectorTarget.command = "generate";
   }
 
 </script>
@@ -118,7 +129,7 @@
         </ListBoxItem>
         {#each $frame.filmStack.films.toReversed() as film}
           <ListBoxItem>
-            <FrameInspectorFilm film={film} on:select-film={onSelectFilm} on:delete-film={onDeleteFilm}/>
+            <FrameInspectorFilm film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate}/>
           </ListBoxItem>
         {/each}
       </ListBox>

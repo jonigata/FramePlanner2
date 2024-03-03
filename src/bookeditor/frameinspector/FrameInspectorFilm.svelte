@@ -1,22 +1,25 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
-  import trashIcon from '../../assets/trash.png';
-  import visibleIcon from '../../assets/eye.png';
   import { redrawToken } from '../bookStore';
+  import visibleIcon from '../../assets/frameInspector/eye.png';
+  import scribbleIcon from '../../assets/frameInspector/scribble.png';
+  import generateIcon from '../../assets/frameInspector/generate.png';
+  import trashIcon from '../../assets/frameInspector/trash.png';
+  import { toolTip } from '../../utils/passiveToolTipStore';
 
   export let film: Film;
 
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
-    dispatch('select-film', { film, ctrlKey: e.ctrlKey });
+    dispatch('select', { film, ctrlKey: e.ctrlKey });
   }
 
   function onDelete(ev: MouseEvent) {
     ev.stopPropagation();
     ev.preventDefault();
-    dispatch('delete-film', film);
+    dispatch('delete', film);
   }
 
   function onToggleVisible(ev: MouseEvent) {
@@ -24,6 +27,20 @@
     ev.preventDefault();
     film.visible = !film.visible;
     $redrawToken = true;
+  }
+
+  function onScribble(ev: MouseEvent) {
+    console.log("onScribble");
+    ev.stopPropagation();
+    ev.preventDefault();
+    dispatch('scribble', film)
+  }
+
+  function onGenerate(ev: MouseEvent) {
+    console.log("onGenerate");
+    ev.stopPropagation();
+    ev.preventDefault();
+    dispatch('generate', film)
   }
 
 </script>
@@ -47,9 +64,13 @@
     </div>
   {:else}
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" on:click={onDelete}/>
+    <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" on:click={onToggleVisible}/>
+    <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" use:toolTip={"可視/不可視"} on:click={onToggleVisible}/>
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
     <img draggable={false} class="film-content" src={film.image.src} alt="film"/>
   {/if}
 </div>
@@ -90,23 +111,33 @@
   }
   .trash-icon {
     position: absolute;
-    top: 50%;
+    top: 4px;
     right: 4px;
     width: 32px;
     height: 32px;
-    transform: translateY(-70%);
-    color: white;
   }
   .visible-icon {
     position: absolute;
     left: 4px;
-    top: 50%;
+    top: 4px;
     width: 32px;
     height: 32px;
-    color: white;
-    transform: translateY(-50%);
   }
   .visible-icon.off {
     filter: opacity(0.3);
+  }
+  .scribble-icon {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    width: 32px;
+    height: 32px;
+  }
+  .generate-icon {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 32px;
+    height: 32px;
   }
 </style>

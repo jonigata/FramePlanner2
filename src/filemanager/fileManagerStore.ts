@@ -81,33 +81,27 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
+  markUp.films = [];
   for (let film of frameTree.filmStack.films) {
     const image = film.image;
-    const scribble = film.scribble;
 
     let markUpImage = null;
-    let markUpScribble = null;
     
     if (image) {
       await saveImage(fileSystem, image, imageFolder);
       const fileId = image["fileId"][fileSystem.id];
       markUpImage = fileId;
     }
-    if (scribble) {
-      await saveImage(fileSystem, scribble, imageFolder);
-      const fileId = scribble["fileId"][fileSystem.id];
-      markUpScribble = fileId;
-    }
 
-    markUp.image = {
+    const markUpFilm = {
       image: markUpImage,
-      scribble: markUpScribble,
       n_scale: film.n_scale,
       n_translation: [...film.n_translation],
       rotation: film.rotation,
       reverse: [...film.reverse],
       visible: film.visible,
     }
+    markUp.films.push(markUpFilm);
   }
 
   const children = [];
@@ -221,74 +215,75 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
   frameTree.gallery = [];
   if (markUp.image || markUp.scribble) {
     if (typeof markUp.image === 'string') {
-      // 旧バージョン処理
-      let image = null;
-      let scribble = null;
-      if (markUp.image) {
-        image = await loadImage(fileSystem, markUp.image);
-        if (image) {
-          frameTree.gallery.push(image);
-        }
-      }
-      if (markUp.scribble) {
-        scribble = await loadImage(fileSystem, markUp.scribble);
-        if (scribble) {
-          frameTree.gallery.push(scribble);
-        }
-      } 
-
-      const anyImage = image ?? scribble;
-      if (anyImage) {
+      function newFilm(anyImage: HTMLImageElement): Film {
         const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
         const s_pageSize = Math.min(paperSize[0], paperSize[1]);
         const scale = s_imageSize / s_pageSize;
-
+    
         const markUpScale = (markUp.scale ?? [1,1])[0];
         const n_scale = scale * markUpScale;
         
         const markUpTranlation = markUp.translation ?? [0,0];
         const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
-
+    
         const film = new Film();
-        film.image = image;
-        film.scribble = scribble;
+        film.image = anyImage;
         film.n_scale = n_scale;
         film.n_translation = n_translation;
         film.rotation = markUp.rotation;
         film.reverse = [...(markUp.reverse ?? [1,1])] as Vector;
-
-        frameTree.filmStack.films = [film];
+        return film;
       }
-    } else {
-      // 新バージョン処理
-      let image = null;
-      let scribble = null;
-      if (markUp.image.image) {
-        image = await loadImage(fileSystem, markUp.image.image);
+    
+      // 初期バージョン処理
+      if (markUp.image) {
+        const image = await loadImage(fileSystem, markUp.image);
         if (image) {
+          const film = newFilm(image);
           frameTree.gallery.push(image);
+          frameTree.filmStack.films.push(film);
         }
       }
       if (markUp.scribble) {
-        scribble = await loadImage(fileSystem, markUp.image.scribble);
+        const scribble = await loadImage(fileSystem, markUp.scribble);
         if (scribble) {
+          const film = newFilm(scribble);
           frameTree.gallery.push(scribble);
+          frameTree.filmStack.films.push(film);
         }
       } 
-
-      if (image || scribble) {
+    } else {
+      // 前期バージョン処理
+      function newFilm(anyImage: HTMLImageElement): Film {
         const film = new Film();
-        film.image = image;
-        film.scribble = scribble;
+        film.image = anyImage;
         film.n_scale = markUp.image.n_scale;
         film.n_translation = markUp.image.n_translation;
         film.rotation = markUp.image.rotation;
         film.reverse = [...markUp.image.reverse] as Vector;
         film.visible = markUp.image.visible;
-        
-        frameTree.filmStack.films = [film];
+        return film;
       }
+
+      if (markUp.image.image) {
+        const image = await loadImage(fileSystem, markUp.image.image);
+        if (image) {
+          const film = newFilm(image);
+          frameTree.gallery.push(image);
+          frameTree.filmStack.films.push(film);
+        }
+      }
+      if (markUp.image.scribble) {
+        const scribble = await loadImage(fileSystem, markUp.image.scribble);
+        if (scribble) {
+          const film = newFilm(scribble);
+          frameTree.gallery.push(scribble);
+          frameTree.filmStack.films.push(film);
+        }
+      } 
     }
+  } else {
+    // Film版処理
   }
 
   const children = markUp.column ?? markUp.row;

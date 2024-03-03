@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { type FrameElement, type Layout, calculatePhysicalLayout, constraintLeaf, findLayoutOf } from '../dataModels/frameTree';
+import { type FrameElement, type Layout, calculatePhysicalLayout, constraintLeaf, findLayoutOf, Film } from '../dataModels/frameTree';
 import type { Vector } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
@@ -10,6 +10,7 @@ export class InlinePainterLayer extends Layer {
 
   currentBrush: { strokeStyle: string, lineWidth: number };
   element: FrameElement;
+  film: Film;
   translation: Vector;
   scale: Vector;
   maskPath: paper.PathItem;
@@ -117,63 +118,66 @@ export class InlinePainterLayer extends Layer {
     }
   }
 
-  setElement(element: FrameElement): void {
+  setFilm(element: FrameElement, film: Film): void {
     if (this.element) {
       this.element.focused = false;
     }
     this.element = element;
+    this.film = film;
     this.maskPath = null;
-
-    const img = element?.image?.scribble
-    if (img) {
-      this.element.focused = true;
-      console.log("setElement");
-
-      const paperSize = this.frameLayer.getPaperSize();
-      this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, paperSize, [0,0]);
-      const layout = findLayoutOf(this.paperLayout, element);
-      this.layout = layout;
-      constraintLeaf(paperSize, layout);
-
-      const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-      const elementTranslation = element.getPhysicalImageTranslation(paperSize);
-      const elementScale = element.getPhysicalImageScale(paperSize);
-      const translation: Vector = [
-        x0 + w * 0.5 + elementTranslation[0], 
-        y0 + h * 0.5 + elementTranslation[1]
-      ];
-      const scale: Vector = [
-        elementScale * element.image.reverse[0],
-        elementScale * element.image.reverse[1]
-      ];
-
-      this.translation = translation;
-      this.scale = scale;
-      this.offscreenCanvas = document.createElement('canvas');
-      this.offscreenCanvas.width = img.naturalWidth;
-      this.offscreenCanvas.height = img.naturalHeight;
-      this.offscreenContext = this.offscreenCanvas.getContext('2d');
-      this.offscreenContext.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
-
-      const windowPath = new paper.Path();
-      windowPath.moveTo(layout.corners.topLeft);
-      windowPath.lineTo(layout.corners.topRight);
-      windowPath.lineTo(layout.corners.bottomRight);
-      windowPath.lineTo(layout.corners.bottomLeft);
-      windowPath.closed = true;
-
-      const paperPath = new paper.CompoundPath({children: [new paper.Path.Rectangle([0,0], this.getPaperSize())]});
-      this.maskPath = paperPath.subtract(windowPath);
-      // this.maskPath = paperPath;
-      console.log(this.maskPath.pathData);
-      this.history=[this.image.src];
-      this.historyIndex = 1;
+    if (element == null) { 
+      this.film = null;
+      this.redraw();
+      return; 
     }
+
+    this.element.focused = true;
+
+    const paperSize = this.frameLayer.getPaperSize();
+    this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, paperSize, [0,0]);
+    const layout = findLayoutOf(this.paperLayout, element);
+    this.layout = layout;
+
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+    const filmTranslation = film.getPhysicalImageTranslation(paperSize);
+    const filmScale = film.getPhysicalImageScale(paperSize);
+    const translation: Vector = [
+      x0 + w * 0.5 + filmTranslation[0], 
+      y0 + h * 0.5 + filmTranslation[1]
+    ];
+    const scale: Vector = [
+      filmScale * film.reverse[0],
+      filmScale * film.reverse[1]
+    ];
+
+    const [iw, ih] = [film.image.naturalWidth, film.image.naturalHeight];
+
+    this.translation = translation;
+    this.scale = scale;
+    this.offscreenCanvas = document.createElement('canvas');
+    this.offscreenCanvas.width = iw;
+    this.offscreenCanvas.height = ih;
+    this.offscreenContext = this.offscreenCanvas.getContext('2d');
+    this.offscreenContext.drawImage(film.image, 0, 0, iw, ih);
+
+    const windowPath = new paper.Path();
+    windowPath.moveTo(layout.corners.topLeft);
+    windowPath.lineTo(layout.corners.topRight);
+    windowPath.lineTo(layout.corners.bottomRight);
+    windowPath.lineTo(layout.corners.bottomLeft);
+    windowPath.closed = true;
+
+    const paperPath = new paper.CompoundPath({children: [new paper.Path.Rectangle([0,0], this.getPaperSize())]});
+    this.maskPath = paperPath.subtract(windowPath);
+    // this.maskPath = paperPath;
+    console.log(this.maskPath.pathData);
+    this.history=[this.image.src];
+    this.historyIndex = 1;
     this.redraw();
   }
 
   get image(): HTMLImageElement {
-    return this.element?.image?.scribble;
+    return this.film?.image;
   }
 
   async undo() {

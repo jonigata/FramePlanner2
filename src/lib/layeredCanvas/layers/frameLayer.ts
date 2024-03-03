@@ -22,8 +22,6 @@ export class FrameLayer extends Layer {
   onFocus: (layout: Layout) => void;
   onCommit: () => void;
   onRevert: () => void;
-  onGenerate: (element: FrameElement) => void;
-  onScribble: (element: FrameElement) => void;
   onInsert: (element: FrameElement) => void;
   onSplice: (element: FrameElement) => void;
   cursorPosition: Vector;
@@ -40,17 +38,13 @@ export class FrameLayer extends Layer {
   visibilityIcon: ClickableIcon;
   scaleIcon: ClickableIcon;
   rotateIcon: ClickableIcon;
-  dropIcon: ClickableIcon;
   flipHorizontalIcon: ClickableIcon;
   flipVerticalIcon: ClickableIcon;
   fitIcon: ClickableIcon;
-  generateIcon: ClickableIcon;
-  scribbleIcon: ClickableIcon;
   expandHorizontalIcon: ClickableIcon;
   slantHorizontalIcon: ClickableIcon;
   expandVerticalIcon: ClickableIcon;
   slantVerticalIcon: ClickableIcon;
-  showsScribbleIcon: ClickableIcon;
 
   frameIcons: ClickableIcon[];
   borderIcons: ClickableIcon[];
@@ -69,8 +63,6 @@ export class FrameLayer extends Layer {
     onFocus: (layout: Layout) => void,
     onCommit: () => void, 
     onRevert: () => void, 
-    onGenerate: (element: FrameElement) => void, 
-    onScribble: (element: FrameElement) => void, 
     onInsert: (element: FrameElement) => void, 
     onSplice: (element: FrameElement) => void) {
     super();
@@ -79,8 +71,6 @@ export class FrameLayer extends Layer {
     this.onFocus = onFocus;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
-    this.onGenerate = onGenerate;
-    this.onScribble = onScribble;
     this.onInsert = onInsert;
     this.onSplice = onSplice;
     this.cursorPosition = [-1, -1];
@@ -100,19 +90,14 @@ export class FrameLayer extends Layer {
     this.zminusIcon = new ClickableIcon(["zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible, mp);
     this.visibilityIcon = new ClickableIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
     this.visibilityIcon.index = 2;
-    this.showsScribbleIcon = new ClickableIcon(["scribble-hide.png","scribble-show.png"],unit,[0,1], "落書きの表示/非表示", isFrameActiveAndVisible, mp);
-    this.showsScribbleIcon.index = 1;
 
     const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
     this.scaleIcon = new ClickableIcon(["scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
     this.rotateIcon = new ClickableIcon(["rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
-    this.dropIcon = new ClickableIcon(["drop.png"],unit,[0,1],"画像除去", isImageActive, mp);
     this.flipHorizontalIcon = new ClickableIcon(["flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive, mp);
     this.flipVerticalIcon = new ClickableIcon(["flip-vertical.png"],unit,[0,1],"上下反転", isImageActive, mp);
     this.fitIcon = new ClickableIcon(["fit.png"],unit,[0,1],"フィット", isImageActive, mp);
-    this.generateIcon = new ClickableIcon(["generate-image.png"],unit,[0,1],"画像生成", isFrameActiveAndVisible, mp);
-    this.scribbleIcon = new ClickableIcon(["scribble.png"],unit,[0,1],"落書き", isFrameActiveAndVisible, mp);
 
     const isBorderActive = (dir) => this.interactable && this.selectedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon(["expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
@@ -120,7 +105,7 @@ export class FrameLayer extends Layer {
     this.expandVerticalIcon = new ClickableIcon(["expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'), mp);
     this.slantVerticalIcon = new ClickableIcon(["slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.dropIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.generateIcon, this.scribbleIcon, this.showsScribbleIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
 
     this.makeCanvasPattern();
@@ -614,20 +599,8 @@ export class FrameLayer extends Layer {
       this.redraw();
       return "done";
     }
-    if (this.showsScribbleIcon.contains(point)) {
-      this.showsScribbleIcon.increment();
-      layout.element.showsScribble = this.showsScribbleIcon.index === 1;
-      this.onCommit();
-      this.redraw();
-      return "done";
-    }
 
-    if (this.dropIcon.contains(point)) {
-      layout.element.filmStack.films = [];
-      this.onCommit();
-      this.redraw();
-      return "done";
-    } else if (this.flipHorizontalIcon.contains(point)) {
+    if (this.flipHorizontalIcon.contains(point)) {
       layout.element.filmStack.films[0].reverse[0] *= -1;
       this.redraw();
       return "done";
@@ -639,12 +612,6 @@ export class FrameLayer extends Layer {
       constraintLeaf(this.getPaperSize(), layout); // TODO: さきに小さくしておく
       this.onCommit();
       this.redraw();
-      return "done";
-    } else if (this.generateIcon.contains(point)) {
-      this.onGenerate(layout.element);
-      return "done";
-    } else if (this.scribbleIcon.contains(point)) {
-      this.onScribble(layout.element);
       return "done";
     } else if (isPointInTrapezoid(point, layout.corners)) {
         return { layout: layout };
@@ -1046,17 +1013,12 @@ export class FrameLayer extends Layer {
     this.zminusIcon.position = cp([0,0],[1,0]);
     this.visibilityIcon.position = cp([0,0],[0,0]);
     this.visibilityIcon.index = layout.element.visibility;
-    this.showsScribbleIcon.position = cp([0,1],[0,-4]);
-    this.showsScribbleIcon.index = layout.element.showsScribble ? 1 : 0;
 
     this.scaleIcon.position = cp([1,1],[0,0]);
     this.rotateIcon.position = cp([1,1],[-1,0]);
-    this.dropIcon.position = cp([0,1],[0,0]);
     this.flipHorizontalIcon.position = cp([0,1], [2,0]);
     this.flipVerticalIcon.position = cp([0,1], [3,0]);
     this.fitIcon.position = cp([0,1], [4,0]);
-    this.generateIcon.position = cp([0,1], [0,-2]);
-    this.scribbleIcon.position = cp([0,1], [0,-3]);
 }
 
   relayoutBorderIcons(border: Border): void {

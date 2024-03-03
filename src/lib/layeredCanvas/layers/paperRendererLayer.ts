@@ -369,8 +369,9 @@ export class PaperRendererLayer extends Layer {
         ctx.restore();
       }
 
-      if (film.image) {drawIt(film.image);}
-      if (element.showsScribble && film.scribble) {drawIt(film.scribble);}
+      if (film.visible) {
+        drawIt(film.image);
+      }
       ctx.restore();
     }
   }

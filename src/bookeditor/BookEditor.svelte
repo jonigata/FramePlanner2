@@ -128,11 +128,6 @@
     commit(null);
   }
 
-  function modalGenerate(page: Page, e: FrameElement) {
-    delayedCommiter.force();
-    $imageGeneratorTarget = e;
-  }
-
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
@@ -181,8 +176,6 @@
       revert,
       undo,
       redo,
-      modalGenerate,
-      modalScribble,
       insert,
       splice,
       focusFrame,
@@ -272,6 +265,7 @@
       $frameInspectorTarget = {
         frame: f,
         page,
+        command: null,
       };
       $frameInspectorPosition = {
         center: convertPointFromNodeToPage(canvas, cx, cy),
@@ -307,12 +301,37 @@
     }
   }
 
-  function modalScribble(page: Page, element: FrameElement) {
-    toolTipRequest.set(null);
-    painter.start(page, element);
+  $: onFrameCommand($frameInspectorTarget?.command);
+  function onFrameCommand(command: string) {
+    if (command === "scribble") {
+      modalScribble($frameInspectorTarget.page, $frameInspectorTarget.frame);
+    } else if (command === "generate") {
+      modalGenerate($frameInspectorTarget.page, $frameInspectorTarget.frame);
+    }
   }
 
-  onDestroy(() => {
+  let frameInspectorTargetBackUp;
+  function modalScribble(page: Page, element: FrameElement) {
+    frameInspectorTargetBackUp = { ...$frameInspectorTarget };
+    frameInspectorTargetBackUp.command = null;
+    $frameInspectorTarget = null;
+    delayedCommiter.force();
+    toolTipRequest.set(null);
+    painter.start(page, element, element.filmStack.films[0]); // TODO:
+  }
+
+  function modalScribbleDone() {
+    commit(null);
+    $frameInspectorTarget = frameInspectorTargetBackUp;
+  }
+
+  function modalGenerate(page: Page, e: FrameElement) {
+    $frameInspectorTarget = null;
+    delayedCommiter.force();
+    $imageGeneratorTarget = e;
+  }
+
+onDestroy(() => {
     layeredCanvas.cleanup();
   });
 
@@ -338,7 +357,7 @@
   </AutoSizeCanvas>
 </div>
 
-<Painter bind:this={painter} on:done={() => commit(null)} bind:layeredCanvas bind:arrayLayer/>
+<Painter bind:this={painter} on:done={modalScribbleDone} bind:layeredCanvas bind:arrayLayer/>
 
 <style>
   .main-paper-container {

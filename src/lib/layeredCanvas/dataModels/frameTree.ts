@@ -22,7 +22,6 @@ export type Layout = {
 
 export class Film  {
   image: ImageFile;
-  scribble: ImageFile;
   n_scale: number;
   n_translation: Vector;
   rotation: number;
@@ -32,7 +31,6 @@ export class Film  {
 
   constructor() {
     this.image = null;
-    this.scribble = null;
     this.n_scale = 1;
     this.n_translation = [0, 0];
     this.rotation = 0;
@@ -44,7 +42,6 @@ export class Film  {
   clone() {
     const f = new Film();
     f.image = this.image;
-    f.scribble = this.scribble;
     f.n_translation = [...this.n_translation];
     f.n_scale = this.n_scale;
     f.rotation = this.rotation;
@@ -59,16 +56,12 @@ export class Film  {
     return n_scale * scale;
   }
 
-  get validImage(): HTMLImageElement {
-    return this.image ?? this.scribble;
-  }
-
   getPhysicalImageScale(paperSize: Vector): number {
-    return Film.getPhysicalImageScale(paperSize, this.validImage, this.n_scale);
+    return Film.getPhysicalImageScale(paperSize, this.image, this.n_scale);
   }
 
   setPhysicalImageScale(paperSize: Vector, scale: number): void {
-    const image = this.validImage;
+    const image = this.image;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     this.n_scale = scale / (pageSize / imageSize);
@@ -83,11 +76,11 @@ export class Film  {
   }
 
   getPhysicalImageTranslation(paperSize: Vector): Vector {
-    return Film.getPhysicalImageTranslation(paperSize, this.validImage, this.n_translation);
+    return Film.getPhysicalImageTranslation(paperSize, this.image, this.n_translation);
   }
 
   setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
-    const image = this.validImage;
+    const image = this.image;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize;

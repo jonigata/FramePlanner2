@@ -146,11 +146,6 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
   const frameTree = FrameElement.compile(frameExamples[2].frameTree);
   const film = new Film();
   film.image = image;
-  film.scribble = null;
-  film.n_translation = [0, 0];
-  film.n_scale = 1;
-  film.rotation = 0;
-  film.reverse = [1, 1];
   frameTree.children[0].filmStack.films = [film];
 
   const page = newPage(frameTree, []);
@@ -172,8 +167,6 @@ export interface BookOperators {
   revert: () => void;
   undo: () => void;
   redo: () => void;
-  modalGenerate: (page: Page, frameElement: FrameElement) => void;
-  modalScribble: (page: Page, frameElement: FrameElement) => void;
   insert: (page: Page, frameElement: FrameElement) => void;
   splice: (page: Page, frameElement: FrameElement) => void;
   focusFrame: (page: Page, frame: FrameElement, p: Vector) => void;

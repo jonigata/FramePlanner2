@@ -1,16 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import type { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Page } from '../bookeditor/book';
-  import { makePlainImage } from '../utils/imageUtil';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
-  import { constraintLeaf, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { mainBook } from '../bookeditor/bookStore';
   import PainterToolBox from './PainterToolBox.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
-  import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 
   const dispatch = createEventDispatcher();
 
@@ -18,6 +15,7 @@
   export let arrayLayer: ArrayLayer;
   let painterPage: Page = null;
   let painterElement: FrameElement = null;
+  let painterFilm: Film = null;
   let autoGeneration: boolean = false;
   let lcm: boolean = false;
   let painterAutoGenerate: PainterAutoGenerate = null;
@@ -31,11 +29,13 @@
     layeredCanvas.redraw();
   }
 
-  export async function start(page: Page, element: FrameElement) {
+  export async function start(page: Page, element: FrameElement, film: Film) {
     painterPage = page;
     painterElement = element;
+    painterFilm = film;
 
     console.log("START", element.showsScribble);
+/*    
     if (!element.image?.scribble) {
       let image = element.image;
       if (!image) {
@@ -69,18 +69,20 @@
       element.gallery.push(element.image.scribble);
       constraintElement();
     }
+*/
 
     layeredCanvas.mode = "scribble";
 
-    findLayer().setElement(element);
+    findLayer().setFilm(element, film);
   }
 
   async function onDone() {
     console.log("onScribbleDone")
 
     painterElement = null;
+    painterFilm = null;
     layeredCanvas.mode = null;
-    findLayer().setElement(null);
+    findLayer().setFilm(null, null);
 
     dispatch("done");
   }
@@ -115,28 +117,16 @@
     return arrayLayer.array.papers[indexOfPage(painterPage)].paper;
   }
 
-  function constraintElement() {
-    const paperSize = painterPage.paperSize;
-    const pageLayout = calculatePhysicalLayout(painterPage.frameTree, paperSize, [0,0]);
-    const layout = findLayoutOf(pageLayout, painterElement);
-    if (!layout) { return; }
-    painterElement.image.n_scale = 0.001;
-    constraintLeaf(paperSize, layout);
-  }
-
   function indexOfPage(page: Page) {
     return $mainBook.pages.indexOf(page);
   }
 
   export function chase() {
+/*
     console.log("chase");
     if (painterAutoGenerate == null) { return; }
-    if (painterElement == null) { return; }
+    if (painterFilm == null) { return; }
     if (!autoGeneration) { return; }
-
-    if (painterElement.image == null) {
-      painterElement.image.image = document.createElement('img');
-    }
 
     painterAutoGenerate.doScribble(
       url,
@@ -144,6 +134,7 @@
       painterElement.prompt,
       lcm,
       painterElement.image.image);
+*/
   }
 
 </script>
