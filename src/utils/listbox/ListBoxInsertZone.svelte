@@ -4,20 +4,17 @@
 
   export let zoneHeight = 0;
   export let insertPosition = 0;
+  export let index = -1;
 
   export let zone;
   export let active = false;
 
-  const dragCursor = getContext('dragCursor') as Writable<{x:number, y:number}>;
+  const dragCursor = getContext('dragCursor') as Writable<number>;
 
-  $: onDragCursorChange($dragCursor);
-  function onDragCursorChange(c: {x:number, y:number}) {
-    active  = zone && c !== null && isPointInRect(c, zone.getBoundingClientRect());
-    console.log($dragCursor, active);
-  }
-
-  function isPointInRect({x,y}: {x: number, y: number}, rect: DOMRect) {
-    return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom;
+  $: onDragCursorChange(index, $dragCursor);
+  function onDragCursorChange(i:number, c: number) {
+    console.log(c, i);
+    active = c != null && i == c;
   }
 
 </script>

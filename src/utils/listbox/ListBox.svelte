@@ -7,8 +7,9 @@
 
   let tailZoneHeight = 0;
   let tailZone;
+  let lastIndex = 0;
 
-  const dragCursor = writable(null);
+  const dragCursor = writable(-1);
 
   setContext('retrieveHandlers', retrieveHandlers);
   setContext('dragCursor', dragCursor);
@@ -20,10 +21,11 @@
     };
   }
 
-  let items: {item:HTMLElement, zone:HTMLElement}[] = [];
-  function registerChild(item, zone) {
+  let items: {item:HTMLElement, zone:HTMLElement, transferTo: number}[] = [];
+  function registerChild(item, zone, transferTo) {
     let index = items.length;
-    items.push({item, zone});
+    items.push({item, zone, transferTo});
+    lastIndex = items.length;
     return {
       index,
       zoneHeight: getZoneHeight(index),
@@ -39,13 +41,15 @@
   function onDragOver(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    dragCursor.set({x: ev.clientX, y: ev.clientY});
+    const index = getItemIndexAt(ev.clientX, ev.clientY);
+    console.log(index);
+    dragCursor.set(index);
   }
 
   function onDragLeave(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    dragCursor.set({x: ev.clientX, y: ev.clientY});
+    dragCursor.set(getItemIndexAt(ev.clientX, ev.clientY));
     // nullにするとちらつく、多分leaveとenterが入れ違うせい
   }
 
@@ -76,6 +80,9 @@
       if (zone) {
         const rect = zone.getBoundingClientRect();
         if (isPointInRect(x, y, rect)) {
+          if (0 <= entry.transferTo) {
+            return entry.transferTo;
+          }
           return index;
         }
       }
@@ -125,7 +132,7 @@
 <div class="listbox" on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop}>
   <slot/>
   <div class="tail">
-    <ListBoxInsertZone zoneHeight={tailZoneHeight} insertPosition={0} bind:zone={tailZone}/>
+    <ListBoxInsertZone zoneHeight={tailZoneHeight} insertPosition={0} bind:zone={tailZone} bind:index={lastIndex}/>
   </div>
 </div>
 
