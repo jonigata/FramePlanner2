@@ -40,18 +40,15 @@
       const t = $imageGeneratorTarget;
       $imageGeneratorTarget = null;
       chosen = null;
-      const film = new Film();
-      film.image = c;
-      film.prompt = prompt;
-      t.frame.filmStack.films.push(film);
-      commitBook($mainBook, null);
-      $mainBook = $mainBook;
+      t.onDone({ image: c, prompt: prompt });
     }
   }
 
   function onClickAway() {
     if (busy) { return; }
+    const t = $imageGeneratorTarget;
     $imageGeneratorTarget = null;
+    t.onDone(null);
   }
 </script>
 

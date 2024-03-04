@@ -71,8 +71,10 @@
     <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
-    <img draggable={false} class="film-content" src={film.image.src} alt="film"/>
-  {/if}
+    <div class="film-container">
+      <img draggable={false} class="film-content" src={film.image.src} alt="film"/>
+    </div>
+    {/if}
 </div>
 
 <style lang="postcss">
@@ -97,6 +99,15 @@
   }
   .new-film-description {
     color: black;
+  }
+  .film-container {
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+                      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    background-color: white;
   }
   .film-content {
     width: 100%;

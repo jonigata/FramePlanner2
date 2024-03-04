@@ -5,7 +5,7 @@ import type { Page } from '../bookeditor/book';
 export type ImageGeneratorTarget = {
   page: Page,
   frame: FrameElement,
-  onDone: () => void,
+  onDone: (r: {image: HTMLImageElement, prompt: string}) => void,
 }
 
 export const imageGeneratorTarget: Writable<ImageGeneratorTarget> = writable(null);

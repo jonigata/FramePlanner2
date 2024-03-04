@@ -6,7 +6,7 @@
   let targetPage: Page = null;
   let targetFrame: FrameElement = null;
 
-  export async function run(page: Page, frame: FrameElement): Promise<void> {
+  export async function run(page: Page, frame: FrameElement): Promise<{image: HTMLImageElement, prompt: string}> {
     return new Promise((resolve, reject) => {
       targetPage = page;
       targetFrame = frame;

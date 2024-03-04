@@ -157,7 +157,7 @@
     gap: 2px;
   }
   .frame-inspector :global(.listbox) {
-    gap: 32px;
+    gap: 16px;
   }
   .title-bar {
     cursor: move;

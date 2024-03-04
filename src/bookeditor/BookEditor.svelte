@@ -332,8 +332,15 @@
   async function modalGenerate(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
-    await imageProvider.run(fit.page, fit.frame);
-    commit(null);
+    const r = await imageProvider.run(fit.page, fit.frame);
+    if (r) {
+      const { image, prompt } = r;
+      const film = new Film();
+      film.image = image;
+      film.prompt = prompt;
+      fit.frame.filmStack.films.push(film);
+      commit(null);
+    }
   }
 
   onDestroy(() => {

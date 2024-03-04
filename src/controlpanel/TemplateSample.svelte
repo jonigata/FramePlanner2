@@ -3,7 +3,6 @@
   import { LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
-  import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
   const dispatch = createEventDispatcher();
 
