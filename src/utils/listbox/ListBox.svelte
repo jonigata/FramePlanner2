@@ -45,7 +45,8 @@
   function onDragLeave(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    dragCursor.set(null);
+    dragCursor.set({x: ev.clientX, y: ev.clientY});
+    // nullにするとちらつく、多分leaveとenterが入れ違うせい
   }
 
   async function onDrop(ev: DragEvent) {
@@ -87,7 +88,7 @@
   }
 
   function isPointInRect(x: number, y: number, rect: DOMRect) {
-    return rect.left < x && x < rect.right && rect.top < y && y < rect.bottom;
+    return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom;
   }
 
 

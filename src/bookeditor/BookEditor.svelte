@@ -266,6 +266,7 @@
         frame: f,
         page,
         command: null,
+        commandTargetFilm: null,
       };
       $frameInspectorPosition = {
         center: convertPointFromNodeToPage(canvas, cx, cy),
@@ -312,12 +313,13 @@
 
   let frameInspectorTargetBackUp;
   function modalScribble(page: Page, element: FrameElement) {
+    const targetFilm = $frameInspectorTarget.commandTargetFilm;
     frameInspectorTargetBackUp = { ...$frameInspectorTarget };
     frameInspectorTargetBackUp.command = null;
     $frameInspectorTarget = null;
     delayedCommiter.force();
     toolTipRequest.set(null);
-    painter.start(page, element, element.filmStack.films[0]); // TODO:
+    painter.start(page, element, targetFilm);
   }
 
   function modalScribbleDone() {

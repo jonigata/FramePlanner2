@@ -13,10 +13,11 @@
   $: onDragCursorChange($dragCursor);
   function onDragCursorChange(c: {x:number, y:number}) {
     active  = zone && c !== null && isPointInRect(c, zone.getBoundingClientRect());
+    console.log($dragCursor, active);
   }
 
   function isPointInRect({x,y}: {x: number, y: number}, rect: DOMRect) {
-    return rect.left < x && x < rect.right && rect.top < y && y < rect.bottom;
+    return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom;
   }
 
 </script>

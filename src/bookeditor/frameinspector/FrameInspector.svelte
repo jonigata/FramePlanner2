@@ -104,11 +104,13 @@
 
   function onScribble(e: CustomEvent<Film>) {
     console.log("onScribble", e.detail);
+    $frameInspectorTarget.commandTargetFilm = e.detail;
     $frameInspectorTarget.command = "scribble";
   }
 
   function onGenerate(e: CustomEvent<Film>) {
     console.log("onGenerate", e.detail);
+    $frameInspectorTarget.commandTargetFilm = e.detail;
     $frameInspectorTarget.command = "generate";
   }
 
