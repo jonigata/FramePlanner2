@@ -85,23 +85,19 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   for (let film of frameTree.filmStack.films) {
     const image = film.image;
 
-    let markUpImage = null;
-    
-    if (image) {
-      await saveImage(fileSystem, image, imageFolder);
-      const fileId = image["fileId"][fileSystem.id];
-      markUpImage = fileId;
-    }
+    await saveImage(fileSystem, image, imageFolder);
+    const fileId = image["fileId"][fileSystem.id];
 
-    const markUpFilm = {
-      image: markUpImage,
+    const filmMarkUp = {
+      image: fileId,
       n_scale: film.n_scale,
       n_translation: [...film.n_translation],
       rotation: film.rotation,
       reverse: [...film.reverse],
       visible: film.visible,
+      prompt: film.prompt,
     }
-    markUp.films.push(markUpFilm);
+    markUp.films.push(filmMarkUp);
   }
 
   const children = [];
@@ -232,6 +228,7 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         film.n_translation = n_translation;
         film.rotation = markUp.rotation;
         film.reverse = [...(markUp.reverse ?? [1,1])] as Vector;
+        film.prompt = markUp.prompt;
         return film;
       }
     
@@ -262,6 +259,7 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         film.rotation = markUp.image.rotation;
         film.reverse = [...markUp.image.reverse] as Vector;
         film.visible = markUp.image.visible;
+        film.prompt = markUp.prompt;
         return film;
       }
 
@@ -284,6 +282,23 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
     }
   } else {
     // Film版処理
+    if (markUp.films) {
+      for (const filmMarkUp of markUp.films) {
+        const image = await loadImage(fileSystem, filmMarkUp.image);
+        if (image) {
+          const film = new Film();
+          film.image = image;
+          film.n_scale = filmMarkUp.n_scale;
+          film.n_translation = filmMarkUp.n_translation;
+          film.rotation = filmMarkUp.rotation;
+          film.reverse = filmMarkUp.reverse;
+          film.visible = filmMarkUp.visible;
+          film.prompt = filmMarkUp.prompt;
+          frameTree.gallery.push(image);
+          frameTree.filmStack.films.push(film);
+        }
+      }
+    }
   }
 
   const children = markUp.column ?? markUp.row;

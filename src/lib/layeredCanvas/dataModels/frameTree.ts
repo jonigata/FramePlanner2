@@ -27,6 +27,7 @@ export class Film  {
   rotation: number;
   reverse: [number, number];
   visible: boolean;
+  prompt: string | null;
   selected: boolean; // 揮発性
 
   constructor() {
@@ -36,6 +37,7 @@ export class Film  {
     this.rotation = 0;
     this.reverse = [1, 1];
     this.visible = true;
+    this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
     this.selected = false;
   }
 
@@ -46,6 +48,8 @@ export class Film  {
     f.n_scale = this.n_scale;
     f.rotation = this.rotation;
     f.reverse = [...this.reverse];
+    f.visible = this.visible;
+    f.prompt = this.prompt;
     return f;
   }
 
@@ -108,7 +112,6 @@ export class FrameElement {
   semantics: string | null;
   prompt: string | null;
   gallery: ImageFile[];
-  showsScribble: boolean;
   filmStack: FilmStack;
 
   focused: boolean;
@@ -130,7 +133,6 @@ export class FrameElement {
     this.visibility = 2;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
     this.gallery = [];
-    this.showsScribble = true;
     this.semantics = null;
 
     // リーフ要素の場合は絵がある可能性がある
@@ -159,7 +161,6 @@ export class FrameElement {
     element.visibility = this.visibility;
     element.semantics = this.semantics;
     element.prompt = this.prompt;
-    element.showsScribble = this.showsScribble;
 
     element.filmStack = { 
       films: this.filmStack.films.map(film => film.clone())
@@ -214,7 +215,6 @@ export class FrameElement {
     element.visibility = markUp.visibility ?? 2;
     element.semantics = markUp.semantics;
     element.prompt = markUp.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
-    element.showsScribble = markUp.showsScribble ?? true;
     return element;
   }
 
@@ -254,7 +254,6 @@ export class FrameElement {
     if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
     if (element.semantics) { markUpElement.semantics = element.semantics; }
     if (element.prompt) { markUpElement.prompt = element.prompt; }
-    if (element.showsScribble !== true) { markUpElement.showsScribble = element.showsScribble; }
     if (element.direction) {
       const dir = element.direction == 'h' ? 'row' : 'column';
       markUpElement[dir] = [];

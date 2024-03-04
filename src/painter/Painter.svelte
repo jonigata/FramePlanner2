@@ -41,41 +41,6 @@
       findLayer().setFilm(element, film);
       onDoneHandler = resolve;
     });
-/*    
-    if (!element.image?.scribble) {
-      let image = element.image;
-      if (!image) {
-        image = {
-          image: null,
-          scribble: null,
-          n_scale: 1,
-          n_translation: [0, 0],
-          rotation: 75,
-          reverse: [1, 1],
-        };
-      }
-      let width: number;
-      let height: number;
-      if (image.image) {
-        width = image.image.naturalWidth;
-        height = image.image.naturalHeight;
-      } else {
-        const layout = calculatePhysicalLayout(painterPage.frameTree, painterPage.paperSize, [0,0]);
-        const thisLayout = findLayoutOf(layout, element);
-        let [x0, y0, w, h] = trapezoidBoundingRect(thisLayout.corners);
-        [w, h] = [Math.abs(w), Math.abs(h)];
-        // 256の倍数で切り上げ
-        if (w < 1) { w = 1; }
-        if (h < 1) { h = 1; }
-        width = Math.ceil(w / 256) * 256;
-        height = Math.ceil(h / 256) * 256;
-      }
-      image.scribble = await makePlainImage(width, height, false);
-      element.image = image;      
-      element.gallery.push(element.image.scribble);
-      constraintElement();
-    }
-*/
   }
 
   async function onDone() {

@@ -74,16 +74,20 @@
     <textarea class="prompt" placeholder="prompt" bind:value={element.prompt}></textarea>
   </div>
   <div class="canvas-container">
+<!--
     <div>
       <input type="checkbox" bind:checked={autoGeneration}/>自動AI生成
     </div>
     <div>
       <input type="checkbox" bind:checked={lcm}/>LCM
     </div>
+-->
     <div class="vfill"/>
+<!--
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 done-button" on:click={onRedraw}>
       Redraw
     </button>
+-->
     <div class="h-4"/>
     <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 done-button" on:click={onDone}>
       Done

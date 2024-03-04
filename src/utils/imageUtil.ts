@@ -1,11 +1,11 @@
-export async function makePlainImage(w: number, h: number, white: boolean) {
+export async function makePlainImage(w: number, h: number, color: string) {
   console.log("makeWhiteImage", w, h);
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
-  if (white) {
-    ctx.fillStyle = "white";
+  if (color) {
+    ctx.fillStyle = color;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   const img = new Image();

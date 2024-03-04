@@ -73,7 +73,7 @@
   });
 
   async function generateWhiteImage() {
-    const img = await makePlainImage(imageRequest.width, imageRequest.height, true);
+    const img = await makePlainImage(imageRequest.width, imageRequest.height, "#ffffff");
     gallery.push(img);
     gallery = gallery;
   }
