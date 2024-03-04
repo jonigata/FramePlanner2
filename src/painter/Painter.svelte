@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Page } from '../bookeditor/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
@@ -9,7 +8,7 @@
   import PainterToolBox from './PainterToolBox.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
 
-  const dispatch = createEventDispatcher();
+  // TODO: autoGenerate周り未整備、基本的に一旦削除予定
 
   export let layeredCanvas: LayeredCanvas;
   export let arrayLayer: ArrayLayer;
@@ -20,7 +19,8 @@
   let lcm: boolean = false;
   let painterAutoGenerate: PainterAutoGenerate = null;
   let url: string = "http://192.168.68.111:7860";
-  
+  let onDoneHandler: () => void;
+
   $: onChangeAutoGeneration(autoGeneration);
   function onChangeAutoGeneration(autoGeneration: boolean) {
     if (layeredCanvas == null) { return; }
@@ -29,12 +29,18 @@
     layeredCanvas.redraw();
   }
 
-  export async function start(page: Page, element: FrameElement, film: Film) {
-    painterPage = page;
-    painterElement = element;
-    painterFilm = film;
+  export async function run(page: Page, element: FrameElement, film: Film): Promise<void> {
+    return new Promise((resolve, reject) => {
+      painterPage = page;
+      painterElement = element;
+      painterFilm = film;
 
-    console.log("START", element.showsScribble);
+      console.log("START", element.showsScribble);
+
+      layeredCanvas.mode = "scribble";
+      findLayer().setFilm(element, film);
+      onDoneHandler = resolve;
+    });
 /*    
     if (!element.image?.scribble) {
       let image = element.image;
@@ -70,10 +76,6 @@
       constraintElement();
     }
 */
-
-    layeredCanvas.mode = "scribble";
-
-    findLayer().setFilm(element, film);
   }
 
   async function onDone() {
@@ -84,7 +86,7 @@
     layeredCanvas.mode = null;
     findLayer().setFilm(null, null);
 
-    dispatch("done");
+    onDoneHandler();
   }
 
   function onRedraw() {

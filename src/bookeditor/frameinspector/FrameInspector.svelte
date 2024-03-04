@@ -127,7 +127,7 @@
     {#key key}
       <ListBox on:import={onNewFilm} on:move={onMoveFilm}>
         <ListBoxItem draggable={false} insertable={false}>
-          <FrameInspectorFilm film={null}/>
+          <FrameInspectorFilm film={null} on:select={onGenerate}/>
         </ListBoxItem>
         {#each $frame.filmStack.films.toReversed() as film}
           <ListBoxItem>

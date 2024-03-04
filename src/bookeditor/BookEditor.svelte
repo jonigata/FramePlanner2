@@ -3,13 +3,13 @@
   import { onDestroy } from 'svelte';
   import { derived } from "svelte/store";
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
-  import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
-  import { frameInspectorTarget, frameInspectorPosition } from './frameinspector/frameInspectorStore';
+  import { frameInspectorTarget, frameInspectorPosition, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken } from './bookStore';
@@ -17,10 +17,10 @@
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
-  import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
+  import ImageProvider from '../generator/ImageProvider.svelte';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -34,6 +34,7 @@
   let editingBookId: string = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
+  let imageProvider: ImageProvider;
 
   let pageIds: string[] = [];
   let readingDirection: ReadingDirection;
@@ -302,38 +303,40 @@
     }
   }
 
-  $: onFrameCommand($frameInspectorTarget?.command);
-  function onFrameCommand(command: string) {
-    if (command === "scribble") {
-      modalScribble($frameInspectorTarget.page, $frameInspectorTarget.frame);
-    } else if (command === "generate") {
-      modalGenerate($frameInspectorTarget.page, $frameInspectorTarget.frame);
+  let frameInspectorTargetBackUp: FrameInspectorTarget;
+  $: onFrameCommand($frameInspectorTarget);
+  async function onFrameCommand(fit: FrameInspectorTarget) {
+    if (fit) {
+      frameInspectorTargetBackUp = { ...fit };
+      frameInspectorTargetBackUp.command = null;
+      $frameInspectorTarget = null;
+
+      const command = fit.command;
+      if (command === "scribble") {
+        await modalScribble(fit);
+      } else if (command === "generate") {
+        await modalGenerate(fit);
+      }
+      $frameInspectorTarget = frameInspectorTargetBackUp;
     }
   }
 
-  let frameInspectorTargetBackUp;
-  function modalScribble(page: Page, element: FrameElement) {
-    const targetFilm = $frameInspectorTarget.commandTargetFilm;
-    frameInspectorTargetBackUp = { ...$frameInspectorTarget };
-    frameInspectorTargetBackUp.command = null;
-    $frameInspectorTarget = null;
+
+  async function modalScribble(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
-    painter.start(page, element, targetFilm);
-  }
-
-  function modalScribbleDone() {
+    await painter.run(fit.page, fit.frame, fit.commandTargetFilm);
     commit(null);
-    $frameInspectorTarget = frameInspectorTargetBackUp;
   }
 
-  function modalGenerate(page: Page, e: FrameElement) {
-    $frameInspectorTarget = null;
+  async function modalGenerate(fit: FrameInspectorTarget) {
     delayedCommiter.force();
-    $imageGeneratorTarget = e;
+    toolTipRequest.set(null);
+    await imageProvider.run(fit.page, fit.frame);
+    commit(null);
   }
 
-onDestroy(() => {
+  onDestroy(() => {
     layeredCanvas.cleanup();
   });
 
@@ -359,7 +362,8 @@ onDestroy(() => {
   </AutoSizeCanvas>
 </div>
 
-<Painter bind:this={painter} on:done={modalScribbleDone} bind:layeredCanvas bind:arrayLayer/>
+<Painter bind:this={painter} bind:layeredCanvas bind:arrayLayer/>
+<ImageProvider bind:this={imageProvider}/>
 
 <style>
   .main-paper-container {

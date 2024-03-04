@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { imageGeneratorTarget } from "./imageGeneratorStore";
+  import { type ImageGeneratorTarget, imageGeneratorTarget } from "./imageGeneratorStore";
   import Drawer from '../utils/Drawer.svelte';
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";
   import ImageGeneratorFeathral from "./ImageGeneratorFeathral.svelte";
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { tick } from "svelte";
-  import type { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+  import { Film, type FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
   import { mainBook } from '../bookeditor/bookStore';
   import { commitBook } from '../bookeditor/book';
   import feathralIcon from '../assets/feathral.png';
@@ -18,14 +18,14 @@
   let chosen: HTMLImageElement = null;
 
   $: onTargetChanged($imageGeneratorTarget);
-  function onTargetChanged(t: FrameElement) {
-    if (t) {
-      console.log("imageGenerator.prompt", t.prompt);
-      prompt = t.prompt;
+  function onTargetChanged(igt: ImageGeneratorTarget) {
+    if (igt) {
+      console.log("imageGenerator.prompt", igt.frame.prompt);
+      prompt = igt.frame.prompt;
     }
   }
 
-  $: onChangeGallery($imageGeneratorTarget?.gallery);
+  $: onChangeGallery($imageGeneratorTarget?.frame.gallery);
   async function onChangeGallery(g: HTMLImageElement[]) {
     if (g) {
       gallery = [];
@@ -40,15 +40,10 @@
       const t = $imageGeneratorTarget;
       $imageGeneratorTarget = null;
       chosen = null;
-      t.prompt = prompt;
-      t.image = {
-        image: c,
-        scribble: null,
-        n_translation: [0, 0],
-        n_scale: 1,
-        rotation: 0,
-        reverse: [1, 1],
-      };
+      t.frame.prompt = prompt;
+      const film = new Film();
+      film.image = c;
+      t.frame.filmStack.films.push(film);
       commitBook($mainBook, null);
       $mainBook = $mainBook;
     }
@@ -58,7 +53,7 @@
     if (busy) { return; }
     const t = $imageGeneratorTarget;
     $imageGeneratorTarget = null;
-    t.prompt = prompt;
+    t.frame.prompt = prompt;
   }
 </script>
 
