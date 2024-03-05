@@ -63,6 +63,7 @@
     commitBook($mainBook, tag);
     console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
     $mainBook = $mainBook;
+    $frameInspectorTarget = $frameInspectorTarget;
   }
 
   function revert() {

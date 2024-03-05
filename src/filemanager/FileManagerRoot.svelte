@@ -23,6 +23,7 @@
   import { DelayedCommiter } from '../utils/cancelableTask';
   import { loading } from '../utils/loadingStore'
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
 
   export let fileSystem: FileSystem;
 
@@ -68,6 +69,7 @@
         currentRevision = {...newBook.revision};
         console.snapshot(newBook.pages[0]);
         $mainBook = newBook;
+        $frameInspectorTarget = null;
         logEvent(getAnalytics(), 'continue_book');
       } else {
         // 初起動の場合はデスクトップにセーブ
@@ -170,6 +172,7 @@
       await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
       currentRevision = {...book.revision};
       $mainBook = book;
+      $frameInspectorTarget = null;
       $fileManagerRefreshKey++;
       logEvent(getAnalytics(), 'new_book');
     }
@@ -222,6 +225,7 @@
     const book = await loadBookFrom(fileSystem, file);
     currentRevision = {...book.revision};
     $mainBook = book; // TODO: ここで無駄なセーブが走っている
+    $frameInspectorTarget = null;
     $loading = false;
   }
 

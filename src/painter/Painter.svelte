@@ -35,8 +35,6 @@
       painterElement = element;
       painterFilm = film;
 
-      console.log("START", element.showsScribble);
-
       layeredCanvas.mode = "scribble";
       findLayer().setFilm(element, film);
       onDoneHandler = resolve;

@@ -70,9 +70,11 @@
     {/each}
     <span style="width:20px;"></span>
   </div>
+<!--
   <div class="prompt-container">
     <textarea class="prompt" placeholder="prompt" bind:value={element.prompt}></textarea>
   </div>
+-->
   <div class="canvas-container">
 <!--
     <div>

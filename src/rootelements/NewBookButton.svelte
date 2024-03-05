@@ -53,11 +53,8 @@
       if (file.type.startsWith("image/")) {
         const imageURL = URL.createObjectURL(file);
         const image = new Image();
-
-        const imageLoaded = new Promise((resolve) => image.onload = resolve);          
         image.src = imageURL;
-        await imageLoaded;
-        URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
+        await image.decode();
 
         const page = newImageBook("not visited", image, "drop-")
         $newBookToken = page;
