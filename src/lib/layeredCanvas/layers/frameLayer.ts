@@ -609,7 +609,7 @@ export class FrameLayer extends Layer {
       this.redraw();
       return "done";
     } else if (this.fitIcon.contains(point)) {
-      constraintLeaf(this.getPaperSize(), layout); // TODO: さきに小さくしておく
+      constraintLeaf(this.getPaperSize(), layout);
       this.onCommit();
       this.redraw();
       return "done";

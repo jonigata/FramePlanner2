@@ -49,7 +49,6 @@ export class InlinePainterLayer extends Layer {
     // ctx.drawImage(this.image, 0, 0);
     drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.layout.corners);
 
-
     if (this.maskPath) {
       ctx.beginPath();
       ctx.fillStyle = "rgb(0, 0, 0, 0.5)";

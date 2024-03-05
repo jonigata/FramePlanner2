@@ -866,40 +866,44 @@ export function constraintRecursive(paperSize: Vector, layout: Layout): void {
   }
 }
 
-export function constraintLeaf(paperSize: Vector, layout: Layout, ): void {
+export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   if (!layout.corners) {return; }
   if (layout.element.filmStack.films.length == 0) { return; }
+
+  layout.element.filmStack.films.forEach(film => {
+    constraintFilm(paperSize, layout, film);
+  });
+}
+
+export function constraintFilm(paperSize: Vector, layout: Layout, film: Film): void {
+  if (!layout.corners) {return; }
 
   const element = layout.element;
   const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
   const [x1, y1] = [x0 + w, y0 + h];
-  const [ix, iy, iw, ih] = calculateMinimumBoundingRect(paperSize, element);
-  console.log("frame", [w, h], "image", [iw, ih]);
+  const [cx, cy] = [(x0 + x1) / 2, (y0 + y1) / 2];
+  const [iw, ih] = [film.image.naturalWidth, film.image.naturalHeight]
 
-  let stackScale = 1;
-  if (iw * h < w * ih) { stackScale = w / iw; }
-  else { stackScale = h / ih; }
+  let scale = film.getPhysicalImageScale(paperSize);
+  console.log("source scale", scale);
+  if (iw * scale < w) { scale = w / iw; }
+  if (ih * scale < h) { scale = h / ih; }
+  console.log("target scale", scale);
 
-  const [nw, nh] = [iw * stackScale, ih * stackScale];
-  const [nx0, ny0] = [ix - (nw - w) / 2, iy - (nh - h) / 2];
+  let [tx, ty] = film.getPhysicalImageTranslation(paperSize);
+  const [nw, nh] = [iw * scale, ih * scale];
+  const [nx0, ny0] = [cx - nw / 2 + tx, cy - nh / 2 + ty];
   const [nx1, ny1] = [nx0 + nw, ny0 + nh];
 
-  const stackTranslation = [0, 0];
-  if (x0 < nx0) { stackTranslation[0] -= nx0 - x0; }
-  if (y0 < ny0) { stackTranslation[1] -= ny0 - y0; }
-  if (nx1 < x1) { stackTranslation[0] += x1 - nx1; }
-  if (ny1 < y1) { stackTranslation[1] += y1 - ny1; }
-  console.log("newsize", [nw, nh], "scale", stackScale, "translation", stackTranslation);
+  if (x0 < nx0) { tx -= nx0 - x0; }
+  if (y0 < ny0) { ty -= ny0 - y0; }
+  if (nx1 < x1) { tx += x1 - nx1; }
+  if (ny1 < y1) { ty += y1 - ny1; }
 
-  // TODO: 多分translateにもscaleをかけるべき
-  const n_stackTranslation = [stackTranslation[0] / paperSize[0], stackTranslation[1] / paperSize[1]];
-
-  element.filmStack.films.forEach(film => {
-    film.n_scale *= stackScale;
-    film.n_translation[0] += n_stackTranslation[0];
-    film.n_translation[1] += n_stackTranslation[1];
-  });
+  film.setPhysicalImageScale(paperSize, scale);
+  film.setPhysicalImageTranslation(paperSize, [tx, ty]);
 }
+
 
 function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement): Rect {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
