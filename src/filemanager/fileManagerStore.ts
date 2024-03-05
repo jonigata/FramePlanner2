@@ -210,7 +210,7 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
 
   frameTree.gallery = [];
   if (markUp.image || markUp.scribble) {
-    if (typeof markUp.image === 'string') {
+    if (typeof markUp.image === 'string' || typeof markUp.scribble === 'string') {
       function newFilm(anyImage: HTMLImageElement): Film {
         const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
         const s_pageSize = Math.min(paperSize[0], paperSize[1]);
@@ -231,9 +231,10 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         film.prompt = markUp.prompt;
         return film;
       }
-    
+
       // 初期バージョン処理
       if (markUp.image) {
+        console.tag("type A.1", "#004400");
         const image = await loadImage(fileSystem, markUp.image);
         if (image) {
           const film = newFilm(image);
@@ -242,6 +243,7 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         }
       }
       if (markUp.scribble) {
+        console.tag("type A.2", "#004400");
         const scribble = await loadImage(fileSystem, markUp.scribble);
         if (scribble) {
           const film = newFilm(scribble);
@@ -258,12 +260,12 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         film.n_translation = markUp.image.n_translation;
         film.rotation = markUp.image.rotation;
         film.reverse = [...markUp.image.reverse] as Vector;
-        film.visible = markUp.image.visible;
         film.prompt = markUp.prompt;
         return film;
       }
 
       if (markUp.image.image) {
+        console.tag("type B.1", "#004400");
         const image = await loadImage(fileSystem, markUp.image.image);
         if (image) {
           const film = newFilm(image);
@@ -272,6 +274,7 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
         }
       }
       if (markUp.image.scribble) {
+        console.tag("type B.2", "#004400");
         const scribble = await loadImage(fileSystem, markUp.image.scribble);
         if (scribble) {
           const film = newFilm(scribble);
@@ -283,6 +286,8 @@ async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: Fil
   } else {
     // Film版処理
     if (markUp.films) {
+      console.tag("type C", "#004400");
+
       for (const filmMarkUp of markUp.films) {
         const image = await loadImage(fileSystem, filmMarkUp.image);
         if (image) {
