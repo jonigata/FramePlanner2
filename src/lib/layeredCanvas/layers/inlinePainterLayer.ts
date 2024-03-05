@@ -3,6 +3,7 @@ import { type FrameElement, type Layout, calculatePhysicalLayout, constraintLeaf
 import type { Vector } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
+import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import * as paper from 'paper';
 
 export class InlinePainterLayer extends Layer {
@@ -46,13 +47,14 @@ export class InlinePainterLayer extends Layer {
 
     this.drawImage(ctx, this.layout)
     // ctx.drawImage(this.image, 0, 0);
+    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.layout.corners);
+
 
     if (this.maskPath) {
       ctx.beginPath();
       ctx.fillStyle = "rgb(0, 0, 0, 0.5)";
       ctx.fill(new Path2D(this.maskPath.pathData));
     }
-
 
     if (this.path) {
       this.applyCurrentBrush(ctx);
