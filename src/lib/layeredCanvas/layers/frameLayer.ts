@@ -351,8 +351,6 @@ export class FrameLayer extends Layer {
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
-    const paperSize = this.getPaperSize();
-
     this.updateLit(point);
 
     if (this.selectedLayout) {
@@ -492,12 +490,16 @@ export class FrameLayer extends Layer {
         return "done";
       }
       if (keyDownFlags["KeyT"]) {
-        layout.element.filmStack.films[0].reverse[0] *= -1;
+        layout.element.filmStack.films.forEach(film => {
+          film.reverse[0] *= -1;
+        });
         this.redraw();
         return "done";
       }
       if (keyDownFlags["KeyY"]) {
-        layout.element.filmStack.films[0].reverse[1] *= -1;
+        layout.element.filmStack.films.forEach(film => {
+          film.reverse[1] *= -1;
+        });
         this.redraw();
         return "done";
       }
@@ -599,21 +601,28 @@ export class FrameLayer extends Layer {
       this.redraw();
       return "done";
     }
-
     if (this.flipHorizontalIcon.contains(point)) {
-      layout.element.filmStack.films[0].reverse[0] *= -1;
+      layout.element.filmStack.films.forEach(film => {
+        film.reverse[0] *= -1;
+      });
       this.redraw();
       return "done";
-    } else if (this.flipVerticalIcon.contains(point)) {
-      layout.element.filmStack.films[0].reverse[1] *= -1;
+    } 
+    if (this.flipVerticalIcon.contains(point)) {
+      layout.element.filmStack.films.forEach(film => {
+        film.reverse[1] *= -1;
+      });
       this.redraw();
       return "done";
-    } else if (this.fitIcon.contains(point)) {
+    } 
+    if (this.fitIcon.contains(point)) {
       constraintLeaf(this.getPaperSize(), layout);
       this.onCommit();
       this.redraw();
       return "done";
-    } else if (isPointInTrapezoid(point, layout.corners)) {
+    } 
+    if (this.scaleIcon.contains(point) || this.rotateIcon.contains(point) ||
+        isPointInTrapezoid(point, layout.corners)) {
         return { layout: layout };
     }
     return null;
