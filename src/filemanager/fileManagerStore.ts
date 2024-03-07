@@ -206,153 +206,11 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
 }
 
 async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
-  const frameTree = FrameElement.compileNode(markUp);
-
-  frameTree.gallery = [];
-  if (markUp.image || markUp.scribble) {
-    if (typeof markUp.image === 'string' || typeof markUp.scribble === 'string') {
-      function newFilm(anyImage: HTMLImageElement): Film {
-        const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
-        const s_pageSize = Math.min(paperSize[0], paperSize[1]);
-        const scale = s_imageSize / s_pageSize;
-    
-        const markUpScale = (markUp.scale ?? [1,1])[0];
-        const n_scale = scale * markUpScale;
-        
-        const markUpTranlation = markUp.translation ?? [0,0];
-        const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
-    
-        const film = new Film();
-        film.image = anyImage;
-        film.n_scale = n_scale;
-        film.n_translation = n_translation;
-        film.rotation = markUp.rotation;
-        film.reverse = [...(markUp.reverse ?? [1,1])] as Vector;
-        film.prompt = markUp.prompt;
-        return film;
-      }
-
-      // 初期バージョン処理
-      if (markUp.image) {
-        console.tag("type A.1", "#004400");
-        const image = await loadImage(fileSystem, markUp.image);
-        if (image) {
-          const film = newFilm(image);
-          frameTree.gallery.push(image);
-          frameTree.filmStack.films.push(film);
-        }
-      }
-      if (markUp.scribble) {
-        console.tag("type A.2", "#004400");
-        const scribble = await loadImage(fileSystem, markUp.scribble);
-        if (scribble) {
-          const film = newFilm(scribble);
-          frameTree.gallery.push(scribble);
-          frameTree.filmStack.films.push(film);
-        }
-      } 
-    } else {
-      // 前期バージョン処理
-      function newFilm(anyImage: HTMLImageElement): Film {
-        const film = new Film();
-        film.image = anyImage;
-        film.n_scale = markUp.image.n_scale;
-        film.n_translation = markUp.image.n_translation;
-        film.rotation = markUp.image.rotation;
-        film.reverse = [...markUp.image.reverse] as Vector;
-        film.prompt = markUp.prompt;
-        return film;
-      }
-
-      if (markUp.image.image) {
-        console.tag("type B.1", "#004400");
-        const image = await loadImage(fileSystem, markUp.image.image);
-        if (image) {
-          const film = newFilm(image);
-          frameTree.gallery.push(image);
-          frameTree.filmStack.films.push(film);
-        }
-      }
-      if (markUp.image.scribble) {
-        console.tag("type B.2", "#004400");
-        const scribble = await loadImage(fileSystem, markUp.image.scribble);
-        if (scribble) {
-          const film = newFilm(scribble);
-          frameTree.gallery.push(scribble);
-          frameTree.filmStack.films.push(film);
-        }
-      } 
-    }
-  } else {
-    // Film版処理
-    if (markUp.films) {
-      console.tag("type C", "#004400");
-
-      for (const filmMarkUp of markUp.films) {
-        const image = await loadImage(fileSystem, filmMarkUp.image);
-        if (image) {
-          const film = new Film();
-          film.image = image;
-          film.n_scale = filmMarkUp.n_scale;
-          film.n_translation = filmMarkUp.n_translation;
-          film.rotation = filmMarkUp.rotation;
-          film.reverse = filmMarkUp.reverse;
-          film.visible = filmMarkUp.visible;
-          film.prompt = filmMarkUp.prompt;
-          frameTree.gallery.push(image);
-          frameTree.filmStack.films.push(film);
-        }
-      }
-    }
-  }
-
-  const children = markUp.column ?? markUp.row;
-  if (children) {
-    frameTree.direction = markUp.column ? 'v' : 'h';
-    frameTree.children = [];
-    for (let child of children) {
-      frameTree.children.push(await unpackFrameImages(paperSize, child, fileSystem));
-    }
-    frameTree.calculateLengthAndBreadth();
-  }
-
-  return frameTree;
+  return await unpackFrameImagesInternal(paperSize, markUp, fileSystem, loadImage);
 }
 
 async function unpackBubbleImages(paperSize: Vector, markUps: any[], fileSystem: FileSystem): Promise<Bubble[]> {
-  const unpackedBubbles: Bubble[] = [];
-  for (const markUp of markUps) {
-    const imageMarkUp = markUp.image;
-    const bubble: Bubble = Bubble.compile(paperSize, markUp);
-    if (imageMarkUp) {
-      const image = await loadImage(fileSystem, imageMarkUp.image);
-      if (image) {
-        const s_imageSize = Math.min(image.width, image.height) ;
-        const s_pageSize = Math.min(paperSize[0], paperSize[1]);
-
-        let n_scale = imageMarkUp.n_scale;
-        if (!n_scale) {
-          const markUpScaleVector = imageMarkUp.scale ?? [1,1];
-          const markUpScale = markUpScaleVector[0];
-          n_scale = s_imageSize / s_pageSize * markUpScale;
-        }
-        let n_translation = imageMarkUp.n_translation;
-        if (!n_translation) {
-          const markUpTranslationVector = imageMarkUp.translation ?? [0,0];
-          const scale = s_imageSize / s_pageSize;
-          n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
-        }
-        bubble.image = { 
-          image,
-          n_scale,
-          n_translation,
-          scaleLock: imageMarkUp.scaleLock,
-        };
-      }
-    }
-    unpackedBubbles.push(bubble);
-  }
-  return unpackedBubbles;
+  return await unpackBubbleImagesInternal(paperSize, markUps, fileSystem, loadImage);
 }
 
 export async function newFile(fs: FileSystem, folder: Folder, name: string, book: Book): Promise<{file: File, bindId: BindId}> {
@@ -432,9 +290,6 @@ export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images
   const content = await file.read();
   let serializedBook = JSON.parse(content);
 
-  const root = await fileSystem.getRoot();
-  const imageFolder = await root.getNodeByName('画像') as Folder;
-
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
   if (!serializedBook.pages) {
     serializedBook = {
@@ -443,47 +298,181 @@ export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images
   }
 
   for (const serializedPage of serializedBook.pages) {
-    const frameTree = dryUnpackFrameImages(serializedPage.frameTree, images);
-    const bubbles = dryUnpackBubbleImages(serializedPage.bubbles, images);
+    await dryUnpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, images);
+    await dryUnpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, images);
   }
 }
 
-function dryUnpackFrameImages(markUp: any, images: NodeId[]) {
+async function dryUnpackFrameImages(paperSize: Vector, markUp: any, images: NodeId[]): Promise<void> {
+  await unpackFrameImagesInternal(
+    paperSize, 
+    markUp, 
+    null, 
+    async (fileSystem: FileSystem, imageId: NodeId) => {
+      images.push(imageId);
+      return null;
+    }
+  );
+}
+
+async function dryUnpackBubbleImages(paperSize: Vector, markUps: any[], images: NodeId[]): Promise<void> {
+  await unpackBubbleImagesInternal(
+    paperSize, markUps, null, 
+    async (fileSystem: FileSystem, imageId: NodeId) => {
+      images.push(imageId);
+      return null;
+    });
+}
+
+async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
-  if (markUp.image) {
-    if (typeof markUp.image !== 'string') {
-      // throw new Error('invalid image, ' + JSON.stringify(markUp.image)); 
-    } 
-    images.push(markUp.image);
-  }
-  if (markUp.scribble) {
-    if (typeof markUp.scribble !== 'string') { 
-      // throw new Error('invalid scribble' + JSON.stringify(markUp.scribble)); 
-    }
-    images.push(markUp.scribble);
-  }
+  frameTree.gallery = [];
+  if (markUp.image || markUp.scribble) {
+    if (typeof markUp.image === 'string' || typeof markUp.scribble === 'string') {
+      function newFilm(anyImage: HTMLImageElement): Film {
+        const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
+        const s_pageSize = Math.min(paperSize[0], paperSize[1]);
+        const scale = s_imageSize / s_pageSize;
+    
+        const markUpScale = (markUp.scale ?? [1,1])[0];
+        const n_scale = scale * markUpScale;
+        
+        const markUpTranlation = markUp.translation ?? [0,0];
+        const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
+    
+        const film = new Film();
+        film.image = anyImage;
+        film.n_scale = n_scale;
+        film.n_translation = n_translation;
+        film.rotation = markUp.rotation;
+        film.reverse = [...(markUp.reverse ?? [1,1])] as Vector;
+        film.prompt = markUp.prompt;
+        return film;
+      }
 
+      // 初期バージョン処理
+      if (markUp.image) {
+        console.tag("type A.1", "#004400");
+        const image = await loadImageFunc(fileSystem, markUp.image);
+        if (image) {
+          const film = newFilm(image);
+          frameTree.gallery.push(image);
+          frameTree.filmStack.films.push(film);
+        }
+      }
+      if (markUp.scribble) {
+        console.tag("type A.2", "#004400");
+        const scribble = await loadImageFunc(fileSystem, markUp.scribble);
+        if (scribble) {
+          const film = newFilm(scribble);
+          frameTree.gallery.push(scribble);
+          frameTree.filmStack.films.push(film);
+        }
+      } 
+    } else {
+      // 前期バージョン処理
+      function newFilm(anyImage: HTMLImageElement): Film {
+        const film = new Film();
+        film.image = anyImage;
+        film.n_scale = markUp.image.n_scale;
+        film.n_translation = markUp.image.n_translation;
+        film.rotation = markUp.image.rotation;
+        film.reverse = [...markUp.image.reverse] as Vector;
+        film.prompt = markUp.prompt;
+        return film;
+      }
+
+      if (markUp.image.image) {
+        console.tag("type B.1", "#004400");
+        const image = await loadImageFunc(fileSystem, markUp.image.image);
+        if (image) {
+          const film = newFilm(image);
+          frameTree.gallery.push(image);
+          frameTree.filmStack.films.push(film);
+        }
+      }
+      if (markUp.image.scribble) {
+        console.tag("type B.2", "#004400");
+        const scribble = await loadImageFunc(fileSystem, markUp.image.scribble);
+        if (scribble) {
+          const film = newFilm(scribble);
+          frameTree.gallery.push(scribble);
+          frameTree.filmStack.films.push(film);
+        }
+      } 
+    }
+  } else {
+    // Film版処理
+    if (markUp.films) {
+      if (0 < markUp.films.length) {
+        console.tag("type C", "#004400");
+      }
+
+      for (const filmMarkUp of markUp.films) {
+        const image = await loadImageFunc(fileSystem, filmMarkUp.image);
+        if (image) {
+          const film = new Film();
+          film.image = image;
+          film.n_scale = filmMarkUp.n_scale;
+          film.n_translation = filmMarkUp.n_translation;
+          film.rotation = filmMarkUp.rotation;
+          film.reverse = filmMarkUp.reverse;
+          film.visible = filmMarkUp.visible;
+          film.prompt = filmMarkUp.prompt;
+          frameTree.gallery.push(image);
+          frameTree.filmStack.films.push(film);
+        }
+      }
+    }
+  }
 
   const children = markUp.column ?? markUp.row;
   if (children) {
+    frameTree.direction = markUp.column ? 'v' : 'h';
+    frameTree.children = [];
     for (let child of children) {
-      dryUnpackFrameImages(child, images);
+      frameTree.children.push(await unpackFrameImagesInternal(paperSize, child, fileSystem, loadImageFunc));
     }
+    frameTree.calculateLengthAndBreadth();
   }
+
+  return frameTree;
 }
 
-function dryUnpackBubbleImages(bubbles: any[], images: NodeId[]) {
+async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
-  for (const src of bubbles) {
-    const image = src.image;
-    if (image) {
-      if (typeof image.image !== 'string') { 
-        // throw new Error('invalid image' + JSON.stringify(image.image)); 
-      }
-      images.push(image.image);
-    }
-  }
-}
+  for (const markUp of markUps) {
+    const imageMarkUp = markUp.image;
+    const bubble: Bubble = Bubble.compile(paperSize, markUp);
+    if (imageMarkUp) {
+      const image = await loadImageFunc(fileSystem, imageMarkUp.image);
+      if (image) {
+        const s_imageSize = Math.min(image.width, image.height) ;
+        const s_pageSize = Math.min(paperSize[0], paperSize[1]);
 
+        let n_scale = imageMarkUp.n_scale;
+        if (!n_scale) {
+          const markUpScaleVector = imageMarkUp.scale ?? [1,1];
+          const markUpScale = markUpScaleVector[0];
+          n_scale = s_imageSize / s_pageSize * markUpScale;
+        }
+        let n_translation = imageMarkUp.n_translation;
+        if (!n_translation) {
+          const markUpTranslationVector = imageMarkUp.translation ?? [0,0];
+          const scale = s_imageSize / s_pageSize;
+          n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
+        }
+        bubble.image = { 
+          image,
+          n_scale,
+          n_translation,
+          scaleLock: imageMarkUp.scaleLock,
+        };
+      }
+    }
+    unpackedBubbles.push(bubble);
+  }
+  return unpackedBubbles;
+}
 

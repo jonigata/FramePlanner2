@@ -15,6 +15,7 @@ export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImag
 
   const usedImageFiles = [];
   for (const file of allFiles) {
+    console.log("fileId", file);
     await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId)).asFile(), usedImageFiles);
   }
 

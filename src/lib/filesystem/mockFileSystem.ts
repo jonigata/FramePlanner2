@@ -28,6 +28,13 @@ export class MockFileSystem extends FileSystem {
     return folder;
   }
 
+  async destroyNode(id: NodeId): Promise<void> {
+    if (!this.files[id]) {
+      throw new Error(`Node ${id} not found`);
+    }
+    delete this.files[id];    
+  }
+
   async getNode(id: NodeId): Promise<Node> {
     if (!this.files[id]) {
       throw new Error(`Node ${id} not found`);
@@ -37,6 +44,36 @@ export class MockFileSystem extends FileSystem {
 
   async getRoot(): Promise<Folder> {
     return this.root;
+  }
+  
+  async dump(): Promise<string> {
+    const json = JSON.stringify(Object.values(this.files).map((f: Node) => {
+      if (f.getType() === 'file') {
+        return (f as MockFile).dump();
+      } else {
+        return (f as MockFolder).dump();
+      }
+    }));
+
+    return json;
+  }
+  
+  async undump(json: string): Promise<void> {
+    this.files = [];
+    const files = JSON.parse(json); // array of object
+    for (const file of files) {
+      const id = file.id;
+      if (file.type === 'file') {
+        const f = new MockFile(this, id);
+        f.content = file.content;
+        this.files[id] = f;
+      } else {
+        const f = new MockFolder(this, id);
+        f.children = file.children;
+        this.files[id] = f;
+      }
+    }
+    this.root = this.files['/'] as MockFolder;
   }
 }
 
@@ -56,6 +93,10 @@ export class MockFile extends File {
 
   async write(data) {
     this.content = data;
+  }
+
+  dump() {
+    return { id: this.id, type: 'file', content: this.content };
   }
 }
 
@@ -102,5 +143,17 @@ export class MockFolder extends Folder {
   async getEntriesByName(name: string): Promise<Entry[]> {
     // console.log("get", name, this.children);
     return this.children.filter(([_, n, __]) => n === name);
+  }
+
+  async getBindId(nodeId: NodeId): Promise<BindId> { 
+    const entry = this.children.find(([_, __, id]) => id === nodeId);
+    if (entry) {
+      return entry[0];
+    }
+    return null;
+  }
+
+  dump() {
+    return { id: this.id, type: 'folder', children: this.children, attributes: {} };
   }
 }
