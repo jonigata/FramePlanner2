@@ -12,7 +12,7 @@
   import { frameInspectorTarget, frameInspectorPosition, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
-  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken } from './bookStore';
+  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken, forceCommitDelayedToken } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
@@ -46,6 +46,11 @@
   $: if ($redrawToken) {
     $redrawToken = false; 
     layeredCanvas?.redraw();
+  }
+
+  $: if ($forceCommitDelayedToken) {
+    $forceCommitDelayedToken = false;
+    delayedCommiter.force();
   }
 
   function hint(p: [number, number], s: string) {

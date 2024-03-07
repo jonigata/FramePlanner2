@@ -9,6 +9,7 @@ export const viewport: Writable<Viewport> = writable(null);
 export const bookEditor: Writable<BookOperators> = writable(null);
 export const redrawToken = writable(false);
 export const forceFontLoadToken = writable(false);
+export const forceCommitDelayedToken: Writable<boolean> = writable(false);
 
 export type NewPageProperty = {
   paperSize: [number, number],
