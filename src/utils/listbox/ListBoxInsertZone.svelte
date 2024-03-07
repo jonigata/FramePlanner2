@@ -13,7 +13,6 @@
 
   $: onDragCursorChange(index, $dragCursor);
   function onDragCursorChange(i:number, c: number) {
-    console.log(c, i);
     active = c != null && i == c;
   }
 

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { getContext, onMount, onDestroy } from 'svelte';
-  import type { Writable } from 'svelte/store';
   import ListBoxInsertZone from './ListBoxInsertZone.svelte';
 
   type RegisterChildReuslt = {

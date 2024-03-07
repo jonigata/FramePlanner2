@@ -148,7 +148,7 @@ export class Bubble {
     // 古いjsonはn_に一貫性がない 古い"fontsize"はn_fontsize相当
     const defaultUnit = 1 / 840;
     const unit = Bubble.getUnit(paperSize);
-    const normalizedNumber = (v1, v2, v3) => { if (v1) { return v1; } else if (v2) { return v2 * unit; } else { return v3 * defaultUnit; }}
+    const normalizedNumber = (v1, v2, v3) => { if (v1 != null) { return v1; } else if (v2 != null) { return v2 * unit; } else { return v3 * defaultUnit; }}
 
     const b = new Bubble();
     b.n_p0 = json.p0 ?? json.n_p0;
