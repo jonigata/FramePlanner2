@@ -354,8 +354,8 @@ export class PaperRendererLayer extends Layer {
 
       const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
-      const scale = film.getPhysicalImageScale(paperSize);
-      const translation = film.getPhysicalImageTranslation(paperSize);
+      const scale = film.getShiftedScale(paperSize);
+      const translation = film.getShiftedTranslation(paperSize);
 
       ctx.save();
       ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);

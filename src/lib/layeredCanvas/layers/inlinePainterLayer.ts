@@ -140,8 +140,8 @@ export class InlinePainterLayer extends Layer {
     this.layout = layout;
 
     const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-    const filmTranslation = film.getPhysicalImageTranslation(paperSize);
-    const filmScale = film.getPhysicalImageScale(paperSize);
+    const filmTranslation = film.getShiftedTranslation(paperSize);
+    const filmScale = film.getShiftedScale(paperSize);
     const translation: Vector = [
       x0 + w * 0.5 + filmTranslation[0], 
       y0 + h * 0.5 + filmTranslation[1]

@@ -222,3 +222,49 @@ export function ensureMinRectSize(minSize: number, r: Rect) {
   h = nh;
   return [x, y, w, h];
 }
+
+// アスペクト比を変更しない移動量最小の最小外接矩形
+export function computeConstraintedRect(srcRect: Rect, constraintRect: Rect): { scale: number, translation: Vector } {
+  console.log("srcRect:", srcRect);
+  console.log("constraintRect:", constraintRect);
+  const [x0, y0, w, h] = constraintRect;
+  const [x1, y1] = [x0 + w, y0 + h];
+  const [_sx, _sy, sw, sh] = srcRect;
+  const [cx, cy] = getRectCenter(srcRect);
+  let [tx, ty] = [cx, cy];
+
+  let scale = 1;
+  if (sw * scale < w) { scale = w / sw; }
+  if (sh * scale < h) { scale = h / sh; }
+
+  const [nw, nh] = [sw * scale, sh * scale];
+  const [nx0, ny0] = [tx - nw / 2, ty - nh / 2];
+  const [nx1, ny1] = [nx0 + nw, ny0 + nh];
+
+  if (x0 < nx0) { tx -= nx0 - x0; }
+  if (y0 < ny0) { ty -= ny0 - y0; }
+  if (nx1 < x1) { tx += x1 - nx1; }
+  if (ny1 < y1) { ty += y1 - ny1; }
+
+  return { scale, translation: [tx - cx, ty - cy] };
+}
+
+export function computeBoundingRectFromRects(rects: Rect[]): Rect {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const r of rects) {
+    const [x, y, w, h] = r;
+    x0 = Math.min(x0, x);
+    y0 = Math.min(y0, y);
+    x1 = Math.max(x1, x + w);
+    y1 = Math.max(y1, y + h);
+  }
+  return [x0, y0, x1 - x0, y1 - y0];
+}
+
+export function getRectCenter(r: Rect): Vector {
+  return [r[0] + r[2] / 2, r[1] + r[3] / 2];
+}
+
+export function translateRect(r: Rect, v: Vector): Rect {
+  return [r[0] + v[0], r[1] + v[1], r[2], r[3]];
+}

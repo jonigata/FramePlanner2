@@ -665,13 +665,13 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
     const element = layout.element;
     const films = element.getOperationTargetFilms();
-    const origins = films.map(film => film.getPhysicalImageScale(paperSize));
+    const origins = films.map(film => film.getShiftedScale(paperSize));
 
     try {
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
         films.forEach((film, i) => {
-          film.setPhysicalImageScale(paperSize, origins[i] * s);
+          film.setShiftedScale(paperSize, origins[i] * s);
         });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
@@ -714,14 +714,14 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
     const element = layout.element;
     const films = element.getOperationTargetFilms();
-    const origins = films.map(film => film.getPhysicalImageTranslation(paperSize));
+    const origins = films.map(film => film.getShiftedTranslation(paperSize));
 
     try {
       let lastq = null;
       yield* translate(p, (q) => {
         lastq = [...q];
         films.forEach((film, i) => {
-          film.setPhysicalImageTranslation(paperSize, [origins[i][0] + q[0], origins[i][1] + q[1]]);
+          film.setShiftedTranslation(paperSize, [origins[i][0] + q[0], origins[i][1] + q[1]]);
         });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);

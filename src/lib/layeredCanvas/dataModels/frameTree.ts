@@ -1,4 +1,4 @@
-import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D } from "../tools/geometry/geometry";
+import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, computeBoundingRectFromRects, getRectCenter, translateRect } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
 import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
@@ -53,25 +53,27 @@ export class Film  {
     return f;
   }
 
-  static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
+  // Shifted = Physicalとscaleは一緒だが、translationはコマの中心から相対
+
+  static getShiftedScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize
     return n_scale * scale;
   }
 
-  getPhysicalImageScale(paperSize: Vector): number {
-    return Film.getPhysicalImageScale(paperSize, this.image, this.n_scale);
+  getShiftedScale(paperSize: Vector): number {
+    return Film.getShiftedScale(paperSize, this.image, this.n_scale);
   }
 
-  setPhysicalImageScale(paperSize: Vector, scale: number): void {
+  setShiftedScale(paperSize: Vector, scale: number): void {
     const image = this.image;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     this.n_scale = scale / (pageSize / imageSize);
   }
 
-  static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
+  static getShiftedTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize;
@@ -79,17 +81,31 @@ export class Film  {
     return translation;
   }
 
-  getPhysicalImageTranslation(paperSize: Vector): Vector {
-    return Film.getPhysicalImageTranslation(paperSize, this.image, this.n_translation);
+  getShiftedTranslation(paperSize: Vector): Vector {
+    return Film.getShiftedTranslation(paperSize, this.image, this.n_translation);
   }
 
-  setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
+  setShiftedTranslation(paperSize: Vector, translation: Vector): void {
     const image = this.image;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize;
     this.n_translation = [translation[0] / scale, translation[1] / scale];
   }
+
+  static getShiftedRect(paperSize: Vector, image: HTMLImageElement, n_scale: number, n_translation: Vector, rotation: number): Rect {
+    const scale = Film.getShiftedScale(paperSize, image, n_scale);
+    const translation = Film.getShiftedTranslation(paperSize, image, n_translation);
+    const [w, h] = [image.naturalWidth * scale, image.naturalHeight * scale];
+    const [x, y] = translation;
+    const rect: Rect = [x - w/2, y - h/2, w, h];
+    return rect;
+  }
+
+  getShiftedRect(paperSize: Vector): Rect {
+    return Film.getShiftedRect(paperSize, this.image, this.n_scale, this.n_translation, this.rotation);
+  }
+
 }
 
 export type FilmStack = {
@@ -870,6 +886,7 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   if (!layout.corners) {return; }
   if (layout.element.filmStack.films.length == 0) { return; }
 
+  // constraintFilms(paperSize, layout, layout.element.filmStack.films);
   layout.element.filmStack.films.forEach(film => {
     constraintFilm(paperSize, layout, film);
   });
@@ -878,32 +895,38 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
 export function constraintFilm(paperSize: Vector, layout: Layout, film: Film): void {
   if (!layout.corners) {return; }
 
-  const element = layout.element;
   const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-  const [x1, y1] = [x0 + w, y0 + h];
-  const [cx, cy] = [(x0 + x1) / 2, (y0 + y1) / 2];
-  const [iw, ih] = [film.image.naturalWidth, film.image.naturalHeight]
+  const center = getRectCenter([x0, y0, w, h]);
+  console.log("trapezoid center", center);
+  console.log("image shifted", film.getShiftedRect(paperSize));
+  console.log("translated", translateRect(film.getShiftedRect(paperSize), center));
+  const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
+    translateRect(film.getShiftedRect(paperSize), center),
+    [x0, y0, w, h]);
+  console.log("A: ", targetScale, targetTranslation);
 
-  let scale = film.getPhysicalImageScale(paperSize);
-  console.log("source scale", scale);
-  if (iw * scale < w) { scale = w / iw; }
-  if (ih * scale < h) { scale = h / ih; }
-  console.log("target scale", scale);
-
-  let [tx, ty] = film.getPhysicalImageTranslation(paperSize);
-  const [nw, nh] = [iw * scale, ih * scale];
-  const [nx0, ny0] = [cx - nw / 2 + tx, cy - nh / 2 + ty];
-  const [nx1, ny1] = [nx0 + nw, ny0 + nh];
-
-  if (x0 < nx0) { tx -= nx0 - x0; }
-  if (y0 < ny0) { ty -= ny0 - y0; }
-  if (nx1 < x1) { tx += x1 - nx1; }
-  if (ny1 < y1) { ty += y1 - ny1; }
-
-  film.setPhysicalImageScale(paperSize, scale);
-  film.setPhysicalImageTranslation(paperSize, [tx, ty]);
+  film.setShiftedScale(paperSize, film.getShiftedScale(paperSize) * targetScale);
+  film.setShiftedTranslation(paperSize, add2D(film.getShiftedTranslation(paperSize), targetTranslation));
 }
 
+export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]): void {
+  if (!layout.corners) {return; }
+
+  const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+
+  // フィルム全部の和の最小外接矩形を計算
+  const mergedRect = computeBoundingRectFromRects(
+    films.map(film => film.getShiftedRect(paperSize)));
+  const [ix, iy, iw, ih] = mergedRect;
+  console.log("computed bouding rect", iw, ih);
+
+  const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
+    [ix, iy, iw, ih],
+    [x0, y0, w, h]);
+  console.log("B: ", targetScale, targetTranslation, films[0].getShiftedScale(paperSize));
+  console.log("C: ", films[0].n_translation, films[0].getShiftedTranslation(paperSize));
+  console.log("D: ", targetScale * films[0].getShiftedScale(paperSize), add2D(targetTranslation, films[0].getShiftedTranslation(paperSize)));
+}
 
 function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement): Rect {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -924,7 +947,7 @@ function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement):
 }
 
 function transformFilm(paperSize: Vector, film: Film): Vector[] {
-  const scale = film.getPhysicalImageScale(paperSize);
+  const scale = film.getShiftedScale(paperSize);
 
   // 画像サイズを考慮して角の座標を計算
   const halfWidth = film.image.width * scale * 0.5;
