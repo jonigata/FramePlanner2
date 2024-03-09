@@ -959,7 +959,7 @@ export class FrameLayer extends Layer {
     film.reverse = [1, 1];
     film.n_translation = [0, 0];
 
-    layoutlet.element.filmStack.films = [film];
+    layoutlet.element.filmStack.films.push(film);
       
     constraintLeaf(paperSize, layoutlet);
     this.redraw();

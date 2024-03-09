@@ -896,14 +896,10 @@ export function constraintFilm(paperSize: Vector, layout: Layout, film: Film): v
   if (!layout.corners) {return; }
 
   const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-  const center = getRectCenter([x0, y0, w, h]);
-  console.log("trapezoid center", center);
-  console.log("image shifted", film.getShiftedRect(paperSize));
-  console.log("translated", translateRect(film.getShiftedRect(paperSize), center));
+  const trapezoidCenter = getRectCenter([x0, y0, w, h]);
   const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
-    translateRect(film.getShiftedRect(paperSize), center),
+    translateRect(film.getShiftedRect(paperSize), trapezoidCenter),
     [x0, y0, w, h]);
-  console.log("A: ", targetScale, targetTranslation);
 
   film.setShiftedScale(paperSize, film.getShiftedScale(paperSize) * targetScale);
   film.setShiftedTranslation(paperSize, add2D(film.getShiftedTranslation(paperSize), targetTranslation));
@@ -913,6 +909,7 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
   if (!layout.corners) {return; }
 
   const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+  const trapezoidCenter = getRectCenter([x0, y0, w, h]);
 
   // フィルム全部の和の最小外接矩形を計算
   const mergedRect = computeBoundingRectFromRects(
@@ -921,11 +918,8 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
   console.log("computed bouding rect", iw, ih);
 
   const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
-    [ix, iy, iw, ih],
+    translateRect(mergedRect, trapezoidCenter),
     [x0, y0, w, h]);
-  console.log("B: ", targetScale, targetTranslation, films[0].getShiftedScale(paperSize));
-  console.log("C: ", films[0].n_translation, films[0].getShiftedTranslation(paperSize));
-  console.log("D: ", targetScale * films[0].getShiftedScale(paperSize), add2D(targetTranslation, films[0].getShiftedTranslation(paperSize)));
 }
 
 function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement): Rect {

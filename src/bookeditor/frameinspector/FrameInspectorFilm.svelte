@@ -10,6 +10,10 @@
 
   export let film: Film;
 
+  let item;
+  let imageContainer;
+  let image;
+
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
@@ -43,6 +47,32 @@
     dispatch('generate', film)
   }
 
+  function onLoad(e: Event) {
+    adjustContainerSize();
+  }
+
+  function adjustContainerSize() {
+    // object-fit: containsを使うとサイズを取得できないので、
+    // Imgのサイズをobject-fit: contains相当で自前で計算し、
+    // filmContainerに設定する
+    const aspect = image.naturalWidth / image.naturalHeight;
+    const itemAspect = item.clientWidth / item.clientHeight;
+    if (aspect > itemAspect) {
+      imageContainer.style.width = "100%";
+      imageContainer.style.height = `calc(100% * ${itemAspect / aspect})`;
+    } else {
+      imageContainer.style.width = `calc(100% * ${aspect / itemAspect})`;
+      imageContainer.style.height = "100%";
+    }
+    imageContainer.style.display = "block";
+  }
+
+  onMount(() => {
+    if (image && image.complete) {
+      adjustContainerSize();
+    }
+  });
+
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -52,7 +82,8 @@
   class:selected={film?.selected}
   class:unselected={!film?.selected}
   draggable={false}
-  on:click={onClick}>
+  on:click={onClick}
+  bind:this={item}>
   {#if !film}
     <div class="vbox">
       <div class="new-film">
@@ -71,8 +102,8 @@
     <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
-    <div class="film-container">
-      <img draggable={false} class="film-content" src={film.image.src} alt="film"/>
+    <div class="image-container" bind:this={imageContainer}>
+      <img draggable={false} class="film-content" src={film.image.src} alt="film" bind:this={image} on:load={onLoad}/>
     </div>
     {/if}
 </div>
@@ -100,9 +131,11 @@
   .new-film-description {
     color: black;
   }
-  .film-container {
-    width: 100%;
-    height: 100%;
+  .image-container {
+    position: relative;
+    display: none;
+    width: 100px;
+    height: 100px;
     background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
                       linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
     background-size: 20px 20px;
@@ -110,9 +143,9 @@
     background-color: white;
   }
   .film-content {
+    position: absolute;
     width: 100%;
     height: 100%;
-    object-fit: contain;
   }
   .selected {
     @apply variant-filled-primary;
