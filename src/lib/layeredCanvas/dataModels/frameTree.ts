@@ -24,11 +24,12 @@ export class Film  {
   image: ImageFile;
   n_scale: number;
   n_translation: Vector;
-  rotation: number;
+  rotation: number; // degree
   reverse: [number, number];
   visible: boolean;
   prompt: string | null;
   selected: boolean; // 揮発性
+  matrix: DOMMatrix; // 揮発性
 
   constructor() {
     this.image = null;
@@ -104,6 +105,16 @@ export class Film  {
 
   getShiftedRect(paperSize: Vector): Rect {
     return Film.getShiftedRect(paperSize, this.image, this.n_scale, this.n_translation, this.rotation);
+  }
+  
+  makeMatrix(paperSize: Vector): DOMMatrix {
+    const scale = this.getShiftedScale(paperSize);
+    const translation = this.getShiftedTranslation(paperSize);
+    const matrix = new DOMMatrix();
+    matrix.translateSelf(translation[0], translation[1]);
+    matrix.rotateSelf(-this.rotation);
+    matrix.scaleSelf(scale, scale);
+    return matrix;
   }
 
 }
@@ -954,8 +965,8 @@ function transformFilm(paperSize: Vector, film: Film): Vector[] {
   ];
   console.log("film", [halfWidth*2, halfHeight*2], "scale", scale);
 
-  const cosTheta = Math.cos(film.rotation);
-  const sinTheta = Math.sin(film.rotation);
+  const cosTheta = Math.cos(-film.rotation);
+  const sinTheta = Math.sin(-film.rotation);
 
   return corners.map(corner => {
     // 反転

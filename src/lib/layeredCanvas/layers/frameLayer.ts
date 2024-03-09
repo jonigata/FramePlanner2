@@ -665,13 +665,22 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
     const element = layout.element;
     const films = element.getOperationTargetFilms();
-    const origins = films.map(film => film.getShiftedScale(paperSize));
 
     try {
+      films.forEach((film, i) => {
+        film.matrix = film.makeMatrix(paperSize);
+      });
+
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
+        console.log(s);
+        const rootMatrix = new DOMMatrix();
+        rootMatrix.scaleSelf(s);
+
         films.forEach((film, i) => {
-          film.setShiftedScale(paperSize, origins[i] * s);
+          const m = rootMatrix.multiply(film.matrix);
+          film.setShiftedScale(paperSize, Math.sqrt(m.a * m.a + m.b * m.b));
+          film.setShiftedTranslation(paperSize, [m.e, m.f]);
         });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
@@ -690,12 +699,21 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
     const element = layout.element;
     const films = element.getOperationTargetFilms();
-    const originalRotations = films.map(film => film.rotation);
 
     try {
+      films.forEach((film, i) => {
+        film.matrix = film.makeMatrix(paperSize);
+      });
+
       yield* rotate(p, (q) => {
+        const rotation = Math.max(-180, Math.min(180, -q * 0.2));
+        const rootMatrix = new DOMMatrix();
+        rootMatrix.rotateSelf(rotation);
+
         films.forEach((film, i) => {
-          film.rotation = Math.max(-180, Math.min(180, originalRotations[i] + -q * 0.2));
+          const m = rootMatrix.multiply(film.matrix);
+          film.rotation = -Math.atan2(m.b, m.a) * 180 / Math.PI;
+          film.setShiftedTranslation(paperSize, [m.e, m.f]);
         });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);

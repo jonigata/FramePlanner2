@@ -359,18 +359,14 @@ export class PaperRendererLayer extends Layer {
 
       ctx.save();
       ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
-      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
       ctx.rotate(-film.rotation * Math.PI / 180);
-
-      function drawIt(img: HTMLImageElement) {
-        ctx.save();
-        ctx.translate(-img.naturalWidth * 0.5, -img.naturalHeight * 0.5);
-        ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
-        ctx.restore();
-      }
+      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
 
       if (film.visible) {
-        drawIt(film.image);
+        ctx.save();
+        ctx.translate(-film.image.naturalWidth * 0.5, -film.image.naturalHeight * 0.5);
+        ctx.drawImage(film.image, 0, 0, film.image.naturalWidth, film.image.naturalHeight);
+        ctx.restore();
       }
       ctx.restore();
     }
