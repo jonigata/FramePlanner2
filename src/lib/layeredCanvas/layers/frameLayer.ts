@@ -353,7 +353,9 @@ export class FrameLayer extends Layer {
 
     this.updateLit(point);
 
+    console.log("a");
     if (this.selectedLayout) {
+      console.log("b");
       const q = this.acceptsOnSelectedFrameIcons(point);
       if (q) {
         if (q == "done") {
@@ -363,13 +365,16 @@ export class FrameLayer extends Layer {
       }
     }
 
+    console.log("c");
     // パディング操作
     if (this.focusedPadding) {
       return { padding: this.focusedPadding };
     }
 
     // 選択ボーダー操作
+    console.log("d");
     if (this.selectedBorder) {
+      console.log("e");
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
         return r;
@@ -386,6 +391,7 @@ export class FrameLayer extends Layer {
       } 
       // return null; このあとフレーム選択処理が入るかもしれないので放棄しない
     } else {
+      console.log("f");
       if (this.litBorder) {
         if (keyDownFlags["KeyT"]) {
           const target = this.litBorder.layout.element.children[this.litBorder.index-1];
@@ -404,8 +410,8 @@ export class FrameLayer extends Layer {
       }
     }
 
-    // 選択フレーム操作
-    const r = this.acceptsOnSelectedFrame(point);
+    console.log("g");
+    const r = this.acceptsOnFrame(point);
     if (r) {
       if (r == "done") {
         return null;
@@ -413,23 +419,12 @@ export class FrameLayer extends Layer {
       return r;
     }
 
-    if (this.litLayout) {
-      if (this.selectedLayout?.element != this.litLayout?.element) {
-        this.selectedLayout = this.litLayout;
-        this.onFocus(this.selectedLayout);
-        this.relayoutIcons();
-        this.redraw();
-        return null;
-      }
-    } else {
-      if (this.selectedLayout) {
-        this.selectedLayout = null;
-        this.onFocus(null);
-        this.relayoutIcons();
-        this.redraw();
-        return null;
-      }
-    }
+    console.log("h");
+    this.selectedLayout = null;
+    this.onFocus(null);
+    this.relayoutIcons();
+    this.redraw();
+    return null;
   }
 
   acceptsOnSelectedBorder(p: Vector): any {
@@ -447,83 +442,8 @@ export class FrameLayer extends Layer {
     return null;
   }
 
-  acceptsOnSelectedFrame(point: Vector): any {
-    const layout = this.selectedLayout;
-    if (layout) {
-      const paperSize = this.getPaperSize();
-      if (keyDownFlags["KeyQ"]) {
-        FrameElement.eraseElement(this.frameTree, layout.element);
-        this.litLayout = null;
-        this.selectedLayout = null;
-        this.onFocus(null);
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (keyDownFlags["KeyW"]) {
-        this.litLayout = null;
-        this.selectedLayout = null;
-        FrameElement.splitElementHorizontal(
-          this.frameTree,
-          layout.element
-        );
-        this.onFocus(null);
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (keyDownFlags["KeyS"]) {
-        this.litLayout = null;
-        this.selectedLayout = null;
-        FrameElement.splitElementVertical(
-          this.frameTree,
-          layout.element
-        );
-        this.onFocus(null);
-        this.onCommit();
-        this.redraw();
-        return "done";
-      }
-      if (keyDownFlags["KeyD"]) {
-        layout.element.filmStack.films = [];
-        this.redraw();
-        return "done";
-      }
-      if (keyDownFlags["KeyT"]) {
-        layout.element.filmStack.films.forEach(film => {
-          film.reverse[0] *= -1;
-        });
-        this.redraw();
-        return "done";
-      }
-      if (keyDownFlags["KeyY"]) {
-        layout.element.filmStack.films.forEach(film => {
-          film.reverse[1] *= -1;
-        });
-        this.redraw();
-        return "done";
-      }
-      if (keyDownFlags["KeyE"]) {
-        constraintLeaf(paperSize, layout);
-        this.redraw();
-        return "done";
-      }
-      const q = this.acceptsOnSelectedFrameIcons(point);
-      if (q) {
-        if (q == "done") {
-          return null;
-        }
-        return q;
-      }
-    }
-
-    return null;
-  }
-
   acceptsOnSelectedFrameIcons(point: Vector): any {
     const layout = this.selectedLayout;
-    if (!layout) { return null; }
-
     if (this.splitHorizontalIcon.contains(point)) {
       FrameElement.splitElementHorizontal(
         this.frameTree,
@@ -621,11 +541,84 @@ export class FrameLayer extends Layer {
       this.redraw();
       return "done";
     } 
-    if (this.scaleIcon.contains(point) || this.rotateIcon.contains(point) ||
-        isPointInTrapezoid(point, layout.corners)) {
-        return { layout: layout };
+    if (this.scaleIcon.contains(point) || this.rotateIcon.contains(point)) {
+      return { layout: layout };
     }
     return null;
+  }
+
+  acceptsOnFrame(point: Vector): any {
+    console.log("A");
+    let layout = this.litLayout;
+    if (!layout) { return null; }
+
+    const paperSize = this.getPaperSize();
+    if (keyDownFlags["KeyQ"]) {
+      FrameElement.eraseElement(this.frameTree, layout.element);
+      this.litLayout = null;
+      this.selectedLayout = null;
+      this.onFocus(null);
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (keyDownFlags["KeyW"]) {
+      this.litLayout = null;
+      this.selectedLayout = null;
+      FrameElement.splitElementHorizontal(
+        this.frameTree,
+        layout.element
+      );
+      this.onFocus(null);
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (keyDownFlags["KeyS"]) {
+      this.litLayout = null;
+      this.selectedLayout = null;
+      FrameElement.splitElementVertical(
+        this.frameTree,
+        layout.element
+      );
+      this.onFocus(null);
+      this.onCommit();
+      this.redraw();
+      return "done";
+    }
+    if (keyDownFlags["KeyD"]) {
+      layout.element.filmStack.films = [];
+      this.redraw();
+      return "done";
+    }
+    if (keyDownFlags["KeyT"]) {
+      layout.element.filmStack.films.forEach(film => {
+        film.reverse[0] *= -1;
+      });
+      this.redraw();
+      return "done";
+    }
+    if (keyDownFlags["KeyY"]) {
+      layout.element.filmStack.films.forEach(film => {
+        film.reverse[1] *= -1;
+      });
+      this.redraw();
+      return "done";
+    }
+    if (keyDownFlags["KeyE"]) {
+      constraintLeaf(paperSize, layout);
+      this.redraw();
+      return "done";
+    }
+    if (this.selectedLayout?.element != this.litLayout?.element) {
+      this.selectedLayout = this.litLayout;
+      this.onFocus(this.selectedLayout);
+      this.relayoutIcons();
+      this.redraw();
+      return "done";
+    } else {
+      return { layout: layout };
+    }
   }
 
   async *pointer(p: Vector, payload: any) {
