@@ -707,7 +707,7 @@ export class FrameLayer extends Layer {
       yield* rotate(p, (q) => {
         const rotation = Math.max(-180, Math.min(180, -q * 0.2));
         const rootMatrix = new DOMMatrix();
-        rootMatrix.rotateSelf(rotation);
+        rootMatrix.rotateSelf(-rotation);
 
         films.forEach((film, i) => {
           const m = rootMatrix.multiply(film.matrix);
