@@ -37,7 +37,7 @@
     async () => {
       const book = $mainBook;
       const file = await fileSystem.getNode(book.revision.id as NodeId);
-      // await saveBookTo(book, fileSystem, file.asFile());
+      await saveBookTo(book, fileSystem, file.asFile());
       currentRevision = {...book.revision};
       await recordCurrentFileId(book.revision.id as NodeId);
     });

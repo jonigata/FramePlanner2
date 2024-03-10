@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, calculateMinimumBoundingRect } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, calculateMinimumBoundingRect, FilmStackTransformer } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -651,20 +651,10 @@ export class FrameLayer extends Layer {
     const films = element.getOperationTargetFilms();
 
     try {
-      films.forEach((film, i) => {
-        film.matrix = film.makeMatrix(paperSize);
-      });
+      const transformer = new FilmStackTransformer(paperSize, films);
 
       yield* scale(this.getPaperSize(), p, (q) => {
-        const s = Math.max(q[0], q[1]);
-        const rootMatrix = new DOMMatrix();
-        rootMatrix.scaleSelf(s);
-
-        films.forEach((film, i) => {
-          const m = rootMatrix.multiply(film.matrix);
-          film.setShiftedTranslation(paperSize, [m.e, m.f]);
-          film.setShiftedScale(paperSize, Math.sqrt(m.a * m.a + m.b * m.b));
-        });
+        transformer.scale(Math.max(q[0], q[1]))
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }
@@ -684,25 +674,10 @@ export class FrameLayer extends Layer {
     const films = element.getOperationTargetFilms();
 
     try {
-      films.forEach((film, i) => {
-        film.matrix = film.makeMatrix(paperSize);
-      });
-
-      const r = calculateMinimumBoundingRect(paperSize, films);
-      const pivot = getRectCenter(r);
+      const transformer = new FilmStackTransformer(paperSize, films);
 
       yield* rotate(p, (q) => {
-        const rotation = Math.max(-180, Math.min(180, -q * 0.2));
-        const rootMatrix = new DOMMatrix();
-        rootMatrix.translateSelf(pivot[0], pivot[1]);
-        rootMatrix.rotateSelf(-rotation);
-        rootMatrix.translateSelf(-pivot[0], -pivot[1]);
-
-        films.forEach((film, i) => {
-          const m = rootMatrix.multiply(film.matrix);
-          film.rotation = -Math.atan2(m.b, m.a) * 180 / Math.PI;
-          film.setShiftedTranslation(paperSize, [m.e, m.f]);
-        });
+        transformer.rotate(q*-0.2);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
         }

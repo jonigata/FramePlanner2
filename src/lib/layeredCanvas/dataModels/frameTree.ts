@@ -1,4 +1,4 @@
-import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, computeBoundingRectFromRects, getRectCenter, translateRect, rectToCorners } from "../tools/geometry/geometry";
+import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, computeBoundingRectFromRects, getRectCenter, translateRect, rectToCorners, reverse2D } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
 import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
@@ -908,19 +908,6 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   constraintFilms(paperSize, layout, films);
 }
 
-export function constraintFilm(paperSize: Vector, layout: Layout, film: Film): void {
-  if (!layout.corners) {return; }
-
-  const constraintRect = trapezoidBoundingRect(layout.corners);
-  const constraintCenter = getRectCenter(constraintRect);
-  const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
-    translateRect(film.getShiftedRect(paperSize), constraintCenter),
-    constraintRect);
-
-  film.setShiftedScale(paperSize, film.getShiftedScale(paperSize) * targetScale);
-  film.setShiftedTranslation(paperSize, add2D(film.getShiftedTranslation(paperSize), targetTranslation));
-}
-
 export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]): void {
   if (!layout.corners) {return; }
 
@@ -969,4 +956,46 @@ function transformFilm(paperSize: Vector, film: Film): Vector[] {
 
   const matrix = film.makeMatrix(paperSize);
   return corners.map(corner => matrix.transformPoint({x: corner[0], y: corner[1]})).map(p => [p.x, p.y]);
+}
+
+export class FilmStackTransformer {
+  paperSize: Vector;
+  films: Film[];
+  pivot: Vector;
+
+  constructor(paperSize: Vector, films: Film[]) {
+    this.paperSize = paperSize;
+    this.films = films;
+    films.forEach((film, i) => {
+      film.matrix = film.makeMatrix(paperSize);
+    });
+
+    const r = calculateMinimumBoundingRect(paperSize, films);
+    this.pivot = getRectCenter(r);
+  }
+
+  scale(s: number) {
+    const rootMatrix = new DOMMatrix();
+    rootMatrix.scaleSelf(s);
+
+    this.films.forEach((film, i) => {
+      const m = rootMatrix.multiply(film.matrix);
+      film.setShiftedTranslation(this.paperSize, [m.e, m.f]);
+      film.setShiftedScale(this.paperSize, Math.sqrt(m.a * m.a + m.b * m.b));
+    });
+  }
+
+  rotate(q: number) {
+    const rotation = Math.max(-180, Math.min(180, q));
+    const rootMatrix = new DOMMatrix();
+    rootMatrix.translateSelf(...this.pivot);
+    rootMatrix.rotateSelf(-rotation);
+    rootMatrix.translateSelf(...reverse2D(this.pivot));
+
+    this.films.forEach((film, i) => {
+      const m = rootMatrix.multiply(film.matrix);
+      film.rotation = -Math.atan2(m.b, m.a) * 180 / Math.PI;
+      film.setShiftedTranslation(this.paperSize, [m.e, m.f]);
+    });
+  }
 }

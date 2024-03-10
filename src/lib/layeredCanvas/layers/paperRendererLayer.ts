@@ -372,6 +372,7 @@ export class PaperRendererLayer extends Layer {
       ctx.restore();
     }
 
+  /*
     // 最小外接矩形
     const boundingRect = calculateMinimumBoundingRect(paperSize, element.filmStack.films);
     if (boundingRect) {
@@ -382,6 +383,7 @@ export class PaperRendererLayer extends Layer {
       ctx.strokeRect(r[0], r[1], r[2], r[3]);
       ctx.restore();
     }    
+*/
   }
 
   drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {

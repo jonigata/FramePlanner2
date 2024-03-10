@@ -4,7 +4,7 @@
   import "../box.css"  
   import { onMount } from 'svelte';
   import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
@@ -36,7 +36,7 @@
     for (const page of $mainBook.pages) {
       const leaves = collectLeaves(page.frameTree);
       m += leaves.length;
-      n += leaves.filter((leaf) => leaf.image).length;
+      n += leaves.filter((leaf) => 0 < leaf.filmStack.films.length).length;
     }
     totalCount = m;
     filledCount = n;
@@ -61,15 +61,9 @@
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
 
-      frame.image = {
-        image: img,
-        scribble: null,
-        n_scale: 1,
-        n_translation: [0, 0],
-        rotation: 0,
-        reverse: [1, 1],
-        scaleLock: false,
-      };
+      const film = new Film();
+      film.image = img;
+      frame.filmStack.films.push(film);
       frame.gallery.push(img);
     } catch (e) {
       console.log(e);
@@ -83,16 +77,17 @@
     const leaves = collectLeaves(page.frameTree);
     const promises = [];
     for (const leaf of leaves) {
-      if (leaf.image) { continue; }
+      if (0 < leaf.filmStack.films.length) { continue; }
       promises.push(generate(leaf));
     }
     await Promise.all(promises);
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     for (const leaf of leaves) {
-      if (!leaf.image) { continue; }
+      if (0 < leaf.filmStack.films.length) { continue; }
       const layout = findLayoutOf(pageLayout, leaf);
-      leaf.image.n_scale = 0.001;
+      const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
+      transformer.scale(0.01);
       constraintLeaf(page.paperSize, layout);
     }
 
