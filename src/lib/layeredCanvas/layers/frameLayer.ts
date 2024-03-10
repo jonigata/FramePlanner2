@@ -678,8 +678,8 @@ export class FrameLayer extends Layer {
 
         films.forEach((film, i) => {
           const m = rootMatrix.multiply(film.matrix);
-          film.setShiftedScale(paperSize, Math.sqrt(m.a * m.a + m.b * m.b));
           film.setShiftedTranslation(paperSize, [m.e, m.f]);
+          film.setShiftedScale(paperSize, Math.sqrt(m.a * m.a + m.b * m.b));
         });
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);

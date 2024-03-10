@@ -904,19 +904,18 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   if (layout.element.filmStack.films.length == 0) { return; }
 
   // constraintFilms(paperSize, layout, layout.element.filmStack.films);
-  layout.element.filmStack.films.forEach(film => {
-    constraintFilm(paperSize, layout, film);
-  });
+  const films = layout.element.getOperationTargetFilms();
+  constraintFilms(paperSize, layout, films);
 }
 
 export function constraintFilm(paperSize: Vector, layout: Layout, film: Film): void {
   if (!layout.corners) {return; }
 
-  const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-  const trapezoidCenter = getRectCenter([x0, y0, w, h]);
+  const constraintRect = trapezoidBoundingRect(layout.corners);
+  const constraintCenter = getRectCenter(constraintRect);
   const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
-    translateRect(film.getShiftedRect(paperSize), trapezoidCenter),
-    [x0, y0, w, h]);
+    translateRect(film.getShiftedRect(paperSize), constraintCenter),
+    constraintRect);
 
   film.setShiftedScale(paperSize, film.getShiftedScale(paperSize) * targetScale);
   film.setShiftedTranslation(paperSize, add2D(film.getShiftedTranslation(paperSize), targetTranslation));
@@ -925,18 +924,26 @@ export function constraintFilm(paperSize: Vector, layout: Layout, film: Film): v
 export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]): void {
   if (!layout.corners) {return; }
 
-  const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-  const trapezoidCenter = getRectCenter([x0, y0, w, h]);
-
-  // フィルム全部の和の最小外接矩形を計算
-  const mergedRect = computeBoundingRectFromRects(
-    films.map(film => film.getShiftedRect(paperSize)));
-  const [ix, iy, iw, ih] = mergedRect;
-  console.log("computed bouding rect", iw, ih);
+  const constraintRect = trapezoidBoundingRect(layout.corners);
+  const constraintCenter = getRectCenter(constraintRect);
+  const mergedRect = calculateMinimumBoundingRect(paperSize, films);
 
   const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
-    translateRect(mergedRect, trapezoidCenter),
-    [x0, y0, w, h]);
+    translateRect(mergedRect, constraintCenter),
+    constraintRect);
+  console.log('targetScale', targetScale, 'targetTranslation', targetTranslation);
+
+  const rootMatrix = new DOMMatrix();
+  rootMatrix.scaleSelf(targetScale, targetScale);
+  rootMatrix.translateSelf(...targetTranslation);
+
+  films.forEach(film => {
+    const m = rootMatrix.multiply(film.makeMatrix(paperSize));
+    const scale = Math.sqrt(m.a * m.a + m.b * m.b);
+    film.setShiftedScale(paperSize, scale);
+    console.log("m.e, m.f:", [m.e, m.f])
+    film.setShiftedTranslation(paperSize, [m.e, m.f]);
+  });
 }
 
 export function calculateMinimumBoundingRect(paperSize: Vector, films: Film[]): Rect {
