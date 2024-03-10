@@ -353,9 +353,7 @@ export class FrameLayer extends Layer {
 
     this.updateLit(point);
 
-    console.log("a");
     if (this.selectedLayout) {
-      console.log("b");
       const q = this.acceptsOnSelectedFrameIcons(point);
       if (q) {
         if (q == "done") {
@@ -365,16 +363,13 @@ export class FrameLayer extends Layer {
       }
     }
 
-    console.log("c");
     // パディング操作
     if (this.focusedPadding) {
       return { padding: this.focusedPadding };
     }
 
     // 選択ボーダー操作
-    console.log("d");
     if (this.selectedBorder) {
-      console.log("e");
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
         return r;
@@ -391,7 +386,6 @@ export class FrameLayer extends Layer {
       } 
       // return null; このあとフレーム選択処理が入るかもしれないので放棄しない
     } else {
-      console.log("f");
       if (this.litBorder) {
         if (keyDownFlags["KeyT"]) {
           const target = this.litBorder.layout.element.children[this.litBorder.index-1];
@@ -410,7 +404,6 @@ export class FrameLayer extends Layer {
       }
     }
 
-    console.log("g");
     const r = this.acceptsOnFrame(point);
     if (r) {
       if (r == "done") {
@@ -419,7 +412,6 @@ export class FrameLayer extends Layer {
       return r;
     }
 
-    console.log("h");
     this.selectedLayout = null;
     this.onFocus(null);
     this.relayoutIcons();
@@ -548,7 +540,6 @@ export class FrameLayer extends Layer {
   }
 
   acceptsOnFrame(point: Vector): any {
-    console.log("A");
     let layout = this.litLayout;
     if (!layout) { return null; }
 

@@ -230,33 +230,26 @@ export function ensureMinRectSize(minSize: number, r: Rect) {
 
 // アスペクト比を変更しない移動量最小の最小外接矩形
 export function computeConstraintedRect(targetRect: Rect, constraintRect: Rect): { scale: number, translation: Vector } {
-  console.log("targetRect:", targetRect);
-  console.log("constraintRect:", constraintRect);
   const [x0, y0, w, h] = constraintRect;
   const [x1, y1] = [x0 + w, y0 + h];
   const [_tx, _ty, tw, th] = targetRect;
   const [opx, opy] = getRectCenter(targetRect);
-  console.log("global pivot:", opx, opy);
   const [cx, cy] = getRectCenter(constraintRect); 
-  console.log("shifted pivot", opx - cx, opy - cy);
 
   let scale = 1;
   if (tw * scale < w) { scale = w / tw; }
   if (th * scale < h) { scale = h / th; }
   const [npx, npy] = [(opx - cx) * scale + cx , (opy - cy) * scale + cy];
-  console.log("global new pivot", npx, npy);
 
   const [nw, nh] = [tw * scale, th * scale];
   const [nx0, ny0] = [npx - nw / 2, npy - nh / 2];
   const [nx1, ny1] = [nx0 + nw, ny0 + nh];
-  console.log("nx0, ny0, nx1, ny1:", nx0, ny0, nx1, ny1);
 
   let [mx, my] = [0, 0];
   if (x0 < nx0) { mx -= nx0 - x0; }
   if (y0 < ny0) { my -= ny0 - y0; }
   if (nx1 < x1) { mx += x1 - nx1; }
   if (ny1 < y1) { my += y1 - ny1; }
-  console.log("mx, my:", mx, my);
 
   return { scale, translation: [mx / scale, my / scale] };
 }

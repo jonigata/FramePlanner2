@@ -267,17 +267,17 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
         contents.shift();
       } 
       if (frameTree === insertElement || contents.length === 0) {
-        frameTree.filmStack.films = [];
-        frameTree.prompt = null;
+        frameTree.filmStack = { films: [] };
+        frameTree.prompt = "";
         return;
       }
-    
+      
       const leafLayout = findLayoutOf(layout, frameTree);
       const [sx, sy, sw, sh] = contents[0].sourceRect;
       const [tx, ty, tw, th] = trapezoidBoundingRect(leafLayout.corners);
 
       const content = contents.shift();
-      frameTree.filmStack.films = [...content.filmStack.films];
+      frameTree.filmStack = { films: [...content.filmStack.films] };
       frameTree.prompt = content.prompt;
 
       for (let b of content.bubbles) {

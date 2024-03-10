@@ -931,7 +931,6 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
   const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
     translateRect(mergedRect, constraintCenter),
     constraintRect);
-  console.log('targetScale', targetScale, 'targetTranslation', targetTranslation);
 
   const rootMatrix = new DOMMatrix();
   rootMatrix.scaleSelf(targetScale, targetScale);
@@ -941,7 +940,6 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
     const m = rootMatrix.multiply(film.makeMatrix(paperSize));
     const scale = Math.sqrt(m.a * m.a + m.b * m.b);
     film.setShiftedScale(paperSize, scale);
-    console.log("m.e, m.f:", [m.e, m.f])
     film.setShiftedTranslation(paperSize, [m.e, m.f]);
   });
 }
