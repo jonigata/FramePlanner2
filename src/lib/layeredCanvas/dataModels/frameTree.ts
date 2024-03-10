@@ -1,4 +1,4 @@
-import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, computeBoundingRectFromRects, getRectCenter, translateRect } from "../tools/geometry/geometry";
+import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, computeBoundingRectFromRects, getRectCenter, translateRect, rectToCorners } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
 import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
@@ -52,6 +52,12 @@ export class Film  {
     f.visible = this.visible;
     f.prompt = this.prompt;
     return f;
+  }
+
+  getPlainRect() {
+    const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
+    const rect: Rect = [- w/2, - h/2, w, h];
+    return rect;
   }
 
   // Shifted = Physicalとscaleは一緒だが、translationはコマの中心から相対
@@ -933,12 +939,13 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
     [x0, y0, w, h]);
 }
 
-function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement): Rect {
+export function calculateMinimumBoundingRect(paperSize: Vector, films: Film[]): Rect {
+  if (films.length === 0) { return null; }
+
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-  element.filmStack.films.forEach(film => {
+  films.forEach(film => {
     const transformedCorners = transformFilm(paperSize, film);
-    // 最小外接矩形の座標を更新
     transformedCorners.forEach(corner => {
       const [x, y] = corner;
       minX = Math.min(minX, x);
@@ -952,38 +959,9 @@ function calculateMinimumBoundingRect(paperSize: Vector, element: FrameElement):
 }
 
 function transformFilm(paperSize: Vector, film: Film): Vector[] {
-  const scale = film.getShiftedScale(paperSize);
+  const rect: Rect = film.getPlainRect();
+  const corners = rectToCorners(rect);
 
-  // 画像サイズを考慮して角の座標を計算
-  const halfWidth = film.image.width * scale * 0.5;
-  const halfHeight = film.image.height * scale * 0.5;
-  const corners = [
-    [ -halfWidth,  -halfHeight ],
-    [ halfWidth, -halfHeight ],
-    [ halfWidth, halfHeight ],
-    [ -halfWidth,  halfHeight ]
-  ];
-  console.log("film", [halfWidth*2, halfHeight*2], "scale", scale);
-
-  const cosTheta = Math.cos(-film.rotation);
-  const sinTheta = Math.sin(-film.rotation);
-
-  return corners.map(corner => {
-    // 反転
-    let x = film.reverse[0] * corner[0];
-    let y = film.reverse[1] * corner[1];
-
-    // 回転
-    const rotatedX = x * cosTheta - y * sinTheta;
-    const rotatedY = x * sinTheta + y * cosTheta;
-
-    // 平行移動（n_translationを実座標に変換）
-    const realTranslationX = paperSize[0] * film.n_translation[0];
-    const realTranslationY = paperSize[1] * film.n_translation[1];
-
-    return [
-      rotatedX + realTranslationX,
-      rotatedY + realTranslationY
-    ];
-  });
+  const matrix = film.makeMatrix(paperSize);
+  return corners.map(corner => matrix.transformPoint({x: corner[0], y: corner[1]})).map(p => [p.x, p.y]);
 }

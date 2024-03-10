@@ -673,7 +673,6 @@ export class FrameLayer extends Layer {
 
       yield* scale(this.getPaperSize(), p, (q) => {
         const s = Math.max(q[0], q[1]);
-        console.log(s);
         const rootMatrix = new DOMMatrix();
         rootMatrix.scaleSelf(s);
 

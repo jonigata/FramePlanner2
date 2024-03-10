@@ -1,7 +1,7 @@
-import { type Vector, reverse2D } from "../tools/geometry/geometry";
+import { type Vector, reverse2D, getRectCenter, translateRect } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
-import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
+import { findLayoutAt, calculatePhysicalLayout, FrameElement, calculateMinimumBoundingRect } from "../dataModels/frameTree";
 import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText } from "../tools/draw/drawText";
 import { Layer } from "../system/layeredCanvas";
@@ -349,10 +349,11 @@ export class PaperRendererLayer extends Layer {
     const paperSize = this.getPaperSize();
     const element = layout.element;
 
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+    const center = getRectCenter([x0, y0, w, h])
+
     for (let film of element.filmStack.films) {
       if (!film.visible) { continue; }
-
-      const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
 
       const scale = film.getShiftedScale(paperSize);
       const translation = film.getShiftedTranslation(paperSize);
@@ -370,6 +371,17 @@ export class PaperRendererLayer extends Layer {
       }
       ctx.restore();
     }
+
+    // 最小外接矩形
+    const boundingRect = calculateMinimumBoundingRect(paperSize, element.filmStack.films);
+    if (boundingRect) {
+      const r = translateRect(boundingRect, center);
+      ctx.save();
+      ctx.strokeStyle = "rgb(255, 0, 0)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r[0], r[1], r[2], r[3]);
+      ctx.restore();
+    }    
   }
 
   drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {

@@ -196,6 +196,11 @@ export function rectToPointDistance(r: Rect, p: Vector): number {
   return Math.sqrt(dx*dx + dy*dy);
 }
 
+export function rectToCorners(r: Rect): [Vector, Vector, Vector, Vector] {
+  const [x, y, w, h] = r;
+  return [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+}
+
 export function vectorEquals(v0: Vector, v1: Vector): boolean {
   return v0[0] === v1[0] && v0[1] === v1[1];
 }
