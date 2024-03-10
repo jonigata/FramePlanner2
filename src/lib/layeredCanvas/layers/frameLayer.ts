@@ -1,11 +1,11 @@
 import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, calculateMinimumBoundingRect } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize } from '../tools/geometry/geometry';
+import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
@@ -688,10 +688,15 @@ export class FrameLayer extends Layer {
         film.matrix = film.makeMatrix(paperSize);
       });
 
+      const r = calculateMinimumBoundingRect(paperSize, films);
+      const pivot = getRectCenter(r);
+
       yield* rotate(p, (q) => {
         const rotation = Math.max(-180, Math.min(180, -q * 0.2));
         const rootMatrix = new DOMMatrix();
+        rootMatrix.translateSelf(pivot[0], pivot[1]);
         rootMatrix.rotateSelf(-rotation);
+        rootMatrix.translateSelf(-pivot[0], -pivot[1]);
 
         films.forEach((film, i) => {
           const m = rootMatrix.multiply(film.matrix);
