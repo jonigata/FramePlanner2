@@ -56,7 +56,7 @@
       film.rotation = 0;
       film.reverse = [1, 1];
       $frame.filmStack.films.splice(index, 0, film);
-      $redrawToken = true;
+      $frameInspectorTarget.command = "commit";
       key++;
     }
   }
@@ -78,7 +78,7 @@
       const film = $frame.filmStack.films.splice(sourceIndex, 1)[0];
       $frame.filmStack.films.splice(index + 1, 0, film);
     }
-    $redrawToken = true;
+    $frameInspectorTarget.command = "commit";
     key++;
   }
 
@@ -114,6 +114,12 @@
     $frameInspectorTarget.command = "generate";
   }
 
+  function onPunch(e: CustomEvent<Film>) {
+    console.log("onPunch", e.detail);
+    $frameInspectorTarget.commandTargetFilm = e.detail;
+    $frameInspectorTarget.command = "punch";
+  }
+
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -131,7 +137,7 @@
         </ListBoxItem>
         {#each $frame.filmStack.films.toReversed() as film}
           <ListBoxItem>
-            <FrameInspectorFilm film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate}/>
+            <FrameInspectorFilm film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
           </ListBoxItem>
         {/each}
       </ListBox>

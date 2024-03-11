@@ -42,7 +42,6 @@
     ev.preventDefault();
     ev.stopPropagation();
     const index = getItemIndexAt(ev.clientX, ev.clientY);
-    console.log(index);
     dragCursor.set(index);
   }
 

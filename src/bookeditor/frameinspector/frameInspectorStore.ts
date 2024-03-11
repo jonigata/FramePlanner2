@@ -2,7 +2,7 @@ import { type Writable, writable } from "svelte/store";
 import type { Film, FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree";
 import type { Page } from '../book';
 
-type FrameInspectorCommand = "generate" | "scribble";
+type FrameInspectorCommand = "generate" | "scribble" | "punch" | "commit";
 
 export type FrameInspectorPosition = {
   center: {x: number, y: number},

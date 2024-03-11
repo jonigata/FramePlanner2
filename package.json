@@ -37,6 +37,7 @@
     "@splidejs/svelte-splide": "^0.2.9",
     "@svelte-web-fonts/google": "^1.0.4",
     "@types/uuid": "^9.0.7",
+    "@xenova/transformers": "^2.16.0",
     "@xyflow/svelte": "^0.0.26",
     "ag-psd": "^19.0.0",
     "css-font-parser": "^2.0.0",

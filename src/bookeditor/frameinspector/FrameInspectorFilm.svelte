@@ -6,7 +6,9 @@
   import scribbleIcon from '../../assets/frameInspector/scribble.png';
   import generateIcon from '../../assets/frameInspector/generate.png';
   import trashIcon from '../../assets/frameInspector/trash.png';
+  import punchIcon from '../../assets/frameInspector/punch.png';
   import { toolTip } from '../../utils/passiveToolTipStore';
+  import "./frameInspector.postcss";
 
   export let film: Film;
 
@@ -45,6 +47,13 @@
     ev.stopPropagation();
     ev.preventDefault();
     dispatch('generate', film)
+  }
+
+  function onPunch(ev: MouseEvent) {
+    console.log("onPunch");
+    ev.stopPropagation();
+    ev.preventDefault();
+    dispatch('punch', film)
   }
 
   function onLoad(e: Event) {
@@ -102,6 +111,8 @@
     <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img draggable={false} class="punch-icon" src={punchIcon} alt="背景除去" use:toolTip={"背景除去"} on:click={onPunch}/>
     <div class="image-container" bind:this={imageContainer}>
       <img draggable={false} class="film-content" src={film.image.src} alt="film" bind:this={image} on:load={onLoad}/>
     </div>
@@ -147,12 +158,6 @@
     width: 100%;
     height: 100%;
   }
-  .selected {
-    @apply variant-filled-primary;
-  }
-  .unselected {
-    @apply variant-soft-tertiary;
-  }
   .trash-icon {
     position: absolute;
     top: 4px;
@@ -180,6 +185,13 @@
   .generate-icon {
     position: absolute;
     right: 4px;
+    bottom: 4px;
+    width: 32px;
+    height: 32px;
+  }
+  .punch-icon {
+    position: absolute;
+    right: 40px;
     bottom: 4px;
     width: 32px;
     height: 32px;

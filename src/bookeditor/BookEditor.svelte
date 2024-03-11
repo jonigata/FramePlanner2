@@ -21,6 +21,9 @@
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
   import ImageProvider from '../generator/ImageProvider.svelte';
+  import { loadModel, predict } from '../utils/rmbg';
+  import { loading } from '../utils/loadingStore'
+  import type { ImageFile } from '../lib/layeredCanvas/dataModels/imageFile';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -322,6 +325,10 @@
         await modalScribble(fit);
       } else if (command === "generate") {
         await modalGenerate(fit);
+      } else if (command === "punch") {
+        await punch(fit);
+      } else if (command === "commit") {
+        commit(null);
       }
       $frameInspectorTarget = frameInspectorTargetBackUp;
     }
@@ -347,6 +354,22 @@
       fit.frame.filmStack.films.push(film);
       commit(null);
     }
+  }
+
+  async function punch(fit: FrameInspectorTarget) {
+    $loading = true;
+    await loadModel((s: string) => console.log(s));
+    
+    const film = fit.commandTargetFilm;
+    const canvas = await predict(film.image);
+    const dataURL = canvas.toDataURL("image/png");
+    const newImage = new Image();
+    newImage.src = dataURL;
+    await newImage.decode();
+    film.image = newImage;
+    layeredCanvas.redraw();
+    commit(null);
+    $loading = false;
   }
 
   onDestroy(() => {
