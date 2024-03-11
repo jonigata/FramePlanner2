@@ -3,9 +3,9 @@
 	import Gallery from './Gallery.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import feathralIcon from '../assets/feathral.png';
-  import SliderEdit from '../utils/SliderEdit.svelte';
   import { onMount } from 'svelte';
   import { updateFeathral, generateImageFromTextWithFeathral } from '../firebase';
+  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 
   export let busy: boolean;
   export let prompt: string;
@@ -15,7 +15,11 @@
   let progress = 0;
   let refered: HTMLImageElement = null;
   let batchCount = 1;
+  let initialSize = [1024, 1024];
+  let size = initialSize; // こうしないと最初に選択してくれない
 
+
+  /* LCM
   let imageRequest = {
     "model": "lcm-dark-sushi-mix-v2-25",
     "prompt": "1 chibi girl, penguin costume",
@@ -24,6 +28,16 @@
     "height": 512,
     "steps": 4,
     "seed": 0,
+    "output_format": "png"
+  };
+  */
+
+  // essential
+  let imageRequest = {
+    "style": "anime",
+    "prompt": "1 chibi girl, penguin costume",
+    "width": 1024,
+    "height": 1024,
     "output_format": "png"
   };
 
@@ -37,6 +51,8 @@
     busy = true;
     try {
       imageRequest.prompt = prompt;
+      imageRequest.width = size[0];
+      imageRequest.height = size[1];
       const { image, feathral } = await generateImageFromTextWithFeathral(imageRequest);
       $onlineAccount.feathral = feathral;
       gallery.push(image);
@@ -60,13 +76,30 @@
 
   <p>prompt</p>
   <textarea bind:value={prompt}/>
+<!--
   <p>negative prompt</p>
   <textarea bind:value={imageRequest.negative_prompt}/>
+-->
 
   <div class="hbox gap-5">
+<!--
     <div class="vbox" style="width: 400px;">
       <SliderEdit label="width" bind:value={imageRequest.width} min={512} max={1024} step={256}/>
       <SliderEdit label="height" bind:value={imageRequest.height} min={512} max={1024} step={256}/>
+    </div>
+-->
+    <div class="vbox left gap-2">
+      <RadioGroup>
+        <RadioItem bind:group={size} name={"size"} value={initialSize}>1024x1024</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={[1024,1280]}>1024x1280</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={[1024,1536]}>1024x1536</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={[1024,1792]}>1024x1792</RadioItem>
+      </RadioGroup>
+      <RadioGroup>
+        <RadioItem bind:group={size} name={"size"} value={[1280,1024]}>1280x1024</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={[1536,1024]}>1536x1024</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={[1792,1024]}>1792x1024</RadioItem>
+      </RadioGroup>
     </div>
 
     <div class="vbox">

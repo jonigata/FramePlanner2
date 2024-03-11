@@ -4,7 +4,7 @@
   import { redrawToken } from '../bookStore';
   import visibleIcon from '../../assets/frameInspector/eye.png';
   import scribbleIcon from '../../assets/frameInspector/scribble.png';
-  import generateIcon from '../../assets/frameInspector/generate.png';
+  // import generateIcon from '../../assets/frameInspector/generate.png';
   import trashIcon from '../../assets/frameInspector/trash.png';
   import punchIcon from '../../assets/frameInspector/punch.png';
   import { toolTip } from '../../utils/passiveToolTipStore';
@@ -110,7 +110,9 @@
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <!--
     <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
+    -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="punch-icon" src={punchIcon} alt="背景除去" use:toolTip={"背景除去"} on:click={onPunch}/>
     <div class="image-container" bind:this={imageContainer}>
@@ -191,7 +193,7 @@
   }
   .punch-icon {
     position: absolute;
-    right: 40px;
+    right: 4px;
     bottom: 4px;
     width: 32px;
     height: 32px;
