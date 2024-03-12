@@ -942,6 +942,8 @@ export class FrameLayer extends Layer {
 
     layoutlet.element.filmStack.films.push(film);
       
+    const transformer = new FilmStackTransformer(paperSize, layoutlet.element.filmStack.films);
+    transformer.scale(0.01);
     constraintLeaf(paperSize, layoutlet);
     this.redraw();
   }
