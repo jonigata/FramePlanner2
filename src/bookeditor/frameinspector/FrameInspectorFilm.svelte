@@ -98,9 +98,6 @@
       <div class="new-film">
         ＋
       </div>
-      <div class="new-film-description">
-        ここに画像をドロップ
-      </div>
     </div>
   {:else}
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->

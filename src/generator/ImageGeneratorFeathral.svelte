@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { updateFeathral, generateImageFromTextWithFeathral } from '../firebase';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { getAnalytics, logEvent } from "firebase/analytics";
 
   export let busy: boolean;
   export let prompt: string;
@@ -14,7 +15,6 @@
 
   let progress = 0;
   let refered: HTMLImageElement = null;
-  let batchCount = 1;
   let initialSize = [1024, 1024];
   let size = initialSize; // こうしないと最初に選択してくれない
 
@@ -41,8 +41,6 @@
     "output_format": "png"
   };
 
-  let url = 'http://127.0.0.1:5001/frameplanner-e5569/us-central1/generateImageFromText';
-
   function onChooseImage({detail}) {
     chosen = detail;
   }
@@ -57,6 +55,7 @@
       $onlineAccount.feathral = feathral;
       gallery.push(image);
       gallery = gallery;
+      logEvent(getAnalytics(), 'generate_feathral');
     }
     catch(error) {
     }

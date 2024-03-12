@@ -971,7 +971,9 @@ export class FilmStackTransformer {
     });
 
     const r = calculateMinimumBoundingRect(paperSize, films);
-    this.pivot = getRectCenter(r);
+    if (r != null) {
+      this.pivot = getRectCenter(r);
+    }
   }
 
   scale(s: number) {
