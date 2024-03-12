@@ -256,20 +256,21 @@ export function dealBookContents(book: Book, contents: FrameContent[], insertEle
 
 function dealPageContents(book: Book, page: Page, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-  dealFrameContents(book, page, page.frameTree, layout, contents, insertElement, spliceElement, pageNumber);
+  dealFrameContents(book, page, page.frameTree, layout, contents, insertElement, spliceElement, pageNumber, false);
 } 
 
-function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layout: Layout, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
+function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layout: Layout, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number, tailMode: boolean): boolean {
   if (!frameTree.children || frameTree.children.length === 0) {
     if (0 < frameTree.visibility) {
 
       if (frameTree === spliceElement) {
         contents.shift();
+        tailMode = true;
       } 
       if (frameTree === insertElement || contents.length === 0) {
         frameTree.filmStack = { films: [] };
         frameTree.prompt = "";
-        return;
+        return true;
       }
       
       const leafLayout = findLayoutOf(layout, frameTree);
@@ -291,13 +292,17 @@ function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layo
         page.bubbles.push(b);
       }
 
-      const transformer = new FilmStackTransformer(page.paperSize, frameTree.filmStack.films);
-      transformer.scale(0.01);
-      constraintLeaf(page.paperSize, leafLayout);
+      if (tailMode) {
+        const transformer = new FilmStackTransformer(page.paperSize, frameTree.filmStack.films);
+        transformer.scale(0.01);
+        constraintLeaf(page.paperSize, leafLayout);
+      }
     }
+    return tailMode;
   } else {
     for (let child of frameTree.children) {
-      dealFrameContents(book, page, child, layout, contents, insertElement, spliceElement, pageNumber);
+      tailMode = dealFrameContents(book, page, child, layout, contents, insertElement, spliceElement, pageNumber, tailMode);
     }
+    return tailMode;
   }
 }
