@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
-  import { forceFontLoadToken, mainBook, redrawToken } from "./bookStore";
+  import { forceFontLoadToken, mainBook, redrawToken, fontLoadToken } from "./bookStore";
   import { onMount } from "svelte";
 
   $: onBookChanged($mainBook, $forceFontLoadToken);
@@ -15,6 +15,15 @@
       }
     }
   }
+
+  $: onFontLoad($fontLoadToken);
+  function onFontLoad(tokens: {family: string, weight: string}[]) {
+    if (tokens) {
+      for (let token of tokens) {
+        load(token.family, token.weight);
+      }
+    }
+  }  
 
   const localFontFiles = {
     '源暎アンチック': 'GenEiAntiqueNv5-M',

@@ -33,6 +33,7 @@
   import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
   import Account from './utils/Account.svelte';
+  import Mascot from './mascot/Mascot.svelte'
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -100,6 +101,7 @@
 <ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
 <FileManager/>
+<Mascot/>
 
 <JsonEditor/>
 
