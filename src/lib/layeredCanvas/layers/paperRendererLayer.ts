@@ -566,4 +566,10 @@ export class PaperRendererLayer extends Layer {
   }
 
   renderDepths(): number[] { return [0,1]; }
+
+  resetCache(){
+    for (let bubble of this.rawBubbles) {
+      bubble.renderInfo = null;
+    }
+  }
 }
