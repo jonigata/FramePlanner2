@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fontLoadToken } from "../bookeditor/bookStore";
-  import { chat } from "../firebase";
+  import { fontLoadToken, mainBook } from "../bookeditor/bookStore";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import "../box.css";
-  import { type Log, MascotController } from "./MascotController";
+  import { type Context, type Log, MascotController } from "./MascotController";
+  import { commitBook } from '../bookeditor/book';
 
   const controller = new MascotController();
   let input = "";
@@ -18,19 +18,13 @@
     timelineElement.scrollTop = timelineElement.scrollHeight;
   }
 
-  const handleKeydown = async (e) => {
+  const handleKeydown = (e) => {
     if (e.keyCode === 13) {
       if (e.shiftKey) {
         return;
       }
       e.preventDefault();
-      controller.add(
-        (clog) => {
-          log = clog;
-          input=null;
-          key++;
-        },
-        input);
+      onPost(input);
     }
   };  
 
@@ -41,14 +35,35 @@
     key++;
   }
 
-  function onPost(content: string) {
-    controller.add(
-      (clog) => {
-        log = clog;
+  async function onPost(content: string) {
+    const context: Context = {
+      book: $mainBook,
+      pageIndex: 0,
+    }
+    try {
+      await controller.add(
+        (clog) => {
+          log = clog;
+          input=null;
+          key++;
+        },
+        content,
+        context);
+      commitBook($mainBook, null);
+      $mainBook = $mainBook;
+      input=null;
+      key++;
+    }
+    catch(e) {
+      if (e.name === "AIError" || e.name === "AIArgumentError") {
+        log.length = log.length - 1;
+        log.push({role: "error", content: e.message});
         input=null;
         key++;
-      },
-      content);
+      } else {
+        console.error(e.message);
+      }
+    }
   }
   
   onMount(() => {
@@ -72,6 +87,9 @@
         {#if role === 'user'}
           <div class="user variant-soft-tertiary rounded-container-token">{content}</div>
         {/if}
+        {#if role === 'error'}
+          <div class="error variant-soft-error rounded-container-token">{content}</div>
+        {/if}
       {/each}
     {/key}
   </div>
@@ -85,6 +103,11 @@
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost("フキダシを作るには？")}>
       フキダシを作るには？
+    </button>
+  </div>
+  <div class="hbox">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost("お腹すいたってフキダシ作って")}>
+      お腹すいたってフキダシ作って
     </button>
   </div>
 </div>
@@ -126,6 +149,14 @@
     color: var(--color-primary-50);
     font-family: 'Kaisei Decol';
     max-width: 80%;
+    word-wrap: break-word;
+    padding: 6px;
+    align-self: flex-start;
+  }
+  .error {
+    color: var(--color-error-50);
+    font-family: 'Zen Maru Gothic';
+    max-width: 100%;
     word-wrap: break-word;
     padding: 6px;
     align-self: flex-start;

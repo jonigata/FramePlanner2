@@ -126,14 +126,26 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<{ im
   return { image: img, feathral: result.feathral };
 }
 
-
-export async function chat(log: { role: string, content: string }[]): Promise<string> {
+export async function aiChat(log: { role: string, content: string }[]): Promise<string> {
   const functions = getFunctions(app);
   connectFunctionsEmulator(functions, "localhost", 5001);
   const chat = httpsCallable(functions, 'chat');
   const r = await chat({log});
   const result = (r.data as any);
-  console.log(r);
+  console.log("chat:", r);
 
   return result.response;
 }
+
+export async function aiEdit(instruction: string): Promise<string> {
+  const functions = getFunctions(app);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+  const edit = httpsCallable(functions, 'edit');
+  console.log("instruction:", instruction);
+  const r = await edit({instruction});
+  const result = (r.data as any);
+  console.log("edit:", r);
+
+  return result.response;
+}
+
