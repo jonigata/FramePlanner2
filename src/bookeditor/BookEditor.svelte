@@ -23,7 +23,7 @@
   import ImageProvider from '../generator/ImageProvider.svelte';
   import { loadModel, predict } from '../utils/rmbg';
   import { loading } from '../utils/loadingStore'
-  import type { ImageFile } from '../lib/layeredCanvas/dataModels/imageFile';
+  import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -46,9 +46,12 @@
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
 
-  $: if ($redrawToken) {
+  $: if ($redrawToken && layeredCanvas != null) {
     $redrawToken = false; 
-    layeredCanvas?.redraw();
+    for (const paper of arrayLayer.array.papers) {
+      (paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer).resetCache();
+    } 
+    layeredCanvas.redraw();
   }
 
   $: if ($forceCommitDelayedToken) {
