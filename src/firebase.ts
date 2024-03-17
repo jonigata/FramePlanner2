@@ -125,3 +125,15 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<{ im
 
   return { image: img, feathral: result.feathral };
 }
+
+
+export async function chat(log: { role: string, content: string }[]): Promise<string> {
+  const functions = getFunctions(app);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+  const chat = httpsCallable(functions, 'chat');
+  const r = await chat({log});
+  const result = (r.data as any);
+  console.log(r);
+
+  return result.response;
+}
