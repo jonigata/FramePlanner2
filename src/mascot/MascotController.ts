@@ -30,18 +30,21 @@ export class MascotController {
     log.push({ role: 'assistant', content: null });
     refresh(log);
 
-    const r = await aiChat(log);
+    const r = await aiChat(log.slice(0,-1));
     //await new Promise((resolve) => setTimeout(resolve, 2));
     //const r = "まだ実装してないよ～";
+    //callServant(context, { tool: "createBubble", parameters: { text: "うひひ", position: [0.5, 0.5] } })
+
+    log.pop();
 
     const json = this.parse(r);
     console.log(json);
     if (typeof json === 'string') {
-      post(r);
+      this.post(r);
     } else {
       switch (json.type) {
-        case 'message':
-          post(json.message);
+        case 'chat':
+          this.post(json.message);
           break;
         case 'operation':
           await this.edit(json.instruction, context);
@@ -67,7 +70,7 @@ export class MascotController {
   }
 
   post(s: string) {
-    this.log[this.log.length - 1].content = s;
+    this.log.push({ role: 'assistant', content: s })
   }
 
   parse(content: string): any {

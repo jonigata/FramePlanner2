@@ -170,6 +170,8 @@
   async function signOut() {
     const auth = getAuth(app);
     await auth.signOut();
+    // reload
+    location.reload();
   }
 
   function archive(op: BookArchiveOperation) {

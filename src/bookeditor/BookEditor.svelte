@@ -46,12 +46,18 @@
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
 
-  $: if ($redrawToken && layeredCanvas != null) {
+  $: onRedraw($redrawToken);
+  function onRedraw(token: boolean) {
+    console.log("=================redrawToken", token, layeredCanvas);
+    if (!token) { return; }
+    if (layeredCanvas != null) {
+      for (const paper of arrayLayer.array.papers) {
+        (paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer).resetCache();
+      } 
+      console.log("redraw");
+      layeredCanvas.redraw();
+    }
     $redrawToken = false; 
-    for (const paper of arrayLayer.array.papers) {
-      (paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer).resetCache();
-    } 
-    layeredCanvas.redraw();
   }
 
   $: if ($forceCommitDelayedToken) {
@@ -167,6 +173,15 @@
 
     const newPageIds = book.pages.map(p => p.id);
     if (pageIds.join(",") === newPageIds.join(",")) {
+      // frames/bubblesの再設定だけは毎回しておく
+      let i = 0;
+      for (const paper of arrayLayer.array.papers) {
+        const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
+        rendererLayer.setBubbles(book.pages[i].bubbles);
+        rendererLayer.setFrameTree(book.pages[i].frameTree);
+        i++;
+      } 
+      layeredCanvas.redraw();
       return;
     }
     pageIds = newPageIds;
@@ -206,6 +221,7 @@
       $bookEditor,
       defaultBubbleSlot);
     layeredCanvas = builtBook.layeredCanvas;
+    console.log("setting layeredCanvas", layeredCanvas);
     layeredCanvas.redraw();
     arrayLayer = builtBook.arrayLayer;
   }

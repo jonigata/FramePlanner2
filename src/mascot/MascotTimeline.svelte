@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { fontLoadToken, mainBook } from "../bookeditor/bookStore";
+  import { onMount, tick } from "svelte";
+  import { fontLoadToken, mainBook, redrawToken } from "../bookeditor/bookStore";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import "../box.css";
   import { type Context, type Log, MascotController } from "./MascotController";
@@ -11,7 +11,7 @@
   let key=0;
   let log: Log[] = controller.log;
   let timelineElement: HTMLDivElement;
-  
+
   $: if (log && timelineElement) {
     console.log("scroll");
     console.log(timelineElement.scrollHeight);
@@ -51,7 +51,7 @@
         context);
       commitBook($mainBook, null);
       $mainBook = $mainBook;
-      input=null;
+      input = null;
       key++;
     }
     catch(e) {
@@ -73,6 +73,9 @@
 
 <div class="timeline-container variant-glass-surface rounded-container-token">
   <div class="timeline rounded-container-token vbox" bind:this={timelineElement}>
+    <div class="mascot variant-soft-primary rounded-container-token">
+      やってほしいことを教えてね～　多分すぐにはできないけど、そのうちできるようになるよ～
+    </div>
     {#key key}
       {#each log as { role, content }, i}
         {#if role === 'assistant'}
