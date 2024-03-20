@@ -51,6 +51,6 @@
     opacity: 1;
   }
   .tooltip {
-    white-space: pre-line;
+    white-space: pre;
   }
 </style>

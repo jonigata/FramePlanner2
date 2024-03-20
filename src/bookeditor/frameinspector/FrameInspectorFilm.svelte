@@ -8,7 +8,6 @@
   import trashIcon from '../../assets/frameInspector/trash.png';
   import punchIcon from '../../assets/frameInspector/punch.png';
   import { toolTip } from '../../utils/passiveToolTipStore';
-  import "./frameInspector.postcss";
 
   export let film: Film;
 
@@ -88,8 +87,8 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="film"
-  class:selected={film?.selected}
-  class:unselected={!film?.selected}
+  class:variant-filled-primary={film?.selected}
+  class:variant-soft-tertiary={!film?.selected}
   draggable={false}
   on:click={onClick}
   bind:this={item}>

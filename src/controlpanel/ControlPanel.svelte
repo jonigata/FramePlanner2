@@ -28,6 +28,7 @@
   import { app } from "../firebase";
   import { getAuth } from "firebase/auth";
   import { accountUser } from "../utils/accountStore";
+  import { onlineStatus } from "../utils/onlineStatusStore";
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
@@ -39,7 +40,6 @@
   let exponentialMin = 4096;
   let max = 9410;
   let contactText = "";
-  let signInStatus: "unknown" | "signed-in" | "signed-out" = "unknown";
 
   const scale = writableDerived(
   	viewport,
@@ -297,10 +297,10 @@
     auth.onAuthStateChanged((user) => {
       console.log("onAuthStateChanged", user);
       if (user) {
-        signInStatus = "signed-in";
+        $onlineStatus = "signed-in";
         $accountUser = user;
       } else {
-        signInStatus = "signed-out";
+        $onlineStatus = "signed-out";
         $accountUser = null;
       }
     });
@@ -429,12 +429,12 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
       Export PSD
     </button>
-    {#if signInStatus === "signed-out"}
+    {#if $onlineStatus === "signed-out"}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
         Sign in
       </button>
     {/if}
-    {#if signInStatus === "signed-in"}
+    {#if $onlineStatus === "signed-in"}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signOut}>
         Sign out
       </button>

@@ -9,7 +9,7 @@
 </script>
 
 <button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={callFairy}
-  use:toolTip={`ファイルマネージャー`}>
+  use:toolTip={`カイルちゃん！`}>
   <img src={bellIcon} alt="call fairy"/>
 </button>
 
