@@ -450,11 +450,11 @@
   .control-panel {
     position: absolute;
     width: 400px;
-    height: 750px;
     display: flex;
     flex-direction: column;
     top: 20px;
     left: 20px;
+    padding-bottom: 8px;
   }
   .title-bar {
     cursor: move;
