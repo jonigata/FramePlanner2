@@ -8,6 +8,7 @@
   import { copyIndexedDB } from './utils/backUpIndexedDB';
   import * as Sentry from "@sentry/svelte";
   import { Modals } from 'svelte-modals'
+  import { mascotVisible } from './mascot/mascotStore';
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -25,6 +26,7 @@
   import FileManager from './filemanager/FileManager.svelte';
   import NewBookButton from './rootelements/NewBookButton.svelte';
   import CabinetButton from './rootelements/CabinetButton.svelte';
+  import BellButton from './rootelements/BellButton.svelte';
   import StoryWeaver from './weaver/StoryWeaver.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
@@ -93,6 +95,7 @@
   <PassiveToolTip />
   <NewBookButton  />
   <CabinetButton />
+  <BellButton />
 </div>
 
 <FrameInspector/>
@@ -101,7 +104,9 @@
 <ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
 <FileManager/>
-<Mascot/>
+{#if $mascotVisible}
+  <Mascot/>
+{/if}
 
 <JsonEditor/>
 
