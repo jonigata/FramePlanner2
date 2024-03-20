@@ -9,7 +9,7 @@
   import * as Sentry from "@sentry/svelte";
   import { Modals } from 'svelte-modals'
   import { mascotVisible } from './mascot/mascotStore';
-  import { onlineStatus } from './utils/onlineStatusStore';
+  import { onlineAccount } from './utils/accountStore';
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -96,7 +96,7 @@
   <PassiveToolTip />
   <NewBookButton  />
   <CabinetButton />
-  {#if $onlineStatus === 'signed-in'}
+  {#if $onlineAccount != null}
     <BellButton />
   {/if}
 </div>
@@ -107,7 +107,7 @@
 <ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
 <FileManager/>
-{#if $mascotVisible && $onlineStatus === 'signed-in'}
+{#if $mascotVisible && $onlineAccount != null}
   <Mascot/>
 {/if}
 
