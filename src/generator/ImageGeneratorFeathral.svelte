@@ -2,11 +2,11 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
   import { onlineAccount } from "../utils/accountStore";
-  import feathralIcon from '../assets/feathral.png';
   import { onMount } from 'svelte';
   import { updateFeathral, generateImageFromTextWithFeathral } from '../firebase';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
+  import Feathral from '../utils/Feathral.svelte';
 
   export let busy: boolean;
   export let prompt: string;
@@ -71,7 +71,7 @@
 
 <div class="drawer-content">
   {#if $onlineAccount}
-  <p><img src={feathralIcon} alt="feathral" width=24 height=24/>Feathral: {$onlineAccount.feathral}</p>
+  <p><Feathral/></p>
 
   <p>prompt</p>
   <textarea bind:value={prompt}/>

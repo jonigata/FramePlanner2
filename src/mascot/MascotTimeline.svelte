@@ -5,6 +5,7 @@
   import "../box.css";
   import { type Context, type Log, MascotController } from "./MascotController";
   import { commitBook } from '../bookeditor/book';
+  import Feathral from '../utils/Feathral.svelte';
 
   const controller = new MascotController();
   let input = "";
@@ -113,6 +114,7 @@
       お腹すいたってフキダシ作って
     </button>
   </div>
+  <Feathral/>
 </div>
 
 <style>
@@ -120,9 +122,14 @@
     position: absolute;
     left: 256px;
     bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 4px;
   }
   .timeline {
     margin: 8px;
+    margin-bottom: 0px;
     width: 320px;
     height: 512px;
     background: rgba(var(--color-surface-50) / 1);
