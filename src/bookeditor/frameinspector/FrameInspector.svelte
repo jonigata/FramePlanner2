@@ -82,10 +82,10 @@
     key++;
   }
 
-  function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean }>) {
-    const { film, ctrlKey } = e.detail;
+  function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean, metaKey: boolean }>) {
+    const { film, ctrlKey, metaKey } = e.detail;
 
-    if (!ctrlKey) {
+    if (!ctrlKey && !metaKey) {
       const oldSelected = film.selected;
       $frame.filmStack.films.forEach(f => f.selected = false);
       film.selected = !oldSelected;
