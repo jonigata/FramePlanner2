@@ -7,6 +7,8 @@ import type * as Storyboard from "./weaver/storyboard";
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui'
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
+import { developmentFlag } from "./utils/developmentFlagStore";
+import { get as storeGet } from "svelte/store";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
@@ -18,6 +20,13 @@ const firebaseConfig = {
   appId: "1:415667920948:web:6a16664190f63933c7aa61",
   measurementId: "G-KFVR03HSSF"
 };
+
+function useEmulatorIfDevelopment() {
+  if (storeGet(developmentFlag)) {
+    const functions = getFunctions(app);
+    connectFunctionsEmulator(functions, "localhost", 5001);
+  }
+}
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
@@ -103,7 +112,7 @@ export function startAuth(elementId: string) {
 
 export async function updateFeathral(): Promise<number> {
   const functions = getFunctions(app);
-  // connectFunctionsEmulator(functions, "localhost", 5001);
+  useEmulatorIfDevelopment();
   const updateFeathral = httpsCallable(functions, 'updatefeathralifneeded');
   const r = await updateFeathral();
   console.tag("feathral", "cyan", r);
@@ -112,7 +121,7 @@ export async function updateFeathral(): Promise<number> {
 
 export async function generateImageFromTextWithFeathral(data: any): Promise<{ image: HTMLImageElement, feathral: number }> {
   const functions = getFunctions(app);
-  // connectFunctionsEmulator(functions, "localhost", 5001);
+  useEmulatorIfDevelopment();
   const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateimagefromtext');
   const r = await generateImageFromTextWithFeathral(data);
   const result = (r.data as any);
@@ -128,7 +137,7 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<{ im
 
 export async function aiChat(log: { role: string, content: string }[]): Promise<string> {
   const functions = getFunctions(app);
-  connectFunctionsEmulator(functions, "localhost", 5001);
+  useEmulatorIfDevelopment();
   const chat = httpsCallable(functions, 'chat');
   const r = await chat({log});
   const result = (r.data as any);
@@ -139,7 +148,7 @@ export async function aiChat(log: { role: string, content: string }[]): Promise<
 
 export async function aiEdit(instruction: string): Promise<string> {
   const functions = getFunctions(app);
-  connectFunctionsEmulator(functions, "localhost", 5001);
+  useEmulatorIfDevelopment();
   const edit = httpsCallable(functions, 'edit');
   console.log("instruction:", instruction);
   const r = await edit({instruction});

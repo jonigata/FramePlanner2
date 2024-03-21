@@ -24,6 +24,7 @@
   import { loading } from '../utils/loadingStore'
   import { toolTip } from '../utils/passiveToolTipStore';
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
+  import { saveProhibitFlag } from '../utils/developmentFlagStore';
 
   export let fileSystem: FileSystem;
 
@@ -37,7 +38,9 @@
     async () => {
       const book = $mainBook;
       const file = await fileSystem.getNode(book.revision.id as NodeId);
-      await saveBookTo(book, fileSystem, file.asFile());
+      if (!$saveProhibitFlag) {
+        await saveBookTo(book, fileSystem, file.asFile());
+      }
       currentRevision = {...book.revision};
       await recordCurrentFileId(book.revision.id as NodeId);
     });

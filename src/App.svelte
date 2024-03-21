@@ -10,6 +10,7 @@
   import { Modals } from 'svelte-modals'
   import { mascotVisible } from './mascot/mascotStore';
   import { onlineAccount } from './utils/accountStore';
+  import { developmentFlag } from "./utils/developmentFlagStore";
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -37,6 +38,7 @@
   import SignIn from './utils/SignIn.svelte';
   import Account from './utils/Account.svelte';
   import Mascot from './mascot/Mascot.svelte'
+  import SaveOffButton from './rootelements/SaveOffButton.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -74,6 +76,11 @@
       URL.revokeObjectURL(url);
     }
 
+    // localhostか127.0.0.1だったら
+    $developmentFlag = 
+      location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    console.log("================ developmentFlag", $developmentFlag);
+
     /*
     // Initialize the Sentry SDK here
     Sentry.init({
@@ -109,6 +116,9 @@
 <FileManager/>
 {#if $mascotVisible && $onlineAccount != null}
   <Mascot/>
+{/if}
+{#if $developmentFlag}
+  <SaveOffButton/>
 {/if}
 
 <JsonEditor/>

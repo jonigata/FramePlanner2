@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import { fontLoadToken, mainBook, redrawToken } from "../bookeditor/bookStore";
+  import { onMount } from "svelte";
+  import { fontLoadToken, mainBook } from "../bookeditor/bookStore";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import "../box.css";
   import { type Context, type Log, MascotController } from "./MascotController";
