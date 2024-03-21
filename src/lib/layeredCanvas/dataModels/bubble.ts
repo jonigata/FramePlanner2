@@ -2,6 +2,7 @@ import { ulid } from 'ulid';
 import type { Vector, Rect } from '../tools/geometry/geometry';
 import { rectContains } from '../tools/geometry/geometry';
 import { type RectHandle, rectHandles } from '../tools/rectHandle';
+import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 
 const minimumBubbleSize = 72;
 const threshold = 10;
@@ -470,6 +471,28 @@ export class Bubble {
     const scale = pageSize / imageSize;
     this.image.n_translation = [translation[0] / scale, translation[1] / scale];
   }
+
+  calculateFitSize(paperSize: Vector) {
+    const fontSize = this.getPhysicalFontSize(paperSize);
+    const baselineSkip = fontSize * 1.5;
+    const charSkip = fontSize;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let size: Vector =[0,0];
+    if (this.direction == 'v') {
+      const m = measureVerticalText(ctx, Infinity, this.text, baselineSkip, charSkip, false);
+      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
+    } else {
+      const ss = `${this.fontStyle} ${this.fontWeight} ${fontSize}px '${this.fontFamily}'`;
+      ctx.font = ss;
+      const m = measureHorizontalText(ctx, Infinity, this.text, baselineSkip, false);
+      size = [Math.floor(m.width*1.4), Math.floor(m.height*1.2)];
+    }
+    console.log(size);
+    return Bubble.enoughSize(size);
+  }
+
+
 }
 
 // TODO: tailTip正規化してなかった……

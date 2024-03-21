@@ -386,8 +386,8 @@ export class BubbleLayer extends Layer {
   }
 
   createTextBubble(text: string): Bubble[] {
+    const paperSize = this.getPaperSize();
     try {
-      const paperSize = this.getPaperSize();
       const b = Bubble.compile(paperSize, JSON.parse(text));
       const bubbleSize = b.getPhysicalSize(paperSize);
       b.parent = null;
@@ -400,16 +400,16 @@ export class BubbleLayer extends Layer {
       return [b];
     }
     catch (e) {
-      const paperSize = this.getPaperSize();
       let cursorX = 10;
       let cursorY = 10;
       let lineHeight = 0;
       let lastBubble = null;
       const bubbles = [];
       for (let s of text.split(/\n\s*\n/)) {
-        const size = this.calculateFitBubbleSize(s, this.defaultBubbleSlot.bubble);
         const b = this.defaultBubbleSlot.bubble.clone();
+        b.text = s;
         b.image = null;
+        const size = b.calculateFitSize(paperSize);
 
         if (cursorX + size[0] > paperSize[0]) {
           cursorX = 10;
@@ -431,25 +431,6 @@ export class BubbleLayer extends Layer {
       this.selectBubble(lastBubble);
       return bubbles;
     }
-  }
-
-  calculateFitBubbleSize(s: string, bubble: Bubble) {
-    const fontSize = bubble.getPhysicalFontSize(this.getPaperSize());
-    const baselineSkip = fontSize * 1.5;
-    const charSkip = fontSize;
-    const ctx = this.viewport.canvas.getContext('2d');
-    let size: Vector =[0,0];
-    if (bubble.direction == 'v') {
-      const m = measureVerticalText(ctx, Infinity, s, baselineSkip, charSkip, false);
-      size = [Math.floor(m.width*1.2), Math.floor(m.height*1.4)];
-    } else {
-      const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
-      ctx.font = ss;
-      const m = measureHorizontalText(ctx, Infinity, s, baselineSkip, false);
-      size = [Math.floor(m.width*1.4), Math.floor(m.height*1.2)];
-    }
-    console.log(size);
-    return Bubble.enoughSize(size);
   }
 
   createImageBubble(image: HTMLImageElement): void {
@@ -705,7 +686,7 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, p)) {
-        const size = this.calculateFitBubbleSize(bubble.text, bubble);
+        const size = bubble.calculateFitSize(paperSize);
         bubble.setPhysicalSize(paperSize, size);
         this.onCommit();
         return true;
