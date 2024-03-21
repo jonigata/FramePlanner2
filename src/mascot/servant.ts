@@ -47,6 +47,8 @@ function createBubble(context: Context, args: CreateBubbleArgs) {
   bubble.initOptions();
   // bubble.forceEnoughSize(paperSize);
   bubble.setPhysicalCenter(paperSize, [paperSize[0] * args.position[0], paperSize[1] * args.position[1]]);
+  const size = bubble.calculateFitSize(paperSize);
+  bubble.setPhysicalSize(paperSize, size);
   console.log(bubble);
   context.book.pages[context.pageIndex].bubbles.push(bubble);
 }
