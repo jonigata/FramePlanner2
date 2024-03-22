@@ -62,7 +62,8 @@
     <h2>チートシート</h2>
 
     <h3>ペーパー</h3>
-    <p>Space + Drag: スクロール</p>
+    <p>Space+ドラッグ: スクロール</p>
+    <p>右ドラッグ: スクロール</p>
     <p>Wheel: ズーム</p>
     <p>Undo/Redo: Ctrl+Z/Shift+Ctrl+Z</p>
 
