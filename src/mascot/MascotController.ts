@@ -1,5 +1,4 @@
-import { APIError } from "openai";
-import { aiChat, aiEdit } from "../firebase";
+import { aiChat } from "../firebase";
 import { AIError, AIArgumentError, callServant, type FunctionCalling } from "./servant";
 import type { Context } from "./servant";
 export type { Context };
@@ -31,14 +30,14 @@ export class MascotController {
     refresh(log);
 
     const r = await aiChat(log.slice(0,-1));
+    console.log(r);
     //await new Promise((resolve) => setTimeout(resolve, 2));
     //const r = "まだ実装してないよ～";
     //callServant(context, { tool: "createBubble", parameters: { text: "うひひ", position: [0.5, 0.5] } })
 
     log.pop();
 
-    const json = this.parse(r);
-    console.log(json);
+    const json = this.parse(r.result);
     if (typeof json === 'string') {
       this.post(r);
     } else {
@@ -47,26 +46,16 @@ export class MascotController {
           this.post(json.message);
           break;
         case 'operation':
-          await this.edit(json.instruction, context);
+          callServant(context, json.functionCall as FunctionCalling);
+          this.post("やったよ～")
           break;
         default:
           throw new AIArgumentError(`不明な判断: ${json.type}`)
       }
     }
     refresh(log);
-  }
 
-  async edit(instruction: string, context: Context) {
-    const r = await aiEdit(instruction);
-    console.log("edit", r);
-    try {
-      const json = JSON.parse(r);
-      callServant(context, json as FunctionCalling);
-      this.post("やったよ～")
-    }
-    catch (e) {
-      throw new AIError(`AIエラー: ${e.message}`);
-    }
+    return r.feathral;
   }
 
   post(s: string) {

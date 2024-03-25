@@ -51,9 +51,13 @@
       imageRequest.prompt = prompt;
       imageRequest.width = size[0];
       imageRequest.height = size[1];
-      const { image, feathral } = await generateImageFromTextWithFeathral(imageRequest);
-      $onlineAccount.feathral = feathral;
-      gallery.push(image);
+      const data = await generateImageFromTextWithFeathral(imageRequest);
+      console.log(data);
+      const img = document.createElement('img');
+      img.src = "data:image/png;base64," + data.result.image;
+
+      $onlineAccount.feathral = data.feathral;
+      gallery.push(img);
       gallery = gallery;
       logEvent(getAnalytics(), 'generate_feathral');
     }

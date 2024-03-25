@@ -6,6 +6,7 @@
   import { type Context, type Log, MascotController } from "./MascotController";
   import { commitBook } from '../bookeditor/book';
   import Feathral from '../utils/Feathral.svelte';
+  import { onlineAccount } from "../utils/accountStore";
 
   const controller = new MascotController();
   let input = "";
@@ -14,8 +15,6 @@
   let timelineElement: HTMLDivElement;
 
   $: if (log && timelineElement) {
-    console.log("scroll");
-    console.log(timelineElement.scrollHeight);
     timelineElement.scrollTop = timelineElement.scrollHeight;
   }
 
@@ -30,7 +29,6 @@
   };  
 
   function onReset() {
-    console.log("onReset");
     controller.reset();
     log = controller.log;
     key++;
@@ -42,7 +40,7 @@
       pageIndex: 0,
     }
     try {
-      await controller.add(
+      const feathral = await controller.add(
         (clog) => {
           log = clog;
           input=null;
@@ -50,6 +48,7 @@
         },
         content,
         context);
+      $onlineAccount.feathral = feathral;
       commitBook($mainBook, null);
       $mainBook = $mainBook;
       input = null;

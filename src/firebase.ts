@@ -119,42 +119,22 @@ export async function updateFeathral(): Promise<number> {
   return (r.data as any).feathral;
 }
 
-export async function generateImageFromTextWithFeathral(data: any): Promise<{ image: HTMLImageElement, feathral: number }> {
+export async function generateImageFromTextWithFeathral(data: any): Promise<any> {
   const functions = getFunctions(app);
   useEmulatorIfDevelopment();
   const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateimagefromtext');
   const r = await generateImageFromTextWithFeathral(data);
-  const result = (r.data as any);
   console.log(r);
-
-  const img = document.createElement('img');
-  img.src = "data:image/png;base64," + (result.data as any).image;
-
   logEvent(analytics, 'feathral_generate');
-
-  return { image: img, feathral: result.feathral };
+  return r.data;
 }
 
-export async function aiChat(log: { role: string, content: string }[]): Promise<string> {
+export async function aiChat(log: { role: string, content: string }[]): Promise<any> {
   const functions = getFunctions(app);
   useEmulatorIfDevelopment();
   const chat = httpsCallable(functions, 'chat');
   const r = await chat({log});
-  const result = (r.data as any);
-  console.log("chat:", r);
-
-  return result.response;
+  console.log(r);
+  logEvent(analytics, 'chat');
+  return r.data;
 }
-
-export async function aiEdit(instruction: string): Promise<string> {
-  const functions = getFunctions(app);
-  useEmulatorIfDevelopment();
-  const edit = httpsCallable(functions, 'edit');
-  console.log("instruction:", instruction);
-  const r = await edit({instruction});
-  const result = (r.data as any);
-  console.log("edit:", r);
-
-  return result.response;
-}
-
