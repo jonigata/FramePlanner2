@@ -18,7 +18,7 @@
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
-    dispatch('select', { film, ctrlKey: e.ctrlKey });
+    dispatch('select', { film, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
   }
 
   function onDelete(ev: MouseEvent) {
