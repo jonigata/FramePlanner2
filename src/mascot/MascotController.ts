@@ -46,7 +46,7 @@ export class MascotController {
           this.post(json.message);
           break;
         case 'operation':
-          callServant(context, json.functionCall as FunctionCalling);
+          callServant(context, json.functionCall as FunctionCalling[]);
           this.post("やったよ～")
           break;
         default:

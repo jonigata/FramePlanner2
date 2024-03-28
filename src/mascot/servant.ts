@@ -1,6 +1,7 @@
 import type { Book } from "../bookeditor/book"
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
+import { getHaiku } from "../lib/layeredCanvas/tools/haiku";
 
 export type Context = {
   book: Book;
@@ -34,8 +35,10 @@ type CreateBubbleArgs = {
 
 function createBubble(context: Context, args: CreateBubbleArgs) {
   console.log("createBubble", args);
-  if (args.text == null || args.text === "") {
+  if (args.text == null) {
     throw new AIArgumentError("テキストが空です");
+  } else if (args.text === "") {
+    args.text = getHaiku();
   }
   if (args.position == null || args.position.length !== 2 || 
       typeof args.position[0] !== "number" || typeof args.position[1] !== "number") {
@@ -61,14 +64,16 @@ export type FunctionCalling = {
 type Servant = (context: Context, parameters: Parameters) => void;
 
 // 関数の定義に基づいて関数を動的に呼び出す関数
-export function callServant(context: Context, funcall: FunctionCalling) {
+export function callServant(context: Context, funcalls: FunctionCalling[]) {
   const servants: { [key: string]: Servant } = {
     "createBubble": createBubble,
   }
 
-  const servant = servants[funcall.tool];
-  if (servant == null) {
-    throw new AIError(`関数${funcall.tool}は存在しません`);
+  for (const funcall of funcalls) {
+    const servant = servants[funcall.tool];
+    if (servant == null) {
+      throw new AIError(`関数${funcall.tool}は存在しません`);
+    }
+    servant(context, funcall.parameters);
   }
-  servant(context, funcall.parameters);
 }

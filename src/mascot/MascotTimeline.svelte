@@ -7,6 +7,14 @@
   import { commitBook } from '../bookeditor/book';
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from "../utils/accountStore";
+  import DebugOnly from "../utils/DebugOnly.svelte";
+
+  const debugSamples = [
+    "にゃん",
+    "ぬるぽ",
+    "FramePlannerって何？",
+    "Feathralって何？",
+  ]
 
   const controller = new MascotController();
   let input = "";
@@ -97,22 +105,18 @@
     {/key}
   </div>
   <textarea class="chat rounded-container-token" rows="4" cols="50" on:keydown={handleKeydown} bind:value={input}/>
-  <div class="hbox">
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={onReset}>
-      Reset
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost("お前を消す方法")}>
-      お前を消す方法
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost("フキダシを作るには？")}>
-      フキダシを作るには？
-    </button>
-  </div>
-  <div class="hbox">
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost("お腹すいたってフキダシ作って")}>
-      お腹すいたってフキダシ作って
-    </button>
-  </div>
+  <DebugOnly>
+    <div class="flex flex-wrap gap-1 justify-center">
+      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onReset()}>
+        reset
+      </button>
+      {#each debugSamples as sample}
+        <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost(sample)}>
+          {sample}
+        </button>
+      {/each}
+    </div>
+  </DebugOnly>
   <Feathral/>
 </div>
 

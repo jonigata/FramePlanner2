@@ -39,6 +39,7 @@
   import Account from './utils/Account.svelte';
   import Mascot from './mascot/Mascot.svelte'
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
+  import DebugOnly from './utils/DebugOnly.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -117,9 +118,9 @@
 {#if $mascotVisible && $onlineAccount != null}
   <Mascot/>
 {/if}
-{#if $developmentFlag}
+<DebugOnly>
   <SaveOffButton/>
-{/if}
+</DebugOnly>
 
 <JsonEditor/>
 
