@@ -772,7 +772,7 @@ function addMind(path, seed, size, opts, newOpts) {
   const m = tailCoordToWorldCoord([0,0], opts.tailTip, opts.tailMid);
   const s = opts.tailTip;
   const v = [s[0] - m[0], s[1] - m[1]];
-  const r = Math.min(size[0], size[1]) * 0.5;
+  const r = Math.min(size[0], size[1]) * 0.5 * opts.tailWidth;
   for (let t of trail) {
     const p = [m[0] + t[0] * v[0], m[1] + t[0] * v[1]];
     const rt = r * t[1] * 2;

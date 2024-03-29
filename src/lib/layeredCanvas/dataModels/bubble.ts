@@ -655,6 +655,7 @@ export const bubbleOptionSets = {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
     xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
