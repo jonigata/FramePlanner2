@@ -623,7 +623,7 @@ function addTrivialTail(path, size, opts) {
       // do nothing
     } else {
       if (!opts?.extract) {
-        return path.unite(makeTrivialTailPath(size, m, v));
+        return path.unite(makeTrivialTailPath(size, m, v, opts.tailWidth));
       } else {
         return path.subtract(makeExtractTailPath(size, m, v, opts.extractWidth));
       }
@@ -633,11 +633,12 @@ function addTrivialTail(path, size, opts) {
   return path;
 }
 
-function makeTrivialTailPath(size, m, v) {
+function makeTrivialTailPath(size, m, v, tailWidth) {
   if (m == null || (m[0] == 0 && m[1] == 0)) {
     m = [0.5, 0];
   }
-  const a = size[0] * size[1];
+  console.log(tailWidth);
+  const a = size[0] * size[1] * tailWidth;
   const l = Math.max(50000, Math.hypot(v[0], v[1]) ** 2);
   const vd1 = normalize2D(perpendicular2D(v), a * 35 / l);
   const vd2 = normalize2D(perpendicular2D(v, -1), a * 35 / l);
