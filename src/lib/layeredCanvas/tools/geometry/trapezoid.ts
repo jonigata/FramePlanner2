@@ -44,3 +44,12 @@ export function extendTrapezoid(t: Trapezoid, x: number, y: number): Trapezoid {
     bottomRight: [t.bottomRight[0] + x, t.bottomRight[1] + y],
   };
 }
+
+export function rectToTrapezoid(r: Rect): Trapezoid {
+  return {
+    topLeft: [r[0], r[1]],
+    topRight: [r[0] + r[2], r[1]],
+    bottomLeft: [r[0], r[1] + r[3]],
+    bottomRight: [r[0] + r[2], r[1] + r[3]],
+  };
+}

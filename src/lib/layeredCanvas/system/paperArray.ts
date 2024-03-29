@@ -52,6 +52,13 @@ export class PaperArray {
     }
   }
 
+  getPaperRect(i: number): Rect {
+    const e = this.papers[i];
+    const x0 = e.center[0] - e.paper.size[0] * 0.5;
+    const y0 = e.center[1] - e.paper.size[1] * 0.5;
+    return [x0, y0, ...e.paper.size];
+  }
+
   findNearestPaperIndex(parentPosition: Vector): number {
     let minDist = Infinity;
     let minIndex = -1;

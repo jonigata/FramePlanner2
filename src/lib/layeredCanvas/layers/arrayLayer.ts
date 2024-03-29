@@ -3,20 +3,34 @@ import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { keyDownFlags } from "../system/keyCache";
+import { drawSelectionFrame } from "../tools/draw/selectionFrame";
+import { rectToTrapezoid } from '../tools/geometry/trapezoid';
 
 export class ArrayLayer extends Layer {
   array: PaperArray;
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
+  onMove: (from: number[], to: number) => void;
 
   trashIcons: ClickableIcon[] = [];
+  cutIcons: ClickableIcon[] = [];
   insertIcons: ClickableIcon[] = [];
+  cutFlags: boolean[] = [];
 
-  constructor(papers: Paper[], fold: number, gap: number, direction: number, onInsert: (index: number) => void, onDelete: (index: number) => void) {
+  constructor(
+    papers: Paper[], 
+    fold: number, 
+    gap: number, 
+    direction: number, 
+    onInsert: (index: number) => void, 
+    onDelete: (index: number) => void,
+    onMove: (from: number[], to: number) => void) {
+
     super();
     this.array = new PaperArray(papers, fold, gap, direction);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
+    this.onMove = onMove;
 
     this.insertIcons = [];
     this.trashIcons = [];
@@ -24,9 +38,12 @@ export class ArrayLayer extends Layer {
     for (let i = 0; i < this.array.papers.length; i++) {
       const trashIcon = new ClickableIcon(["page-trash.png"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
       this.trashIcons.push(trashIcon);
+      const cutIcon = new ClickableIcon(["page-cut.png"],[32,32],[0.5,0],"ページカット", () => 1 < this.array.papers.length, mp);
+      this.cutIcons.push(cutIcon);
+      this.cutFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
-      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png"],[24,24],[0.5,0],"ページ挿入", null, mp);
+      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png", "page-paste.png"],[24,24],[0.5,0],"ページ挿入", null, mp);
       this.insertIcons.push(insertIcon);
     }
     this.calculateIconPositions();
@@ -49,12 +66,17 @@ export class ArrayLayer extends Layer {
       const s = paper.paper.size;
       const c = paper.center;
       const trashIcon = this.trashIcons[i];
+      const cutIcon = this.cutIcons[i];
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
-        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1]];
+        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 60];
+        cutIcon.pivot = [0, 0.5];
+        cutIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 60];
       } else {
         trashIcon.pivot = [0.5, 0];
-        trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 16];
+        trashIcon.position = [c[0] + 60, c[1] + s[1] * 0.5 + 16];
+        cutIcon.pivot = [0.5, 0];
+        cutIcon.position = [c[0] - 60, c[1] + s[1] * 0.5 + 16];
       }
     }
     for (let i = 0; i < this.array.papers.length; i++) {
@@ -83,8 +105,14 @@ export class ArrayLayer extends Layer {
       insertIcon.pivot = [0, 0.5];
       insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + s[1] * 0.5 + gap * 0.5];
     } else {
+      insertIcon.index = 0;
       insertIcon.pivot = [0.5, 0];
       insertIcon.position = [c[0] - s[0] * 0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
+    }
+    if (this.cutFlags.some(e => e)) {
+      for (let i = 0; i <= this.array.papers.length; i++) {
+        this.insertIcons[i].index = 2;
+      }
     }
   }
 
@@ -118,13 +146,26 @@ export class ArrayLayer extends Layer {
 
     this.insertIcons.forEach((e, i) => {
       if (e.contains(p)) {
-        this.onInsert(i);
+        if (this.cutFlags.some(e => e)) {
+          // cutFlagsが立っているページが前にある場合、その分indexを減らす
+          const n = this.cutFlags.slice(0, i).filter(e => e).length;
+          this.onMove(this.cutFlags.map((e, i) => e ? i : -1).filter(e => 0 <= e), i - n);
+        } else {
+          this.onInsert(i);
+        }
         return null;
       }      
     });
     this.trashIcons.forEach((e, i) => {
       if (e.contains(p)) {
         this.onDelete(i);
+        return null;
+      }      
+    });
+    this.cutIcons.forEach((e, i) => {
+      if (e.contains(p)) {
+        this.cutFlags[i] = !this.cutFlags[i];
+        this.calculateIconPositions();
         return null;
       }      
     });
@@ -185,13 +226,20 @@ export class ArrayLayer extends Layer {
       this.trashIcons.forEach(e => {
         e.render(ctx);
       });
+      this.cutIcons.forEach(e => {
+        e.render(ctx);
+      });
     }
-    ctx.save();
-    for (let paper of this.array.papers) {
+    this.array.papers.forEach((paper, i) => { 
+      ctx.save();
       ctx.translate(...paper.center);
       paper.paper.render(ctx, depth);
-    }
-    ctx.restore();
+      ctx.restore();
+      if (this.cutFlags[i]) {
+        const r = this.array.getPaperRect(i);
+        drawSelectionFrame(ctx, "rgba(255, 128, 128, 1)", rectToTrapezoid(r));
+      }
+    });
   }
 
   dropped(p: Vector, image: HTMLImageElement): boolean {

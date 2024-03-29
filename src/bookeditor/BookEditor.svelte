@@ -133,6 +133,13 @@
     commit(null);
   }
 
+  function movePages(from: number[], to: number) {
+    const restPages = $mainBook.pages.filter((_, i) => !from.includes(i));
+    const movedPages = from.map(i => $mainBook.pages[i]);
+    $mainBook.pages = [...restPages.slice(0, to), ...movedPages, ...restPages.slice(to)];
+    commit(null);
+  }
+
   function insert(_page: Page, element: FrameElement) {
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, element, null);
@@ -211,6 +218,7 @@
       viewportChanged,
       insertPage,
       deletePage,
+      movePages,
       chase,
     };
     $bookEditor = bookEditorInstance;
