@@ -22,9 +22,11 @@ export class ArrayLayer extends Layer {
     this.trashIcons = [];
     const mp = () => this.paper.matrix;
     for (let i = 0; i < this.array.papers.length; i++) {
-      const trashIcon = new ClickableIcon(["page-trash.png"],[64,64],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
-      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png"],[48,48],[0.5,0],"ページ挿入", null, mp);
+      const trashIcon = new ClickableIcon(["page-trash.png"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
       this.trashIcons.push(trashIcon);
+    }
+    for (let i = 0; i <= this.array.papers.length; i++) {
+      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png"],[24,24],[0.5,0],"ページ挿入", null, mp);
       this.insertIcons.push(insertIcon);
     }
     this.calculateIconPositions();
@@ -47,34 +49,56 @@ export class ArrayLayer extends Layer {
       const s = paper.paper.size;
       const c = paper.center;
       const trashIcon = this.trashIcons[i];
-      const insertIcon = this.insertIcons[i];
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
         trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1]];
-        insertIcon.index = 1;
-        insertIcon.pivot = [0, 0.5];
-        insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + s[1] * 0.5 + gap * 0.5];
       } else {
         trashIcon.pivot = [0.5, 0];
-        trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 32];
+        trashIcon.position = [c[0], c[1] + s[1] * 0.5 + 16];
+      }
+    }
+    for (let i = 0; i < this.array.papers.length; i++) {
+      const paper = this.array.papers[i];
+      const s = paper.paper.size;
+      const c = paper.center;
+      const insertIcon = this.insertIcons[i];
+      if (this.array.fold === 1) {
+        insertIcon.index = 1;
+        insertIcon.pivot = [0, 0.5];
+        insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - s[1] * 0.5 - gap * 0.5];
+      } else {
         insertIcon.index = 0;
         insertIcon.pivot = [0.5, 0];
-        insertIcon.position = [c[0] + s[0] * -0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
+        insertIcon.position = [c[0] + s[0] * 0.5 + gap * 0.5, c[1] + s[1] * 0.5 + 16];
       }
+    }
+
+    // 最後のページの挿入アイコン
+    const paper = this.array.papers[this.array.papers.length - 1];
+    const s = paper.paper.size;
+    const c = paper.center;
+    const insertIcon = this.insertIcons[this.array.papers.length];
+    if (this.array.fold === 1) {
+      insertIcon.index = 1;
+      insertIcon.pivot = [0, 0.5];
+      insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + s[1] * 0.5 + gap * 0.5];
+    } else {
+      insertIcon.pivot = [0.5, 0];
+      insertIcon.position = [c[0] - s[0] * 0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
     }
   }
 
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
-    this.insertIcons.forEach((e, i) => {
+    this.insertIcons.forEach((e) => {
       if (e.contains(p)) {
         const q = e.center;
         this.hint([q[0], q[1] - 32],"ページ挿入")
         return true;
       }      
     });
-    this.trashIcons.forEach((e, i) => {
+    this.trashIcons.forEach((e) => {
       if (e.contains(p)) {
         const q = e.center;
         this.hint([q[0], q[1] - 32],"ページ削除")

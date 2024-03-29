@@ -124,7 +124,7 @@
     page.paperColor = p.paperColor;
     page.frameColor = p.frameColor;
     page.frameWidth = p.frameWidth;
-    $mainBook.pages.splice(index+1, 0, page);
+    $mainBook.pages.splice(index, 0, page);
     commit(null);
   }
 
