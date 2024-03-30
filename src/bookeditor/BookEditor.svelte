@@ -46,20 +46,6 @@
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
   const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
 
-  $: onRedraw($redrawToken);
-  function onRedraw(token: boolean) {
-    console.log("=================redrawToken", token, layeredCanvas);
-    if (!token) { return; }
-    if (layeredCanvas != null) {
-      for (const paper of arrayLayer.array.papers) {
-        (paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer).resetCache();
-      } 
-      console.log("redraw");
-      layeredCanvas.redraw();
-    }
-    $redrawToken = false; 
-  }
-
   $: if ($forceCommitDelayedToken) {
     $forceCommitDelayedToken = false;
     delayedCommiter.force();
@@ -253,35 +239,43 @@
   function onSplitCursor(cursor: number | null) {
     if (cursor == null || layeredCanvas == null) { return; }
     $bubbleSplitCursor = null;
+    const page = $bubbleInspectorTarget.page;
+    const oldBubble = $bubble;
 
     const text = $bubble.text;
 
-    const paperSize = $bubblePage.paperSize;
-    const bubbleSize = $bubble.getPhysicalSize(paperSize)
+    const paperSize = page.paperSize;
+    const bubbleSize = oldBubble.getPhysicalSize(paperSize)
     const width = bubbleSize[0];
-    const center = $bubble.getPhysicalCenter(paperSize);
+    const center = oldBubble.getPhysicalCenter(paperSize);
 
     const newBubble = defaultBubbleSlot.bubble.clone();
-    newBubble.n_p0 = $bubble.n_p0;
-    newBubble.n_p1 = $bubble.n_p1;
+    newBubble.n_p0 = oldBubble.n_p0;
+    newBubble.n_p1 = oldBubble.n_p1;
     newBubble.initOptions();
     newBubble.text = text.slice(cursor).trimStart();
-    findBubblePage($mainBook, $bubble).bubbles.push(newBubble);
+    page.bubbles.push(newBubble);
 
-    $bubble.text = text.slice(0, cursor).trimEnd();
+    oldBubble.text = text.slice(0, cursor).trimEnd();
 
     const c0: Vector = [center[0] + width / 2, center[1]];
     const c1: Vector = [center[0] - width / 2, center[1]];
-    if ($bubble.direction === 'v') {
-      $bubble.setPhysicalCenter(paperSize, c0);
+    if (oldBubble.direction === 'v') {
+      oldBubble.setPhysicalCenter(paperSize, c0);
       newBubble.setPhysicalCenter(paperSize, c1);
     } else {
-      $bubble.setPhysicalCenter(paperSize, c1);
+      oldBubble.setPhysicalCenter(paperSize, c1);
       newBubble.setPhysicalCenter(paperSize, c0);
     }
 
+    const oldSize = oldBubble.calculateFitSize(paperSize);
+    oldBubble.setPhysicalSize(paperSize, oldSize);
+    const newSize = newBubble.calculateFitSize(paperSize);
+    newBubble.setPhysicalSize(paperSize, newSize);
+
+    $bubbleInspectorTarget.bubble = newBubble;
     commit(null);
-    $bubble = newBubble;
+    $redrawToken = true; // TODO: なぜかnewBubbleがすぐに表示されない
   }
 
   function findBubblePage(book: Book, bubble: Bubble) {
@@ -411,6 +405,20 @@
 
   function chase() {
     painter.chase();
+  }
+
+  $: onRedraw($redrawToken);
+  function onRedraw(token: boolean) {
+    console.log("=================redrawToken", token, layeredCanvas);
+    if (!token) { return; }
+    if (layeredCanvas != null) {
+      for (const paper of arrayLayer.array.papers) {
+        (paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer).resetCache();
+      } 
+      console.log("redraw");
+      layeredCanvas.redraw();
+    }
+    $redrawToken = false; 
   }
 
 </script>
