@@ -1,12 +1,7 @@
-import type { Book } from "../bookeditor/book"
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { getHaiku } from "../lib/layeredCanvas/tools/haiku";
-
-export type Context = {
-  book: Book;
-  pageIndex: number;
-};
+import type { Context } from "./servantContext";
 
 type Parameters = { [key: string]: any };
 

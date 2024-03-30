@@ -14,6 +14,7 @@
     "ぬるぽ",
     "FramePlannerって何？",
     "Feathralって何？",
+    "ネーム作って",
   ]
 
   const controller = new MascotController();
