@@ -104,7 +104,6 @@
     const p = $newPageProperty;
     const example = frameExamples[p.templateIndex];
     const bubbles = example.bubbles.map(b => Bubble.compile(p.paperSize, b));
-    console.log(bubbles);
     const page = newPage(FrameElement.compile(example.frameTree), bubbles);
     page.paperSize = [...p.paperSize];
     page.paperColor = p.paperColor;
@@ -275,7 +274,7 @@
 
     $bubbleInspectorTarget.bubble = newBubble;
     commit(null);
-    $redrawToken = true; // TODO: なぜかnewBubbleがすぐに表示されない
+    $redrawToken = true;
   }
 
   function findBubblePage(book: Book, bubble: Bubble) {
@@ -412,8 +411,12 @@
     console.log("=================redrawToken", token, layeredCanvas);
     if (!token) { return; }
     if (layeredCanvas != null) {
+      let i = 0;
+      const pages = $mainBook.pages;
       for (const paper of arrayLayer.array.papers) {
-        (paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer).resetCache();
+        const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
+        rendererLayer.setBubbles(pages[i++].bubbles);
+        rendererLayer.resetCache();
       } 
       console.log("redraw");
       layeredCanvas.redraw();
