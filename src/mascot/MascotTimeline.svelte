@@ -24,7 +24,9 @@
   let timelineElement: HTMLDivElement;
 
   $: if (log && timelineElement) {
-    timelineElement.scrollTop = timelineElement.scrollHeight;
+    setTimeout(() => {
+      timelineElement.scrollTop = timelineElement.scrollHeight;
+    }, 0); // 0ミリ秒の遅延で即時に実行されるが、DOMの更新を待つのに十分
   }
 
   const handleKeydown = (e) => {

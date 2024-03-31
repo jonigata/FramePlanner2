@@ -144,6 +144,7 @@ export class FrameElement {
   visibility: number;
   semantics: string | null;
   prompt: string | null;
+  pseudo: boolean; // 4コマタイトルなどの擬似要素、流し込みやバッチ処理のときに無視する
   gallery: ImageFile[];
   filmStack: FilmStack;
 
@@ -248,6 +249,7 @@ export class FrameElement {
     element.visibility = markUp.visibility ?? 2;
     element.semantics = markUp.semantics;
     element.prompt = markUp.prompt ?? ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+    element.pseudo = markUp.pseudo ?? false;
     return element;
   }
 
@@ -287,6 +289,7 @@ export class FrameElement {
     if (element.visibility !== 2) { markUpElement.visibility = element.visibility; }
     if (element.semantics) { markUpElement.semantics = element.semantics; }
     if (element.prompt) { markUpElement.prompt = element.prompt; }
+    if (element.pseudo) { markUpElement.pseudo = true; }
     if (element.direction) {
       const dir = element.direction == 'h' ? 'row' : 'column';
       markUpElement[dir] = [];
@@ -868,7 +871,7 @@ export function dealImages(frameTree: FrameElement, filmStacks: FilmStack[], ins
 export function collectLeaves(frameTree: FrameElement): FrameElement[] {
   const leaves = [];
   if (!frameTree.children || frameTree.children.length === 0) {
-    if (0 < frameTree.visibility) {
+    if (0 < frameTree.visibility && !frameTree.pseudo) {
       leaves.push(frameTree);
     }
   } else {

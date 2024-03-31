@@ -84,7 +84,7 @@ export const frameExamples = [
                 {
                   height: 5,
                   column: [
-                    { height: 2, divider: { spacing: 1, slant: 0 }  },
+                    { height: 2, pseudo: true, divider: { spacing: 1, slant: 0 }  },
                   ],
                   divider: { spacing: 2, slant: 0 }
                 },
@@ -141,7 +141,7 @@ export const frameExamples = [
                 {
                   height: 5,
                   column: [
-                    { height: 2, divider: { spacing: 1, slant: 0 }  },
+                    { height: 2, pseudo: true, divider: { spacing: 1, slant: 0 }  },
                   ],
                   divider: { spacing: 2, slant: 0 }
                 },
@@ -171,7 +171,7 @@ export const frameExamples = [
                 {
                   height: 5,
                   column: [
-                    { height: 2, divider: { spacing: 1, slant: 0 }  },
+                    { height: 2, pseudo: true, divider: { spacing: 1, slant: 0 }  },
                   ],
                   divider: { spacing: 2, slant: 0 }
                 },
