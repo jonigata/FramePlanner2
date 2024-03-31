@@ -260,6 +260,8 @@ export class Paper {
   }
 
   showHint(position: Vector, message: string): void {
+    console.log("showHint", position, message);
+    console.trace();
     this.hint = {position, message};
   }
 

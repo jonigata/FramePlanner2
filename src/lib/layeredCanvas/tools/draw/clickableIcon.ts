@@ -39,14 +39,14 @@ export class ClickableIcon {
 
   contains(p: Vector): boolean {
     if (!this.isVisible()) return false;
-    const [x, y, w, h] = this.boudingRect();
+    const [x, y, w, h] = this.boudingRect;
     const f = x <= p[0] && p[0] <= x + w && y <= p[1] && p[1] <= y + h;
     return f;
   }
 
   hintIfContains(point: Vector, f: (v: Vector, h: string) => void): boolean {
     if (this.contains(point)) {
-      const [x, y, w, h] = this.boudingRect();
+      const [x, y, w, h] = this.boudingRect;
       const hintPosition: Vector = [x + w / 2, y + h / 2 - 32];
   
       f(hintPosition, this.hint);
@@ -82,14 +82,14 @@ export class ClickableIcon {
     ClickableIcon.tmpCtx.drawImage(image, 0, 0);
 
     ctx.save();
-    const [x, y, w, h] = this.boudingRect();
+    const [x, y, w, h] = this.boudingRect;
     ctx.shadowColor = '#ffffff';
     ctx.shadowBlur = 15;
     ctx.drawImage(ClickableIcon.tmpCanvas, x, y, w, h);
     ctx.restore();
   }
 
-  boudingRect(): Rect {
+  get boudingRect(): Rect {
     const rscale = this.rscale;
     let [x, y] = this.position;
     x -= this.pivot[0] * this.size[0] * rscale;
@@ -98,8 +98,8 @@ export class ClickableIcon {
     return [x, y, w, h];
   }
 
-  center(): Vector {
-    const [x, y, w, h] = this.boudingRect();
+  get center(): Vector {
+    const [x, y, w, h] = this.boudingRect;
     return [x + w / 2, y + h / 2];
   }
 

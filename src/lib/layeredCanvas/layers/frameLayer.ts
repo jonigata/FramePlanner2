@@ -279,7 +279,7 @@ export class FrameLayer extends Layer {
     const hintIfContains = (a: ClickableIcon[]): { position: Vector, message: string } => {
       for (let e of a) {
         if (e.contains(position)) {
-          return { position: e.center(), message: e.hint };
+          return { position: e.center, message: e.hint };
         }
       }
       return null;

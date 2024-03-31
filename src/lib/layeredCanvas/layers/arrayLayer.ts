@@ -15,6 +15,7 @@ export class ArrayLayer extends Layer {
   trashIcons: ClickableIcon[] = [];
   cutIcons: ClickableIcon[] = [];
   insertIcons: ClickableIcon[] = [];
+  imagingIcons: ClickableIcon[] = [];
   cutFlags: boolean[] = [];
 
   constructor(
@@ -40,6 +41,8 @@ export class ArrayLayer extends Layer {
       this.trashIcons.push(trashIcon);
       const cutIcon = new ClickableIcon(["page-cut.png"],[32,32],[0.5,0],"ページカット", () => 1 < this.array.papers.length, mp);
       this.cutIcons.push(cutIcon);
+      const imagingIcon = new ClickableIcon(["page-imaging.png"],[32,32],[0.5,0],"バッチ画像生成", null, mp);
+      this.imagingIcons.push(imagingIcon);
       this.cutFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
@@ -67,16 +70,21 @@ export class ArrayLayer extends Layer {
       const c = paper.center;
       const trashIcon = this.trashIcons[i];
       const cutIcon = this.cutIcons[i];
+      const imagingIcon = this.imagingIcons[i];
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
         trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 60];
         cutIcon.pivot = [0, 0.5];
         cutIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 60];
+        imagingIcon.pivot = [1, 1];
+        imagingIcon.position = [c[0] - s[0] * 0.5 - 30, c[1]];
       } else {
         trashIcon.pivot = [0.5, 0];
         trashIcon.position = [c[0] + 60, c[1] + s[1] * 0.5 + 16];
         cutIcon.pivot = [0.5, 0];
         cutIcon.position = [c[0] - 60, c[1] + s[1] * 0.5 + 16];
+        imagingIcon.pivot = [0.5, 1];
+        imagingIcon.position = [c[0], c[1] - s[1] * 0.5 - 16];
       }
     }
     for (let i = 0; i < this.array.papers.length; i++) {
@@ -119,20 +127,13 @@ export class ArrayLayer extends Layer {
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
-    this.insertIcons.forEach((e) => {
-      if (e.contains(p)) {
-        const q = e.center;
-        this.hint([q[0], q[1] - 32],"ページ挿入")
-        return true;
-      }      
-    });
-    this.trashIcons.forEach((e) => {
-      if (e.contains(p)) {
-        const q = e.center;
-        this.hint([q[0], q[1] - 32],"ページ削除")
-        return true;
-      }      
-    });
+    for (let icons of [this.insertIcons, this.trashIcons, this.cutIcons, this.imagingIcons]) {
+      for (let icon of icons) {
+        if (icon.hintIfContains(p, this.hint.bind(this))) {
+          return true;
+        }
+      }
+    }
 
     this.hint([0,0], null);
 
@@ -227,6 +228,9 @@ export class ArrayLayer extends Layer {
         e.render(ctx);
       });
       this.cutIcons.forEach(e => {
+        e.render(ctx);
+      });
+      this.imagingIcons.forEach(e => {
         e.render(ctx);
       });
     }

@@ -275,7 +275,7 @@ export class BubbleLayer extends Layer {
         ctx.strokeRect(...rect);
       }
 
-      const [cx, cy] = this.optionIcons[bubble.optionSet.link.icon].center();
+      const [cx, cy] = this.optionIcons[bubble.optionSet.link.icon].center;
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(0, 0, 255, 0.3)";
       ctx.beginPath();
