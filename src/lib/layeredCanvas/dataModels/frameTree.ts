@@ -906,7 +906,6 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   if (!layout.corners) {return; }
   if (layout.element.filmStack.films.length == 0) { return; }
 
-  // constraintFilms(paperSize, layout, layout.element.filmStack.films);
   const films = layout.element.getOperationTargetFilms();
   constraintFilms(paperSize, layout, films);
 }

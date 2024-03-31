@@ -2,9 +2,6 @@
   import { type ImageGeneratorTarget, imageGeneratorTarget } from "./imageGeneratorStore";
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { tick } from "svelte";
-  import { Film } from "../lib/layeredCanvas/dataModels/frameTree";
-  import { mainBook } from '../bookeditor/bookStore';
-  import { commitBook } from '../bookeditor/book';
   import feathralIcon from '../assets/feathral.png';
   import Drawer from '../utils/Drawer.svelte';
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
@@ -60,24 +57,24 @@
     on:clickAway={onClickAway}
   >
 
-  <TabGroup>
-    <Tab bind:group={tabSet} name="tab1" value={0}>Dall・E 3</Tab>
-    <Tab bind:group={tabSet} name="tab2" value={1}>Stable Diffusion</Tab>
-    <Tab bind:group={tabSet} name="tab3" value={2}><span class="tab"><img src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
-    <Tab bind:group={tabSet} name="tab4" value={3}>白紙</Tab>
-    <!-- Tab Panels --->
-    <svelte:fragment slot="panel">
-      {#if tabSet === 0}
-        <ImageGeneratorDalle3 bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
-        {:else if tabSet === 1}
-        <ImageGeneratorStableDiffusion bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
-        {:else if tabSet === 2}
-        <ImageGeneratorFeathral bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
-        {:else if tabSet === 3}
-        <ImageGeneratorPlain bind:chosen={chosen}/>
-      {/if}
-    </svelte:fragment>
-  </TabGroup>  
+    <TabGroup>
+      <Tab bind:group={tabSet} name="tab1" value={0}>Dall・E 3</Tab>
+      <Tab bind:group={tabSet} name="tab2" value={1}>Stable Diffusion</Tab>
+      <Tab bind:group={tabSet} name="tab3" value={2}><span class="tab"><img src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
+      <Tab bind:group={tabSet} name="tab4" value={3}>白紙</Tab>
+      <!-- Tab Panels --->
+      <svelte:fragment slot="panel">
+        {#if tabSet === 0}
+          <ImageGeneratorDalle3 bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
+          {:else if tabSet === 1}
+          <ImageGeneratorStableDiffusion bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
+          {:else if tabSet === 2}
+          <ImageGeneratorFeathral bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
+          {:else if tabSet === 3}
+          <ImageGeneratorPlain bind:chosen={chosen}/>
+        {/if}
+      </svelte:fragment>
+    </TabGroup>  
 
   </Drawer>
 </div>

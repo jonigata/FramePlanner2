@@ -175,6 +175,7 @@ export interface BookOperators {
   insertPage: (index: number) => void;
   deletePage: (index: number) => void;
   movePages: (from: number[], to: number) => void;
+  batchImaging: (index: number) => void;
   chase: () => void;
 }
 

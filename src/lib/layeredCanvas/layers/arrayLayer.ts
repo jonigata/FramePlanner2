@@ -11,6 +11,7 @@ export class ArrayLayer extends Layer {
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
   onMove: (from: number[], to: number) => void;
+  onBatchImaging: (index: number) => void;
 
   trashIcons: ClickableIcon[] = [];
   cutIcons: ClickableIcon[] = [];
@@ -25,13 +26,15 @@ export class ArrayLayer extends Layer {
     direction: number, 
     onInsert: (index: number) => void, 
     onDelete: (index: number) => void,
-    onMove: (from: number[], to: number) => void) {
+    onMove: (from: number[], to: number) => void,
+    onBatchImaging: (index: number) => void) {
 
     super();
     this.array = new PaperArray(papers, fold, gap, direction);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
     this.onMove = onMove;
+    this.onBatchImaging = onBatchImaging;
 
     this.insertIcons = [];
     this.trashIcons = [];
@@ -145,7 +148,7 @@ export class ArrayLayer extends Layer {
   accepts(p: Vector, button: number): any { 
     if (keyDownFlags["Space"] || 0 < button) {return null;}
 
-    this.insertIcons.forEach((e, i) => {
+    for (let [i, e] of this.insertIcons.entries()) {
       if (e.contains(p)) {
         if (this.cutFlags.some(e => e)) {
           // cutFlagsが立っているページが前にある場合、その分indexを減らす
@@ -156,20 +159,26 @@ export class ArrayLayer extends Layer {
         }
         return null;
       }      
-    });
-    this.trashIcons.forEach((e, i) => {
+    }
+    for (let [i, e] of this.trashIcons.entries()) {
       if (e.contains(p)) {
         this.onDelete(i);
         return null;
       }      
-    });
-    this.cutIcons.forEach((e, i) => {
+    }
+    for (let [i, e] of this.cutIcons.entries()) {
       if (e.contains(p)) {
         this.cutFlags[i] = !this.cutFlags[i];
         this.calculateIconPositions();
         return null;
       }      
-    });
+    }
+    for (let [i, e] of this.imagingIcons.entries()) {
+      if (e.contains(p)) {
+        this.onBatchImaging(i);
+        return null;
+      }      
+    }
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position, button);

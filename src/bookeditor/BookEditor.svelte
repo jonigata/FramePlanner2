@@ -24,6 +24,7 @@
   import { loadModel, predict } from '../utils/rmbg';
   import { loading } from '../utils/loadingStore'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
+  import { batchImagingPage } from '../generator/batchImagingStore';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -125,6 +126,11 @@
     commit(null);
   }
 
+  function batchImaging(index: number) {
+    console.log("batchImaging", index);
+    $batchImagingPage = $mainBook.pages[index];
+  }
+
   function insert(_page: Page, element: FrameElement) {
     const frameContents = collectBookContents($mainBook);
     dealBookContents($mainBook, frameContents, element, null);
@@ -204,6 +210,7 @@
       insertPage,
       deletePage,
       movePages,
+      batchImaging,
       chase,
     };
     $bookEditor = bookEditorInstance;

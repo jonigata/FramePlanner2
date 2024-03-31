@@ -23,7 +23,6 @@
   import type { IndexedDBFileSystem } from "../lib/filesystem/indexeddbFileSystem";
   import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { batchImagingOpen } from '../generator/batchImagingStore';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { app } from "../firebase";
   import { getAuth } from "firebase/auth";
@@ -250,11 +249,6 @@
     $isJsonEditorOpen = !$isJsonEditorOpen;      
   }
 
-  function batchImaging() {
-    console.log("batchImaging");
-    $batchImagingOpen = true;
-  }
-
   async function downloadJson() {
     $commitIfDirtyToken = true;
     $downloadJsonToken = true;
@@ -412,9 +406,6 @@
       JSON Editor
     </button>
     -->
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={batchImaging}>
-      Batch imaging
-    </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
       Weaver
     </button>

@@ -1,136 +1,87 @@
 <script lang="ts">
+  import { TabGroup, Tab } from '@skeletonlabs/skeleton';
+  import { batchImagingPage } from "./batchImagingStore";
+  import { collectLeaves } from '../lib/layeredCanvas/dataModels/frameTree';
   import Drawer from '../utils/Drawer.svelte'
-  import { batchImagingOpen } from "./batchImagingStore";
+  import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
+  import BatchImagingFeathral from './BatchImagingFeathral.svelte';
   import "../box.css"  
-  import { onMount } from 'svelte';
-  import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
-  import { toastStore } from '@skeletonlabs/skeleton';
-  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
+  import feathralIcon from '../assets/feathral.png';
+  import { commitBook, type Page } from "../bookeditor/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { commitToken } from '../undoStore';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
-  import type { Page } from '../bookeditor/book';
 
+  let busy: boolean;
+  let tabSet: number = 0;
   let totalCount = 1;
   let filledCount = 0;
-  let keyValueStorage: KeyValueStorage = null;
-  let storedApiKey: string = null;
-  let apiKey: string;
-  let busy = false;
+  let dalle3;
+  let feathral;
 
-  $: onUpdateApiKey(apiKey);
-  async function onUpdateApiKey(ak: string) {
-    if (!keyValueStorage || !keyValueStorage.isReady() || ak === storedApiKey) { return; }
-    await keyValueStorage.set("apiKey", ak);
-    storedApiKey = ak;
-  }
+  $: updateImageInfo($batchImagingPage);
+  function updateImageInfo(page: Page) {
+    if (!page) { return; }
 
-  $: if($batchImagingOpen) {
-    updateImageInfo();
-  }
+    const leaves = collectLeaves(page.frameTree);
+    console.log(leaves);
+    const m = leaves.length;
+    const n = leaves.filter((leaf) => 0 < leaf.filmStack.films.length).length;
 
-  function updateImageInfo() {
-    let m = 0;
-    let n = 0;
-    for (const page of $mainBook.pages) {
-      const leaves = collectLeaves(page.frameTree);
-      m += leaves.length;
-      n += leaves.filter((leaf) => 0 < leaf.filmStack.films.length).length;
-    }
     totalCount = m;
     filledCount = n;
+    console.log(totalCount, filledCount);
   }
 
-  // ImageGeneratorDalle3からコピペした
-  async function generate(frame: FrameElement) {
-    try {
-      const openai = new OpenAI({
-        apiKey,
-        dangerouslyAllowBrowser: true
-      });
-
-      let n = 0;
-      const response: OpenAI.Images.ImagesResponse = await openai.images.generate({
-        model: 'dall-e-3',
-        prompt: frame.prompt,
-        response_format: 'b64_json',
-      });
-
-      const imageJson = response.data[0].b64_json;
-      const img = document.createElement('img');
-      img.src = "data:image/png;base64," + imageJson;
-
-      const film = new Film();
-      film.image = img;
-      frame.filmStack.films.push(film);
-      frame.gallery.push(img);
-    } catch (e) {
-      console.log(e);
-      toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
-    }
-  }
-
-  async function generateAll(page: Page) {
-
+  async function execute(child: any) {
+    console.log('execute');
     busy = true;
-    const leaves = collectLeaves(page.frameTree);
-    const promises = [];
-    for (const leaf of leaves) {
-      if (0 < leaf.filmStack.films.length) { continue; }
-      promises.push(generate(leaf));
-    }
-    await Promise.all(promises);
-
-    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-    for (const leaf of leaves) {
-      if (0 < leaf.filmStack.films.length) { continue; }
-      const layout = findLayoutOf(pageLayout, leaf);
-      const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
-      transformer.scale(0.01);
-      constraintLeaf(page.paperSize, layout);
-    }
-
-    busy = false;
-    updateImageInfo();
+    await child.excecute($batchImagingPage);
+    busy = false;     
+    console.log('execute done');
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
     $redrawToken = true;
   }
-
-  async function generateAllPages() {
-    const pages = $mainBook.pages;
-    for (const page of pages) {
-      await generateAll(page);
-    }
-    $commitToken = true;
-  }
-
-  onMount(async () => {
-    await keyValueStorage.waitForReady();
-    storedApiKey = await keyValueStorage.get("apiKey") ?? '';
-    apiKey = storedApiKey;
-  });
 </script>
 
-<div class="drawer-outer">
-  <Drawer open={$batchImagingOpen} size="220px" on:clickAway={() => $batchImagingOpen = false} placement={"top"}>
-    <div class="drawer-content">
-      <div>画像一括生成</div>
-      <div>{filledCount}/{totalCount}</div>
-      {#if busy}
-        <ProgressRadial width={"w-16"}/>
-      {:else}
-        <div class="hbox gap-2">API key <input type="password" autocomplete="off" bind:value={apiKey}/></div>
-        <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={generateAllPages}>開始</button>
-      {/if}
-    </div>
-  </Drawer>  
-</div>
-
-<KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
+<Drawer open={$batchImagingPage != null} size="220px" on:clickAway={() => $batchImagingPage = null} placement={"top"}>
+  <div class="drawer-content">
+    <TabGroup regionList="h-12">
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={0}>Dall・E 3</Tab>
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={1}><span class="tab"><img class="image" src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
+      <svelte:fragment slot="panel">
+        {#if busy}
+          <div class="content">
+            <ProgressRadial width={"w-16"}/>
+          </div>
+        {:else}
+          <div class="content">
+            <div>画像一括生成</div>
+            <div>{filledCount}/{totalCount}</div>
+            {#if tabSet === 0}
+              <BatchImagingDalle3 bind:this={dalle3}/>
+              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
+            {:else if tabSet === 1}
+              <BatchImagingFeathral bind:this={feathral}/>
+              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
+            {/if}
+          </div>
+        {/if}
+      </svelte:fragment> 
+    </TabGroup>  
+  </div>
+</Drawer>  
 
 <style>
   .drawer-content {
     background-color: rgb(var(--color-surface-100));
+    height: 100%;
+  }
+  .tab {
+    display: flex;
+    flex-direction: row;
+  }
+  .content {
     width: 100%;
     height: 100%;
     font-family: 'Yu Gothic', sans-serif;
@@ -140,11 +91,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding-top: 24px;
-  }
-  input {
-    width: 450px;
-    font-size: 15px;
+    gap: 8px;
   }
 </style>
