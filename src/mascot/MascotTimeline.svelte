@@ -23,7 +23,9 @@
   let log: Log[] = controller.log;
   let timelineElement: HTMLDivElement;
 
-  $: if (log && timelineElement) {
+  $: onLogChanged(log);
+  function onLogChanged(log: Log[]) {
+    if (timelineElement == null) { return; }
     setTimeout(() => {
       timelineElement.scrollTop = timelineElement.scrollHeight;
     }, 0); // 0ミリ秒の遅延で即時に実行されるが、DOMの更新を待つのに十分
