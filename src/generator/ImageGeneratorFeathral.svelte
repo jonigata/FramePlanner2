@@ -51,6 +51,7 @@
       imageRequest.prompt = prompt;
       imageRequest.width = size[0];
       imageRequest.height = size[1];
+      console.log(imageRequest);
       const data = await generateImageFromTextWithFeathral(imageRequest);
       console.log(data);
       const img = document.createElement('img');

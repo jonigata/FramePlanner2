@@ -379,6 +379,7 @@
       film.image = image;
       film.prompt = prompt;
       fit.frame.filmStack.films.push(film);
+      fit.frame.prompt = prompt;
       commit(null);
     }
   }

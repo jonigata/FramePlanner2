@@ -76,18 +76,18 @@ export class ArrayLayer extends Layer {
       const imagingIcon = this.imagingIcons[i];
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
-        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 60];
+        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 90];
         cutIcon.pivot = [0, 0.5];
-        cutIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 60];
-        imagingIcon.pivot = [1, 1];
-        imagingIcon.position = [c[0] - s[0] * 0.5 - 30, c[1]];
+        cutIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 180];
+        imagingIcon.pivot = [0, 0.5];
+        imagingIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 90];
       } else {
         trashIcon.pivot = [0.5, 0];
-        trashIcon.position = [c[0] + 60, c[1] + s[1] * 0.5 + 16];
+        trashIcon.position = [c[0] - 90, c[1] + s[1] * 0.5 + 16];
         cutIcon.pivot = [0.5, 0];
-        cutIcon.position = [c[0] - 60, c[1] + s[1] * 0.5 + 16];
-        imagingIcon.pivot = [0.5, 1];
-        imagingIcon.position = [c[0], c[1] - s[1] * 0.5 - 16];
+        cutIcon.position = [c[0] - 180, c[1] + s[1] * 0.5 + 16];
+        imagingIcon.pivot = [0.5, 0];
+        imagingIcon.position = [c[0] + 90, c[1] + s[1] * 0.5 + 16];
       }
     }
     for (let i = 0; i < this.array.papers.length; i++) {
