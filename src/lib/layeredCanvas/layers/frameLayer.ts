@@ -528,7 +528,10 @@ export class FrameLayer extends Layer {
       return "done";
     } 
     if (this.fitIcon.contains(point)) {
-      constraintLeaf(this.getPaperSize(), layout);
+      const paperSize = this.getPaperSize();
+      const transformer = new FilmStackTransformer(paperSize, layout.element.filmStack.films);
+      transformer.scale(0.01);
+      constraintLeaf(paperSize, layout);
       this.onCommit();
       this.redraw();
       return "done";
