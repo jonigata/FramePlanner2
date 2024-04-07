@@ -6,10 +6,11 @@ import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples'
 import { type Page, newPage, commitBook } from "../bookeditor/book";
 import type * as Storyboard from '../weaver/storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
+import { newPageProperty } from '../bookeditor/bookStore';
+import { get } from "svelte/store";
 
 export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
-  const paperSize = context.book.pages[context.pageIndex].paperSize;
-  const imagePromptPrefix = 'masterpiece';
+  const paperSize = get(newPageProperty).paperSize;
 
   for (const storyboardPage of storyboard.pages) {
     const sample = frameExamples[3];
@@ -19,12 +20,15 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
     const page = newPage(frameTree, bubbles);
     const paperLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leaves = collectLeaves(page.frameTree);
+    for (let i = 0; i < leaves.length; i++) {
+      console.log(leaves[i].pseudo);
+    }
 
     console.log(storyboardPage);
     storyboardPage.panels.forEach((panel: Storyboard.Panel, index: number) => {
       if (index < leaves.length) {
         const leaf = leaves[index];
-        leaf.prompt = `${imagePromptPrefix} ${panel.composition}`;
+        leaf.prompt = panel.composition;
 
         const layout = findLayoutOf(paperLayout, leaf);
         const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);

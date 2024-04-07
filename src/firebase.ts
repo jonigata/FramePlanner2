@@ -123,6 +123,7 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<any>
   const functions = getFunctions(app);
   useEmulatorIfDevelopment();
   const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateimagefromtext');
+  console.log("calling");
   const r = await generateImageFromTextWithFeathral(data);
   console.log(r);
   logEvent(analytics, 'feathral_generate');

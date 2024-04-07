@@ -55,16 +55,20 @@
             <ProgressRadial width={"w-16"}/>
           </div>
         {:else}
-          <div class="content">
-            <div>画像一括生成</div>
-            <div>{filledCount}/{totalCount}</div>
-            {#if tabSet === 0}
-              <BatchImagingDalle3 bind:this={dalle3}/>
-              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
-            {:else if tabSet === 1}
-              <BatchImagingFeathral bind:this={feathral}/>
-              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
-            {/if}
+          <div class="hbox">
+            <div class="common w-64">
+              <div>画像一括生成</div>
+              <div>{filledCount}/{totalCount}</div>
+            </div>
+            <div class="content">
+              {#if tabSet === 0}
+                <BatchImagingDalle3 bind:this={dalle3}/>
+                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
+              {:else if tabSet === 1}
+                <BatchImagingFeathral bind:this={feathral}/>
+                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
+              {/if}
+            </div>
           </div>
         {/if}
       </svelte:fragment> 
@@ -80,6 +84,12 @@
   .tab {
     display: flex;
     flex-direction: row;
+  }
+  .common {
+    font-family: 'Yu Gothic', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    text-align: center;
   }
   .content {
     width: 100%;
