@@ -42,12 +42,19 @@ export type History  = {
 export type ReadingDirection = 'left-to-right' | 'right-to-left';
 export type WrapMode = 'none' | 'two-pages' | 'one-page';
 
+export type ChatLog = {
+  role: 'system' | 'assistant' | 'user' | 'error';
+  content: string;
+  hidden?: boolean;
+}
+
 export type Book = {
   revision: Revision;
   pages: Page[];
   history: History;
   direction: ReadingDirection;
   wrapMode: WrapMode;
+  chatLogs: ChatLog[];
 }
 
 export function incrementRevision(revision: Revision): void {
@@ -137,6 +144,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
     history: { entries: [], cursor: 0 },
     direction: 'right-to-left',
     wrapMode: 'two-pages',
+    chatLogs: [],
   }
   commitBook(book, null);
   return book;
@@ -156,6 +164,7 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
     history: { entries: [], cursor: 0 },
     direction: 'right-to-left',
     wrapMode: 'one-page',
+    chatLogs: [],
   }
   commitBook(book, null);
   return book;

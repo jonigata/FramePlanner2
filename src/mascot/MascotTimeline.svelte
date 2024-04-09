@@ -3,8 +3,8 @@
   import { fontLoadToken, mainBook } from "../bookeditor/bookStore";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import "../box.css";
-  import { type Context, type Log, MascotController } from "./MascotController";
-  import { commitBook } from '../bookeditor/book';
+  import { type Context, MascotController } from "./MascotController";
+  import { type ChatLog, commitBook } from '../bookeditor/book';
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import DebugOnly from "../utils/DebugOnly.svelte";
@@ -15,16 +15,17 @@
     "FramePlannerって何？",
     "Feathralって何？",
     "ネーム作って",
+    "4コマ漫画で連載するね。1度に全部やらなくていいから、1本ずつ作っていこう。セリフはちゃんときららっぽくしてね",
   ]
 
   const controller = new MascotController();
   let input = "";
   let key=0;
-  let log: Log[] = controller.log;
+  let log: ChatLog[] = controller.log;
   let timelineElement: HTMLDivElement;
 
   $: onLogChanged(log);
-  function onLogChanged(log: Log[]) {
+  function onLogChanged(log: ChatLog[]) {
     if (timelineElement == null) { return; }
     setTimeout(() => {
       timelineElement.scrollTop = timelineElement.scrollHeight;

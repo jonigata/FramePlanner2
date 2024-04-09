@@ -33,13 +33,6 @@
 </div>
 
 <style>
-  .page-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
   .box {
     width: 600px;
     height: 300px;
@@ -47,9 +40,6 @@
     border-radius: 10px;
     color: #000;
     background-color: white;
-  }
-  form {
-    width: 80%;
   }
   .back-button {
     margin-top: 16px;
@@ -59,9 +49,5 @@
     cursor: pointer;
     color: #fff;
     width: 160px;
-  }
-  .input {
-    padding-left: 12px;
-    height: 40px;
   }
 </style>

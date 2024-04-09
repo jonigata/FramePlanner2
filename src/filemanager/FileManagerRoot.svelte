@@ -145,6 +145,7 @@
         history: { entries: [], cursor: 0 },
         direction: 'right-to-left',
         wrapMode: 'none',
+        chatLogs: [],
       }
       commitBook(book, null);
       await saveBookTo(book, fileSystem, localFile);
@@ -395,22 +396,11 @@
 </div>
 
 <style>
-  .toolbar {
-    display: flex;
-    justify-content: flex-start;
-    flex-direction: row;
-    margin: 8px;
-    gap: 16px;
-    height: 32px;
-  }
   .cabinet {
     margin: 8px;
     padding: 8px;
   }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
-  }
-  .button {
-    width: 160px;
   }
 </style>

@@ -147,15 +147,6 @@
   .generate-button {
     width: 160px;
   }
-  .number-box {
-    width: 35px;
-    height: 20px;
-    display: inline-block;
-    vertical-align: bottom;
-  }
-  img {
-    display: inline-block;
-  }
   .warning {
     color: #d22;
   }

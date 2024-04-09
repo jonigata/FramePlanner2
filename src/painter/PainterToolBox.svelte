@@ -5,10 +5,6 @@
   // import PainterCanvas from './PainterCanvas.svelte';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
-  export let element: FrameElement;
-  export let lcm = true;
-  export let autoGeneration = false;
-
   let chosenTool = null;
   
   const dispatch = createEventDispatcher();
@@ -134,18 +130,6 @@
     padding: 8px;
     gap: 8px;
   } 
-  .prompt-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px;
-    height: 96px;
-  } 
-  .prompt {
-    width: 100%;
-    height: 100%;
-  }
   .vfill {
     flex-grow: 1;
   }

@@ -147,11 +147,6 @@
 {/if}
 
 <style>
-  .frame-inspector-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
   .frame-inspector {
     position: absolute;
     top: 0px;
@@ -173,10 +168,5 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-  }
-  .film-stack {
-    overflow-y: auto;
-    width: 100%;
-    height: 400px;
   }
 </style>

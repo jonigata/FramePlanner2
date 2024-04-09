@@ -350,10 +350,6 @@
     height: 16px;
     display: inline;
   }
-  .recycle-button {
-    height: 20px;
-    font-size: 12px;
-  }
   .no-select {
     user-select: none; /* 標準のCSS */
     -webkit-user-select: none; /* Chrome, Safari */

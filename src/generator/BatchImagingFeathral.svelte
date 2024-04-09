@@ -94,15 +94,4 @@
 <KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
-  .drawer-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    font-size: 16px;
-  }
-  input {
-    width: 450px;
-    font-size: 15px;
-  }
 </style>

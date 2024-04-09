@@ -137,9 +137,6 @@
     height: 60px;
     color: black;
   }
-  .new-film-description {
-    color: black;
-  }
   .image-container {
     position: relative;
     display: none;
@@ -176,13 +173,6 @@
   .scribble-icon {
     position: absolute;
     left: 4px;
-    bottom: 4px;
-    width: 32px;
-    height: 32px;
-  }
-  .generate-icon {
-    position: absolute;
-    right: 4px;
     bottom: 4px;
     width: 32px;
     height: 32px;

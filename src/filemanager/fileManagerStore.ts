@@ -38,11 +38,18 @@ type SerializedPage = {
   frameWidth: number,
 }
 
+type SerializedChatLog = {
+  role: 'system' | 'assistant' | 'user' | 'error';
+  content: string;
+  hidden?: boolean;
+}
+
 type SerializedBook = {
   revision: {id: string, revision: number, prefix: string},
   pages: SerializedPage[],
   direction: ReadingDirection,
   wrapMode: WrapMode,
+  chatLogs: SerializedChatLog[],
 }
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
@@ -56,6 +63,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     pages: [],
     direction: book.direction,
     wrapMode: book.wrapMode,
+    chatLogs: book.chatLogs,
   };
   for (const page of book.pages) {
     const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
@@ -157,6 +165,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     },
     direction: serializedBook.direction ?? 'right-to-left',
     wrapMode: serializedBook.wrapMode ?? 'none',
+    chatLogs: serializedBook.chatLogs ?? [],
   };
 
   for (const serializedPage of serializedBook.pages) {
@@ -199,6 +208,7 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
     },
     direction: 'right-to-left',
     wrapMode: 'none',
+    chatLogs: [],
   };
   commitBook(book, null);
 

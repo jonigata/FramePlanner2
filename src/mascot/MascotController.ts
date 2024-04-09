@@ -1,13 +1,10 @@
 import { aiChat } from "../firebase";
-import { AIError, AIArgumentError, callServant, type FunctionCalling } from "./servant";
+import { AIArgumentError, callServant, type FunctionCalling } from "./servant";
 import type { Context } from "./servantContext";
 import { makePage } from "./storyboardServant";
-export type { Context };
+import type { ChatLog } from '../bookeditor/book'
 
-export type Log = {
-  role: 'assistant' | 'user' | 'error';
-  content: string;
-}
+export type { Context };
 
 export type Response = {
   type: string;
@@ -15,10 +12,46 @@ export type Response = {
 }
 
 export class MascotController {
-  log: Log[] = [{ role: 'assistant', content: '何について調べますか～？' }];
+  log: ChatLog[] = [{ role: 'assistant', content: '何について調べますか～？' }];
 
   constructor() {
-    const dummyLog: Log[] = [
+    const dummyLog2: ChatLog[] = [ 
+      { role: 'user', content: `配達屋の漫画を作ろうと思います。
+      キャラクターの性格を考えるときはなんJ民を思い浮かべて。
+      ただしそれは表に出さないように、うまくかわいい感じに料理してください。
+      まずはキャラクター設定をお願いします。主人公は女の子で、彼氏はいない。` },
+
+      { role: 'assistant', content: `ゲーム好きのぽっちゃり女子・春香ちゃんなら、きららファンタジーにも登場しそうだね～
+      根が明るくて前向きなところは、なんJ民っぽさを感じさせるかもしれないけど、
+      そこはあくまで「芯の強さ」という形で表現するのがいいと思うよ～` },
+
+      { role: 'user', content: `はるかちゃん、基本的に割とクズなんだけど、
+      根はいい子なので大事なところは守るし憎めない感じにできないかな。その方がなんJ民っぽい。`},
+
+      { role: 'assistant', content: `
+      なるほど～じゃあ、ちょっと設定を変えてみるね～
+  
+      春香ちゃんは、基本的にはサボり癖があってだらしないんだけど、
+      いざというときには頼りになる、憎めないキャラってことだね～
+      
+      じゃあ、ストーリーはこんな感じでどうかな～
+      
+      春香ちゃんは、いつものようにサボって公園でゲームをしていた～
+      そこに、配達先の奥さんから「産気づいちゃった！」と電話が！
+      でも春香ちゃんは、「めんどくせぇ～」と思いつつも、
+      「ほな、ワイが病院まで連れてったるわ」と言って、奥さんを助けに行く。
+      道中、陣痛に苦しむ奥さんをなだめつつ、必死で自転車をこぐ春香ちゃん。
+      ようやく病院に到着し、奥さんを助けることができた！ほっとする春香ちゃん。
+      でも、その間に他の荷物が全然配れていないことに気づいてあせる春香ちゃん。
+      「ワイの配達員人生終わったンゴ…」と嘆く春香ちゃんだったが、
+      上司から「お客さんを助けるなんて立派だ！」と褒められ、
+      「ほな、もうちょいがんばるわ」と言って、配達員を続けることになった、というオチ。
+      
+      こんな感じで、サボり癖はあるけど、いざというときには頼りになる春香ちゃんを描けばいいかな～
+      でも、ここからどうやってきらら風に変換するのか、ちょっと悩むね～` },
+    ];
+
+    const dummyLog: ChatLog[] = [
       { role: 'user', content: `スパイものを作りたい。キャラクター考えて` },
 
       { role: 'assistant', content: `じゃあ、こんなキャラクターはどうかな～？
@@ -81,10 +114,10 @@ export class MascotController {
       続きが気になるような終わり方になったかな～？`}
     ];
 
-    this.log = this.log.concat(dummyLog);
+    this.log = this.log.concat(dummyLog2);
   }
 
-  async add(refresh: (log: Log[]) => void, input: string, context: Context) {
+  async add(refresh: (log: ChatLog[]) => void, input: string, context: Context) {
     const log = this.log;
     if (log[log.length - 1].role !== 'user') {
       log.push({ role: 'user', content: input });

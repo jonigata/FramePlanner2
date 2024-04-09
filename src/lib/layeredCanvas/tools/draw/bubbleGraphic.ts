@@ -1,8 +1,8 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "../geometry/quickHull"
 import * as paper from 'paper';
-import { debumpPointsAroundIndex, tailCoordToWorldCoord, jitterDistances } from "../geometry/bubbleGeometry";
-import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump, findNearestIndex, findNearestAngleIndex } from "../geometry/bubbleGeometry";
+import { tailCoordToWorldCoord, jitterDistances } from "../geometry/bubbleGeometry";
+import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump } from "../geometry/bubbleGeometry";
 import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D } from "../geometry/geometry";
 import { PaperOffset } from 'paperjs-offset'
 import type { Vector } from "../geometry/geometry";
@@ -449,7 +449,7 @@ function getHarshPath(size, opts, seed) {
   let points = subdividePointsWithBump(size, rawPoints, opts.bumpDepth);
 
   const path = new paper.Path();
-  path.addSegments(points);
+  path.addSegments((points as any) as paper.Segment[]);
   path.closed = true;
 
   return addTrivialTail(path, size, opts);

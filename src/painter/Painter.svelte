@@ -16,9 +16,7 @@
   let painterElement: FrameElement = null;
   let painterFilm: Film = null;
   let autoGeneration: boolean = false;
-  let lcm: boolean = false;
   let painterAutoGenerate: PainterAutoGenerate = null;
-  let url: string = "http://192.168.68.111:7860";
   let onDoneHandler: () => void;
 
   $: onChangeAutoGeneration(autoGeneration);
@@ -109,10 +107,7 @@
   <PainterToolBox 
     on:setTool={onSetTool} 
     on:done={onDone} 
-    on:redraw={onRedraw} 
-    bind:element={painterElement} 
-    bind:autoGeneration={autoGeneration} 
-    bind:lcm={lcm}/>
+    on:redraw={onRedraw}/>
   <PainterAutoGenerate bind:this={painterAutoGenerate}/>
 {/if}
 </div>
