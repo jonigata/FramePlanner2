@@ -173,7 +173,8 @@
       $newBookToken = null;
       const root = await fileSystem.getRoot();
       const desktop = await root.getNodeByName("デスクトップ");
-      await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
+      const { file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
+      await recordCurrentFileId(file.id as NodeId);
       currentRevision = {...book.revision};
       $mainBook = book;
       $frameInspectorTarget = null;

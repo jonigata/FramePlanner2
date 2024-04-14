@@ -3,7 +3,7 @@
   import { onDestroy } from 'svelte';
   import { derived } from "svelte/store";
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
-  import { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, Film, calculatePhysicalLayout, findLayoutOf, constraintLeaf, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -372,7 +372,12 @@
   async function modalGenerate(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
-    const r = await imageProvider.run(fit.page, fit.frame);
+    const page = fit.page;
+    const leaf = fit.frame;
+    const r = await imageProvider.run(page, leaf);
+
+    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
+    const leafLayout = findLayoutOf(pageLayout, leaf);
     if (r) {
       const { image, prompt } = r;
       const film = new Film();
@@ -380,6 +385,11 @@
       film.prompt = prompt;
       fit.frame.filmStack.films.push(film);
       fit.frame.prompt = prompt;
+
+      const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
+      transformer.scale(0.01);
+      constraintLeaf(page.paperSize, leafLayout);
+
       commit(null);
     }
   }

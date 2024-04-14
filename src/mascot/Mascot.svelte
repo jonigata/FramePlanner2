@@ -6,8 +6,8 @@
   let adjustedPosition ;
 </script>
 
-<div class="mascot"  use:draggable={{ position: adjustedPosition }}>
-  <img src={mascot} alt="mascot"/>
+<div class="mascot"  use:draggable={{ position: adjustedPosition, handle: '.handle' }}>
+  <img class="handle" src={mascot} alt="mascot"/>
   <MascotTimeline />
 </div>
 

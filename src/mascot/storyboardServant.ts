@@ -18,6 +18,7 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
     const bubbles = sample.bubbles.map(b => Bubble.compile(paperSize, b));
 
     const page = newPage(frameTree, bubbles);
+    page.paperSize = paperSize;
     const paperLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leaves = collectLeaves(page.frameTree);
     for (let i = 0; i < leaves.length; i++) {
@@ -36,7 +37,7 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
         panel.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
           const bubble = new Bubble();
           bubble.text = b.speech.replace(/\\n/g, '\n');
-          bubble.setPhysicalFontSize(page.paperSize, 24);
+          bubble.setPhysicalFontSize(page.paperSize, 44);
           bubble.initOptions();
           const cc: Vector = [x0 + w * (n - i) / (n+1), y0 + h / 2];
           bubble.setPhysicalCenter(page.paperSize, cc);
