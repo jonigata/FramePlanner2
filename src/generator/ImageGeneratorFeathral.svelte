@@ -7,6 +7,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
+  import { persistent } from '../utils/persistent';
 
   export let busy: boolean;
   export let prompt: string;
@@ -17,7 +18,7 @@
   let refered: HTMLImageElement = null;
   let initialSize = [1024, 1024];
   let size = initialSize; // こうしないと最初に選択してくれない
-
+  let postfix: string = "";
 
   /* LCM
   let imageRequest = {
@@ -48,7 +49,7 @@
   async function generate() {
     busy = true;
     try {
-      imageRequest.prompt = prompt;
+      imageRequest.prompt = prompt + ", " + postfix;
       imageRequest.width = size[0];
       imageRequest.height = size[1];
       console.log(imageRequest);
@@ -78,7 +79,9 @@
   {#if $onlineAccount}
   <p><Feathral/></p>
 
-  <p>prompt</p>
+  <p>スタイル</p>
+  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style'}}/>
+  <p>プロンプト</p>
   <textarea bind:value={prompt}/>
 <!--
   <p>negative prompt</p>

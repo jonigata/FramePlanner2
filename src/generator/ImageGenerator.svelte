@@ -53,7 +53,7 @@
   <Drawer
     open={$imageGeneratorTarget != null}
     placement="right"
-    size="720px"
+    size="800px"
     on:clickAway={onClickAway}
   >
 
