@@ -6,18 +6,37 @@
   let adjustedPosition ;
 </script>
 
-<div class="mascot"  use:draggable={{ position: adjustedPosition, handle: '.handle' }}>
-  <img class="handle" src={mascot} alt="mascot"/>
-  <MascotTimeline />
+<div class="container" use:draggable={{ position: adjustedPosition, handle: '.handle' }}>
+  <div class="resizable">
+    <MascotTimeline />
+  </div>
+  <div class="handle absolute-positioned">
+    <img class="mascot handle" src={mascot} alt="mascot"/>
+  </div>
 </div>
 
 <style>
+  .container {
+    position: relative;
+  }
+  .resizable {
+    width: 500px;
+    height: 700px;
+    overflow: auto;
+    resize: both;
+  }
+  .absolute-positioned {
+    position: absolute;
+    bottom: 0;
+    left: 0px;
+  }
   .mascot {
     position: absolute;
-    left: 128px;
-    bottom: 8px;
+    right: 0px;
+    bottom: 0px;
     width: 256px;
     height: 256px;
+    max-width: 256px;
   }
   img {
     transform: scale(-1, 1);

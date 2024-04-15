@@ -15,7 +15,7 @@
     "FramePlannerって何？",
     "Feathralって何？",
     "ネーム作って",
-    "4コマ漫画で連載するね。1度に全部やらなくていいから、1本ずつ作っていこう。セリフはちゃんときららっぽくしてね",
+    "4コマ漫画で連載するね。第一話のネームを考えてください。性格はなんJ民だけど、セリフはきららっぽくしてね",
   ]
 
   const controller = new MascotController($mainBook.chatLogs);
@@ -252,19 +252,17 @@
 
 <style>
   .timeline-container {
-    position: absolute;
-    left: 256px;
-    bottom: 0;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding-bottom: 4px;
+    padding: 8px;
+    width: 100%;
+    height: 100%;
   }
   .timeline {
-    margin: 8px;
-    margin-bottom: 0px;
-    width: 320px;
-    height: 512px;
+    box-sizing: border-box;
+    width: 100%;
     background: rgba(var(--color-surface-50) / 1);
     white-space: pre-line;
     text-align: left;
@@ -273,9 +271,10 @@
     overflow-y: auto;
   }
   .chat {
-    margin: 8px;
-    padding: 4px;
-    width: 95%;
+    box-sizing: border-box;
+    margin-top: 8px;
+    padding: 8px;
+    width: 100%;
     height: 50px;
     background: rgba(var(--color-surface-50) / 1);
     line-height: 1.3;

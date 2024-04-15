@@ -25,6 +25,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
+  import { mascotVisible } from '../mascot/mascotStore';
 
   export let fileSystem: FileSystem;
 
@@ -170,6 +171,7 @@
   async function onNewBookRequest(book: Book) {
     if (book) {
       console.tag("new book request", "green");
+      $mascotVisible = false;
       $newBookToken = null;
       const root = await fileSystem.getRoot();
       const desktop = await root.getNodeByName("デスクトップ");
@@ -224,6 +226,7 @@
   async function onLoadRequest(nodeId: NodeId) {
     if (!nodeId) { return; }
     $loadToken = null;
+    $mascotVisible = false;
 
     $loading = true;
     const file = (await fileSystem.getNode(nodeId)).asFile();
