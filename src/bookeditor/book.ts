@@ -4,6 +4,7 @@ import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { ulid } from 'ulid';
+import type { RichChatLog } from '../utils/richChat';
 
 // history処理では基本的にすべてdeep copyを使う
 
@@ -42,19 +43,13 @@ export type History  = {
 export type ReadingDirection = 'left-to-right' | 'right-to-left';
 export type WrapMode = 'none' | 'two-pages' | 'one-page';
 
-export type ChatLog = {
-  role: 'system' | 'assistant' | 'user' | 'error';
-  content: string;
-  hidden?: boolean;
-}
-
 export type Book = {
   revision: Revision;
   pages: Page[];
   history: History;
   direction: ReadingDirection;
   wrapMode: WrapMode;
-  chatLogs: ChatLog[];
+  chatLogs: RichChatLog[];
 }
 
 export function incrementRevision(revision: Revision): void {

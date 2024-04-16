@@ -6,6 +6,8 @@ import { Film, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
+import type { ProtocolChatLog } from "../utils/richChat";
+import { richChatLogToProtocolChatLog } from "../utils/richChat";
 
 export type Dragging = {
   bindId: string;
@@ -38,18 +40,12 @@ type SerializedPage = {
   frameWidth: number,
 }
 
-type SerializedChatLog = {
-  role: 'system' | 'assistant' | 'user' | 'error';
-  content: string;
-  hidden?: boolean;
-}
-
 type SerializedBook = {
   revision: {id: string, revision: number, prefix: string},
   pages: SerializedPage[],
   direction: ReadingDirection,
   wrapMode: WrapMode,
-  chatLogs: SerializedChatLog[],
+  chatLogs: ProtocolChatLog[],
 }
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
@@ -63,7 +59,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     pages: [],
     direction: book.direction,
     wrapMode: book.wrapMode,
-    chatLogs: book.chatLogs,
+    chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
   };
   for (const page of book.pages) {
     const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');

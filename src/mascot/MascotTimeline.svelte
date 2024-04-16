@@ -4,10 +4,12 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import "../box.css";
   import { type Context, MascotController } from "./MascotController";
-  import { type ChatLog, commitBook } from '../bookeditor/book';
+  import { commitBook } from '../bookeditor/book';
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import DebugOnly from "../utils/DebugOnly.svelte";
+  import type { ProtocolChatLog, RichChatLog } from "../utils/richChat";
+  import { protocolChatLogToRichChatLog } from "../utils/richChat";
 
   const debugSamples = [
     "にゃん",
@@ -21,11 +23,11 @@
   const controller = new MascotController($mainBook.chatLogs);
   let input = "";
   let key=0;
-  let logs: ChatLog[] = controller.logs;
+  let logs: RichChatLog[] = controller.logs;
   let timelineElement: HTMLDivElement;
 
   $: onLogsChanged(logs);
-  function onLogsChanged(logs: ChatLog[]) {
+  function onLogsChanged(logs: RichChatLog[]) {
     if (timelineElement == null) { return; }
     setTimeout(() => {
       timelineElement.scrollTop = timelineElement.scrollHeight;
@@ -55,7 +57,7 @@
   }
 
   function onAddDummyLog(n) {
-    const dummyLogs: ChatLog[][] = [
+    const dummyLogs: ProtocolChatLog[][] = [
       [ 
         { role: 'user', content: `配達屋の漫画を作ろうと思います。
         キャラクターの性格を考えるときはなんJ民を思い浮かべて。
@@ -155,24 +157,24 @@
         続きが気になるような終わり方になったかな～？`}
       ]
     ];
-    controller.addDummyLog(dummyLogs[n]);
+    controller.addDummyLog(protocolChatLogToRichChatLog(dummyLogs[n]));
     logs = controller.logs;
     key++;
   }
 
-  async function onPost(content: string) {
+  async function onPost(input: string) {
     const context: Context = {
       book: $mainBook,
       pageIndex: 0,
     }
     try {
-      const feathral = await controller.add(
+      controller.addUserLog({role: 'user', content: {type: 'speech', body: input}});
+      const feathral = await controller.addAssistantLog(
         (clog) => {
           logs = clog;
           input=null;
           key++;
         },
-        content,
         context);
       $onlineAccount.feathral = feathral;
       $mainBook.chatLogs = controller.logs;

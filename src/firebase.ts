@@ -9,6 +9,7 @@ import * as firebaseui from 'firebaseui'
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
+import type { ProtocolChatLog } from "./utils/richChat";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
@@ -130,7 +131,7 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<any>
   return r.data;
 }
 
-export async function aiChat(log: { role: string, content: string }[]): Promise<any> {
+export async function aiChat(log: ProtocolChatLog[]): Promise<any> {
   const functions = getFunctions(app);
   useEmulatorIfDevelopment();
   const chat = httpsCallable(functions, 'chat');
