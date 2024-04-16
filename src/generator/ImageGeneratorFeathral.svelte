@@ -8,6 +8,8 @@
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
+  import { toastStore } from '@skeletonlabs/skeleton';
+  import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
 
   export let busy: boolean;
   export let prompt: string;
@@ -53,7 +55,11 @@
       imageRequest.width = size[0];
       imageRequest.height = size[1];
       console.log(imageRequest);
-      const data = await generateImageFromTextWithFeathral(imageRequest);
+      const data = await executeProcessAndNotify(
+        5000, "画像が生成されました",
+        async () => {
+          return await generateImageFromTextWithFeathral(imageRequest);
+        });
       console.log(data);
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + data.result.image;
@@ -64,6 +70,8 @@
       logEvent(getAnalytics(), 'generate_feathral');
     }
     catch(error) {
+      console.log(error);
+      toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
     }
     busy = false;
   }

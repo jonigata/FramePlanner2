@@ -3,6 +3,7 @@ import { AIArgumentError, callServant, type FunctionCalling } from "./servant";
 import type { Context } from "./servantContext";
 import { makePage } from "./storyboardServant";
 import type { ChatLog } from '../bookeditor/book'
+import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
 
 export type { Context };
 
@@ -40,7 +41,12 @@ export class MascotController {
     log.push({ role: 'assistant', content: null });
     refresh(log);
 
-    const r = await aiChat(log.slice(0,-1));
+    //const r = await aiChat(log.slice(0,-1));
+    const r = await executeProcessAndNotify(
+      5000, "カイルがお返事してます", 
+      async () => {
+        return await aiChat(log.slice(0, -1));
+      });
     console.log(r);
     //await new Promise((resolve) => setTimeout(resolve, 2));
     //const r = "まだ実装してないよ～";

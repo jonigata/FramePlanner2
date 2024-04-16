@@ -2,12 +2,14 @@
   import mascot from '../assets/mascot.png';
   import { draggable } from '@neodrag/svelte';
   import MascotTimeline from './MascotTimeline.svelte';
+  import { mascotWindowRect } from './mascotStore';
+  import { observeResize } from '../utils/observeResize';
 
   let adjustedPosition ;
 </script>
 
 <div class="container" use:draggable={{ position: adjustedPosition, handle: '.handle' }}>
-  <div class="resizable">
+  <div class="resizable" use:observeResize>
     <MascotTimeline />
   </div>
   <div class="handle absolute-positioned">
