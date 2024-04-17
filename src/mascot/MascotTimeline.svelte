@@ -207,20 +207,22 @@
     </div>
     {#key key}
       {#each logs as { role, content }, i}
-        {#if role === 'assistant'}
+        {#if content.type === 'document'}
+          <div class="document variant-soft-surface rounded-container-token">{content.body.text}</div>
+        {:else if role === 'assistant'}
           {#if content === null}
           <div class="mascot variant-soft-primary rounded-container-token w-24 flex justify-center">
             <ProgressRadial width="w-4"/>
           </div>
           {:else}
-            <div class="mascot variant-soft-primary rounded-container-token">{content}</div>
+            <div class="mascot variant-soft-primary rounded-container-token">{content.body}</div>
           {/if}
         {/if}
         {#if role === 'user'}
-          <div class="user variant-soft-tertiary rounded-container-token">{content}</div>
+          <div class="user variant-soft-tertiary rounded-container-token">{content.body}</div>
         {/if}
         {#if role === 'error'}
-          <div class="error variant-soft-error rounded-container-token">{content}</div>
+          <div class="error variant-soft-error rounded-container-token">{content.body}</div>
         {/if}
       {/each}
     {/key}
@@ -271,6 +273,7 @@
     padding: 4px;
     gap: 2px;
     overflow-y: auto;
+    flex-grow: 1;
   }
   .chat {
     box-sizing: border-box;
@@ -281,10 +284,18 @@
     background: rgba(var(--color-surface-50) / 1);
     line-height: 1.3;
   }
+  .document {
+    color: var(--color-primary-50);
+    font-family: 'Zen Kurenaido';
+    max-width: 80%;
+    word-wrap: break-word;
+    padding: 6px;
+    align-self: center;
+  }
   .user {
     color: var(--color-primary-50);
     font-family: '源暎エムゴ';
-    max-width: 80%;
+    width: 80%;
     word-wrap: break-word;
     padding: 6px;
     align-self: flex-end;

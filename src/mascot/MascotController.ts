@@ -139,5 +139,7 @@ export class MascotController {
       {role: 'user', content: {type: 'speech', body: '4コマ漫画で連載するね。第一話のネームを考えてください。性格はなんJ民だけど、セリフはきららっぽくしてね'}},
       {role: 'assistant', content: {type: 'speech', body: 'できたよ～'}},
     ];
+
+    this.addDummyLog(dummy);
   }
 }

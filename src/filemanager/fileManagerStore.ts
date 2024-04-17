@@ -1,13 +1,13 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page, Book, WrapMode, ReadingDirection } from "../bookeditor/book.js";
+import type { Page, Book, WrapMode, ReadingDirection, Prefix } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
 import { Film, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
-import { richChatLogToProtocolChatLog } from "../utils/richChat";
+import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
 
 export type Dragging = {
   bindId: string;
@@ -41,7 +41,7 @@ type SerializedPage = {
 }
 
 type SerializedBook = {
-  revision: {id: string, revision: number, prefix: string},
+  revision: {id: string, revision: number, prefix: Prefix},
   pages: SerializedPage[],
   direction: ReadingDirection,
   wrapMode: WrapMode,
@@ -142,15 +142,17 @@ async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, image
 export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
   console.tag("loadBookFrom", "cyan", file.id);
   const content = await file.read();
-  const serializedBook = JSON.parse(content);
+  const serializedBook: SerializedBook = JSON.parse(content);
 
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
   if (!serializedBook.pages) {
-    const serializedPage = serializedBook;
+    const serializedPage = serializedBook as any as SerializedPage;
     const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
     const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
     return await wrapPageAsBook(serializedBook, frameTree, bubbles);
   }
+
+  const chatLogs = protocolChatLogToRichChatLog(serializedBook.chatLogs ?? []);
 
   const book: Book = {
     revision: serializedBook.revision,
@@ -161,7 +163,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     },
     direction: serializedBook.direction ?? 'right-to-left',
     wrapMode: serializedBook.wrapMode ?? 'none',
-    chatLogs: serializedBook.chatLogs ?? [],
+    chatLogs,
   };
 
   for (const serializedPage of serializedBook.pages) {
