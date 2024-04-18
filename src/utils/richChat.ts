@@ -7,18 +7,18 @@ export type RichChatLog = {
 }
 
 // 識別共用体のための型定義
-type RichChatContent =
+export type RichChatContent =
   | { type: 'speech'; body: string }
   | { type: 'image'; body: RichChatImage }
   | { type: 'document'; body: RichChatDocument };
 
 // その他の型定義
-type RichChatImage = {
+export type RichChatImage = {
   id: string;
   image: HTMLImageElement;
 }
 
-type RichChatDocument = {
+export type RichChatDocument = {
   id: string;
   text: string;
 }

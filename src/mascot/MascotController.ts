@@ -101,8 +101,7 @@ export class MascotController {
     const dummy: RichChatLog[] = [
       {role: 'user', content: {type: 'speech', body: '漫画のキャラクターを考えて。お題は「異世界転生したUber Eats」'}},
       {role: 'assistant', content: {type: 'speech', body: '了解～！異世界に転生したUber Eatsの配達員のキャラクターを考えるね～'}},
-      {role: 'assistant', content: {type: 'document', body: { id: 'dummy', text: `
-名前：タクミ
+      {role: 'assistant', content: {type: 'document', body: { id: 'dummy', text: `名前：タクミ
 性別：男
 年齢：20歳
 性格：明るくて前向き、ちょっとドジだけど一生懸命
@@ -118,8 +117,7 @@ export class MascotController {
 `}}},
       {role: 'user', content: {type: 'speech', body: '主人公は女の子がいいな。なんJ民みたいな性格ね'}},
       {role: 'assistant', content: {type: 'speech', body: '了解～！異世界に転生したUber Eatsの配達員のキャラクターを考えるね～'}},
-      {role: 'assistant', content: {type: 'document', body: {id: 'dummy', text: `
-名前：川上 奈々（かわかみ なな）
+      {role: 'assistant', content: {type: 'document', body: {id: 'dummy', text: `名前：川上 奈々（かわかみ なな）
 あだ名：ななJ
 性別：女
 年齢：19歳

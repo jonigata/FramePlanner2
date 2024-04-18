@@ -8,8 +8,9 @@
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import DebugOnly from "../utils/DebugOnly.svelte";
-  import type { ProtocolChatLog, RichChatLog } from "../utils/richChat";
+  import type { ProtocolChatLog, RichChatLog, RichChatDocument } from "../utils/richChat";
   import { protocolChatLogToRichChatLog } from "../utils/richChat";
+  import InlineDocument from "./InlineDocument.svelte";
 
   const debugSamples = [
     "にゃん",
@@ -54,6 +55,10 @@
     controller.rollback();
     logs = controller.logs;
     key++;
+  }
+
+  function onUpdateDocument(e: CustomEvent<RichChatDocument>) {
+    console.log("document updated");
   }
 
   function onAddDummyLog(n) {
@@ -208,7 +213,7 @@
     {#key key}
       {#each logs as { role, content }, i}
         {#if content.type === 'document'}
-          <div class="document variant-soft-surface rounded-container-token">{content.body.text}</div>
+          <InlineDocument document={content.body} on:input={onUpdateDocument}/>
         {:else if role === 'assistant'}
           {#if content === null}
           <div class="mascot variant-soft-primary rounded-container-token w-24 flex justify-center">
@@ -271,7 +276,7 @@
     white-space: pre-line;
     text-align: left;
     padding: 4px;
-    gap: 2px;
+    gap: 4px;
     overflow-y: auto;
     flex-grow: 1;
   }
@@ -283,14 +288,6 @@
     height: 50px;
     background: rgba(var(--color-surface-50) / 1);
     line-height: 1.3;
-  }
-  .document {
-    color: var(--color-primary-50);
-    font-family: 'Zen Kurenaido';
-    max-width: 80%;
-    word-wrap: break-word;
-    padding: 6px;
-    align-self: center;
   }
   .user {
     color: var(--color-primary-50);
