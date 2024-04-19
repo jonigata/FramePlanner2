@@ -10,7 +10,8 @@ export type RichChatLog = {
 export type RichChatContent =
   | { type: 'speech'; body: string }
   | { type: 'image'; body: RichChatImage }
-  | { type: 'document'; body: RichChatDocument };
+  | { type: 'document'; body: RichChatDocument }
+  | { type: 'error'; body: string };
 
 // その他の型定義
 export type RichChatImage = {
@@ -62,49 +63,43 @@ export function richChatLogToProtocolChatLog(log: RichChatLog[]): ProtocolChatLo
 
 export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLog[] {
   const converted = [];
-  for (const l of log) {
-    // もしcontentの中に```id\nbody```の部分があれば、documentとして扱う
-    // document前後は通常のspeechとして扱う
-    const match = l.content.match(/(.*)```([^]+)\n([^]+)```(.*)/);
-    if (match) {
-      if (match[1].length > 0) {
-        converted.push({
-          role: l.role,
-          content: {
-            type: 'speech',
-            body: match[1],
-          }
-        });
-      }
-      converted.push({
-        role: l.role,
-        content: {
-          type: 'document',
-          body: {
-            id: match[2],
-            text: match[3],
-          }
-        }
-      });
-      if (match[4].length > 0) {
-        converted.push({
-          role: l.role,
-          content: {
-            type: 'speech',
-            body: match[4],
-          }
-        });
-      }
-    } else {
-      converted.push({
-        role: l.role,
-        content: {
-          type: 'speech',
-          body: l.content,
-        }
-      });
-    }
 
+  function flush(role: string, content: string, isDocument: boolean) {
+    content = content.trim();
+    console.log(content.length, content)
+    if (content.length === 0) return;
+    if (isDocument) {
+      converted.push({role, content: {type: 'document', body: {id: '', text: content}}});
+    } else {
+      converted.push({role, content: {type: 'speech', body: content}});
+    }
+  }
+
+  for (const l of log) {
+    // contentの中に```で始まる行があれば、そこから次の```までをdocumentとして扱う
+    let s = '';
+    let document = false;
+    for (const line of l.content.split('\n')) {
+      if (!line.startsWith('```')) {
+        s += line + '\n';
+        continue;
+      }
+      flush(l.role, s, document);
+      s = '';
+      document = !document;
+    }
+    flush(l.role, s, document);
   }
   return converted;
+}
+
+export function rollback(log: RichChatLog[], role: 'user' | 'assistant') {
+  for (let i = log.length - 1; i >= 0; i--) {
+    const role2 = log[i].role;
+    if (role == role2 || role2 === 'system' || role2 === 'error') {
+      log.splice(i, 1);
+    } else {
+      break;
+    }
+  }
 }
