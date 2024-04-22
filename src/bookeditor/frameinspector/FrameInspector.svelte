@@ -99,6 +99,7 @@
     const film = e.detail;
     $frame.filmStack.films = $frame.filmStack.films.filter(f => f !== film);
     $redrawToken = true;
+    $frameInspectorTarget.command = "commit";
     key++;
   }
 
