@@ -720,7 +720,6 @@ export class BubbleLayer extends Layer {
     const paperSize = this.getPaperSize();
     const rscale = 1 / this.paper.matrix.a;
     const minSize = 160 * rscale;
-    console.log(minSize);
     const [x, y, w, h] = ensureMinRectSize(minSize, this.selected.getPhysicalRegularizedRect(paperSize));
 
     const rect: Rect = [x+10, y+10, w-20, h-20];

@@ -111,6 +111,11 @@ export class FrameLayer extends Layer {
     this.makeCanvasPattern();
   }
 
+  calculateLayout(matrix: DOMMatrix): void {
+    this.relayoutIcons();
+  }
+
+
   makeCanvasPattern() {
     const pcanvas = document.createElement("canvas");
     pcanvas.width = 16;
@@ -991,12 +996,18 @@ export class FrameLayer extends Layer {
   }
 
   relayoutFrameIcons(layout: Layout): void {
-    const minSize = 200;
+    const rscale = 1 / this.paper.matrix.a;
+    const minSize = 320 * rscale;
     const origin = layout.rawOrigin;
     const size = layout.rawSize;
     const [x, y, w, h] = ensureMinRectSize(minSize, [...origin, ...size]);
 
-    const cp = (ro, ou) => ClickableIcon.calcPosition([x+10, y+10, w-20, h-20],iconUnit, ro, ou);
+    const rect: Rect = [x+10, y+10, w-20, h-20];
+    const unit: Vector = [...iconUnit];
+    unit[0] *= rscale;
+    unit[1] *= rscale;
+    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, unit, ro, ou);
+
     this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
     this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
     this.deleteIcon.position = cp([1,0],[0,0]);
