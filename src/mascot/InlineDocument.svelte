@@ -24,7 +24,7 @@
   }
   .document-title {
     position: absolute;
-    top: 0px;
+    top: -10px;
     right: 0px;
     color: #000088;
     font-family: 'Dela Gothic One';

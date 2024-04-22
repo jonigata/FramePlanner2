@@ -115,7 +115,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     paperRendererLayer,
     defaultBubbleSlot,
     page.bubbles,
-    1,
+    2,
     (bubble: Bubble) => { 
       if (bubble) {
         const cp = layeredCanvas.paperPositionToCanvasPosition(paper, bubble.getPhysicalCenter(page.paperSize));

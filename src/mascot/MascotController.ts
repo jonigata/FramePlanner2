@@ -4,7 +4,7 @@ import type { Context } from "./servantContext";
 import { makePage } from "./storyboardServant";
 import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog, rollback } from "../utils/richChat";
-import type { RichChatLog, ProtocolChatLog } from "../utils/richChat";
+import type { RichChatLog, ProtocolChatLog, RichChatDocument } from "../utils/richChat";
 
 export type { Context };
 
@@ -44,11 +44,13 @@ export class MascotController {
     log.push({ role: 'assistant', content: null });
     refresh(log);
 
+    const documents = log.filter(l => l.content != null && l.content.type === 'document').map(l => l.content.body as RichChatDocument);
+
     //const r = await aiChat(log.slice(0,-1));
     const r = await executeProcessAndNotify(
       5000, "カイルがお返事してます", 
       async () => {
-        return await aiChat(richChatLogToProtocolChatLog(log.slice(0, -1)));
+        return await aiChat(richChatLogToProtocolChatLog(log.slice(0, -1)), documents);
       });
     console.log(r);
     //await new Promise((resolve) => setTimeout(resolve, 2));
@@ -84,7 +86,9 @@ export class MascotController {
   }
 
   post(s: string) {
-    this.logs.push({ role: 'assistant', content: {type: 'speech', body: s} })
+    const newLog: ProtocolChatLog[] = [{ role: 'assistant', content: s}]
+    this.logs.push(...protocolChatLogToRichChatLog(newLog));
+    console.log(this.logs);
   }
 
   parse(content: string): any {

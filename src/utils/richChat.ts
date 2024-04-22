@@ -64,12 +64,12 @@ export function richChatLogToProtocolChatLog(log: RichChatLog[]): ProtocolChatLo
 export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLog[] {
   const converted = [];
 
-  function flush(role: string, content: string, isDocument: boolean) {
+  function flush(role: string, content: string, documentTag: string) {
     content = content.trim();
     console.log(content.length, content)
     if (content.length === 0) return;
-    if (isDocument) {
-      converted.push({role, content: {type: 'document', body: {id: '', text: content}}});
+    if (documentTag != null) {
+      converted.push({role, content: {type: 'document', body: {id: documentTag, text: content}}});
     } else {
       converted.push({role, content: {type: 'speech', body: content}});
     }
@@ -78,17 +78,21 @@ export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLo
   for (const l of log) {
     // contentの中に```で始まる行があれば、そこから次の```までをdocumentとして扱う
     let s = '';
-    let document = false;
+    let documentTag = null;
     for (const line of l.content.split('\n')) {
       if (!line.startsWith('```')) {
         s += line + '\n';
         continue;
       }
-      flush(l.role, s, document);
+      flush(l.role, s, documentTag);
       s = '';
-      document = !document;
+      if (documentTag == null) {
+        documentTag = line.slice(3);
+      } else {
+        documentTag = null;
+      }
     }
-    flush(l.role, s, document);
+    flush(l.role, s, documentTag);
   }
   return converted;
 }

@@ -18,11 +18,13 @@
     "FramePlannerって何？",
     "Feathralって何？",
     "ネーム作って",
-    "4コマ漫画で連載するね。第一話のネームを考えてください。性格はなんJ民だけど、セリフはきららっぽくしてね",
+    "任せる",
+    "いいね",
+    "4コマ漫画で連載するね。第一話のネームを考えてください。性格はなんJ民だけど、セリフはふつうにしてね",
   ]
 
   const controller = new MascotController($mainBook.chatLogs);
-  let input = "";
+  let userInput = "";
   let key=0;
   let logs: RichChatLog[] = controller.logs;
   let timelineElement: HTMLDivElement;
@@ -41,7 +43,7 @@
         return;
       }
       e.preventDefault();
-      onPost(input);
+      onPost(userInput);
     }
   };  
 
@@ -74,10 +76,10 @@
     }
     try {
       controller.addUserLog({role: 'user', content: {type: 'speech', body: input}});
+      userInput = '';
       const feathral = await controller.addAssistantLog(
         (clog) => {
           logs = clog;
-          input=null;
           key++;
         },
         context);
@@ -85,14 +87,12 @@
       $mainBook.chatLogs = controller.logs;
       commitBook($mainBook, null);
       $mainBook = $mainBook;
-      input = null;
       key++;
     }
     catch(e) {
-      console.error(e.message);
+      console.log(e.message);
       logs.length = logs.length - 1;
       logs.push({role: "error", content: { type: 'error', body: "エラーになりました"}});
-      input=null;
       key++;
     }
   }
@@ -133,7 +133,7 @@
       {/each}
     {/key}
   </div>
-  <textarea class="chat rounded-container-token" rows="4" cols="50" on:keydown={handleKeydown} bind:value={input}/>
+  <textarea class="chat rounded-container-token" rows="4" cols="50" on:keydown={handleKeydown} bind:value={userInput}/>
   <DebugOnly>
     <div class="flex flex-wrap gap-1 justify-center">
       <div class="flex w-full gap-1 justify-center">
@@ -196,7 +196,7 @@
   .user {
     color: var(--color-primary-50);
     font-family: '源暎エムゴ';
-    width: 80%;
+    max-width: 80%;
     word-wrap: break-word;
     padding: 6px;
     align-self: flex-end;
