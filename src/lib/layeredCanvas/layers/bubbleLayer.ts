@@ -14,6 +14,7 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
+import { min } from "@xenova/transformers";
 
 const iconUnit: Vector = [20, 20];
 
@@ -100,6 +101,12 @@ export class BubbleLayer extends Layer {
     this.optionIcons.radius = new ClickableIcon(["radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
     this.setFold(fold);
+  }
+
+  calculateLayout(matrix: DOMMatrix): void {
+    if (this.selected != null) {
+      this.setIconPositions();
+    }
   }
 
   prerender(): void {
@@ -711,7 +718,9 @@ export class BubbleLayer extends Layer {
 
   setIconPositions(): void {
     const paperSize = this.getPaperSize();
-    const minSize = 160;
+    const rscale = 1 / this.paper.matrix.a;
+    const minSize = 160 * rscale;
+    console.log(minSize);
     const [x, y, w, h] = ensureMinRectSize(minSize, this.selected.getPhysicalRegularizedRect(paperSize));
 
     const rect: Rect = [x+10, y+10, w-20, h-20];

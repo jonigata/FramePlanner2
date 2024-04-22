@@ -34,7 +34,7 @@ export class ClickableIcon {
 
   render(ctx: CanvasRenderingContext2D) {
     if (!this.isVisible()) return;
-    this.renderImage(ctx, this.images[this.index], this.position, this.size, this.pivot);
+    this.renderImage(ctx, this.images[this.index]);
   }
 
   contains(p: Vector): boolean {
@@ -71,7 +71,7 @@ export class ClickableIcon {
     this.index = 0;
   }
 
-  renderImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, position: Vector, size: Vector, pivot: Vector) {
+  renderImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement) {
     if (image.width === 0 || image.height === 0) return;
     if (!ClickableIcon.tmpCanvas) {
       ClickableIcon.tmpCanvas = document.createElement("canvas");
