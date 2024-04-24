@@ -213,6 +213,7 @@
       movePages,
       batchImaging,
       chase,
+      getMarks,
     };
     $bookEditor = bookEditorInstance;
 
@@ -423,6 +424,10 @@
 
   function chase() {
     painter.chase();
+  }
+
+  function getMarks() {
+    return arrayLayer.markFlags;
   }
 
   $: onRedraw($redrawToken);

@@ -181,6 +181,7 @@ export interface BookOperators {
   movePages: (from: number[], to: number) => void;
   batchImaging: (index: number) => void;
   chase: () => void;
+  getMarks: () => boolean[];
 }
 
 export function clonePage(page: Page): Page {

@@ -27,6 +27,7 @@
   import { app } from "../firebase";
   import { getAuth } from "firebase/auth";
   import { accountUser } from "../utils/accountStore";
+  import { toolTip } from '../utils/passiveToolTipStore';
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
@@ -382,10 +383,10 @@
   <div class="variant-soft-tertiary mt-2 mx-2 p-2 pt-0 rounded-container-token">
     出版！
     <div class="hbox mx-2 gap">
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={download}>
+      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={download} use:toolTip={"すべてのページを\nダウンロード"}>
         <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
       </button>
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard}>
+      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard} use:toolTip={"マークしたページか\n1ページ目をコピー"}>
         <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
       </button>
       <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 download-button hbox" on:click={postAIPictors}>

@@ -2,7 +2,7 @@
   import { saveAsZip } from "./saver/saveAsZip";
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
-  import { mainBook } from "../bookeditor/bookStore";
+  import { mainBook, bookEditor } from "../bookeditor/bookStore";
   import { saveAsPng } from "./saver/saveAsPng";
   import { saveAsPSD } from "./saver/saveAsPSD";
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -11,6 +11,17 @@
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
     console.log("onTask", ba);
+    const marks: boolean[] = $bookEditor.getMarks();
+    function onePage() {
+      const pages = $mainBook.pages;
+      const filteredPages = pages.filter((_, i) => marks[i]);
+      if (0 < filteredPages.length) {
+        return filteredPages[0];
+      } else {
+        return pages[0];
+      }
+    }
+
     try {
       for (let operation of ba) {
         switch (operation) {
@@ -22,13 +33,13 @@
             }
             break;
           case 'copy':
-            await copyToClipboard($mainBook.pages[0])
+            await copyToClipboard(onePage())
             break;
           case 'export-psd':
-            saveAsPSD($mainBook.pages[0]);
+            saveAsPSD(onePage());
             break;
           case 'aipictors':
-            postToAiPictors($mainBook.pages[0]);
+            postToAiPictors(onePage());
             break;
         }
       }
