@@ -14,10 +14,10 @@ export class ArrayLayer extends Layer {
   onBatchImaging: (index: number) => void;
 
   trashIcons: ClickableIcon[] = [];
-  cutIcons: ClickableIcon[] = [];
+  markIcons: ClickableIcon[] = [];
   insertIcons: ClickableIcon[] = [];
   imagingIcons: ClickableIcon[] = [];
-  cutFlags: boolean[] = [];
+  markFlags: boolean[] = [];
 
   constructor(
     papers: Paper[], 
@@ -42,11 +42,11 @@ export class ArrayLayer extends Layer {
     for (let i = 0; i < this.array.papers.length; i++) {
       const trashIcon = new ClickableIcon(["page-trash.png"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
       this.trashIcons.push(trashIcon);
-      const cutIcon = new ClickableIcon(["page-cut.png"],[32,32],[0.5,0],"ページカット", () => 1 < this.array.papers.length, mp);
-      this.cutIcons.push(cutIcon);
+      const markIcon = new ClickableIcon(["page-mark.png", "page-mark-on.png"],[32,32],[0.5,0],"ページマーク", () => 1 < this.array.papers.length, mp);
+      this.markIcons.push(markIcon);
       const imagingIcon = new ClickableIcon(["page-imaging.png"],[32,32],[0.5,0],"バッチ画像生成", null, mp);
       this.imagingIcons.push(imagingIcon);
-      this.cutFlags[i] = false;
+      this.markFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
       const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png", "page-paste.png"],[24,24],[0.5,0],"ページ挿入", null, mp);
@@ -72,20 +72,22 @@ export class ArrayLayer extends Layer {
       const s = paper.paper.size;
       const c = paper.center;
       const trashIcon = this.trashIcons[i];
-      const cutIcon = this.cutIcons[i];
+      const markIcon = this.markIcons[i];
       const imagingIcon = this.imagingIcons[i];
+      markIcon.index = this.markFlags[i] ? 1 : 0;
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
         trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 90];
-        cutIcon.pivot = [0, 0.5];
-        cutIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 180];
+        markIcon.pivot = [0, 0.5];
+        markIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 180];
+        markIcon.index = this.markFlags[i] ? 1 : 0;
         imagingIcon.pivot = [0, 0.5];
         imagingIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 90];
       } else {
         trashIcon.pivot = [0.5, 0];
         trashIcon.position = [c[0] - 90, c[1] + s[1] * 0.5 + 16];
-        cutIcon.pivot = [0.5, 0];
-        cutIcon.position = [c[0] - 180, c[1] + s[1] * 0.5 + 16];
+        markIcon.pivot = [0.5, 0];
+        markIcon.position = [c[0] - 180, c[1] + s[1] * 0.5 + 16];
         imagingIcon.pivot = [0.5, 0];
         imagingIcon.position = [c[0] + 90, c[1] + s[1] * 0.5 + 16];
       }
@@ -120,7 +122,7 @@ export class ArrayLayer extends Layer {
       insertIcon.pivot = [0.5, 0];
       insertIcon.position = [c[0] - s[0] * 0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
     }
-    if (this.cutFlags.some(e => e)) {
+    if (this.markFlags.some(e => e)) {
       for (let i = 0; i <= this.array.papers.length; i++) {
         this.insertIcons[i].index = 2;
       }
@@ -130,7 +132,7 @@ export class ArrayLayer extends Layer {
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
-    for (let icons of [this.insertIcons, this.trashIcons, this.cutIcons, this.imagingIcons]) {
+    for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.imagingIcons]) {
       for (let icon of icons) {
         if (icon.hintIfContains(p, this.hint.bind(this))) {
           return true;
@@ -150,10 +152,10 @@ export class ArrayLayer extends Layer {
 
     for (let [i, e] of this.insertIcons.entries()) {
       if (e.contains(p)) {
-        if (this.cutFlags.some(e => e)) {
-          // cutFlagsが立っているページが前にある場合、その分indexを減らす
-          const n = this.cutFlags.slice(0, i).filter(e => e).length;
-          this.onMove(this.cutFlags.map((e, i) => e ? i : -1).filter(e => 0 <= e), i - n);
+        if (this.markFlags.some(e => e)) {
+          // markFlagsが立っているページが前にある場合、その分indexを減らす
+          const n = this.markFlags.slice(0, i).filter(e => e).length;
+          this.onMove(this.markFlags.map((e, i) => e ? i : -1).filter(e => 0 <= e), i - n);
         } else {
           this.onInsert(i);
         }
@@ -166,10 +168,11 @@ export class ArrayLayer extends Layer {
         return null;
       }      
     }
-    for (let [i, e] of this.cutIcons.entries()) {
+    for (let [i, e] of this.markIcons.entries()) {
       if (e.contains(p)) {
-        this.cutFlags[i] = !this.cutFlags[i];
+        this.markFlags[i] = !this.markFlags[i];
         this.calculateIconPositions();
+        this.redraw();
         return null;
       }      
     }
@@ -236,7 +239,7 @@ export class ArrayLayer extends Layer {
       this.trashIcons.forEach(e => {
         e.render(ctx);
       });
-      this.cutIcons.forEach(e => {
+      this.markIcons.forEach(e => {
         e.render(ctx);
       });
       this.imagingIcons.forEach(e => {
@@ -248,7 +251,7 @@ export class ArrayLayer extends Layer {
       ctx.translate(...paper.center);
       paper.paper.render(ctx, depth);
       ctx.restore();
-      if (this.cutFlags[i]) {
+      if (this.markFlags[i]) {
         const r = this.array.getPaperRect(i);
         drawSelectionFrame(ctx, "rgba(255, 128, 128, 1)", rectToTrapezoid(r));
       }
