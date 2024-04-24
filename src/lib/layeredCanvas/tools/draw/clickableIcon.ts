@@ -104,7 +104,7 @@ export class ClickableIcon {
   }
 
   get rscale(): number {
-    return 1 / this.matrixProvider().a;
+    return Math.min(1 / this.matrixProvider().a, 3);
   }
 
   static calcPosition(rect: Rect, unit: Vector, regularizedOrigin: Vector, offsetUnit: Vector): Vector {

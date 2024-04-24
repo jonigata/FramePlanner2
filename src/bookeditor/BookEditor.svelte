@@ -157,10 +157,11 @@
       wrapMode = $mainBook.wrapMode;
 
       const direction = getDirectionFromReadingDirection(book.direction);
-      const [fold, gap] = getFoldAndGapFromWrapMode(wrapMode);
+      const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(wrapMode);
       arrayLayer.array.direction = direction;
       arrayLayer.array.fold = fold;
-      arrayLayer.array.gap = gap;
+      arrayLayer.array.gapX = gapX;
+      arrayLayer.array.gapY = gapY;
       for (const paper of arrayLayer.array.papers) {
         paper.paper.findLayer(BubbleLayer).setFold(fold);
       } 

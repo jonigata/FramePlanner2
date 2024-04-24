@@ -9,12 +9,14 @@ import { type Vector, type Rect, rectContains, rectToPointDistance } from "../to
 export class PaperArray {
   papers: {paper: Paper, center: Vector}[];
   fold: number;
-  gap: number;
+  gapX: number;
+  gapY: number;
   direction: number;
 
-  constructor(papers: Paper[], fold: number, gap: number, direction: number) {
+  constructor(papers: Paper[], fold: number, gapX: number, gapY: number, direction: number) {
     this.fold = fold;
-    this.gap = gap;
+    this.gapX = gapX;
+    this.gapY = gapY;
     this.direction = direction;
 
     this.papers = papers.map(e => ({ paper: e, center: [0, 0] }));
@@ -41,11 +43,11 @@ export class PaperArray {
         x = 0;
         const j = i / this.fold;
         y += heights[j-1] * 0.5 + heights[j] * 0.5;
-        y += this.gap;
+        y += this.gapY;
       }
       this.papers[i].center = [x, y];
       x += this.papers[i].paper.size[0] * 0.5 * this.direction;
-      x += this.gap * this.direction;
+      x += this.gapX * this.direction;
       if (i < this.papers.length - 1) {
         x += this.papers[i + 1].paper.size[0] * 0.5 * this.direction;
       }

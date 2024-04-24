@@ -35,8 +35,8 @@ export function buildBookEditor(
     pageNumber++;
   }
   const direction = getDirectionFromReadingDirection(book.direction);
-  const [fold, gap] = getFoldAndGapFromWrapMode(book.wrapMode);
-  const arrayLayer = new ArrayLayer(papers, fold, gap, direction, editor.insertPage, editor.deletePage, editor.movePages, editor.batchImaging);
+  const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(book.wrapMode);
+  const arrayLayer = new ArrayLayer(papers, fold, gapX, gapY, direction, editor.insertPage, editor.deletePage, editor.movePages, editor.batchImaging);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   layeredCanvas.takeOver();
@@ -56,14 +56,14 @@ export function buildBookEditor(
   return { arrayLayer, layeredCanvas};
 }
 
-export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): [number, number] {
+export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number, gapX: number, gapY: number } {
   switch (wrapMode) {
     case "none":
-      return [0, 100];
+      return { fold: 0, gapX: 100, gapY: 0 };
     case "two-pages":
-      return [2, 100];
+      return { fold: 2, gapX: 100, gapY: 200 };
     case "one-page":
-      return [1, 0];
+      return { fold: 1, gapX: 0, gapY: 0 };
   }
 }
 

@@ -22,7 +22,8 @@ export class ArrayLayer extends Layer {
   constructor(
     papers: Paper[], 
     fold: number, 
-    gap: number, 
+    gapX: number, 
+    gapY: number,
     direction: number, 
     onInsert: (index: number) => void, 
     onDelete: (index: number) => void,
@@ -30,7 +31,7 @@ export class ArrayLayer extends Layer {
     onBatchImaging: (index: number) => void) {
 
     super();
-    this.array = new PaperArray(papers, fold, gap, direction);
+    this.array = new PaperArray(papers, fold, gapX, gapY, direction);
     this.onInsert = onInsert;
     this.onDelete = onDelete;
     this.onMove = onMove;
@@ -66,7 +67,6 @@ export class ArrayLayer extends Layer {
   }
 
   calculateIconPositions() {
-    const gap = this.array.gap;
     for (let i = 0; i < this.array.papers.length; i++) {
       const paper = this.array.papers[i];
       const s = paper.paper.size;
@@ -98,10 +98,12 @@ export class ArrayLayer extends Layer {
       const c = paper.center;
       const insertIcon = this.insertIcons[i];
       if (this.array.fold === 1) {
+        const gap = this.array.gapY;
         insertIcon.index = 1;
         insertIcon.pivot = [0, 0.5];
         insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - s[1] * 0.5 - gap * 0.5];
       } else {
+        const gap = this.array.gapX;
         insertIcon.index = 0;
         insertIcon.pivot = [0.5, 0];
         insertIcon.position = [c[0] + s[0] * 0.5 + gap * 0.5, c[1] + s[1] * 0.5 + 16];
@@ -114,10 +116,12 @@ export class ArrayLayer extends Layer {
     const c = paper.center;
     const insertIcon = this.insertIcons[this.array.papers.length];
     if (this.array.fold === 1) {
+      const gap = this.array.gapY;
       insertIcon.index = 1;
       insertIcon.pivot = [0, 0.5];
       insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + s[1] * 0.5 + gap * 0.5];
     } else {
+      const gap = this.array.gapX;
       insertIcon.index = 0;
       insertIcon.pivot = [0.5, 0];
       insertIcon.position = [c[0] - s[0] * 0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
