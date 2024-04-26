@@ -66,6 +66,9 @@
   function onAddDummyLog(n) {
     controller.addDummyLog(n);
     logs = controller.logs;
+    $mainBook.chatLogs = controller.logs;
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
     key++;
   }
 

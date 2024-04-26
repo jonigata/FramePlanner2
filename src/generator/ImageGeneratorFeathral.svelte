@@ -84,7 +84,7 @@
 </script>
 
 <div class="drawer-content">
-  {#if $onlineAccount}
+  {#if $onlineAccount != null}
   <p><Feathral/></p>
 
   <p>スタイル</p>
@@ -137,7 +137,7 @@
     {/if}
   </div>
   {:else}
-  <p>サインインしてください</p>
+    <p>サインインしてください</p>
   {/if}
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />

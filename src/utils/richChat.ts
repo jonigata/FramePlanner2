@@ -35,7 +35,7 @@ export function richChatLogToProtocolChatLog(log: RichChatLog[]): ProtocolChatLo
         break;
       case 'document':
         const doc = l.content.body as RichChatDocument;
-        converted.push({ role: l.role, content: `\`\`\`${doc.id}\n${doc.text}\`\`\`` });
+        converted.push({ role: l.role, content: `\`\`\`${doc.id}\n${doc.text}\n\`\`\`` });
         break;
     }
   }

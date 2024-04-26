@@ -120,23 +120,39 @@ export async function updateFeathral(): Promise<number> {
   return (r.data as any).feathral;
 }
 
+async function callFunc(name: string, data: any, timeout: number | null): Promise<any> {
+  if (timeout == null) {
+    const functions = getFunctions(app);
+    useEmulatorIfDevelopment();
+    const f = httpsCallable(functions, name);
+    const r = await f(data);
+    console.log(r);
+    return r.data;
+  } else {
+    const functions = getFunctions(app);
+    useEmulatorIfDevelopment();
+    const f = httpsCallable(functions, name);
+
+    // タイムアウトを検出するプロミス
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("タイムアウト\n2分後に再度試行してください."));
+      }, timeout);
+    });
+
+    const r: any = await Promise.race([f(data), timeoutPromise]);
+    return r.data;
+  }
+}
+
 export async function generateImageFromTextWithFeathral(data: any): Promise<any> {
-  const functions = getFunctions(app);
-  useEmulatorIfDevelopment();
-  const generateImageFromTextWithFeathral = httpsCallable(functions, 'generateimagefromtext');
-  console.log("calling");
-  const r = await generateImageFromTextWithFeathral(data);
-  console.log(r);
+  const r = await callFunc('generateimagefromtext', data, 20000);
   logEvent(analytics, 'feathral_generate');
-  return r.data;
+  return r;
 }
 
 export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument[]): Promise<any> {
-  const functions = getFunctions(app);
-  useEmulatorIfDevelopment();
-  const chat = httpsCallable(functions, 'chat');
-  const r = await chat({log, documents});
-  console.log(r);
+  const r = await callFunc('chat', {log, documents}, null);
   logEvent(analytics, 'chat');
-  return r.data;
+  return r;
 }
