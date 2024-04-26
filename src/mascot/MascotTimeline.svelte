@@ -8,8 +8,7 @@
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import DebugOnly from "../utils/DebugOnly.svelte";
-  import type { ProtocolChatLog, RichChatLog, RichChatDocument } from "../utils/richChat";
-  import { protocolChatLogToRichChatLog, rollback } from "../utils/richChat";
+  import type { RichChatLog, RichChatDocument } from "../utils/richChat";
   import InlineDocument from "./InlineDocument.svelte";
 
   const debugSamples = [

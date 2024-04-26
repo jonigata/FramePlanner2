@@ -10,6 +10,7 @@
   import { persistent } from '../utils/persistent';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
+  import { ProgressRadial } from '@skeletonlabs/skeleton';
 
   export let busy: boolean;
   export let prompt: string;
@@ -55,6 +56,11 @@
       imageRequest.width = size[0];
       imageRequest.height = size[1];
       console.log(imageRequest);
+
+      progress = 0;
+      let delta = 1 / 8;
+      const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
+
       const data = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
@@ -67,7 +73,10 @@
       $onlineAccount.feathral = data.feathral;
       gallery.push(img);
       gallery = gallery;
+      progress = 1;
+
       logEvent(getAnalytics(), 'generate_feathral');
+      clearInterval(q);
     }
     catch(error) {
       console.log(error);
@@ -130,7 +139,13 @@
 
   <div class="hbox gap-5">
     <button disabled={busy || $onlineAccount.feathral < 1} class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
-      Generate
+      <div class="flex justify-center items-center h-6">
+        {#if busy}
+          <ProgressRadial stroke={220} meter="stroke-success-200" track="stroke-success-400" width="w-4"/>
+        {:else}
+          生成
+        {/if}
+        </div>
     </button>
     {#if $onlineAccount.feathral < 1}
     <div class="warning">Feathralが足りません</div>

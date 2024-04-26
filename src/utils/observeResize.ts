@@ -1,17 +1,23 @@
-export function observeResize(node) {
-  const resizeObserver = new ResizeObserver(entries => {
-    console.log(entries);
-    for (let entry of entries) {
-      // ここでリサイズ時の処理を記述
-      console.log(entry.target, entry.contentRect.width, entry.contentRect.height);
-    }
+import type { Writable } from 'svelte/store';
+import { get } from 'svelte/store';
+
+export function resize(node: HTMLElement, store: Writable<DOMRect>) {
+  const r = get(store);
+  node.style.width = r.width + 'px';
+  node.style.height = r.height + 'px';
+  node.style.left = r.x + 'px';
+  node.style.top = r.y + 'px';
+
+  const observer = new ResizeObserver(entries => {
+    const r = get(store);
+    store.set(new DOMRect(r.x, r.y, entries[0].contentRect.width, entries[0].contentRect.height));
   });
 
-  resizeObserver.observe(node);
+  observer.observe(node);
 
   return {
     destroy() {
-      resizeObserver.unobserve(node);
+      observer.disconnect();
     }
   };
 }

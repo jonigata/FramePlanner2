@@ -3,13 +3,23 @@
   import { draggable } from '@neodrag/svelte';
   import MascotTimeline from './MascotTimeline.svelte';
   import { mascotWindowRect } from './mascotStore';
-  import { observeResize } from '../utils/observeResize';
+  import { resize } from '../utils/observeResize';
+  import { onMount } from 'svelte';
 
-  let adjustedPosition ;
+  let container;
 </script>
 
-<div class="container" use:draggable={{ position: adjustedPosition, handle: '.handle' }}>
-  <div class="resizable" use:observeResize>
+<div class="container" use:draggable={
+  {
+    handle: '.handle',
+    defaultPosition: $mascotWindowRect,
+    transform: ({ offsetX, offsetY }) => {
+      $mascotWindowRect = new DOMRect(offsetX, offsetY, $mascotWindowRect.width, $mascotWindowRect.height);
+      return `translate(${offsetX}px, ${offsetY}px)`;
+    }
+  }}
+  bind:this={container}>
+  <div class="resizable" use:resize={mascotWindowRect}>
     <MascotTimeline />
   </div>
   <div class="handle absolute-positioned">
