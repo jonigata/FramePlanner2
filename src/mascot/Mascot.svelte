@@ -2,11 +2,14 @@
   import mascot from '../assets/mascot.png';
   import { draggable } from '@neodrag/svelte';
   import MascotTimeline from './MascotTimeline.svelte';
-  import { mascotWindowRect } from './mascotStore';
+  import { mascotVisible, mascotWindowRect } from './mascotStore';
   import { resize } from '../utils/observeResize';
-  import { onMount } from 'svelte';
 
-  let container;
+  function onClick(e: MouseEvent) {
+    e.preventDefault();
+    $mascotVisible = false;
+  }
+
 </script>
 
 <div class="container" use:draggable={
@@ -17,12 +20,11 @@
       $mascotWindowRect = new DOMRect(offsetX, offsetY, $mascotWindowRect.width, $mascotWindowRect.height);
       return `translate(${offsetX}px, ${offsetY}px)`;
     }
-  }}
-  bind:this={container}>
-  <div class="resizable" use:resize={mascotWindowRect}>
+  }} use:resize={mascotWindowRect}>
     <MascotTimeline />
-  </div>
-  <div class="handle absolute-positioned">
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="handle absolute-positioned" on:contextmenu={onClick}>
     <img class="mascot handle" src={mascot} alt="mascot"/>
   </div>
 </div>
