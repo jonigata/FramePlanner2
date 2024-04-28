@@ -637,7 +637,6 @@ function makeTrivialTailPath(size, m, v, tailWidth) {
   if (m == null || (m[0] == 0 && m[1] == 0)) {
     m = [0.5, 0];
   }
-  console.log(tailWidth);
   const a = size[0] * size[1] * tailWidth;
   const l = Math.max(50000, Math.hypot(v[0], v[1]) ** 2);
   const vd1 = normalize2D(perpendicular2D(v), a * 35 / l);

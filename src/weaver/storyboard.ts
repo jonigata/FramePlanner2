@@ -4,6 +4,7 @@ export type Panel = { composition: string, bubbles: Bubble[] };
 export type Page = { panels: Panel[] };
 
 export type Storyboard = {
+  format: "4koma" | "standard";
   characters: Character[],
   pages: Page[]  
 }

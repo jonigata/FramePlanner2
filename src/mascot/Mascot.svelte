@@ -12,7 +12,7 @@
 
 </script>
 
-<div class="container" use:draggable={
+<div class="container resizable" use:draggable={
   {
     handle: '.handle',
     defaultPosition: $mascotWindowRect,

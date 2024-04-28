@@ -276,462 +276,483 @@ export const frameExamples = [
 export const aiTemplates = [
   // 2コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "divider": {
-              "spacing": 4
+    frameTree: {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
             },
-            "height": 88
-          },
-          {
-            "height": 88
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
+            {
+              "divider": {
+                "spacing": 4
+              },
+              "height": 88
+            },
+            {
+              "height": 88
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
   },
   // 3コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
-                },
-                "width": 86
-              },
-              {
-                "width": 86
-              }
-            ],
-            "divider": {
-              "spacing": 4
+    frameTree: {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
             },
-            "height": 96
-          },
-          {
-            "height": 80
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 86
+                },
+                {
+                  "width": 86
+                }
+              ],
+              "divider": {
+                "spacing": 4
+              },
+              "height": 96
+            },
+            {
+              "height": 80
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
   },
   // 4コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
+    frameTree:  {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
+            },
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 86
                 },
-                "width": 86
+                {
+                  "width": 86
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 86
-              }
-            ],
-            "divider": {
-              "spacing": 4
+              "height": 55
             },
-            "height": 55
-          },
-          {
-            "divider": {
-              "spacing": 4
+            {
+              "divider": {
+                "spacing": 4
+              },
+              "height": 40
             },
-            "height": 40
-          },
-          {
-            "height": 75
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
+            {
+              "height": 75
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
   },
   // 5コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
-                },
-                "width": 85
-              },
-              {
-                "width": 85
-              }
-            ],
-            "divider": {
-              "spacing": 4
+    frameTree: {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
             },
-            "height": 55
-          },
-          {
-            "divider": {
-              "spacing": 4
-            },
-            "height": 40
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 85
                 },
-                "width": 75
+                {
+                  "width": 85
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 75
-              }
-            ],
-            "height": 80
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
+              "height": 55
+            },
+            {
+              "divider": {
+                "spacing": 4
+              },
+              "height": 40
+            },
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 75
+                },
+                {
+                  "width": 75
+                }
+              ],
+              "height": 80
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
   },
   // 6コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
-                },
-                "width": 65
-              },
-              {
-                "width": 105
-              }
-            ],
-            "divider": {
-              "spacing": 4
+    frameTree: {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
             },
-            "height": 65
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 2
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 65
                 },
-                "width": 60
+                {
+                  "width": 105
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 30
-              }
-            ],
-            "divider": {
-              "spacing": 4
+              "height": 65
             },
-            "height": 45
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 2
+                  },
+                  "width": 60
                 },
-                "width": 75
+                {
+                  "width": 30
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 75
-              }
-            ],
-            "height": 65
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
+              "height": 45
+            },
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 75
+                },
+                {
+                  "width": 75
+                }
+              ],
+              "height": 65
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
   },
   // 7コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
-                },
-                "width": 65
-              },
-              {
-                "width": 105
-              }
-            ],
-            "divider": {
-              "spacing": 4
+    frameTree: {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
             },
-            "height": 65
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 2
-                },
-                "width": 60
-              },
-              {
-                "width": 30
-              }
-            ],
-            "divider": {
-              "spacing": 4
-            },
-            "height": 45
-          },
-          {
-            "row": [
-              {
-                "width": 75,
-                "column": [
-                  {
-                    "height": 40,
-                    "divider": {
-                      "spacing": 2
-                    },
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
                   },
-                  {
-                    "height": 40
-                  }
-                ],
-                "divider": {
-                  "spacing": 3
+                  "width": 65
                 },
+                {
+                  "width": 105
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 75
+              "height": 65
+            },
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 2
+                  },
+                  "width": 60
+                },
+                {
+                  "width": 30
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-            ],
-            "height": 110
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
+              "height": 45
+            },
+            {
+              "row": [
+                {
+                  "width": 75,
+                  "column": [
+                    {
+                      "height": 40,
+                      "divider": {
+                        "spacing": 2
+                      },
+                    },
+                    {
+                      "height": 40
+                    }
+                  ],
+                  "divider": {
+                    "spacing": 3
+                  },
+                },
+                {
+                  "width": 75
+                },
+              ],
+              "height": 110
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
   },
   // 8コマ
   {
-    "bgColor": "white",
-    "row": [
-      {
-        "visibility": 0,
-        "width": 3
-      },
-      {
-        "column": [
-          {
-            "visibility": 0,
-            "height": 3
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
-                },
-                "width": 65
-              },
-              {
-                "width": 105
-              }
-            ],
-            "divider": {
-              "spacing": 4
+    frameTree: {
+      "bgColor": "white",
+      "row": [
+        {
+          "visibility": 0,
+          "width": 3
+        },
+        {
+          "column": [
+            {
+              "visibility": 0,
+              "height": 3
             },
-            "height": 65
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 2
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 65
                 },
-                "width": 60
+                {
+                  "width": 105
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 30
-              }
-            ],
-            "divider": {
-              "spacing": 4
+              "height": 65
             },
-            "height": 45
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 2
+                  },
+                  "width": 60
                 },
-                "width": 75
+                {
+                  "width": 30
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 75
-              }
-            ],
-            "divider": {
-              "spacing": 4
+              "height": 45
             },
-            "height": 50
-          },
-          {
-            "row": [
-              {
-                "divider": {
-                  "spacing": 3
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 75
                 },
-                "width": 70
+                {
+                  "width": 75
+                }
+              ],
+              "divider": {
+                "spacing": 4
               },
-              {
-                "width": 80
-              }
-            ],
-            "height": 65
-          },
-          {
-            "visibility": 0,
-            "height": 3
-          }
-        ],
-        "width": 120
-      },
-      {
-        "visibility": 0,
-        "width": 3
-      }
-    ],
-    "height": 100
-  }  
+              "height": 50
+            },
+            {
+              "row": [
+                {
+                  "divider": {
+                    "spacing": 3
+                  },
+                  "width": 70
+                },
+                {
+                  "width": 80
+                }
+              ],
+              "height": 65
+            },
+            {
+              "visibility": 0,
+              "height": 3
+            }
+          ],
+          "width": 120
+        },
+        {
+          "visibility": 0,
+          "width": 3
+        }
+      ],
+      "height": 100
+    },
+    bubbles: []
+  },
 ]

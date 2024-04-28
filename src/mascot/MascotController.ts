@@ -52,7 +52,7 @@ export class MascotController {
       async () => {
         return await aiChat(richChatLogToProtocolChatLog(log.slice(0, -1)), documents);
       });
-    console.log(r);
+    console.log("RESULT", r);
     //await new Promise((resolve) => setTimeout(resolve, 2));
     //const r = "まだ実装してないよ～";
     //callServant(context, { tool: "createBubble", parameters: { text: "うひひ", position: [0.5, 0.5] } })
@@ -60,6 +60,7 @@ export class MascotController {
     log.pop();
 
     const json = this.parse(r.result);
+    console.log("JSON", json);
     if (typeof json === 'string') {
       this.post(r);
     } else {
@@ -208,7 +209,7 @@ export class MascotController {
       [
         {role: 'user', content: '漫画のキャラクターを考えて。お題は「異世界転生したUber Eats」'},
         {role: 'assistant', content: `了解～！異世界に転生したUber Eatsの配達員のキャラクターを考えるね～
-\`\`\`
+\`\`\`characters
 性別：男
 年齢：20歳
 性格：明るくて前向き、ちょっとドジだけど一生懸命
@@ -225,7 +226,7 @@ export class MascotController {
 `},
         {role: 'user', content: '主人公は女の子がいいな。なんJ民みたいな性格ね'},
         {role: 'assistant', content: `了解～！異世界に転生したUber Eatsの配達員のキャラクターを考えるね～
-\`\`\`
+\`\`\`characters
 名前：川上 奈々（かわかみ なな）
 あだ名：ななJ
 性別：女
