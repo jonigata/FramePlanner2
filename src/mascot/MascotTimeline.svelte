@@ -11,16 +11,19 @@
   import type { RichChatLog, RichChatDocument } from "../utils/richChat";
   import InlineDocument from "./InlineDocument.svelte";
 
-  const debugSamples = [
+  const debugTemplates = [
     "にゃん",
     "ぬるぽ",
     "FramePlannerって何？",
     "Feathralって何？",
-    "ネーム作って",
+  ];
+
+  const chatTemplates = [
+    "マンガ作って",
     "任せる",
     "いいね",
-    "4コマ漫画で連載するね。第一話のネームを考えてください。性格はなんJ民だけど、セリフはふつうにしてね",
-  ]
+    "ネーム作って",
+  ];
 
   const controller = new MascotController($mainBook.chatLogs);
   let userInput = "";
@@ -136,15 +139,22 @@
     {/key}
   </div>
   <textarea class="chat rounded-container-token" rows="4" cols="50" on:keydown={handleKeydown} bind:value={userInput}/>
+  <div class="flex flex-wrap gap-1 justify-center">
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button px-1 hbox" on:click={() => onReset()}>
+      reset
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button px-1 hbox" on:click={() => onRollback()}>
+      rollback
+    </button>
+    {#each chatTemplates as sample}
+      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button px-1 hbox" on:click={() => onPost(sample)}>
+        {sample}
+      </button>
+    {/each}
+  </div>
   <DebugOnly>
     <div class="flex flex-wrap gap-1 justify-center">
       <div class="flex w-full gap-1 justify-center">
-        <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onReset()}>
-          reset
-        </button>
-        <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onRollback()}>
-          rollback
-        </button>
         <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onAddDummyLog(0)}>
           dummy1
         </button>
@@ -155,7 +165,7 @@
           dummy3
         </button>
       </div>
-      {#each debugSamples as sample}
+      {#each debugTemplates as sample}
         <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onPost(sample)}>
           {sample}
         </button>

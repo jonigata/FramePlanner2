@@ -5,7 +5,7 @@
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { generateImageFromTextWithFeathral } from '../firebase';
-  import { onlineAccount } from "../utils/accountStore";
+  import { onlineAccount, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
 
@@ -47,8 +47,6 @@
       film.image = img;
       frame.filmStack.films.push(film);
       frame.gallery.push(img);
-
-      $onlineAccount.feathral = data.feathral;
     }
     catch(error) {
     }
@@ -72,6 +70,7 @@
       console.log("scaled");
       constraintLeaf(page.paperSize, leafLayout);
     }
+    $updateToken = true;
   }
 
   onMount(async () => {
