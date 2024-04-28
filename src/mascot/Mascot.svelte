@@ -4,6 +4,7 @@
   import MascotTimeline from './MascotTimeline.svelte';
   import { mascotVisible, mascotWindowRect } from './mascotStore';
   import { resize } from '../utils/observeResize';
+  import { fitWithin } from '../utils/observeWithin';
 
   function onClick(e: MouseEvent) {
     e.preventDefault();
@@ -12,7 +13,7 @@
 
 </script>
 
-<div class="container resizable" use:draggable={
+<div class="container" use:draggable={
   {
     handle: '.handle',
     defaultPosition: $mascotWindowRect,
@@ -20,8 +21,10 @@
       $mascotWindowRect = new DOMRect(offsetX, offsetY, $mascotWindowRect.width, $mascotWindowRect.height);
       return `translate(${offsetX}px, ${offsetY}px)`;
     }
-  }} use:resize={mascotWindowRect}>
+  }}>
+  <div class="resizable"use:resize={mascotWindowRect} use:fitWithin>
     <MascotTimeline />
+  </div>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="handle absolute-positioned" on:contextmenu={onClick}>
@@ -43,6 +46,7 @@
     position: absolute;
     bottom: 0;
     left: 0px;
+    overflow: visible;
   }
   .mascot {
     position: absolute;
