@@ -25,6 +25,8 @@
   import { loading } from '../utils/loadingStore'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import { batchImagingPage } from '../generator/batchImagingStore';
+  import { copyToClipboard } from '../utils/saver/copyToClipboard';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -126,6 +128,12 @@
     commit(null);
   }
 
+  function copyPageToClipboard(index: number) {
+    const page = $mainBook.pages[index];
+    copyToClipboard(page);
+    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+  }
+
   function batchImaging(index: number) {
     console.log("batchImaging", index);
     $batchImagingPage = $mainBook.pages[index];
@@ -211,6 +219,7 @@
       insertPage,
       deletePage,
       movePages,
+      copyPageToClipboard,
       batchImaging,
       chase,
       getMarks,

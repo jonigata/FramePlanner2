@@ -11,12 +11,14 @@ export class ArrayLayer extends Layer {
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
   onMove: (from: number[], to: number) => void;
+  onCopyToClipboard: (index: number) => void;
   onBatchImaging: (index: number) => void;
 
   trashIcons: ClickableIcon[] = [];
   markIcons: ClickableIcon[] = [];
   insertIcons: ClickableIcon[] = [];
   imagingIcons: ClickableIcon[] = [];
+  copyIcons: ClickableIcon[] = [];
   markFlags: boolean[] = [];
 
   constructor(
@@ -28,6 +30,7 @@ export class ArrayLayer extends Layer {
     onInsert: (index: number) => void, 
     onDelete: (index: number) => void,
     onMove: (from: number[], to: number) => void,
+    onCopyToClipboard: (index: number) => void,
     onBatchImaging: (index: number) => void) {
 
     super();
@@ -35,10 +38,9 @@ export class ArrayLayer extends Layer {
     this.onInsert = onInsert;
     this.onDelete = onDelete;
     this.onMove = onMove;
+    this.onCopyToClipboard = onCopyToClipboard;
     this.onBatchImaging = onBatchImaging;
 
-    this.insertIcons = [];
-    this.trashIcons = [];
     const mp = () => this.paper.matrix;
     for (let i = 0; i < this.array.papers.length; i++) {
       const trashIcon = new ClickableIcon(["page-trash.png"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
@@ -47,6 +49,8 @@ export class ArrayLayer extends Layer {
       this.markIcons.push(markIcon);
       const imagingIcon = new ClickableIcon(["page-imaging.png"],[32,32],[0.5,0],"バッチ画像生成", null, mp);
       this.imagingIcons.push(imagingIcon);
+      const copyIcon = new ClickableIcon(["page-clipboard.png"],[32,32],[0.5,0],"クリップボードにコピー", null, mp);
+      this.copyIcons.push(copyIcon);
       this.markFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
@@ -73,23 +77,27 @@ export class ArrayLayer extends Layer {
       const c = paper.center;
       const trashIcon = this.trashIcons[i];
       const markIcon = this.markIcons[i];
+      const copyIcon = this.copyIcons[i];
       const imagingIcon = this.imagingIcons[i];
       markIcon.index = this.markFlags[i] ? 1 : 0;
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
-        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 90];
+        trashIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 180];
         markIcon.pivot = [0, 0.5];
-        markIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 180];
-        markIcon.index = this.markFlags[i] ? 1 : 0;
+        markIcon.position = [c[0] + s[0] * 0.5 + 60, c[1]];
+        copyIcon.pivot = [0, 0.5];
+        copyIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 90];
         imagingIcon.pivot = [0, 0.5];
-        imagingIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - 90];
+        imagingIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 180];
       } else {
         trashIcon.pivot = [0.5, 0];
-        trashIcon.position = [c[0] - 90, c[1] + s[1] * 0.5 + 16];
+        trashIcon.position = [c[0] + 180, c[1] + s[1] * 0.5 + 16];
         markIcon.pivot = [0.5, 0];
-        markIcon.position = [c[0] - 180, c[1] + s[1] * 0.5 + 16];
+        markIcon.position = [c[0], c[1] + s[1] * 0.5 + 16];
+        copyIcon.pivot = [0.5, 0];
+        copyIcon.position = [c[0] - 90, c[1] + s[1] * 0.5 + 16];
         imagingIcon.pivot = [0.5, 0];
-        imagingIcon.position = [c[0] + 90, c[1] + s[1] * 0.5 + 16];
+        imagingIcon.position = [c[0] - 180, c[1] + s[1] * 0.5 + 16];
       }
     }
     for (let i = 0; i < this.array.papers.length; i++) {
@@ -136,7 +144,7 @@ export class ArrayLayer extends Layer {
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
-    for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.imagingIcons]) {
+    for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.copyIcons, this.imagingIcons]) {
       for (let icon of icons) {
         if (icon.hintIfContains(p, this.hint.bind(this))) {
           return true;
@@ -177,6 +185,12 @@ export class ArrayLayer extends Layer {
         this.markFlags[i] = !this.markFlags[i];
         this.calculateIconPositions();
         this.redraw();
+        return null;
+      }      
+    }
+    for (let [i, e] of this.copyIcons.entries()) {
+      if (e.contains(p)) {
+        this.onCopyToClipboard(i);
         return null;
       }      
     }
@@ -244,6 +258,9 @@ export class ArrayLayer extends Layer {
         e.render(ctx);
       });
       this.markIcons.forEach(e => {
+        e.render(ctx);
+      });
+      this.copyIcons.forEach(e => {
         e.render(ctx);
       });
       this.imagingIcons.forEach(e => {

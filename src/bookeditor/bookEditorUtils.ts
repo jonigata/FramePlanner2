@@ -36,7 +36,13 @@ export function buildBookEditor(
   }
   const direction = getDirectionFromReadingDirection(book.direction);
   const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(book.wrapMode);
-  const arrayLayer = new ArrayLayer(papers, fold, gapX, gapY, direction, editor.insertPage, editor.deletePage, editor.movePages, editor.batchImaging);
+  const arrayLayer = new ArrayLayer(
+    papers, fold, gapX, gapY, direction,
+    editor.insertPage,
+    editor.deletePage,
+    editor.movePages,
+    editor.copyPageToClipboard,
+    editor.batchImaging);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   layeredCanvas.takeOver();
