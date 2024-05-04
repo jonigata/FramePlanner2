@@ -75,7 +75,7 @@ export class MascotController {
         case 'storyboard':
           console.log(json);
           makePage(context, json.data);
-          this.post("できたよ～")
+          this.post("ネームを作ってページを追加しておいたよ～")
           break;
         default:
           throw new AIArgumentError(`不明な判断: ${json.type}`)

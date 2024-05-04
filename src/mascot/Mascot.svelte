@@ -5,6 +5,7 @@
   import { mascotVisible, mascotWindowRect } from './mascotStore';
   import { resize } from '../utils/observeResize';
   import { fitWithin } from '../utils/observeWithin';
+  import MascotStatus from './MascotStatus.svelte';
 
   function onClick(e: MouseEvent) {
     e.preventDefault();
@@ -27,8 +28,9 @@
   </div>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="handle absolute-positioned" on:contextmenu={onClick}>
+  <div class="absolute-positioned" on:contextmenu={onClick}>
     <img class="mascot handle" src={mascot} alt="mascot"/>
+    <MascotStatus/>
   </div>
 </div>
 
@@ -47,6 +49,8 @@
     bottom: 0;
     left: 0px;
     overflow: visible;
+    width: 0px;
+    height: 0px;
   }
   .mascot {
     position: absolute;
@@ -57,6 +61,7 @@
     max-width: 256px;
   }
   img {
+    position: absolute;
     transform: scale(-1, 1);
     filter: drop-shadow(0 0 24px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(0, 224, 224, 0.7));
   }

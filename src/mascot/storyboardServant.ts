@@ -10,6 +10,7 @@ import { newPageProperty } from '../bookeditor/bookStore';
 import { get } from "svelte/store";
 
 export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
+  console.log(JSON.stringify(storyboard));
   const paperSize = get(newPageProperty).paperSize;
 
   for (const storyboardPage of storyboard.pages) {
@@ -30,7 +31,6 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
       console.log(leaves[i].pseudo);
     }
 
-    console.log(storyboardPage);
     storyboardPage.panels.forEach((panel: Storyboard.Panel, index: number) => {
       if (index < leaves.length) {
         const leaf = leaves[index];
@@ -45,6 +45,11 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
           bubble.n_fontSize = 0.03;
           bubble.initOptions();
           const cc: Vector = [x0 + w * (n - i) / (n+1), y0 + h / 2];
+          if (index % 2 == 0) {
+            cc[0] += w*0.25; 
+          } else {
+            cc[0] -= w*0.25;
+          }
           bubble.setPhysicalCenter(page.paperSize, cc);
           const size = bubble.calculateFitSize(paperSize);
           bubble.setPhysicalSize(paperSize, size);

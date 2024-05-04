@@ -10,6 +10,7 @@
   import DebugOnly from "../utils/DebugOnly.svelte";
   import type { RichChatLog, RichChatDocument } from "../utils/richChat";
   import InlineDocument from "./InlineDocument.svelte";
+  import { makePage } from "./storyboardServant";
 
   const debugTemplates = [
     "にゃん",
@@ -69,6 +70,20 @@
     controller.addDummyLog(n);
     logs = controller.logs;
     $mainBook.chatLogs = controller.logs;
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
+    key++;
+  }
+
+  function onAddDummyStoryboard() {
+    console.log("dummy storyboarding")
+    const s = `{"format":"4koma","characters":[{"name":"宮本さつき","appearance":"Athletic build, tanned skin, brown hair in a ponytail, wearing a baseball jersey and cap"},{"name":"鈴木なつみ","appearance":"Short stature, slightly chubby, short black hair, wearing a catcher's gear"},{"name":"高橋あかり","appearance":"Tall and slender, long straight black hair, wearing a baseball jersey and yoga pants"}],"pages":[{"panels":[{"composition":"A pitcher's mound in a tropical baseball stadium, with palm trees visible in the background. Satsuki, an athletic woman with tanned skin, brown hair in a ponytail, wearing a baseball jersey and cap, stands on the mound, looking determined but slightly nervous. Next to her, Natsumi, a short and slightly chubby woman with short black hair, wearing a catcher's gear, stands ready. In the outfield, Akari, a tall and slender woman with long straight black hair, wearing a baseball jersey and yoga pants, is positioned, ready to play.","camera":"from side","bubbles":[{"owner":"さつき","speech":"南国の地で、\\n全国制覇を\\n目指すのよ！"}]},{"composition":"A young woman with a ponytail and tanned skin, wearing a baseball jersey and cap, giving an encouraging thumbs-up to a short and slightly chubby woman in catcher's gear, from a low angle.","camera":"from below","bubbles":[{"owner":"なつみ","speech":"さつきなら\\nできるよ！\\n頑張ろう！"}]},{"composition":"Tall and slender woman with long straight black hair wearing a baseball jersey and yoga pants, practicing her batting alone on a baseball field with the sun setting in the distance, from the side.","camera":"from side","bubbles":[{"owner":"あかり","speech":"私も打撃を\\n上達させないと..."}]},{"composition":"Three athletic girls high-fiving on a baseball field, with teammates cheering in the background. One girl has an athletic build, tanned skin, and brown hair in a ponytail, wearing a baseball jersey and cap. Another girl has a short stature, slightly chubby build, short black hair, and is wearing catcher's gear. The third girl is tall and slender, with long straight black hair, wearing a baseball jersey and yoga pants. The scene is shot from above.","camera":"from above","bubbles":[{"owner":"さつき","speech":"一緒に\\n頑張ろうね！"}]}]},{"panels":[{"composition":"Athletic woman with tanned skin, brown hair in a ponytail, wearing a baseball jersey and cap, intensely pitching a ball, with a short, slightly chubby woman in catcher's gear ready to receive the pitch, dramatic angle.","camera":"dramatic angle","bubbles":[{"owner":"さつき","speech":"えいっ！\\nどうよ！"}]},{"composition":"A tanned, athletic woman with brown hair in a ponytail, wearing a baseball jersey and cap, missing the pitch of a short, slightly chubby woman wearing catcher's gear, with a shocked expression on her face, side view.","camera":"from side","bubbles":[{"owner":"ライバル","speech":"な、何てスピード\\nだ..."}]},{"composition":"A player with long, straight black hair wearing a baseball jersey and yoga pants stepping up to the plate, her teammates cheering from the dugout behind her. The catcher, a short and slightly chubby person with short black hair wearing catching gear, crouched down ready to receive the pitch. An athletic player with tanned skin, brown hair in a ponytail, and wearing a baseball jersey and cap, standing at the edge of the dugout watching intently.","camera":"from above","bubbles":[{"owner":"あかり","speech":"よし...\\n決めた！"}]},{"composition":"Three athletic girls in a baseball uniform celebrating their win, jumping up and down in a circle with confetti raining down, from a birds-eye-view shot.","camera":"birds-eye-view shot","bubbles":[{"owner":"なつみ","speech":"やったー！\\n優勝だぁ！"}]}]}]}`;
+    const context: Context = {
+      book: $mainBook,
+      pageIndex: 0,
+    }
+    const storyboard = JSON.parse(s);
+    makePage(context, storyboard);    
     commitBook($mainBook, null);
     $mainBook = $mainBook;
     key++;
@@ -163,6 +178,9 @@
         </button>
         <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onAddDummyLog(2)}>
           dummy3
+        </button>
+        <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={() => onAddDummyStoryboard()}>
+          storyboard
         </button>
       </div>
       {#each debugTemplates as sample}
