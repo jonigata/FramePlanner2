@@ -81,6 +81,28 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   await file.write(json);
 }
 
+export function serializeBook(book: Book): SerializedBook {
+  return {
+    revision: book.revision,
+    pages: book.pages.map(page => serializePage(page)),
+    direction: book.direction,
+    wrapMode: book.wrapMode,
+    chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
+  }
+}
+
+function serializePage(page: Page): SerializedPage {
+  return {
+    id: page.id,
+    frameTree: FrameElement.decompileNode(page.frameTree, 'v'),
+    bubbles: page.bubbles.map(bubble => Bubble.decompile(bubble)),
+    paperSize: page.paperSize,
+    paperColor: page.paperColor,
+    frameColor: page.frameColor,
+    frameWidth: page.frameWidth,
+  }
+}
+
 async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す

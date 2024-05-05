@@ -140,6 +140,7 @@ export class PaperRendererLayer extends Layer {
     // 初期化
     const bubbleDic: {[key: string]: Bubble} = {};
     for (let bubble of bubbles) {
+      console.log(bubble.uuid, bubble.parent);
       bubble.renderInfo ??= {} as BubbleRenderInfo;
       bubble.renderInfo.unitedPath = null;
       bubble.renderInfo.children = [];
@@ -150,7 +151,11 @@ export class PaperRendererLayer extends Layer {
     // 親子関係解決
     for (let bubble of bubbles) {
       if (bubble.parent) {
-        bubbleDic[bubble.parent].renderInfo.children.push(bubble);
+        if (bubbleDic[bubble.parent] == null) {
+          bubble.parent = null;
+        } else {
+          bubbleDic[bubble.parent].renderInfo.children.push(bubble);
+        }
       }
     }
 

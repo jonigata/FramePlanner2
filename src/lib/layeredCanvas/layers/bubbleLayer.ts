@@ -413,7 +413,8 @@ export class BubbleLayer extends Layer {
       let lastBubble = null;
       const bubbles = [];
       for (let s of text.split(/\n\s*\n/)) {
-        const b = this.defaultBubbleSlot.bubble.clone();
+        const b = this.defaultBubbleSlot.bubble.clone(false);
+        b.parent = null;
         b.text = s;
         b.image = null;
         const size = b.calculateFitSize(paperSize);
@@ -702,7 +703,8 @@ export class BubbleLayer extends Layer {
 
     const q = Bubble.normalizedPosition(paperSize, p);
 
-    const bubble = this.defaultBubbleSlot.bubble.clone();
+    const bubble = this.defaultBubbleSlot.bubble.clone(false);
+    bubble.parent = null;
     bubble.image = null;
     bubble.n_p0 = [q[0] - 0.12, q[1] - 0.12];
     bubble.n_p1 = [q[0] + 0.12, q[1] + 0.12];
@@ -740,7 +742,8 @@ export class BubbleLayer extends Layer {
   async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
     const paperSize = this.getPaperSize();
     this.unfocus();
-    const bubble = this.defaultBubbleSlot.bubble.clone();
+    const bubble = this.defaultBubbleSlot.bubble.clone(false);
+    bubble.parent = null;
     bubble.image = null;
     bubble.setPhysicalRect(paperSize, [dragStart[0], dragStart[1], 0, 0]);
     bubble.text = getHaiku();

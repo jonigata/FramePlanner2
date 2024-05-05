@@ -75,6 +75,7 @@
   function revert() {
     delayedCommiter.cancel();
     revertBook($mainBook);
+    resetBubbleCache();
     $mainBook = $mainBook;
     if ($frameInspectorTarget) {
       $frameInspectorTarget.frame = null;
@@ -266,7 +267,7 @@
     const width = bubbleSize[0];
     const center = oldBubble.getPhysicalCenter(paperSize);
 
-    const newBubble = defaultBubbleSlot.bubble.clone();
+    const newBubble = defaultBubbleSlot.bubble.clone(false);
     newBubble.n_p0 = oldBubble.n_p0;
     newBubble.n_p1 = oldBubble.n_p1;
     newBubble.initOptions();
@@ -444,17 +445,21 @@
     console.log("=================redrawToken", token, layeredCanvas);
     if (!token) { return; }
     if (layeredCanvas != null) {
-      let i = 0;
-      const pages = $mainBook.pages;
-      for (const paper of arrayLayer.array.papers) {
-        const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
-        rendererLayer.setBubbles(pages[i++].bubbles);
-        rendererLayer.resetCache();
-      } 
+      resetBubbleCache();
       console.log("redraw");
       layeredCanvas.redraw();
     }
     $redrawToken = false; 
+  }
+
+  function resetBubbleCache() {
+    let i = 0;
+    const pages = $mainBook.pages;
+    for (const paper of arrayLayer.array.papers) {
+      const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
+      rendererLayer.setBubbles(pages[i++].bubbles);
+      rendererLayer.resetCache();
+    } 
   }
 
 </script>

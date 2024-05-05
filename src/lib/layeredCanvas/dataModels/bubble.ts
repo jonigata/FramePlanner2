@@ -92,7 +92,7 @@ export class Bubble {
     return Error().stack;
   }
 
-  clone(): Bubble {
+  clone(hard: boolean): Bubble {
     const b = new Bubble();
     b.n_p0 = [...this.n_p0];
     b.n_p1 = [...this.n_p1];
@@ -113,8 +113,10 @@ export class Bubble {
     b.outlineColor = this.outlineColor;
     b.n_outlineWidth = this.n_outlineWidth;
     b.autoNewline = this.autoNewline;
-    b.uuid = ulid();
-    b.parent = null;
+    if (hard) {
+      b.uuid = this.uuid;
+      b.parent = this.parent;
+    }
 
     b.image = this.image ? {...this.image} : null;
     b.optionContext = {...this.optionContext};

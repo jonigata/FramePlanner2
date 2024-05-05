@@ -189,7 +189,7 @@ export function clonePage(page: Page): Page {
   return {
     id: ulid(),
     frameTree: page.frameTree.clone(),
-    bubbles: page.bubbles.map(b => b.clone()),
+    bubbles: page.bubbles.map(b => b.clone(true)),
     paperSize: [...page.paperSize],
     paperColor: page.paperColor,
     frameColor: page.frameColor,
