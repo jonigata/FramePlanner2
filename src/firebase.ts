@@ -146,7 +146,7 @@ async function callFunc(name: string, data: any, timeout: number | null): Promis
 }
 
 export async function generateImageFromTextWithFeathral(data: any): Promise<any> {
-  const r = await callFunc('generateimagefromtext', data, 20000);
+  const r = await callFunc('generateimagefromtext', data, null);
   logEvent(analytics, 'feathral_generate');
   return r;
 }

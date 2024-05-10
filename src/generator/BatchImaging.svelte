@@ -1,6 +1,6 @@
 <script lang="ts">
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
-  import { batchImagingPage } from "./batchImagingStore";
+  import { batchImagingPage, type Stats } from "./batchImagingStore";
   import { collectLeaves } from '../lib/layeredCanvas/dataModels/frameTree';
   import Drawer from '../utils/Drawer.svelte'
   import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
@@ -17,6 +17,7 @@
   let filledCount = 0;
   let dalle3;
   let feathral;
+  let stats: Stats = { total: 0, succeeded: 0, failed: 0 };
 
   $: updateImageInfo($batchImagingPage);
   function updateImageInfo(page: Page) {
@@ -35,6 +36,7 @@
   async function execute(child: any) {
     console.log('execute');
     busy = true;
+    stats = { total: 0, succeeded: 0, failed: 0 };
     await child.excecute($batchImagingPage);
     busy = false;     
     console.log('execute done');
@@ -53,6 +55,14 @@
         {#if busy}
           <div class="content">
             <ProgressRadial width={"w-16"}/>
+            <div class="hbox gap-2">
+              <div>成功</div>
+              <div>{stats.succeeded}</div>
+              <div>失敗</div>
+              <div>{stats.failed}</div>
+              <div>合計</div>
+              <div>{stats.total}</div>
+            </div>
           </div>
         {:else}
           <div class="hbox">
@@ -65,7 +75,7 @@
                 <BatchImagingDalle3 bind:this={dalle3}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
               {:else if tabSet === 1}
-                <BatchImagingFeathral bind:this={feathral}/>
+                <BatchImagingFeathral bind:this={feathral} bind:stats={stats}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
               {/if}
             </div>

@@ -4,15 +4,19 @@
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
-  import { generateImageFromTextWithFeathral } from '../firebase';
   import { onlineAccount, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
+  import { GenerateImageContext, generateImage } from '../utils/feathralImaging';
+  import type { Stats } from "./batchImagingStore";
+
+  export let stats: Stats;
 
   let keyValueStorage: KeyValueStorage = null;
   let storedApiKey: string = null;
   let apiKey: string;
   let postfix: string = "";
+  let generateContext = new GenerateImageContext();
 
   $: onUpdateApiKey(apiKey);
   async function onUpdateApiKey(ak: string) {
@@ -25,41 +29,30 @@
     await generateAll(page);
   }
 
-  // ImageGeneratorFeathralからコピペした
   async function generate(frame: FrameElement) {
-    console.log("running feathral");
-    try {
-      let imageRequest = {
-        "style": "anime",
-        "prompt": frame.prompt + ", " + postfix,
-        "width": 1024,
-        "height": 1024,
-        "output_format": "png"
-      };
-      console.log(imageRequest);
-
-      const data = await generateImageFromTextWithFeathral(imageRequest);
-      console.log(data);
-      const img = document.createElement('img');
-      img.src = "data:image/png;base64," + data.result.image;
-
+    const img = await generateImage(`${frame.prompt}, ${postfix}`, generateContext);
+    if (img != null) {
       const film = new Film();
       film.image = img;
       frame.filmStack.films.push(film);
       frame.gallery.push(img);
-    }
-    catch(error) {
+      stats.succeeded++;
+    } else {
+      stats.failed++;
     }
   }
 
-
   async function generateAll(page: Page) {
+    generateContext.reset();
     const leaves = collectLeaves(page.frameTree).filter(
       (leaf) => 0 == leaf.filmStack.films.length);
     const promises = [];
     for (const leaf of leaves) {
       promises.push(generate(leaf));
     }
+    stats.total = promises.length;
+    stats.succeeded = 0;
+    stats.failed = 0;
     await Promise.all(promises);
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
