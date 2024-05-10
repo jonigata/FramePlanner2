@@ -47,7 +47,6 @@
   let wrapMode: WrapMode;
 
   const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
-  const bubblePage = derived(bubbleInspectorTarget, (b) => b?.page);
 
   $: if ($forceCommitDelayedToken) {
     $forceCommitDelayedToken = false;

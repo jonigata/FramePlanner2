@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, filenameDisplayMode, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
+  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight } from '../bookeditor/book';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { bookEditor, mainBook } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -50,6 +50,7 @@
   $: onOpen($fileManagerOpen);
   async function onOpen(open: boolean) {
     if (open) {
+      $fileManagerMarkedFlag = $bookEditor.getMarks().some((m) => m);
       $fileManagerUsedSize = await fileSystem.collectTotalSize();
       console.log("used size updated");
     }

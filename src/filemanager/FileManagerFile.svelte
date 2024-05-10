@@ -1,16 +1,18 @@
 <script lang="ts">
-  import { fileManagerDragging, filenameDisplayMode, loadToken, type Dragging } from "./fileManagerStore";
+  import { fileManagerDragging, fileManagerMarkedFlag, loadBookFrom, loadToken, saveBookTo, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder } from "../lib/filesystem/fileSystem";
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook, bookEditor } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { saveAs } from 'file-saver';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
   import fileIcon from '../assets/fileManager/file.png';
+  import pasteIcon from '../assets/fileManager/paste.png'
 
   const dispatch = createEventDispatcher();
 
@@ -99,6 +101,18 @@
     }
   }
 
+  async function copyMarkedPages() {
+    const marked = $bookEditor.getMarks();
+    const pages = $mainBook.pages;
+    const markedPages = pages.filter((_, i) => marked[i]);
+
+    const file = (await fileSystem.getNode(nodeId)).asFile();
+    const targetBook = await loadBookFrom(fileSystem, file);
+    targetBook.pages.push(...markedPages);
+    await saveBookTo(targetBook, fileSystem, file);
+    toastStore.trigger({ message: 'マークされたページを\nコピーしました', timeout: 1500});
+  }
+
   onMount(async () => {
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
@@ -114,23 +128,24 @@
     draggable={true} on:click={onClick} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
     <img class="button" src={fileIcon} alt="symbol"/>
     {#if isDiscardable}
-      {#if $filenameDisplayMode === 'index'}
-        {`Page ${( '00' + (index+1) ).slice( -2 )}`}
-      {:else}
-        <div class="filename">
-          <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
-        </div>
-      {/if}
+      <div class="filename">
+        <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
+      </div>
     {:else}
       {filename}
     {/if}
   </div>
-  <div class="button-container">
-    {#if $filenameDisplayMode !== 'index'}
+  {#if $fileManagerMarkedFlag}
+    <div class="button-container">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
-    {/if}
+      <img class="button" src={pasteIcon} alt="rename" on:click={copyMarkedPages} use:toolTip={"選択ページを\nこのファイルにコピー"}/>
+    </div>  
+  {/if}
+  <div class="button-container">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
   </div>  
   <div class="button-container">
     {#if !selected}

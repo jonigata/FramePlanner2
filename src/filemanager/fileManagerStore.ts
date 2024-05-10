@@ -19,14 +19,13 @@ export const fileManagerOpen = writable(false);
 export const trashUpdateToken = writable(false);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
-export const newPageToken: Writable<Page> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);
 export const newBubbleToken: Writable<Bubble> = writable(null);
-export const filenameDisplayMode: Writable<'filename' | 'index'> = writable('filename');
 export const fileSystem: Writable<FileSystem> = writable(null);
 export const shareBookToken: Writable<Book> = writable(null);
 export const fileManagerUsedSize: Writable<number> = writable(null);
 export const loadToken: Writable<NodeId> = writable(null);
+export const fileManagerMarkedFlag = writable(false);
 
 const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
 
