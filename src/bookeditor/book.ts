@@ -205,20 +205,29 @@ export type FrameContent = {
   prompt: string | null,
 }
 
-export function collectBookContents(book: Book): FrameContent[] {
-  const contents: FrameContent[] = [];
-  for (const page of book.pages) {
-    contents.push(...collectPageContents(page));
-  }
-  return contents;
+export type FrameSequence = {
+  layouts: Layout[],
+  contents: FrameContent[],
 }
 
-function collectPageContents(page: Page): FrameContent[] {
+export function collectBookContents(book: Book): FrameSequence {
+  const layouts: Layout[] = [];
+  const contents: FrameContent[] = [];
+  for (const page of book.pages) {
+    const { layouts: l, contents: c } = collectPageContents(page);
+    layouts.push(...l);
+    contents.push(...c);
+  }
+  return { layouts, contents };
+}
+
+function collectPageContents(page: Page): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   return collectFrameContents(page, page.frameTree, layout);
 }
 
-function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layout): FrameContent[] {
+function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layout): FrameSequence {
+  const layouts: Layout[] = [];
   const contents: FrameContent[] = [];
   if (!frameTree.children || frameTree.children.length === 0) {
     if (0 < frameTree.visibility) {
@@ -237,6 +246,7 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
       }
       page.bubbles.splice(0, page.bubbles.length, ...unselected)
 
+      layouts.push(leafLayout);
       contents.push({
         sourcePage: page,
         sourceRect: trapezoidBoundingRect(leafLayout.corners),
@@ -248,69 +258,66 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
       const child = frameTree.children[i];
-      contents.push(...collectFrameContents(page, child, layout));
+      const { layouts: l, contents: c } = collectFrameContents(page, child, layout);
+      layouts.push(...l);
+      contents.push(...c);
     }
   }
-  return contents;  
+  return { layouts, contents };
 }
 
-export function dealBookContents(book: Book, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement): void {
+export function dealBookContents(book: Book, seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement): void {
   let pageNumber = 0;
   for (const page of book.pages) {
-    dealPageContents(book, page, contents, insertElement, spliceElement, pageNumber);
+    dealPageContents(book, page, seq, insertElement, spliceElement, pageNumber);
     pageNumber++;
   }
 }
 
-function dealPageContents(book: Book, page: Page, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
-  const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-  dealFrameContents(book, page, page.frameTree, layout, contents, insertElement, spliceElement, pageNumber, false);
+function dealPageContents(book: Book, page: Page, seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
+  dealFrameContents(book, page, seq, insertElement, spliceElement, pageNumber, false);
 } 
 
-function dealFrameContents(book: Book, page: Page, frameTree: FrameElement, layout: Layout, contents: FrameContent[], insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number, tailMode: boolean): boolean {
-  if (!frameTree.children || frameTree.children.length === 0) {
-    if (0 < frameTree.visibility) {
+function dealFrameContents(book: Book, page: Page, seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number, tailMode: boolean) {
+  const { layouts, contents } = seq;
 
-      if (frameTree === spliceElement) {
-        contents.shift();
-        tailMode = true;
-      } 
-      if (frameTree === insertElement || contents.length === 0) {
-        frameTree.filmStack = { films: [] };
-        frameTree.prompt = "";
-        return true;
-      }
-      
-      const leafLayout = findLayoutOf(layout, frameTree);
-      const [sx, sy, sw, sh] = contents[0].sourceRect;
-      const [tx, ty, tw, th] = trapezoidBoundingRect(leafLayout.corners);
+  if (layouts.length === 0) return;
+  const leafLayout = layouts.shift();
+  const frameTree = leafLayout.element;
 
-      const content = contents.shift();
-      frameTree.filmStack = { films: [...content.filmStack.films] };
-      frameTree.prompt = content.prompt;
-
-      for (let b of content.bubbles) {
-        b.pageNumber = pageNumber;
-        const bc = b.getPhysicalCenter(page.paperSize);
-        const cc: Vector = [
-          tx + tw * (bc[0] - sx) / sw,
-          ty + th * (bc[1] - sy) / sh,
-        ];
-        b.setPhysicalCenter(page.paperSize, cc);
-        page.bubbles.push(b);
-      }
-
-      if (tailMode) {
-        const transformer = new FilmStackTransformer(page.paperSize, frameTree.filmStack.films);
-        transformer.scale(0.01);
-        constraintLeaf(page.paperSize, leafLayout);
-      }
-    }
-    return tailMode;
+  if (frameTree === spliceElement) {
+    tailMode = true;
+    contents.shift();
+  } 
+  if (frameTree === insertElement || contents.length === 0) {
+    tailMode = true;
+    frameTree.filmStack = { films: [] };
+    frameTree.prompt = "";
   } else {
-    for (let child of frameTree.children) {
-      tailMode = dealFrameContents(book, page, child, layout, contents, insertElement, spliceElement, pageNumber, tailMode);
+    const [sx, sy, sw, sh] = contents[0].sourceRect;
+    const [tx, ty, tw, th] = trapezoidBoundingRect(leafLayout.corners);
+
+    const content = contents.shift();
+    frameTree.filmStack = { films: [...content.filmStack.films] };
+    frameTree.prompt = content.prompt;
+
+    for (let b of content.bubbles) {
+      b.pageNumber = pageNumber;
+      const bc = b.getPhysicalCenter(page.paperSize);
+      const cc: Vector = [
+        tx + tw * (bc[0] - sx) / sw,
+        ty + th * (bc[1] - sy) / sh,
+      ];
+      b.setPhysicalCenter(page.paperSize, cc);
+      page.bubbles.push(b);
     }
-    return tailMode;
   }
+
+  if (tailMode) {
+    const transformer = new FilmStackTransformer(page.paperSize, frameTree.filmStack.films);
+    transformer.scale(0.01);
+    constraintLeaf(page.paperSize, leafLayout);
+  }
+
+  dealFrameContents(book, page, { layouts, contents }, insertElement, spliceElement, pageNumber, tailMode);
 }
