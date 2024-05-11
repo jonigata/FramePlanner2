@@ -140,15 +140,15 @@
   }
 
   function insert(_page: Page, element: FrameElement) {
-    const frameContents = collectBookContents($mainBook);
-    dealBookContents($mainBook, frameContents, element, null);
+    const frameSeq = collectBookContents($mainBook);
+    dealBookContents(frameSeq, element, null);
     layeredCanvas.redraw();
     commit(null);
   }
 
   function splice(_page: Page, element: FrameElement) {
-    const frameContents = collectBookContents($mainBook);
-    dealBookContents($mainBook, frameContents, null, element);
+    const frameSeq = collectBookContents($mainBook);
+    dealBookContents(frameSeq, null, element);
     layeredCanvas.redraw();
     commit(null);
   }

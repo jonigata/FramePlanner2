@@ -205,40 +205,48 @@ export type FrameContent = {
   prompt: string | null,
 }
 
+export type FrameSlot = {
+  layout: Layout,
+  page: Page,
+  pageNumber: number,
+}
+
 export type FrameSequence = {
-  layouts: Layout[],
+  slots: FrameSlot[],
   contents: FrameContent[],
 }
 
 export function collectBookContents(book: Book): FrameSequence {
-  const layouts: Layout[] = [];
+  const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];
+  let pageNumber = 0;
   for (const page of book.pages) {
-    const { layouts: l, contents: c } = collectPageContents(page);
-    layouts.push(...l);
+    const { slots: l, contents: c } = collectPageContents(page, pageNumber);
+    slots.push(...l);
     contents.push(...c);
+    pageNumber++;
   }
-  return { layouts, contents };
+  return { slots, contents };
 }
 
-function collectPageContents(page: Page): FrameSequence {
+function collectPageContents(page: Page, pageNumber: number): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-  return collectFrameContents(page, page.frameTree, layout);
+  return collectFrameContents(page, pageNumber, page.frameTree, layout);
 }
 
-function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layout): FrameSequence {
-  const layouts: Layout[] = [];
+function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameElement, pageLayout: Layout): FrameSequence {
+  const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];
   if (!frameTree.children || frameTree.children.length === 0) {
     if (0 < frameTree.visibility) {
-      const leafLayout = findLayoutOf(layout, frameTree);
+      const layout = findLayoutOf(pageLayout, frameTree);
 
       // centerがtrapezoidに含まれるbubbleを抽出
       const selected: Bubble[] = [];
       const unselected: Bubble[] = [];
       for (let b of page.bubbles) {
         const bc = b.getPhysicalCenter(page.paperSize);
-        if (isPointInTrapezoid(bc, leafLayout.corners)) {
+        if (isPointInTrapezoid(bc, layout.corners)) {
           selected.push(b);
         } else {
           unselected.push(b);
@@ -246,10 +254,10 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
       }
       page.bubbles.splice(0, page.bubbles.length, ...unselected)
 
-      layouts.push(leafLayout);
+      slots.push({ layout, page, pageNumber });
       contents.push({
         sourcePage: page,
-        sourceRect: trapezoidBoundingRect(leafLayout.corners),
+        sourceRect: trapezoidBoundingRect(layout.corners),
         filmStack: frameTree.filmStack,
         bubbles: selected,
         prompt: frameTree.prompt,
@@ -258,32 +266,29 @@ function collectFrameContents(page: Page, frameTree: FrameElement, layout: Layou
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
       const child = frameTree.children[i];
-      const { layouts: l, contents: c } = collectFrameContents(page, child, layout);
-      layouts.push(...l);
+      const { slots: l, contents: c } = collectFrameContents(page, pageNumber, child, pageLayout);
+      slots.push(...l);
       contents.push(...c);
     }
   }
-  return { layouts, contents };
+  return { slots, contents };
 }
 
-export function dealBookContents(book: Book, seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement): void {
-  let pageNumber = 0;
-  for (const page of book.pages) {
-    dealPageContents(book, page, seq, insertElement, spliceElement, pageNumber);
-    pageNumber++;
-  }
+export function dealBookContents(seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement): void {
+  dealPageContents(seq, insertElement, spliceElement);
 }
 
-function dealPageContents(book: Book, page: Page, seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number): void {
-  dealFrameContents(book, page, seq, insertElement, spliceElement, pageNumber, false);
+function dealPageContents(seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement): void {
+  dealFrameContents(seq, insertElement, spliceElement, false);
 } 
 
-function dealFrameContents(book: Book, page: Page, seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement, pageNumber: number, tailMode: boolean) {
-  const { layouts, contents } = seq;
+function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement, tailMode: boolean) {
+  const { slots, contents } = seq;
 
-  if (layouts.length === 0) return;
-  const leafLayout = layouts.shift();
-  const frameTree = leafLayout.element;
+  if (slots.length === 0) return;
+  const slot = slots.shift();
+  const layout = slot.layout;
+  const frameTree = layout.element;
 
   if (frameTree === spliceElement) {
     tailMode = true;
@@ -295,29 +300,29 @@ function dealFrameContents(book: Book, page: Page, seq: FrameSequence, insertEle
     frameTree.prompt = "";
   } else {
     const [sx, sy, sw, sh] = contents[0].sourceRect;
-    const [tx, ty, tw, th] = trapezoidBoundingRect(leafLayout.corners);
+    const [tx, ty, tw, th] = trapezoidBoundingRect(layout.corners);
 
     const content = contents.shift();
     frameTree.filmStack = { films: [...content.filmStack.films] };
     frameTree.prompt = content.prompt;
 
     for (let b of content.bubbles) {
-      b.pageNumber = pageNumber;
-      const bc = b.getPhysicalCenter(page.paperSize);
+      b.pageNumber = slot.pageNumber;
+      const bc = b.getPhysicalCenter(slot.page.paperSize);
       const cc: Vector = [
         tx + tw * (bc[0] - sx) / sw,
         ty + th * (bc[1] - sy) / sh,
       ];
-      b.setPhysicalCenter(page.paperSize, cc);
-      page.bubbles.push(b);
+      b.setPhysicalCenter(slot.page.paperSize, cc);
+      slot.page.bubbles.push(b);
     }
   }
 
   if (tailMode) {
-    const transformer = new FilmStackTransformer(page.paperSize, frameTree.filmStack.films);
+    const transformer = new FilmStackTransformer(slot.page.paperSize, frameTree.filmStack.films);
     transformer.scale(0.01);
-    constraintLeaf(page.paperSize, leafLayout);
+    constraintLeaf(slot.page.paperSize, layout);
   }
 
-  dealFrameContents(book, page, { layouts, contents }, insertElement, spliceElement, pageNumber, tailMode);
+  dealFrameContents({ slots, contents }, insertElement, spliceElement, tailMode);
 }
