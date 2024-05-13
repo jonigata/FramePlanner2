@@ -675,25 +675,25 @@ export function findBorderAt(layout: Layout, position: Vector, margin: number): 
   return null;
 }
 
-export function findPaddingAt(layout: Layout, position: Vector): PaddingHandle {
+export function findPaddingAt(layout: Layout, position: Vector, innerWidth: number, outerWidth: number): PaddingHandle {
   const [x,y] = position;
 
   if (layout.children) {
     for (let i = 0; i < layout.children.length; i++) {
-      const found = findPaddingAt(layout.children[i], position);
+      const found = findPaddingAt(layout.children[i], position, innerWidth, outerWidth);
       if (found) { return found; }
     }
     return null;
   } else {
-      return findPaddingOn(layout, position);
+      return findPaddingOn(layout, position, innerWidth, outerWidth);
   }
 }
 
-export function findPaddingOn(layout: Layout, position: Vector): PaddingHandle {
+export function findPaddingOn(layout: Layout, position: Vector, innerWidth: number, outerWidth: number): PaddingHandle {
   if (layout.element.visibility === 0) { return null; }
   const [x,y] = position;
   for (let handle of rectHandles) {
-    const paddingTrapezoid = makePaddingTrapezoid(layout, handle);
+    const paddingTrapezoid = makePaddingTrapezoid(layout, handle, innerWidth, outerWidth);
     if (isPointInTrapezoid([x, y], paddingTrapezoid)) {
       return { layout, handle, corners: paddingTrapezoid } as PaddingHandle;
     }
@@ -701,37 +701,67 @@ export function findPaddingOn(layout: Layout, position: Vector): PaddingHandle {
   return null;
 }
 
-export function findPaddingOf(layout: Layout, handle: RectHandle) {
-  const corners = makePaddingTrapezoid(layout, handle);
+export function findPaddingOf(layout: Layout, handle: RectHandle, innerWidth: number, outerWidth: number) {
+  const corners = makePaddingTrapezoid(layout, handle, innerWidth, outerWidth);
   return { layout, handle, corners };
 }
 
-export function makePaddingTrapezoid(layout: Layout, handle: RectHandle): Trapezoid {
-  const PADDING_WIDTH = 20;
-
+export function makePaddingTrapezoid(layout: Layout, handle: RectHandle, innerWidth: number, outerWidth: number): Trapezoid {
   switch (handle) {
     case 'topLeft':
-      return trapezoidAroundPoint(layout.corners.topLeft, PADDING_WIDTH);
+      {
+        const [x, y] = layout.corners.topLeft;
+        return {
+          topLeft: [x - outerWidth, y - outerWidth],
+          topRight: [x + innerWidth, y - outerWidth],
+          bottomRight: [x + innerWidth, y + innerWidth],
+          bottomLeft: [x - outerWidth, y + innerWidth],
+        };
+      }
     case 'topRight':
-      return trapezoidAroundPoint(layout.corners.topRight, PADDING_WIDTH);
+      {
+        const [x, y] = layout.corners.topRight;
+        return {
+          topLeft: [x - innerWidth, y - outerWidth],
+          topRight: [x + outerWidth, y - outerWidth],
+          bottomRight: [x + outerWidth, y + innerWidth],
+          bottomLeft: [x - innerWidth, y + innerWidth],
+        };
+      }
     case 'bottomLeft':
-      return trapezoidAroundPoint(layout.corners.bottomLeft, PADDING_WIDTH);
+      {
+        const [x, y] = layout.corners.bottomLeft;
+        return {
+          topLeft: [x - outerWidth, y - innerWidth],
+          topRight: [x + innerWidth, y - innerWidth],
+          bottomRight: [x + innerWidth, y + outerWidth],
+          bottomLeft: [x - outerWidth, y + outerWidth],
+        };
+      }
     case 'bottomRight':
-      return trapezoidAroundPoint(layout.corners.bottomRight, PADDING_WIDTH);
+      {
+        const [x, y] = layout.corners.bottomRight;
+        return {
+          topLeft: [x - innerWidth, y - innerWidth],
+          topRight: [x + outerWidth, y - innerWidth],
+          bottomRight: [x + outerWidth, y + outerWidth],
+          bottomLeft: [x - innerWidth, y + outerWidth],
+        };
+      }
     case 'top':
-      return trapezoidAroundSegment(layout.corners.topLeft, layout.corners.topRight, PADDING_WIDTH);
+      return trapezoidAroundSegment(layout.corners.topLeft, layout.corners.topRight, outerWidth, innerWidth);
     case 'bottom':
-      return trapezoidAroundSegment(layout.corners.bottomLeft, layout.corners.bottomRight, PADDING_WIDTH);
+      return trapezoidAroundSegment(layout.corners.bottomRight, layout.corners.bottomLeft, outerWidth, innerWidth);
     case 'left':
-      return trapezoidAroundSegment(layout.corners.topLeft, layout.corners.bottomLeft, PADDING_WIDTH);
+      return trapezoidAroundSegment(layout.corners.bottomLeft, layout.corners.topLeft, outerWidth, innerWidth);
     case 'right':
-      return trapezoidAroundSegment(layout.corners.topRight, layout.corners.bottomRight, PADDING_WIDTH);
+      return trapezoidAroundSegment(layout.corners.topRight, layout.corners.bottomRight, outerWidth, innerWidth);
     default:
       return null;
   }
 }
 
-function trapezoidAroundSegment(p0: Vector, p1: Vector, width: number): Trapezoid {
+function trapezoidAroundSegment(p0: Vector, p1: Vector, leftWidth: number, rightWidth: number): Trapezoid {
   const [x0, y0] = p0;
   const [x1, y1] = p1;
   const dx = x1 - x0;
@@ -739,23 +769,15 @@ function trapezoidAroundSegment(p0: Vector, p1: Vector, width: number): Trapezoi
   const d = Math.sqrt(dx * dx + dy * dy);
   const nx = dx / d;
   const ny = dy / d;
-  const wx = ny * width;
-  const wy = -nx * width;
+  const wx = ny * leftWidth;
+  const wy = -nx * leftWidth;
+  const ex = ny * -rightWidth;
+  const ey = -nx * -rightWidth;
   return {
-    topLeft: [x0 - wx, y0 - wy],
-    topRight: [x0 + wx, y0 + wy],
-    bottomRight: [x1 + wx, y1 + wy],
-    bottomLeft: [x1 - wx, y1 - wy],
-  };
-}
-
-function trapezoidAroundPoint(p: Vector, width: number): Trapezoid {
-  const [x, y] = p;
-  return {
-    topLeft: [x - width, y - width],
-    topRight: [x + width, y - width],
-    bottomRight: [x + width, y + width],
-    bottomLeft: [x - width, y + width],
+    topLeft: [x0 + wx, y0 + wy],
+    topRight: [x1 + wx, y1 + wy],
+    bottomRight: [x1 + ex, y1 + ey],
+    bottomLeft: [x0 + ex, y0 + ey],
   };
 }
 

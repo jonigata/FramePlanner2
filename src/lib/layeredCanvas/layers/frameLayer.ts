@@ -15,6 +15,8 @@ import type { Trapezoid } from "../tools/geometry/trapezoid";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
+const PADDING_HANDLE_INNER_WIDTH = 20;
+const PADDING_HANDLE_OUTER_WIDTH = 10;
 
 export class FrameLayer extends Layer {
   renderLayer: PaperRendererLayer;
@@ -241,9 +243,9 @@ export class FrameLayer extends Layer {
         }
       }
 
-      const corners = extendTrapezoid(this.selectedLayout.corners, 20, 20);
+      const corners = extendTrapezoid(this.selectedLayout.corners, PADDING_HANDLE_OUTER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
       if (isPointInTrapezoid(point, corners)) {
-        const padding = findPaddingOn(this.selectedLayout, point);
+        const padding = findPaddingOn(this.selectedLayout, point, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
         this.focusedPadding = padding;
         this.litLayout = this.selectedLayout;
         return;
@@ -964,7 +966,7 @@ export class FrameLayer extends Layer {
 
     if (this.focusedPadding) {
       const handle = this.focusedPadding.handle;
-      this.focusedPadding = findPaddingOf(this.selectedLayout, handle);
+      this.focusedPadding = findPaddingOf(this.selectedLayout, handle, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
     }
   }
 
