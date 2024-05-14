@@ -1,6 +1,5 @@
 import { Layer, sequentializePointer, type Viewport, type Dragging } from "../system/layeredCanvas";
 import { keyDownFlags } from "../system/keyCache";
-import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 import { getPath } from "../tools/draw/bubbleGraphic";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
@@ -14,7 +13,6 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
-import { min } from "@xenova/transformers";
 
 const iconUnit: Vector = [20, 20];
 
@@ -697,6 +695,7 @@ export class BubbleLayer extends Layer {
         const size = bubble.calculateFitSize(paperSize);
         bubble.setPhysicalSize(paperSize, size);
         this.onCommit();
+        this.setIconPositions();
         return true;
       }
     }
