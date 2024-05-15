@@ -1,5 +1,5 @@
-import { Layer, sequentializePointer, type Viewport } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, calculateMinimumBoundingRect, FilmStackTransformer } from "../dataModels/frameTree";
+import { Layer, sequentializePointer } from "../system/layeredCanvas";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, FilmStackTransformer } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -10,8 +10,6 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
-
-// TODO: films[0]
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -26,6 +24,7 @@ export class FrameLayer extends Layer {
   onRevert: () => void;
   onInsert: (element: FrameElement) => void;
   onSplice: (element: FrameElement) => void;
+  onSwap: (element0: FrameElement, element1: FrameElement) => void;
   cursorPosition: Vector;
 
   splitHorizontalIcon: ClickableIcon;
@@ -47,9 +46,11 @@ export class FrameLayer extends Layer {
   slantHorizontalIcon: ClickableIcon;
   expandVerticalIcon: ClickableIcon;
   slantVerticalIcon: ClickableIcon;
+  swapIcon: ClickableIcon;
 
   frameIcons: ClickableIcon[];
   borderIcons: ClickableIcon[];
+  litIcons: ClickableIcon[];
 
   litLayout: Layout;
   litBorder: Border;
@@ -66,7 +67,8 @@ export class FrameLayer extends Layer {
     onCommit: () => void, 
     onRevert: () => void, 
     onInsert: (element: FrameElement) => void, 
-    onSplice: (element: FrameElement) => void) {
+    onSplice: (element: FrameElement) => void,
+    onSwap: (element0: FrameElement, element1: FrameElement) => void) {
     super();
     this.renderLayer = renderLayer;
     this.frameTree = frameTree;
@@ -75,6 +77,8 @@ export class FrameLayer extends Layer {
     this.onRevert = onRevert;
     this.onInsert = onInsert;
     this.onSplice = onSplice;
+    this.onSwap = onSwap;
+
     this.cursorPosition = [-1, -1];
 
     const unit = iconUnit;
@@ -107,8 +111,12 @@ export class FrameLayer extends Layer {
     this.expandVerticalIcon = new ClickableIcon(["expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'), mp);
     this.slantVerticalIcon = new ClickableIcon(["slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
 
+    const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
+    this.swapIcon = new ClickableIcon(["swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
+
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
+    this.litIcons = [this.swapIcon];
 
     this.makeCanvasPattern();
   }
@@ -208,6 +216,7 @@ export class FrameLayer extends Layer {
 
     this.frameIcons.forEach(icon => icon.render(ctx));
     this.borderIcons.forEach(icon => icon.render(ctx));
+    this.litIcons.forEach(icon => icon.render(ctx));
   }
 
   dropped(position: Vector, image: HTMLImageElement): boolean {
@@ -262,6 +271,9 @@ export class FrameLayer extends Layer {
     this.litBorder = findBorderAt(layout, point, BORDER_MARGIN);
     if (!this.litBorder) {
       this.litLayout = findLayoutAt(layout, point);
+      if (this.litLayout) {
+        this.relayoutLitIcons(this.litLayout);
+      }
     }
   }
 
@@ -286,7 +298,7 @@ export class FrameLayer extends Layer {
     const hintIfContains = (a: ClickableIcon[]): { position: Vector, message: string } => {
       for (let e of a) {
         if (e.contains(position)) {
-          return { position: e.center, message: e.hint };
+          return { position: [e.center[0], e.center[1] - 32], message: e.hint };
         }
       }
       return null;
@@ -320,6 +332,11 @@ export class FrameLayer extends Layer {
           return { position: [x, y +48], message: "画像をドロップ" };
         } else {
           return null;
+        }
+      } else {
+        const hint = hintIfContains(this.litIcons);
+        if (hint) {
+          return hint;
         }
       }
     }
@@ -367,6 +384,13 @@ export class FrameLayer extends Layer {
           return null;
         }
         return q;
+      }
+
+      if (this.litLayout && this.litLayout.element != this.selectedLayout.element) {
+        if (this.swapIcon.contains(point)) {
+          this.swapContent(this.selectedLayout.element, this.litLayout.element);
+          return null;
+        }
       }
     }
 
@@ -1037,6 +1061,11 @@ export class FrameLayer extends Layer {
     this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5,bt.bottomLeft[1]];
   }
 
+  relayoutLitIcons(layout: Layout): void {
+    const center = getRectCenter([...layout.origin, ...layout.size]);
+    this.swapIcon.position = center;    
+  }
+
   resetPadding(): void {
     if (!this.selectedLayout) { return; }
     const element = this.selectedLayout.element;
@@ -1050,6 +1079,13 @@ export class FrameLayer extends Layer {
     this.redraw();
   }
 
+  swapContent(a: FrameElement, b: FrameElement): void {
+    console.log("swap", a, b);
+    this.onSwap(a, b);
+    this.onCommit();
+    this.redraw();
+  }
+
   beforeDoubleClick(p: Vector): boolean {
     for (let e of this.frameIcons) {
       if (e.contains(p)) {
@@ -1057,6 +1093,11 @@ export class FrameLayer extends Layer {
       }
     }
     for (let e of this.borderIcons) {
+      if (e.contains(p)) {
+        return true;
+      }
+    }
+    for (let e of this.litIcons) {
       if (e.contains(p)) {
         return true;
       }

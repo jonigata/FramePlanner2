@@ -34,6 +34,10 @@ function sendNotification(message: string, timeouts: boolean) {
   if (document.visibilityState === 'visible' || !timeouts) {
     toastStore.trigger({ message, timeout: 3000 });
   } else {
-    new Notification(message);
+    const n = new Notification(message);
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
   }
 }

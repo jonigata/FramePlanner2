@@ -82,7 +82,7 @@ export function getDirectionFromReadingDirection(readingDirection: ReadingDirect
   }
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, insert, splice, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
+function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, insert, splice, swap, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize, false);
 
   // undo
@@ -112,7 +112,8 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     () => { commit(null); },
     () => { revert(); },
     (e: FrameElement) => { insert(page, e); },
-    (e: FrameElement) => { splice(page, e); });
+    (e: FrameElement) => { splice(page, e); },
+    (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); });
   paper.addLayer(frameLayer);
 
   // bubbles

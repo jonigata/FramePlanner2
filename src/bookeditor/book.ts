@@ -173,6 +173,7 @@ export interface BookOperators {
   redo: () => void;
   insert: (page: Page, frameElement: FrameElement) => void;
   splice: (page: Page, frameElement: FrameElement) => void;
+  swap: (page: Page, frameElement0: FrameElement, frameElement1: FrameElement) => void;
   focusFrame: (page: Page, frame: FrameElement, p: Vector) => void;
   focusBubble: (page: Page, bubble: Bubble, p: Vector) => void;
   viewportChanged: () => void;
@@ -229,6 +230,7 @@ export function collectBookContents(book: Book): FrameSequence {
   return { slots, contents };
 }
 
+// TODO: page.bubblesを破壊する
 function collectPageContents(page: Page, pageNumber: number): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   return collectFrameContents(page, pageNumber, page.frameTree, layout);
@@ -308,7 +310,7 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
 
     for (let b of content.bubbles) {
       b.pageNumber = slot.pageNumber;
-      const bc = b.getPhysicalCenter(slot.page.paperSize);
+      const bc = b.getPhysicalCenter(slot.page.paperSize); // TODO: 多分間違ってる
       const cc: Vector = [
         tx + tw * (bc[0] - sx) / sw,
         ty + th * (bc[1] - sy) / sh,
@@ -325,4 +327,68 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
   }
 
   dealFrameContents({ slots, contents }, insertElement, spliceElement, tailMode);
+}
+
+export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement, frameElement1: FrameElement): void {
+  const { slots, contents } = seq;
+
+  let content0 = null;
+  let content1 = null;
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i];
+    const layout = slot.layout;
+    const frameTree = layout.element;
+    if (frameTree === frameElement0) {
+      content0 = contents[i];
+    } else if (frameTree === frameElement1) {
+      content1 = contents[i];
+    }
+  }
+
+  for (let i = 0; i < seq.slots.length; i++) {
+    const slot = slots[i];
+    const layout = slot.layout;
+    const frameTree = layout.element;
+    const content = contents[i];
+    let swapContent = null;
+    if (frameTree === frameElement0) {
+      swapContent = content1;
+    } else if (frameTree === frameElement1) {
+      swapContent = content0;
+    }
+    if (swapContent == null) { 
+      // TODO: 非破壊にすればいらない
+      content.sourcePage.bubbles.push(...content.bubbles);
+      continue; 
+    }
+
+    frameTree.filmStack = { films: [...swapContent.filmStack.films] };
+    frameTree.prompt = swapContent.prompt;
+
+    const [sx, sy, sw, sh] = swapContent.sourceRect;
+    const [tx, ty, tw, th] = trapezoidBoundingRect(layout.corners);
+    console.log([sx, sy, sw, sh], [tx, ty, tw, th]);
+    for (let b of swapContent.bubbles) {
+      b.pageNumber = slot.pageNumber;
+      const bc = b.getPhysicalCenter(swapContent.sourcePage.paperSize);
+      const cc: Vector = [
+        tx + tw * (bc[0] - sx) / sw,
+        ty + th * (bc[1] - sy) / sh,
+      ];
+      console.log(bc, cc, slot.page.paperSize);
+      b.setPhysicalCenter(slot.page.paperSize, cc);
+      // TODO: 非破壊にすればいらない
+    }
+    content.sourcePage.bubbles.push(...swapContent.bubbles);
+  }
+
+  /*
+  TODO: 非破壊にしたらいる
+  if (content0.sourcePage !== content1.sourcePage) {
+    content0.sourcePage.bubbles = content0.sourcePage.bubbles.filter(b => !content1.bubbles.includes(b));
+    content1.sourcePage.bubbles = content1.sourcePage.bubbles.filter(b => !content0.bubbles.includes(b));
+    content0.sourcePage.bubbles.push(...content1.bubbles);
+    content1.sourcePage.bubbles.push(...content0.bubbles);
+  }
+  */
 }

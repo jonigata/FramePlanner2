@@ -11,7 +11,7 @@
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, frameInspectorPosition, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
-  import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents } from './book';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents, swapBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken, forceCommitDelayedToken } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
@@ -153,6 +153,13 @@
     commit(null);
   }
 
+  function swap(_page: Page, element0: FrameElement, element1: FrameElement) {
+    const frameSeq = collectBookContents($mainBook);
+    swapBookContents(frameSeq, element0, element1);
+    layeredCanvas.redraw();
+    commit(null);
+  }
+
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
@@ -213,6 +220,7 @@
       redo,
       insert,
       splice,
+      swap,
       focusFrame,
       focusBubble,
       viewportChanged,

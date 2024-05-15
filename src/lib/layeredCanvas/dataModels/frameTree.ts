@@ -1,4 +1,4 @@
-import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, computeBoundingRectFromRects, getRectCenter, translateRect, rectToCorners, reverse2D } from "../tools/geometry/geometry";
+import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect, rectToCorners, reverse2D } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
 import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
