@@ -217,6 +217,7 @@ export type FrameSequence = {
   contents: FrameContent[],
 }
 
+// NOTICE: page.bubblesを破壊するので注意
 export function collectBookContents(book: Book): FrameSequence {
   const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];
@@ -230,7 +231,6 @@ export function collectBookContents(book: Book): FrameSequence {
   return { slots, contents };
 }
 
-// TODO: page.bubblesを破壊する
 function collectPageContents(page: Page, pageNumber: number): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   return collectFrameContents(page, pageNumber, page.frameTree, layout);
@@ -310,7 +310,7 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
 
     for (let b of content.bubbles) {
       b.pageNumber = slot.pageNumber;
-      const bc = b.getPhysicalCenter(slot.page.paperSize); // TODO: 多分間違ってる
+      const bc = b.getPhysicalCenter(content.sourcePage.paperSize);
       const cc: Vector = [
         tx + tw * (bc[0] - sx) / sw,
         ty + th * (bc[1] - sy) / sh,
@@ -357,13 +357,16 @@ export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement
       swapContent = content0;
     }
     if (swapContent == null) { 
-      // TODO: 非破壊にすればいらない
       content.sourcePage.bubbles.push(...content.bubbles);
       continue; 
     }
 
     frameTree.filmStack = { films: [...swapContent.filmStack.films] };
     frameTree.prompt = swapContent.prompt;
+
+    const transformer = new FilmStackTransformer(slot.page.paperSize, frameTree.filmStack.films);
+    transformer.scale(0.01);
+    constraintLeaf(slot.page.paperSize, layout);
 
     const [sx, sy, sw, sh] = swapContent.sourceRect;
     const [tx, ty, tw, th] = trapezoidBoundingRect(layout.corners);
@@ -377,18 +380,7 @@ export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement
       ];
       console.log(bc, cc, slot.page.paperSize);
       b.setPhysicalCenter(slot.page.paperSize, cc);
-      // TODO: 非破壊にすればいらない
     }
     content.sourcePage.bubbles.push(...swapContent.bubbles);
   }
-
-  /*
-  TODO: 非破壊にしたらいる
-  if (content0.sourcePage !== content1.sourcePage) {
-    content0.sourcePage.bubbles = content0.sourcePage.bubbles.filter(b => !content1.bubbles.includes(b));
-    content1.sourcePage.bubbles = content1.sourcePage.bubbles.filter(b => !content0.bubbles.includes(b));
-    content0.sourcePage.bubbles.push(...content1.bubbles);
-    content1.sourcePage.bubbles.push(...content0.bubbles);
-  }
-  */
 }
