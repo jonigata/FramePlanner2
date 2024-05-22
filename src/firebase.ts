@@ -121,38 +121,22 @@ export async function updateFeathral(): Promise<number> {
 }
 
 async function callFunc(name: string, data: any, timeout: number | null): Promise<any> {
-  if (timeout == null) {
-    const functions = getFunctions(app);
-    useEmulatorIfDevelopment();
-    const f = httpsCallable(functions, name);
-    const r = await f(data);
-    console.log(r);
-    return r.data;
-  } else {
-    const functions = getFunctions(app);
-    useEmulatorIfDevelopment();
-    const f = httpsCallable(functions, name);
-
-    // タイムアウトを検出するプロミス
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("タイムアウト\n2分後に再度試行してください."));
-      }, timeout);
-    });
-
-    const r: any = await Promise.race([f(data), timeoutPromise]);
-    return r.data;
-  }
+  const functions = getFunctions(app);
+  useEmulatorIfDevelopment();
+  const f = httpsCallable(functions, name, timeout == null ? undefined: {timeout: timeout * 1000});
+  const r = await f(data);
+  console.log(r);
+  return r.data;
 }
 
 export async function generateImageFromTextWithFeathral(data: any): Promise<any> {
-  const r = await callFunc('generateimagefromtext', data, null);
+  const r = await callFunc('generateimagefromtext', data, 180);
   logEvent(analytics, 'feathral_generate');
   return r;
 }
 
 export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument[]): Promise<any> {
-  const r = await callFunc('chat', {log, documents}, null);
+  const r = await callFunc('chat', {log, documents}, 180);
   logEvent(analytics, 'chat');
   return r;
 }

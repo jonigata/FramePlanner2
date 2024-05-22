@@ -114,6 +114,7 @@
       logs.length = logs.length - 1;
       logs.push({role: "error", content: { type: 'error', body: "エラーになりました"}});
       key++;
+      throw e;
     }
   }
   

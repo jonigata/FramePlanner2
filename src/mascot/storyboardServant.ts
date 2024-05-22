@@ -40,20 +40,24 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
         const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
         const n = panel.bubbles.length;
         panel.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
-          const bubble = new Bubble();
-          bubble.text = b.speech.replace(/\\n/g, '\n');
-          bubble.n_fontSize = 0.03;
-          bubble.initOptions();
-          const cc: Vector = [x0 + w * (n - i) / (n+1), y0 + h / 2];
-          if (index % 2 == 0) {
-            cc[0] += w*0.25; 
+          if (!b.owner || !b.speech) { 
+            // do nothing
           } else {
-            cc[0] -= w*0.25;
+            const bubble = new Bubble();
+            bubble.text = b.speech.replace(/\\n/g, '\n');
+            bubble.n_fontSize = 0.03;
+            bubble.initOptions();
+            const cc: Vector = [x0 + w * (n - i) / (n+1), y0 + h / 2];
+            if (index % 2 == 0) {
+              cc[0] += w*0.25; 
+            } else {
+              cc[0] -= w*0.25;
+            }
+            bubble.setPhysicalCenter(page.paperSize, cc);
+            const size = bubble.calculateFitSize(paperSize);
+            bubble.setPhysicalSize(paperSize, size);
+            page.bubbles.push(bubble);
           }
-          bubble.setPhysicalCenter(page.paperSize, cc);
-          const size = bubble.calculateFitSize(paperSize);
-          bubble.setPhysicalSize(paperSize, size);
-          page.bubbles.push(bubble);
         })
       }
     });
