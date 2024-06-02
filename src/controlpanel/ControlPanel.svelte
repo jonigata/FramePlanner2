@@ -425,9 +425,11 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareBook}>
       Share
     </button>
+    <!--
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={callListSharedImages}>
       ListImage
     </button>
+    -->
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">
     <!--
@@ -438,9 +440,11 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
       About
     </button>
+    <!--
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={structureTree}>
       Tree
     </button>
+    -->
     {#if onlineStatus === "signed-out"}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
         Sign in
