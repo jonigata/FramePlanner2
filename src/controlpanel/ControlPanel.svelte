@@ -14,7 +14,6 @@
   import { aboutOpen } from '../about/aboutStore';
   import { structureTreeOpen } from '../about/structureTreeStore';
   import { isPendingRedirect, postContact, prepareAuth, listSharedImages } from '../firebase';
-  import { isJsonEditorOpen, downloadJsonToken } from '../jsoneditor/jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitIfDirtyToken } from '../undoStore';
   import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
@@ -251,16 +250,6 @@
     $structureTreeOpen = true;
   }
 
-  function toggleJsonEditor() {
-    console.log("openJsonEditor");
-    $isJsonEditorOpen = !$isJsonEditorOpen;      
-  }
-
-  async function downloadJson() {
-    $commitIfDirtyToken = true;
-    $downloadJsonToken = true;
-  }
-
   async function shareBook() {
     $commitIfDirtyToken = true;
     $shareBookToken = $mainBook;
@@ -409,16 +398,6 @@
     <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
   </div>
   <div class="hbox gap mx-2" style="margin-top: 0px;">
-    <!--
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={toggleJsonEditor}>
-      JSON Editor
-    </button>
-    -->
-    <!--
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openStoryWeaver}>
-      Weaver
-    </button>
-    -->
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
       Export PSD
     </button>

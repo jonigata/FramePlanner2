@@ -19,7 +19,6 @@
   import About from './about/About.svelte';
   import FrameInspector from './bookeditor/frameinspector/FrameInspector.svelte';
   import BubbleInspector from './bookeditor/bubbleinspector/BubbleInspector.svelte';
-  import JsonEditor from './jsoneditor/JsonEditor.svelte';
   import Comic from './utils/Comic.svelte'; 
   import License from './utils/License.svelte';
   import FontChooser from './bookeditor/bubbleinspector/FontChooser.svelte';
@@ -102,34 +101,35 @@
 
 <BookEditor />
 
-<div class="control-panel-container">
-  <ControlPanel />
-  <PassiveToolTip />
-  <NewBookButton  />
-  <CabinetButton />
-  {#if $onlineAccount != null}
-    <BellButton />
-  {/if}
-</div>
-
+<!-- dialogs -->
+<ControlPanel />
 <FrameInspector/>
 <BubbleInspector/>
-<FontChooser/>
-<ShapeChooser itemSize={[64, 96]}/>
-<ImageGenerator/>
-<FileManager/>
 {#if $mascotVisible && $onlineAccount != null}
   <Mascot/>
 {/if}
 <DebugOnly>
   <SaveOffButton/>
 </DebugOnly>
-
-<JsonEditor/>
-
-<About/>
 <StructureTree/>
+
+<!-- root items -->
+<NewBookButton  />
+<CabinetButton />
+{#if $onlineAccount != null}
+  <BellButton />
+{/if}
+
+<!-- drawers -->
+<FontChooser/>
+<ShapeChooser itemSize={[64, 96]}/>
+<ImageGenerator/>
+<FileManager/>
+<About/>
 <BatchImaging/>
+
+<!-- tools -->
+<PassiveToolTip />
 <Toast/>
 <BookArchiver/>
 <FontLoader/>
@@ -149,15 +149,6 @@
     overflow: hidden;
     height: 100vh;
     max-height: 100vh;
-  }
-
-  .control-panel-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
   }
 
   .backdrop {
