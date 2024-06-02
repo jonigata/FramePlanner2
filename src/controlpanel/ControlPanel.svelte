@@ -181,14 +181,6 @@
     $bookArchiver = $bookArchiver;
   }
 
-  function openStoryWeaver() {
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'weaver',
-    };
-    modalStore.trigger(d);    
-  }
-
   async function dumpFileSystem() {
     await ($fileSystem as IndexedDBFileSystem).dump();
   }
