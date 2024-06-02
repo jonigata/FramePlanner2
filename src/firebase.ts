@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
-import type * as Storyboard from "./weaver/storyboard";
+import type { Storyboard } from "./utils/hiruma";
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui'
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
@@ -69,7 +69,7 @@ export async function loadTemplate(key) {
   return snapshot.val();
 }
 
-export async function getLayover(key: string): Promise<Storyboard.Storyboard> {
+export async function getLayover(key: string): Promise<Storyboard> {
   const auth = getAuth(app);
   await signInAnonymously(auth);
 
@@ -138,5 +138,10 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<any>
 export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument[]): Promise<any> {
   const r = await callFunc('chat', {log, documents}, 180);
   logEvent(analytics, 'chat');
+  return r;
+}
+
+export async function listSharedImages(): Promise<any> {
+  const r = await callFunc('cleansharedimages', {}, 180);
   return r;
 }

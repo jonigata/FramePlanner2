@@ -40,7 +40,8 @@
   import Mascot from './mascot/Mascot.svelte'
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
-//  import JsonReader from './utils/JsonReader.svelte';
+  import StructureTree from './about/StructureTree.svelte';
+  //  import JsonReader from './utils/JsonReader.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -127,6 +128,7 @@
 <JsonEditor/>
 
 <About/>
+<StructureTree/>
 <BatchImaging/>
 <Toast/>
 <BookArchiver/>

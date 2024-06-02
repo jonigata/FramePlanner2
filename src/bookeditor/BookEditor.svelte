@@ -27,6 +27,7 @@
   import { batchImagingPage } from '../generator/batchImagingStore';
   import { copyToClipboard } from '../utils/saver/copyToClipboard';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { getAnalytics, logEvent } from "firebase/analytics";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -130,6 +131,7 @@
 
   function copyPageToClipboard(index: number) {
     const page = $mainBook.pages[index];
+    logEvent(getAnalytics(), 'copy_page_to_clipboard');
     copyToClipboard(page);
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }

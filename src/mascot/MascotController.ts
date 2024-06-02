@@ -29,8 +29,9 @@ export class MascotController {
   }
 
   rollback() {
-    rollback(this.logs, "assistant");
-    rollback(this.logs, "user");
+    const spliced = rollback(this.logs, "assistant");
+    spliced.splice(0, 0, ...rollback(this.logs, "user"))
+    return spliced;
   }
 
   addUserLog(input: RichChatLog) {

@@ -12,7 +12,8 @@
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
   import { aboutOpen } from '../about/aboutStore';
-  import { isPendingRedirect, postContact, prepareAuth, startAuth } from '../firebase';
+  import { structureTreeOpen } from '../about/structureTreeStore';
+  import { isPendingRedirect, postContact, prepareAuth, listSharedImages } from '../firebase';
   import { isJsonEditorOpen, downloadJsonToken } from '../jsoneditor/jsonEditorStore';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitIfDirtyToken } from '../undoStore';
@@ -154,7 +155,7 @@
   }
 
   function copyToClipboard() {
-    logEvent(getAnalytics(), 'copy_to_clipboard');
+    logEvent(getAnalytics(), 'copy_book_to_clipboard');
     archive('copy');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
 
@@ -245,6 +246,11 @@
     $aboutOpen = true;
   }
 
+  function structureTree() {
+    console.log("structureTree");
+    $structureTreeOpen = true;
+  }
+
   function toggleJsonEditor() {
     console.log("openJsonEditor");
     $isJsonEditorOpen = !$isJsonEditorOpen;      
@@ -258,6 +264,10 @@
   async function shareBook() {
     $commitIfDirtyToken = true;
     $shareBookToken = $mainBook;
+  }
+
+  async function callListSharedImages() {
+    await listSharedImages();
   }
 
   async function contact() {
@@ -415,6 +425,9 @@
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareBook}>
       Share
     </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={callListSharedImages}>
+      ListImage
+    </button>
   </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">
     <!--
@@ -424,6 +437,9 @@
     -->
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
       About
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={structureTree}>
+      Tree
     </button>
     {#if onlineStatus === "signed-out"}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>

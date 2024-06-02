@@ -316,6 +316,20 @@ export class FrameElement {
     return markUpElement;
   }
 
+  static findElement(root: FrameElement, f: (e: FrameElement) => boolean): FrameElement {
+    if (f(root)) {
+      return root;
+    } else {
+      for (let i = 0; i < root.children.length; i++) {
+        const child = this.findElement(root.children[i], f);
+        if (child) {
+          return child;
+        }
+      }
+    }
+    return null;
+  }
+
   static findParent(root: FrameElement, target: FrameElement): FrameElement {
     for (let i = 0; i < root.children.length; i++) {
       const child = root.children[i];

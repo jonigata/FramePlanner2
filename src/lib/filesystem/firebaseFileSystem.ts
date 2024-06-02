@@ -133,7 +133,7 @@ export class FirebaseFile extends File {
 
     try {
       // Try to get the metadata of the file
-      await getMetadata(storageFileRef);
+        await getMetadata(storageFileRef);
       console.log('File already exists, skipping...');
     } catch (error) {
       // If error occurs (e.g., file doesn't exist), upload the file

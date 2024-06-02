@@ -97,13 +97,16 @@ export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLo
   return converted;
 }
 
-export function rollback(log: RichChatLog[], role: 'user' | 'assistant') {
+export function rollback(log: RichChatLog[], role: 'user' | 'assistant'): RichChatLog[] {
+  const spliced = [];
   for (let i = log.length - 1; i >= 0; i--) {
     const role2 = log[i].role;
     if (role == role2 || role2 === 'system' || role2 === 'error') {
+      spliced.splice(0, 0, log[i]);
       log.splice(i, 1);
     } else {
       break;
     }
   }
+  return spliced;
 }

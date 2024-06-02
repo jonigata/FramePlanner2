@@ -14,7 +14,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { getLayover } from "../firebase";
-  import { createPage } from '../weaver/weaverStore';
+  import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
   import { collectGarbage } from '../utils/garbageCollection';
@@ -107,6 +107,7 @@
   }
 
   async function loadSharedBook(): Promise<boolean> {
+    console.log("loadSharedBook");
     const root = await fileSystem.getRoot();
     const desktop = (await root.getNodeByName("デスクトップ")).asFolder();
 
@@ -133,16 +134,17 @@
       }
       await recordCurrentFileId(key as NodeId);
     } else if (urlParams.has('build')) {
-      logEvent(getAnalytics(), 'gpt_build');
+      console.log("loadSharedBook: build");
+      logEvent(getAnalytics(), 'layover');
       const build = urlParams.get('build');
       const storyboard = await getLayover(build);
+      console.log(storyboard);
 
-      console.log(storyboard.pages[0]);
       const page = createPage(storyboard.pages[0], '');
 
       const localFile = await fileSystem.createFile();
       const book: Book = {
-        revision: { id: localFile.id, revision:1, prefix: 'gpt-build-' },
+        revision: { id: localFile.id, revision:1, prefix: 'hiruma-' },
         pages: [page],
         history: { entries: [], cursor: 0 },
         direction: 'right-to-left',
@@ -158,7 +160,8 @@
     } else {
       return false;
     }
-  
+
+/*
     // いずれにせよリダイレクト
     let currentUrl = new URL(window.location.href);
     let urlWithoutQuery = currentUrl.origin + currentUrl.pathname;      
@@ -166,6 +169,7 @@
     window.history.replaceState(null, null, urlWithoutQuery);
     window.location.href = urlWithoutQuery;
     return true;
+*/
   }
 
   $:onNewBookRequest($newBookToken);
@@ -220,7 +224,7 @@
     navigator.clipboard.writeText(shareUrl);
 
     $loading = false;
-    toastStore.trigger({ message: 'クリップボードにシェアURLをコピーしました', timeout: 1500});
+    toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、\n一定時間後消去される可能性があります", timeout: 4500});
   }
 
   $:onLoadRequest($loadToken);

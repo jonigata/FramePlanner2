@@ -57,7 +57,10 @@
   }
 
   function onRollback() {
-    controller.rollback();
+    const spliced = controller.rollback();
+    if (0 < spliced.length) {
+      userInput = spliced[0].content.body as string;
+    }
     logs = controller.logs;
     key++;
   }
@@ -160,7 +163,7 @@
       reset
     </button>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button px-1 hbox" on:click={() => onRollback()}>
-      rollback
+      一手戻る
     </button>
     {#each chatTemplates as sample}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button px-1 hbox" on:click={() => onPost(sample)}>

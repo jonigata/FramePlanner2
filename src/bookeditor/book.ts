@@ -8,7 +8,7 @@ import type { RichChatLog } from '../utils/richChat';
 
 // history処理では基本的にすべてdeep copyを使う
 
-export type Prefix = 'shortcut-' | 'paste-' | 'drop-' | 'add-in-folder-' | 'shared-' | 'initial-' | 'gpt-build-' | 'weaved-';
+export type Prefix = 'shortcut-' | 'paste-' | 'drop-' | 'add-in-folder-' | 'shared-' | 'initial-' | 'hiruma-' | 'weaved-';
 
 export type Revision = {
   id: string;
