@@ -27,6 +27,7 @@
   import FileManager from './filemanager/FileManager.svelte';
   import NewBookButton from './rootelements/NewBookButton.svelte';
   import CabinetButton from './rootelements/CabinetButton.svelte';
+  import MaterialBucketButton from './rootelements/MaterialBucketButton.svelte';
   import BellButton from './rootelements/BellButton.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
@@ -112,6 +113,7 @@
 <MaterialBucket/>
 
 <!-- root items -->
+<MaterialBucketButton />
 <NewBookButton  />
 <CabinetButton />
 {#if $onlineAccount != null}

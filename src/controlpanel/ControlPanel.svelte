@@ -422,9 +422,6 @@
       Tree
     </button>
     -->
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={materialBucket}>
-      素材
-    </button>
     {#if onlineStatus === "signed-out"}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
         Sign in
