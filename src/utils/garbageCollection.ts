@@ -19,8 +19,13 @@ export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImag
     await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId)).asFile(), usedImageFiles);
   }
 
+  const materialImageFolder = await root.getNodeByName("素材");
+  const materialImages = (await materialImageFolder.asFolder().list()).map((entry) => entry[2]);
+  usedImageFiles.push(...materialImages);
+
   const allImageFolder = await root.getNodeByName("画像");
   const allImageFiles = (await allImageFolder.asFolder().list()).map((entry) => entry[2]);
+  allImageFiles.push(...materialImages);
 
   function difference(setA, setB) {
     const _difference = new Set(setA);

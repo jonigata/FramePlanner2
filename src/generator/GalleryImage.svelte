@@ -34,6 +34,11 @@
     dispatch("refer", image);
   }
 
+  function onDragStart(e: DragEvent) {
+    console.log("onDragStart");
+    dispatch("dragstart", image);
+  }
+
   // fix aspect ratio
   function getHeight() {
     return (image.naturalHeight / image.naturalWidth) * width;
@@ -46,6 +51,7 @@
       image.height = getHeight();
     }
     container.appendChild(image);
+    image.ondragstart = onDragStart;
   });
 </script>
 

@@ -13,6 +13,7 @@
   import { bodyDragging } from '../uiStore';
   import { aboutOpen } from '../about/aboutStore';
   import { structureTreeOpen } from '../about/structureTreeStore';
+  import { materialBucketOpen } from '../materialBucket/materialBucketStore';
   import { isPendingRedirect, postContact, prepareAuth, listSharedImages } from '../firebase';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { commitIfDirtyToken } from '../undoStore';
@@ -21,7 +22,7 @@
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { fileSystem, newBookToken, shareBookToken } from '../filemanager/fileManagerStore';
   import type { IndexedDBFileSystem } from "../lib/filesystem/indexeddbFileSystem";
-  import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+  import { modalStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { app } from "../firebase";
@@ -242,6 +243,11 @@
     $structureTreeOpen = true;
   }
 
+  function materialBucket() {
+    console.log("materialBucket");
+    $materialBucketOpen = true;
+  }
+
   async function shareBook() {
     $commitIfDirtyToken = true;
     $shareBookToken = $mainBook;
@@ -416,6 +422,9 @@
       Tree
     </button>
     -->
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={materialBucket}>
+      素材
+    </button>
     {#if onlineStatus === "signed-out"}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
         Sign in

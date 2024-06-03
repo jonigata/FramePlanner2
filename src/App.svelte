@@ -39,6 +39,7 @@
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
   import StructureTree from './about/StructureTree.svelte';
+  import MaterialBucket from './materialBucket/MaterialBucket.svelte';
   //  import JsonReader from './utils/JsonReader.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
@@ -108,6 +109,7 @@
   <SaveOffButton/>
 </DebugOnly>
 <StructureTree/>
+<MaterialBucket/>
 
 <!-- root items -->
 <NewBookButton  />

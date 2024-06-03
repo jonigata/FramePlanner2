@@ -505,3 +505,18 @@ async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fil
   return unpackedBubbles;
 }
 
+export async function saveMaterialImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<BindId> {
+  const root = await fileSystem.getRoot();
+  const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
+  const file = await fileSystem.createFile();
+  await file.writeImage(image);
+  return await materialFolder.link(file.id, file.id);
+}
+
+export async function deleteMaterialImage(fileSystem: FileSystem, materialBindId: BindId): Promise<void> {
+  const root = await fileSystem.getRoot();
+  const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
+  const nodeId = (await materialFolder.getEntry(materialBindId))[2];
+  await materialFolder.unlink(materialBindId);
+  await fileSystem.destroyNode(nodeId);
+}

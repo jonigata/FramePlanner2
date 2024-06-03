@@ -6,7 +6,7 @@ export async function buildFileSystem(): Promise<FileSystem> {
   await fs.open();
   const root = await fs.getRoot();
 
-  const specialFolders = ['デスクトップ', 'キャビネット', 'ごみ箱', 'テンプレート', '画像', 'プリファレンス'];
+  const specialFolders = ['デスクトップ', 'キャビネット', 'ごみ箱', 'テンプレート', '画像', 'プリファレンス', '素材'];
 
   const children = await root.list();
   for (const f of specialFolders) {
