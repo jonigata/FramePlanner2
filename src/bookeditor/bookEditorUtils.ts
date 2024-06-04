@@ -114,7 +114,6 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     (e: FrameElement) => { insert(page, e); },
     (e: FrameElement) => { splice(page, e); },
     (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); });
-  paper.addLayer(frameLayer);
 
   // bubbles
   const bubbleLayer = new BubbleLayer(
@@ -124,12 +123,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     page.bubbles,
     2,
     (bubble: Bubble) => { 
-      if (bubble) {
-        const cp = layeredCanvas.paperPositionToCanvasPosition(paper, bubble.getPhysicalCenter(page.paperSize));
-        focusBubble(page, bubble, cp);
-      } else {
-        focusBubble(page, null, null);
-      }
+      focusBubble(page, bubble);
     },
     () => { commit(null); },
     () => { revert(); },

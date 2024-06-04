@@ -379,33 +379,32 @@ export class LayeredCanvas {
     }
   }
 
-  // canvasの中央を原点(1枚目の紙の中央)とする
-
-  pagePositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
+  eventPositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
     const p = convertPointFromPageToNode(this.viewport.canvas, event.pageX, event.pageY);
     return [Math.floor(p.x), Math.floor(p.y)];
   }
 
-  viewportPositionToPaperPosition(p: Vector): Vector {
-    const size = this.rootPaper.size;
+  viewportPositionToRootPaperPosition(p: Vector): Vector {
+    const [w, h] = this.rootPaper.size;
     const [sx, sy] = p;
-    const [x, y] = [sx + size[0] * 0.5, sy + size[1] * 0.5];
+    const [x, y] = [sx + w * 0.5, sy + h * 0.5];
     return [x, y];
   }
 
-  pagePositionToPaperPosition(event: { pageX: number, pageY: number }): Vector {
-    const p = this.pagePositionToCanvasPosition(event);
+  eventPositionToRootPaperPosition(event: { pageX: number, pageY: number }): Vector {
+    const p = this.eventPositionToCanvasPosition(event);
     const q = this.viewport.canvasPositionToViewportPosition(p);
-    return this.viewportPositionToPaperPosition(q);
+    return this.viewportPositionToRootPaperPosition(q);
   }
 
-  paperPositionToCanvasPosition(paper: Paper, p: Vector): Vector {
+  rootPaperPositionToCanvasPosition(p: Vector): Vector {
+    const paper = this.rootPaper;
     const [sx, sy] = [p[0] - paper.size[0] * 0.5, p[1] - paper.size[1] * 0.5];
     return this.viewport.viewportPositionToCanvasPosition([sx, sy]);
   }
     
   handlePointerDown(event: PointerEvent): void {
-    const p = this.pagePositionToPaperPosition(event);
+    const p = this.eventPositionToRootPaperPosition(event);
     this.dragging = this.rootPaper.handleAccepts(p, event.button);
     if (this.dragging) {
       this.viewport.canvas.setPointerCapture(event.pointerId);
@@ -415,7 +414,7 @@ export class LayeredCanvas {
   }
       
   handlePointerMove(event: PointerEvent): void {
-    const p = this.pagePositionToPaperPosition(event);
+    const p = this.eventPositionToRootPaperPosition(event);
     this.pointerCursor = p;
     if (this.dragging) {
       this.rootPaper.handlePointerMove(p, this.dragging);
@@ -426,7 +425,7 @@ export class LayeredCanvas {
     
   handlePointerUp(event: PointerEvent): void {
     if (this.dragging) {
-      const p = this.pagePositionToPaperPosition(event);
+      const p = this.eventPositionToRootPaperPosition(event);
       this.rootPaper.handlePointerUp(p, this.dragging);
       this.viewport.canvas.releasePointerCapture(event.pointerId);
       this.dragging = null;
@@ -435,7 +434,7 @@ export class LayeredCanvas {
       
   handlePointerLeave(event: PointerEvent): void {
     if (this.dragging) {
-      const p = this.pagePositionToPaperPosition(event);
+      const p = this.eventPositionToRootPaperPosition(event);
       this.rootPaper.handlePointerLeave(p, this.dragging);
       this.viewport.canvas.releasePointerCapture(event.pointerId);
       this.dragging = null;
@@ -447,7 +446,7 @@ export class LayeredCanvas {
   handleContextMenu(event: PointerEvent): void {
     event.preventDefault();
     if (this.dragging) {
-      const p = this.pagePositionToPaperPosition(event);
+      const p = this.eventPositionToRootPaperPosition(event);
       this.pointerCursor = p;
       this.rootPaper.handleCancel(p, this.dragging);
     }
@@ -458,7 +457,7 @@ export class LayeredCanvas {
   }
 
   async handleDrop(event: DragEvent): Promise<void> {
-    const p = this.pagePositionToPaperPosition(event);
+    const p = this.eventPositionToRootPaperPosition(event);
     this.pointerCursor = p;
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
@@ -475,7 +474,7 @@ export class LayeredCanvas {
   }
 
   handleDoubleClick(event: PointerEvent): void {
-    const p = this.pagePositionToPaperPosition(event);
+    const p = this.eventPositionToRootPaperPosition(event);
     this.pointerCursor = p;
     if (this.rootPaper.handleBeforeDoubleClick(p)) { return; }
     this.rootPaper.handleDoubleClicked(p);
@@ -483,7 +482,7 @@ export class LayeredCanvas {
 
   handleWheel(event: WheelEvent): void {
     const delta = event.deltaY;
-    const p = this.pagePositionToPaperPosition(event);
+    const p = this.eventPositionToRootPaperPosition(event);
     this.rootPaper.handleWheel(p, delta);
   }
 
@@ -530,7 +529,7 @@ export class LayeredCanvas {
   isPointerOnCanvas(): boolean {
     const m = this.pointerCursor
     if (m == null) { return false; }
-    const mm = this.paperPositionToCanvasPosition(this.rootPaper, m);
+    const mm = this.rootPaperPositionToCanvasPosition(m);
     const rect = this.viewport.canvas.getBoundingClientRect();
     const f = 0 <= mm[0] && mm[0] <= rect.width && 0 <= mm[1] && mm[1] <= rect.height;
     return f;

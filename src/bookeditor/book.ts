@@ -175,7 +175,7 @@ export interface BookOperators {
   splice: (page: Page, frameElement: FrameElement) => void;
   swap: (page: Page, frameElement0: FrameElement, frameElement1: FrameElement) => void;
   focusFrame: (page: Page, frame: FrameElement, p: Vector) => void;
-  focusBubble: (page: Page, bubble: Bubble, p: Vector) => void;
+  focusBubble: (page: Page, bubble: Bubble) => void;
   viewportChanged: () => void;
   insertPage: (index: number) => void;
   deletePage: (index: number) => void;

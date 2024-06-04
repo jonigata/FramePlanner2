@@ -337,10 +337,14 @@
     }
   }
 
-  function focusBubble(page: Page, b: Bubble, p: Vector) {
+  function focusBubble(page: Page, b: Bubble) {
     delayedCommiter.force();
     if (b) {
-      const [cx, cy] = p;
+      const bp = b.getPhysicalCenter(page.paperSize);
+      const rp = arrayLayer.array.childPositionToParentPosition(b.pageNumber, bp);
+      const cp = layeredCanvas.rootPaperPositionToCanvasPosition(rp);
+
+      const [cx, cy] = cp;
       const offset = canvas.height / 2 < cy ? -1 : 1;
       const bubbleSize = b.getPhysicalSize(page.paperSize);
       
