@@ -114,6 +114,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
     (e: FrameElement) => { insert(page, e); },
     (e: FrameElement) => { splice(page, e); },
     (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); });
+  paper.addLayer(frameLayer);
 
   // bubbles
   const bubbleLayer = new BubbleLayer(
