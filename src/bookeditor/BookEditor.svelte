@@ -233,6 +233,7 @@
       batchImaging,
       chase,
       getMarks,
+      getFocusedPage,
     };
     $bookEditor = bookEditorInstance;
 
@@ -443,6 +444,13 @@
 
   function chase() {
     painter.chase();
+  }
+
+  function getFocusedPage(): Page {
+    const v = $viewport;
+    const p = v.canvasPositionToViewportPosition(v.getCanvasCenter());
+    const index = arrayLayer.array.findNearestPaperIndex(p);
+    return $mainBook.pages[index];
   }
 
   function getMarks() {

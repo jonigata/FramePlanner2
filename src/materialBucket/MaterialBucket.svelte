@@ -4,15 +4,35 @@
 	import Gallery from '../generator/Gallery.svelte';
   import { loading } from '../utils/loadingStore'
   import { deleteMaterialImage, fileSystem, saveMaterialImage } from '../filemanager/fileManagerStore';
-  import { collectGarbage } from '../utils/garbageCollection';
-  import type { NodeId, Folder } from '../lib/filesystem/fileSystem';
+  import type { Folder } from '../lib/filesystem/fileSystem';
   import { dropzone } from '../utils/dropzone';
+  import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
+  import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
+  import { bookEditor, redrawToken } from '../bookeditor/bookStore';
 
   export let gallery: HTMLImageElement[];
 
   function onChooseImage(e: CustomEvent<HTMLImageElement>) {
     console.log("onChooseImage");
-    $materialBucketOpen = false;
+
+    const page = $bookEditor.getFocusedPage();
+
+    const image = e.detail;
+    const bubble = new Bubble();
+    const paperSize = page.paperSize;
+    const imageSize = [image.naturalWidth, image.naturalHeight];
+    const x = Math.random() * (paperSize[0] - imageSize[0]);
+    const y = Math.random() * (paperSize[1] - imageSize[1]);
+    bubble.setPhysicalRect(paperSize, [x, y, ...imageSize] as Rect);
+    bubble.forceEnoughSize(paperSize);
+    bubble.shape = "none";
+    bubble.initOptions();
+    bubble.text = "";
+    bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
+    bubble.setPhysicalImageScale(paperSize, 1);
+    page.bubbles.push(bubble);
+    $bookEditor.focusBubble(page, bubble, [0,0]);
+    $redrawToken = true;
   }
 
   function onChildDragStart(e: CustomEvent<HTMLImageElement>) {

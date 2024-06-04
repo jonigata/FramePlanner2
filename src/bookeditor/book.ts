@@ -184,6 +184,7 @@ export interface BookOperators {
   batchImaging: (index: number) => void;
   chase: () => void;
   getMarks: () => boolean[];
+  getFocusedPage: () => Page;
 }
 
 export function clonePage(page: Page): Page {

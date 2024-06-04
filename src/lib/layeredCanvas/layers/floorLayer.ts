@@ -59,6 +59,7 @@ export class FloorLayer extends Layer {
     this.viewport.translate = [t[0] + v[0], t[1] + v[1]];
     this.viewport.viewTranslate = [0, 0];
     this.viewport.dirty = true;
+    this.onViewportChanged();
   }
 
 }

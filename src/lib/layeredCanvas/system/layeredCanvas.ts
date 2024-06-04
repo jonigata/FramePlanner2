@@ -46,7 +46,9 @@ export class Viewport {
     return [sx, sy];
   }
 
-
+  getCanvasCenter(): Vector {
+    return [this.canvas.width * 0.5, this.canvas.height * 0.5];
+  }
 };
 
 
