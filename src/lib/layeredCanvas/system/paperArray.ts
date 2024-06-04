@@ -98,7 +98,6 @@ export class PaperArray {
   }
 
   childPositionToParentPosition(index: number, childPosition: Vector): Vector {
-    console.log(index);
     const e = this.papers[index];
     const x0 = e.center[0] - e.paper.size[0] * 0.5;
     const y0 = e.center[1] - e.paper.size[1] * 0.5;

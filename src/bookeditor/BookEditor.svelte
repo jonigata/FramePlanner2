@@ -340,6 +340,7 @@
   function focusBubble(page: Page, b: Bubble) {
     delayedCommiter.force();
     if (b) {
+      console.log("show bubble");
       const bp = b.getPhysicalCenter(page.paperSize);
       const rp = arrayLayer.array.childPositionToParentPosition(b.pageNumber, bp);
       const cp = layeredCanvas.rootPaperPositionToCanvasPosition(rp);
@@ -360,6 +361,7 @@
       };
       defaultBubbleSlot.bubble = b;
     } else {
+      console.log("hide bubble");
       bubbleSnapshot = null;
       $bubbleInspectorTarget = null;
     }
