@@ -342,7 +342,8 @@
     if (b) {
       console.log("show bubble");
       const bp = b.getPhysicalCenter(page.paperSize);
-      const rp = arrayLayer.array.childPositionToParentPosition(b.pageNumber, bp);
+      const pageIndex = $mainBook.pages.findIndex(p => p.id === page.id);
+      const rp = arrayLayer.array.childPositionToParentPosition(pageIndex, bp);
       const cp = layeredCanvas.rootPaperPositionToCanvasPosition(rp);
 
       const [cx, cy] = cp;
