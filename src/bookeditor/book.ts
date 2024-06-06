@@ -182,6 +182,7 @@ export interface BookOperators {
   movePages: (from: number[], to: number) => void;
   copyPageToClipboard: (index: number) => void;
   batchImaging: (index: number) => void;
+  editBubbles: (index: number) => void;
   chase: () => void;
   getMarks: () => boolean[];
   getFocusedPage: () => Page;

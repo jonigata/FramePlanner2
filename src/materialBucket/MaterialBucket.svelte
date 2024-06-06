@@ -10,7 +10,7 @@
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
 
-  export let gallery: HTMLImageElement[];
+  let gallery: HTMLImageElement[];
 
   function onChooseImage(e: CustomEvent<HTMLImageElement>) {
     console.log("onChooseImage");
@@ -31,7 +31,7 @@
     bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
     bubble.setPhysicalImageScale(paperSize, 1);
     page.bubbles.push(bubble);
-    $bookEditor.focusBubble(page, bubble, [0,0]);
+    $bookEditor.focusBubble(page, bubble);
     $redrawToken = true;
   }
 

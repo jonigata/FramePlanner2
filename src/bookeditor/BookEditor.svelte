@@ -28,6 +28,7 @@
   import { copyToClipboard } from '../utils/saver/copyToClipboard';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
+  import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -141,6 +142,17 @@
     $batchImagingPage = $mainBook.pages[index];
   }
 
+  function editBubbles(index: number) {
+    console.log("editBubbles", index);
+    delayedCommiter.force();
+    $bubbleBucketPage = $mainBook.pages[index];
+  }
+
+  $: if ($bubbleBucketDirty) {
+    commit(null);
+    $bubbleBucketDirty = false;
+  }
+
   function insert(_page: Page, element: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     dealBookContents(frameSeq, element, null);
@@ -231,6 +243,7 @@
       movePages,
       copyPageToClipboard,
       batchImaging,
+      editBubbles,
       chase,
       getMarks,
       getFocusedPage,

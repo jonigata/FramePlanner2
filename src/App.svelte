@@ -41,6 +41,7 @@
   import DebugOnly from './utils/DebugOnly.svelte';
   import StructureTree from './about/StructureTree.svelte';
   import MaterialBucket from './materialBucket/MaterialBucket.svelte';
+  import BubbleBucket from './bubbleBucket/BubbleBucket.svelte';
   //  import JsonReader from './utils/JsonReader.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
@@ -111,6 +112,7 @@
 </DebugOnly>
 <StructureTree/>
 <MaterialBucket/>
+<BubbleBucket/>
 
 <!-- root items -->
 <MaterialBucketButton />

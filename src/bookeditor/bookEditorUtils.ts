@@ -42,7 +42,8 @@ export function buildBookEditor(
     editor.deletePage,
     editor.movePages,
     editor.copyPageToClipboard,
-    editor.batchImaging);
+    editor.batchImaging,
+    editor.editBubbles);
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 
   layeredCanvas.takeOver();
