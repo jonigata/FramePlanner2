@@ -85,14 +85,14 @@
   </div>
 
   <div class="contents-panel">
-    <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:program={program}/>
+    <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
     <div class="resindence-times variant-filled-surface rounded-container-token">
       {#each chunkedProgram as pagePrograms, pageNumber}
         <div class="resindence-times-page variant-ghost-secondary rounded-container-token">
           Page {pageNumber}
           <div class="indent">
             {#each pagePrograms as program, index}
-              <FrameResidenceTime entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
+              <FrameResidenceTime bind:standardWait={standardWait} entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
             {/each}
           </div>
         </div>

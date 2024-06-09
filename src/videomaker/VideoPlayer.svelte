@@ -11,6 +11,7 @@
   export let width: number;
   export let height: number;
   export let moveDuration: number;
+  export let standardWait: number;
   export let program: DisplayProgramEntry[]
 
   let canvas = null;
@@ -28,7 +29,7 @@
   }
 
   $: if (program != null) {
-    ({timeTable, totalTime} = createTimeTable(program, moveDuration));
+    ({timeTable, totalTime} = createTimeTable(program, moveDuration, standardWait));
   }
 
   function render(_c: number) {
@@ -56,7 +57,8 @@
       },
       timeTable,
       cursor,
-      moveDuration);
+      moveDuration,
+      standardWait);
   }
 
   let playerAlive = true;
@@ -106,7 +108,7 @@
         <img class="title-image" src={playIcon} alt="play"/>
       {/if}
     </button>
-    <SeekBar bind:program={program} bind:moveDuration={moveDuration} bind:cursor={cursor}/>
+    <SeekBar bind:program={program} bind:standardWait={standardWait} bind:moveDuration={moveDuration} bind:cursor={cursor}/>
   </div>
 </div>
 

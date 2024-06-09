@@ -6,20 +6,19 @@
 
   const dispacher = createEventDispatcher();
 
-  export let index = 0;
-  export let entry: DisplayProgramEntry = null;
+  export let standardWait: number;
+  export let index: number;
+  export let entry: DisplayProgramEntry;
 
-  let wait = 1;  
+  let wait = 1;
 
   $: onWaitChanged(wait);
   function onWaitChanged(wait: number) {
-    entry.residenceTime = wait;
-    dispacher('waitChanged', {entry, wait});
+    entry.residenceTime = wait - standardWait;
+    dispacher('waitChanged', entry);
   }
 
-  onMount(() => {
-    wait = entry.residenceTime;
-  });
+  $: wait = standardWait + entry.residenceTime;
 
 </script>
 

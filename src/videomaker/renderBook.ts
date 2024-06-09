@@ -67,7 +67,7 @@ export type DisplayProgramEntry = {
   pageNumber: number;
   position: [number, number],
   scale: number,
-  residenceTime: number,
+  residenceTime: number, // standardWaitからの相対
 }
 
 export function makeDisplayProgram(book: Book, viewportSize: [number, number]): DisplayProgramEntry[] {
@@ -78,7 +78,7 @@ export function makeDisplayProgram(book: Book, viewportSize: [number, number]): 
     const rect = trapezoidBoundingRect(layout.corners);
     const position = trapezoidCenter(layout.corners);
     const scale = Math.min(viewportSize[0] / rect[2], viewportSize[1] / rect[3]);    
-    result.push({ pageNumber, position, scale, residenceTime: 1 });
+    result.push({ pageNumber, position, scale, residenceTime: 0 });
   }
   return result;
 }

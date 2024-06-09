@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { DisplayProgramEntry } from './renderBook';
 
-  export let moveDuration = 0.3;
-  export let program: DisplayProgramEntry[] = null;
-  export let cursor = 0;
+  export let moveDuration: number;
+  export let standardWait: number;
+  export let program: DisplayProgramEntry[];
+  export let cursor;
 
   let containerWidth: number;
   let containerHeight: number;
@@ -43,18 +44,20 @@
   function draw() {
     length = 0;
     for (const e of program) {
-      length += e.residenceTime;
+      length += standardWait + e.residenceTime;
       length += moveDuration;
     }
+    console.log(length);
 
     const xFactor = containerWidth / length;
 
     const ctx = canvas.getContext('2d');
     let x = 0;
     for (const e of program) {
+      const duration = standardWait + e.residenceTime;
       ctx.fillStyle = "#00E890";
-      ctx.fillRect(x, 0, e.residenceTime * xFactor, containerHeight);
-      x += e.residenceTime * xFactor;
+      ctx.fillRect(x, 0, duration * xFactor, containerHeight);
+      x += duration * xFactor;
       ctx.fillStyle = "#006AAA";
       ctx.fillRect(x, 0, moveDuration * xFactor, containerHeight);
       x += moveDuration * xFactor;
