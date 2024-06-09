@@ -115,7 +115,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    flex-grow: 1;
     height: 100%;
   }
 

@@ -43,6 +43,7 @@
   import MaterialBucket from './materialBucket/MaterialBucket.svelte';
   import BubbleBucket from './bubbleBucket/BubbleBucket.svelte';
   //  import JsonReader from './utils/JsonReader.svelte';
+  import VideoMaker from './videomaker/VideoMaker.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -57,6 +58,9 @@
     },
     signIn: {
       ref: SignIn,
+    },
+    videoMaker: {
+      ref: VideoMaker,
     }
   };
 

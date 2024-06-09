@@ -22,13 +22,13 @@
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { fileSystem, newBookToken, shareBookToken } from '../filemanager/fileManagerStore';
   import type { IndexedDBFileSystem } from "../lib/filesystem/indexeddbFileSystem";
-  import { modalStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { app } from "../firebase";
   import { getAuth } from "firebase/auth";
   import { accountUser } from "../utils/accountStore";
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
@@ -280,6 +280,14 @@
     files = e.dataTransfer.files;
   }
 
+  function openVideoMaker() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'videoMaker',
+    };
+    modalStore.trigger(d);    
+  }
+
   onMount(() => {
     prepareAuth();
     if (isPendingRedirect()) {
@@ -416,6 +424,9 @@
     -->
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
       About
+    </button>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openVideoMaker}>
+      Video
     </button>
     <!--
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={structureTree}>
