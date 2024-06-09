@@ -7,6 +7,13 @@
   export let min = 0;
   export let max = 10;
   export let step = 0.1;
+
+  let uiValue = value;
+  $: onChanged(uiValue);
+  function onChanged(v: number) {
+    console.log("onChanged", v);
+    value = v;
+  }
 </script>
 
 <div class="entry">
@@ -14,9 +21,9 @@
     {label}
   </div>
   <div class="hbox gap-2">
-    <RangeSlider bind:value={value} min={min} max={max} step={step} name="value"/>
+    <RangeSlider bind:value={uiValue} min={min} max={max} step={step} name="value"/>
     <div class="number-box">
-      <NumberEdit bind:value={value} min={min} max={max} allowDecimal={true}/>
+      <NumberEdit bind:value={uiValue} min={min} max={max} allowDecimal={true}/>
     </div>
   </div>
 </div>

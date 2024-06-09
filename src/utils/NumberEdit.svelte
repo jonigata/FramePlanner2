@@ -1,5 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
+  import { writable } from 'svelte/store';
+  import writableDerived from "svelte-writable-derived";
 
   export let value: number;
   export let min: number = 1;
@@ -12,34 +14,31 @@
   let container: HTMLDivElement;
   let containerWidth = 0;
   let containerHeight = 0;
-  let textValue = '';
 
   let key = 0; // undo防止
 
-  $: onChangeValue(value);
-  function onChangeValue(v: number) {
-    if (v == null) { return; }
-    let s = allowDecimal ? v.toFixed(2) : v.toString();
-    if (textValue != s) {
-      textValue = s;
-    }
-  }
-
-  $: onChangeTextValue(textValue);
-  function onChangeTextValue(tv: string) {
-    if (tv == '' || tv == null) { tv = '0'; }
-    let n = allowDecimal ? parseFloat(tv) : parseInt(tv, 10);
-    n = Math.max(min, Math.min(max, n));
-    if (value != n) {
-      value = n;
-    }
-  }
+  const valueStore = writable(value);
+  $: valueStore.set(value);
+  valueStore.subscribe((v) => {
+    value = v;
+  });
+  const textValue = writableDerived(
+    valueStore,
+    (v: number) => {
+      if (v == null) { return ''; }
+      let s = allowDecimal ? v.toFixed(2) : v.toString();
+      return s;
+    },
+    (tv: string, old: number) => {
+      if (tv == '' || tv == null) { return 0; }
+      let n = allowDecimal ? parseFloat(tv) : parseInt(tv, 10);
+      return Math.max(min, Math.min(max, n));
+    });
 
   onMount(() => {
     original = value;
     containerWidth = container.offsetWidth;
     containerHeight = container.offsetHeight;
-    textValue = value.toString();
   });
 
   function edit(event: FocusEvent) {
@@ -79,7 +78,7 @@
     {#key key}
     <input
       type="number"
-      bind:value={textValue}
+      bind:value={$textValue}
       on:focus="{edit}"
       on:keydown="{keydown}"
       on:blur="{handleBlur}"

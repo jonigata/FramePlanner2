@@ -242,7 +242,7 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
   const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];
   if (!frameTree.children || frameTree.children.length === 0) {
-    if (0 < frameTree.visibility) {
+    if (0 < frameTree.visibility && !frameTree.pseudo) {
       const layout = findLayoutOf(pageLayout, frameTree);
 
       // centerがtrapezoidに含まれるbubbleを抽出

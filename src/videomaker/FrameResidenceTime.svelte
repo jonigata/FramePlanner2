@@ -1,24 +1,32 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
+  import { writable } from 'svelte/store';
+  import writableDerived from "svelte-writable-derived";
+  import type { DisplayProgramEntry } from './renderBook';
   import NumberEdit from "../utils/NumberEdit.svelte";
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import type { DisplayProgramEntry } from './renderBook';
 
-  const dispacher = createEventDispatcher();
+  const dispatcher = createEventDispatcher();
 
   export let standardWait: number;
   export let index: number;
   export let entry: DisplayProgramEntry;
 
-  let wait = 1;
+  const min = 0;
+  const max = 10;
+  const step = 0.1;
 
-  $: onWaitChanged(wait);
-  function onWaitChanged(wait: number) {
-    entry.residenceTime = wait - standardWait;
-    dispacher('waitChanged', entry);
-  }
-
-  $: wait = standardWait + entry.residenceTime;
+  const standardWaitStore = writable(standardWait);
+  $: standardWaitStore.set(standardWait);
+  const wait = writableDerived(
+    standardWaitStore,
+    (n) => n + entry.residenceTime,
+    (n, old) => {
+      console.log("reflect", n, entry.residenceTime);
+      entry.residenceTime = n - standardWait
+      dispatcher('waitChanged', n);
+      return n;
+    });
 
 </script>
 
@@ -26,10 +34,10 @@
   <div class="label">
     Frame {index}
   </div>
-  <div class="hbox">
-    <RangeSlider bind:value={wait} min={0} max={10} step={0.1} name="wait"/>
+  <div class="pair">
+    <RangeSlider bind:value={$wait} min={min} max={max} step={step} name="range-slider"/>
     <div class="number-box">
-      <NumberEdit bind:value={wait} min={0} max={10}/>
+      <NumberEdit bind:value={$wait} min={min} max={max} allowDecimal={true}/>
     </div>
   </div>
 </div>
@@ -45,6 +53,11 @@
   .label {
     width: 70px;
     text-align: left;
+  }
+  .pair {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
   }
   .number-box {
     width: 50px;

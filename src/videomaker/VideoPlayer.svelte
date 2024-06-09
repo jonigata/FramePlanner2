@@ -7,6 +7,7 @@
   import { createTimeTable, renderAtTime, type PlayerEntry } from './videoPlayer';
   import playIcon from '../assets/videomaker/play.png';
   import pauseIcon from '../assets/videomaker/pause.png';
+  import Spreader from '../utils/Spreader.svelte'
 
   export let width: number;
   export let height: number;
@@ -77,25 +78,27 @@
 
 </script>
 
-<div class="canvas-panel variant-filled-surface rounded-container-token">
-  <div class="canvas-container">
-    <SpreadCanvas bind:canvas={canvas} bind:width={width} bind:height={height}/>
+<Spreader>
+  <div class="canvas-panel">
+    <div class="canvas-container">
+      <SpreadCanvas bind:canvas={canvas} bind:width={width} bind:height={height}/>
+    </div>
+    <div class="seekbar-container">
+      <button type="button" class="btn-icon btn-icon-sm variant-filled" on:click={togglePlay}>
+        {#if playing}
+          <img class="title-image" src={pauseIcon} alt="pause"/>
+        {:else}
+          <img class="title-image" src={playIcon} alt="play"/>
+        {/if}
+      </button>
+      <SeekBar bind:program={program} bind:standardWait={standardWait} bind:moveDuration={moveDuration} bind:cursor={cursor}/>
+    </div>
   </div>
-  <div class="seekbar-container">
-    <button type="button" class="btn-icon btn-icon-sm variant-filled" on:click={togglePlay}>
-      {#if playing}
-        <img class="title-image" src={pauseIcon} alt="pause"/>
-      {:else}
-        <img class="title-image" src={playIcon} alt="play"/>
-      {/if}
-    </button>
-    <SeekBar bind:program={program} bind:standardWait={standardWait} bind:moveDuration={moveDuration} bind:cursor={cursor}/>
-  </div>
-</div>
+</Spreader>
 
 <style>
   .canvas-panel {
-    width: 70%;
+    width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;

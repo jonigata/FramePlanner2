@@ -4,7 +4,7 @@
   export let moveDuration: number;
   export let standardWait: number;
   export let program: DisplayProgramEntry[];
-  export let cursor;
+  export let cursor: number;
 
   let containerWidth: number;
   let containerHeight: number;
@@ -68,7 +68,8 @@
     ctx.fillRect(cursorPosition, 0, 4, containerHeight);
   }
 
-  $: if (canvas != null && program != null && cursor != null && moveDuration != null) {
+  $: if (canvas != null && program != null && cursor != null && moveDuration != null && standardWait != null &&
+         containerHeight != null && containerWidth != null) {
     draw();
   }
 

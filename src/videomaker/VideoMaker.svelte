@@ -17,23 +17,8 @@
   let moveDuration = 0.3;
   let standardWait = 1;
 
-  // キャンバスコンテナのサイズを取得する
-  let containerWidth = null;
-
   let program: DisplayProgramEntry[] = null;
   let chunkedProgram: DisplayProgramEntry[][] = [];
-
-  // キャンバスサイズの調整を行う関数
-  function adjustCanvasSize() {
-    if (containerWidth) {
-      // キャンバスのアスペクト比を維持しつつ、コンテナの幅に合わせてサイズを調整
-      let aspectRatio = width / height;
-      let newWidth = Math.min(containerWidth, width);
-      let newHeight = newWidth / aspectRatio;
-      width = newWidth;
-      height = newHeight;
-    }
-  }
 
   function onWaitChanged(e) {
     console.log(program.map(e => e.residenceTime));
@@ -71,8 +56,8 @@
 
 </script>
 
-<div class="page-container" bind:clientWidth={containerWidth} on:resize={adjustCanvasSize}>
-  <div class="variant-filled-surface rounded-container-token w-4/5 hbox gap-4" style="">
+<div class="page-container">
+  <div class="header-panel variant-filled-surface rounded-container-tokenhbox hbox">
     <div>
       <div class="hbox">
         <div class="font-bold slider-label w-24">Width</div>
@@ -104,12 +89,14 @@
   </div>
 
   <div class="contents-panel">
-    <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
-    <div class="vbox gap-4">
+    <div class="player-panel variant-filled-surface rounded-container-token">
+      <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
+    </div>
+    <div class="side-panel vbox gap-4">
       <div class="resindence-times variant-filled-surface rounded-container-token">
         {#each chunkedProgram as pagePrograms, pageNumber}
           <div class="resindence-times-page variant-ghost-secondary rounded-container-token">
-            Page {pageNumber}
+            Page {pageNumber+1}
             <div class="indent">
               {#each pagePrograms as program, index}
                 <FrameResidenceTime bind:standardWait={standardWait} entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
@@ -136,12 +123,16 @@
 
 <style>
   .page-container {
-    width: 100%;
-    height: 100%;
+    width: 80dvw;
+    height: 90dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
+  }
+  .header-panel {
+    gap: 12px;
+    width: 100%;
   }
   .back-button {
     margin-top: 16px;
@@ -163,14 +154,17 @@
     text-align: right;
   }
   .contents-panel {
-    width: 80%;
-    height: 80dvh;
+    width: 100%;
     display: flex;
+    flex-direction: row;
+    flex-grow: 1;
     gap: 16px;
+    overflow: hidden; /* こうしないとSpreaderが縮小を通知しない */
   }
   .resindence-times {
     display: flex;
     flex-direction: column;
+    width: 100%;
     flex-grow: 1;
     padding: 16px;
     gap: 12px;
@@ -198,5 +192,13 @@
     padding: 16px;
     gap: 12px;
     color: #000;
+  }
+  .player-panel {
+    flex-grow: 1;
+    height: 100%;
+    overflow: hidden; /* こうしないとSpreaderが縮小を通知しない */
+  }
+  .side-panel {
+    width: 350px;
   }
 </style>
