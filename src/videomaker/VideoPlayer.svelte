@@ -25,6 +25,7 @@
 
   $: if (canvas != null) { onRebuild(); }
   function onRebuild() {
+    console.log([...$mainBook.pages[0].bubbles]);
     ({arrayLayer, layeredCanvas} = buildBookRenderer(canvas, $mainBook));
     layeredCanvas.render();
   }

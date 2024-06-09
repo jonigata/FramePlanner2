@@ -281,6 +281,8 @@
   }
 
   function openVideoMaker() {
+    console.log([...$mainBook.pages[0].bubbles]);
+
     const d: ModalSettings = {
       type: 'component',
       component: 'videoMaker',

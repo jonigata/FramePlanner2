@@ -235,10 +235,11 @@ export function collectBookContents(book: Book): FrameSequence {
 
 function collectPageContents(page: Page, pageNumber: number): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-  return collectFrameContents(page, pageNumber, page.frameTree, layout);
+  const bubbles = [...page.bubbles];
+  return collectFrameContents(page, pageNumber, page.frameTree, layout, bubbles);
 }
 
-function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameElement, pageLayout: Layout): FrameSequence {
+function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameElement, pageLayout: Layout, bubbles: Bubble[]): FrameSequence {
   const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];
   if (!frameTree.children || frameTree.children.length === 0) {
@@ -248,7 +249,7 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
       // centerがtrapezoidに含まれるbubbleを抽出
       const selected: Bubble[] = [];
       const unselected: Bubble[] = [];
-      for (let b of page.bubbles) {
+      for (let b of bubbles) {
         const bc = b.getPhysicalCenter(page.paperSize);
         if (isPointInTrapezoid(bc, layout.corners)) {
           selected.push(b);
@@ -256,7 +257,7 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
           unselected.push(b);
         }
       }
-      page.bubbles.splice(0, page.bubbles.length, ...unselected)
+      bubbles.splice(0, bubbles.length, ...unselected)
 
       slots.push({ layout, page, pageNumber });
       contents.push({
@@ -270,7 +271,7 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
       const child = frameTree.children[i];
-      const { slots: l, contents: c } = collectFrameContents(page, pageNumber, child, pageLayout);
+      const { slots: l, contents: c } = collectFrameContents(page, pageNumber, child, pageLayout, bubbles);
       slots.push(...l);
       contents.push(...c);
     }
@@ -318,7 +319,6 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
         ty + th * (bc[1] - sy) / sh,
       ];
       b.setPhysicalCenter(slot.page.paperSize, cc);
-      slot.page.bubbles.push(b);
     }
   }
 

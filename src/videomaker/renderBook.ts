@@ -11,6 +11,7 @@ export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book) {
   let papers: Paper[] = [];
   let pageNumber = 0;
   for (const page of book.pages) {
+    console.log([...page.bubbles]);
     papers.push(buildPaper(page));
     pageNumber++;
   }
@@ -59,6 +60,7 @@ function buildPaper(page: Page) {
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);
   paper.addLayer(paperRendererLayer);
+  console.log([...page.bubbles]);
 
   return paper;
 }

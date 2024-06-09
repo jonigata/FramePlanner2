@@ -43,7 +43,9 @@
   }
 
   onMount(() => {
+    console.log([...$mainBook.pages[0].bubbles]);
     program = makeDisplayProgram($mainBook, [width, height]);
+    console.log([...$mainBook.pages[0].bubbles]);
   });
 
   $: if (program) {
