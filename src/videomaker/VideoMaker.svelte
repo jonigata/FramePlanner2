@@ -9,6 +9,8 @@
   import { makeDisplayProgram, type DisplayProgramEntry } from './renderBook';
   import { mainBook } from '../bookeditor/bookStore';
   import Parameter from './Parameter.svelte';
+  import { buildMovie } from './buildMovie';
+  import { ProgressRadial } from '@skeletonlabs/skeleton';
 
   let width = 1920;
   let height = 1080;
@@ -36,6 +38,23 @@
   function onWaitChanged(e) {
     console.log(program.map(e => e.residenceTime));
     program = program;
+  }
+
+  let building = false;
+  async function doBuildMovie() {
+    building = true;
+    const url = await buildMovie(program, width, height, moveDuration, standardWait, $mainBook);
+    building = false;
+    download(url);
+  }
+
+  function download(url: string) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'output.mp4';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   onMount(() => {
@@ -86,17 +105,28 @@
 
   <div class="contents-panel">
     <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
-    <div class="resindence-times variant-filled-surface rounded-container-token">
-      {#each chunkedProgram as pagePrograms, pageNumber}
-        <div class="resindence-times-page variant-ghost-secondary rounded-container-token">
-          Page {pageNumber}
-          <div class="indent">
-            {#each pagePrograms as program, index}
-              <FrameResidenceTime bind:standardWait={standardWait} entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
-            {/each}
+    <div class="vbox gap-4">
+      <div class="resindence-times variant-filled-surface rounded-container-token">
+        {#each chunkedProgram as pagePrograms, pageNumber}
+          <div class="resindence-times-page variant-ghost-secondary rounded-container-token">
+            Page {pageNumber}
+            <div class="indent">
+              {#each pagePrograms as program, index}
+                <FrameResidenceTime bind:standardWait={standardWait} entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
+              {/each}
+            </div>
           </div>
-        </div>
-      {/each}
+        {/each}
+      </div>
+      <div class="sample-movie variant-filled-surface rounded-container-token">
+        {#if building}
+          <ProgressRadial width={"w-16"}/>
+        {:else}
+          <button type="button" class="btn btn-sm variant-filled" on:click={doBuildMovie}>
+            ムービー作成
+          </button>
+        {/if}
+      </div>  
     </div>
   </div>
 
@@ -157,5 +187,16 @@
     margin-top: 2px;
     margin-left: 8px;
     padding-right: 8px;
+  }
+  .sample-movie {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 150px;
+    padding: 16px;
+    gap: 12px;
+    color: #000;
   }
 </style>

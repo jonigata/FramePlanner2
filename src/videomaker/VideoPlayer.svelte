@@ -34,27 +34,8 @@
 
   function render(_c: number) {
     renderAtTime(
-      (index: number, normalizedTime: number) => {
-        const v = layeredCanvas.viewport;
-        const e0 = timeTable[index].entry;
-        const p = arrayLayer.array.childPositionToParentPosition(e0.pageNumber, e0.position);
-        const currScale = e0.scale * 0.98;
-        const currTranslate = [-p[0] * currScale, -p[1] * currScale];
-        if (normalizedTime == 0 || index == timeTable.length - 1) {
-          v.translate = currTranslate;
-          v.scale = currScale;
-        } else {
-          const e1 = timeTable[index + 1].entry;
-          const p1 = arrayLayer.array.childPositionToParentPosition(e1.pageNumber, e1.position);
-          const nextScale = e1.scale * 0.98;
-          const nextTranslate = [-p1[0] * nextScale, -p1[1] * nextScale];
-          const [dx, dy] = [nextTranslate[0] - currTranslate[0], nextTranslate[1] - currTranslate[1]];
-          v.translate = [currTranslate[0] + dx * normalizedTime, currTranslate[1] + dy * normalizedTime];
-          v.scale = currScale + (nextScale - currScale) * normalizedTime;
-        }
-        v.dirty = true;
-        layeredCanvas.render();
-      },
+      layeredCanvas,
+      arrayLayer,
       timeTable,
       cursor,
       moveDuration,

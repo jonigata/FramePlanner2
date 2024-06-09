@@ -16,7 +16,7 @@
   <div class="hbox gap-2">
     <RangeSlider bind:value={value} min={min} max={max} step={step} name="value"/>
     <div class="number-box">
-      <NumberEdit bind:value={value} min={min} max={max}/>
+      <NumberEdit bind:value={value} min={min} max={max} allowDecimal={true}/>
     </div>
   </div>
 </div>

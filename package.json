@@ -32,6 +32,7 @@
     "vite": "^4.2.0"
   },
   "dependencies": {
+    "@diffusion-studio/ffmpeg-js": "^0.2.3",
     "@neodrag/svelte": "^2.0.3",
     "@sentry/svelte": "^7.74.0",
     "@splidejs/svelte-splide": "^0.2.9",

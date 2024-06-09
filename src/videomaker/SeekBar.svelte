@@ -47,7 +47,6 @@
       length += standardWait + e.residenceTime;
       length += moveDuration;
     }
-    console.log(length);
 
     const xFactor = containerWidth / length;
 
