@@ -68,9 +68,11 @@
     ctx.fillRect(cursorPosition, 0, 4, containerHeight);
   }
 
-  $: if (canvas != null && program != null && cursor != null && moveDuration != null && standardWait != null &&
-         containerHeight != null && containerWidth != null) {
-    draw();
+  $: {
+    if (canvas != null && program != null && cursor != null && moveDuration != null && standardWait != null &&
+        containerHeight != null && containerWidth != null) {
+      requestAnimationFrame(draw);
+    }
   }
 
 </script>
