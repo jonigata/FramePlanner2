@@ -113,6 +113,7 @@ export class FirebaseFile extends File {
     // Create a new Image element and set its src attribute to the object URL
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.src = url;
       img.onload = () => {
         URL.revokeObjectURL(url);  // Revoke the object URL once the image has loaded

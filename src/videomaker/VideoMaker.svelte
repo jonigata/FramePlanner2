@@ -11,6 +11,7 @@
   import Parameter from './Parameter.svelte';
   import { buildMovie } from './buildMovie';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   let width = 1920;
   let height = 1080;
@@ -28,9 +29,17 @@
   let building = false;
   async function doBuildMovie() {
     building = true;
-    const url = await buildMovie(program, width, height, moveDuration, standardWait, $mainBook);
+    try {
+      const url = await buildMovie(program, width, height, moveDuration, standardWait, $mainBook);
+      building = false;
+      toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
+      download(url);
+    }
+    catch (e) {
+      console.error(e);
+      toastStore.trigger({ message: 'エンコードに失敗しました', timeout: 3000});
+    }
     building = false;
-    download(url);
   }
 
   function download(url: string) {
@@ -40,6 +49,11 @@
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  }
+
+  function makeEven(n: number) {
+    console.log(n);
+    return Math.floor(n / 2) * 2;
   }
 
   onMount(() => {
@@ -64,20 +78,20 @@
       <div class="hbox">
         <div class="font-bold slider-label w-24">Width</div>
         <div style="width: 140px;">
-          <RangeSlider bind:value={width} min={512} max={1920} step={1} name="width"/>
+          <RangeSlider bind:value={width} min={512} max={1920} step={2} name="width"/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={width} min={512} max={1920}/></div>
+          <div class="number-box"><NumberEdit bind:value={width} min={512} max={1920} on:submit={() => width = makeEven(width)}/></div>
           / {1920}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label w-24">Height</div>
         <div style="width: 140px;">
-          <RangeSlider bind:value={height} min={512} max={1080} step={1} name="height"/>
+          <RangeSlider bind:value={height} min={512} max={1080} step={2} name="height"/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={height} min={512} max={1080}/></div>
+          <div class="number-box"><NumberEdit bind:value={height} min={512} max={1080} on:submit={() => height = makeEven(height)}/></div>
           / {1080}
         </div>
       </div>
@@ -150,6 +164,7 @@
     height: 20px;
     display: inline-block;
     vertical-align: bottom;
+    color: #000;
   }
   .slider-value-text {
     width: 76px;

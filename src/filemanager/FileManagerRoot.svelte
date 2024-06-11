@@ -161,7 +161,6 @@
       return false;
     }
 
-/*
     // いずれにせよリダイレクト
     let currentUrl = new URL(window.location.href);
     let urlWithoutQuery = currentUrl.origin + currentUrl.pathname;      
@@ -169,7 +168,6 @@
     window.history.replaceState(null, null, urlWithoutQuery);
     window.location.href = urlWithoutQuery;
     return true;
-*/
   }
 
   $:onNewBookRequest($newBookToken);

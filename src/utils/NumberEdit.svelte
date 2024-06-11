@@ -47,6 +47,7 @@
 
   function submit() {
     if (value != original) {
+      console.log("submit", value, original);
       dispatch('submit', value);
     }
   }
@@ -59,9 +60,11 @@
   }
   
   function handleBlur(event: FocusEvent) {
-    if (event.relatedTarget) {
-      return;
-    }
+    let s = (event.target as HTMLInputElement).value;
+    let n = allowDecimal ? parseFloat(s) : parseInt(s, 10);
+    n = Math.max(min, Math.min(max, n));
+    value = n; // なぜ両方必要なのかわからん
+    textValue.set(n.toString());
     submit();
     key++; // undo防止
   }
@@ -79,9 +82,9 @@
     <input
       type="number"
       bind:value={$textValue}
-      on:focus="{edit}"
-      on:keydown="{keydown}"
-      on:blur="{handleBlur}"
+      on:focus={edit}
+      on:keydown={keydown}
+      on:blur={handleBlur}
       class="input"
     />
     {/key}
