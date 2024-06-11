@@ -3,7 +3,7 @@
   import SeekBar from './SeekBar.svelte';
   import { buildBookRenderer, type DisplayProgramEntry } from './renderBook';
   import { mainBook } from '../bookeditor/bookStore';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import { createTimeTable, renderAtTime, type PlayerEntry } from './videoPlayer';
   import playIcon from '../assets/videomaker/play.png';
   import pauseIcon from '../assets/videomaker/pause.png';
@@ -34,7 +34,8 @@
     ({timeTable, totalTime} = createTimeTable(program, moveDuration, standardWait));
   }
 
-  function render(_c: number) {
+  async function render() {
+    await tick();
     renderAtTime(
       layeredCanvas,
       arrayLayer,
@@ -61,8 +62,8 @@
     console.log("play done");
   }
 
-  $: if (0 < timeTable.length) {
-    render(cursor);
+  $: if (0 < timeTable.length && 0 <= cursor && layeredCanvas != null) {
+    render();
   }
 
   onMount(() => {

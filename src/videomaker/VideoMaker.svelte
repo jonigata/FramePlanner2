@@ -56,11 +56,10 @@
     return Math.floor(n / 2) * 2;
   }
 
-  onMount(() => {
-    console.log([...$mainBook.pages[0].bubbles]);
-    program = makeDisplayProgram($mainBook, [width, height]);
-    console.log([...$mainBook.pages[0].bubbles]);
-  });
+  $: onChangeSize(width, height);
+  function onChangeSize(w: number, h: number) {
+    program = makeDisplayProgram($mainBook, [w, h], program);
+  }
 
   $: if (program) {
     chunkedProgram = [];
@@ -106,7 +105,9 @@
 
   <div class="contents-panel">
     <div class="player-panel variant-filled-surface rounded-container-token">
-      <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
+      {#if program != null}
+        <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
+      {/if}
     </div>
     <div class="side-panel vbox gap-4">
       <div class="resindence-times variant-filled-surface rounded-container-token">

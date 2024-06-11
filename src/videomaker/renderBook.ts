@@ -72,15 +72,20 @@ export type DisplayProgramEntry = {
   residenceTime: number, // standardWaitからの相対
 }
 
-export function makeDisplayProgram(book: Book, viewportSize: [number, number]): DisplayProgramEntry[] {
+export function makeDisplayProgram(book: Book, viewportSize: [number, number], old: DisplayProgramEntry[]): DisplayProgramEntry[] {
   const seq = collectBookContents(book);
   const result: DisplayProgramEntry[] = [];
+  let i = 0;
   for (const slot of seq.slots) {
     const { layout, page, pageNumber } = slot;
     const rect = trapezoidBoundingRect(layout.corners);
     const position = trapezoidCenter(layout.corners);
     const scale = Math.min(viewportSize[0] / rect[2], viewportSize[1] / rect[3]);    
-    result.push({ pageNumber, position, scale, residenceTime: 0 });
+    let residenceTime = 0;
+    if (old) {
+      residenceTime = old[i].residenceTime;
+    }
+    result.push({ pageNumber, position, scale, residenceTime });
   }
   return result;
 }

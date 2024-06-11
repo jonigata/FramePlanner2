@@ -14,8 +14,6 @@
   const img = new Image();
   img.src = wallPaper;
 
-  $: console.log(width, height);
-
   $:onChangeContainerSize(containerWidth, containerHeight, width, height);
   async function onChangeContainerSize(w: number, h: number, bw: number, bh: number) {
     if (!w || !h) return;
