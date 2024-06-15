@@ -1098,7 +1098,35 @@ export class FrameLayer extends Layer {
     return false;
   }
 
+  videoRedrawInterval: NodeJS.Timer;
   selectLayout(layout: Layout): void {
+    if (layout != this.selectedLayout) {
+      clearInterval(this.videoRedrawInterval);
+      this.videoRedrawInterval = null;      
+      if (this.selectedLayout) {
+        for (const film of this.selectedLayout.element.filmStack.films) {
+          if (film.media instanceof VideoMedia) {
+            film.media.video.pause();
+          }
+        }
+      }
+
+      if (layout) {
+        let playFlag = false;
+        for (const film of layout.element.filmStack.films) {
+          if (film.media instanceof VideoMedia) {
+            playFlag = true;
+            film.media.video.play();
+          }
+        }
+        if (playFlag) {
+          this.videoRedrawInterval = setInterval(() => {
+            this.redraw();
+          }, 1000/30);
+        }
+      }
+    }
+
     this.selectedLayout = layout;
     this.onFocus(layout);
   }
