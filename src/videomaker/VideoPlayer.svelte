@@ -34,15 +34,19 @@
     ({timeTable, totalTime} = createTimeTable(program, moveDuration, standardWait));
   }
 
+  let rendering = false;
   async function render() {
     await tick();
-    renderAtTime(
+    if (rendering) { return; }
+    rendering = true;
+    await renderAtTime(
       layeredCanvas,
       arrayLayer,
       timeTable,
       cursor,
       moveDuration,
       standardWait);
+    rendering = false;
   }
 
   let playerAlive = true;

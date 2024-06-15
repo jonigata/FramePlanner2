@@ -1122,7 +1122,7 @@ export class FrameLayer extends Layer {
         if (playFlag) {
           this.videoRedrawInterval = setInterval(() => {
             this.redraw();
-          }, 1000/30);
+          }, 1000/24);
         }
       }
     }

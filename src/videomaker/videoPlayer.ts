@@ -40,14 +40,23 @@ function easeOut(t: number) {
   return 1 - Math.pow(1 - t, 2);
 }
 
-export function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLayer, timeTable: PlayerEntry[], cursor: number, moveDuration: number, standardWait: number): void {
-  function render(index: number, normalizedTime: number) {
+export async function cue(timeTable: PlayerEntry[]): Promise<void> {
+  for (const tt of timeTable) {
+    const filmStack = tt.entry.layout.element.filmStack;
+    for (const film of filmStack.films) {
+      await film.media.seek(0);
+    }
+  }
+}
+
+export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLayer, timeTable: PlayerEntry[], cursor: number, moveDuration: number, standardWait: number): Promise<void> {
+  async function render(index: number, seekTime: number, normalizedPositionTime: number): Promise<void> {
     const v = layeredCanvas.viewport;
     const e0 = timeTable[index].entry;
     const p = arrayLayer.array.childPositionToParentPosition(e0.pageNumber, e0.position);
     const currScale = e0.scale * 0.98;
     const currTranslate: Vector = [-p[0] * currScale, -p[1] * currScale];
-    if (normalizedTime == 0 || index == timeTable.length - 1) {
+    if (normalizedPositionTime == 0 || index == timeTable.length - 1) {
       v.translate = currTranslate;
       v.scale = currScale;
     } else {
@@ -56,10 +65,25 @@ export function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLaye
       const nextScale = e1.scale * 0.98;
       const nextTranslate = [-p1[0] * nextScale, -p1[1] * nextScale];
       const [dx, dy] = [nextTranslate[0] - currTranslate[0], nextTranslate[1] - currTranslate[1]];
-      v.translate = [currTranslate[0] + dx * normalizedTime, currTranslate[1] + dy * normalizedTime];
-      v.scale = currScale + (nextScale - currScale) * normalizedTime;
+      v.translate = [currTranslate[0] + dx * normalizedPositionTime, currTranslate[1] + dy * normalizedPositionTime];
+      v.scale = currScale + (nextScale - currScale) * normalizedPositionTime;
     }
     v.dirty = true;
+
+    async function seek(index: number, seekTime: number) {
+      const tt = timeTable[index];
+      const filmStack = tt.entry.layout.element.filmStack;
+      for (const film of filmStack.films) {
+        await film.media.seek(seekTime);
+      }
+    }
+
+    // 時刻設定
+    await seek(index, seekTime);
+    if (index < timeTable.length - 1 && 0 < normalizedPositionTime) {
+      await seek(index + 1, 0);
+    }
+  
     layeredCanvas.render();
   }
 
@@ -68,9 +92,9 @@ export function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLaye
   const moveStart = te.time + standardWait + te.entry.residenceTime;
   if (cursor < moveStart) {
     // 静止中
-    render(index, 0);
+    await render(index, cursor - te.time, 0);
   } else {
     // 移動中
-    render(index, easeOut((cursor - moveStart) / moveDuration));
+    await render(index, cursor - te.time, easeOut((cursor - moveStart) / moveDuration));
   }
 }

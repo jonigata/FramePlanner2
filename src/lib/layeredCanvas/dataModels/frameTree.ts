@@ -32,6 +32,8 @@ export class Media {
     this.fileId[fileSystemId] = fileId;
   }
 
+  async seek(time: number): Promise<void> {}
+
   get naturalWidth(): number {return 0;}
   get naturalHeight(): number {return 0;}
   get drawSource(): HTMLImageElement | HTMLVideoElement {return null;}
@@ -43,6 +45,7 @@ export class ImageMedia extends Media {
     super();
     this.image = image;
   }
+
   get naturalWidth(): number { return this.image.naturalWidth; }
   get naturalHeight(): number { return this.image.naturalHeight; }
   get drawSource(): HTMLImageElement { return this.image; }
@@ -54,6 +57,31 @@ export class VideoMedia extends Media {
     super();
     this.video = video;
   }
+
+  async seek(timeInSeconds: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const video = this.video;
+      let start = performance.now();
+      video.onerror = () => {
+        reject(new Error('Error during the video loading or processing.'));
+      };
+  
+      video.onseeked = () => {
+        console.log('seeked', performance.now() - start);
+        resolve();
+      };
+  
+      if (video.readyState >= 1) {
+        console.log(`seek from ${video.currentTime} to ${timeInSeconds}`);
+        video.currentTime = timeInSeconds;
+      } else {
+        video.onloadedmetadata = () => {
+          video.currentTime = timeInSeconds;
+        };
+      }
+    });
+  }
+
   get naturalWidth(): number { return this.video.videoWidth; }
   get naturalHeight(): number { return this.video.videoHeight; }
   get drawSource(): HTMLVideoElement {
@@ -189,6 +217,7 @@ export class FrameElement {
   gallery: HTMLImageElement[];
   filmStack: FilmStack;
 
+  // 以下は揮発性
   focused: boolean;
 
   constructor(size: number) {
@@ -212,6 +241,8 @@ export class FrameElement {
 
     // リーフ要素の場合は絵がある可能性がある
     this.filmStack = { films: [] };
+
+    // 以下揮発性
     this.focused = false;
   }
 

@@ -3,6 +3,7 @@ import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import { type Book, type Page, type WrapMode, type ReadingDirection, collectBookContents } from '../bookeditor/book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import { trapezoidBoundingRect, trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
+import type { Layout } from '../lib/layeredCanvas/dataModels/frameTree';
 
 export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book) {
   const viewport = new Viewport(canvas, () => {});
@@ -70,6 +71,7 @@ export type DisplayProgramEntry = {
   position: [number, number],
   scale: number,
   residenceTime: number, // standardWaitからの相対
+  layout: Layout;
 }
 
 export function makeDisplayProgram(book: Book, viewportSize: [number, number], old: DisplayProgramEntry[]): DisplayProgramEntry[] {
@@ -85,7 +87,7 @@ export function makeDisplayProgram(book: Book, viewportSize: [number, number], o
     if (old) {
       residenceTime = old[i].residenceTime;
     }
-    result.push({ pageNumber, position, scale, residenceTime });
+    result.push({ pageNumber, position, scale, residenceTime, layout });
   }
   return result;
 }
