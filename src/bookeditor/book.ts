@@ -1,5 +1,5 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, type FilmStack, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
+import { FrameElement, ImageMedia, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, type FilmStack, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
@@ -148,7 +148,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
 export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix): Book {
   const frameTree = FrameElement.compile(frameExamples[2].frameTree);
   const film = new Film();
-  film.image = image;
+  film.media = new ImageMedia(image);
   frameTree.children[0].filmStack.films = [film];
 
   const page = newPage(frameTree, []);

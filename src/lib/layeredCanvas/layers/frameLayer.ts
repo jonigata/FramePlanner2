@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, FilmStackTransformer } from "../dataModels/frameTree";
+import { FrameElement, Media, ImageMedia, VideoMedia, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, FilmStackTransformer } from "../dataModels/frameTree";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -219,7 +219,7 @@ export class FrameLayer extends Layer {
     this.litIcons.forEach(icon => icon.render(ctx));
   }
 
-  dropped(position: Vector, image: HTMLImageElement): boolean {
+  dropped(position: Vector, media: HTMLImageElement | HTMLVideoElement) {
     if (!this.interactable) { return; }
 
     const layout = calculatePhysicalLayout(
@@ -232,10 +232,15 @@ export class FrameLayer extends Layer {
       return false;
     }
 
-    this.importImage(layoutlet, image);
+  if (media instanceof HTMLImageElement) {
+      this.importMedia(layoutlet, new ImageMedia(media));
+    }
+    if (media instanceof HTMLVideoElement) {
+      this.importMedia(layoutlet, new VideoMedia(media));
+    }
     this.onCommit();
     return true;
-  }
+}
 
   updateLit(point: Vector): void {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
@@ -963,12 +968,12 @@ export class FrameLayer extends Layer {
     constraintRecursive(paperSize, layout);
   }
 
-  importImage(layoutlet: Layout, image: HTMLImageElement): void {
+  importMedia(layoutlet: Layout, media: Media): void {
     const paperSize = this.getPaperSize();
     // calc expansion to longer size
 
     const film = new Film();
-    film.image = image;
+    film.media = media;
     film.n_scale = 1;
     film.rotation = 0;
     film.reverse = [1, 1];

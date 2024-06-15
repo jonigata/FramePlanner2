@@ -77,7 +77,7 @@ export class Layer {
   pointerCancel(position: Vector, payload: any) {}
   prerender() {}
   render(ctx: CanvasRenderingContext2D, depth: number) {}
-  dropped(position: Vector, image: HTMLImageElement) { return false; }
+  dropped(position: Vector, media: HTMLImageElement | HTMLVideoElement) { return false; }
   beforeDoubleClick(position: Vector) { return false; }
   doubleClicked(position: Vector) { return false; }
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
@@ -156,10 +156,10 @@ export class Paper {
     dragging.layer.pointerCancel(p, dragging.payload);
   }
         
-  handleDrop(p: Vector, image: HTMLImageElement): boolean {
+  handleDrop(p: Vector, media: HTMLImageElement | HTMLVideoElement): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      if (layer.dropped(p, image)) {
+      if (layer.dropped(p, media)) {
         return true;
       }
     }
@@ -457,20 +457,53 @@ export class LayeredCanvas {
   }
 
   async handleDrop(event: DragEvent): Promise<void> {
+    async function loadVideo(file) {
+      const video = document.createElement('video');
+      video.muted = true; // オートプレイポリシーを回避するためミュート
+      video.src = URL.createObjectURL(file);
+    
+      try {
+        await video.play(); // ミュート状態での再生を試みる
+        video.pause(); // 最初のフレームで即座に一時停止
+        console.log('First frame loaded');
+        
+        // キャンバスにビデオの最初のフレームを描画する（オプション）
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+        // ここで canvas を使用して何か処理を行う
+        // 例えば、画像として保存するなど
+    
+      } catch (error) {
+        console.error('Error loading video', error);
+      }
+    
+      return video;
+    }
+
     const p = this.eventPositionToRootPaperPosition(event);
     this.pointerCursor = p;
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
     var file = event.dataTransfer.files[0];
     if (!file) return; // 選択テキストのドロップなど
-    if (!file.type.match(/^image\/(png|jpeg|gif|webp)$/)) return;
+    if (file.type.startsWith('image/svg')) { return; } // 念の為
+    if (file.type.startsWith('image/')) {
+      const image = new Image();
+      image.src = URL.createObjectURL(file);
+      await image.decode();
 
-    var image = new Image();
-    image.src = URL.createObjectURL(file);
-    await image.decode();
-
-    console.log("image loaded", image.width, image.height);
-    this.rootPaper.handleDrop(p, image);
+      console.log("image loaded", image.width, image.height);
+      this.rootPaper.handleDrop(p, image);
+    }
+    if (file.type.startsWith('video/')) {
+      const video = await loadVideo(file);
+      console.log("video loaded", video.videoWidth, video.videoHeight);
+      this.rootPaper.handleDrop(p, video);
+    }
   }
 
   handleDoubleClick(event: PointerEvent): void {

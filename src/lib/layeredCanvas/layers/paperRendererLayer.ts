@@ -369,8 +369,8 @@ export class PaperRendererLayer extends Layer {
 
       if (film.visible) {
         ctx.save();
-        ctx.translate(-film.image.naturalWidth * 0.5, -film.image.naturalHeight * 0.5);
-        ctx.drawImage(film.image, 0, 0, film.image.naturalWidth, film.image.naturalHeight);
+        ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
+        ctx.drawImage(film.media.drawSource, 0, 0, film.media.naturalWidth, film.media.naturalHeight);
         ctx.restore();
       }
       ctx.restore();

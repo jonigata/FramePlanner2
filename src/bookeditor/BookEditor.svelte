@@ -3,7 +3,7 @@
   import { onDestroy } from 'svelte';
   import { derived } from "svelte/store";
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
-  import { FrameElement, Film, calculatePhysicalLayout, findLayoutOf, constraintLeaf, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, ImageMedia, Film, calculatePhysicalLayout, findLayoutOf, constraintLeaf, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -200,17 +200,19 @@
     }
 
     const newPageIds = book.pages.map(p => p.id);
-    if (pageIds.join(",") === newPageIds.join(",")) {
-      // frames/bubblesの再設定だけは毎回しておく
-      let i = 0;
-      for (const paper of arrayLayer.array.papers) {
-        const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
-        rendererLayer.setBubbles(book.pages[i].bubbles);
-        rendererLayer.setFrameTree(book.pages[i].frameTree);
-        i++;
-      } 
-      layeredCanvas.redraw();
-      return;
+    if (arrayLayer) {
+      if (pageIds.join(",") === newPageIds.join(",")) {
+        // frames/bubblesの再設定だけは毎回しておく
+        let i = 0;
+        for (const paper of arrayLayer.array.papers) {
+          const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
+          rendererLayer.setBubbles(book.pages[i].bubbles);
+          rendererLayer.setFrameTree(book.pages[i].frameTree);
+          i++;
+        } 
+        layeredCanvas.redraw();
+        return;
+      }
     }
     pageIds = newPageIds;
 
@@ -423,7 +425,7 @@
     if (r) {
       const { image, prompt } = r;
       const film = new Film();
-      film.image = image;
+      film.media = new ImageMedia(image);
       film.prompt = prompt;
       fit.frame.filmStack.films.push(film);
       fit.frame.prompt = prompt;
@@ -437,16 +439,19 @@
   }
 
   async function punch(fit: FrameInspectorTarget) {
+    const imageMedia = fit.commandTargetFilm.media as ImageMedia;
+    if (!(imageMedia instanceof ImageMedia)) { return; }
+
     $loading = true;
     await loadModel((s: string) => console.log(s));
     
     const film = fit.commandTargetFilm;
-    const canvas = await predict(film.image);
+    const canvas = await predict(imageMedia.image);
     const dataURL = canvas.toDataURL("image/png");
     const newImage = new Image();
     newImage.src = dataURL;
     await newImage.decode();
-    film.image = newImage;
+    film.media = new ImageMedia(newImage);
     layeredCanvas.redraw();
     commit(null);
     $loading = false;

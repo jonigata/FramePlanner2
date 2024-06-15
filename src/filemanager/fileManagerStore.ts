@@ -2,7 +2,7 @@ import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
 import type { Page, Book, WrapMode, ReadingDirection, Prefix } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
-import { Film, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { Film, Media, ImageMedia, FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -108,7 +108,8 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
   markUp.films = [];
   for (let film of frameTree.filmStack.films) {
-    const image = film.image;
+    if (!(film.media instanceof ImageMedia)) { continue; }
+    const image = film.media.image;
 
     await saveImage(fileSystem, image, imageFolder);
     const fileId = image["fileId"][fileSystem.id];
@@ -371,7 +372,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
         const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
     
         const film = new Film();
-        film.image = anyImage;
+        film.media = new ImageMedia(anyImage);
         film.n_scale = n_scale;
         film.n_translation = n_translation;
         film.rotation = markUp.rotation;
@@ -403,7 +404,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
       // 前期バージョン処理
       function newFilm(anyImage: HTMLImageElement): Film {
         const film = new Film();
-        film.image = anyImage;
+        film.media = new ImageMedia(anyImage);
         film.n_scale = markUp.image.n_scale;
         film.n_translation = markUp.image.n_translation;
         film.rotation = markUp.image.rotation;
@@ -442,7 +443,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
         const image = await loadImageFunc(fileSystem, filmMarkUp.image);
         if (image) {
           const film = new Film();
-          film.image = image;
+          film.media = new ImageMedia(image);
           film.n_scale = filmMarkUp.n_scale;
           film.n_translation = filmMarkUp.n_translation;
           film.rotation = filmMarkUp.rotation;

@@ -4,7 +4,6 @@
   import NumberEdit from '../utils/NumberEdit.svelte';
   import FrameResidenceTime from './FrameResidenceTime.svelte';
   import '../box.css';
-  import { onMount } from 'svelte';
   import VideoPlayer from './VideoPlayer.svelte';
   import { makeDisplayProgram, type DisplayProgramEntry } from './renderBook';
   import { mainBook } from '../bookeditor/bookStore';
@@ -12,6 +11,7 @@
   import { buildMovie } from './buildMovie';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { getAnalytics, logEvent } from "firebase/analytics";
 
   let width = 1920;
   let height = 1080;
@@ -33,6 +33,7 @@
       const url = await buildMovie(program, width, height, moveDuration, standardWait, $mainBook);
       building = false;
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
+      logEvent(getAnalytics(), 'build_movie');
       download(url);
     }
     catch (e) {

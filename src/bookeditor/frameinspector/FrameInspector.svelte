@@ -3,7 +3,7 @@
   import { draggable } from '@neodrag/svelte';
   import { frameInspectorTarget } from './frameInspectorStore';
   import FrameInspectorFilm from "./FrameInspectorFilm.svelte";
-  import { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import { Film, Media, ImageMedia } from "../../lib/layeredCanvas/dataModels/frameTree";
   import { redrawToken } from "../bookStore"
   import ListBox from "../../utils/listbox/ListBox.svelte";
   import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";
@@ -50,7 +50,7 @@
       index = $frame.filmStack.films.length - index;
 
       const film = new Film();
-      film.image = image;
+      film.media = new ImageMedia(image);
       film.n_scale = 1;
       film.n_translation = [0, 0];
       film.rotation = 0;

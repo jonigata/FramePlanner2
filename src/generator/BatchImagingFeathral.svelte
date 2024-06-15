@@ -1,7 +1,7 @@
 <script lang="ts">
   import "../box.css"  
   import { onMount } from 'svelte';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, ImageMedia, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { onlineAccount, updateToken } from "../utils/accountStore";
@@ -33,7 +33,7 @@
     const img = await generateImage(`${frame.prompt}, ${postfix}`, generateContext);
     if (img != null) {
       const film = new Film();
-      film.image = img;
+      film.media = new ImageMedia(img);
       frame.filmStack.films.push(film);
       frame.gallery.push(img);
       stats.succeeded++;

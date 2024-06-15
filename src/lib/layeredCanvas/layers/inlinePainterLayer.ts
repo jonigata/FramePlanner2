@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { type FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, Film } from '../dataModels/frameTree';
+import { type FrameElement, type Layout, Media, ImageMedia, calculatePhysicalLayout, findLayoutOf, Film } from '../dataModels/frameTree';
 import type { Vector } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
@@ -151,7 +151,7 @@ export class InlinePainterLayer extends Layer {
       filmScale * film.reverse[1]
     ];
 
-    const [iw, ih] = [film.image.naturalWidth, film.image.naturalHeight];
+    const [iw, ih] = [film.media.naturalWidth, film.media.naturalHeight];
 
     this.translation = translation;
     this.scale = scale;
@@ -159,7 +159,7 @@ export class InlinePainterLayer extends Layer {
     this.offscreenCanvas.width = iw;
     this.offscreenCanvas.height = ih;
     this.offscreenContext = this.offscreenCanvas.getContext('2d');
-    this.offscreenContext.drawImage(film.image, 0, 0, iw, ih);
+    this.offscreenContext.drawImage(film.media.drawSource, 0, 0, iw, ih);
 
     const windowPath = new paper.Path();
     windowPath.moveTo(layout.corners.topLeft);
@@ -178,7 +178,12 @@ export class InlinePainterLayer extends Layer {
   }
 
   get image(): HTMLImageElement {
-    return this.film?.image;
+    if (!this.film) { return null; }
+    const media = this.film.media;
+    if (!(media instanceof ImageMedia)) {
+      return null;
+    }
+    return media.image;
   }
 
   async undo() {

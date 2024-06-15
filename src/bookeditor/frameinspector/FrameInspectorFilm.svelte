@@ -112,7 +112,7 @@
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img draggable={false} class="punch-icon" src={punchIcon} alt="背景除去" use:toolTip={"背景除去"} on:click={onPunch}/>
     <div class="image-container" bind:this={imageContainer}>
-      <img draggable={false} class="film-content" crossorigin="anonymous" src={film.image.src} alt="film" bind:this={image} on:load={onLoad}/>
+      <img draggable={false} class="film-content" crossorigin="anonymous" src={film.media.drawSource.src} alt="film" bind:this={image} on:load={onLoad}/>
     </div>
     {/if}
 </div>

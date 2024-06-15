@@ -1,6 +1,5 @@
 import { type Vector, type Rect, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect, rectToCorners, reverse2D } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
-import type { ImageFile } from "./imageFile";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
 
 // formal～はoffsetが含まれない値
@@ -20,8 +19,50 @@ export type Layout = {
   formalCorners: Trapezoid; 
 };
 
+export class Media {
+  fileId: { [key: string]: string}; // filesystemId => fileId
+  constructor() {
+    this.fileId = {};
+  }
+
+  getFileId(fileSystemId: string): string {
+    return this.fileId[fileSystemId];
+  }
+  setFileId(fileSystemId: string, fileId: string): void {
+    this.fileId[fileSystemId] = fileId;
+  }
+
+  get naturalWidth(): number {return 0;}
+  get naturalHeight(): number {return 0;}
+  get drawSource(): HTMLImageElement | HTMLVideoElement {return null;}
+}
+
+export class ImageMedia extends Media {
+  image: HTMLImageElement;
+  constructor(image: HTMLImageElement) {
+    super();
+    this.image = image;
+  }
+  get naturalWidth(): number { return this.image.naturalWidth; }
+  get naturalHeight(): number { return this.image.naturalHeight; }
+  get drawSource(): HTMLImageElement { return this.image; }
+}
+
+export class VideoMedia extends Media {
+  video: HTMLVideoElement;
+  constructor(video: HTMLVideoElement) {
+    super();
+    this.video = video;
+  }
+  get naturalWidth(): number { return this.video.videoWidth; }
+  get naturalHeight(): number { return this.video.videoHeight; }
+  get drawSource(): HTMLVideoElement {
+    return this.video; 
+  }
+}
+
 export class Film  {
-  image: ImageFile;
+  media: Media;
   n_scale: number;
   n_translation: Vector;
   rotation: number; // degree
@@ -32,7 +73,7 @@ export class Film  {
   matrix: DOMMatrix; // 揮発性
 
   constructor() {
-    this.image = null;
+    this.media = null;
     this.n_scale = 1;
     this.n_translation = [0, 0];
     this.rotation = 0;
@@ -44,7 +85,7 @@ export class Film  {
 
   clone() {
     const f = new Film();
-    f.image = this.image;
+    f.media = this.media;
     f.n_translation = [...this.n_translation];
     f.n_scale = this.n_scale;
     f.rotation = this.rotation;
@@ -55,33 +96,33 @@ export class Film  {
   }
 
   getPlainRect() {
-    const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
+    const [w, h] = [this.media.naturalWidth, this.media.naturalHeight];
     const rect: Rect = [- w/2, - h/2, w, h];
     return rect;
   }
 
   // Shifted = Physicalとscaleは一緒だが、translationはコマの中心から相対
 
-  static getShiftedScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+  static getShiftedScale(paperSize: Vector, media: Media, n_scale: number): number {
+    const imageSize = Math.min(media.naturalWidth, media.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize
     return n_scale * scale;
   }
 
   getShiftedScale(paperSize: Vector): number {
-    return Film.getShiftedScale(paperSize, this.image, this.n_scale);
+    return Film.getShiftedScale(paperSize, this.media, this.n_scale);
   }
 
   setShiftedScale(paperSize: Vector, scale: number): void {
-    const image = this.image;
+    const image = this.media;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     this.n_scale = scale / (pageSize / imageSize);
   }
 
-  static getShiftedTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
+  static getShiftedTranslation(paperSize: Vector, media: Media, n_translation: Vector): Vector {
+    const imageSize = Math.min(media.naturalWidth, media.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize;
     const translation: Vector = [n_translation[0] * scale, n_translation[1] * scale];
@@ -89,28 +130,28 @@ export class Film  {
   }
 
   getShiftedTranslation(paperSize: Vector): Vector {
-    return Film.getShiftedTranslation(paperSize, this.image, this.n_translation);
+    return Film.getShiftedTranslation(paperSize, this.media, this.n_translation);
   }
 
   setShiftedTranslation(paperSize: Vector, translation: Vector): void {
-    const image = this.image;
+    const image = this.media;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
     const scale = pageSize / imageSize;
     this.n_translation = [translation[0] / scale, translation[1] / scale];
   }
 
-  static getShiftedRect(paperSize: Vector, image: HTMLImageElement, n_scale: number, n_translation: Vector, rotation: number): Rect {
-    const scale = Film.getShiftedScale(paperSize, image, n_scale);
-    const translation = Film.getShiftedTranslation(paperSize, image, n_translation);
-    const [w, h] = [image.naturalWidth * scale, image.naturalHeight * scale];
+  static getShiftedRect(paperSize: Vector, media: Media, n_scale: number, n_translation: Vector, rotation: number): Rect {
+    const scale = Film.getShiftedScale(paperSize, media, n_scale);
+    const translation = Film.getShiftedTranslation(paperSize, media, n_translation);
+    const [w, h] = [media.naturalWidth * scale, media.naturalHeight * scale];
     const [x, y] = translation;
     const rect: Rect = [x - w/2, y - h/2, w, h];
     return rect;
   }
 
   getShiftedRect(paperSize: Vector): Rect {
-    return Film.getShiftedRect(paperSize, this.image, this.n_scale, this.n_translation, this.rotation);
+    return Film.getShiftedRect(paperSize, this.media, this.n_scale, this.n_translation, this.rotation);
   }
   
   makeMatrix(paperSize: Vector): DOMMatrix {
@@ -145,7 +186,7 @@ export class FrameElement {
   semantics: string | null;
   prompt: string | null;
   pseudo: boolean; // 4コマタイトルなどの擬似要素、流し込みやバッチ処理のときに無視する
-  gallery: ImageFile[];
+  gallery: HTMLImageElement[];
   filmStack: FilmStack;
 
   focused: boolean;

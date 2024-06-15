@@ -2,7 +2,7 @@
   import "../box.css"  
   import { onMount } from 'svelte';
   import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, ImageMedia, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
@@ -43,7 +43,7 @@
       img.src = "data:image/png;base64," + imageJson;
 
       const film = new Film();
-      film.image = img;
+      film.media = new ImageMedia(img);
       frame.filmStack.films.push(film);
       frame.gallery.push(img);
     } catch (e) {
