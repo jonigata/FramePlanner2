@@ -427,11 +427,10 @@ export class FrameLayer extends Layer {
           const target = this.litBorder.layout.element.children[this.litBorder.index-1];
           FrameElement.transposeDivider(this.frameTree, target);
           this.onCommit();
-          this.selectedLayout = null;
           this.litLayout = null;
           this.selectedBorder = null;
           this.litBorder = null;
-          this.onFocus(null);
+          this.selectLayout(null);
           this.redraw();
           return null;
         } else {
@@ -448,8 +447,7 @@ export class FrameLayer extends Layer {
       return r;
     }
 
-    this.selectedLayout = null;
-    this.onFocus(null);
+    this.selectLayout(null);
     this.relayoutIcons();
     this.redraw();
     return null;
@@ -478,8 +476,7 @@ export class FrameLayer extends Layer {
         layout.element
       );
       this.litLayout = null;
-      this.selectedLayout = null;
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
@@ -490,8 +487,7 @@ export class FrameLayer extends Layer {
         layout.element
       );
       this.litLayout = null;
-      this.selectedLayout = null;
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
@@ -499,8 +495,7 @@ export class FrameLayer extends Layer {
     if (this.deleteIcon.contains(point)) {
       FrameElement.eraseElement(this.frameTree, layout.element);
       this.litLayout = null;
-      this.selectedLayout = null;
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
@@ -508,8 +503,7 @@ export class FrameLayer extends Layer {
     if (this.duplicateIcon.contains(point)) {
       FrameElement.duplicateElement(this.frameTree, layout.element);
       this.litLayout = null;
-      this.selectedLayout = null;
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
@@ -586,32 +580,29 @@ export class FrameLayer extends Layer {
     if (keyDownFlags["KeyQ"]) {
       FrameElement.eraseElement(this.frameTree, layout.element);
       this.litLayout = null;
-      this.selectedLayout = null;
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
     }
     if (keyDownFlags["KeyW"]) {
       this.litLayout = null;
-      this.selectedLayout = null;
       FrameElement.splitElementHorizontal(
         this.frameTree,
         layout.element
       );
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
     }
     if (keyDownFlags["KeyS"]) {
       this.litLayout = null;
-      this.selectedLayout = null;
       FrameElement.splitElementVertical(
         this.frameTree,
         layout.element
       );
-      this.onFocus(null);
+      this.selectLayout(null);
       this.onCommit();
       this.redraw();
       return "done";
@@ -641,8 +632,7 @@ export class FrameLayer extends Layer {
       return "done";
     }
     if (this.selectedLayout?.element != this.litLayout?.element) {
-      this.selectedLayout = this.litLayout;
-      this.onFocus(this.selectedLayout);
+      this.selectLayout(this.litLayout);
       this.relayoutIcons();
       this.redraw();
       return "done";
@@ -670,8 +660,7 @@ export class FrameLayer extends Layer {
       yield* this.expandPadding(p, payload.padding);
     } else {
       this.selectedBorder = payload.border;
-      this.selectedLayout = null;
-      this.onFocus(null);
+      this.selectLayout(null);
       this.relayoutIcons();
       this.redraw();
       if (payload.action === "expand") {
@@ -990,8 +979,7 @@ export class FrameLayer extends Layer {
   updateSelectedLayout(): void {
     if (!this.selectedLayout) { return; }
     const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
-    this.selectedLayout = findLayoutOf(rootLayout, this.selectedLayout.element);
-    this.onFocus(this.selectedLayout);
+    this.selectLayout(findLayoutOf(rootLayout, this.selectedLayout.element));
 
     if (this.focusedPadding) {
       const handle = this.focusedPadding.handle;
@@ -1108,6 +1096,11 @@ export class FrameLayer extends Layer {
       }
     }
     return false;
+  }
+
+  selectLayout(layout: Layout): void {
+    this.selectedLayout = layout;
+    this.onFocus(layout);
   }
 
   renderDepths(): number[] { return [0]; }
