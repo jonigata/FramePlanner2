@@ -62,9 +62,10 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
 
   // 画像を連結して動画を作成
   console.log("************************************** B");
-  ffmpeg.onProgress((progress) => {
-    reportProgress(0.8 + 0.1 * 0.01 * progress);
-  });
+  function onProgress(n: number) {
+    reportProgress(0.8 + 0.1 * 0.01 * n);
+  }
+  ffmpeg.onProgress(onProgress);
   await ffmpeg.exec([
     '-f', 'concat', 
     '-safe', '0', 
@@ -74,14 +75,15 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
     '-r', `${fps}`,
     'concat.mp4'
   ]);
+  ffmpeg.removeOnProgress(onProgress);
   reportProgress(0.9);
-
-  ffmpeg.onProgress((progress) => {
-    console.log("progress", progress);
-  });
 
   // H.264に変換
   console.log("************************************** C");
+  function onProgress2(n: number) {
+    reportProgress(0.9 + 0.05 * 0.01 * n);
+  }
+  ffmpeg.onProgress(onProgress2);
   await ffmpeg.exec([
     '-i', 'concat.mp4',
     '-vcodec', 'libx264',
@@ -90,6 +92,7 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
     '-r', `${fps}`,
     'output.mp4'
   ]);
+  ffmpeg.removeOnProgress(onProgress2);
   reportProgress(0.95);
 
   const result = ffmpeg.readFile('output.mp4');
