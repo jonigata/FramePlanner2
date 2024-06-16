@@ -1,15 +1,15 @@
-import type { DisplayProgramEntry } from './renderBook';
+import type { DisplayProgramEntry } from './buildProgram';
 import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
 import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 
-export type PlayerEntry = {
+export type TimeTableEntry = {
   time: number,
   entry: DisplayProgramEntry,
 }
 
-export function createTimeTable(program: DisplayProgramEntry[], moveDuration: number, standardWait: number): { timeTable: PlayerEntry[], totalTime: number } {
-  const timeTable: PlayerEntry[] = [];
+export function buildTimeTable(program: DisplayProgramEntry[], moveDuration: number, standardWait: number): { timeTable: TimeTableEntry[], totalTime: number } {
+  const timeTable: TimeTableEntry[] = [];
   let time = 0;
   for (const entry of program) {
     timeTable.push({ time, entry });
@@ -19,7 +19,7 @@ export function createTimeTable(program: DisplayProgramEntry[], moveDuration: nu
   return { timeTable, totalTime: time };
 }
 
-function findEntry(timeTable: PlayerEntry[], time: number): number {
+function findEntry(timeTable: TimeTableEntry[], time: number): number {
   // 要するにlower_bound
   let low = 0;
   let high = timeTable.length - 1;
@@ -40,7 +40,7 @@ function easeOut(t: number) {
   return 1 - Math.pow(1 - t, 2);
 }
 
-export async function cue(timeTable: PlayerEntry[]): Promise<void> {
+export async function cue(timeTable: TimeTableEntry[]): Promise<void> {
   for (const tt of timeTable) {
     const filmStack = tt.entry.layout.element.filmStack;
     for (const film of filmStack.films) {
@@ -49,7 +49,7 @@ export async function cue(timeTable: PlayerEntry[]): Promise<void> {
   }
 }
 
-export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLayer, timeTable: PlayerEntry[], cursor: number, moveDuration: number, standardWait: number): Promise<void> {
+export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLayer, timeTable: TimeTableEntry[], cursor: number, moveDuration: number, standardWait: number): Promise<void> {
   async function render(index: number, seekTime: number, normalizedPositionTime: number): Promise<void> {
     const v = layeredCanvas.viewport;
     const e0 = timeTable[index].entry;
@@ -78,7 +78,36 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
       }
     }
 
-    // 時刻設定
+    // bubblesの表示設定
+    // まだなら非表示、すぎてたら表示
+    for (let i = 0 ; i < timeTable.length; i++) {
+      const tt = timeTable[i];
+      const bubbles = tt.entry.bubbles;
+      if (i < index) {
+        for (const b of bubbles) {
+          b.hidesText = false;
+        }
+      } else if (i == index) {
+        for (const b of bubbles) {
+          console.log(b.appearanceDelay, seekTime);
+          if (b.appearanceDelay == 0) {
+            b.hidesText = false;
+          } else {
+            b.hidesText = seekTime < b.appearanceDelay;
+          }
+        }
+      } else {
+        for (const b of bubbles) {
+          if (b.appearanceDelay == 0) {
+            b.hidesText = false;
+          } else {
+            b.hidesText = true;
+          }
+        }
+      }
+    }
+
+    // VideoMediaの時刻設定
     await seek(index, seekTime);
     if (index < timeTable.length - 1 && 0 < normalizedPositionTime) {
       await seek(index + 1, 0);
@@ -89,6 +118,7 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
 
   const index = findEntry(timeTable, cursor);
   const te = timeTable[index];
+
   const moveStart = te.time + standardWait + te.entry.residenceTime;
   if (cursor < moveStart) {
     // 静止中

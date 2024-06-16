@@ -53,6 +53,7 @@ export class Bubble {
   pageNumber: number; // 一時的、当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
   fontRenderVersion: number; // 一時的、フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
   appearanceDelay: number; // 一時的、ムービー生成時に使う出現までの時間(コマ単位)
+  hidesText: boolean; // 一時的、ムービー生成時に使うテキスト非表示フラグ
 
   renderInfo: BubbleRenderInfo;
 
@@ -89,6 +90,7 @@ export class Bubble {
     this.outlineColor = "#000000FF";
     this.autoNewline = false;
     this.appearanceDelay = 0;
+    this.hidesText = false;
   }
 
   getStackTrace() {
@@ -116,6 +118,8 @@ export class Bubble {
     b.outlineColor = this.outlineColor;
     b.n_outlineWidth = this.n_outlineWidth;
     b.autoNewline = this.autoNewline;
+    b.appearanceDelay = this.appearanceDelay;
+
     if (hard) {
       b.uuid = this.uuid;
       b.parent = this.parent;

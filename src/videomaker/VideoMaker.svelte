@@ -5,19 +5,21 @@
   import FrameResidenceTime from './FrameResidenceTime.svelte';
   import '../box.css';
   import VideoPlayer from './VideoPlayer.svelte';
-  import { makeDisplayProgram, type DisplayProgramEntry } from './renderBook';
+  import { makeDisplayProgram, type DisplayProgramEntry } from './buildProgram';
   import { mainBook } from '../bookeditor/bookStore';
   import Parameter from './Parameter.svelte';
-  import { buildMovie } from './buildMovie';
+  import { buildMovie } from './generateScenes';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
+  import { type Book, cloneBook } from '../bookeditor/book';
 
   let width = 1920;
   let height = 1080;
   let moveDuration = 0.3;
   let standardWait = 1;
 
+  let book: Book;
   let program: DisplayProgramEntry[] = null;
   let chunkedProgram: DisplayProgramEntry[][] = [];
 
@@ -59,7 +61,8 @@
 
   $: onChangeSize(width, height);
   function onChangeSize(w: number, h: number) {
-    program = makeDisplayProgram($mainBook, [w, h], program);
+    book = cloneBook($mainBook); // 中でいじるのでコピーする
+    program = makeDisplayProgram(book, [w, h], program);
   }
 
   $: if (program) {
@@ -107,7 +110,7 @@
   <div class="contents-panel">
     <div class="player-panel variant-filled-surface rounded-container-token">
       {#if program != null}
-        <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:program={program}/>
+        <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:book={book} bind:program={program}/>
       {/if}
     </div>
     <div class="side-panel vbox gap-4">

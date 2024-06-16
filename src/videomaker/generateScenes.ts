@@ -1,12 +1,12 @@
-import { renderAtTime, createTimeTable } from './videoPlayer';
-import { buildBookRenderer, type DisplayProgramEntry } from './renderBook';
-import { createVideoWithImages, type Scene } from './renderMovie';
+import { renderAtTime, buildTimeTable } from './renderProgram';
+import { buildBookRenderer, type DisplayProgramEntry } from './buildProgram';
+import { createVideoWithImages, type Scene } from './generateMovieFile';
 import type { Book } from '../bookeditor/book';
 import { type FrameElement, VideoMedia } from '../lib/layeredCanvas/dataModels/frameTree';
 
 export async function buildMovie(program: DisplayProgramEntry[], width: number, height: number, moveDuration: number, standardWait: number, book: Book) {
 
-  const {timeTable} = createTimeTable(program, moveDuration, standardWait);
+  const {timeTable} = buildTimeTable(program, moveDuration, standardWait);
 
   const scenes: Scene[] = [];
 

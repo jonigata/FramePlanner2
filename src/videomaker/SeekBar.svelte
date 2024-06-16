@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DisplayProgramEntry } from './renderBook';
+  import type { DisplayProgramEntry } from './buildProgram';
 
   export let moveDuration: number;
   export let standardWait: number;

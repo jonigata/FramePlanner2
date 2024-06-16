@@ -200,6 +200,17 @@ export function clonePage(page: Page): Page {
   }
 }
 
+export function cloneBook(book: Book): Book {
+  return {
+    revision: { ...book.revision },
+    pages: book.pages.map(clonePage),
+    history: { entries: book.history.entries.map(e => ({ ...e })), cursor: book.history.cursor },
+    direction: book.direction,
+    wrapMode: book.wrapMode,
+    chatLogs: book.chatLogs.map(l => ({ ...l })),
+  };
+}
+
 export type FrameContent = {
   sourcePage: Page,
   sourceRect: Rect, // 元のコマのtrapezoidBoudingRect
@@ -219,7 +230,6 @@ export type FrameSequence = {
   contents: FrameContent[],
 }
 
-// NOTICE: page.bubblesを破壊するので注意
 export function collectBookContents(book: Book): FrameSequence {
   const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];

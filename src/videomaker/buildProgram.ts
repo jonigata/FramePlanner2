@@ -4,6 +4,7 @@ import { type Book, type Page, type WrapMode, type ReadingDirection, collectBook
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import { trapezoidBoundingRect, trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import type { Layout } from '../lib/layeredCanvas/dataModels/frameTree';
+import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
 export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book) {
   const viewport = new Viewport(canvas, () => {});
@@ -12,7 +13,6 @@ export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book) {
   let papers: Paper[] = [];
   let pageNumber = 0;
   for (const page of book.pages) {
-    console.log([...page.bubbles]);
     papers.push(buildPaper(page));
     pageNumber++;
   }
@@ -30,7 +30,7 @@ export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book) {
 
   layeredCanvas.mode = "video";
 
-  return { arrayLayer, layeredCanvas};
+  return {arrayLayer, layeredCanvas};
 }
 
 export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number, gapX: number, gapY: number } {
@@ -61,7 +61,6 @@ function buildPaper(page: Page) {
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);
   paper.addLayer(paperRendererLayer);
-  console.log([...page.bubbles]);
 
   return paper;
 }
@@ -72,14 +71,18 @@ export type DisplayProgramEntry = {
   scale: number,
   residenceTime: number, // standardWaitからの相対
   layout: Layout;
+  bubbles: Bubble[];
 }
 
 export function makeDisplayProgram(book: Book, viewportSize: [number, number], old: DisplayProgramEntry[]): DisplayProgramEntry[] {
   const seq = collectBookContents(book);
   const result: DisplayProgramEntry[] = [];
-  let i = 0;
-  for (const slot of seq.slots) {
-    const { layout, page, pageNumber } = slot;
+  for (let i = 0; i < seq.slots.length; i++) {
+    const slot = seq.slots[i];
+    const content = seq.contents[i];
+
+    const { layout, pageNumber } = slot;
+    const { bubbles } = content;
     const rect = trapezoidBoundingRect(layout.corners);
     const position = trapezoidCenter(layout.corners);
     const scale = Math.min(viewportSize[0] / rect[2], viewportSize[1] / rect[3]);    
@@ -87,7 +90,7 @@ export function makeDisplayProgram(book: Book, viewportSize: [number, number], o
     if (old) {
       residenceTime = old[i].residenceTime;
     }
-    result.push({ pageNumber, position, scale, residenceTime, layout });
+    result.push({ pageNumber, position, scale, residenceTime, layout, bubbles });
   }
   return result;
 }

@@ -1,37 +1,37 @@
 <script lang="ts">
   import SpreadCanvas from './SpreadCanvas.svelte';
   import SeekBar from './SeekBar.svelte';
-  import { buildBookRenderer, type DisplayProgramEntry } from './renderBook';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { buildBookRenderer, type DisplayProgramEntry } from './buildProgram';
   import { onDestroy, onMount, tick } from 'svelte';
-  import { createTimeTable, renderAtTime, type PlayerEntry } from './videoPlayer';
+  import { buildTimeTable, renderAtTime, type TimeTableEntry } from './renderProgram';
   import playIcon from '../assets/videomaker/play.png';
   import pauseIcon from '../assets/videomaker/pause.png';
   import Spreader from '../utils/Spreader.svelte'
+  import type { Book } from '../bookeditor/book';
 
   export let width: number;
   export let height: number;
   export let moveDuration: number;
   export let standardWait: number;
+  export let book: Book;
   export let program: DisplayProgramEntry[]
 
   let canvas = null;
   let layeredCanvas = null;
   let arrayLayer = null;
 
-  let timeTable: PlayerEntry[] = [];
+  let timeTable: TimeTableEntry[] = [];
   let totalTime: number = 0;
   let cursor = 0;
 
   $: if (canvas != null) { onRebuild(); }
   function onRebuild() {
-    console.log([...$mainBook.pages[0].bubbles]);
-    ({arrayLayer, layeredCanvas} = buildBookRenderer(canvas, $mainBook));
+    ({arrayLayer, layeredCanvas} = buildBookRenderer(canvas, book));
     layeredCanvas.render();
   }
 
   $: if (program != null) {
-    ({timeTable, totalTime} = createTimeTable(program, moveDuration, standardWait));
+    ({timeTable, totalTime} = buildTimeTable(program, moveDuration, standardWait));
   }
 
   let rendering = false;

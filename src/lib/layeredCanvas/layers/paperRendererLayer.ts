@@ -322,7 +322,7 @@ export class PaperRendererLayer extends Layer {
     this.drawBubble(ctx, size, 'clip', bubble);
 
     // テキスト描画
-    if (bubble.text) {
+    if (bubble.text && !bubble.hidesText) {
       this.drawText(ctx, bubble);
     }
     ctx.restore();

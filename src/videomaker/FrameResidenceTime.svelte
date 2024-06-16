@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { writable } from 'svelte/store';
   import writableDerived from "svelte-writable-derived";
-  import type { DisplayProgramEntry } from './renderBook';
+  import type { DisplayProgramEntry } from './buildProgram';
   import NumberEdit from "../utils/NumberEdit.svelte";
   import { RangeSlider } from '@skeletonlabs/skeleton';
 
