@@ -48,23 +48,18 @@
   	viewport,
   	(v) => v?.scale,
   	(s, v) => {
-      v.scale = s;
-      v.dirty = true;
-      $redrawToken = true;
+      if (v) {
+        v.scale = s;
+        v.dirty = true;
+        $redrawToken = true;
+      }
       return v;
     }
   );
 
-  const scalePercent = writableDerived(
-  	viewport,
-  	(v) => (v?.scale ?? 1) * 100,
-  	(s, v) => {
-      v.scale = s / 100;
-      v.dirty = true;
-      $redrawToken = true;
-      return v;
-    }
-  );
+  let scalePercent = $scale * 100;
+  scale.subscribe((v) => scalePercent = v * 100);
+  $: $scale = scalePercent / 100;
 
   $:onUpdatePaperProperty($newPageProperty);
   function onUpdatePaperProperty(q: NewPageProperty) {
@@ -378,7 +373,7 @@
   </div>
   <div class="hbox gap" style="margin-top: 16px;">
     拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:200px;"/>
-    <div class="number-box"><NumberEdit bind:value={$scalePercent} min={10} max={1000}/></div>
+    <div class="number-box"><NumberEdit bind:value={scalePercent} min={10} max={1000}/></div>
     <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
   </div>
 

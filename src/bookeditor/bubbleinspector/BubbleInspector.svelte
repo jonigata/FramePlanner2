@@ -52,7 +52,7 @@
       return bit;
     }
   );
-  const fontSize = writableDerived(
+  const fontSizeStore = writableDerived(
   	bubbleInspectorTarget,
   	(bit) => bit?.bubble.getPhysicalFontSize(bit.page.paperSize),
   	(fs, bit) => {
@@ -76,6 +76,10 @@
       return bit;
     }
   );
+
+  let fontSize = $fontSizeStore;
+  fontSizeStore.subscribe((v) => fontSize = v);
+  $: $fontSizeStore = fontSize;
 
   $:onWindowResize(innerWidth, innerHeight);
   function onWindowResize(w: number, h: number) {
@@ -198,9 +202,9 @@
     <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
       <div class="font-bold slider-label">T</div>
       <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
-        <ExponentialRangeSlider name="fontsize" bind:value={$fontSize} exponentialMin={100} step={1}/>
+        <ExponentialRangeSlider name="fontsize" bind:value={fontSize} exponentialMin={100} step={1}/>
         <div class="text-xs slider-value-text">
-          <div class="number-box"><NumberEdit bind:value={$fontSize} min={1} max={999}/></div>
+          <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
         </div>  
         <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={$bubble.fontColor} label="" /></span>
       </div>
