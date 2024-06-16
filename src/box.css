@@ -10,7 +10,7 @@
 .hbox.space-around {justify-content: space-around;}
 .hbox.top {align-items: start;}
 .hbox.bottom {align-items: end;}
-.hobx.vcenter { align-items: center; }
+.hbox.vcenter { align-items: center; }
 .hbox.gap {gap: 12px;}
 .hbox.stretch-child {align-items: stretch;}
 .hbox .expand {align-self: stretch;}

@@ -558,6 +558,10 @@ export class FrameElement {
     return this.children.length === 0;
   }
 
+  isAuthentic(): boolean {
+    return 0 < this.visibility && !this.pseudo
+  }
+
   getSelectedFilms(): Film[] {
     return this.filmStack.films.filter(film => film.selected);
   }

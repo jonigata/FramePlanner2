@@ -25,6 +25,7 @@
   import embeddedIcon from '../../assets/embedded.png';
   import unembeddedIcon from '../../assets/unembedded.png';
   import resetIcon from '../../assets/reset.png';
+  import movieIcon from '../../assets/movie.png';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -72,6 +73,15 @@
   	(bit) => bit?.bubble.getPhysicalStrokeWidth(bit.page.paperSize),
   	(sw, bit) => {
       bit.bubble.setPhysicalStrokeWidth(bit.page.paperSize, sw);
+      return bit;
+    }
+  );
+
+  const delay = writableDerived(
+  	bubbleInspectorTarget,
+  	(bit) => bit?.bubble.appearanceDelay,
+  	(d, bit) => {
+      bit.bubble.appearanceDelay = d;
       return bit;
     }
   );
@@ -247,6 +257,16 @@
       <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
     </div>
     <BubbleInspectorAppendix/>
+    <div class="movie-option-panel px-2 variant-ghost-tertiary rounded-container-token font-color-picker">
+      <img class="movie-option-panel-icon" src={movieIcon} alt="movie"/>
+      <div class="hbox gap-2 grow left" use:toolTip={"ビデオ作成時のディレイ"}>
+        <span class="w-24 text-left">出現ディレイ</span>
+        <div style="width: 140px;">
+          <RangeSlider name="delay" bind:value={$delay} min={0} max={10} step={0.1}/>
+        </div>
+        <div class="number-box"><NumberEdit bind:value={$delay} min={0} max={10} allowDecimal={true}/></div>
+      </div>
+    </div>
   </div>
 </div>
 {/if}
@@ -312,6 +332,7 @@
     height: 20px;
     display: inline-block;
     text-align: right;
+    font-size: 12px;
   }
   .selected-font:hover {
     color: rgb(128, 93, 47);
@@ -360,5 +381,19 @@
   }
   .save-button {
     height: 12px;
+  }
+  .movie-option-panel {
+    position: relative;
+    align-self: stretch;
+    display: flex;
+    align-items: left;
+    font-size: 14px;
+  }
+  .movie-option-panel-icon {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: -10px;
+    right: 4px;
   }
 </style>

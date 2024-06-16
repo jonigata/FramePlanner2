@@ -49,8 +49,10 @@ export class Bubble {
     scaleLock: boolean,
   } | null;
   optionContext: any;
+
   pageNumber: number; // 一時的、当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
   fontRenderVersion: number; // 一時的、フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
+  appearanceDelay: number; // 一時的、ムービー生成時に使う出現までの時間(コマ単位)
 
   renderInfo: BubbleRenderInfo;
 
@@ -86,6 +88,7 @@ export class Bubble {
     this.n_outlineWidth = 0;
     this.outlineColor = "#000000FF";
     this.autoNewline = false;
+    this.appearanceDelay = 0;
   }
 
   getStackTrace() {
