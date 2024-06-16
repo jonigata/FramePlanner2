@@ -25,12 +25,15 @@ async function writeCanvasToFile(canvas: HTMLCanvasElement, filename: string): P
   });
 }
 
-export async function createVideoWithImages(w: number, h: number, fps: number, d: number, scenes: Scene[]): Promise<string> {
+export async function createVideoWithImages(w: number, h: number, fps: number, d: number, scenes: Scene[], reportProgress: (number) => void): Promise<string> {
   console.log('createVideoWithImages', w, h, fps, d);
   // 各画像をファイルシステムに書き込む
+  let progress = 0.5;
   for (let i = 0; i < scenes.length; i++) {
     const scene = scenes[i];
     await writeCanvasToFile(scene.canvas, `image${i}.png`);
+    progress += 0.25 / scenes.length;
+    reportProgress(progress);
   }
 
   // 各画像の表示時間を設定するファイルを作成
@@ -53,11 +56,15 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
   const fileListFilename = 'filelist.txt';
   const fileListBlob = new Blob([fileListString], { type: 'text/plain' });
   await ffmpeg.writeFile(fileListFilename, fileListBlob);
+  reportProgress(0.8);
 
   // console.log(await ffmpeg.codecs());
 
   // 画像を連結して動画を作成
   console.log("************************************** B");
+  ffmpeg.onProgress((progress) => {
+    reportProgress(0.8 + 0.1 * 0.01 * progress);
+  });
   await ffmpeg.exec([
     '-f', 'concat', 
     '-safe', '0', 
@@ -67,6 +74,11 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
     '-r', `${fps}`,
     'concat.mp4'
   ]);
+  reportProgress(0.9);
+
+  ffmpeg.onProgress((progress) => {
+    console.log("progress", progress);
+  });
 
   // H.264に変換
   console.log("************************************** C");
@@ -78,6 +90,7 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
     '-r', `${fps}`,
     'output.mp4'
   ]);
+  reportProgress(0.95);
 
   const result = ffmpeg.readFile('output.mp4');
   if (result.length == 0) {
@@ -85,5 +98,6 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
   }
   const blob = new Blob([result], { type: 'video/mp4' });
   const url = URL.createObjectURL(blob);
+  reportProgress(1.0);
   return url;
 }

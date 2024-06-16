@@ -5,7 +5,7 @@ import type { Book } from '../bookeditor/book';
 import { type FrameElement, VideoMedia } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
-export async function buildMovie(program: DisplayProgramEntry[], width: number, height: number, moveDuration: number, standardWait: number, book: Book) {
+export async function buildMovie(program: DisplayProgramEntry[], width: number, height: number, moveDuration: number, standardWait: number, book: Book, reportProgress: (number) => void) {
 
   const {timeTable} = buildTimeTable(program, moveDuration, standardWait);
 
@@ -52,6 +52,7 @@ export async function buildMovie(program: DisplayProgramEntry[], width: number, 
   }
 
   let time = 0;
+  let progress = 0;
   for (const e of program) {
     const frameStart = time + 0.001;
     if (isVideo(e.layout.element)) {
@@ -77,9 +78,11 @@ export async function buildMovie(program: DisplayProgramEntry[], width: number, 
       time += 1 / fps;
     }
     time = moveStart + moveDuration;
+    progress += 0.5 * (1 / program.length);
+    reportProgress(progress);
   }
 
-  const url = await createVideoWithImages(width, height, fps, time, scenes);
+  const url = await createVideoWithImages(width, height, fps, time, scenes, reportProgress);
   console.log(url);
   return url;
 }

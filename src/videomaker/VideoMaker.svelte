@@ -13,6 +13,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { type Book, cloneBook } from '../bookeditor/book';
+  import { ProgressBar } from '@skeletonlabs/skeleton';
 
   let width = 1920;
   let height = 1080;
@@ -22,6 +23,7 @@
   let book: Book;
   let program: DisplayProgramEntry[] = null;
   let chunkedProgram: DisplayProgramEntry[][] = [];
+  let progress = 0;
 
   function onWaitChanged(e) {
     program = program;
@@ -31,7 +33,7 @@
   async function doBuildMovie() {
     building = true;
     try {
-      const url = await buildMovie(program, width, height, moveDuration, standardWait, book);
+      const url = await buildMovie(program, width, height, moveDuration, standardWait, book, (n) => progress = n);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');
       download(url);
@@ -127,6 +129,7 @@
       <div class="sample-movie variant-filled-surface rounded-container-token">
         {#if building}
           <ProgressRadial width={"w-16"}/>
+          <ProgressBar label="Progress Bar" value={progress} max={1} />
         {:else}
           <button type="button" class="btn btn-sm variant-filled" on:click={doBuildMovie}>
             ムービー作成
