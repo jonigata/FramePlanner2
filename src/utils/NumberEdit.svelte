@@ -20,11 +20,13 @@
   const valueStore = writable(value);
   $: valueStore.set(value);
   valueStore.subscribe((v) => {
+    console.log("valueStore", v);
     value = v;
   });
   const textValue = writableDerived(
     valueStore,
     (v: number) => {
+      console.log("textValue(1)", v);
       if (v == null) { return ''; }
       let s = allowDecimal ? v.toFixed(2) : v.toString();
       return s;
@@ -32,6 +34,7 @@
     (tv: string, old: number) => {
       if (tv == '' || tv == null) { return 0; }
       let n = allowDecimal ? parseFloat(tv) : parseInt(tv, 10);
+      console.log("textValue(2)", tv, n);
       return Math.max(min, Math.min(max, n));
     });
 

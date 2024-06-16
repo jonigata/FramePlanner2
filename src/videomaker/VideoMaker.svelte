@@ -24,7 +24,6 @@
   let chunkedProgram: DisplayProgramEntry[][] = [];
 
   function onWaitChanged(e) {
-    console.log(program.map(e => e.residenceTime));
     program = program;
   }
 
@@ -32,8 +31,7 @@
   async function doBuildMovie() {
     building = true;
     try {
-      const url = await buildMovie(program, width, height, moveDuration, standardWait, $mainBook);
-      building = false;
+      const url = await buildMovie(program, width, height, moveDuration, standardWait, book);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');
       download(url);

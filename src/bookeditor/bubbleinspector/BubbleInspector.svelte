@@ -77,15 +77,6 @@
     }
   );
 
-  const delay = writableDerived(
-  	bubbleInspectorTarget,
-  	(bit) => bit?.bubble.appearanceDelay,
-  	(d, bit) => {
-      bit.bubble.appearanceDelay = d;
-      return bit;
-    }
-  );
-
   $:onWindowResize(innerWidth, innerHeight);
   function onWindowResize(w: number, h: number) {
     if (w < adjustedPosition.x + inspectorSize[0] + 16) {
@@ -262,9 +253,9 @@
       <div class="hbox gap-2 grow left" use:toolTip={"ビデオ作成時のディレイ"}>
         <span class="w-24 text-left">出現ディレイ</span>
         <div style="width: 140px;">
-          <RangeSlider name="delay" bind:value={$delay} min={0} max={10} step={0.1}/>
+          <RangeSlider name="delay" bind:value={$bubble.appearanceDelay} min={0} max={10} step={0.1}/>
         </div>
-        <div class="number-box"><NumberEdit bind:value={$delay} min={0} max={10} allowDecimal={true}/></div>
+        <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
       </div>
     </div>
   </div>

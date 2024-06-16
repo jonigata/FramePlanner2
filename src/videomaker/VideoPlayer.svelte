@@ -39,6 +39,7 @@
     await tick();
     if (rendering) { return; }
     rendering = true;
+    console.log("render time: ", cursor);
     await renderAtTime(
       layeredCanvas,
       arrayLayer,

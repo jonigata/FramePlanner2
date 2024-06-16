@@ -89,7 +89,6 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
         }
       } else if (i == index) {
         for (const b of bubbles) {
-          console.log(b.appearanceDelay, seekTime);
           if (b.appearanceDelay == 0) {
             b.hidesText = false;
           } else {

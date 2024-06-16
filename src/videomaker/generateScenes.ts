@@ -3,6 +3,7 @@ import { buildBookRenderer, type DisplayProgramEntry } from './buildProgram';
 import { createVideoWithImages, type Scene } from './generateMovieFile';
 import type { Book } from '../bookeditor/book';
 import { type FrameElement, VideoMedia } from '../lib/layeredCanvas/dataModels/frameTree';
+import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
 export async function buildMovie(program: DisplayProgramEntry[], width: number, height: number, moveDuration: number, standardWait: number, book: Book) {
 
@@ -40,17 +41,32 @@ export async function buildMovie(program: DisplayProgramEntry[], width: number, 
     return false;
   }
 
+  function getBubbleProgram(bubbles: Bubble[]): number[] {
+    const program = [];
+    for (const bubble of bubbles) {
+      if (0 < bubble.appearanceDelay) {
+        program.push(bubble.appearanceDelay);
+      }
+    }
+    return program.sort();
+  }
+
   let time = 0;
   for (const e of program) {
-    // 停止絵
-    const frameStart = time;
+    const frameStart = time + 0.001;
     if (isVideo(e.layout.element)) {
       while (time < frameStart + standardWait + e.residenceTime) {
         await render(time);
         time += 1 / fps;
       }
     } else {
-      render(time);
+      await render(time);
+      const bubbleProgram = getBubbleProgram(e.bubbles);
+      if (0 < bubbleProgram.length) {
+        for (const bubbleTime of bubbleProgram) {
+          await render(time + bubbleTime + 0.001);
+        }
+      }
     }
     time = frameStart + standardWait + e.residenceTime;
 
