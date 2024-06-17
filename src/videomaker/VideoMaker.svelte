@@ -33,6 +33,7 @@
   async function doBuildMovie() {
     building = true;
     try {
+      progress = 0;
       const url = await buildMovie(program, width, height, moveDuration, standardWait, book, (n) => progress = n);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');

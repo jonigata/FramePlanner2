@@ -59,6 +59,7 @@ export async function buildMovie(program: DisplayProgramEntry[], width: number, 
       while (time < frameStart + standardWait + e.residenceTime) {
         await render(time);
         time += 1 / fps;
+        reportProgress(progress + 0.5 * (1 / program.length) * (time - frameStart) / (standardWait + e.residenceTime));
       }
     } else {
       await render(time);
