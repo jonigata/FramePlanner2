@@ -192,6 +192,7 @@
     padding: 16px;
     gap: 12px;
     color: #000;
+    overflow-y: auto;
   }
   .resindence-times-page {
     display: flex;
