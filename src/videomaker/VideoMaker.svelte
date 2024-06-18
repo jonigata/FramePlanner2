@@ -19,6 +19,7 @@
   let height = 1080;
   let moveDuration = 0.3;
   let standardWait = 1;
+  let standardScale = 0.98;
 
   let book: Book;
   let program: DisplayProgramEntry[] = null;
@@ -34,7 +35,7 @@
     building = true;
     try {
       progress = 0;
-      const url = await buildMovie(program, width, height, moveDuration, standardWait, book, (n) => progress = n);
+      const url = await buildMovie(program, width, height, moveDuration, standardWait, standardScale, book, (n) => progress = n);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');
       download(url);
@@ -106,12 +107,15 @@
     <div class="parameter-box">
       <Parameter label="標準滞留時間" bind:value={standardWait}/>
     </div>
+    <div class="parameter-box">
+      <Parameter label="標準スケール" bind:value={standardScale} min={0.5} max={1.5} step={0.01}/>
+    </div>
   </div>
 
   <div class="contents-panel">
     <div class="player-panel variant-filled-surface rounded-container-token">
       {#if program != null}
-        <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:book={book} bind:program={program}/>
+        <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:standardScale={standardScale} bind:book={book} bind:program={program}/>
       {/if}
     </div>
     <div class="side-panel vbox gap-4">

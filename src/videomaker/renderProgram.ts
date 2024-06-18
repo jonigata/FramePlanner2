@@ -49,12 +49,12 @@ export async function cue(timeTable: TimeTableEntry[]): Promise<void> {
   }
 }
 
-export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLayer, timeTable: TimeTableEntry[], cursor: number, moveDuration: number, standardWait: number): Promise<void> {
+export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: ArrayLayer, timeTable: TimeTableEntry[], cursor: number, moveDuration: number, standardWait: number, standardScale: number): Promise<void> {
   async function render(index: number, seekTime: number, normalizedPositionTime: number): Promise<void> {
     const v = layeredCanvas.viewport;
     const e0 = timeTable[index].entry;
     const p = arrayLayer.array.childPositionToParentPosition(e0.pageNumber, e0.position);
-    const currScale = e0.scale * 0.98;
+    const currScale = e0.scale * standardScale;
     const currTranslate: Vector = [-p[0] * currScale, -p[1] * currScale];
     if (normalizedPositionTime == 0 || index == timeTable.length - 1) {
       v.translate = currTranslate;
@@ -62,7 +62,7 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
     } else {
       const e1 = timeTable[index + 1].entry;
       const p1 = arrayLayer.array.childPositionToParentPosition(e1.pageNumber, e1.position);
-      const nextScale = e1.scale * 0.98;
+      const nextScale = e1.scale * standardScale;
       const nextTranslate = [-p1[0] * nextScale, -p1[1] * nextScale];
       const [dx, dy] = [nextTranslate[0] - currTranslate[0], nextTranslate[1] - currTranslate[1]];
       v.translate = [currTranslate[0] + dx * normalizedPositionTime, currTranslate[1] + dy * normalizedPositionTime];

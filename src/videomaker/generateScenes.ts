@@ -5,7 +5,7 @@ import type { Book } from '../bookeditor/book';
 import { type FrameElement, VideoMedia } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
-export async function buildMovie(program: DisplayProgramEntry[], width: number, height: number, moveDuration: number, standardWait: number, book: Book, reportProgress: (number) => void) {
+export async function buildMovie(program: DisplayProgramEntry[], width: number, height: number, moveDuration: number, standardWait: number, standardScale: number, book: Book, reportProgress: (number) => void) {
 
   const {timeTable} = buildTimeTable(program, moveDuration, standardWait);
 
@@ -22,7 +22,8 @@ export async function buildMovie(program: DisplayProgramEntry[], width: number, 
       timeTable,
       time,
       moveDuration,
-      standardWait);
+      standardWait,
+      standardScale);
     const scene = {
       key: time,
       canvas: layeredCanvas.viewport.canvas

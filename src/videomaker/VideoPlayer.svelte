@@ -13,6 +13,7 @@
   export let height: number;
   export let moveDuration: number;
   export let standardWait: number;
+  export let standardScale: number;
   export let book: Book;
   export let program: DisplayProgramEntry[]
 
@@ -34,6 +35,10 @@
     ({timeTable, totalTime} = buildTimeTable(program, moveDuration, standardWait));
   }
 
+  $: if (standardScale) {
+    render();
+  }
+
   let rendering = false;
   async function render() {
     await tick();
@@ -46,7 +51,8 @@
       timeTable,
       cursor,
       moveDuration,
-      standardWait);
+      standardWait,
+      standardScale);
     rendering = false;
   }
 
