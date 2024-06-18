@@ -22,7 +22,6 @@
     standardWaitStore,
     (n) => n + entry.residenceTime,
     (n, old) => {
-      console.log("reflect", n, entry.residenceTime);
       entry.residenceTime = n - standardWait
       dispatcher('waitChanged', n);
       return n;

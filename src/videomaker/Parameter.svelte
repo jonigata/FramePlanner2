@@ -8,7 +8,7 @@
   export let max = 10;
   export let step = 0.1;
 
-  let uiValue = value;
+  $: uiValue = value;
   $: onChanged(uiValue);
   function onChanged(v: number) {
     console.log("onChanged", v);

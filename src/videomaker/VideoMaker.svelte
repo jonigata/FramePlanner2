@@ -5,21 +5,25 @@
   import FrameResidenceTime from './FrameResidenceTime.svelte';
   import '../box.css';
   import VideoPlayer from './VideoPlayer.svelte';
-  import { makeDisplayProgram, type DisplayProgramEntry } from './buildProgram';
+  import { makeDisplayProgram, reflectDisplayProgram, type DisplayProgramEntry } from './buildProgram';
   import { mainBook } from '../bookeditor/bookStore';
   import Parameter from './Parameter.svelte';
   import { buildMovie } from './generateScenes';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { type Book, cloneBook } from '../bookeditor/book';
+  import { type Book, type VideoSettings, cloneBook } from '../bookeditor/book';
   import { ProgressBar } from '@skeletonlabs/skeleton';
+  import { onDestroy, onMount } from 'svelte';
+  import { writable, type Writable } from 'svelte/store';
 
-  let width = 1920;
-  let height = 1080;
-  let moveDuration = 0.3;
-  let standardWait = 1;
-  let standardScale = 0.98;
+  const video: Writable<VideoSettings> = writable({
+    width: 1920,
+    height: 1080,
+    moveDuration: 0.3,
+    standardWait: 1,
+    standardScale: 0.98,
+  });
 
   let book: Book;
   let program: DisplayProgramEntry[] = null;
@@ -35,7 +39,7 @@
     building = true;
     try {
       progress = 0;
-      const url = await buildMovie(program, width, height, moveDuration, standardWait, standardScale, book, (n) => progress = n);
+      const url = await buildMovie(program, $video, book, (n) => progress = n);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');
       download(url);
@@ -61,7 +65,7 @@
     return Math.floor(n / 2) * 2;
   }
 
-  $: onChangeSize(width, height);
+  $: onChangeSize($video?.width, $video?.height);
   function onChangeSize(w: number, h: number) {
     book = cloneBook($mainBook); // 中でいじるのでコピーする
     program = makeDisplayProgram(book, [w, h], program);
@@ -75,6 +79,20 @@
     }
   }
 
+  onMount(() => {
+    if ($mainBook.video) {
+      console.log("video is already set", $mainBook.video);
+      $video = {...$mainBook.video};
+      $video.standardScale = $mainBook.video.standardScale;
+    }
+  });
+
+  onDestroy(() => {
+    reflectDisplayProgram($mainBook, program);
+    console.log(video);
+    $mainBook.video = $video;
+  });
+
 </script>
 
 <div class="page-container">
@@ -83,39 +101,39 @@
       <div class="hbox">
         <div class="font-bold slider-label w-24">Width</div>
         <div style="width: 140px;">
-          <RangeSlider bind:value={width} min={512} max={1920} step={2} name="width"/>
+          <RangeSlider bind:value={$video.width} min={512} max={1920} step={2} name="width"/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={width} min={512} max={1920} on:submit={() => width = makeEven(width)}/></div>
+          <div class="number-box"><NumberEdit bind:value={$video.width} min={512} max={1920} on:submit={() => $video.width = makeEven($video.width)}/></div>
           / {1920}
         </div>
       </div>
       <div class="hbox">
         <div class="font-bold slider-label w-24">Height</div>
         <div style="width: 140px;">
-          <RangeSlider bind:value={height} min={512} max={1080} step={2} name="height"/>
+          <RangeSlider bind:value={$video.height} min={512} max={1080} step={2} name="height"/>
         </div>
         <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={height} min={512} max={1080} on:submit={() => height = makeEven(height)}/></div>
+          <div class="number-box"><NumberEdit bind:value={$video.height} min={512} max={1080} on:submit={() => $video.height = makeEven($video.height)}/></div>
           / {1080}
         </div>
       </div>
     </div>
     <div class="parameter-box">
-      <Parameter label="移動時間" bind:value={moveDuration}/>
+      <Parameter label="移動時間" bind:value={$video.moveDuration}/>
     </div>
     <div class="parameter-box">
-      <Parameter label="標準滞留時間" bind:value={standardWait}/>
+      <Parameter label="標準滞留時間" bind:value={$video.standardWait}/>
     </div>
     <div class="parameter-box">
-      <Parameter label="標準スケール" bind:value={standardScale} min={0.5} max={1.5} step={0.01}/>
+      <Parameter label="標準スケール" bind:value={$video.standardScale} min={0.5} max={1.5} step={0.01}/>
     </div>
   </div>
 
   <div class="contents-panel">
     <div class="player-panel variant-filled-surface rounded-container-token">
       {#if program != null}
-        <VideoPlayer bind:width={width} bind:height={height} bind:moveDuration={moveDuration} bind:standardWait={standardWait} bind:standardScale={standardScale} bind:book={book} bind:program={program}/>
+        <VideoPlayer bind:video={$video} bind:book={book} bind:program={program}/>
       {/if}
     </div>
     <div class="side-panel vbox gap-4">
@@ -125,7 +143,7 @@
             Page {pageNumber+1}
             <div class="indent">
               {#each pagePrograms as program, index}
-                <FrameResidenceTime bind:standardWait={standardWait} entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
+                <FrameResidenceTime bind:standardWait={$video.standardWait} entry={program} index={index+1} on:waitChanged={onWaitChanged}/>
               {/each}
             </div>
           </div>

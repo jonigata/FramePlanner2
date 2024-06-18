@@ -86,11 +86,20 @@ export function makeDisplayProgram(book: Book, viewportSize: [number, number], o
     const rect = trapezoidBoundingRect(layout.corners);
     const position = trapezoidCenter(layout.corners);
     const scale = Math.min(viewportSize[0] / rect[2], viewportSize[1] / rect[3]);    
-    let residenceTime = 0;
+    let residenceTime = layout.element.residenceTime;
     if (old) {
       residenceTime = old[i].residenceTime;
     }
     result.push({ pageNumber, position, scale, residenceTime, layout, bubbles });
   }
   return result;
+}
+
+export function reflectDisplayProgram(book: Book, program: DisplayProgramEntry[]): void {
+  const seq = collectBookContents(book);
+  for (let i = 0; i < seq.slots.length; i++) {
+    const slot = seq.slots[i];
+    const { layout } = slot;
+    layout.element.residenceTime = program[i].residenceTime;
+  }
 }

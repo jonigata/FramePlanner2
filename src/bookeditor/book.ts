@@ -43,6 +43,14 @@ export type History  = {
 export type ReadingDirection = 'left-to-right' | 'right-to-left';
 export type WrapMode = 'none' | 'two-pages' | 'one-page';
 
+export type VideoSettings = {
+  width: number;
+  height: number;
+  moveDuration: number;
+  standardWait: number;
+  standardScale: number;
+}
+
 export type Book = {
   revision: Revision;
   pages: Page[];
@@ -50,6 +58,9 @@ export type Book = {
   direction: ReadingDirection;
   wrapMode: WrapMode;
   chatLogs: RichChatLog[];
+
+  // 以下揮発性
+  video?: VideoSettings;
 }
 
 export function incrementRevision(revision: Revision): void {

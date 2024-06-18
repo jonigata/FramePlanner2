@@ -7,13 +7,9 @@
   import playIcon from '../assets/videomaker/play.png';
   import pauseIcon from '../assets/videomaker/pause.png';
   import Spreader from '../utils/Spreader.svelte'
-  import type { Book } from '../bookeditor/book';
+  import type { Book, VideoSettings } from '../bookeditor/book';
 
-  export let width: number;
-  export let height: number;
-  export let moveDuration: number;
-  export let standardWait: number;
-  export let standardScale: number;
+  export let video: VideoSettings;
   export let book: Book;
   export let program: DisplayProgramEntry[]
 
@@ -32,10 +28,10 @@
   }
 
   $: if (program != null) {
-    ({timeTable, totalTime} = buildTimeTable(program, moveDuration, standardWait));
+    ({timeTable, totalTime} = buildTimeTable(program, video.moveDuration, video.standardWait));
   }
 
-  $: if (standardScale) {
+  $: if (video.standardScale) {
     render();
   }
 
@@ -50,9 +46,9 @@
       arrayLayer,
       timeTable,
       cursor,
-      moveDuration,
-      standardWait,
-      standardScale);
+      video.moveDuration,
+      video.standardWait,
+      video.standardScale);
     rendering = false;
   }
 
@@ -94,7 +90,7 @@
 <Spreader>
   <div class="canvas-panel">
     <div class="canvas-container">
-      <SpreadCanvas bind:canvas={canvas} bind:width={width} bind:height={height}/>
+      <SpreadCanvas bind:canvas={canvas} bind:width={video.width} bind:height={video.height}/>
     </div>
     <div class="seekbar-container">
       <button type="button" class="btn-icon btn-icon-sm variant-filled" on:click={togglePlay}>
@@ -104,7 +100,7 @@
           <img class="title-image" src={playIcon} alt="play"/>
         {/if}
       </button>
-      <SeekBar bind:program={program} bind:standardWait={standardWait} bind:moveDuration={moveDuration} bind:cursor={cursor}/>
+      <SeekBar bind:program={program} bind:standardWait={video.standardWait} bind:moveDuration={video.moveDuration} bind:cursor={cursor}/>
     </div>
   </div>
 </Spreader>

@@ -219,6 +219,7 @@ export class FrameElement {
 
   // 以下は揮発性
   focused: boolean;
+  residenceTime: number;
 
   constructor(size: number) {
     // 保持するのは兄弟間でのみ有効な相対サイズ（ローカル座標）
@@ -244,6 +245,7 @@ export class FrameElement {
 
     // 以下揮発性
     this.focused = false;
+    this.residenceTime = 0;
   }
 
   clone(): FrameElement {
@@ -271,6 +273,9 @@ export class FrameElement {
     element.filmStack = { 
       films: this.filmStack.films.map(film => film.clone())
     };
+
+    element.residenceTime = this.residenceTime;
+    
     return element;
   }
 
