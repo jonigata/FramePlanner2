@@ -6,6 +6,7 @@ import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdivi
 import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D } from "../geometry/geometry";
 import { PaperOffset } from 'paperjs-offset'
 import type { Vector } from "../geometry/geometry";
+import rough from 'roughjs';
 
 export function drawBubble(context, seed, size, shape, opts) {
   seed = opts.randomSeed ?? 0;
@@ -394,7 +395,14 @@ export function drawPath(context, unified, opts) {
       }
       break;
     case 'stroke':
-      context.stroke(new Path2D(unified.pathData));
+      const roughness = opts.roughness ?? 0;
+      if (0 < roughness) {
+        const seed = (opts.randomSeed ?? 0) + 1;
+        const rc = rough.canvas(context.canvas, {options:{seed, roughness, strokeWidth: 2}});
+        rc.path(unified.pathData);
+      } else {
+        context.stroke(new Path2D(unified.pathData));
+      }
       break;
     case 'clip':
       context.clip(new Path2D(unified.pathData));

@@ -55,6 +55,7 @@
     "parse-css-font": "^4.0.0",
     "rete-render-utils": "^2.0.1",
     "rete-svelte-plugin": "^2.0.0",
+    "roughjs": "^4.6.6",
     "sass": "^1.69.5",
     "seedrandom": "^3.0.5",
     "svelte-jsoneditor": "^0.16.1",
