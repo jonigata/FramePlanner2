@@ -398,7 +398,7 @@ export function drawPath(context, unified, opts) {
       const roughness = opts.roughness ?? 0;
       if (0 < roughness) {
         const seed = (opts.randomSeed ?? 0) + 1;
-        const rc = rough.canvas(context.canvas, {options:{seed, roughness, strokeWidth: 2}});
+        const rc = rough.canvas(context.canvas, {options:{seed, roughness, strokeWidth: context.strokeWidth, stroke: context.strokeStyle}});
         rc.path(unified.pathData);
       } else {
         context.stroke(new Path2D(unified.pathData));
