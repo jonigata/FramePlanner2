@@ -5,11 +5,11 @@ import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import * as paper from 'paper';
+import { getStroke } from 'perfect-freehand'
 
 export class InlinePainterLayer extends Layer {
   frameLayer: FrameLayer;
 
-  currentBrush: { strokeStyle: string, lineWidth: number };
   element: FrameElement;
   film: Film;
   translation: Vector;
@@ -22,14 +22,15 @@ export class InlinePainterLayer extends Layer {
   drawsBackground: boolean;
   offscreenCanvas: HTMLCanvasElement;
   offscreenContext: CanvasRenderingContext2D;
-  path: paper.Path;
+  // path: paper.Path;
   paperLayout: Layout;
+  path: Path2D;
+  strokeOptions: any; // perfect-freehandのオプション
 
   constructor(frameLayer: FrameLayer, onAutoGenerate: () => void) {
     super();
     this.frameLayer = frameLayer;
 
-    this.currentBrush = { strokeStyle: "black", lineWidth: 5 };
     this.element = null;
     this.translation = [0, 0];
     this.scale = [1,1];
@@ -39,6 +40,31 @@ export class InlinePainterLayer extends Layer {
     this.onAutoGenerate = onAutoGenerate;
     this.layout = null;
     this.drawsBackground = false;
+
+    this.strokeOptions = {
+      size: 8,  
+      thinning: 0.5,
+      smoothing: 0.5,
+      streamline: 0.5,
+      easing: t => t,
+      simulatePressure: true,
+      last: true,
+      start: {
+        cap: true,
+        taper: 0,
+        easing: t => t,
+      },
+      end: {
+        cap: true,
+        taper: 0,
+        easing: t => t,
+      },
+
+      strokeWidth: 1,
+      isFilled: true,
+      fill: "#000000",
+      stroke: "#000000",
+    }; // TODO: FreehandInspectorと重複している
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
@@ -56,8 +82,13 @@ export class InlinePainterLayer extends Layer {
     }
 
     if (this.path) {
-      this.applyCurrentBrush(ctx);
-      ctx.stroke(new Path2D(this.path.pathData));
+      this.applyBrush(ctx);
+      if (0 < this.strokeOptions.strokeWidth) {
+        ctx.stroke(this.path);
+      }
+      if (this.strokeOptions.isFilled) {
+        ctx.fill(this.path);
+      }
     }
   }
 
@@ -69,14 +100,24 @@ export class InlinePainterLayer extends Layer {
   async *pointer(q: Vector, payload: any): AsyncGenerator<Vector, void, Vector> {
     console.log("pointer", q, payload);
 
-    const path = new paper.Path();
-    this.path = path;
-    path.moveTo(q);
-    path.closed = false;
+    const rawStroke: Vector[] = [];
+
+    console.log(this.strokeOptions);
 
     let p: Vector;
     while (p = yield) {
-      path.lineTo(p);
+      rawStroke.push(p);
+
+      const stroke: Vector[] = getStroke(rawStroke, this.strokeOptions) as Vector[];
+      console.log(stroke);
+
+      this.path = new Path2D();
+      this.path.moveTo(...stroke[0]);
+      for (let i = 1; i < stroke.length; i++) {
+        this.path.lineTo(...stroke[i]);
+      }
+      this.path.closePath();
+
       this.redraw();      
     }
     await this.snapshot();
@@ -97,8 +138,13 @@ export class InlinePainterLayer extends Layer {
       ctx.translate(w * 0.5, h * 0.5);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
-      this.applyCurrentBrush(ctx);
-      ctx.stroke(new Path2D(this.path.pathData));
+      this.applyBrush(ctx);
+      if (0 < this.strokeOptions.strokeWidth) {
+        ctx.stroke(this.path);
+      }
+      if (this.strokeOptions.isFilled) {
+        ctx.fill(this.path);
+      }
       ctx.restore();
     }
 
@@ -109,14 +155,6 @@ export class InlinePainterLayer extends Layer {
     this.historyIndex++;
     console.log("snapshot", this.historyIndex, this.history.length);
     await this.image.decode();
-  }
-
-  applyCurrentBrush(ctx: CanvasRenderingContext2D): void {
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    for (let key in this.currentBrush) {
-      ctx[key] = this.currentBrush[key];
-    }
   }
 
   setFilm(element: FrameElement, film: Film): void {
@@ -226,6 +264,12 @@ export class InlinePainterLayer extends Layer {
     ctx.globalAlpha = 1.0;
     ctx.drawImage(this.image, 0, 0, w, h);
     ctx.restore();
+  }
+
+  applyBrush(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = this.strokeOptions.fill;
+    ctx.strokeStyle = this.strokeOptions.stroke;
+    ctx.lineWidth = this.strokeOptions.strokeWidth;
   }
 
   renderDepths(): number[] { return [0]; }

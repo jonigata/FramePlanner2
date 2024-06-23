@@ -53,6 +53,7 @@
     "paper": "^0.12.17",
     "paperjs-offset": "^1.0.8",
     "parse-css-font": "^4.0.0",
+    "perfect-freehand": "^1.2.2",
     "rete-render-utils": "^2.0.1",
     "rete-svelte-plugin": "^2.0.0",
     "roughjs": "^4.6.6",

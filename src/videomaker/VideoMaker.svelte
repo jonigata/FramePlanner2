@@ -7,7 +7,7 @@
   import VideoPlayer from './VideoPlayer.svelte';
   import { makeDisplayProgram, reflectDisplayProgram, type DisplayProgramEntry } from './buildProgram';
   import { mainBook } from '../bookeditor/bookStore';
-  import Parameter from './Parameter.svelte';
+  import Parameter from '../utils/Parameter.svelte';
   import { buildMovie } from './generateScenes';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';

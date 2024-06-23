@@ -5,7 +5,7 @@
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
   import { mainBook } from '../bookeditor/bookStore';
-  import PainterToolBox from './PainterToolBox.svelte';
+  import FreehandInspector from './FreehandInspector.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
 
   // TODO: autoGenerate周り未整備、基本的に一旦削除予定
@@ -57,7 +57,7 @@
   function onSetTool(e: CustomEvent<any>) {
     console.log("setTool", e.detail);
 
-    findLayer().currentBrush = e.detail;
+    findLayer().strokeOptions = e.detail;
   }
 
   export function isPainting() {
@@ -104,7 +104,7 @@
 
 <div>
 {#if painterElement != null}
-  <PainterToolBox 
+  <FreehandInspector
     on:setTool={onSetTool} 
     on:done={onDone} 
     on:redraw={onRedraw}/>
