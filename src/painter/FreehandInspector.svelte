@@ -6,6 +6,7 @@
   import FreehandInspectorTaper from './FreehandInspectorTaper.svelte';
   import FreehandInspectorPalette from './FreehandInspectorPalette.svelte';
   import { EASINGS } from './easing';
+  import { deepCopyProperties } from '../lib/Misc';
 
   const dispatch = createEventDispatcher();
 
@@ -29,14 +30,67 @@
     },
 
     // 以下はperfect-freehandは扱わない
-    strokeWidth: 1,
+    strokeWidth: 0,
     isFilled: true,
     fill: "#000000",
     stroke: "#000000",
   };
 
+  const presets = [
+    {
+      label: "ファイン",
+      thinning: 0.5,
+      smoothing: 0.5,
+      easing: "linear",
+      last: true,
+      start: {
+        taper: 100,
+        easing: "linear",
+      },
+      end: {
+        taper: 100,
+        easing: "linear",
+      },
+    },
+    {
+      label: "サインペン",
+      thinning: 0,
+      smoothing: 0.5,
+      easing: "linear",
+      last: true,
+      start: {
+        taper: 0,
+        cap: true,
+      },
+      end: {
+        taper: 0,
+        cap: true,
+      },
+    },
+    {
+      label: "フラット",
+      thinning: 0,
+      smoothing: 0.5,
+      easing: "linear",
+      last: true,
+      start: {
+        taper: 0,
+        cap: false,
+      },
+      end: {
+        taper: 0,
+        cap: false,
+      },
+    },
+  ]
+
   let options = structuredClone(initialOptions);
 
+  function applyPreset(preset) {
+    deepCopyProperties(options, preset);
+    options = options;
+  } 
+  
   let strokeOptions;
   $: onChangeStrokeOptions(options);
   function onChangeStrokeOptions(options) {
@@ -58,6 +112,7 @@
     console.log("onDone");
     dispatch('done');
   }
+
 </script>
 
 <div class="toolbox variant-glass-surface rounded-container-token vbox" use:draggable={{ handle: '.title-bar' }}>
@@ -109,6 +164,18 @@
           {/if}
       </div>
     </div>
+
+    <hr/>
+
+    <div class="flex flex-col gap-2 mt-2">
+      <span class="text-left">プリセット</span>
+      {#each presets as preset}
+        <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 w-fill" on:click={() => applyPreset(preset)}>
+          {preset.label}
+        </button>
+      {/each}
+    </div>
+
 
     <hr/>
 

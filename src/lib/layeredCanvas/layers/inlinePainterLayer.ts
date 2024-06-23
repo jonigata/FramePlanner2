@@ -60,7 +60,7 @@ export class InlinePainterLayer extends Layer {
         easing: t => t,
       },
 
-      strokeWidth: 1,
+      strokeWidth: 0,
       isFilled: true,
       fill: "#000000",
       stroke: "#000000",
@@ -84,6 +84,7 @@ export class InlinePainterLayer extends Layer {
     if (this.path) {
       this.applyBrush(ctx);
       if (0 < this.strokeOptions.strokeWidth) {
+        ctx.lineJoin = "round";
         ctx.stroke(this.path);
       }
       if (this.strokeOptions.isFilled) {
@@ -140,6 +141,7 @@ export class InlinePainterLayer extends Layer {
       ctx.translate(-this.translation[0], -this.translation[1]);
       this.applyBrush(ctx);
       if (0 < this.strokeOptions.strokeWidth) {
+        ctx.lineJoin = "round";
         ctx.stroke(this.path);
       }
       if (this.strokeOptions.isFilled) {
