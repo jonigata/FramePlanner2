@@ -14,9 +14,8 @@
 </div>
 <div class="parameter-box">
   {#if taper.taper == 0}
-    <label class="flex items-center space-x-2">
+    <label class="flex items-center space-x-2">丸める
       <input class="checkbox" type="checkbox" bind:checked={taper.cap} />
-      <p>丸める</p>
     </label>
   {:else}
     <div class="parameter-box">

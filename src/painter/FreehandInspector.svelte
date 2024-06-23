@@ -7,6 +7,7 @@
   import FreehandInspectorPalette from './FreehandInspectorPalette.svelte';
   import { EASINGS } from './easing';
   import { deepCopyProperties } from '../lib/Misc';
+	import ColorPicker from 'svelte-awesome-color-picker';
 
   const dispatch = createEventDispatcher();
 
@@ -33,7 +34,7 @@
     strokeWidth: 0,
     isFilled: true,
     fill: "#000000",
-    stroke: "#000000",
+    stroke: "#ffffff",
   };
 
   const presets = [
@@ -85,6 +86,8 @@
   ]
 
   let options = structuredClone(initialOptions);
+  let fillTheme = options.fill;
+  let strokeTheme = options.stroke;
 
   function applyPreset(preset) {
     deepCopyProperties(options, preset);
@@ -111,6 +114,10 @@
   function onDone() {
     console.log("onDone");
     dispatch('done');
+  }
+
+  function onSyncThemeColor() {
+    strokeTheme = fillTheme;
   }
 
 </script>
@@ -146,12 +153,18 @@
       <hr/>
 
       <div>
-        <div class="flex flex-row gap-4">
-          <label class="text-sm font-medium">塗りつぶし</label>
-          <input class="checkbox" type="checkbox" bind:checked={options.isFilled}/>
+        <div class="flex flex-row gap-4 items-center">
+          <label class="flex items-center gap-2"><span>塗りつぶし</span>
+            <input class="checkbox" type="checkbox" bind:checked={options.isFilled}/>
+          </label>            
+          {#if options.isFilled && 0 < options.strokeWidth}
+            <button class="btn btn-sm variant-filled h-6" on:click={onSyncThemeColor}>
+              テーマカラーを同期
+            </button>
+          {/if}
         </div>
         {#if options.isFilled}
-          <FreehandInspectorPalette on:color={(color) => options.fill = color.detail}/>
+          <FreehandInspectorPalette bind:color={options.fill} bind:themeColor={fillTheme}/>
         {/if}
       </div>
 
@@ -160,8 +173,8 @@
           <Parameter label="フチ" bind:value={options.strokeWidth} min={0} max={100} step={1}/>
         </div>
         {#if 0 < options.strokeWidth} 
-        <FreehandInspectorPalette on:color={(color) => options.stroke = color.detail}/>
-          {/if}
+          <FreehandInspectorPalette bind:color={options.stroke} bind:themeColor={strokeTheme}/>
+        {/if}
       </div>
     </div>
 
