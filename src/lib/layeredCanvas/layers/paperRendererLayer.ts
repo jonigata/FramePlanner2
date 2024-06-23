@@ -354,7 +354,6 @@ export class PaperRendererLayer extends Layer {
     const element = layout.element;
 
     const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-    const center = getRectCenter([x0, y0, w, h])
 
     for (let film of element.filmStack.films) {
       if (!film.visible) { continue; }

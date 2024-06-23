@@ -71,7 +71,7 @@ export class InlinePainterLayer extends Layer {
     if (!this.image) {return;}
     if (depth !== 0) { return; }
 
-    this.drawImage(ctx, this.layout)
+    // this.drawImage(ctx);
     // ctx.drawImage(this.image, 0, 0);
     drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.layout.corners);
 
@@ -137,6 +137,7 @@ export class InlinePainterLayer extends Layer {
       ctx.save();
       console.log("snapshot", this.translation, this.scale, [w, h]);
       ctx.translate(w * 0.5, h * 0.5);
+      ctx.rotate(this.film.rotation * Math.PI / 180);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
       this.applyBrush(ctx);
@@ -251,7 +252,7 @@ export class InlinePainterLayer extends Layer {
   }
 
   // paperRenderLayerからコピペ
-  drawImage(ctx: CanvasRenderingContext2D, layout: Layout): void {
+  drawImage(ctx: CanvasRenderingContext2D): void {
     const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
 
     ctx.save();

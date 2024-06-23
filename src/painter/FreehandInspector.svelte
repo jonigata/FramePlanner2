@@ -90,7 +90,7 @@
     deepCopyProperties(options, preset);
     options = options;
   } 
-  
+
   let strokeOptions;
   $: onChangeStrokeOptions(options);
   function onChangeStrokeOptions(options) {
@@ -170,7 +170,7 @@
     <div class="flex flex-col gap-2 mt-2">
       <span class="text-left">プリセット</span>
       {#each presets as preset}
-        <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 w-fill" on:click={() => applyPreset(preset)}>
+        <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 w-fill" on:click={() => applyPreset(preset)}>
           {preset.label}
         </button>
       {/each}
