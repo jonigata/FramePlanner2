@@ -1,7 +1,7 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
 import { type FrameElement, type Layout, Media, ImageMedia, calculatePhysicalLayout, findLayoutOf, Film } from '../dataModels/frameTree';
 import type { Vector } from "../tools/geometry/geometry";
-import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
+import { type Trapezoid, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import * as paper from 'paper';
@@ -71,8 +71,7 @@ export class InlinePainterLayer extends Layer {
     if (!this.image) {return;}
     if (depth !== 0) { return; }
 
-    // this.drawImage(ctx);
-    // ctx.drawImage(this.image, 0, 0);
+    this.drawFilmFrame(ctx);
     drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.layout.corners);
 
     if (this.maskPath) {
@@ -252,20 +251,16 @@ export class InlinePainterLayer extends Layer {
   }
 
   // paperRenderLayerからコピペ
-  drawImage(ctx: CanvasRenderingContext2D): void {
+  drawFilmFrame(ctx: CanvasRenderingContext2D): void {
     const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
 
     ctx.save();
     ctx.translate(this.translation[0], this.translation[1]);
     ctx.scale(this.scale[0], this.scale[1]);
+    ctx.rotate(-this.film.rotation * Math.PI / 180);
     ctx.translate(-w * 0.5, -h * 0.5);
-    ctx.globalAlpha = 0.4;
-    if (this.drawsBackground) {
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, w, h);
-    }
-    ctx.globalAlpha = 1.0;
-    ctx.drawImage(this.image, 0, 0, w, h);
+    ctx.strokeStyle = "rgba(128, 128, 128, 0.5)";
+    ctx.strokeRect(0, 0, w, h);
     ctx.restore();
   }
 
