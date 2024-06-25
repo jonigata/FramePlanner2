@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
+  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Page } from '../bookeditor/book';
   import { imageGeneratorTarget } from '../generator/imageGeneratorStore';
 

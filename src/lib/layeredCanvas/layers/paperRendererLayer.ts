@@ -1,7 +1,7 @@
 import { type Vector, reverse2D, getRectCenter, translateRect } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
-import { findLayoutAt, calculatePhysicalLayout, FrameElement, calculateMinimumBoundingRect } from "../dataModels/frameTree";
+import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
 import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText } from "../tools/draw/drawText";
 import { Layer } from "../system/layeredCanvas";

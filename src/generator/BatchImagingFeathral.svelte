@@ -1,7 +1,8 @@
 <script lang="ts">
   import "../box.css"  
   import { onMount } from 'svelte';
-  import { FrameElement, ImageMedia, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { Film, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { onlineAccount, updateToken } from "../utils/accountStore";

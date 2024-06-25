@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
-  import type { Film } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from '../bookStore';
   import visibleIcon from '../../assets/frameInspector/eye.png';
   import scribbleIcon from '../../assets/frameInspector/scribble.png';

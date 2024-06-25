@@ -3,7 +3,7 @@
   import { draggable } from '@neodrag/svelte';
   import { frameInspectorTarget } from './frameInspectorStore';
   import FrameInspectorFilm from "./FrameInspectorFilm.svelte";
-  import { Film, Media, ImageMedia } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import { Film, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from "../bookStore"
   import ListBox from "../../utils/listbox/ListBox.svelte";
   import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";

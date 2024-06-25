@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
+  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import type { Film } from '../lib/layeredCanvas/dataModels/film';
   import type { Page } from '../bookeditor/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
