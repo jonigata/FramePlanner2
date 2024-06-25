@@ -1,6 +1,6 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
-import { Film, type FilmStack, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
+import { Film, FilmStack, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
@@ -323,14 +323,15 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
   } 
   if (frameTree === insertElement || contents.length === 0) {
     tailMode = true;
-    frameTree.filmStack = { films: [] };
+    frameTree.filmStack = new FilmStack();
     frameTree.prompt = "";
   } else {
     const [sx, sy, sw, sh] = contents[0].sourceRect;
     const [tx, ty, tw, th] = trapezoidBoundingRect(layout.corners);
 
     const content = contents.shift();
-    frameTree.filmStack = { films: [...content.filmStack.films] };
+    frameTree.filmStack = new FilmStack();
+    frameTree.filmStack.films = [...content.filmStack.films];
     frameTree.prompt = content.prompt;
 
     for (let b of content.bubbles) {
@@ -385,7 +386,8 @@ export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement
       continue; 
     }
 
-    frameTree.filmStack = { films: [...swapContent.filmStack.films] };
+    frameTree.filmStack = new FilmStack();
+    frameTree.filmStack.films = [...swapContent.filmStack.films];
     frameTree.prompt = swapContent.prompt;
 
     const transformer = new FilmStackTransformer(slot.page.paperSize, frameTree.filmStack.films);

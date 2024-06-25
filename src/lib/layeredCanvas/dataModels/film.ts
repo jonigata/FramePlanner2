@@ -175,8 +175,21 @@ export class Film  {
 
 }
 
-export type FilmStack = {
+export class FilmStack  {
   films: Film[];
+
+  constructor() {
+    this.films = [];
+  }
+
+  getSelectedFilms(): Film[] {
+    return this.films.filter(film => film.selected);
+  }
+
+  getOperationTargetFilms(): Film[] {
+    const films = this.getSelectedFilms();
+    return 0 < films.length ? films : this.films;
+  }
 }
 
 export class FilmStackTransformer {
@@ -201,7 +214,7 @@ export class FilmStackTransformer {
     const rootMatrix = new DOMMatrix();
     rootMatrix.scaleSelf(s);
 
-    this.films.forEach((film, i) => {
+    this.films.forEach((film) => {
       const m = rootMatrix.multiply(film.matrix);
       film.setShiftedTranslation(this.paperSize, [m.e, m.f]);
       film.setShiftedScale(this.paperSize, Math.sqrt(m.a * m.a + m.b * m.b));
@@ -215,7 +228,7 @@ export class FilmStackTransformer {
     rootMatrix.rotateSelf(-rotation);
     rootMatrix.translateSelf(...reverse2D(this.pivot));
 
-    this.films.forEach((film, i) => {
+    this.films.forEach((film) => {
       const m = rootMatrix.multiply(film.matrix);
       film.rotation = -Math.atan2(m.b, m.a) * 180 / Math.PI;
       film.setShiftedTranslation(this.paperSize, [m.e, m.f]);

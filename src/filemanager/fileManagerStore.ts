@@ -107,25 +107,7 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
-  markUp.films = [];
-  for (let film of frameTree.filmStack.films) {
-    if (!(film.media instanceof ImageMedia)) { continue; }
-    const image = film.media.image;
-
-    await saveImage(fileSystem, image, imageFolder);
-    const fileId = image["fileId"][fileSystem.id];
-
-    const filmMarkUp = {
-      image: fileId,
-      n_scale: film.n_scale,
-      n_translation: [...film.n_translation],
-      rotation: film.rotation,
-      reverse: [...film.reverse],
-      visible: film.visible,
-      prompt: film.prompt,
-    }
-    markUp.films.push(filmMarkUp);
-  }
+  markUp.films = await packFilms(frameTree.filmStack.films, fileSystem, imageFolder);
 
   const children = [];
   for (const child of frameTree.children) {
@@ -144,21 +126,33 @@ async function packFrameImages(frameTree: FrameElement, fileSystem: FileSystem, 
 async function packBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, paperSize: [number, number]): Promise<any[]> {
   const packedBubbles = [];
   for (const bubble of bubbles) {
-    const image = bubble.image;
     const markUp = Bubble.decompile(bubble);
-    if (image) {
-      await saveImage(fileSystem, image.image, imageFolder);
-      const fileId = image.image["fileId"][fileSystem.id];
-      markUp.image = {
-        image: fileId,
-        n_scale: bubble.image.n_scale,
-        n_translation: bubble.image.n_translation,
-        scaleLock: bubble.image.scaleLock,
-      };
-    }
+    markUp.films = await packFilms(bubble.filmStack.films, fileSystem, imageFolder);
     packedBubbles.push(markUp);
   }
   return packedBubbles;
+}
+
+async function packFilms(films: Film[], fileSystem: FileSystem, imageFolder: Folder): Promise<any[]> {
+  const packedFilms = [];
+  for (const film of films) {
+    if (!(film.media instanceof ImageMedia)) { continue; }
+    const image = film.media.image;
+    await saveImage(fileSystem, image, imageFolder);
+    const fileId = image["fileId"][fileSystem.id];
+
+    const filmMarkUp = {
+      image: fileId,
+      n_scale: film.n_scale,
+      n_translation: [...film.n_translation],
+      rotation: film.rotation,
+      reverse: [...film.reverse],
+      visible: film.visible,
+      prompt: film.prompt,
+    }
+    packedFilms.push(filmMarkUp);
+  }
+  return packedFilms;
 }
 
 
@@ -440,21 +434,8 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
         console.tag("type C", "#004400");
       }
 
-      for (const filmMarkUp of markUp.films) {
-        const image = await loadImageFunc(fileSystem, filmMarkUp.image);
-        if (image) {
-          const film = new Film();
-          film.media = new ImageMedia(image);
-          film.n_scale = filmMarkUp.n_scale;
-          film.n_translation = filmMarkUp.n_translation;
-          film.rotation = filmMarkUp.rotation;
-          film.reverse = filmMarkUp.reverse;
-          film.visible = filmMarkUp.visible;
-          film.prompt = filmMarkUp.prompt;
-          frameTree.gallery.push(image);
-          frameTree.filmStack.films.push(film);
-        }
-      }
+      const films = await unpackFilms(paperSize, markUp.films, fileSystem, loadImageFunc);
+      frameTree.filmStack.films.push(...films);
     }
   }
 
@@ -474,8 +455,8 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
 async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
   for (const markUp of markUps) {
-    const imageMarkUp = markUp.image;
     const bubble: Bubble = Bubble.compile(paperSize, markUp);
+    const imageMarkUp = markUp.image;
     if (imageMarkUp) {
       const image = await loadImageFunc(fileSystem, imageMarkUp.image);
       if (image) {
@@ -494,17 +475,39 @@ async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fil
           const scale = s_imageSize / s_pageSize;
           n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
         }
-        bubble.image = { 
-          image,
-          n_scale,
-          n_translation,
-          scaleLock: imageMarkUp.scaleLock,
-        };
+        const film = new Film();
+        film.media = new ImageMedia(image);
+        film.n_scale = n_scale;
+        film.n_translation = n_translation;
+        bubble.filmStack.films.push(film);
+        bubble.scaleLock = imageMarkUp.scaleLock;
       }
+    } else if (markUp.films) {
+      const films = await unpackFilms(paperSize, markUp.films, fileSystem, loadImageFunc);
+      bubble.filmStack.films = films;
     }
     unpackedBubbles.push(bubble);
   }
   return unpackedBubbles;
+}
+
+async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<Film[]> {
+  const films: Film[] = [];
+  for (const filmMarkUp of markUp) {
+    const image = await loadImageFunc(fileSystem, filmMarkUp.image);
+    if (image) {
+      const film = new Film();
+      film.media = new ImageMedia(image);
+      film.n_scale = filmMarkUp.n_scale;
+      film.n_translation = filmMarkUp.n_translation;
+      film.rotation = filmMarkUp.rotation;
+      film.reverse = filmMarkUp.reverse;
+      film.visible = filmMarkUp.visible;
+      film.prompt = filmMarkUp.prompt;
+      films.push(film);
+    }
+  }
+  return films;
 }
 
 export async function saveMaterialImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<BindId> {

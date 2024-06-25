@@ -217,9 +217,6 @@ export class PaperRendererLayer extends Layer {
       }
 
       this.drawImage(ctx, layout);
-      if (element.focused) {
-        this.drawImageFrame(ctx, layout);
-      }
 
       if (embeddedBubbles.has(layout)) {
         const bubbles = embeddedBubbles.get(layout);
@@ -287,16 +284,25 @@ export class PaperRendererLayer extends Layer {
     this.drawBubble(ctx, size, 'clip', bubble);
 
     // 画像描画
-    if (bubble.image) {
-      const img = bubble.image;
-      const scale = bubble.getPhysicalImageScale(paperSize);
-      const translation = bubble.getPhysicalImageTranslation(paperSize);
+    const [x0, y0, w, h] = bubble.getPhysicalRect(paperSize);
+    for (let film of bubble.filmStack.films) {
+      if (!film.visible) { continue; }
 
-      let iw = img.image.naturalWidth * scale;
-      let ih = img.image.naturalHeight * scale;
-      let ix = - iw * 0.5 + translation[0];
-      let iy = - ih * 0.5 + translation[1];
-      ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
+      const scale = film.getShiftedScale(paperSize);
+      const translation = film.getShiftedTranslation(paperSize);
+
+      ctx.save();
+      ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
+      ctx.rotate(-film.rotation * Math.PI / 180);
+      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
+
+      if (film.visible) {
+        ctx.save();
+        ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
+        ctx.drawImage(film.media.drawSource, 0, 0, film.media.naturalWidth, film.media.naturalHeight);
+        ctx.restore();
+      }
+      ctx.restore();
     }
 
     ctx.restore();
@@ -388,30 +394,6 @@ export class PaperRendererLayer extends Layer {
     }    
 */
   }
-
-  drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {
-    // TODO:
-/*
-    const element = layout.element;
-    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-
-    const paperSize = this.getPaperSize();
-    const scale = element.getPhysicalImageScale(paperSize);
-    const translation = element.getPhysicalImageTranslation(paperSize);
-
-    ctx.save();
-    ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
-    ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
-    ctx.translate(-element.image.scribble.naturalWidth * 0.5, -element.image.scribble.naturalHeight * 0.5);
-    ctx.beginPath();
-    ctx.rect(0, 0, element.image.scribble.naturalWidth, element.image.scribble.naturalHeight);
-    ctx.strokeStyle = "rgb(0, 0, 255)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-*/
-  }
-
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
     const paperSize = this.getPaperSize();

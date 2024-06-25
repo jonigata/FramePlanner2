@@ -1,7 +1,7 @@
 import { type Vector, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
-import { type Film, type FilmStack, calculateMinimumBoundingRect } from "./film";
+import { type Film, FilmStack, calculateMinimumBoundingRect } from "./film";
 
 // formal～はoffsetが含まれない値
 export type CornerOffsets = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
@@ -63,7 +63,7 @@ export class FrameElement {
     this.semantics = null;
 
     // リーフ要素の場合は絵がある可能性がある
-    this.filmStack = { films: [] };
+    this.filmStack = new FilmStack();
 
     // 以下揮発性
     this.focused = false;
@@ -92,9 +92,8 @@ export class FrameElement {
     element.semantics = this.semantics;
     element.prompt = this.prompt;
 
-    element.filmStack = { 
-      films: this.filmStack.films.map(film => film.clone())
-    };
+    element.filmStack = new FilmStack();
+    element.filmStack.films =  this.filmStack.films.map(film => film.clone());
 
     element.residenceTime = this.residenceTime;
 
@@ -388,16 +387,6 @@ export class FrameElement {
   isAuthentic(): boolean {
     return 0 < this.visibility && !this.pseudo
   }
-
-  getSelectedFilms(): Film[] {
-    return this.filmStack.films.filter(film => film.selected);
-  }
-
-  getOperationTargetFilms(): Film[] {
-    const films = this.getSelectedFilms();
-    return 0 < films.length ? films : this.filmStack.films;
-  }
-
 }
 
 function paddedSquare(rawOrigin: Vector, rawSize: Vector, cornerOffsets: CornerOffsets): [Vector, Vector] {
@@ -795,7 +784,7 @@ export function dealImages(frameTree: FrameElement, filmStacks: FilmStack[], ins
       filmStacks.shift();
     } 
     if (frameTree === insertElement || filmStacks.length === 0) {
-      frameTree.filmStack = { films: [] };
+      frameTree.filmStack = new FilmStack();
       return;
     }
     const filmStack = filmStacks.shift();
@@ -845,7 +834,7 @@ export function constraintLeaf(paperSize: Vector, layout: Layout): void {
   if (!layout.corners) {return; }
   if (layout.element.filmStack.films.length == 0) { return; }
 
-  const films = layout.element.getOperationTargetFilms();
+  const films = layout.element.filmStack.getOperationTargetFilms();
   constraintFilms(paperSize, layout, films);
 }
 

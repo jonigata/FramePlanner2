@@ -13,6 +13,7 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
+import { Film, ImageMedia, FilmStackTransformer } from "../dataModels/film";
 
 const iconUnit: Vector = [20, 20];
 
@@ -87,8 +88,7 @@ export class BubbleLayer extends Layer {
     this.removeIcon = new ClickableIcon(["remove.png"],unit,[1,0],"削除", () => this.interactable && this.selected != null, mp);
     this.rotateIcon = new ClickableIcon(["bubble-rotate.png"],unit,[0.5,1],"左右ドラッグで回転", () => this.interactable && this.selected != null, mp);
 
-    this.imageDropIcon = new ClickableIcon(["bubble-drop.png"],unit,[0,1],"画像除去", () => this.interactable && this.selected?.image != null, mp);
-    this.imageScaleLockIcon = new ClickableIcon(["bubble-unlock.png","bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && this.selected?.image != null, mp);
+    this.imageScaleLockIcon = new ClickableIcon(["bubble-unlock.png","bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && 0 < this.selected?.filmStack.films.length, mp);
     this.imageScaleLockIcon.index = 0;
 
     this.optionIcons = {};
@@ -414,7 +414,7 @@ export class BubbleLayer extends Layer {
         const b = this.defaultBubbleSlot.bubble.clone(false);
         b.parent = null;
         b.text = s;
-        b.image = null;
+        b.filmStack.films = [];
         const size = b.calculateFitSize(paperSize);
 
         if (cursorX + size[0] > paperSize[0]) {
@@ -450,8 +450,9 @@ export class BubbleLayer extends Layer {
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
-    bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
-    bubble.setPhysicalImageScale(paperSize, 1);
+
+    const film = this.newImageFilm(image);
+    bubble.filmStack.films.push(film);
     this.bubbles.push(bubble);
     this.onCommit();
     this.selectBubble(bubble);
@@ -542,7 +543,7 @@ export class BubbleLayer extends Layer {
       }
 
       const gm = this.getGroupMaster(bubble);
-      if (gm.image && !gm.image.scaleLock && bubble.contains(paperSize, point)) {
+      if (0 < gm.filmStack.films.length && !gm.scaleLock && bubble.contains(paperSize, point)) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble: gm };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
@@ -672,12 +673,8 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, position)) {
-        this.getGroupMaster(bubble).image = {
-           image, 
-           n_translation: [0,0], 
-           n_scale: 1, 
-           scaleLock: false 
-          };
+        const film = this.newImageFilm(image);
+        this.getGroupMaster(bubble).filmStack.films.push(film);
         this.onCommit();
         return true;
       }
@@ -704,7 +701,7 @@ export class BubbleLayer extends Layer {
 
     const bubble = this.defaultBubbleSlot.bubble.clone(false);
     bubble.parent = null;
-    bubble.image = null;
+    bubble.filmStack.films = [];
     bubble.n_p0 = [q[0] - 0.12, q[1] - 0.12];
     bubble.n_p1 = [q[0] + 0.12, q[1] + 0.12];
     //bubble.n_p0 = [0,0];
@@ -735,7 +732,7 @@ export class BubbleLayer extends Layer {
 
     this.imageDropIcon.position = cp([0,1],[0,0]);
     this.imageScaleLockIcon.position = cp([1,1],[0,0]);
-    this.imageScaleLockIcon.index = this.selected.image?.scaleLock ? 1 : 0;
+    this.imageScaleLockIcon.index = this.selected.scaleLock ? 1 : 0;
   }
 
   async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
@@ -743,7 +740,7 @@ export class BubbleLayer extends Layer {
     this.unfocus();
     const bubble = this.defaultBubbleSlot.bubble.clone(false);
     bubble.parent = null;
-    bubble.image = null;
+    bubble.filmStack.films = [];
     bubble.setPhysicalRect(paperSize, [dragStart[0], dragStart[1], 0, 0]);
     bubble.text = getHaiku();
     bubble.initOptions();
@@ -876,11 +873,14 @@ export class BubbleLayer extends Layer {
         const pp = Bubble.normalizedPosition(paperSize, p);
         this.resizeBubbleAux(bubble, handle, q0, q1, pp);
 
-        if (bubble.image?.scaleLock) {
+        if (bubble.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
+          // TODO: 
+          /*
           const bubbleSize = bubble.getPhysicalSize(paperSize);
           bubble.image.n_translation = [0,0];
           bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
+          */
         }
   
         this.setIconPositions();
@@ -890,7 +890,6 @@ export class BubbleLayer extends Layer {
       if (!bubble.hasEnoughSize(paperSize)) {
         throw "cancel";
       }
-      console.log(bubble.image);
       this.onPotentialCrossPage(bubble);
       this.onCommit();
     } catch (e) {
@@ -904,7 +903,7 @@ export class BubbleLayer extends Layer {
   resizeBubbleAux(bubble: Bubble, handle: RectHandle, q0: Vector, q1: Vector, p: Vector) {
     const paperSize = this.getPaperSize();
 
-    if (bubble.image?.scaleLock) {
+    if (bubble.scaleLock) {
       const rwfar = (os: Vector, ns: Vector) => {
         return this.resizeWithFixedAspectRatio(os, ns);
       }
@@ -1003,38 +1002,47 @@ export class BubbleLayer extends Layer {
 
   *translateImage(dragStart: Vector, bubble: Bubble) {
     const paperSize = this.getPaperSize();
-    const n_origin = bubble.image.n_translation;
-    const origin = bubble.getPhysicalImageTranslation(paperSize);
+    const films = bubble.filmStack.getOperationTargetFilms();
+    const origins = films.map(film => film.getShiftedTranslation(paperSize));
 
     try {
+      let lastq = null;
       yield* translate(dragStart, (q) => {
-        bubble.setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
+        lastq = [...q];
+        films.forEach((film, i) => {
+          film.setShiftedTranslation(paperSize, [origins[i][0] + q[0], origins[i][1] + q[1]]);
+        });
         this.redraw();
       });
+      if (lastq[0] !== 0 || lastq[1] !== 0) {
+        this.onCommit();
+      }
     } catch (e) {
       if (e === "cancel") {
-        bubble.image.n_translation = n_origin;
-        this.redraw();
+        this.onRevert();
       }
     }
   }
 
 
   *scaleImage(dragStart: Vector, bubble: Bubble) {
-    const origin = bubble.image.n_scale;
+    const paperSize = this.getPaperSize();
+    const films = bubble.filmStack.getOperationTargetFilms();
 
     try {
+      const transformer = new FilmStackTransformer(paperSize, films);
+
       yield* scale(this.getPaperSize(), dragStart, (q) => {
-        const s = Math.max(q[0], q[1]);
-        bubble.image.n_scale = origin * s;
+        transformer.scale(Math.max(q[0], q[1]))
         this.redraw();
       });
     } catch (e) {
       if (e === "cancel") {
-        bubble.image.n_scale = origin;
-        this.redraw();
+        this.onRevert();
       }
     }
+    // TODO: revertしたときこれでいい？
+    this.onCommit();
   }
 
   *optionsTailTip(p: Vector, bubble: Bubble) {
@@ -1250,9 +1258,11 @@ export class BubbleLayer extends Layer {
 
   toggleScaleLock(bubble: Bubble) {
     const paperSize = this.getPaperSize();
-    bubble.image.scaleLock = !bubble.image.scaleLock;
-    this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
-    if (bubble.image.scaleLock) {
+    bubble.scaleLock = !bubble.scaleLock;
+    this.imageScaleLockIcon.index = bubble.scaleLock ? 1 : 0;
+    if (bubble.scaleLock) {
+      // TODO:
+      /* 
       let bubbleSize = bubble.getPhysicalSize(paperSize);
       const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubbleSize);
       const [cx,cy] = bubble.getPhysicalCenter(paperSize);
@@ -1262,6 +1272,7 @@ export class BubbleLayer extends Layer {
       bubbleSize = bubble.getPhysicalSize(paperSize);
       bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
       this.setIconPositions();
+      */
     }
     this.redraw();
   }
@@ -1293,6 +1304,12 @@ export class BubbleLayer extends Layer {
     } else {
       this.createBubbleIcon.pivot = [0,1];
     }
+  }
+
+  newImageFilm(image: HTMLImageElement): Film {
+    const film = new Film();
+    film.media = new ImageMedia(image);
+    return film;
   }
 }
 sequentializePointer(BubbleLayer);

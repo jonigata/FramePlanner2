@@ -677,7 +677,7 @@ export class FrameLayer extends Layer {
   *scaleImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const films = element.getOperationTargetFilms();
+    const films = element.filmStack.getOperationTargetFilms();
 
     try {
       const transformer = new FilmStackTransformer(paperSize, films);
@@ -694,13 +694,14 @@ export class FrameLayer extends Layer {
         this.onRevert();
       }
     }
+    // TODO: revertしたときこれでいい？
     this.onCommit();
   }
 
   *rotateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const films = element.getOperationTargetFilms();
+    const films = element.filmStack.getOperationTargetFilms();
 
     try {
       const transformer = new FilmStackTransformer(paperSize, films);
@@ -723,7 +724,7 @@ export class FrameLayer extends Layer {
   *translateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const films = element.getOperationTargetFilms();
+    const films = element.filmStack.getOperationTargetFilms();
     const origins = films.map(film => film.getShiftedTranslation(paperSize));
 
     try {
