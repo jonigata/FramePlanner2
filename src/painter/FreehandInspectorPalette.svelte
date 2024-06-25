@@ -24,9 +24,13 @@
 </script>
 
 <div class="flex flex-row gap-4 items-center mt-2">
-  <span class="color-picker">
-    <ColorPicker bind:hex={themeColor} label="" />
-  </span>
+  <div class="color-picker">
+    <!-- svelte-ignore a11y-label-has-associated-control -->
+    <label class="flex items-center gap-1 flex flex-col">
+      <span class="text-xs">テーマ</span>
+      <ColorPicker bind:hex={themeColor} label="" />
+    </label>
+  </div>
   <div class="flex space-x-1">
     {#each colors as c}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
