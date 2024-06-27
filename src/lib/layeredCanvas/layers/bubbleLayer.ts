@@ -47,7 +47,6 @@ export class BubbleLayer extends Layer {
   zMinusIcon: ClickableIcon;
   removeIcon: ClickableIcon;
   rotateIcon: ClickableIcon;
-  imageDropIcon: ClickableIcon;
   imageScaleLockIcon: ClickableIcon;
   optionIcons: Record<string, ClickableIcon>;
 
@@ -126,7 +125,6 @@ export class BubbleLayer extends Layer {
     this.removeIcon.render(ctx);
     this.rotateIcon.render(ctx);
 
-    this.imageDropIcon.render(ctx);
     this.imageScaleLockIcon.render(ctx);
 
     if (this.interactable && this.lit) {
@@ -310,7 +308,6 @@ export class BubbleLayer extends Layer {
         this.offsetIcon.hintIfContains(p, this.hint) ||
         this.zMinusIcon.hintIfContains(p, this.hint) ||
         this.zPlusIcon.hintIfContains(p, this.hint) ||
-        this.imageDropIcon.hintIfContains(p, this.hint) ||
         this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
@@ -526,8 +523,6 @@ export class BubbleLayer extends Layer {
         return { action: "z-minus", bubble };
       } else if (this.zPlusIcon.contains(point)) {
         return { action: "z-plus", bubble };
-      } else if (this.imageDropIcon.contains(point)) {
-        return { action: "image-drop", bubble };
       } else if (this.imageScaleLockIcon.contains(point)) {
         return { action: "image-scale-lock", bubble };
       } else {
@@ -730,7 +725,6 @@ export class BubbleLayer extends Layer {
     this.removeIcon.position = cp([1,0], [0, 0]);
     this.rotateIcon.position = cp([0.5,0], [0,-1]);
 
-    this.imageDropIcon.position = cp([0,1],[0,0]);
     this.imageScaleLockIcon.position = cp([1,1],[0,0]);
     this.imageScaleLockIcon.index = this.selected.scaleLock ? 1 : 0;
   }
