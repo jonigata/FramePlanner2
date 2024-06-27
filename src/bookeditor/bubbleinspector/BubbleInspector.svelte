@@ -16,6 +16,7 @@
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
+  import FilmList from "../frameinspector/FilmList.svelte";
 
   import bubbleIcon from '../../assets/title-bubble.png';
   import horizontalIcon from '../../assets/horizontal.png';
@@ -164,6 +165,17 @@
     $newBubbleToken = $bubble;
   }
 
+  function onCommit() {
+  }
+
+  function onScribble(e: CustomEvent<Film>) {
+  }
+
+  function onGenerate(e: CustomEvent<Film>) {
+  }
+
+  function onPunch(e: CustomEvent<Film>) {
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -262,6 +274,10 @@
         <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
       </div>
     </div>
+    <details class="w-full text-left">
+      <summary>レイヤー</summary>
+      <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+    </details>
   </div>
 </div>
 {/if}
