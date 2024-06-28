@@ -14,6 +14,7 @@ import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { Film, ImageMedia, FilmStackTransformer } from "../dataModels/film";
+import { drawFilmStackFrame } from "../tools/draw/drawFilmStack";
 
 const iconUnit: Vector = [20, 20];
 
@@ -168,6 +169,12 @@ export class BubbleLayer extends Layer {
     }
     drawSelectionFrame(ctx, "rgba(0, 192, 0, 1)", corners, 3, 5);
 
+    // フィルムの枠
+    ctx.save();
+    ctx.translate(x + w * 0.5, y + h * 0.5);
+    ctx.rotate((-bubble.rotation * Math.PI) / 180);
+    drawFilmStackFrame(ctx, bubble.filmStack, paperSize);
+    ctx.restore();
 
     // 操作対象のハンドルを強調表示
     if (this.handle != null) {
@@ -448,7 +455,12 @@ export class BubbleLayer extends Layer {
     bubble.initOptions();
     bubble.text = "";
 
+    const minImageDimension = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const minPageDimension = Math.min(paperSize[0], paperSize[1]);
+    const n_scale = 1 / (minPageDimension / minImageDimension);
+
     const film = this.newImageFilm(image);
+    film.n_scale = n_scale;
     bubble.filmStack.films.push(film);
     this.bubbles.push(bubble);
     this.onCommit();

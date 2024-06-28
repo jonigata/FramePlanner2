@@ -2,7 +2,7 @@ import { type Vector, reverse2D } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
 import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
-import type { FilmStack } from "../dataModels/film";
+import { drawFilmStack } from "../tools/draw/drawFilmStack";
 import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText } from "../tools/draw/drawText";
 import { Layer } from "../system/layeredCanvas";
@@ -270,6 +270,7 @@ export class PaperRendererLayer extends Layer {
     const paperSize = this.getPaperSize();
     const size = bubble.getPhysicalSize(paperSize);
     const strokeWidth = bubble.getPhysicalStrokeWidth(paperSize);
+    const [x0, y0, w, h] = bubble.getPhysicalRect(paperSize);
 
     ctx.save();
     ctx.translate(...bubble.getPhysicalCenter(paperSize));
@@ -285,26 +286,7 @@ export class PaperRendererLayer extends Layer {
     this.drawBubble(ctx, size, 'clip', bubble);
 
     // 画像描画
-    const [x0, y0, w, h] = bubble.getPhysicalRect(paperSize);
-    for (let film of bubble.filmStack.films) {
-      if (!film.visible) { continue; }
-
-      const scale = film.getShiftedScale(paperSize);
-      const translation = film.getShiftedTranslation(paperSize);
-
-      ctx.save();
-      ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
-      ctx.rotate(-film.rotation * Math.PI / 180);
-      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
-
-      if (film.visible) {
-        ctx.save();
-        ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
-        ctx.drawImage(film.media.drawSource, 0, 0, film.media.naturalWidth, film.media.naturalHeight);
-        ctx.restore();
-      }
-      ctx.restore();
-    }
+    drawFilmStack(ctx, bubble.filmStack, paperSize);
 
     ctx.restore();
   }
@@ -363,7 +345,7 @@ export class PaperRendererLayer extends Layer {
     const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
     ctx.save();
     ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
-    this.drawFilmStack(ctx, element.filmStack);
+    drawFilmStack(ctx, element.filmStack, paperSize);
     ctx.restore();
 
   /*
@@ -378,31 +360,6 @@ export class PaperRendererLayer extends Layer {
       ctx.restore();
     }    
 */
-  }
-
-  drawFilmStack(ctx: CanvasRenderingContext2D, filmStack: FilmStack) {
-    const paperSize = this.getPaperSize();
-    const films = filmStack.films;
-
-    for (let film of films) {
-      if (!film.visible) { continue; }
-
-      const scale = film.getShiftedScale(paperSize);
-      const translation = film.getShiftedTranslation(paperSize);
-
-      ctx.save();
-      ctx.translate(translation[0], translation[1]);
-      ctx.rotate(-film.rotation * Math.PI / 180);
-      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
-
-      if (film.visible) {
-        ctx.save();
-        ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
-        ctx.drawImage(film.media.drawSource, 0, 0, film.media.naturalWidth, film.media.naturalHeight);
-        ctx.restore();
-      }
-      ctx.restore();
-    }
   }
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
