@@ -6,14 +6,14 @@ import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
-import { type Vector, type Rect, add2D, ensureMinRectSize } from "../tools/geometry/geometry";
+import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
-import { Film, ImageMedia, FilmStackTransformer } from "../dataModels/film";
+import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
 import { drawFilmStackFrame } from "../tools/draw/drawFilmStack";
 
 const iconUnit: Vector = [20, 20];
@@ -873,6 +873,9 @@ export class BubbleLayer extends Layer {
     try {
       const paperSize = this.getPaperSize();
       const [q0, q1] = bubble.regularized();
+      const ir = scaleRect(calculateMinimumBoundingRect(paperSize, bubble.filmStack.films), 0.01);
+
+      const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
 
       let p;
       while ((p = yield)) {
@@ -881,12 +884,9 @@ export class BubbleLayer extends Layer {
 
         if (bubble.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
-          // TODO: 
-          /*
-          const bubbleSize = bubble.getPhysicalSize(paperSize);
-          bubble.image.n_translation = [0,0];
-          bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
-          */
+          const bubbleRect = bubble.getPhysicalRect(paperSize);
+          const { scale } = computeConstraintedRect(ir, bubbleRect);
+          transformer.scale(scale * 0.01);          
         }
   
         this.setIconPositions();

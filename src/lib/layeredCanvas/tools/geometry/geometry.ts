@@ -273,3 +273,7 @@ export function getRectCenter(r: Rect): Vector {
 export function translateRect(r: Rect, v: Vector): Rect {
   return [r[0] + v[0], r[1] + v[1], r[2], r[3]];
 }
+
+export function scaleRect(r: Rect, s: number): Rect {
+  return [r[0] * s, r[1] * s, r[2] * s, r[3] * s];
+}
