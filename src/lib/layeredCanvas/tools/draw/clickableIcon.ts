@@ -15,9 +15,9 @@ export class ClickableIcon {
   
   constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: () => boolean, matrixProvider: () => DOMMatrix) {
     this.images = srcs.map(src => {
-        const image = new Image();
-        image.src = new URL(`../../../../assets/${src}`, import.meta.url).href;
-        return image;
+      const image = new Image();
+      image.src = new URL(`../../../../assets/${src}`, import.meta.url).href;
+      return image;
     });
     this.position = [0,0];
     this.size = size;

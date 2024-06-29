@@ -271,8 +271,9 @@
     layeredCanvas.redraw();
 
     if (bubbleSnapshot && bubble) {
-      const snapshot = JSON.stringify(Bubble.decompile(bubble));
+      const snapshot = makeSnapshot(bubble);
       if (bubbleSnapshot !== snapshot) {
+        bubbleSnapshot = snapshot;
         $forceFontLoadToken = true;
         delayedCommiter.schedule(2000);
       }
@@ -366,7 +367,7 @@
       const offset = canvas.height / 2 < cy ? -1 : 1;
       const bubbleSize = b.getPhysicalSize(page.paperSize);
       
-      bubbleSnapshot = JSON.stringify(Bubble.decompile(b)); // サイズは比較時に合致してればいいので適当に
+      bubbleSnapshot = makeSnapshot(b); // サイズは比較時に合致してればいいので適当に
       $bubbleInspectorTarget = {
         bubble: b,
         page,
@@ -406,6 +407,25 @@
     }
   }
 
+
+  function makeSnapshot(b: Bubble) {
+    let films = [];
+    for (let film of b.filmStack.films) {
+      const f = {
+        media: film.media.fileId,
+        n_scale: film.n_scale,
+        n_translation: film.n_translation,
+        rotation: film.rotation,
+        reverse: film.reverse,
+        visible: film.visible,
+        prompt: film.prompt,
+      }
+      films.push(f);
+    }
+    const jsonObject = Bubble.decompile(b);
+    jsonObject.films = films;
+    return JSON.stringify(jsonObject);
+  }
 
   async function modalScribble(fit: FrameInspectorTarget) {
     delayedCommiter.force();
