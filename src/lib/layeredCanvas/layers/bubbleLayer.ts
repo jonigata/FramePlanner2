@@ -16,7 +16,7 @@ import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
 import { drawFilmStackFrame } from "../tools/draw/drawFilmStack";
 
-const iconUnit: Vector = [32, 32];
+const iconUnit: Vector = [26, 26];
 
 export class DefaultBubbleSlot {
   bubble: Bubble;
@@ -49,6 +49,7 @@ export class BubbleLayer extends Layer {
   removeIcon: ClickableIcon;
   rotateIcon: ClickableIcon;
   imageScaleLockIcon: ClickableIcon;
+  scaleIcon: ClickableIcon;
   optionIcons: Record<string, ClickableIcon>;
 
   constructor(
@@ -90,6 +91,7 @@ export class BubbleLayer extends Layer {
 
     this.imageScaleLockIcon = new ClickableIcon(["bubbleLayer/bubble-unlock.png","bubbleLayer/bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && 0 < this.selected?.filmStack.films.length, mp);
     this.imageScaleLockIcon.index = 0;
+    this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.png"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null, mp);
 
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.png"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
@@ -127,6 +129,7 @@ export class BubbleLayer extends Layer {
     this.rotateIcon.render(ctx);
 
     this.imageScaleLockIcon.render(ctx);
+    this.scaleIcon.render(ctx);
 
     if (this.interactable && this.lit) {
       this.drawLitUI(ctx, this.lit);
@@ -191,8 +194,9 @@ export class BubbleLayer extends Layer {
   drawOptionHandles(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
     const paperSize = this.getPaperSize();
     const bubbleCenter = bubble.getPhysicalCenter(paperSize);
-    const bubbleRect = bubble.getPhysicalRegularizedRect(paperSize);
-    const cp = (ro, ou) => ClickableIcon.calcPosition(bubbleRect, iconUnit, ro, ou);
+    const [x,y,w,h] = bubble.getPhysicalRegularizedRect(paperSize);
+    const rect: Rect = [x+10, y+10, w-20, h-20];
+    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
     const rp = (p) => [bubbleCenter[0] + p[0], bubbleCenter[1] + p[1]];
     const tailMidCoord = () => tailCoordToWorldCoord(bubbleCenter, bubble.optionContext.tailTip, bubble.optionContext.tailMid);
 
@@ -537,6 +541,8 @@ export class BubbleLayer extends Layer {
         return { action: "z-plus", bubble };
       } else if (this.imageScaleLockIcon.contains(point)) {
         return { action: "image-scale-lock", bubble };
+      } else if (this.scaleIcon.contains(point)) {
+        return { action: "image-scale", bubble };
       } else {
         const icon = this.getOptionIconAt(bubble.shape, point);
         if (icon) {
@@ -736,6 +742,8 @@ export class BubbleLayer extends Layer {
 
     this.imageScaleLockIcon.position = cp([1,1],[0,0]);
     this.imageScaleLockIcon.index = this.selected.scaleLock ? 1 : 0;
+
+    this.scaleIcon.position = cp([1,1],[-2,0]);
   }
 
   async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
