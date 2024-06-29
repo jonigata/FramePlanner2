@@ -16,7 +16,7 @@ import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
 import { drawFilmStackFrame } from "../tools/draw/drawFilmStack";
 
-const iconUnit: Vector = [20, 20];
+const iconUnit: Vector = [32, 32];
 
 export class DefaultBubbleSlot {
   bubble: Bubble;

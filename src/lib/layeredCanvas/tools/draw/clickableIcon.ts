@@ -84,7 +84,7 @@ export class ClickableIcon {
     ctx.save();
     const [x, y, w, h] = this.boudingRect;
     ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 10;
     ctx.drawImage(ClickableIcon.tmpCanvas, x, y, w, h);
     ctx.restore();
   }
