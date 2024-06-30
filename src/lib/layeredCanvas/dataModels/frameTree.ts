@@ -36,10 +36,10 @@ export class FrameElement {
   semantics: string | null;
   prompt: string | null;
   pseudo: boolean; // 4コマタイトルなどの擬似要素、流し込みやバッチ処理のときに無視する
-  gallery: HTMLImageElement[];
   filmStack: FilmStack;
 
   // 以下は揮発性
+  gallery: HTMLImageElement[];
   focused: boolean;
   residenceTime: number;
 
@@ -59,13 +59,13 @@ export class FrameElement {
     this.z = 0;
     this.visibility = 2;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
-    this.gallery = [];
     this.semantics = null;
 
     // リーフ要素の場合は絵がある可能性がある
     this.filmStack = new FilmStack();
 
     // 以下揮発性
+    this.gallery = [];
     this.focused = false;
     this.residenceTime = 0;
   }
@@ -86,7 +86,6 @@ export class FrameElement {
     element.bgColor = this.bgColor;
     element.borderColor = this.borderColor;
     element.borderWidth = this.borderWidth;
-    element.gallery = [...this.gallery];
     element.z = this.z;
     element.visibility = this.visibility;
     element.semantics = this.semantics;

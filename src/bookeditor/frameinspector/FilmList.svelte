@@ -79,9 +79,8 @@
     dispatch('scribble', e.detail);
   }
 
-  function onGenerate(e: CustomEvent<Film>) {
-    console.log("onGenerate", e.detail);
-    dispatch('generate', e.detail);
+  function onGenerate() {
+    dispatch('generate');
   }
 
   function onPunch(e: CustomEvent<Film>) {

@@ -439,7 +439,7 @@
     toolTipRequest.set(null);
     const page = fit.page;
     const leaf = fit.frame;
-    const r = await imageProvider.run(page, leaf);
+    const r = await imageProvider.run(leaf.prompt, leaf.filmStack, leaf.gallery);
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leafLayout = findLayoutOf(pageLayout, leaf);

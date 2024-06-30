@@ -1054,13 +1054,12 @@ export class BubbleLayer extends Layer {
         transformer.scale(Math.max(q[0], q[1]))
         this.redraw();
       });
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.onRevert();
       }
     }
-    // TODO: revertしたときこれでいい？
-    this.onCommit();
   }
 
   *optionsTailTip(p: Vector, bubble: Bubble) {

@@ -45,7 +45,7 @@
     console.log("onGenerate");
     ev.stopPropagation();
     ev.preventDefault();
-    dispatch('generate', film)
+    dispatch('generate')
   }
 
   function onPunch(ev: MouseEvent) {

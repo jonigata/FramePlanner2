@@ -18,6 +18,7 @@
   import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
+  import ImageProvider from '../../generator/ImageProvider.svelte';
 
   import bubbleIcon from '../../assets/title-bubble.png';
   import horizontalIcon from '../../assets/horizontal.png';
@@ -37,6 +38,7 @@
   let textarea = null;
   let inspectorSize = [0, 0];
   let inspector = null;
+  let imageProvider: ImageProvider;
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -173,7 +175,8 @@
   function onScribble(e: CustomEvent<Film>) {
   }
 
-  function onGenerate(e: CustomEvent<Film>) {
+  async function onGenerate() {
+    const r = await imageProvider.run($bubble.prompt, $bubble.filmStack, $bubble.gallery);
   }
 
   function onPunch(e: CustomEvent<Film>) {
@@ -283,6 +286,8 @@
   </div>
 </div>
 {/if}
+
+<ImageProvider bind:this={imageProvider}/>
 
 <style>
   .bubble-inspector-container {

@@ -47,10 +47,13 @@ export class Bubble {
   scaleLock: boolean;
   optionContext: any;
 
-  pageNumber: number; // 一時的、当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
-  fontRenderVersion: number; // 一時的、フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
-  appearanceDelay: number; // 一時的、ムービー生成時に使う出現までの時間(コマ単位)
-  hidesText: boolean; // 一時的、ムービー生成時に使うテキスト非表示フラグ
+  // 以下一時的
+  pageNumber: number; // 当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
+  fontRenderVersion: number; // フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
+  appearanceDelay: number; // ムービー生成時に使う出現までの時間(コマ単位)
+  hidesText: boolean; // ムービー生成時に使うテキスト非表示フラグ
+  prompt: string;
+  gallery: HTMLImageElement[];
 
   renderInfo: BubbleRenderInfo;
 
