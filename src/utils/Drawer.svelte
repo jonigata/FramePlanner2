@@ -21,7 +21,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="overlay" on:click={handleClickAway} />
   <div class="panel {placement}" class:size>
-      <slot />
+    <slot />
   </div>
 </aside>
 

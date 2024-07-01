@@ -44,6 +44,7 @@
   import BubbleBucket from './bubbleBucket/BubbleBucket.svelte';
   //  import JsonReader from './utils/JsonReader.svelte';
   import VideoMaker from './videomaker/VideoMaker.svelte';
+  import AdContainer from './utils/AdContainer.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -150,8 +151,12 @@
 </Modals>
 <FullScreenLoading/>
 
+<!-- ads -->
+<AdContainer/>
+
 <style>
-  :global(body) {
+
+:global(body) {
     overflow: hidden;
     height: 100vh;
     max-height: 100vh;
