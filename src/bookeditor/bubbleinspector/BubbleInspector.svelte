@@ -14,11 +14,12 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
-  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
+  import { Film, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
   import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
+  import { minimumBoundingScale } from "../../lib/layeredCanvas/tools/geometry/geometry";
 
   import bubbleIcon from '../../assets/title-bubble.png';
   import horizontalIcon from '../../assets/horizontal.png';
@@ -177,7 +178,18 @@
 
   async function onGenerate() {
     const r = await imageProvider.run($bubble.prompt, $bubble.filmStack, $bubble.gallery);
+    const film = new Film();
+    film.media = new ImageMedia(r.image);
+    const paperSize = $bubblePage.paperSize;
+    const bubbleSize = $bubble.getPhysicalSize(paperSize);
+    const scale = minimumBoundingScale(film.media.size, bubbleSize);
+    film.setShiftedScale(paperSize, scale);
+    $bubble.filmStack.films.push(film);
+    $bubble.prompt = r.prompt;
+    $bubble = $bubble;
   }
+
+
 
   function onPunch(e: CustomEvent<Film>) {
   }

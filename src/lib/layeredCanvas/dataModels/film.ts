@@ -18,6 +18,7 @@ export class Media {
   get naturalWidth(): number {return 0;}
   get naturalHeight(): number {return 0;}
   get drawSource(): HTMLImageElement | HTMLVideoElement {return null;}
+  get size(): Vector {return [this.naturalWidth, this.naturalHeight];}
 }
 
 export class ImageMedia extends Media {
@@ -262,4 +263,3 @@ function transformFilm(paperSize: Vector, film: Film): Vector[] {
   const matrix = film.makeMatrix(paperSize);
   return corners.map(corner => matrix.transformPoint({x: corner[0], y: corner[1]})).map(p => [p.x, p.y]);
 }
-

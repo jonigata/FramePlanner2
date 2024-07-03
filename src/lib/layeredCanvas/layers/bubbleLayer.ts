@@ -6,7 +6,7 @@ import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
-import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect } from "../tools/geometry/geometry";
+import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect, minimumBoundingScale } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
@@ -683,7 +683,11 @@ export class BubbleLayer extends Layer {
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, position)) {
         const film = this.newImageFilm(image);
-        this.getGroupMaster(bubble).filmStack.films.push(film);
+        const masterBubble = this.getGroupMaster(bubble);
+        masterBubble.filmStack.films.push(film);
+        const bubbleSize = masterBubble.getPhysicalSize(paperSize);
+        const scale = minimumBoundingScale(film.media.size, bubbleSize);
+        film.setShiftedScale(paperSize, scale);
         this.onFocus(bubble);
         this.onCommit();
         return true;

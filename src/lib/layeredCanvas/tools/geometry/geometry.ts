@@ -277,3 +277,7 @@ export function translateRect(r: Rect, v: Vector): Rect {
 export function scaleRect(r: Rect, s: number): Rect {
   return [r[0] * s, r[1] * s, r[2] * s, r[3] * s];
 }
+
+export function minimumBoundingScale(objectSize: Vector, containerSize: Vector): number {
+  return Math.max(containerSize[0] / objectSize[0], containerSize[1] / objectSize[1]);
+}
