@@ -1,8 +1,11 @@
 <script>
   import AdPanel from './AdPanel.svelte';
   import EmbeddedHtml from './EmbeddedHtml.svelte';
+  import adsIcon from '../assets/binoculars.png';
+  import { shineEffect } from './shineEffect';
 
   let isOpen = false;
+
   function togglePanel() {
     isOpen = !isOpen;
   }
@@ -11,13 +14,11 @@
 <div class="fixed inset-y-0 right-0 flex items-center z-50">
   <div class="flex flex-col items-end"> <!-- ボタンとパネルをグループ化 -->
     <button
-      class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 mb-2"
+      class="variant-soft-surface rounded-container-token px-4 py-2 rounded border-8 border-gray-400"
       on:click={togglePanel}
+      use:shineEffect={{ interval: 1000, duration: 500, enabled: !isOpen }}
     >
-    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L2 8L12 14L22 8L12 2Z" />
-      <path d="M2 14L12 20L22 14" />
-    </svg>
+      <img src={adsIcon} alt="広告" class="w-12 h-12"/>
     </button>
     <AdPanel {isOpen}>
       <div class="content">
