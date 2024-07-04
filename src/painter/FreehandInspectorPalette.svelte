@@ -14,6 +14,7 @@
     if (!themeColor) {
       return;
     }
+    console.log(themeColor);
     const g = new ColorHarmonyGenerator(themeColor);
     const h = g.generateHarmony();
     colors = Object.values(h);

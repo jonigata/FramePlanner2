@@ -14,12 +14,11 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
-  import { Film, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
+  import { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
-  import { minimumBoundingScale } from "../../lib/layeredCanvas/tools/geometry/geometry";
 
   import bubbleIcon from '../../assets/title-bubble.png';
   import horizontalIcon from '../../assets/horizontal.png';
@@ -30,6 +29,7 @@
   import unembeddedIcon from '../../assets/unembedded.png';
   import resetIcon from '../../assets/reset.png';
   import movieIcon from '../../assets/movie.png';
+  import { redrawToken } from "../bookStore";
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -170,23 +170,18 @@
   }
 
   function onCommit() {
-    $bubble = $bubble;    
+    $bubbleInspectorTarget.command = "commit";
+    $redrawToken = true;
   }
 
   function onScribble(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget.command = "scribble";
   }
 
-  async function onGenerate() {
-    const r = await imageProvider.run($bubble.prompt, $bubble.filmStack, $bubble.gallery);
-    const film = new Film();
-    film.media = new ImageMedia(r.image);
-    const paperSize = $bubblePage.paperSize;
-    const bubbleSize = $bubble.getPhysicalSize(paperSize);
-    const scale = minimumBoundingScale(film.media.size, bubbleSize);
-    film.setShiftedScale(paperSize, scale);
-    $bubble.filmStack.films.push(film);
-    $bubble.prompt = r.prompt;
-    $bubble = $bubble;
+  async function onGenerate(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget.command = "generate";
   }
 
 

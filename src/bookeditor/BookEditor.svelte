@@ -9,7 +9,7 @@
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition } from './bubbleinspector/bubbleInspectorStore';
+  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, frameInspectorPosition, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents, swapBookContents } from './book';
@@ -30,6 +30,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
+  import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -371,6 +372,8 @@
       $bubbleInspectorTarget = {
         bubble: b,
         page,
+        command: null,
+        commandTargetFilm: null,
       };
       $bubbleInspectorPosition = {
         center: convertPointFromNodeToPage(canvas, cx, cy),
@@ -385,17 +388,16 @@
     }
   }
 
-  let frameInspectorTargetBackUp: FrameInspectorTarget;
   $: onFrameCommand($frameInspectorTarget);
   async function onFrameCommand(fit: FrameInspectorTarget) {
     if (fit) {
-      frameInspectorTargetBackUp = { ...fit };
+      let frameInspectorTargetBackUp = { ...fit };
       frameInspectorTargetBackUp.command = null;
       $frameInspectorTarget = null;
 
       const command = fit.command;
       if (command === "scribble") {
-        await modalScribble(fit);
+        await modalFrameScribble(fit);
       } else if (command === "generate") {
         await modalGenerate(fit);
       } else if (command === "punch") {
@@ -404,6 +406,27 @@
         commit(null);
       }
       $frameInspectorTarget = frameInspectorTargetBackUp;
+    }
+  }
+
+  $: onBubbleCommand($bubbleInspectorTarget);
+  async function onBubbleCommand(bit: BubbleInspectorTarget) {
+    if (bit) {
+      let bubbleInspectorTargetBackUp = { ...bit };
+      bubbleInspectorTargetBackUp.command = null;
+      $frameInspectorTarget = null;
+
+      const command = bit.command;
+      if (command === "scribble") {
+        await modalBubbleScribble(bit);
+      } else if (command === "generate") {
+        // await modalGenerate(bit);
+      } else if (command === "punch") {
+        // await punch(bit);
+      } else if (command === "commit") {
+        commit(null);
+      }
+      $bubbleInspectorTarget = bubbleInspectorTargetBackUp;
     }
   }
 
@@ -427,10 +450,17 @@
     return JSON.stringify(jsonObject);
   }
 
-  async function modalScribble(fit: FrameInspectorTarget) {
+  async function modalFrameScribble(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
-    await painter.run(fit.page, fit.frame, fit.commandTargetFilm);
+    await painter.runWithFrame(fit.page, fit.frame, fit.commandTargetFilm);
+    commit(null);
+  }
+
+  async function modalBubbleScribble(bit: BubbleInspectorTarget) {
+    delayedCommiter.force();
+    toolTipRequest.set(null);
+    await painter.runWithBubble(bit.page, bit.bubble, bit.commandTargetFilm);
     commit(null);
   }
 
@@ -457,6 +487,19 @@
 
       commit(null);
     }
+  }
+
+  async function modalBubbleGenerate(fit: FrameInspectorTarget) {
+    const r = await imageProvider.run($bubble.prompt, $bubble.filmStack, $bubble.gallery);
+    const film = new Film();
+    film.media = new ImageMedia(r.image);
+    const paperSize = fit.page.paperSize;
+    const bubbleSize = $bubble.getPhysicalSize(paperSize);
+    const scale = minimumBoundingScale(film.media.size, bubbleSize);
+    film.setShiftedScale(paperSize, scale);
+    $bubble.filmStack.films.push(film);
+    $bubble.prompt = r.prompt;
+    $bubble = $bubble;
   }
 
   async function punch(fit: FrameInspectorTarget) {

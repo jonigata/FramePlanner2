@@ -13,6 +13,7 @@ export class InlinePainterLayer extends Layer {
 
   film: Film;
   surfaceCorners: Trapezoid;
+  depth: number;
   translation: Vector;
   scale: Vector;
   maskPath: paper.PathItem;
@@ -60,15 +61,15 @@ export class InlinePainterLayer extends Layer {
       },
 
       strokeWidth: 0,
-      isFilled: true,
+      strokeOperation: 'strokeWithFill',
       fill: "#000000",
       stroke: "#000000",
-    }; // TODO: FreehandInspectorと重複している
+    }; // TODO: FreehandInspectorと重複している、おそらく使われてない
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.image) {return;}
-    if (depth !== 0) { return; }
+    if (depth !== this.depth) { return; }
 
     this.drawFilmFrame(ctx);
     drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.surfaceCorners);
@@ -80,14 +81,11 @@ export class InlinePainterLayer extends Layer {
     }
 
     if (this.path) {
+      ctx.save();
+      console.log("brush");
       this.applyBrush(ctx);
-      if (0 < this.strokeOptions.strokeWidth) {
-        ctx.lineJoin = "round";
-        ctx.stroke(this.path);
-      }
-      if (this.strokeOptions.isFilled) {
-        ctx.fill(this.path);
-      }
+      this.drawPath(ctx);
+      ctx.restore();
     }
   }
 
@@ -108,7 +106,6 @@ export class InlinePainterLayer extends Layer {
       rawStroke.push(p);
 
       const stroke: Vector[] = getStroke(rawStroke, this.strokeOptions) as Vector[];
-      console.log(stroke);
 
       this.path = new Path2D();
       this.path.moveTo(...stroke[0]);
@@ -139,13 +136,7 @@ export class InlinePainterLayer extends Layer {
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
       this.applyBrush(ctx);
-      if (0 < this.strokeOptions.strokeWidth) {
-        ctx.lineJoin = "round";
-        ctx.stroke(this.path);
-      }
-      if (this.strokeOptions.isFilled) {
-        ctx.fill(this.path);
-      }
+      this.drawPath(ctx);
       ctx.restore();
     }
 
@@ -158,9 +149,10 @@ export class InlinePainterLayer extends Layer {
     await this.image.decode();
   }
 
-  setSurface(film: Film, trapezoid: Trapezoid): void {
+  setSurface(film: Film, trapezoid: Trapezoid, depth: number): void {
     this.film = film;
     this.surfaceCorners = trapezoid;
+    this.depth = depth;
     this.maskPath = null;
     if (film == null) { 
       this.redraw();
@@ -258,6 +250,22 @@ export class InlinePainterLayer extends Layer {
     ctx.fillStyle = this.strokeOptions.fill;
     ctx.strokeStyle = this.strokeOptions.stroke;
     ctx.lineWidth = this.strokeOptions.strokeWidth;
+  }
+
+  drawPath(ctx: CanvasRenderingContext2D) {
+    if (this.strokeOptions.strokeOperation == 'erase') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fill(this.path);
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      if (0 < this.strokeOptions.strokeWidth) {
+        ctx.lineJoin = "round";
+        ctx.stroke(this.path);
+      }
+      if (this.strokeOptions.strokeOperation == 'strokeWithFill') {
+        ctx.fill(this.path);
+      }
+    }
   }
 
   renderDepths(): number[] { return [0]; }

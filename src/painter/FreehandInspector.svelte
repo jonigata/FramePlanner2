@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { draggable } from '@neodrag/svelte';
   import Parameter from '../utils/Parameter.svelte';
@@ -11,10 +11,12 @@
 
   const dispatch = createEventDispatcher();
 
+  type StrokeOperation = "strokeWithfill" | "stroke" | "erase";
+
   const initialOptions = {
     size: 8,
     thinning: 0.5,
-    smoothing: 0.5,
+    smoothing: 0.6,
     streamline: 0.5,
     easing: "linear",
     simulatePressure: true,
@@ -32,7 +34,7 @@
 
     // 以下はperfect-freehandは扱わない
     strokeWidth: 0,
-    isFilled: true,
+    strokeOperation: "strokeWithFill",
     fill: "#000000",
     stroke: "#ffffff",
   };
@@ -41,7 +43,6 @@
     {
       label: "ファイン",
       thinning: 0.5,
-      smoothing: 0.5,
       easing: "linear",
       last: true,
       start: {
@@ -52,11 +53,11 @@
         taper: 100,
         easing: "linear",
       },
+      strokeOperation: "strokeWithFill",
     },
     {
       label: "サインペン",
       thinning: 0,
-      smoothing: 0.5,
       easing: "linear",
       last: true,
       start: {
@@ -67,11 +68,11 @@
         taper: 0,
         cap: true,
       },
+      strokeOperation: "strokeWithFill",
     },
     {
       label: "フラット",
       thinning: 0,
-      smoothing: 0.5,
       easing: "linear",
       last: true,
       start: {
@@ -82,7 +83,23 @@
         taper: 0,
         cap: false,
       },
+      strokeOperation: "strokeWithFill",
     },
+    {
+      label: "消しゴム",
+      thinning: 0,
+      easing: "linear",
+      last: true,
+      start: {
+        taper: 0,
+        cap: true,
+      },
+      end: {
+        taper: 0,
+        cap: true,
+      },
+      strokeOperation: "erase",
+    }    
   ]
 
   let options = structuredClone(initialOptions);
@@ -155,23 +172,28 @@
       <div>
         <div class="flex flex-row gap-4 items-center">
           <label class="flex items-center gap-2"><span>塗りつぶし</span>
-            <input class="checkbox" type="checkbox" bind:checked={options.isFilled}/>
+            <select class="select" bind:value={options.strokeOperation}>
+              <option value={"strokeWithFill"}>塗りつぶし</option>
+              <option value={"stroke"}>フチのみ</option>
+              <option value={"erase"}>消しゴム</option>
+            </select>
           </label>            
-          {#if options.isFilled && 0 < options.strokeWidth}
+          {#if options.strokeOperation != "erase" && 0 < options.strokeWidth}
             <button class="btn btn-sm variant-filled h-6" on:click={onSyncThemeColor}>
               テーマカラーを同期
             </button>
           {/if}
         </div>
-        {#if options.isFilled}
+
+        {#if options.strokeOperation == "strokeWithFill"}
           <FreehandInspectorPalette bind:color={options.fill} bind:themeColor={fillTheme}/>
         {/if}
-      </div>
 
-      <div>
-        <div class="parameter-box">
-          <Parameter label="フチ" bind:value={options.strokeWidth} min={0} max={100} step={1}/>
-        </div>
+        {#if options.strokeOperation != "erase"}
+          <div class="parameter-box">
+            <Parameter label="フチ" bind:value={options.strokeWidth} min={0} max={100} step={1}/>
+          </div>
+        {/if}
         {#if 0 < options.strokeWidth} 
           <FreehandInspectorPalette bind:color={options.stroke} bind:themeColor={strokeTheme}/>
         {/if}

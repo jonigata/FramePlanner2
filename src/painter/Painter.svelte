@@ -1,5 +1,6 @@
 <script lang="ts">
   import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import type { Film } from '../lib/layeredCanvas/dataModels/film';
   import type { Page } from '../bookeditor/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
@@ -8,6 +9,7 @@
   import { mainBook } from '../bookeditor/bookStore';
   import FreehandInspector from './FreehandInspector.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
+  import { rectToTrapezoid } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 
   // TODO: autoGenerate周り未整備、基本的に一旦削除予定
 
@@ -27,7 +29,7 @@
     layeredCanvas.redraw();
   }
 
-  export async function run(page: Page, element: FrameElement, film: Film): Promise<void> {
+  export async function runWithFrame(page: Page, element: FrameElement, film: Film): Promise<void> {
     return new Promise((resolve, reject) => {
       painterPage = page;
       painterFilm = film;
@@ -38,9 +40,24 @@
       const trapezoid = layout.corners;
 
       layeredCanvas.mode = "scribble";
-      findLayer().setSurface(film, trapezoid);
+      findLayer().setSurface(film, trapezoid, 0);
       element.focused = true;
       onDoneHandler = () => { element.focused = false; resolve(); };
+    });
+  }
+
+  export async function runWithBubble(page: Page, bubble: Bubble, film: Film): Promise<void> {
+    return new Promise((resolve, reject) => {
+      painterPage = page;
+      painterFilm = film;
+
+      const paperSize = page.paperSize;
+      const rect = bubble.getPhysicalRect(paperSize);
+      const trapezoid = rectToTrapezoid(rect);
+
+      layeredCanvas.mode = "scribble";
+      findLayer().setSurface(film, trapezoid, 1);
+      onDoneHandler = () => { resolve(); };
     });
   }
 
@@ -49,7 +66,7 @@
 
     painterFilm = null;
     layeredCanvas.mode = null;
-    findLayer().setSurface(null, null);
+    findLayer().setSurface(null, null, 0);
 
     onDoneHandler();
   }
