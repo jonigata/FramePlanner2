@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Film } from '../lib/layeredCanvas/dataModels/film';
   import type { Page } from '../bookeditor/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
@@ -14,7 +14,6 @@
   export let layeredCanvas: LayeredCanvas;
   export let arrayLayer: ArrayLayer;
   let painterPage: Page = null;
-  let painterElement: FrameElement = null;
   let painterFilm: Film = null;
   let autoGeneration: boolean = false;
   let painterAutoGenerate: PainterAutoGenerate = null;
@@ -31,11 +30,15 @@
   export async function run(page: Page, element: FrameElement, film: Film): Promise<void> {
     return new Promise((resolve, reject) => {
       painterPage = page;
-      painterElement = element;
       painterFilm = film;
 
+      const paperSize = page.paperSize;
+      const paperLayout = calculatePhysicalLayout(page.frameTree, paperSize, [0,0]);
+      const layout = findLayoutOf(paperLayout, element);
+      const trapezoid = layout.corners;
+
       layeredCanvas.mode = "scribble";
-      findLayer().setFilm(element, film);
+      findLayer().setSurface(film, trapezoid);
       onDoneHandler = resolve;
     });
   }
@@ -43,10 +46,9 @@
   async function onDone() {
     console.log("onScribbleDone")
 
-    painterElement = null;
     painterFilm = null;
     layeredCanvas.mode = null;
-    findLayer().setFilm(null, null);
+    findLayer().setSurface(null, null);
 
     onDoneHandler();
   }
@@ -62,7 +64,7 @@
   }
 
   export function isPainting() {
-    return painterElement != null;
+    return painterFilm != null;
   }
   
   export function undo() {
@@ -104,7 +106,7 @@
 </script>
 
 <div>
-{#if painterElement != null}
+{#if painterFilm != null}
   <FreehandInspector
     on:setTool={onSetTool} 
     on:done={onDone} 

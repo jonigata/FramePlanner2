@@ -2,7 +2,7 @@ import { Layer, sequentializePointer } from "../system/layeredCanvas";
 import { type FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf } from '../dataModels/frameTree';
 import { type Film, ImageMedia } from '../dataModels/film';
 import type { Vector } from "../tools/geometry/geometry";
-import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
+import { type Trapezoid, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import * as paper from 'paper';
@@ -11,20 +11,20 @@ import { getStroke } from 'perfect-freehand'
 export class InlinePainterLayer extends Layer {
   frameLayer: FrameLayer;
 
-  element: FrameElement;
   film: Film;
+  surfaceCorners: Trapezoid;
   translation: Vector;
   scale: Vector;
   maskPath: paper.PathItem;
   history: string[];
   historyIndex: number;
   onAutoGenerate: () => void;
-  layout: Layout;
+
+
   drawsBackground: boolean;
   offscreenCanvas: HTMLCanvasElement;
   offscreenContext: CanvasRenderingContext2D;
   // path: paper.Path;
-  paperLayout: Layout;
   path: Path2D;
   strokeOptions: any; // perfect-freehandのオプション
 
@@ -32,14 +32,12 @@ export class InlinePainterLayer extends Layer {
     super();
     this.frameLayer = frameLayer;
 
-    this.element = null;
     this.translation = [0, 0];
     this.scale = [1,1];
     this.maskPath = null;
     this.history = [];
     this.historyIndex = 0;
     this.onAutoGenerate = onAutoGenerate;
-    this.layout = null;
     this.drawsBackground = false;
 
     this.strokeOptions = {
@@ -73,7 +71,7 @@ export class InlinePainterLayer extends Layer {
     if (depth !== 0) { return; }
 
     this.drawFilmFrame(ctx);
-    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.layout.corners);
+    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.surfaceCorners);
 
     if (this.maskPath) {
       ctx.beginPath();
@@ -160,27 +158,18 @@ export class InlinePainterLayer extends Layer {
     await this.image.decode();
   }
 
-  setFilm(element: FrameElement, film: Film): void {
-    if (this.element) {
-      this.element.focused = false;
-    }
-    this.element = element;
+  setSurface(film: Film, trapezoid: Trapezoid): void {
     this.film = film;
+    this.surfaceCorners = trapezoid;
     this.maskPath = null;
-    if (element == null) { 
-      this.film = null;
+    if (film == null) { 
       this.redraw();
       return; 
     }
 
-    this.element.focused = true;
-
     const paperSize = this.frameLayer.getPaperSize();
-    this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, paperSize, [0,0]);
-    const layout = findLayoutOf(this.paperLayout, element);
-    this.layout = layout;
 
-    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+    const [x0, y0, w, h] = trapezoidBoundingRect(trapezoid);
     const filmTranslation = film.getShiftedTranslation(paperSize);
     const filmScale = film.getShiftedScale(paperSize);
     const translation: Vector = [
@@ -203,10 +192,10 @@ export class InlinePainterLayer extends Layer {
     this.offscreenContext.drawImage(film.media.drawSource, 0, 0, iw, ih);
 
     const windowPath = new paper.Path();
-    windowPath.moveTo(layout.corners.topLeft);
-    windowPath.lineTo(layout.corners.topRight);
-    windowPath.lineTo(layout.corners.bottomRight);
-    windowPath.lineTo(layout.corners.bottomLeft);
+    windowPath.moveTo(trapezoid.topLeft);
+    windowPath.lineTo(trapezoid.topRight);
+    windowPath.lineTo(trapezoid.bottomRight);
+    windowPath.lineTo(trapezoid.bottomLeft);
     windowPath.closed = true;
 
     const paperPath = new paper.CompoundPath({children: [new paper.Path.Rectangle([0,0], this.getPaperSize())]});
