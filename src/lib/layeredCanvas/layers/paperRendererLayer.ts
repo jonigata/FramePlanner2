@@ -217,7 +217,7 @@ export class PaperRendererLayer extends Layer {
         ctx.clip(); // this.renderFrameBackgroundで描画したものをクリップ
       }
 
-      this.drawImage(ctx, layout);
+      this.drawFilms(ctx, layout);
 
       if (embeddedBubbles.has(layout)) {
         const bubbles = embeddedBubbles.get(layout);
@@ -338,7 +338,7 @@ export class PaperRendererLayer extends Layer {
     }
   }
 
-  drawImage(ctx: CanvasRenderingContext2D, layout: Layout) {
+  drawFilms(ctx: CanvasRenderingContext2D, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
 
@@ -347,19 +347,6 @@ export class PaperRendererLayer extends Layer {
     ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
     drawFilmStack(ctx, element.filmStack, paperSize);
     ctx.restore();
-
-  /*
-    // 最小外接矩形
-    const boundingRect = calculateMinimumBoundingRect(paperSize, element.filmStack.films);
-    if (boundingRect) {
-      const r = translateRect(boundingRect, center);
-      ctx.save();
-      ctx.strokeStyle = "rgb(255, 0, 0)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(r[0], r[1], r[2], r[3]);
-      ctx.restore();
-    }    
-*/
   }
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {

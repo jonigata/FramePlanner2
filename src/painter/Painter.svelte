@@ -39,7 +39,8 @@
 
       layeredCanvas.mode = "scribble";
       findLayer().setSurface(film, trapezoid);
-      onDoneHandler = resolve;
+      element.focused = true;
+      onDoneHandler = () => { element.focused = false; resolve(); };
     });
   }
 

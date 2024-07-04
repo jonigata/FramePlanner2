@@ -14,7 +14,7 @@ import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
-import { drawFilmStackFrame } from "../tools/draw/drawFilmStack";
+import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 
 const iconUnit: Vector = [26, 26];
 
@@ -176,7 +176,7 @@ export class BubbleLayer extends Layer {
     ctx.save();
     ctx.translate(x + w * 0.5, y + h * 0.5);
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
-    drawFilmStackFrame(ctx, bubble.filmStack, paperSize);
+    drawFilmStackBorders(ctx, bubble.filmStack, paperSize);
     ctx.restore();
 
     // 操作対象のハンドルを強調表示

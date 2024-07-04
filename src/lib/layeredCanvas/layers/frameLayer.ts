@@ -5,12 +5,13 @@ import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath } from "../tools/geometry/trapezoid";
+import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
+import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -212,6 +213,13 @@ export class FrameLayer extends Layer {
       trapezoidPath(ctx, this.selectedBorder.corners);
       ctx.fill();
     } else if (this.selectedLayout) {
+      const paperSize = this.getPaperSize();
+      const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
+      ctx.save();
+      ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
+      drawFilmStackBorders(ctx, this.selectedLayout.element.filmStack, paperSize);
+      ctx.restore();
+  
       drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
     }
 
@@ -1132,6 +1140,18 @@ export class FrameLayer extends Layer {
     this.selectedLayout = layout;
     this.onFocus(layout);
   }
+
+  drawFilmBorders(ctx: CanvasRenderingContext2D, layout: Layout) {
+    const paperSize = this.getPaperSize();
+    const element = layout.element;
+
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+    ctx.save();
+    ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
+    drawFilmStackBorders(ctx, element.filmStack, paperSize);
+    ctx.restore();
+  }
+
 
   renderDepths(): number[] { return [0]; }
 

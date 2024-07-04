@@ -25,7 +25,7 @@ export function drawFilmStack(ctx: CanvasRenderingContext2D, filmStack: FilmStac
   }
 }
 
-export function drawFilmStackFrame(ctx: CanvasRenderingContext2D, filmStack: FilmStack, paperSize: Vector) {
+export function drawFilmStackBorders(ctx: CanvasRenderingContext2D, filmStack: FilmStack, paperSize: Vector) {
   const films = filmStack.films;
 
   for (let film of films) {
@@ -37,14 +37,18 @@ export function drawFilmStackFrame(ctx: CanvasRenderingContext2D, filmStack: Fil
     ctx.save();
     ctx.translate(translation[0], translation[1]);
     ctx.rotate(-film.rotation * Math.PI / 180);
-    ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
 
     if (film.visible) {
+      const sx = scale * film.reverse[0];
+      const sy = scale * film.reverse[1];
+      const iw = sx * film.media.naturalWidth;
+      const ih = sy * film.media.naturalHeight;
+
       ctx.save();
-      ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
+      ctx.translate(-iw * 0.5, -ih * 0.5);
       ctx.strokeStyle = '#00000080';
       ctx.lineWidth = 1;
-      ctx.strokeRect(0, 0, film.media.naturalWidth, film.media.naturalHeight);
+      ctx.strokeRect(0, 0, iw, ih);
       ctx.restore();
     }
     ctx.restore();
