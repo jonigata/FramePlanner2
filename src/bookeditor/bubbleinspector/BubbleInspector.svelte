@@ -19,6 +19,8 @@
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
+  import { dominantMode } from "../../uiStore";
+  import { redrawToken } from "../bookStore";
 
   import bubbleIcon from '../../assets/title-bubble.png';
   import horizontalIcon from '../../assets/horizontal.png';
@@ -29,7 +31,6 @@
   import unembeddedIcon from '../../assets/unembedded.png';
   import resetIcon from '../../assets/reset.png';
   import movieIcon from '../../assets/movie.png';
-  import { redrawToken } from "../bookStore";
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -192,7 +193,7 @@
 
 <svelte:window bind:innerWidth bind:innerHeight/>
 
-{#if $bubble}
+{#if $dominantMode != "painting" && $bubble}
 {@const bubbleSize = $bubble.getPhysicalSize($bubblePage.paperSize)}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    
@@ -286,10 +287,9 @@
         <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
       </div>
     </div>
-    <details class="w-full text-left">
-      <summary>レイヤー</summary>
+    <div class="w-full text-left mt-4">
       <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
-    </details>
+    </div>
   </div>
 </div>
 {/if}

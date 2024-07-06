@@ -10,6 +10,7 @@
   import FreehandInspector from './FreehandInspector.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
   import { rectToTrapezoid } from '../lib/layeredCanvas/tools/geometry/trapezoid';
+  import { dominantMode } from '../uiStore'
 
   // TODO: autoGenerate周り未整備、基本的に一旦削除予定
 
@@ -41,8 +42,13 @@
 
       layeredCanvas.mode = "scribble";
       findLayer().setSurface(film, trapezoid, 0);
+      $dominantMode = "painting";
       element.focused = true;
-      onDoneHandler = () => { element.focused = false; resolve(); };
+      onDoneHandler = () => { 
+        $dominantMode = "standard";
+        element.focused = false; 
+        resolve(); 
+      };
     });
   }
 
@@ -57,7 +63,11 @@
 
       layeredCanvas.mode = "scribble";
       findLayer().setSurface(film, trapezoid, 1);
-      onDoneHandler = () => { resolve(); };
+      $dominantMode = "painting";
+      onDoneHandler = () => { 
+        $dominantMode = "standard";
+        resolve(); 
+      };
     });
   }
 

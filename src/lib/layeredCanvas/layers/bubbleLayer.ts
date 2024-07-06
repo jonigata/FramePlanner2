@@ -583,6 +583,7 @@ export class BubbleLayer extends Layer {
   }
 
   changeFocus(dragging: Dragging) {
+    console.log("BubbleLayer.changeFocus", dragging, this.selected);
     if (dragging == null || dragging.layer != this) {
       this.unfocus();
     }

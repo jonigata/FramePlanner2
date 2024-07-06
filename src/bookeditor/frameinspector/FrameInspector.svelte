@@ -5,6 +5,7 @@
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from "../bookStore"
   import FilmList from "./FilmList.svelte";
+  import { dominantMode } from "../../uiStore";
 
   let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let innerWidth = window.innerWidth;
@@ -47,7 +48,7 @@
 
 <svelte:window bind:innerWidth bind:innerHeight/>
 
-{#if $frame}
+{#if $dominantMode != "painting" && $frame}
 <div class="frame-inspector-container">
   <div class="frame-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    
     <div class="title-bar variant-filled-surface rounded-container-token">

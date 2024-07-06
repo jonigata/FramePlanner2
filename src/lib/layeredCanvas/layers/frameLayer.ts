@@ -1,4 +1,4 @@
-import { Layer, sequentializePointer } from "../system/layeredCanvas";
+import { Layer, sequentializePointer, type Dragging } from "../system/layeredCanvas";
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
 import { Film, Media, ImageMedia, VideoMedia, FilmStackTransformer } from "../dataModels/film";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
@@ -644,14 +644,25 @@ export class FrameLayer extends Layer {
       this.selectLayout(this.litLayout);
       this.relayoutIcons();
       this.redraw();
-      return "done";
+      return { select: layout };
     } else {
       return { layout: layout };
     }
   }
 
+  changeFocus(dragging: Dragging) {
+    console.log("FrameLayer.changeFocus", dragging);
+    if (dragging == null || dragging.layer != this) {
+      this.selectedBorder = null;
+      this.selectLayout(null);
+    }
+  }
+
+
   async *pointer(p: Vector, payload: any) {
-    if (payload.layout) {
+    if (payload.select) {
+      // changeFocusのためにacceptsに{select:layout}を変えさせたので、ここでは何もしない 
+    } else if (payload.layout) {
       const layout: Layout = payload.layout;
       const element: FrameElement = layout.element;
       if (0< element.filmStack.films.length) {
