@@ -421,17 +421,6 @@ export class Bubble {
     return [p[0] * paperSize[0], p[1] * paperSize[1]];
   }
 
-  get imageSize(): Vector {
-    // return [this.image?.image.width, this.image?.image.height];
-    // TODO: よくわからないので一旦0の値
-    if (this.filmStack.films.length == 0) {
-      return [0,0];
-    } else {
-      const film = this.filmStack.films[0];
-      return [film.media.naturalWidth, film.media.naturalHeight];
-    }
-  }  
-
   get optionSet(): any {
     return bubbleOptionSets[this.shape];
   }

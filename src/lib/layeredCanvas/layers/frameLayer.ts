@@ -708,13 +708,12 @@ export class FrameLayer extends Layer {
         }
         this.redraw();
       });
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.onRevert();
       }
     }
-    // TODO: revertしたときこれでいい？
-    this.onCommit();
   }
 
   *rotateImage(p: Vector, layout: Layout) {
