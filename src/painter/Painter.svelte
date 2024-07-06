@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
-  import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+  import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import type { Film } from '../lib/layeredCanvas/dataModels/film';
   import type { Page } from '../bookeditor/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';

@@ -14,7 +14,7 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
-  import { Film } from "../../lib/layeredCanvas/dataModels/film";
+  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
