@@ -40,31 +40,6 @@ export class InlinePainterLayer extends Layer {
     this.historyIndex = 0;
     this.onAutoGenerate = onAutoGenerate;
     this.drawsBackground = false;
-
-    this.strokeOptions = {
-      size: 8,  
-      thinning: 0.5,
-      smoothing: 0.5,
-      streamline: 0.5,
-      easing: t => t,
-      simulatePressure: true,
-      last: true,
-      start: {
-        cap: true,
-        taper: 0,
-        easing: t => t,
-      },
-      end: {
-        cap: true,
-        taper: 0,
-        easing: t => t,
-      },
-
-      strokeWidth: 0,
-      strokeOperation: 'strokeWithFill',
-      fill: "#000000",
-      stroke: "#000000",
-    }; // TODO: FreehandInspectorと重複している、おそらく使われてない
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
