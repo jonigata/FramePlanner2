@@ -152,7 +152,9 @@
 <FullScreenLoading/>
 
 <!-- ads -->
-<!--<AdContainer/>-->
+<!--
+<AdContainer advertiser="thumbnail_stories"/>
+-->
 
 <style>
 
