@@ -33,7 +33,7 @@
 
   $: onChosen(chosen);
   function onChosen(c: HTMLImageElement) {
-    if (c) {
+    if (c != null) {
       const t = $imageGeneratorTarget;
       $imageGeneratorTarget = null;
       chosen = null;

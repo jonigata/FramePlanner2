@@ -1,7 +1,7 @@
 
 <script lang="ts">
+  import writableDerived from "svelte-writable-derived";
   import { onDestroy } from 'svelte';
-  import { derived } from "svelte/store";
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
@@ -50,7 +50,14 @@
   let readingDirection: ReadingDirection;
   let wrapMode: WrapMode;
 
-  const bubble = derived(bubbleInspectorTarget, (b) => b?.bubble);
+  const bubble = writableDerived(
+    bubbleInspectorTarget,
+    (bit) => bit?.bubble,
+    (b, bit) => {
+      bit.bubble = b;
+      return bit;
+    }
+  );
 
   $: if ($forceCommitDelayedToken) {
     $forceCommitDelayedToken = false;
@@ -414,7 +421,7 @@
     if (bit) {
       let bubbleInspectorTargetBackUp = { ...bit };
       bubbleInspectorTargetBackUp.command = null;
-      $frameInspectorTarget = null;
+      $bubbleInspectorTarget = null;
 
       const command = bit.command;
       if (command === "scribble") {
@@ -492,6 +499,7 @@
   async function modalBubbleGenerate(bit: BubbleInspectorTarget) {
     const bubble = bit.bubble;
     const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
+    console.log(r);
     const film = new Film();
     film.media = new ImageMedia(r.image);
     const paperSize = bit.page.paperSize;
