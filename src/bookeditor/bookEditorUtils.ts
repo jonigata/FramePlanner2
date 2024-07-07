@@ -12,12 +12,15 @@ import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLay
 import type { FrameElement, Layout } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
+import { FocusKeeper } from '../lib/layeredCanvas/tools/focusKeeper';
 
 export function buildBookEditor(
   viewport: Viewport,
   book: Book,
   editor: BookOperators,
   defaultBubbleSlot: DefaultBubbleSlot) {
+
+  const focusKeeper = new FocusKeeper();
 
   const layeredCanvas = new LayeredCanvas(viewport, true);
 
@@ -31,7 +34,7 @@ export function buildBookEditor(
     for (const bubble of page.bubbles) {
       bubble.pageNumber = pageNumber;
     }
-    papers.push(buildPaper(layeredCanvas, book, page, editor, defaultBubbleSlot));
+    papers.push(buildPaper(layeredCanvas, focusKeeper, book, page, editor, defaultBubbleSlot));
     pageNumber++;
   }
   const direction = getDirectionFromReadingDirection(book.direction);
@@ -83,7 +86,7 @@ export function getDirectionFromReadingDirection(readingDirection: ReadingDirect
   }
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commit, revert, undo, redo, insert, splice, swap, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
+function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book: Book, page: Page, {commit, revert, undo, redo, insert, splice, swap, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize, false);
 
   // undo
@@ -102,6 +105,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
   page.frameTree.borderWidth = page.frameWidth;
   const frameLayer = new FrameLayer(
     paperRendererLayer,
+    focusKeeper,
     page.frameTree,
     (l: Layout) => { 
       if (l) {
@@ -120,6 +124,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, book: Book, page: Page, {commi
   // bubbles
   const bubbleLayer = new BubbleLayer(
     layeredCanvas.viewport,
+    focusKeeper,
     paperRendererLayer,
     defaultBubbleSlot,
     page.bubbles,

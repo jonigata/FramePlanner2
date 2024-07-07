@@ -29,10 +29,4 @@ export default defineConfig({
 		environment: 'jsdom',
 		include: ['src/**/*.{test,spec,vitest}.{js,ts}']
 	},
-  server: {
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    },
-  }
 })

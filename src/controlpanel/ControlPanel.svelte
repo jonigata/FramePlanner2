@@ -29,6 +29,7 @@
   import { accountUser } from "../utils/accountStore";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { dominantMode } from "../uiStore";
 
   import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
@@ -307,7 +308,7 @@
 
 </script>
 
-{#if $viewport}
+{#if $dominantMode != "painting" && $viewport}
 <div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
   <div class="px-2">

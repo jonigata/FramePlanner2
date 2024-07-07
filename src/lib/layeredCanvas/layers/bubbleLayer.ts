@@ -6,15 +6,18 @@ import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
-import { type Vector, type Rect, add2D, ensureMinRectSize } from "../tools/geometry/geometry";
+import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect, minimumBoundingScale, getRectCenter } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
+import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
+import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
+import type { FocusKeeper } from "../tools/focusKeeper";
 
-const iconUnit: Vector = [20, 20];
+const iconUnit: Vector = [26, 26];
 
 export class DefaultBubbleSlot {
   bubble: Bubble;
@@ -25,6 +28,7 @@ export class DefaultBubbleSlot {
 
 export class BubbleLayer extends Layer {
   viewport: Viewport;
+  focusKeeper: FocusKeeper;
   renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
   fold: number;
@@ -46,12 +50,13 @@ export class BubbleLayer extends Layer {
   zMinusIcon: ClickableIcon;
   removeIcon: ClickableIcon;
   rotateIcon: ClickableIcon;
-  imageDropIcon: ClickableIcon;
   imageScaleLockIcon: ClickableIcon;
+  scaleIcon: ClickableIcon;
   optionIcons: Record<string, ClickableIcon>;
 
   constructor(
     viewport: Viewport,
+    focusKeeper: FocusKeeper,
     renderLayer: PaperRendererLayer,
     defaultBubbleSlot: DefaultBubbleSlot,
     bubbles: Bubble[],
@@ -63,6 +68,7 @@ export class BubbleLayer extends Layer {
 
     super();
     this.viewport = viewport;
+    this.focusKeeper = focusKeeper;
     this.renderLayer = renderLayer;
     this.bubbles = bubbles;
     this.onFocus = onFocus;
@@ -78,27 +84,29 @@ export class BubbleLayer extends Layer {
 
     const unit = iconUnit;
     const mp = () => this.paper.matrix;
-    this.createBubbleIcon = new ClickableIcon(["bubble.png"],[64,64],[0,1],"ドラッグで作成", () => this.interactable, mp);
+    this.createBubbleIcon = new ClickableIcon(["bubbleLayer/bubble.png"],[64,64],[0,1],"ドラッグで作成", () => this.interactable, mp);
 
-    this.dragIcon = new ClickableIcon(["drag.png"],unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected != null, mp);
-    this.offsetIcon = new ClickableIcon(["bubble-offset.png"],unit,[0.5,0],"ドラッグで位置調整", () => this.interactable && this.selected != null, mp);
-    this.zPlusIcon = new ClickableIcon(["bubble-zplus.png"],unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected != null, mp);
-    this.zMinusIcon = new ClickableIcon(["bubble-zminus.png"],unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected != null, mp);
-    this.removeIcon = new ClickableIcon(["remove.png"],unit,[1,0],"削除", () => this.interactable && this.selected != null, mp);
-    this.rotateIcon = new ClickableIcon(["bubble-rotate.png"],unit,[0.5,1],"左右ドラッグで回転", () => this.interactable && this.selected != null, mp);
+    this.dragIcon = new ClickableIcon(["bubbleLayer/drag.png"],unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected != null, mp);
+    this.offsetIcon = new ClickableIcon(["bubbleLayer/bubble-offset.png"],unit,[0.5,0],"ドラッグで位置調整", () => this.interactable && this.selected != null, mp);
+    this.zPlusIcon = new ClickableIcon(["bubbleLayer/bubble-zplus.png"],unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected != null, mp);
+    this.zMinusIcon = new ClickableIcon(["bubbleLayer/bubble-zminus.png"],unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected != null, mp);
+    this.removeIcon = new ClickableIcon(["bubbleLayer/remove.png"],unit,[1,0],"削除", () => this.interactable && this.selected != null, mp);
+    this.rotateIcon = new ClickableIcon(["bubbleLayer/bubble-rotate.png"],unit,[0.5,1],"左右ドラッグで回転", () => this.interactable && this.selected != null, mp);
 
-    this.imageDropIcon = new ClickableIcon(["bubble-drop.png"],unit,[0,1],"画像除去", () => this.interactable && this.selected?.image != null, mp);
-    this.imageScaleLockIcon = new ClickableIcon(["bubble-unlock.png","bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && this.selected?.image != null, mp);
+    this.imageScaleLockIcon = new ClickableIcon(["bubbleLayer/bubble-unlock.png","bubbleLayer/bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && 0 < this.selected?.filmStack.films.length, mp);
     this.imageScaleLockIcon.index = 0;
+    this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.png"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null, mp);
 
     this.optionIcons = {};
-    this.optionIcons.tail = new ClickableIcon(["tail-tip.png"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.curve = new ClickableIcon(["tail-mid.png"],unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.unite = new ClickableIcon(["unite.png"],unit,[0.5,1],"ドラッグで他のフキダシと結合", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.circle = new ClickableIcon(["circle.png"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.radius = new ClickableIcon(["radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.png"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.curve = new ClickableIcon(["bubbleLayer/tail-mid.png"],unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.unite = new ClickableIcon(["bubbleLayer/unite.png"],unit,[0.5,1],"ドラッグで他のフキダシと結合", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.circle = new ClickableIcon(["bubbleLayer/circle.png"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
     this.setFold(fold);
+
+    focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
   calculateLayout(matrix: DOMMatrix): void {
@@ -126,8 +134,8 @@ export class BubbleLayer extends Layer {
     this.removeIcon.render(ctx);
     this.rotateIcon.render(ctx);
 
-    this.imageDropIcon.render(ctx);
     this.imageScaleLockIcon.render(ctx);
+    this.scaleIcon.render(ctx);
 
     if (this.interactable && this.lit) {
       this.drawLitUI(ctx, this.lit);
@@ -170,6 +178,12 @@ export class BubbleLayer extends Layer {
     }
     drawSelectionFrame(ctx, "rgba(0, 192, 0, 1)", corners, 3, 5);
 
+    // フィルムの枠
+    ctx.save();
+    ctx.translate(x + w * 0.5, y + h * 0.5);
+    ctx.rotate((-bubble.rotation * Math.PI) / 180);
+    drawFilmStackBorders(ctx, bubble.filmStack, paperSize);
+    ctx.restore();
 
     // 操作対象のハンドルを強調表示
     if (this.handle != null) {
@@ -186,8 +200,9 @@ export class BubbleLayer extends Layer {
   drawOptionHandles(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
     const paperSize = this.getPaperSize();
     const bubbleCenter = bubble.getPhysicalCenter(paperSize);
-    const bubbleRect = bubble.getPhysicalRegularizedRect(paperSize);
-    const cp = (ro, ou) => ClickableIcon.calcPosition(bubbleRect, iconUnit, ro, ou);
+    const [x,y,w,h] = bubble.getPhysicalRegularizedRect(paperSize);
+    const rect: Rect = [x+10, y+10, w-20, h-20];
+    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
     const rp = (p) => [bubbleCenter[0] + p[0], bubbleCenter[1] + p[1]];
     const tailMidCoord = () => tailCoordToWorldCoord(bubbleCenter, bubble.optionContext.tailTip, bubble.optionContext.tailMid);
 
@@ -310,7 +325,6 @@ export class BubbleLayer extends Layer {
         this.offsetIcon.hintIfContains(p, this.hint) ||
         this.zMinusIcon.hintIfContains(p, this.hint) ||
         this.zPlusIcon.hintIfContains(p, this.hint) ||
-        this.imageDropIcon.hintIfContains(p, this.hint) ||
         this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
@@ -414,7 +428,7 @@ export class BubbleLayer extends Layer {
         const b = this.defaultBubbleSlot.bubble.clone(false);
         b.parent = null;
         b.text = s;
-        b.image = null;
+        b.filmStack.films = [];
         const size = b.calculateFitSize(paperSize);
 
         if (cursorX + size[0] > paperSize[0]) {
@@ -450,8 +464,14 @@ export class BubbleLayer extends Layer {
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
-    bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
-    bubble.setPhysicalImageScale(paperSize, 1);
+
+    const minImageDimension = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const minPageDimension = Math.min(paperSize[0], paperSize[1]);
+    const n_scale = 1 / (minPageDimension / minImageDimension);
+
+    const film = this.newImageFilm(image);
+    film.n_scale = n_scale;
+    bubble.filmStack.films.push(film);
     this.bubbles.push(bubble);
     this.onCommit();
     this.selectBubble(bubble);
@@ -525,10 +545,10 @@ export class BubbleLayer extends Layer {
         return { action: "z-minus", bubble };
       } else if (this.zPlusIcon.contains(point)) {
         return { action: "z-plus", bubble };
-      } else if (this.imageDropIcon.contains(point)) {
-        return { action: "image-drop", bubble };
       } else if (this.imageScaleLockIcon.contains(point)) {
         return { action: "image-scale-lock", bubble };
+      } else if (this.scaleIcon.contains(point)) {
+        return { action: "image-scale", bubble };
       } else {
         const icon = this.getOptionIconAt(bubble.shape, point);
         if (icon) {
@@ -542,7 +562,7 @@ export class BubbleLayer extends Layer {
       }
 
       const gm = this.getGroupMaster(bubble);
-      if (gm.image && !gm.image.scaleLock && bubble.contains(paperSize, point)) {
+      if (0 < gm.filmStack.films.length && !gm.scaleLock && bubble.contains(paperSize, point)) {
         if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
           return { action: "image-scale", bubble: gm };
         } else if (!keyDownFlags["AltLeft"] && !keyDownFlags["AltRight"]) {
@@ -563,18 +583,19 @@ export class BubbleLayer extends Layer {
           return { action: "select", bubble };
         }
       }
-      const handle = bubble.getHandleAt(paperSize, point);
-      if (handle) {
-        return { action: "resize", bubble, handle };
-      }
     }
 
     return null;
   }
 
-  changeFocus(dragging: Dragging) {
-    if (dragging == null || dragging.layer != this) {
-      this.unfocus();
+  changeFocus(layer: Layer) {
+    console.log("BubbleLayer.changeFocus", layer);
+    if (layer != this) {
+      // unfocus呼ぶと再帰呼び出しになるので注意
+      if (this.selected) {
+        this.selected = null;
+        this.onFocus(null);
+      }
     }
   }
 
@@ -593,6 +614,7 @@ export class BubbleLayer extends Layer {
   unfocus(): void {
     if (this.selected) {
       this.onFocus(null);
+      this.focusKeeper.setFocus(null);
       this.selected = null;
       this.redraw();
     }
@@ -672,12 +694,14 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, position)) {
-        this.getGroupMaster(bubble).image = {
-           image, 
-           n_translation: [0,0], 
-           n_scale: 1, 
-           scaleLock: false 
-          };
+        const film = this.newImageFilm(image);
+        const masterBubble = this.getGroupMaster(bubble);
+        masterBubble.filmStack.films.push(film);
+        const bubbleSize = masterBubble.getPhysicalSize(paperSize);
+        const scale = minimumBoundingScale(film.media.size, bubbleSize);
+        film.setShiftedScale(paperSize, scale);
+        this.onFocus(bubble);
+        this.focusKeeper.setFocus(this);
         this.onCommit();
         return true;
       }
@@ -704,7 +728,7 @@ export class BubbleLayer extends Layer {
 
     const bubble = this.defaultBubbleSlot.bubble.clone(false);
     bubble.parent = null;
-    bubble.image = null;
+    bubble.filmStack.films = [];
     bubble.n_p0 = [q[0] - 0.12, q[1] - 0.12];
     bubble.n_p1 = [q[0] + 0.12, q[1] + 0.12];
     //bubble.n_p0 = [0,0];
@@ -733,9 +757,10 @@ export class BubbleLayer extends Layer {
     this.removeIcon.position = cp([1,0], [0, 0]);
     this.rotateIcon.position = cp([0.5,0], [0,-1]);
 
-    this.imageDropIcon.position = cp([0,1],[0,0]);
     this.imageScaleLockIcon.position = cp([1,1],[0,0]);
-    this.imageScaleLockIcon.index = this.selected.image?.scaleLock ? 1 : 0;
+    this.imageScaleLockIcon.index = this.selected.scaleLock ? 1 : 0;
+
+    this.scaleIcon.position = cp([1,1],[-2,0]);
   }
 
   async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
@@ -743,7 +768,7 @@ export class BubbleLayer extends Layer {
     this.unfocus();
     const bubble = this.defaultBubbleSlot.bubble.clone(false);
     bubble.parent = null;
-    bubble.image = null;
+    bubble.filmStack.films = [];
     bubble.setPhysicalRect(paperSize, [dragStart[0], dragStart[1], 0, 0]);
     bubble.text = getHaiku();
     bubble.initOptions();
@@ -870,17 +895,25 @@ export class BubbleLayer extends Layer {
     try {
       const paperSize = this.getPaperSize();
       const [q0, q1] = bubble.regularized();
+      let ir = calculateMinimumBoundingRect(paperSize, bubble.filmStack.films);
+      if (ir) {
+        // computeConstraintedRectは十分に大きいときには反応しないので、小さくしておく
+        ir = scaleRect(ir, 0.01);
+      }
+
+      const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
 
       let p;
       while ((p = yield)) {
+        console.log("resizeBubble(1)");
         const pp = Bubble.normalizedPosition(paperSize, p);
         this.resizeBubbleAux(bubble, handle, q0, q1, pp);
 
-        if (bubble.image?.scaleLock) {
+        if (bubble.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
-          const bubbleSize = bubble.getPhysicalSize(paperSize);
-          bubble.image.n_translation = [0,0];
-          bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
+          const bubbleRect = bubble.getPhysicalRect(paperSize);
+          const { scale } = computeConstraintedRect(ir, bubbleRect);
+          transformer.scale(scale * 0.01);          
         }
   
         this.setIconPositions();
@@ -890,13 +923,14 @@ export class BubbleLayer extends Layer {
       if (!bubble.hasEnoughSize(paperSize)) {
         throw "cancel";
       }
-      console.log(bubble.image);
       this.onPotentialCrossPage(bubble);
       this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.selected = null;
         this.onRevert();
+      } else {
+        console.error(e);
       }
     }
   }
@@ -904,7 +938,7 @@ export class BubbleLayer extends Layer {
   resizeBubbleAux(bubble: Bubble, handle: RectHandle, q0: Vector, q1: Vector, p: Vector) {
     const paperSize = this.getPaperSize();
 
-    if (bubble.image?.scaleLock) {
+    if (bubble.scaleLock) {
       const rwfar = (os: Vector, ns: Vector) => {
         return this.resizeWithFixedAspectRatio(os, ns);
       }
@@ -1003,36 +1037,44 @@ export class BubbleLayer extends Layer {
 
   *translateImage(dragStart: Vector, bubble: Bubble) {
     const paperSize = this.getPaperSize();
-    const n_origin = bubble.image.n_translation;
-    const origin = bubble.getPhysicalImageTranslation(paperSize);
+    const films = bubble.filmStack.getOperationTargetFilms();
+    const origins = films.map(film => film.getShiftedTranslation(paperSize));
 
     try {
+      let lastq = null;
       yield* translate(dragStart, (q) => {
-        bubble.setPhysicalImageTranslation(paperSize, [origin[0] + q[0], origin[1] + q[1]]);
+        lastq = [...q];
+        films.forEach((film, i) => {
+          film.setShiftedTranslation(paperSize, [origins[i][0] + q[0], origins[i][1] + q[1]]);
+        });
         this.redraw();
       });
+      if (lastq[0] !== 0 || lastq[1] !== 0) {
+        this.onCommit();
+      }
     } catch (e) {
       if (e === "cancel") {
-        bubble.image.n_translation = n_origin;
-        this.redraw();
+        this.onRevert();
       }
     }
   }
 
 
   *scaleImage(dragStart: Vector, bubble: Bubble) {
-    const origin = bubble.image.n_scale;
+    const paperSize = this.getPaperSize();
+    const films = bubble.filmStack.getOperationTargetFilms();
 
     try {
+      const transformer = new FilmStackTransformer(paperSize, films);
+
       yield* scale(this.getPaperSize(), dragStart, (q) => {
-        const s = Math.max(q[0], q[1]);
-        bubble.image.n_scale = origin * s;
+        transformer.scale(Math.max(q[0], q[1]))
         this.redraw();
       });
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
-        bubble.image.n_scale = origin;
-        this.redraw();
+        this.onRevert();
       }
     }
   }
@@ -1249,18 +1291,35 @@ export class BubbleLayer extends Layer {
   }
 
   toggleScaleLock(bubble: Bubble) {
-    const paperSize = this.getPaperSize();
-    bubble.image.scaleLock = !bubble.image.scaleLock;
-    this.imageScaleLockIcon.index = bubble.image.scaleLock ? 1 : 0;
-    if (bubble.image.scaleLock) {
-      let bubbleSize = bubble.getPhysicalSize(paperSize);
-      const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubbleSize);
+    bubble.scaleLock = !bubble.scaleLock;
+    this.imageScaleLockIcon.index = bubble.scaleLock ? 1 : 0;
+    if (bubble.scaleLock) {
+      const paperSize = this.getPaperSize();
+
+      {
+        const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
+        // [0]のscaleを1とする
+        const scale = bubble.filmStack.films[0].getShiftedScale(paperSize);
+        transformer.scale(1 / scale);
+      }
+      const ir = calculateMinimumBoundingRect(paperSize, bubble.filmStack.films);
+      const origins = bubble.filmStack.films.map(film => film.getShiftedTranslation(paperSize));
+      const move = ir ? getRectCenter(ir) : [0,0];
+
+      const bubbleSize = bubble.getPhysicalSize(paperSize);
+      const [w,h] = this.resizeWithFixedAspectRatio([ir[2], ir[3]], bubbleSize);
+      const newScale = w / ir[2];
+      console.log("newScale", newScale);
       const [cx,cy] = bubble.getPhysicalCenter(paperSize);
       bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w/2, cy - h/2]);
       bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w/2, cy + h/2]);
-      bubble.image.n_translation = [0,0];
-      bubbleSize = bubble.getPhysicalSize(paperSize);
-      bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
+      bubble.filmStack.films.forEach((film, i) => {
+        film.setShiftedTranslation(paperSize, [origins[i][0] + move[0], origins[i][1] + move[1]]);
+      });
+      {
+        const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
+        transformer.scale(newScale);
+      }
       this.setIconPositions();
     }
     this.redraw();
@@ -1278,6 +1337,7 @@ export class BubbleLayer extends Layer {
     this.selected = bubble;
     this.setIconPositions();
     this.onFocus(this.selected);
+    this.focusKeeper.setFocus(this);
 
     this.redraw();
   }
@@ -1293,6 +1353,12 @@ export class BubbleLayer extends Layer {
     } else {
       this.createBubbleIcon.pivot = [0,1];
     }
+  }
+
+  newImageFilm(image: HTMLImageElement): Film {
+    const film = new Film();
+    film.media = new ImageMedia(image);
+    return film;
   }
 }
 sequentializePointer(BubbleLayer);

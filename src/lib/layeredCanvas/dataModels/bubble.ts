@@ -3,6 +3,7 @@ import type { Vector, Rect } from '../tools/geometry/geometry';
 import { rectContains } from '../tools/geometry/geometry';
 import { type RectHandle, rectHandles } from '../tools/rectHandle';
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
+import { FilmStack } from "./film";
 
 const minimumBubbleSize = 72;
 const threshold = 10;
@@ -42,18 +43,17 @@ export class Bubble {
   uuid: string;
   parent: string;
   creationContext: string;
-  image: { 
-    image: HTMLImageElement, 
-    n_scale: number,
-    n_translation: Vector,
-    scaleLock: boolean,
-  } | null;
+  filmStack: FilmStack;
+  scaleLock: boolean;
   optionContext: any;
 
-  pageNumber: number; // 一時的、当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
-  fontRenderVersion: number; // 一時的、フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
-  appearanceDelay: number; // 一時的、ムービー生成時に使う出現までの時間(コマ単位)
-  hidesText: boolean; // 一時的、ムービー生成時に使うテキスト非表示フラグ
+  // 以下一時的
+  pageNumber: number; // 当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
+  fontRenderVersion: number; // フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
+  appearanceDelay: number; // ムービー生成時に使う出現までの時間(コマ単位)
+  hidesText: boolean; // ムービー生成時に使うテキスト非表示フラグ
+  prompt: string;
+  gallery: HTMLImageElement[];
 
   renderInfo: BubbleRenderInfo;
 
@@ -66,7 +66,7 @@ export class Bubble {
     this.parent = null;
     this.creationContext = this.getStackTrace();
 
-    this.image = null;
+    this.filmStack = new FilmStack();
     this.optionContext = {};
     this.fontRenderVersion = 0;
   }
@@ -125,7 +125,9 @@ export class Bubble {
       b.parent = this.parent;
     }
 
-    b.image = this.image ? {...this.image} : null;
+    b.filmStack = new FilmStack();
+    b.filmStack.films = this.filmStack.films.map(film => film.clone());
+
     b.optionContext = {...this.optionContext};
     return b;
   }
@@ -419,10 +421,6 @@ export class Bubble {
     return [p[0] * paperSize[0], p[1] * paperSize[1]];
   }
 
-  get imageSize(): Vector {
-    return [this.image?.image.width, this.image?.image.height];
-  }  
-
   get optionSet(): any {
     return bubbleOptionSets[this.shape];
   }
@@ -445,42 +443,6 @@ export class Bubble {
     return options;
   }
 
-  static getPhysicalImageScale(paperSize: Vector, image: HTMLImageElement, n_scale: number): number {
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize
-    return n_scale * scale;
-  }
-
-  getPhysicalImageScale(paperSize: Vector): number {
-    return Bubble.getPhysicalImageScale(paperSize, this.image.image, this.image.n_scale);
-  }
-
-  setPhysicalImageScale(paperSize: Vector, scale: number): void {
-    const imageSize = Math.min(this.image.image.naturalWidth, this.image.image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    this.image.n_scale = scale / (pageSize / imageSize);
-  }
-
-  static getPhysicalImageTranslation(paperSize: Vector, image: HTMLImageElement, n_translation: Vector): Vector {
-    const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize;
-    const translation: Vector = [n_translation[0] * scale, n_translation[1] * scale];
-    return translation;
-  }
-
-  getPhysicalImageTranslation(paperSize: Vector): Vector {
-    return Bubble.getPhysicalImageTranslation(paperSize, this.image.image, this.image.n_translation);
-  }
-
-  setPhysicalImageTranslation(paperSize: Vector, translation: Vector): void {
-    const imageSize = Math.min(this.image.image.naturalWidth, this.image.image.naturalHeight) ;
-    const pageSize = Math.min(paperSize[0], paperSize[1]);
-    const scale = pageSize / imageSize;
-    this.image.n_translation = [translation[0] / scale, translation[1] / scale];
-  }
-
   calculateFitSize(paperSize: Vector) {
     const fontSize = this.getPhysicalFontSize(paperSize);
     const baselineSkip = fontSize * 1.5;
@@ -500,7 +462,6 @@ export class Bubble {
     console.log(size);
     return Bubble.enoughSize(size);
   }
-
 
 }
 

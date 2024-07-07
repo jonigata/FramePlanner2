@@ -1,6 +1,9 @@
 import { type Writable, writable } from "svelte/store";
 import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
+import type { Film } from "../../lib/layeredCanvas/dataModels/film";
 import type { Page } from '../book';
+
+type BubbleInspectorCommand = "generate" | "scribble" | "punch" | "commit";
 
 export type BubbleInspectorPosition = {
   center: {x: number, y: number},
@@ -11,6 +14,8 @@ export type BubbleInspectorPosition = {
 export type BubbleInspectorTarget = {
   bubble: Bubble,
   page: Page,
+  command: BubbleInspectorCommand,
+  commandTargetFilm: Film,
 }
 
 export const bubbleInspectorTarget: Writable<BubbleInspectorTarget> = writable(null);

@@ -1,7 +1,8 @@
-import { type Vector, reverse2D, getRectCenter, translateRect } from "../tools/geometry/geometry";
+import { type Vector, reverse2D } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
-import { findLayoutAt, calculatePhysicalLayout, FrameElement, calculateMinimumBoundingRect } from "../dataModels/frameTree";
+import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
+import { drawFilmStack } from "../tools/draw/drawFilmStack";
 import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText } from "../tools/draw/drawText";
 import { Layer } from "../system/layeredCanvas";
@@ -216,10 +217,7 @@ export class PaperRendererLayer extends Layer {
         ctx.clip(); // this.renderFrameBackgroundで描画したものをクリップ
       }
 
-      this.drawImage(ctx, layout);
-      if (element.focused) {
-        this.drawImageFrame(ctx, layout);
-      }
+      this.drawFilms(ctx, layout);
 
       if (embeddedBubbles.has(layout)) {
         const bubbles = embeddedBubbles.get(layout);
@@ -272,6 +270,7 @@ export class PaperRendererLayer extends Layer {
     const paperSize = this.getPaperSize();
     const size = bubble.getPhysicalSize(paperSize);
     const strokeWidth = bubble.getPhysicalStrokeWidth(paperSize);
+    const [x0, y0, w, h] = bubble.getPhysicalRect(paperSize);
 
     ctx.save();
     ctx.translate(...bubble.getPhysicalCenter(paperSize));
@@ -287,17 +286,7 @@ export class PaperRendererLayer extends Layer {
     this.drawBubble(ctx, size, 'clip', bubble);
 
     // 画像描画
-    if (bubble.image) {
-      const img = bubble.image;
-      const scale = bubble.getPhysicalImageScale(paperSize);
-      const translation = bubble.getPhysicalImageTranslation(paperSize);
-
-      let iw = img.image.naturalWidth * scale;
-      let ih = img.image.naturalHeight * scale;
-      let ix = - iw * 0.5 + translation[0];
-      let iy = - ih * 0.5 + translation[1];
-      ctx.drawImage(bubble.image.image, ix, iy, iw, ih);
-    }
+    drawFilmStack(ctx, bubble.filmStack, paperSize);
 
     ctx.restore();
   }
@@ -349,70 +338,16 @@ export class PaperRendererLayer extends Layer {
     }
   }
 
-  drawImage(ctx: CanvasRenderingContext2D, layout: Layout) {
+  drawFilms(ctx: CanvasRenderingContext2D, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
 
     const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-    const center = getRectCenter([x0, y0, w, h])
-
-    for (let film of element.filmStack.films) {
-      if (!film.visible) { continue; }
-
-      const scale = film.getShiftedScale(paperSize);
-      const translation = film.getShiftedTranslation(paperSize);
-
-      ctx.save();
-      ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
-      ctx.rotate(-film.rotation * Math.PI / 180);
-      ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
-
-      if (film.visible) {
-        ctx.save();
-        ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
-        ctx.drawImage(film.media.drawSource, 0, 0, film.media.naturalWidth, film.media.naturalHeight);
-        ctx.restore();
-      }
-      ctx.restore();
-    }
-
-  /*
-    // 最小外接矩形
-    const boundingRect = calculateMinimumBoundingRect(paperSize, element.filmStack.films);
-    if (boundingRect) {
-      const r = translateRect(boundingRect, center);
-      ctx.save();
-      ctx.strokeStyle = "rgb(255, 0, 0)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(r[0], r[1], r[2], r[3]);
-      ctx.restore();
-    }    
-*/
-  }
-
-  drawImageFrame(ctx: CanvasRenderingContext2D, layout: Layout) {
-    // TODO:
-/*
-    const element = layout.element;
-    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
-
-    const paperSize = this.getPaperSize();
-    const scale = element.getPhysicalImageScale(paperSize);
-    const translation = element.getPhysicalImageTranslation(paperSize);
-
     ctx.save();
-    ctx.translate(x0 + w * 0.5 + translation[0], y0 + h * 0.5 + translation[1]);
-    ctx.scale(scale * element.image.reverse[0], scale * element.image.reverse[1]);
-    ctx.translate(-element.image.scribble.naturalWidth * 0.5, -element.image.scribble.naturalHeight * 0.5);
-    ctx.beginPath();
-    ctx.rect(0, 0, element.image.scribble.naturalWidth, element.image.scribble.naturalHeight);
-    ctx.strokeStyle = "rgb(0, 0, 255)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
+    drawFilmStack(ctx, element.filmStack, paperSize);
     ctx.restore();
-*/
   }
-
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
     const paperSize = this.getPaperSize();

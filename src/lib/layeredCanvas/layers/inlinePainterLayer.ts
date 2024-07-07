@@ -1,53 +1,53 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { type FrameElement, type Layout, Media, ImageMedia, calculatePhysicalLayout, findLayoutOf, Film } from '../dataModels/frameTree';
+import { type FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf } from '../dataModels/frameTree';
+import { type Film, ImageMedia } from '../dataModels/film';
 import type { Vector } from "../tools/geometry/geometry";
-import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
+import { type Trapezoid, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import * as paper from 'paper';
+import { getStroke } from 'perfect-freehand'
 
 export class InlinePainterLayer extends Layer {
   frameLayer: FrameLayer;
 
-  currentBrush: { strokeStyle: string, lineWidth: number };
-  element: FrameElement;
   film: Film;
+  surfaceCorners: Trapezoid;
+  depth: number;
   translation: Vector;
   scale: Vector;
   maskPath: paper.PathItem;
   history: string[];
   historyIndex: number;
   onAutoGenerate: () => void;
-  layout: Layout;
+
+
   drawsBackground: boolean;
   offscreenCanvas: HTMLCanvasElement;
   offscreenContext: CanvasRenderingContext2D;
-  path: paper.Path;
-  paperLayout: Layout;
+  // path: paper.Path;
+  path: Path2D;
+  strokeOptions: any; // perfect-freehandのオプション
 
   constructor(frameLayer: FrameLayer, onAutoGenerate: () => void) {
     super();
     this.frameLayer = frameLayer;
 
-    this.currentBrush = { strokeStyle: "black", lineWidth: 5 };
-    this.element = null;
     this.translation = [0, 0];
     this.scale = [1,1];
     this.maskPath = null;
     this.history = [];
     this.historyIndex = 0;
     this.onAutoGenerate = onAutoGenerate;
-    this.layout = null;
     this.drawsBackground = false;
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.image) {return;}
-    if (depth !== 0) { return; }
+    if (depth !== this.depth) { return; }
 
-    this.drawImage(ctx, this.layout)
-    // ctx.drawImage(this.image, 0, 0);
-    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.layout.corners);
+    this.drawFilmFrame(ctx);
+    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.surfaceCorners);
 
     if (this.maskPath) {
       ctx.beginPath();
@@ -56,8 +56,11 @@ export class InlinePainterLayer extends Layer {
     }
 
     if (this.path) {
-      this.applyCurrentBrush(ctx);
-      ctx.stroke(new Path2D(this.path.pathData));
+      ctx.save();
+      console.log("brush");
+      this.applyBrush(ctx);
+      this.drawPath(ctx);
+      ctx.restore();
     }
   }
 
@@ -69,14 +72,23 @@ export class InlinePainterLayer extends Layer {
   async *pointer(q: Vector, payload: any): AsyncGenerator<Vector, void, Vector> {
     console.log("pointer", q, payload);
 
-    const path = new paper.Path();
-    this.path = path;
-    path.moveTo(q);
-    path.closed = false;
+    const rawStroke: Vector[] = [];
+
+    console.log(this.strokeOptions);
 
     let p: Vector;
     while (p = yield) {
-      path.lineTo(p);
+      rawStroke.push(p);
+
+      const stroke: Vector[] = getStroke(rawStroke, this.strokeOptions) as Vector[];
+
+      this.path = new Path2D();
+      this.path.moveTo(...stroke[0]);
+      for (let i = 1; i < stroke.length; i++) {
+        this.path.lineTo(...stroke[i]);
+      }
+      this.path.closePath();
+
       this.redraw();      
     }
     await this.snapshot();
@@ -95,10 +107,11 @@ export class InlinePainterLayer extends Layer {
       ctx.save();
       console.log("snapshot", this.translation, this.scale, [w, h]);
       ctx.translate(w * 0.5, h * 0.5);
+      ctx.rotate(this.film.rotation * Math.PI / 180);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
-      this.applyCurrentBrush(ctx);
-      ctx.stroke(new Path2D(this.path.pathData));
+      this.applyBrush(ctx);
+      this.drawPath(ctx);
       ctx.restore();
     }
 
@@ -111,35 +124,19 @@ export class InlinePainterLayer extends Layer {
     await this.image.decode();
   }
 
-  applyCurrentBrush(ctx: CanvasRenderingContext2D): void {
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    for (let key in this.currentBrush) {
-      ctx[key] = this.currentBrush[key];
-    }
-  }
-
-  setFilm(element: FrameElement, film: Film): void {
-    if (this.element) {
-      this.element.focused = false;
-    }
-    this.element = element;
+  setSurface(film: Film, trapezoid: Trapezoid, depth: number): void {
     this.film = film;
+    this.surfaceCorners = trapezoid;
+    this.depth = depth;
     this.maskPath = null;
-    if (element == null) { 
-      this.film = null;
+    if (film == null) { 
       this.redraw();
       return; 
     }
 
-    this.element.focused = true;
-
     const paperSize = this.frameLayer.getPaperSize();
-    this.paperLayout = calculatePhysicalLayout(this.frameLayer.frameTree, paperSize, [0,0]);
-    const layout = findLayoutOf(this.paperLayout, element);
-    this.layout = layout;
 
-    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+    const [x0, y0, w, h] = trapezoidBoundingRect(trapezoid);
     const filmTranslation = film.getShiftedTranslation(paperSize);
     const filmScale = film.getShiftedScale(paperSize);
     const translation: Vector = [
@@ -162,10 +159,10 @@ export class InlinePainterLayer extends Layer {
     this.offscreenContext.drawImage(film.media.drawSource, 0, 0, iw, ih);
 
     const windowPath = new paper.Path();
-    windowPath.moveTo(layout.corners.topLeft);
-    windowPath.lineTo(layout.corners.topRight);
-    windowPath.lineTo(layout.corners.bottomRight);
-    windowPath.lineTo(layout.corners.bottomLeft);
+    windowPath.moveTo(trapezoid.topLeft);
+    windowPath.lineTo(trapezoid.topRight);
+    windowPath.lineTo(trapezoid.bottomRight);
+    windowPath.lineTo(trapezoid.bottomLeft);
     windowPath.closed = true;
 
     const paperPath = new paper.CompoundPath({children: [new paper.Path.Rectangle([0,0], this.getPaperSize())]});
@@ -211,21 +208,39 @@ export class InlinePainterLayer extends Layer {
   }
 
   // paperRenderLayerからコピペ
-  drawImage(ctx: CanvasRenderingContext2D, layout: Layout): void {
+  drawFilmFrame(ctx: CanvasRenderingContext2D): void {
     const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
 
     ctx.save();
     ctx.translate(this.translation[0], this.translation[1]);
     ctx.scale(this.scale[0], this.scale[1]);
+    ctx.rotate(-this.film.rotation * Math.PI / 180);
     ctx.translate(-w * 0.5, -h * 0.5);
-    ctx.globalAlpha = 0.4;
-    if (this.drawsBackground) {
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, w, h);
-    }
-    ctx.globalAlpha = 1.0;
-    ctx.drawImage(this.image, 0, 0, w, h);
+    ctx.strokeStyle = "rgba(128, 128, 128, 0.5)";
+    ctx.strokeRect(0, 0, w, h);
     ctx.restore();
+  }
+
+  applyBrush(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = this.strokeOptions.fill;
+    ctx.strokeStyle = this.strokeOptions.stroke;
+    ctx.lineWidth = this.strokeOptions.strokeWidth;
+  }
+
+  drawPath(ctx: CanvasRenderingContext2D) {
+    if (this.strokeOptions.strokeOperation == 'erase') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fill(this.path);
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      if (0 < this.strokeOptions.strokeWidth) {
+        ctx.lineJoin = "round";
+        ctx.stroke(this.path);
+      }
+      if (this.strokeOptions.strokeOperation == 'strokeWithFill') {
+        ctx.fill(this.path);
+      }
+    }
   }
 
   renderDepths(): number[] { return [0]; }

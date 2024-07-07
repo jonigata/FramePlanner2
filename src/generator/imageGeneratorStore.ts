@@ -1,10 +1,10 @@
 import { type Writable, writable } from "svelte/store";
-import type { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
-import type { Page } from '../bookeditor/book';
+import type { FilmStack } from "../lib/layeredCanvas/dataModels/film";
 
 export type ImageGeneratorTarget = {
-  page: Page,
-  frame: FrameElement,
+  filmStack: FilmStack;
+  initialPrompt: string;
+  gallery: HTMLImageElement[];
   onDone: (r: {image: HTMLImageElement, prompt: string}) => void,
 }
 

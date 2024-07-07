@@ -33,3 +33,19 @@ export function readFileAsDataURL(file) {
     reader.readAsDataURL(file);
   });
 }
+
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+export function deepCopyProperties(target, source) {
+  Object.keys(source).forEach(key => {
+    if (isObject(source[key])) {
+      if (!target[key]) target[key] = {};
+      deepCopyProperties(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  });
+  return target;
+}

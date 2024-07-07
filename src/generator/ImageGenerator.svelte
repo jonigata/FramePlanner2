@@ -18,11 +18,11 @@
   $: onTargetChanged($imageGeneratorTarget);
   function onTargetChanged(igt: ImageGeneratorTarget) {
     if (igt) {
-      prompt = igt.frame.prompt;
+      prompt = igt.initialPrompt;
     }
   }
 
-  $: onChangeGallery($imageGeneratorTarget?.frame.gallery);
+  $: onChangeGallery($imageGeneratorTarget?.gallery);
   async function onChangeGallery(g: HTMLImageElement[]) {
     if (g) {
       gallery = [];

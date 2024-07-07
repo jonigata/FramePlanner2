@@ -9,6 +9,7 @@
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
+  import { Film, ImageMedia } from '../lib/layeredCanvas/dataModels/film';
 
   let gallery: HTMLImageElement[];
 
@@ -28,8 +29,9 @@
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
-    bubble.image = { image, n_translation: [0,0], n_scale: 1, scaleLock: true };
-    bubble.setPhysicalImageScale(paperSize, 1);
+    const film = new Film();
+    film.media = new ImageMedia(image);
+    bubble.filmStack.films.push(film);
     page.bubbles.push(bubble);
     $bookEditor.focusBubble(page, bubble);
     $redrawToken = true;

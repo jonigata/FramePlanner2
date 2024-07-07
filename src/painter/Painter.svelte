@@ -1,19 +1,22 @@
 <script lang="ts">
-  import type { FrameElement, Film } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
+  import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
+  import type { Film } from '../lib/layeredCanvas/dataModels/film';
   import type { Page } from '../bookeditor/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
   import { mainBook } from '../bookeditor/bookStore';
-  import PainterToolBox from './PainterToolBox.svelte';
+  import FreehandInspector from './FreehandInspector.svelte';
   import PainterAutoGenerate from './PainterAutoGenerate.svelte';
+  import { rectToTrapezoid } from '../lib/layeredCanvas/tools/geometry/trapezoid';
+  import { dominantMode } from '../uiStore'
 
   // TODO: autoGenerate周り未整備、基本的に一旦削除予定
 
   export let layeredCanvas: LayeredCanvas;
   export let arrayLayer: ArrayLayer;
   let painterPage: Page = null;
-  let painterElement: FrameElement = null;
   let painterFilm: Film = null;
   let autoGeneration: boolean = false;
   let painterAutoGenerate: PainterAutoGenerate = null;
@@ -27,25 +30,53 @@
     layeredCanvas.redraw();
   }
 
-  export async function run(page: Page, element: FrameElement, film: Film): Promise<void> {
+  export async function runWithFrame(page: Page, element: FrameElement, film: Film): Promise<void> {
     return new Promise((resolve, reject) => {
       painterPage = page;
-      painterElement = element;
       painterFilm = film;
 
+      const paperSize = page.paperSize;
+      const paperLayout = calculatePhysicalLayout(page.frameTree, paperSize, [0,0]);
+      const layout = findLayoutOf(paperLayout, element);
+      const trapezoid = layout.corners;
+
       layeredCanvas.mode = "scribble";
-      findLayer().setFilm(element, film);
-      onDoneHandler = resolve;
+      findLayer().setSurface(film, trapezoid, 0);
+      $dominantMode = "painting";
+      element.focused = true;
+      onDoneHandler = () => { 
+        $dominantMode = "standard";
+        element.focused = false; 
+        resolve(); 
+      };
+    });
+  }
+
+  export async function runWithBubble(page: Page, bubble: Bubble, film: Film): Promise<void> {
+    return new Promise((resolve, reject) => {
+      painterPage = page;
+      painterFilm = film;
+
+      const paperSize = page.paperSize;
+      const rect = bubble.getPhysicalRect(paperSize);
+      const trapezoid = rectToTrapezoid(rect);
+
+      layeredCanvas.mode = "scribble";
+      findLayer().setSurface(film, trapezoid, 1);
+      $dominantMode = "painting";
+      onDoneHandler = () => { 
+        $dominantMode = "standard";
+        resolve(); 
+      };
     });
   }
 
   async function onDone() {
     console.log("onScribbleDone")
 
-    painterElement = null;
     painterFilm = null;
     layeredCanvas.mode = null;
-    findLayer().setFilm(null, null);
+    findLayer().setSurface(null, null, 0);
 
     onDoneHandler();
   }
@@ -57,11 +88,11 @@
   function onSetTool(e: CustomEvent<any>) {
     console.log("setTool", e.detail);
 
-    findLayer().currentBrush = e.detail;
+    findLayer().strokeOptions = e.detail;
   }
 
   export function isPainting() {
-    return painterElement != null;
+    return painterFilm != null;
   }
   
   export function undo() {
@@ -103,8 +134,8 @@
 </script>
 
 <div>
-{#if painterElement != null}
-  <PainterToolBox 
+{#if painterFilm != null}
+  <FreehandInspector
     on:setTool={onSetTool} 
     on:done={onDone} 
     on:redraw={onRedraw}/>

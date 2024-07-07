@@ -1,5 +1,6 @@
 import { type Writable, writable } from "svelte/store";
-import type { Film, FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree";
+import type { FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree";
+import type { Film } from "../../lib/layeredCanvas/dataModels/film";
 import type { Page } from '../book';
 
 type FrameInspectorCommand = "generate" | "scribble" | "punch" | "commit";

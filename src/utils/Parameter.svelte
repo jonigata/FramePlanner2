@@ -1,5 +1,5 @@
 <script lang="ts">
-  import NumberEdit from "../utils/NumberEdit.svelte";
+  import NumberEdit from "./NumberEdit.svelte";
   import { RangeSlider } from '@skeletonlabs/skeleton';
 
   export let label;

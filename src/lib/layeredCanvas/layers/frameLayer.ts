@@ -1,15 +1,18 @@
-import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { FrameElement, Media, ImageMedia, VideoMedia, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, Film, FilmStackTransformer } from "../dataModels/frameTree";
+import { Layer, sequentializePointer, type Dragging } from "../system/layeredCanvas";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
+import { Film, Media, ImageMedia, VideoMedia, FilmStackTransformer } from "../dataModels/film";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath } from "../tools/geometry/trapezoid";
+import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
+import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
+import type { FocusKeeper } from "../tools/focusKeeper";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -18,6 +21,7 @@ const PADDING_HANDLE_OUTER_WIDTH = 10;
 
 export class FrameLayer extends Layer {
   renderLayer: PaperRendererLayer;
+  focusKeeper: FocusKeeper;
   frameTree: FrameElement;
   onFocus: (layout: Layout) => void;
   onCommit: () => void;
@@ -62,6 +66,7 @@ export class FrameLayer extends Layer {
 
   constructor(
     renderLayer: PaperRendererLayer,
+    focusKeeper: FocusKeeper,
     frameTree: FrameElement, 
     onFocus: (layout: Layout) => void,
     onCommit: () => void, 
@@ -71,6 +76,7 @@ export class FrameLayer extends Layer {
     onSwap: (element0: FrameElement, element1: FrameElement) => void) {
     super();
     this.renderLayer = renderLayer;
+    this.focusKeeper = focusKeeper;
     this.frameTree = frameTree;
     this.onFocus = onFocus;
     this.onCommit = onCommit;
@@ -119,6 +125,8 @@ export class FrameLayer extends Layer {
     this.litIcons = [this.swapIcon];
 
     this.makeCanvasPattern();
+
+    focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
   calculateLayout(matrix: DOMMatrix): void {
@@ -211,6 +219,13 @@ export class FrameLayer extends Layer {
       trapezoidPath(ctx, this.selectedBorder.corners);
       ctx.fill();
     } else if (this.selectedLayout) {
+      const paperSize = this.getPaperSize();
+      const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
+      ctx.save();
+      ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
+      drawFilmStackBorders(ctx, this.selectedLayout.element.filmStack, paperSize);
+      ctx.restore();
+  
       drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
     }
 
@@ -635,14 +650,26 @@ export class FrameLayer extends Layer {
       this.selectLayout(this.litLayout);
       this.relayoutIcons();
       this.redraw();
-      return "done";
+      return { select: layout };
     } else {
       return { layout: layout };
     }
   }
 
+  changeFocus(layer: Layer) {
+    console.log("FrameLayer.changeFocus", layer);
+    if (layer != this) {
+      if (this.selectedLayout || this.selectedBorder) {
+        this.selectedBorder = null;
+        this.doSelectLayout(null);
+      }
+    }
+  }
+
   async *pointer(p: Vector, payload: any) {
-    if (payload.layout) {
+    if (payload.select) {
+      // changeFocusのためにacceptsに{select:layout}を変えさせたので、ここでは何もしない 
+    } else if (payload.layout) {
       const layout: Layout = payload.layout;
       const element: FrameElement = layout.element;
       if (0< element.filmStack.films.length) {
@@ -676,7 +703,7 @@ export class FrameLayer extends Layer {
   *scaleImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const films = element.getOperationTargetFilms();
+    const films = element.filmStack.getOperationTargetFilms();
 
     try {
       const transformer = new FilmStackTransformer(paperSize, films);
@@ -688,18 +715,18 @@ export class FrameLayer extends Layer {
         }
         this.redraw();
       });
+      this.onCommit();
     } catch (e) {
       if (e === "cancel") {
         this.onRevert();
       }
     }
-    this.onCommit();
   }
 
   *rotateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const films = element.getOperationTargetFilms();
+    const films = element.filmStack.getOperationTargetFilms();
 
     try {
       const transformer = new FilmStackTransformer(paperSize, films);
@@ -722,7 +749,7 @@ export class FrameLayer extends Layer {
   *translateImage(p: Vector, layout: Layout) {
     const paperSize = this.getPaperSize();
     const element = layout.element;
-    const films = element.getOperationTargetFilms();
+    const films = element.filmStack.getOperationTargetFilms();
     const origins = films.map(film => film.getShiftedTranslation(paperSize));
 
     try {
@@ -1099,7 +1126,7 @@ export class FrameLayer extends Layer {
   }
 
   videoRedrawInterval: NodeJS.Timer;
-  selectLayout(layout: Layout): void {
+  doSelectLayout(layout: Layout): void {
     if (layout != this.selectedLayout) {
       clearInterval(this.videoRedrawInterval);
       this.videoRedrawInterval = null;      
@@ -1128,8 +1155,25 @@ export class FrameLayer extends Layer {
     }
 
     this.selectedLayout = layout;
-    this.onFocus(layout);
   }
+
+  selectLayout(layout: Layout): void {
+    this.doSelectLayout(layout);
+    this.onFocus(layout);
+    this.focusKeeper.setFocus(layout == null ? null : this);
+  }
+
+  drawFilmBorders(ctx: CanvasRenderingContext2D, layout: Layout) {
+    const paperSize = this.getPaperSize();
+    const element = layout.element;
+
+    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+    ctx.save();
+    ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
+    drawFilmStackBorders(ctx, element.filmStack, paperSize);
+    ctx.restore();
+  }
+
 
   renderDepths(): number[] { return [0]; }
 

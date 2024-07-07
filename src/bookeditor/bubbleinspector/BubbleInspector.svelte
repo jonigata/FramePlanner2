@@ -14,8 +14,13 @@
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
+  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { type BubbleInspectorPosition, bubbleInspectorTarget, bubbleInspectorPosition, bubbleSplitCursor } from './bubbleInspectorStore';
   import { newBubbleToken } from '../../filemanager/fileManagerStore';
+  import FilmList from "../frameinspector/FilmList.svelte";
+  import ImageProvider from '../../generator/ImageProvider.svelte';
+  import { dominantMode } from "../../uiStore";
+  import { redrawToken } from "../bookStore";
 
   import bubbleIcon from '../../assets/title-bubble.png';
   import horizontalIcon from '../../assets/horizontal.png';
@@ -35,6 +40,7 @@
   let textarea = null;
   let inspectorSize = [0, 0];
   let inspector = null;
+  let imageProvider: ImageProvider;
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -164,11 +170,30 @@
     $newBubbleToken = $bubble;
   }
 
+  function onCommit() {
+    $bubbleInspectorTarget.command = "commit";
+    $redrawToken = true;
+  }
+
+  function onScribble(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget.command = "scribble";
+  }
+
+  async function onGenerate(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget.command = "generate";
+  }
+
+
+
+  function onPunch(e: CustomEvent<Film>) {
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
 
-{#if $bubble}
+{#if $dominantMode != "painting" && $bubble}
 {@const bubbleSize = $bubble.getPhysicalSize($bubblePage.paperSize)}
 <div class="bubble-inspector-container">
   <div class="bubble-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    
@@ -262,9 +287,14 @@
         <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
       </div>
     </div>
+    <div class="w-full text-left mt-4">
+      <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+    </div>
   </div>
 </div>
 {/if}
+
+<ImageProvider bind:this={imageProvider}/>
 
 <style>
   .bubble-inspector-container {
