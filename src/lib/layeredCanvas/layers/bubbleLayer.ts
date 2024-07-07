@@ -15,6 +15,7 @@ import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
+import type { FocusKeeper } from "../tools/focusKeeper";
 
 const iconUnit: Vector = [26, 26];
 
@@ -27,6 +28,7 @@ export class DefaultBubbleSlot {
 
 export class BubbleLayer extends Layer {
   viewport: Viewport;
+  focusKeeper: FocusKeeper;
   renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
   fold: number;
@@ -54,6 +56,7 @@ export class BubbleLayer extends Layer {
 
   constructor(
     viewport: Viewport,
+    focusKeeper: FocusKeeper,
     renderLayer: PaperRendererLayer,
     defaultBubbleSlot: DefaultBubbleSlot,
     bubbles: Bubble[],
@@ -65,6 +68,7 @@ export class BubbleLayer extends Layer {
 
     super();
     this.viewport = viewport;
+    this.focusKeeper = focusKeeper;
     this.renderLayer = renderLayer;
     this.bubbles = bubbles;
     this.onFocus = onFocus;
@@ -101,6 +105,8 @@ export class BubbleLayer extends Layer {
     this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
     this.setFold(fold);
+
+    focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
   calculateLayout(matrix: DOMMatrix): void {
@@ -582,10 +588,14 @@ export class BubbleLayer extends Layer {
     return null;
   }
 
-  changeFocus(dragging: Dragging) {
-    console.log("BubbleLayer.changeFocus", dragging, this.selected);
-    if (dragging == null || dragging.layer != this) {
-      this.unfocus();
+  changeFocus(layer: Layer) {
+    console.log("BubbleLayer.changeFocus", layer);
+    if (layer != this) {
+      // unfocus呼ぶと再帰呼び出しになるので注意
+      if (this.selected) {
+        this.selected = null;
+        this.onFocus(null);
+      }
     }
   }
 
@@ -604,6 +614,7 @@ export class BubbleLayer extends Layer {
   unfocus(): void {
     if (this.selected) {
       this.onFocus(null);
+      this.focusKeeper.setFocus(null);
       this.selected = null;
       this.redraw();
     }
@@ -690,6 +701,7 @@ export class BubbleLayer extends Layer {
         const scale = minimumBoundingScale(film.media.size, bubbleSize);
         film.setShiftedScale(paperSize, scale);
         this.onFocus(bubble);
+        this.focusKeeper.setFocus(this);
         this.onCommit();
         return true;
       }
@@ -1311,6 +1323,7 @@ export class BubbleLayer extends Layer {
     this.selected = bubble;
     this.setIconPositions();
     this.onFocus(this.selected);
+    this.focusKeeper.setFocus(this);
 
     this.redraw();
   }

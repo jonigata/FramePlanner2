@@ -12,6 +12,7 @@ import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
+import type { FocusKeeper } from "../tools/focusKeeper";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -20,6 +21,7 @@ const PADDING_HANDLE_OUTER_WIDTH = 10;
 
 export class FrameLayer extends Layer {
   renderLayer: PaperRendererLayer;
+  focusKeeper: FocusKeeper;
   frameTree: FrameElement;
   onFocus: (layout: Layout) => void;
   onCommit: () => void;
@@ -64,6 +66,7 @@ export class FrameLayer extends Layer {
 
   constructor(
     renderLayer: PaperRendererLayer,
+    focusKeeper: FocusKeeper,
     frameTree: FrameElement, 
     onFocus: (layout: Layout) => void,
     onCommit: () => void, 
@@ -73,6 +76,7 @@ export class FrameLayer extends Layer {
     onSwap: (element0: FrameElement, element1: FrameElement) => void) {
     super();
     this.renderLayer = renderLayer;
+    this.focusKeeper = focusKeeper;
     this.frameTree = frameTree;
     this.onFocus = onFocus;
     this.onCommit = onCommit;
@@ -121,6 +125,8 @@ export class FrameLayer extends Layer {
     this.litIcons = [this.swapIcon];
 
     this.makeCanvasPattern();
+
+    focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
   calculateLayout(matrix: DOMMatrix): void {
@@ -650,14 +656,15 @@ export class FrameLayer extends Layer {
     }
   }
 
-  changeFocus(dragging: Dragging) {
-    console.log("FrameLayer.changeFocus", dragging);
-    if (dragging == null || dragging.layer != this) {
-      this.selectedBorder = null;
-      this.selectLayout(null);
+  changeFocus(layer: Layer) {
+    console.log("FrameLayer.changeFocus", layer);
+    if (layer != this) {
+      if (this.selectedLayout || this.selectedBorder) {
+        this.selectedBorder = null;
+        this.doSelectLayout(null);
+      }
     }
   }
-
 
   async *pointer(p: Vector, payload: any) {
     if (payload.select) {
@@ -1119,7 +1126,7 @@ export class FrameLayer extends Layer {
   }
 
   videoRedrawInterval: NodeJS.Timer;
-  selectLayout(layout: Layout): void {
+  doSelectLayout(layout: Layout): void {
     if (layout != this.selectedLayout) {
       clearInterval(this.videoRedrawInterval);
       this.videoRedrawInterval = null;      
@@ -1148,7 +1155,12 @@ export class FrameLayer extends Layer {
     }
 
     this.selectedLayout = layout;
+  }
+
+  selectLayout(layout: Layout): void {
+    this.doSelectLayout(layout);
     this.onFocus(layout);
+    this.focusKeeper.setFocus(layout == null ? null : this);
   }
 
   drawFilmBorders(ctx: CanvasRenderingContext2D, layout: Layout) {

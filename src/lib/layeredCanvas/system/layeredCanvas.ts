@@ -70,7 +70,6 @@ export class Layer {
 
   pointerHover(position: Vector): boolean { return false; }
   accepts(position: Vector, button: number) { return null; }
-  changeFocus(dragging: Dragging) {}
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
   pointerUp(position: Vector, payload: any) {}
@@ -118,12 +117,6 @@ export class Paper {
       }
     }
     return result;
-  }
-
-  changeFocus(dragging: Dragging): void {
-    for (let layer of this.layers) {
-      layer.changeFocus(dragging);
-    }
   }
 
   handlePointerDown(p: Vector, dragging: Dragging): void {
@@ -410,7 +403,6 @@ export class LayeredCanvas {
       this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);
     }
-    this.rootPaper.changeFocus(this.dragging);
   }
       
   handlePointerMove(event: PointerEvent): void {

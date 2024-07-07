@@ -223,19 +223,6 @@ export class ArrayLayer extends Layer {
     return innerDragging ? { paper, index, innerDragging } : null;
   }
 
-  changeFocus(dragging: Dragging): void {
-    if (dragging?.layer === this) {
-      const { index, innerDragging } = dragging.payload;
-      for (let i = 0; i < this.array.papers.length; i++) {
-        this.array.papers[i].paper.changeFocus(i === index ? innerDragging : null);
-      }
-    } else {
-      for (let i = 0; i < this.array.papers.length; i++) {
-        this.array.papers[i].paper.changeFocus(null);
-      }
-    }
-  }
-
   pointerDown(p: Vector, payload: any): void {
     const { paper, index, innerDragging } = payload;
     const q = this.array.parentPositionToChildPosition(index, p);
