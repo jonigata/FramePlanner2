@@ -152,7 +152,7 @@
 <FullScreenLoading/>
 
 <!-- ads -->
-<AdContainer/>
+<!--<AdContainer/>-->
 
 <style>
 

@@ -399,7 +399,7 @@
       if (command === "scribble") {
         await modalFrameScribble(fit);
       } else if (command === "generate") {
-        await modalGenerate(fit);
+        await modalFrameGenerate(fit);
       } else if (command === "punch") {
         await punch(fit);
       } else if (command === "commit") {
@@ -420,7 +420,7 @@
       if (command === "scribble") {
         await modalBubbleScribble(bit);
       } else if (command === "generate") {
-        // await modalGenerate(bit);
+        await modalBubbleGenerate(bit);
       } else if (command === "punch") {
         // await punch(bit);
       } else if (command === "commit") {
@@ -464,7 +464,7 @@
     commit(null);
   }
 
-  async function modalGenerate(fit: FrameInspectorTarget) {
+  async function modalFrameGenerate(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
     const page = fit.page;
@@ -489,16 +489,17 @@
     }
   }
 
-  async function modalBubbleGenerate(fit: FrameInspectorTarget) {
-    const r = await imageProvider.run($bubble.prompt, $bubble.filmStack, $bubble.gallery);
+  async function modalBubbleGenerate(bit: BubbleInspectorTarget) {
+    const bubble = bit.bubble;
+    const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
     const film = new Film();
     film.media = new ImageMedia(r.image);
-    const paperSize = fit.page.paperSize;
-    const bubbleSize = $bubble.getPhysicalSize(paperSize);
+    const paperSize = bit.page.paperSize;
+    const bubbleSize = bubble.getPhysicalSize(paperSize);
     const scale = minimumBoundingScale(film.media.size, bubbleSize);
     film.setShiftedScale(paperSize, scale);
-    $bubble.filmStack.films.push(film);
-    $bubble.prompt = r.prompt;
+    bubble.filmStack.films.push(film);
+    bubble.prompt = r.prompt;
     $bubble = $bubble;
   }
 
