@@ -6,7 +6,7 @@ import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
-import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect, minimumBoundingScale } from "../tools/geometry/geometry";
+import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect, minimumBoundingScale, getRectCenter } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
@@ -1291,22 +1291,36 @@ export class BubbleLayer extends Layer {
   }
 
   toggleScaleLock(bubble: Bubble) {
-    const paperSize = this.getPaperSize();
     bubble.scaleLock = !bubble.scaleLock;
     this.imageScaleLockIcon.index = bubble.scaleLock ? 1 : 0;
     if (bubble.scaleLock) {
-      // TODO:
-      /* 
-      let bubbleSize = bubble.getPhysicalSize(paperSize);
-      const [w,h] = this.resizeWithFixedAspectRatio(bubble.imageSize, bubbleSize);
+      const paperSize = this.getPaperSize();
+
+      {
+        const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
+        // [0]のscaleを1とする
+        const scale = bubble.filmStack.films[0].getShiftedScale(paperSize);
+        transformer.scale(1 / scale);
+      }
+      const ir = calculateMinimumBoundingRect(paperSize, bubble.filmStack.films);
+      const origins = bubble.filmStack.films.map(film => film.getShiftedTranslation(paperSize));
+      const move = ir ? getRectCenter(ir) : [0,0];
+
+      const bubbleSize = bubble.getPhysicalSize(paperSize);
+      const [w,h] = this.resizeWithFixedAspectRatio([ir[2], ir[3]], bubbleSize);
+      const newScale = w / ir[2];
+      console.log("newScale", newScale);
       const [cx,cy] = bubble.getPhysicalCenter(paperSize);
       bubble.n_p0 = Bubble.normalizedPosition(paperSize, [cx - w/2, cy - h/2]);
       bubble.n_p1 = Bubble.normalizedPosition(paperSize, [cx + w/2, cy + h/2]);
-      bubble.image.n_translation = [0,0];
-      bubbleSize = bubble.getPhysicalSize(paperSize);
-      bubble.setPhysicalImageScale(paperSize, bubbleSize[0] / bubble.image.image.naturalWidth);
+      bubble.filmStack.films.forEach((film, i) => {
+        film.setShiftedTranslation(paperSize, [origins[i][0] + move[0], origins[i][1] + move[1]]);
+      });
+      {
+        const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
+        transformer.scale(newScale);
+      }
       this.setIconPositions();
-      */
     }
     this.redraw();
   }
