@@ -128,6 +128,7 @@ export class Film  {
     const image = this.media;
     const imageSize = Math.min(image.naturalWidth, image.naturalHeight) ;
     const pageSize = Math.min(paperSize[0], paperSize[1]);
+    console.log("setShiftedScale", paperSize, scale, image.naturalWidth, image.naturalHeight);
     this.n_scale = scale / (pageSize / imageSize);
   }
 

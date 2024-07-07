@@ -16,6 +16,7 @@ import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { Film, ImageMedia, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
+import { makePlainImage } from "../../../utils/imageUtil";
 
 const iconUnit: Vector = [26, 26];
 
@@ -151,6 +152,10 @@ export class BubbleLayer extends Layer {
         console.log(e, this.optionEditActive, this.selected, this.selected?.optionContext);
         throw e;
       }
+    }
+
+    if (this.interactable && this.creatingBubble) {
+      this.drawSelectedUI(ctx, this.creatingBubble);
     }
   }
 
@@ -524,6 +529,9 @@ export class BubbleLayer extends Layer {
     if (keyDownFlags["KeyF"]) {
       return { action: "create" };
     }
+    if (keyDownFlags["KeyG"]) {
+      return { action: "create-surface" };
+    }
     if (this.createBubbleIcon.contains(point)) {
       return { action: "create" };
     }
@@ -624,7 +632,9 @@ export class BubbleLayer extends Layer {
     this.hint(dragStart, null);
 
     if (payload.action === "create") {
-      yield* this.createBubble(dragStart);
+      yield* this.createBubble(dragStart, false);
+    } else if (payload.action === "create-surface") {
+      yield* this.createBubble(dragStart, true);
     } else if (payload.action === "move") {
       yield* this.moveBubble(dragStart, payload.bubble);
     } else if (payload.action === "offset") {
@@ -763,7 +773,7 @@ export class BubbleLayer extends Layer {
     this.scaleIcon.position = cp([1,1],[-2,0]);
   }
 
-  async *createBubble(dragStart: Vector): AsyncGenerator<void, void, Vector> {
+  async *createBubble(dragStart: Vector, createsSurface: boolean): AsyncGenerator<void, void, Vector> {
     const paperSize = this.getPaperSize();
     this.unfocus();
     const bubble = this.defaultBubbleSlot.bubble.clone(false);
@@ -772,6 +782,10 @@ export class BubbleLayer extends Layer {
     bubble.setPhysicalRect(paperSize, [dragStart[0], dragStart[1], 0, 0]);
     bubble.text = getHaiku();
     bubble.initOptions();
+    if (createsSurface) {
+      bubble.shape = "none";
+      bubble.text = "";
+    }
     this.creatingBubble = bubble;
 
     let p: Vector;
@@ -786,8 +800,13 @@ export class BubbleLayer extends Layer {
       if (bubble.hasEnoughSize(paperSize)) {
         this.bubbles.push(bubble);
         this.onCommit();
-        // this.selectBubble(bubble);
+        if (createsSurface) {
+          const size = bubble.getPhysicalSize(paperSize);
+          const film = await this.newMinmumBoundingFilm(size);
+          bubble.filmStack.films.push(film);
+        }
       }
+      this.selectBubble(bubble);
     } catch (e) {
       if (e === "cancel") {
         this.creatingBubble = null;
@@ -1360,6 +1379,18 @@ export class BubbleLayer extends Layer {
     film.media = new ImageMedia(image);
     return film;
   }
+
+  async newMinmumBoundingFilm([w,h]: Vector): Promise<Film> {
+    // 256ごとに切り上げ
+    const unit = 16;
+    const [w2,h2] = [Math.ceil(w / unit) * unit, Math.ceil(h / unit) * unit];
+    console.log(w, h, w2, h2);
+    const image = await makePlainImage(w2, h2, "#ffffff00");
+    const film = this.newImageFilm(image);
+    film.setShiftedScale(this.getPaperSize(), 1);
+    console.log("n_scale", film.n_scale);
+    return film;
+  } 
 }
 sequentializePointer(BubbleLayer);
 
