@@ -19,7 +19,7 @@
   }
 </script>
 
-<div class="canvas-container fullscreen" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
+<div class="canvas-container" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
   <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
   <slot/>
 </div>    
@@ -27,17 +27,11 @@
 
 <style>
   .canvas-container {
-    position: relative;
     background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
                       linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
     background-size: 20px 20px;
     background-position: 0 0, 10px 10px;
     background-color: white;
-  }
-  .fullscreen {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
   }

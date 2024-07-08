@@ -1,6 +1,5 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { draggable } from '@neodrag/svelte';
   import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
@@ -30,8 +29,8 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { dominantMode } from "../uiStore";
+  import { controlPanelOpened } from "./controlPanelStore";
 
-  import titleBarIcon from '../assets/title-control-panel.png';
   import downloadIcon from '../assets/get.png';
   import clipboardIcon from '../assets/clipboard.png';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
@@ -308,9 +307,8 @@
 
 </script>
 
-{#if $dominantMode != "painting" && $viewport}
-<div class="control-panel variant-glass-surface rounded-container-token" use:draggable={{ handle: '.title-bar' }} style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
-  <div class="title-bar variant-filled-surface rounded-container-token"><img class="title-image" src={titleBarIcon} alt="title"/></div>
+{#if $controlPanelOpened && $dominantMode != "painting" && $viewport}
+<div class="control-panel variant-glass-surface rounded-container-token" style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
   <div class="px-2">
     <TemplateChooser on:apply={applyTemplate} on:change={changeTemplate}/>
   </div>
@@ -452,21 +450,10 @@
     width: 400px;
     display: flex;
     flex-direction: column;
-    top: 20px;
-    left: 20px;
+    top: 32px;
+    left: 0px;
+    padding-top: 8px;
     padding-bottom: 8px;
-  }
-  .title-bar {
-    cursor: move;
-    padding: 2px;
-    margin: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .title-image {
-    width: 32px;
-    height: 32px;
   }
   .slider-label {
     width: 20px;

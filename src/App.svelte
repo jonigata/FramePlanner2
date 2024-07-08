@@ -44,6 +44,7 @@
   import BubbleBucket from './bubbleBucket/BubbleBucket.svelte';
   //  import JsonReader from './utils/JsonReader.svelte';
   import VideoMaker from './videomaker/VideoMaker.svelte';
+  import ToolBar from './toolbar/ToolBar.svelte'
   import AdContainer from './utils/AdContainer.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
@@ -103,7 +104,10 @@
   });
 </script>
 
-<BookEditor />
+<div class="flex flex-col w-screen h-screen">
+  <ToolBar/>
+  <BookEditor />
+</div>
 
 <!-- dialogs -->
 <ControlPanel />
