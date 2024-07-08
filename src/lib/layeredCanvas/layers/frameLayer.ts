@@ -686,8 +686,8 @@ export class FrameLayer extends Layer {
     } else if (payload.padding) {
       yield* this.expandPadding(p, payload.padding);
     } else {
-      this.selectedBorder = payload.border;
       this.selectLayout(null);
+      this.selectedBorder = payload.border;
       this.relayoutIcons();
       this.redraw();
       if (payload.action === "expand") {
