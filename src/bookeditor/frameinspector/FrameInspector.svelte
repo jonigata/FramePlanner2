@@ -50,7 +50,7 @@
 <svelte:window bind:innerWidth bind:innerHeight/>
 
 <div class="drawer-outer">
-  <Drawer placement={"right"} open={opened} overlay={false} size="350px" on:clickAway={close}>
+  <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
     <div class="drawer-content">
       {#if opened}
         <FilmList filmStack={$frame.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>

@@ -1155,11 +1155,11 @@ export class FrameLayer extends Layer {
     }
 
     this.selectedLayout = layout;
+    this.onFocus(layout);
   }
 
   selectLayout(layout: Layout): void {
     this.doSelectLayout(layout);
-    this.onFocus(layout);
     this.focusKeeper.setFocus(layout == null ? null : this);
   }
 

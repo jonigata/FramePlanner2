@@ -14,6 +14,7 @@
   );
 </script>
 
+{#if $bubble != null}
 <div class="container">
   {#each Object.entries($bubble.optionSet) as [key, value], _ (key)}
     {#if value["type"] === "number"}
@@ -38,6 +39,7 @@
     {/if}
   {/each}
 </div>
+{/if}
 
 <style>
   .container {
