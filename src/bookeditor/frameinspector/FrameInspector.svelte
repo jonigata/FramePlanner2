@@ -1,16 +1,15 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { draggable } from '@neodrag/svelte';
   import { frameInspectorTarget } from './frameInspectorStore';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from "../bookStore"
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
+  import Drawer from "../../utils/Drawer.svelte";
 
   let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
-  let inspector = null;
 
   const frame = writableDerived(
     frameInspectorTarget,
@@ -20,6 +19,8 @@
       return fit;
     }
   );
+
+  $: opened = $dominantMode != "painting" && $frame != null
 
   function onDrag({offsetX, offsetY}) {
     adjustedPosition = {x: offsetX, y: offsetY};
@@ -48,35 +49,25 @@
 
 <svelte:window bind:innerWidth bind:innerHeight/>
 
-{#if $dominantMode != "painting" && $frame}
-<div class="frame-inspector-container">
-  <div class="frame-inspector variant-glass-surface rounded-container-token vbox gap" use:draggable={{ position: adjustedPosition, onDrag: onDrag ,handle: '.title-bar'}} bind:this={inspector}>    
-    <div class="title-bar variant-filled-surface rounded-container-token">
-      コマ
+<div class="drawer-outer">
+  <Drawer placement={"right"} open={opened} overlay={false} size="350px" on:clickAway={close}>
+    <div class="drawer-content">
+      {#if opened}
+        <FilmList filmStack={$frame.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+      {/if}
     </div>
-    <FilmList filmStack={$frame.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
-  </div>
+  </Drawer>
 </div>
-{/if}
 
 <style>
-  .frame-inspector {
-    position: absolute;
-    top: 0px;
-    left: 0px;
+  .drawer-content {
     width: 350px;
     display: flex;
     flex-direction: column;
     padding: 8px;
     gap: 2px;
   }
-  .title-bar {
-    cursor: move;
-    align-self: stretch;
-    margin-bottom: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
+  .drawer-outer :global(.drawer .panel) {
+    background-color: rgb(var(--color-surface-100));
   }
 </style>

@@ -36,6 +36,7 @@
     width: 100%;
     z-index: -1;
     transition: z-index var(--duration) step-end;
+    pointer-events: none;
   }
 
   .drawer.open {
@@ -53,6 +54,7 @@
     opacity: 0;
     z-index: 2;
     transition: opacity var(--duration) ease;
+    pointer-events: auto;
   }
 
   .drawer.open .overlay {
@@ -67,6 +69,7 @@
     z-index: 3;
     transition: transform var(--duration) ease;
     overflow: auto;
+    pointer-events: auto;
   }
 
   .panel.left {
