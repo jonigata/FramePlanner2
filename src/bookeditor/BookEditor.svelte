@@ -421,7 +421,6 @@
     if (bit) {
       let bubbleInspectorTargetBackUp = { ...bit };
       bubbleInspectorTargetBackUp.command = null;
-      $bubbleInspectorTarget = null;
 
       const command = bit.command;
       if (command === "scribble") {
@@ -499,7 +498,7 @@
   async function modalBubbleGenerate(bit: BubbleInspectorTarget) {
     const bubble = bit.bubble;
     const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
-    console.log(r);
+    if (r == null) { return; }
     const film = new Film();
     film.media = new ImageMedia(r.image);
     const paperSize = bit.page.paperSize;
