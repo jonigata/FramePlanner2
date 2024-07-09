@@ -29,6 +29,7 @@
   import CabinetButton from './rootelements/CabinetButton.svelte';
   import MaterialBucketButton from './rootelements/MaterialBucketButton.svelte';
   import BellButton from './rootelements/BellButton.svelte';
+  import DownloadButton from './rootelements/DownloadButton.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
@@ -46,6 +47,7 @@
   import VideoMaker from './videomaker/VideoMaker.svelte';
   import ToolBar from './toolbar/ToolBar.svelte'
   import AdContainer from './utils/AdContainer.svelte';
+  import Downloader from './downloader/Downloader.svelte';
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -122,6 +124,7 @@
 <StructureTree/>
 <MaterialBucket/>
 <BubbleBucket/>
+<Downloader/>
 
 <!-- root items -->
 <MaterialBucketButton />
@@ -130,6 +133,7 @@
 {#if $onlineAccount != null}
   <BellButton />
 {/if}
+<DownloadButton />
 
 <!-- drawers -->
 <FontChooser/>

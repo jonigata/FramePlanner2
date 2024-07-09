@@ -6,34 +6,26 @@
   import '../box.css';
   import { type Book, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
-  import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { FileDropzone } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
   import { aboutOpen } from '../about/aboutStore';
   import { structureTreeOpen } from '../about/structureTreeStore';
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
   import { isPendingRedirect, postContact, prepareAuth, listSharedImages } from '../firebase';
 	import ColorPicker from 'svelte-awesome-color-picker';
-  import { commitIfDirtyToken } from '../undoStore';
   import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-  import { fileSystem, newBookToken, shareBookToken } from '../filemanager/fileManagerStore';
+  import { fileSystem, newBookToken } from '../filemanager/fileManagerStore';
   import type { IndexedDBFileSystem } from "../lib/filesystem/indexeddbFileSystem";
-  import { getAnalytics, logEvent } from "firebase/analytics";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { app } from "../firebase";
   import { getAuth } from "firebase/auth";
   import { accountUser } from "../utils/accountStore";
-  import { toolTip } from '../utils/passiveToolTipStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { dominantMode } from "../uiStore";
   import { controlPanelOpened } from "./controlPanelStore";
 
-  import downloadIcon from '../assets/get.png';
-  import clipboardIcon from '../assets/clipboard.png';
-  import aiPictorsIcon from '../assets/aipictors_logo_0.png'
   import { onMount } from "svelte";
 
   let min = 256;
@@ -139,28 +131,6 @@
     }
   }
 
-  function download() {
-    logEvent(getAnalytics(), 'download');
-    archive('download');
-  }
-
-  function postAIPictors() {
-    logEvent(getAnalytics(), 'post_to_aipictors');
-    archive('aipictors');
-  }
-
-  function copyToClipboard() {
-    logEvent(getAnalytics(), 'copy_book_to_clipboard');
-    archive('copy');
-    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
-
-  }
-
-  async function downloadPSD() {
-    logEvent(getAnalytics(), 'export_psd');
-    archive('export-psd');
-  }
-
   async function signIn() {
     modalStore.trigger({ type: 'component', component: 'signIn' });
   }
@@ -170,11 +140,6 @@
     await auth.signOut();
     // reload
     location.reload();
-  }
-
-  function archive(op: BookArchiveOperation) {
-    $bookArchiver.push(op);
-    $bookArchiver = $bookArchiver;
   }
 
   async function dumpFileSystem() {
@@ -241,11 +206,6 @@
   function materialBucket() {
     console.log("materialBucket");
     $materialBucketOpen = true;
-  }
-
-  async function shareBook() {
-    $commitIfDirtyToken = true;
-    $shareBookToken = $mainBook;
   }
 
   async function callListSharedImages() {
@@ -376,42 +336,10 @@
     <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
   </div>
 
-  <div class="hbox gap mx-2" style="margin-top: 16px;">
-    <FileDropzone name="upload-file" accept="image/*" on:dragover={onDragOver} on:drop={onDrop} bind:files={files}>
-    	<svelte:fragment slot="message">ここにpngをドロップすると一枚絵の用紙を作ります</svelte:fragment>
-    </FileDropzone> 
-  </div>  
-  <div class="variant-soft-tertiary mt-2 mx-2 p-2 pt-0 rounded-container-token">
-    出版！
-    <div class="hbox mx-2 gap">
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={download} use:toolTip={"すべてのページを\nダウンロード"}>
-        <img class="button-icon" src={downloadIcon} alt="download"/>ダウンロード
-      </button>
-      <button class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 download-button hbox" on:click={copyToClipboard} use:toolTip={"マークしたページか\n1ページ目をコピー"}>
-        <img class="button-icon" src={clipboardIcon} alt="copy"/>コピー
-      </button>
-      <button class="bg-slate-50 text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 download-button hbox" on:click={postAIPictors}>
-        <img width="95%" src={aiPictorsIcon} alt="aipictors"/>
-      </button>
-    </div>
-  </div>
   <div class="hbox mx-2" style="margin-top: 4px;">
     <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
     <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
   </div>
-  <div class="hbox gap mx-2" style="margin-top: 0px;">
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadPSD}>
-      Export PSD
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={shareBook}>
-      Share
-    </button>
-    <!--
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={callListSharedImages}>
-      ListImage
-    </button>
-    -->
-  </div>  
   <div class="hbox gap mx-2" style="margin-top: 8px;">
     <!--
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>

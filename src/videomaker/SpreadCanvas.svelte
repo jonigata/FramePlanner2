@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import wallPaper from '../assets/wallpaper.jpg';
 
   export let canvas: HTMLCanvasElement;
   export let width: number;
@@ -12,7 +11,6 @@
   let displayHeight: number;
 
   const img = new Image();
-  img.src = wallPaper;
 
   $:onChangeContainerSize(containerWidth, containerHeight, width, height);
   async function onChangeContainerSize(w: number, h: number, bw: number, bh: number) {
