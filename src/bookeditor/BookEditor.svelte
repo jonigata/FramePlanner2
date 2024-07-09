@@ -1,7 +1,7 @@
 
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { onDestroy } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
@@ -397,9 +397,8 @@
 
   $: onFrameCommand($frameInspectorTarget);
   async function onFrameCommand(fit: FrameInspectorTarget) {
-    if (fit) {
-      let frameInspectorTargetBackUp = { ...fit };
-      frameInspectorTargetBackUp.command = null;
+    if (fit && fit.command != null) {
+      $frameInspectorTarget = { ...fit, command: null };
 
       const command = fit.command;
       if (command === "scribble") {
@@ -407,19 +406,17 @@
       } else if (command === "generate") {
         await modalFrameGenerate(fit);
       } else if (command === "punch") {
-        await punch(fit);
+        await punchFrameFilm(fit);
       } else if (command === "commit") {
         commit(null);
       }
-      $frameInspectorTarget = frameInspectorTargetBackUp;
     }
   }
 
   $: onBubbleCommand($bubbleInspectorTarget);
   async function onBubbleCommand(bit: BubbleInspectorTarget) {
-    if (bit) {
-      let bubbleInspectorTargetBackUp = { ...bit };
-      bubbleInspectorTargetBackUp.command = null;
+    if (bit && bit.command != null) {
+      $bubbleInspectorTarget = { ...bit, command: null };
 
       const command = bit.command;
       if (command === "scribble") {
@@ -427,11 +424,10 @@
       } else if (command === "generate") {
         await modalBubbleGenerate(bit);
       } else if (command === "punch") {
-        // await punch(bit);
+        await punchBubbleFilm(bit);
       } else if (command === "commit") {
         commit(null);
       }
-      $bubbleInspectorTarget = bubbleInspectorTargetBackUp;
     }
   }
 
@@ -509,14 +505,41 @@
     $bubble = $bubble;
   }
 
-  async function punch(fit: FrameInspectorTarget) {
+  async function punchFrameFilm(fit: FrameInspectorTarget) {
     const imageMedia = fit.commandTargetFilm.media as ImageMedia;
     if (!(imageMedia instanceof ImageMedia)) { return; }
 
     $loading = true;
+    console.log("A");
     await loadModel((s: string) => console.log(s));
     
+    console.log("B");
     const film = fit.commandTargetFilm;
+    const canvas = await predict(imageMedia.image);
+    console.log("C");
+    const dataURL = canvas.toDataURL("image/png");
+    const newImage = new Image();
+    newImage.src = dataURL;
+    await newImage.decode();
+    console.log("D");
+    film.media = new ImageMedia(newImage);
+    layeredCanvas.redraw();
+    commit(null);
+    $loading = false;
+  }
+
+  async function punchBubbleFilm(bit: BubbleInspectorTarget) {
+    console.log("punchBubbleFilm");
+    const imageMedia = bit.commandTargetFilm.media as ImageMedia;
+    if (!(imageMedia instanceof ImageMedia)) { 
+      console.log("not ImageMedia", bit.commandTargetFilm.media);
+      return; 
+    }
+
+    $loading = true;
+    await loadModel((s: string) => console.log(s));
+    
+    const film = bit.commandTargetFilm;
     const canvas = await predict(imageMedia.image);
     const dataURL = canvas.toDataURL("image/png");
     const newImage = new Image();
@@ -526,6 +549,8 @@
     layeredCanvas.redraw();
     commit(null);
     $loading = false;
+
+    $bubble = $bubble;
   }
 
   onDestroy(() => {

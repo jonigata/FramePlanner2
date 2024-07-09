@@ -153,9 +153,9 @@
     $bubbleInspectorTarget.command = "generate";
   }
 
-
-
   function onPunch(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget.command = "punch";
   }
 </script>
 
