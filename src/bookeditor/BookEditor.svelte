@@ -400,7 +400,6 @@
     if (fit) {
       let frameInspectorTargetBackUp = { ...fit };
       frameInspectorTargetBackUp.command = null;
-      $frameInspectorTarget = null;
 
       const command = fit.command;
       if (command === "scribble") {
