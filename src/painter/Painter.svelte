@@ -134,11 +134,12 @@
 </script>
 
 <div>
-{#if painterFilm != null}
   <FreehandInspector
     on:setTool={onSetTool} 
     on:done={onDone} 
-    on:redraw={onRedraw}/>
+    on:redraw={onRedraw}
+    opened={painterFilm != null}/>
+{#if painterFilm != null}
   <PainterAutoGenerate bind:this={painterAutoGenerate}/>
 {/if}
 </div>

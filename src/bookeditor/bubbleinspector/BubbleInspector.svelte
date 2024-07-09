@@ -164,7 +164,6 @@
 <div class="drawer-outer">
   <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
     <div class="drawer-content">
-      {#if opened}
       <div class="hbox gap-x-2 expand">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -244,7 +243,6 @@
       <div class="w-full text-left mt-4">
         <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
       </div>
-      {/if}
     </div>
   </Drawer>
 </div>
