@@ -13,7 +13,7 @@
   import { frameInspectorTarget, frameInspectorPosition, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents, swapBookContents } from './book';
-  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken, forceCommitDelayedToken } from './bookStore';
+  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
@@ -31,6 +31,7 @@
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
   import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
+  import { triggerTemplateChoise } from "./templateChooserStore";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -115,15 +116,11 @@
   }
 
   function insertPage(index: number) {
-    const p = $newPageProperty;
-    const example = frameExamples[p.templateIndex];
-    const bubbles = example.bubbles.map(b => Bubble.compile(p.paperSize, b));
-    const page = newPage(FrameElement.compile(example.frameTree), bubbles);
-    page.paperSize = [...p.paperSize];
-    page.paperColor = p.paperColor;
-    page.frameColor = p.frameColor;
-    page.frameWidth = p.frameWidth;
-    $mainBook.pages.splice(index, 0, page);
+    triggerTemplateChoise.trigger().then(result => {
+      console.log(result);
+    });
+
+    insertNewPageToBook($mainBook, $newPageProperty, index);
     commit(null);
   }
 

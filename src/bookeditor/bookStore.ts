@@ -1,6 +1,9 @@
-import { type Writable, writable, derived } from "svelte/store";
+import { type Writable, writable, derived, get } from "svelte/store";
 import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
-import type { Book, BookOperators } from './book';
+import { type Book, type BookOperators, newPage } from './book';
+import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
+import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 //import writableDerived from "svelte-writable-derived";
 
 export const mainBook = writable<Book>(null);
@@ -27,3 +30,14 @@ export const newPageProperty: Writable<NewPageProperty> = writable({
   frameWidth: 2, 
   templateIndex: 0,
 });
+
+export function insertNewPageToBook(book: Book, p: NewPageProperty, index: number) {
+  const example = frameExamples[p.templateIndex];
+  const bubbles = example.bubbles.map(b => Bubble.compile(p.paperSize, b));
+  const page = newPage(FrameElement.compile(example.frameTree), bubbles);
+  page.paperSize = [...p.paperSize];
+  page.paperColor = p.paperColor;
+  page.frameColor = p.frameColor;
+  page.frameWidth = p.frameWidth;
+  book.pages.splice(index, 0, page);
+}

@@ -48,6 +48,7 @@
   import ToolBar from './toolbar/ToolBar.svelte'
   import AdContainer from './utils/AdContainer.svelte';
   import Downloader from './downloader/Downloader.svelte';
+  import TemplateChooser from './bookeditor/TemplateChooser.svelte'
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -142,6 +143,7 @@
 <FileManager/>
 <About/>
 <BatchImaging/>
+<TemplateChooser/>
 
 <!-- tools -->
 <PassiveToolTip />

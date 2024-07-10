@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, newBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
+  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight } from '../bookeditor/book';
@@ -188,11 +188,11 @@
     }
   }
 
-  $:onNewBubbleRequest($newBubbleToken);
+  $:onNewBubbleRequest($saveBubbleToken);
   async function onNewBubbleRequest(bubble: Bubble) {
     if (!bubble) { return; }
     console.log("onNewBalloonRequest");
-    $newBubbleToken = null;
+    $saveBubbleToken = null;
     const root = await fileSystem.getRoot();
     const folder = await root.getNodeByName("テンプレート");
     const file = await fileSystem.createFile();

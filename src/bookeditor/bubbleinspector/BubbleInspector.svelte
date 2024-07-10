@@ -15,7 +15,7 @@
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { bubbleInspectorTarget, bubbleSplitCursor } from './bubbleInspectorStore';
-  import { newBubbleToken } from '../../filemanager/fileManagerStore';
+  import { saveBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
   import { dominantMode } from "../../uiStore";
@@ -135,7 +135,7 @@
   }
 
   async function saveTemplate() {
-    $newBubbleToken = $bubble;
+    $saveBubbleToken = $bubble;
   }
 
   function onCommit() {
