@@ -14,7 +14,7 @@
 
 </script>
 
-<div class="container" use:draggable={
+<div class="mascot-container" use:draggable={
   {
     handle: '.handle',
     defaultPosition: $mascotWindowRect,
@@ -29,14 +29,16 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="absolute-positioned" on:contextmenu={onClick}>
-    <img class="mascot handle" src={mascot} alt="mascot"/>
+    <img class="mascot handle" draggable={false} src={mascot} alt="mascot"/>
     <MascotStatus/>
   </div>
 </div>
 
 <style>
-  .container {
-    position: relative;
+  .mascot-container {
+    position: absolute;
+    bottom: 0;
+    right: 0;
   }
   .resizable {
     width: 500px;
