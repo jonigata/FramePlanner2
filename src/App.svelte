@@ -17,6 +17,7 @@
   import BookEditor from './bookeditor/BookEditor.svelte';
   import PassiveToolTip from './utils/PassiveToolTip.svelte';
   import About from './about/About.svelte';
+  import PageInspector from './bookeditor/pageinspector/PageInspector.svelte';
   import FrameInspector from './bookeditor/frameinspector/FrameInspector.svelte';
   import BubbleInspector from './bookeditor/bubbleinspector/BubbleInspector.svelte';
   import Comic from './utils/Comic.svelte'; 
@@ -114,6 +115,7 @@
 
 <!-- dialogs -->
 <ControlPanel />
+<PageInspector/>
 <FrameInspector/>
 <BubbleInspector/>
 {#if $mascotVisible && $onlineAccount != null}

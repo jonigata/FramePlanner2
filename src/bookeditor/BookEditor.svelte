@@ -1,7 +1,7 @@
 
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { onDestroy, tick } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
@@ -9,8 +9,8 @@
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorPosition, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
-  import { frameInspectorTarget, frameInspectorPosition, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
+  import { bubbleInspectorTarget, bubbleSplitCursor, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
+  import { frameInspectorTarget, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents, swapBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
@@ -20,7 +20,6 @@
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
-  import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
   import ImageProvider from '../generator/ImageProvider.svelte';
   import { loadModel, predict } from '../utils/rmbg';
   import { loading } from '../utils/loadingStore'
@@ -32,6 +31,7 @@
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
   import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoise } from "./templateChooserStore";
+  import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -115,13 +115,14 @@
     $viewport = $viewport;
   }
 
-  function insertPage(index: number) {
+  function insertPage(pageIndex: number) {
     triggerTemplateChoise.trigger().then(result => {
       console.log(result);
-    });
 
-    insertNewPageToBook($mainBook, $newPageProperty, index);
-    commit(null);
+      $newPageProperty.templateIndex = result;
+      insertNewPageToBook($mainBook, $newPageProperty, pageIndex);
+      commit(null);
+    });
   }
 
   function deletePage(index: number) {
@@ -152,6 +153,11 @@
     console.log("editBubbles", index);
     delayedCommiter.force();
     $bubbleBucketPage = $mainBook.pages[index];
+  }
+
+  function tweak(index: number) {
+    console.log("tweak", index);
+    $pageInspectorTarget = $mainBook.pages[index];
   }
 
   $: if ($bubbleBucketDirty) {
@@ -252,6 +258,7 @@
       copyPageToClipboard,
       batchImaging,
       editBubbles,
+      tweak,
       chase,
       getMarks,
       getFocusedPage,
@@ -349,11 +356,6 @@
         command: null,
         commandTargetFilm: null,
       };
-      $frameInspectorPosition = {
-        center: convertPointFromNodeToPage(canvas, cx, cy),
-        height: 100,
-        offset
-      };
     } else {
       $frameInspectorTarget = null;      
     }
@@ -378,11 +380,6 @@
         page,
         command: null,
         commandTargetFilm: null,
-      };
-      $bubbleInspectorPosition = {
-        center: convertPointFromNodeToPage(canvas, cx, cy),
-        height: bubbleSize[1],
-        offset
       };
       defaultBubbleSlot.bubble = b;
     } else {

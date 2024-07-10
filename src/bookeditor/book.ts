@@ -195,6 +195,7 @@ export interface BookOperators {
   copyPageToClipboard: (index: number) => void;
   batchImaging: (index: number) => void;
   editBubbles: (index: number) => void;
+  tweak: (index: number) => void;
   chase: () => void;
   getMarks: () => boolean[];
   getFocusedPage: () => Page;

@@ -14,6 +14,7 @@ export class ArrayLayer extends Layer {
   onCopyToClipboard: (index: number) => void;
   onBatchImaging: (index: number) => void;
   onEditBubbles: (index: number) => void;
+  onTweak: (index: number) => void;
 
   trashIcons: ClickableIcon[] = [];
   markIcons: ClickableIcon[] = [];
@@ -21,6 +22,7 @@ export class ArrayLayer extends Layer {
   imagingIcons: ClickableIcon[] = [];
   bubblesIcons: ClickableIcon[] = [];
   copyIcons: ClickableIcon[] = [];
+  tweakIcons: ClickableIcon[] = [];
   markFlags: boolean[] = [];
 
   constructor(
@@ -34,7 +36,8 @@ export class ArrayLayer extends Layer {
     onMove: (from: number[], to: number) => void,
     onCopyToClipboard: (index: number) => void,
     onBatchImaging: (index: number) => void,
-    onEditBubbles: (index: number) => void) { 
+    onEditBubbles: (index: number) => void,
+    onTweak: (index: number) => void) { 
 
     super();
     this.array = new PaperArray(papers, fold, gapX, gapY, direction);
@@ -44,6 +47,7 @@ export class ArrayLayer extends Layer {
     this.onCopyToClipboard = onCopyToClipboard;
     this.onBatchImaging = onBatchImaging;
     this.onEditBubbles = onEditBubbles;
+    this.onTweak = onTweak;
 
     const mp = () => this.paper.matrix;
     for (let i = 0; i < this.array.papers.length; i++) {
@@ -57,6 +61,8 @@ export class ArrayLayer extends Layer {
       this.bubblesIcons.push(editBubblesIcon);
       const copyIcon = new ClickableIcon(["page-clipboard.png"],[32,32],[0.5,0],"クリップボードにコピー", null, mp);
       this.copyIcons.push(copyIcon);
+      const tweakIcon = new ClickableIcon(["page-tweak.png"],[32,32],[0.5,0],"ページ調整", null, mp);
+      this.tweakIcons.push(tweakIcon);
       this.markFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
@@ -86,6 +92,7 @@ export class ArrayLayer extends Layer {
       const copyIcon = this.copyIcons[i];
       const imagingIcon = this.imagingIcons[i];
       const bubblesIcon = this.bubblesIcons[i];
+      const tweakIcon = this.tweakIcons[i];
       markIcon.index = this.markFlags[i] ? 1 : 0;
       if (this.array.fold === 1) {
         trashIcon.pivot = [0, 0.5];
@@ -98,6 +105,8 @@ export class ArrayLayer extends Layer {
         imagingIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 180];
         bubblesIcon.pivot = [0, 0.5];
         bubblesIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 270];
+        tweakIcon.pivot = [0, 0.5];
+        tweakIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + 360];
       } else {
         trashIcon.pivot = [0.5, 0];
         trashIcon.position = [c[0] + 180, c[1] + s[1] * 0.5 + 16];
@@ -109,6 +118,8 @@ export class ArrayLayer extends Layer {
         imagingIcon.position = [c[0] - 180, c[1] + s[1] * 0.5 + 16];
         bubblesIcon.pivot = [0.5, 0];
         bubblesIcon.position = [c[0] - 270, c[1] + s[1] * 0.5 + 16];
+        tweakIcon.pivot = [0.5, 0];
+        tweakIcon.position = [c[0] - 360, c[1] + s[1] * 0.5 + 16];
       }
     }
     for (let i = 0; i < this.array.papers.length; i++) {
@@ -155,7 +166,7 @@ export class ArrayLayer extends Layer {
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
-    for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.copyIcons, this.imagingIcons, this.bubblesIcons]) {
+    for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.copyIcons, this.imagingIcons, this.bubblesIcons, this.tweakIcons]) {
       for (let icon of icons) {
         if (icon.hintIfContains(p, this.hint.bind(this))) {
           return true;
@@ -217,6 +228,12 @@ export class ArrayLayer extends Layer {
         return null;
       }      
     }
+    for (let [i, e] of this.tweakIcons.entries()) {
+      if (e.contains(p)) {
+        this.onTweak(i);
+        return null;
+      }      
+    }
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
     const innerDragging = paper.handleAccepts(position, button);
@@ -271,6 +288,9 @@ export class ArrayLayer extends Layer {
         e.render(ctx);
       });
       this.bubblesIcons.forEach(e => {
+        e.render(ctx);
+      });
+      this.tweakIcons.forEach(e => {
         e.render(ctx);
       });
     }

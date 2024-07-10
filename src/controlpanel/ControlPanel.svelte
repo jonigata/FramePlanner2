@@ -1,6 +1,5 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import TemplateChooser from './TemplateChooser.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
@@ -61,19 +60,12 @@
 
     let changed = false;
     for (let p of $mainBook.pages) {
-      if (p.paperSize[0] === q.paperSize[0] && p.paperSize[1] === q.paperSize[1] &&
-          p.paperColor === q.paperColor && p.frameColor === q.frameColor && p.frameWidth === q.frameWidth) {
+      if (p.paperSize[0] === q.paperSize[0] && p.paperSize[1] === q.paperSize[1]) {
         continue;
       }
 
       p.paperSize[0] = q.paperSize[0];
       p.paperSize[1] = q.paperSize[1];
-      p.paperColor = q.paperColor;
-      p.frameColor = q.frameColor;
-      p.frameWidth = q.frameWidth;
-      p.frameTree.bgColor = p.paperColor;
-      p.frameTree.borderColor = p.frameColor;
-      p.frameTree.borderWidth = p.frameWidth;
       changed = true;
     }
     if (changed) {
@@ -269,9 +261,6 @@
 
 {#if $controlPanelOpened && $dominantMode != "painting" && $viewport}
 <div class="control-panel variant-glass-surface rounded-container-token" style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
-  <div class="px-2">
-    <TemplateChooser on:apply={applyTemplate} on:change={changeTemplate}/>
-  </div>
   <div class="hbox space-around canvas-size-container">
     <div class="vbox expand">
       <div class="hbox">
@@ -307,11 +296,6 @@
         <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
       </div>  
     </div>
-  </div>
-  <div class="hbox gap mx-2 paper-color-picker">
-    背景色<ColorPicker bind:hex={$newPageProperty.paperColor} label=""/>
-    枠色<ColorPicker bind:hex={$newPageProperty.frameColor} label="" />
-    枠の幅<RangeSlider name="line" bind:value={$newPageProperty.frameWidth} max={10} step={1} style="width:100px;"/>
   </div>
   <div class="hbox gap my-1">
     ページ配置

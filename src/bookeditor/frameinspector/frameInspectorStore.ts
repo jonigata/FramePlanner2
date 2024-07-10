@@ -19,4 +19,3 @@ export type FrameInspectorTarget = {
 }
 
 export const frameInspectorTarget: Writable<FrameInspectorTarget> = writable(null);
-export const frameInspectorPosition: Writable<FrameInspectorPosition> = writable(null);
