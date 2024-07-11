@@ -5,6 +5,7 @@
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
   const dispatch = createEventDispatcher();
+  const size = [140, 198];
 
   export let sample: { frameTree: any, bubbles: any };
 
@@ -37,14 +38,23 @@
   
 </script>
 
-<div class="paper">
-  <canvas class="paper-canvas" width="140" height="198" bind:this={canvas}></canvas>
+<div class="canvas-container" style="width: {size[0]}px; height: {size[1]}px;">
+  <canvas width="{size[0]}px" height="{size[1]}px" bind:this={canvas} on:click={onClick}/>
 </div>
 
 <style>
-  .paper {
-    width: 140px;
-    height: 198px;
+  .canvas-container {
+    position: relative;
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+                      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    background-color: white;
   }
-
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+  }
 </style>
