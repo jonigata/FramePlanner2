@@ -1,14 +1,12 @@
 import { ulid } from 'ulid';
 import type { NodeId, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
 import { imageToBase64  } from '../layeredCanvas/tools/saveCanvas';
-
-// 仮
-import { app } from '../../firebase';
+import { getAuth } from '../../firebase';
 
 export class FirebaseFileSystem extends FileSystem {
   userId: string;
@@ -23,14 +21,14 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async open(referenceUserId: string) {
-    const auth = getAuth(app);
+    const auth = getAuth();
     const userCredential = await signInAnonymously(auth);
 
     referenceUserId ??= userCredential.user.uid;
     console.log(`anonymousUsers/${referenceUserId}`);
 
     this.userId = userCredential.user.uid;
-    this.database = getDatabase(app);
+    this.database = getDatabase();
     this.userRef = ref(this.database, `anonymousUsers/${referenceUserId}`);
     this.nodesRef = child(this.userRef, 'fileSystem/nodes');
   }

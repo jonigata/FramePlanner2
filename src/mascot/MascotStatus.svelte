@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import { accountUser } from "../utils/accountStore";
-  import { app } from "../firebase";
-  import { getDatabase, ref, off, onValue, type DatabaseReference } from "firebase/database";
+  import { getDatabase } from "../firebase";
+  import { ref, off, onValue, type DatabaseReference } from "firebase/database";
 
   const messages = {
     "storyboarding": ["ネームを考えてるよ","みなぎってきた","セリフどうしようかな","このコマは……","あれれ？","これはきっと面白い","イケる！","神作","いいねいいね","100万部突破"],
@@ -22,7 +22,7 @@
 
   onMount(() => {
     // firebase realtime databaseの/Users/${$accountUser.uid}/aiStatusを監視する
-    const database = getDatabase(app);
+    const database = getDatabase();
     aiStatusRef = ref(database, `/Users/${$accountUser.uid}/aiStatus`);
     onValue(aiStatusRef, (snapshot) => {
       const data = snapshot.val();

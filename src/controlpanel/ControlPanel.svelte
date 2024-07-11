@@ -10,7 +10,7 @@
   import { aboutOpen } from '../about/aboutStore';
   import { structureTreeOpen } from '../about/structureTreeStore';
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
-  import { isPendingRedirect, postContact, prepareAuth, listSharedImages } from '../firebase';
+  import { isPendingRedirect, postContact, prepareAuth, listSharedImages, getAuth } from '../firebase';
 	import ColorPicker from 'svelte-awesome-color-picker';
   import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
@@ -18,8 +18,6 @@
   import { fileSystem, newBookToken } from '../filemanager/fileManagerStore';
   import type { IndexedDBFileSystem } from "../lib/filesystem/indexeddbFileSystem";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
-  import { app } from "../firebase";
-  import { getAuth } from "firebase/auth";
   import { accountUser } from "../utils/accountStore";
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { dominantMode } from "../uiStore";
@@ -128,7 +126,7 @@
   }
 
   async function signOut() {
-    const auth = getAuth(app);
+    const auth = getAuth();
     await auth.signOut();
     // reload
     location.reload();
@@ -244,7 +242,7 @@
       signIn();
     }
 
-    const auth = getAuth(app);
+    const auth = getAuth();
     auth.onAuthStateChanged((user) => {
       console.log("onAuthStateChanged", user);
       if (user) {

@@ -1,5 +1,13 @@
 import "./app.postcss";
 import App from "./App.svelte";
+import { initializeApp } from "./firebase";
+
+function getDomainFromCurrentUrl(): string {
+  const currentUrl = window.location.href;
+  const urlObj = new URL(currentUrl);
+  return urlObj.host;
+}
+initializeApp(getDomainFromCurrentUrl())
 
 const app = new App({
   target: document.getElementById("app"),

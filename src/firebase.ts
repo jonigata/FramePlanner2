@@ -1,5 +1,5 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { type FirebaseApp, initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
@@ -11,17 +11,6 @@ import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
 import type { ProtocolChatLog, RichChatDocument } from "./utils/richChat";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
-  authDomain: "frameplanner-e5569.firebaseapp.com",
-  databaseURL: "https://frameplanner-e5569-default-rtdb.firebaseio.com",
-  projectId: "frameplanner-e5569",
-  storageBucket: "frameplanner-e5569.appspot.com",
-  messagingSenderId: "415667920948",
-  appId: "1:415667920948:web:6a16664190f63933c7aa61",
-  measurementId: "G-KFVR03HSSF"
-};
-
 function useEmulatorIfDevelopment() {
   if (storeGet(developmentFlag)) {
     const functions = getFunctions(app);
@@ -30,8 +19,22 @@ function useEmulatorIfDevelopment() {
 }
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let app: FirebaseApp;
+
+export function initializeApp2(authDomain: string) {
+  console.log("authDomain", authDomain);
+  const firebaseConfig = {
+    apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
+    authDomain: authDomain,
+    databaseURL: "https://frameplanner-e5569-default-rtdb.firebaseio.com",
+    projectId: "frameplanner-e5569",
+    storageBucket: "frameplanner-e5569.appspot.com",
+    messagingSenderId: "415667920948",
+    appId: "1:415667920948:web:6a16664190f63933c7aa61",
+    measurementId: "G-KFVR03HSSF"
+  };
+  app = initializeApp(firebaseConfig);
+}
 
 export async function postContact(s) {
     const auth = getAuth(app);
@@ -131,13 +134,13 @@ async function callFunc(name: string, data: any, timeout: number | null): Promis
 
 export async function generateImageFromTextWithFeathral(data: any): Promise<any> {
   const r = await callFunc('generateimagefromtext', data, 180);
-  logEvent(analytics, 'feathral_generate');
+  logEvent(getAnalytics(), 'feathral_generate');
   return r;
 }
 
 export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument[]): Promise<any> {
   const r = await callFunc('chat', {log, documents}, 180);
-  logEvent(analytics, 'chat');
+  logEvent(getAnalytics(), 'chat');
   return r;
 }
 
@@ -145,3 +148,13 @@ export async function listSharedImages(): Promise<any> {
   const r = await callFunc('cleansharedimages', {}, 180);
   return r;
 }
+
+function getAuth2() {
+  return getAuth(app);
+}
+
+function getDatabase2() {
+  return getDatabase(app);
+}
+
+export { getAuth2 as getAuth, getDatabase2 as getDatabase, initializeApp2 as initializeApp };
