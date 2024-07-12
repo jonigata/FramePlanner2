@@ -13,7 +13,7 @@
   import { developmentFlag } from "./utils/developmentFlagStore";
 
   //import '../app.postcss';  
-  import ControlPanel from './controlpanel/ControlPanel.svelte';
+  import ControlPanel from './controlpanel/NewControlPanel.svelte';
   import BookEditor from './bookeditor/BookEditor.svelte';
   import PassiveToolTip from './utils/PassiveToolTip.svelte';
   import About from './about/About.svelte';
@@ -30,6 +30,7 @@
   import CabinetButton from './rootelements/CabinetButton.svelte';
   import MaterialBucketButton from './rootelements/MaterialBucketButton.svelte';
   import BellButton from './rootelements/BellButton.svelte';
+  import RulerButton from './rootelements/RulerButton.svelte';
   import DownloadButton from './rootelements/DownloadButton.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
@@ -136,6 +137,7 @@
 {#if $onlineAccount != null}
   <BellButton />
 {/if}
+<RulerButton/>
 <DownloadButton />
 
 <!-- drawers -->

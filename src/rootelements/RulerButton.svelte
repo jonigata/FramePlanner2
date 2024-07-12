@@ -1,16 +1,16 @@
 <script type="ts">
-  import downloadIcon from '../assets/download.png';
+  import rulerIcon from '../assets/ruler.png';
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { downloaderOpen } from '../downloader/downloaderStore';
+  import { controlPanelOpen } from '../controlpanel/controlPanelStore';
 
   function download() {
-    $downloaderOpen = !$downloaderOpen;
+    $controlPanelOpen = !$controlPanelOpen;
   }
 </script>
 
 <button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={download}
-  use:toolTip={`出版`}>
-  <img src={downloadIcon} alt="call fairy"/>
+  use:toolTip={`版形`}>
+  <img src={rulerIcon} alt="ruler"/>
 </button>
 
 <style>
@@ -20,7 +20,7 @@
     width: 120px;
     height: 120px;
     top: 44px;
-    right: 20px;
+    left: 20px;
   }
   img {
     width: 80%;

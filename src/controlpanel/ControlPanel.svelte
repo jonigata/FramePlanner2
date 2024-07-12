@@ -1,54 +1,24 @@
 <script lang="ts">
-  import writableDerived from "svelte-writable-derived";
-  import { RangeSlider } from '@skeletonlabs/skeleton';
-  import NumberEdit from '../utils/NumberEdit.svelte';
   import '../box.css';
   import { type Book, newPage, commitBook, newImageBook } from '../bookeditor/book';
   import { type NewPageProperty, mainPage, mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
-  import { toastStore } from '@skeletonlabs/skeleton';
   import { bodyDragging } from '../uiStore';
   import { aboutOpen } from '../about/aboutStore';
   import { structureTreeOpen } from '../about/structureTreeStore';
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
   import { isPendingRedirect, postContact, prepareAuth, listSharedImages, getAuth } from '../firebase';
 	import ColorPicker from 'svelte-awesome-color-picker';
-  import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
   import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { fileSystem, newBookToken } from '../filemanager/fileManagerStore';
   import type { IndexedDBFileSystem } from "../lib/filesystem/indexeddbFileSystem";
-  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { accountUser } from "../utils/accountStore";
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { dominantMode } from "../uiStore";
-  import { controlPanelOpened } from "./controlPanelStore";
+  import { controlPanelOpen } from "./controlPanelStore";
 
   import { onMount } from "svelte";
 
-  let min = 256;
-  let exponentialMin = 4096;
-  let max = 9410;
-  let contactText = "";
-
-  type OnlineStatus = "unknown" | "signed-in" | "signed-out";
-  let onlineStatus: OnlineStatus = "unknown";
-
-  const scale = writableDerived(
-  	viewport,
-  	(v) => v?.scale,
-  	(s, v) => {
-      if (v) {
-        v.scale = s;
-        v.dirty = true;
-        $redrawToken = true;
-      }
-      return v;
-    }
-  );
-
-  let scalePercent = $scale * 100;
-  scale.subscribe((v) => scalePercent = v * 100);
-  $: $scale = scalePercent / 100;
 
   $:onUpdatePaperProperty($newPageProperty);
   function onUpdatePaperProperty(q: NewPageProperty) {
@@ -92,14 +62,6 @@
     $newPageProperty = p;
   }
 
-  function setDimensions(w: number, h: number) {
-    // 入れ物ごと交換するとbindが崩れる模様
-    const p = $newPageProperty;
-    p.paperSize[0] = w;
-    p.paperSize[1] = h;
-    $newPageProperty = p;
-  }
-
   function applyTemplate(event: CustomEvent<{ frameTree: any, bubbles: any }>) {
     const p = $newPageProperty;
     const sample = event.detail;
@@ -119,17 +81,6 @@
     if ($newPageProperty.templateIndex != event.detail) {
       $newPageProperty.templateIndex = event.detail;    
     }
-  }
-
-  async function signIn() {
-    modalStore.trigger({ type: 'component', component: 'signIn' });
-  }
-
-  async function signOut() {
-    const auth = getAuth();
-    await auth.signOut();
-    // reload
-    location.reload();
   }
 
   async function dumpFileSystem() {
@@ -202,20 +153,6 @@
     await listSharedImages();
   }
 
-  async function contact() {
-    console.log(contactText);
-    if (contactText == null || contactText == "") {
-      toastStore.trigger({ message: '要望を入力してください', timeout: 1500});
-      return;
-    }
-    if (contactText === "throw error") {
-      throw new Error("intentional error");
-    }
-    await postContact(contactText);
-    toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
-    contactText = null;
-  }
-
   function onDragOver(e: DragEvent) {
     e.preventDefault();
   }
@@ -235,122 +172,10 @@
     modalStore.trigger(d);    
   }
 
-  onMount(() => {
-    prepareAuth();
-    if (isPendingRedirect()) {
-      console.log("isPendingRedirect");
-      signIn();
-    }
-
-    const auth = getAuth();
-    auth.onAuthStateChanged((user) => {
-      console.log("onAuthStateChanged", user);
-      if (user) {
-        onlineStatus = "signed-in";
-        $accountUser = user;
-      } else {
-        onlineStatus = "signed-out";
-        $accountUser = null;
-      }
-    });
-  });
-
 </script>
 
-{#if $controlPanelOpened && $dominantMode != "painting" && $viewport}
+{#if $controlPanelOpen && $dominantMode != "painting" && $viewport}
 <div class="control-panel variant-glass-surface rounded-container-token" style="pointer-events: {$bodyDragging ? 'none' : 'auto'};">
-  <div class="hbox space-around canvas-size-container">
-    <div class="vbox expand">
-      <div class="hbox">
-        <div class="font-bold slider-label">W</div>
-        <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
-        </div>
-        <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[0]} min={min} max={max}/></div>
-          / {max}
-        </div>
-      </div>
-      <div class="hbox">
-        <div class="font-bold slider-label">H</div>
-        <div style="width: 140px;">
-          <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
-        </div>
-        <div class="text-xs slider-value-text hbox gap-0.5">
-          <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[1]} min={min} max={max}/></div>
-           / {max}
-        </div>
-      </div>
-    </div>
-    <div class="vbox space-around" style="width: 90px; height: 52px;">
-      <div class="hbox gap-0.5">
-        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1024, 1024)}>S2</button>
-        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1680, 2376)}>A3</button>
-        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1456, 2056)}>B4</button>
-      </div>
-      <div class="hbox gap-0.5">
-        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(512, 512)}>S1</button>
-        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(840, 1188)}>A4</button>
-        <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
-      </div>  
-    </div>
-  </div>
-  <div class="hbox gap my-1">
-    ページ配置
-    <div class="radio-box hbox">
-      <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-        <RadioItem bind:group={$mainBook.direction} name="direction" value={'right-to-left'}><span class="radio-text">左</span></RadioItem>
-        <RadioItem bind:group={$mainBook.direction} name="direction" value={'left-to-right'}><span class="radio-text">右</span></RadioItem>
-      </RadioGroup>
-    </div>
-    折返し
-    <div class="radio-box hbox">
-      <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-        <RadioItem bind:group={$mainBook.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">なし</span></RadioItem>
-        <RadioItem bind:group={$mainBook.wrapMode} name="wrap-mode" value={'two-pages'}><span class="radio-text">2p</span></RadioItem>
-        <RadioItem bind:group={$mainBook.wrapMode} name="wrap-omde" value={'one-page'}><span class="radio-text">1p</span></RadioItem>
-      </RadioGroup>
-    </div>
-  </div>
-  <div class="hbox gap" style="margin-top: 16px;">
-    拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:200px;"/>
-    <div class="number-box"><NumberEdit bind:value={scalePercent} min={10} max={1000}/></div>
-    <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
-  </div>
-
-  <div class="hbox mx-2" style="margin-top: 4px;">
-    <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
-    <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
-  </div>
-  <div class="hbox gap mx-2" style="margin-top: 8px;">
-    <!--
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
-      Download JSON
-    </button>
-    -->
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
-      About
-    </button>
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openVideoMaker}>
-      Video
-    </button>
-    <!--
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={structureTree}>
-      Tree
-    </button>
-    -->
-    {#if onlineStatus === "signed-out"}
-      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
-        Sign in
-      </button>
-    {/if}
-    {#if onlineStatus === "signed-in"}
-      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signOut}>
-        Sign out
-      </button>
-    {/if}
-  </div>  
-  <div class="dummy" id="signin-dummy"> </div>
 </div>
 {/if}
 

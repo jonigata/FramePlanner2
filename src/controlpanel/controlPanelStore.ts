@@ -1,3 +1,3 @@
 import { writable } from "svelte/store";
 
-export const controlPanelOpened = writable(false);
+export const controlPanelOpen = writable(false);
