@@ -2,7 +2,6 @@
   import writableDerived from "svelte-writable-derived";
   import { postContact } from '../firebase';
   import { mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
@@ -10,7 +9,6 @@
   import { controlPanelOpen } from './controlPanelStore';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
-  import { aboutOpen } from '../about/aboutStore';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -56,26 +54,10 @@
     contactText = null;
   }
 
-  function about() {
-    console.log("about");
-    $aboutOpen = true;
-  }
-
-  function openVideoMaker() {
-    console.log([...$mainBook.pages[0].bubbles]);
-
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'videoMaker',
-    };
-    modalStore.trigger(d);    
-  }
-
-
 </script>
 
 <div class="drawer-outer">
-  <Drawer placement="right" open={$controlPanelOpen} size="400px" on:clickAway={() => $controlPanelOpen = false}>
+  <Drawer placement="left" open={$controlPanelOpen} size="400px" on:clickAway={() => $controlPanelOpen = false}>
     <div class="drawer-content">
       <div class="flex flex-col gap-2 m-2">
         <div class="hbox space-around canvas-size-container">
@@ -141,24 +123,6 @@
           <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
           <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
         </div>
-        <div class="hbox gap mx-2" style="margin-top: 8px;">
-          <!--
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={downloadJson}>
-            Download JSON
-          </button>
-          -->
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={about}>
-            About
-          </button>
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={openVideoMaker}>
-            Video
-          </button>
-          <!--
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={structureTree}>
-            Tree
-          </button>
-          -->
-        </div>  
       </div>
     </div>
   </Drawer>

@@ -31,7 +31,9 @@
   import MaterialBucketButton from './rootelements/MaterialBucketButton.svelte';
   import BellButton from './rootelements/BellButton.svelte';
   import RulerButton from './rootelements/RulerButton.svelte';
+  import AboutButton from './rootelements/AboutButton.svelte';
   import DownloadButton from './rootelements/DownloadButton.svelte';
+  import VideoButton from './rootelements/VideoButton.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
@@ -138,7 +140,9 @@
   <BellButton />
 {/if}
 <RulerButton/>
+<AboutButton/>
 <DownloadButton />
+<VideoButton />
 
 <!-- drawers -->
 <FontChooser/>

@@ -24,7 +24,7 @@
 
 
 <div class="drawer-outer">
-<Drawer open={$aboutOpen} size="600px" on:clickAway={() => $aboutOpen = false}>
+<Drawer open={$aboutOpen} placement="left" size="600px" on:clickAway={() => $aboutOpen = false}>
   <div class="drawer-content">
     <h2>FramePlanner</h2>
 
