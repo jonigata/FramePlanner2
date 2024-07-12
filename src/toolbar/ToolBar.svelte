@@ -1,10 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { isPendingRedirect, postContact, prepareAuth, listSharedImages, getAuth } from '../firebase';
+  import { isPendingRedirect, prepareAuth, getAuth } from '../firebase';
   import { accountUser } from "../utils/accountStore";
-  import { controlPanelOpen } from '../controlpanel/controlPanelStore';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
-  import titleBarIcon from '../assets/title-control-panel.png';
+  import { modalStore } from '@skeletonlabs/skeleton';
   
   type OnlineStatus = "unknown" | "signed-in" | "signed-out";
   let onlineStatus: OnlineStatus = "unknown";
@@ -42,9 +40,6 @@
 </script>
 
 <div class="w-screen h-8 bg-surface-900 text-slate-100 gap-8 flex items-center pl-4 pr-2 pt-2 pb-2">
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-  <img class="title-image" src={titleBarIcon} alt="title" on:click={() => $controlPanelOpen = !$controlPanelOpen}/> 
   <div class="flex-grow"></div>
   {#if onlineStatus === "signed-out"}
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
@@ -59,10 +54,6 @@
 </div>
 
 <style>
-  .title-image {
-    width: 24px;
-    height: 24px;
-  }
   .function-button {
     width: 125px;
   }
