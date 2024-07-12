@@ -260,14 +260,6 @@
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
-  .bubble-size {
-    width: 80px;
-    height: 24px;
-    right: 32px;
-    top: 12px;
-    font-size: 12px;
-    position: absolute;
-  }
   .textarea {
     flex: 1;
     align-self: stretch;

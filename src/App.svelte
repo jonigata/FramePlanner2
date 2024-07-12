@@ -13,7 +13,7 @@
   import { developmentFlag } from "./utils/developmentFlagStore";
 
   //import '../app.postcss';  
-  import ControlPanel from './controlpanel/NewControlPanel.svelte';
+  import ControlPanel from './controlpanel/ControlPanel.svelte';
   import BookEditor from './bookeditor/BookEditor.svelte';
   import PassiveToolTip from './utils/PassiveToolTip.svelte';
   import About from './about/About.svelte';

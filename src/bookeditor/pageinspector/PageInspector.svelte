@@ -50,22 +50,6 @@
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
-  .number-box {
-    width: 35px;
-    height: 20px;
-    display: inline-block;
-    vertical-align: bottom;
-  }
-  .slider-label {
-    width: 20px;
-  }
-  .slider-value-text {
-    width: 76px;
-    text-align: right;
-  }
-  .paper-size {
-    height: 20px;
-  }
   .paper-color-picker :global(.container .color) {
     width: 80px;
     height: 15px;
