@@ -174,7 +174,7 @@ export class ArrayLayer extends Layer {
       }
     }
 
-    this.hint([0,0], null);
+    this.hint(null, null);
 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     paper.handlePointerHover(position);    

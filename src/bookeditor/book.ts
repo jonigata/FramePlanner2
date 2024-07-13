@@ -178,7 +178,7 @@ export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix
 }
 
 export interface BookOperators {
-  hint: (p: [number, number], s: String) => void;
+  hint: (r: [number, number, number, number], s: String) => void;
   commit: (tag: HistoryTag) => void;
   revert: () => void;
   undo: () => void;

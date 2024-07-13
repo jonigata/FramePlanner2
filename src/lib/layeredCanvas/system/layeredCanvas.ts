@@ -2,7 +2,7 @@ import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect } from "../tools/geometry/geometry";
 
-type OnHint = (p: Vector, s: string | null) => void;
+type OnHint = (p: Rect, s: string | null) => void;
 
 export class Viewport {
   canvas: HTMLCanvasElement;
@@ -21,7 +21,7 @@ export class Viewport {
     this.scale = 1;
     this.dirty = true;
     this.onHint = (p, s) => {
-      onHint(p ?? [-1,-1], s);
+      onHint(p, s);
     };
   }
 
@@ -59,14 +59,14 @@ export interface Dragging {
 
 export class Layer {
   paper: Paper = null;
-  hint: (position: Vector, message: string) => void; // bind(this)しないと面倒なので
+  hint: (rect: Rect, message: string) => void; // bind(this)しないと面倒なので
 
   constructor() { this.hint = this.showHint.bind(this); }
 
   getPaperSize() {return this.paper.size;}
   calculateLayout(matrix: DOMMatrix) {}
   redraw() { this.redrawRequired = true; }
-  showHint(position: Vector, message: string) {this.paper.showHint(position, message); }
+  showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
 
   pointerHover(position: Vector): boolean { return false; }
   accepts(position: Vector, button: number) { return null; }
@@ -97,7 +97,7 @@ export class Paper {
   matrix: DOMMatrix;
   size: Vector;
   layers: Layer[];
-  hint: { position: Vector, message: string } = null;
+  hint: { rect: Rect, message: string } = null;
   root: boolean;
 
   constructor(size: Vector, root: boolean) {
@@ -254,15 +254,20 @@ export class Paper {
     }
   }
 
-  showHint(position: Vector, message: string): void {
-    this.hint = {position, message};
+  showHint(rect: Rect, message: string): void {
+    this.hint = {rect, message};
   }
 
   flushHints(viewport: Viewport) {
     if (this.hint) {
-      const q = this.hint.position;
-      const qq = this.matrix.transformPoint({x:q[0], y:q[1]});
-      viewport.onHint([qq.x, qq.y], this.hint.message);
+      const r = this.hint.rect;
+      if (r == null) {
+        viewport.onHint(null, null);
+      } else {
+        const q = [r[0], r[1]];
+        const qq = this.matrix.transformPoint({x:q[0], y:q[1]});
+        viewport.onHint([qq.x, qq.y, r[2], r[3]], this.hint.message);
+      }
       this.hint = null;
     }
 

@@ -16,7 +16,7 @@
   }
 
   onMount(() => {
-    const viewport = new Viewport(canvas, (p: [number, number], s: String) => {});
+    const viewport = new Viewport(canvas, (r: [number, number, number, number], s: String) => {});
     const layeredCanvas = new LayeredCanvas(
       viewport, 
       false);

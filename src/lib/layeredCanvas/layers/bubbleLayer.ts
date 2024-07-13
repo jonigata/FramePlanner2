@@ -334,7 +334,7 @@ export class BubbleLayer extends Layer {
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
       } else if (this.selected.contains(paperSize, p)) {
-        this.hint(p, null);
+        this.hint(null, null);
       }
 
       if (this.handle || this.selected.contains(paperSize, p)) {
@@ -345,8 +345,8 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, p)) {
-        const [x,y,w,h] = bubble.getPhysicalRegularizedRect(paperSize);
-        this.hint([x + w / 2, y - 20],"Alt+ドラッグで移動、クリックで選択");
+        const r = bubble.getPhysicalRegularizedRect(paperSize);
+        this.hint(r, "Alt+ドラッグで移動、クリックで選択");
         this.lit = bubble;
         this.redraw();
         return true;
@@ -629,7 +629,7 @@ export class BubbleLayer extends Layer {
   }
 
   async *pointer(dragStart: Vector, payload: any): AsyncGenerator<void, void, Vector> {
-    this.hint(dragStart, null);
+    this.hint(null, null);
 
     if (payload.action === "create") {
       yield* this.createBubble(dragStart, false);

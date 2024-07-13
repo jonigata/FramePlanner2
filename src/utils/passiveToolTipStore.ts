@@ -1,6 +1,6 @@
 import { type Writable, writable } from "svelte/store";
 
-export const toolTipRequest: Writable<{message: string, position: {x: number, y: number}}> = writable(null);
+export const toolTipRequest: Writable<{message: string, rect: {left: number, top: number, width: number, height: number}}> = writable(null);
 
 export function toolTip(node, message) {
   let timeoutId = null;
@@ -14,9 +14,8 @@ export function toolTip(node, message) {
     }
 
     timeoutId = setTimeout(() => {
-      const r = node.getBoundingClientRect();
-      const [cx, cy] = [r.left + r.width / 2, r.top /*+ r.height / 2*/];
-      toolTipRequest.set({ message, position: {x: cx, y: cy - 5 }});
+      const rect = node.getBoundingClientRect();
+      toolTipRequest.set({ message, rect});
     }, 1000);
   }
   const handleMouseLeave = (event) => {

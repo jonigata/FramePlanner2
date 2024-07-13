@@ -5,7 +5,7 @@ import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
+import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
@@ -308,60 +308,46 @@ export class FrameLayer extends Layer {
     this.updateLit(position);
     this.redraw();
 
-    const hint = this.decideHint(position);
-    if (hint) {
-      this.hint(hint.position, hint.message);
-    }
+    this.decideHint(position);
   }
 
-  decideHint(position: Vector): { position: Vector, message: string } {
-    const hintIfContains = (a: ClickableIcon[]): { position: Vector, message: string } => {
+  decideHint(position: Vector): void {
+    const hintIfContains = (a: ClickableIcon[]): boolean => {
       for (let e of a) {
-        if (e.contains(position)) {
-          return { position: [e.center[0], e.center[1] - 32], message: e.hint };
+        if (e.hintIfContains(position, this.hint)) {
+          return true;
         }
       }
-      return null;
+      return false;
     }
 
     if (this.selectedBorder) {
-      const hint = hintIfContains(this.borderIcons);
-      if (hint) { 
-        return hint;
+      if (hintIfContains(this.borderIcons)) {
+        return;
       }
       if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
-        return { position, message: "ドラッグで移動" };
+        this.hint([...trapezoidCenter(this.selectedBorder.corners), 0, 0], "ドラッグで移動");
       }
-      return null;
+      return;
     } else if (this.selectedLayout) { 
       const origin = this.selectedLayout.origin;
       const size = this.selectedLayout.size;
-      const x = origin[0] + size[0] / 2;
-      const y = origin[1];
+      const r: Rect = [...origin, ...size];
       if (this.focusedPadding) {
-        return { position: [x, y-8], message: "ドラッグでパディング変更" };
-      }
-      if (isPointInTrapezoid(position, this.selectedLayout.corners)) {
-        const hint = hintIfContains(this.frameIcons);
-        if (hint) {
-          return hint;
+        this.hint(r, "ドラッグでパディング変更");
+      } else if (isPointInTrapezoid(position, this.selectedLayout.corners)) {
+        if (hintIfContains(this.frameIcons)) {
+          return;
         }
         if (this.selectedLayout.element.filmStack.films.length !== 0) {
-          return { position: [x, y +48], message: "ドラッグで移動" };
+          this.hint(r, "ドラッグで変更");
         } else if (0 < this.selectedLayout.element.visibility) {
-          return { position: [x, y +48], message: "画像をドロップ" };
-        } else {
-          return null;
+          this.hint(r, "画像をドロップ");
         }
       } else {
-        const hint = hintIfContains(this.litIcons);
-        if (hint) {
-          return hint;
-        }
+        hintIfContains(this.litIcons);
       }
     }
-    
-    return null;
   }
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {

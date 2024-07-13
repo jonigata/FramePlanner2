@@ -65,11 +65,11 @@
     delayedCommiter.force();
   }
 
-  function hint(p: [number, number], s: string) {
+  function hint(r: [number, number, number, number], s: string) {
     if (s) {
-      const q = convertPointFromNodeToPage(canvas, ...p);
-      q.y -= 25;
-      toolTipRequest.set({ message: s, position: q });
+      console.log(r);
+      const q0 = convertPointFromNodeToPage(canvas, r[0], r[1]);
+      toolTipRequest.set({ message: s, rect: { left: q0.x, top: q0.y, width: r[2], height: r[3] } });
     } else {
       toolTipRequest.set(null);
     }

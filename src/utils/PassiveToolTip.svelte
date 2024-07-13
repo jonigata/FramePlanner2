@@ -3,21 +3,21 @@
   import { tick } from "svelte";
 
   let tooltip = null;
-  let position = { x: 0, y: 0 };
 
   $: onRequest($toolTipRequest);
-  async function onRequest(r: any) {
+  async function onRequest(r: {message: string, rect: {left: number, top: number, width: number, height: number}}) {
     if (!r || !tooltip) return;
     
     await tick(); // 多分要素の内容が更新されるまで待っている
-    position = r.position;
+    let x = r.rect.left + r.rect.width / 2;
+    const y = r.rect.top;
 
     // ツールチップの幅の半分が指定したx位置よりも大きい場合、left位置を調整
-    if (position.x < tooltip.clientWidth / 2) {
-      position.x = tooltip.clientWidth / 2;
+    if (x < tooltip.clientWidth / 2) {
+      x = tooltip.clientWidth / 2;
     }
-    tooltip.style.top = `${position.y}px`;
-    tooltip.style.left = `${position.x}px`;
+    tooltip.style.top = `${y}px`;
+    tooltip.style.left = `${x}px`;
   }
 </script>
 
