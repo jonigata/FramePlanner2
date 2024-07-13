@@ -97,11 +97,11 @@
           </div>
         </div>
         <div class="hbox gap my-1">
-          ページ配置
+          進行方向
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-              <RadioItem bind:group={$mainBook.direction} name="direction" value={'right-to-left'}><span class="radio-text">左</span></RadioItem>
-              <RadioItem bind:group={$mainBook.direction} name="direction" value={'left-to-right'}><span class="radio-text">右</span></RadioItem>
+              <RadioItem bind:group={$mainBook.direction} name="direction" value={'right-to-left'}><span class="radio-text">◀</span></RadioItem>
+              <RadioItem bind:group={$mainBook.direction} name="direction" value={'left-to-right'}><span class="radio-text">▶</span></RadioItem>
             </RadioGroup>
           </div>
           折返し

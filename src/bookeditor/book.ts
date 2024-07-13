@@ -248,7 +248,7 @@ export function collectBookContents(book: Book): FrameSequence {
   const contents: FrameContent[] = [];
   let pageNumber = 0;
   for (const page of book.pages) {
-    const { slots: l, contents: c } = collectPageContents(page, pageNumber);
+    const { slots: l, contents: c } = collectPageContents(page, pageNumber, book.direction);
     slots.push(...l);
     contents.push(...c);
     pageNumber++;
@@ -256,13 +256,13 @@ export function collectBookContents(book: Book): FrameSequence {
   return { slots, contents };
 }
 
-function collectPageContents(page: Page, pageNumber: number): FrameSequence {
+function collectPageContents(page: Page, pageNumber: number, dir: ReadingDirection): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   const bubbles = [...page.bubbles];
-  return collectFrameContents(page, pageNumber, page.frameTree, layout, bubbles);
+  return collectFrameContents(page, pageNumber, page.frameTree, layout, bubbles, dir);
 }
 
-function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameElement, pageLayout: Layout, bubbles: Bubble[]): FrameSequence {
+function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameElement, pageLayout: Layout, bubbles: Bubble[], dir: ReadingDirection): FrameSequence {
   const slots: FrameSlot[] = [];
   const contents: FrameContent[] = [];
   if (frameTree.isLeaf()) {
@@ -292,9 +292,11 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
       });
     }
   } else {
-    for (let i = 0; i < frameTree.children.length; i++) {
+    for (let ii = 0; ii < frameTree.children.length; ii++) {
+      console.log(dir);
+      const i = dir === 'left-to-right' && frameTree.direction == 'h' ? frameTree.children.length - ii - 1 : ii;
       const child = frameTree.children[i];
-      const { slots: l, contents: c } = collectFrameContents(page, pageNumber, child, pageLayout, bubbles);
+      const { slots: l, contents: c } = collectFrameContents(page, pageNumber, child, pageLayout, bubbles, dir);
       slots.push(...l);
       contents.push(...c);
     }
