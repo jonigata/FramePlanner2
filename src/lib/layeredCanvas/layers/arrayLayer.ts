@@ -66,7 +66,7 @@ export class ArrayLayer extends Layer {
       this.markFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
-      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png", "page-paste.png"],[24,24],[0.5,0],"ページ挿入", null, mp);
+      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png", "page-paste.png"],[24,24],[0.5,0],`p${i+1}挿入`, null, mp);
       this.insertIcons.push(insertIcon);
     }
     this.calculateIconPositions();
@@ -273,6 +273,8 @@ export class ArrayLayer extends Layer {
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (this.interactable) {
       ctx.save();
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
       this.insertIcons.forEach(e => {
         e.render(ctx);
       });
@@ -283,9 +285,7 @@ export class ArrayLayer extends Layer {
         e.render(ctx);
         const r = e.boundingRect;
         const rscale = e.rscale;
-        ctx.fillStyle = "white";
         ctx.font = `${Math.floor(18*rscale)}px sans-serif`;
-        ctx.textAlign = "center";
         ctx.fillText((i+1).toString(), r[0]+16*rscale, r[1]+19*rscale);
       });
       this.copyIcons.forEach(e => {
