@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.svelte-check.json",
     "deploy": "firebase deploy --only hosting",
-    "vitest": "vitest"
+    "vitest": "vitest",
+    "deploy:preview": "firebase hosting:channel:deploy preview",
+    "list-preview": "firebase hosting:channel:list"
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "^1.0.0",
