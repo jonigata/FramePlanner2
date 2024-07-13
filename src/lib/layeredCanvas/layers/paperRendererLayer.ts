@@ -311,7 +311,6 @@ export class PaperRendererLayer extends Layer {
     this.drawBubble(ctx, size, 'clip', bubble);
 
     // テキスト描画
-    console.log(bubble.text, bubble.hidesText);
     if (bubble.text && !bubble.hidesText) {
       this.drawText(ctx, bubble);
     }

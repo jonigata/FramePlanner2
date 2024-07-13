@@ -67,7 +67,6 @@
 
   function hint(r: [number, number, number, number], s: string) {
     if (s) {
-      console.log(r);
       const q0 = convertPointFromNodeToPage(canvas, r[0], r[1]);
       toolTipRequest.set({ message: s, rect: { left: q0.x, top: q0.y, width: r[2], height: r[3] } });
     } else {
