@@ -321,7 +321,16 @@ export class FrameLayer extends Layer {
       return false;
     }
 
-    if (this.selectedBorder) {
+    if (this.litLayout && this.litLayout.element != this.selectedLayout?.element) {
+      const origin = this.litLayout.origin;
+      const size = this.litLayout.size;
+      const r: Rect = [...origin, ...size];
+      this.hint(r, "画像をドロップ");
+    } else if (this.litBorder && this.litBorder.layout.element != this.selectedBorder?.layout.element) {
+      if (isPointInTrapezoid(position, this.litBorder.corners)) {
+        this.hint([...trapezoidCenter(this.litBorder.corners), 0, 0], "クリックで選択");
+      }
+    } else if (this.selectedBorder) {
       if (hintIfContains(this.borderIcons)) {
         return;
       }
