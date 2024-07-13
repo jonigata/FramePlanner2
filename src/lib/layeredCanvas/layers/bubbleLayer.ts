@@ -96,7 +96,7 @@ export class BubbleLayer extends Layer {
 
     this.imageScaleLockIcon = new ClickableIcon(["bubbleLayer/bubble-unlock.png","bubbleLayer/bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && 0 < this.selected?.filmStack.films.length, mp);
     this.imageScaleLockIcon.index = 0;
-    this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.png"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null, mp);
+    this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.png"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null && 0 < this.selected?.filmStack.films.length, mp);
 
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.png"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
@@ -331,6 +331,7 @@ export class BubbleLayer extends Layer {
         this.zMinusIcon.hintIfContains(p, this.hint) ||
         this.zPlusIcon.hintIfContains(p, this.hint) ||
         this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
+        this.scaleIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
       } else if (this.selected.contains(paperSize, p)) {

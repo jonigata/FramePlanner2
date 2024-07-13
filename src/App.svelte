@@ -54,6 +54,9 @@
   import Downloader from './downloader/Downloader.svelte';
   import TemplateChooser from './bookeditor/TemplateChooser.svelte'
 
+  //const advertiser = "thumbnail_stories";
+  const advertiser = null;
+
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
       ref: Comic,
@@ -170,9 +173,9 @@
 <FullScreenLoading/>
 
 <!-- ads -->
-<!--
-<AdContainer advertiser="thumbnail_stories"/>
--->
+{#if advertiser != null}
+  <AdContainer advertiser={advertiser}/>
+{/if}
 
 <style>
 

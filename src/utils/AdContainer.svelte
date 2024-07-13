@@ -33,7 +33,7 @@
 
 <style>
   .content {
-    width: 320px;
-    height: 435px;
+    width: 340px;
+    height: 520px;
   }
 </style>
