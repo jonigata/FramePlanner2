@@ -1,15 +1,15 @@
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import type { Book } from '../../bookeditor/book';
+import type { Page } from '../../bookeditor/book';
 import { renderPageToBlob } from './renderPage';
 
-export async function saveAsZip(book: Book) {
+export async function saveAsZip(pages: Page[]) {
   const zip = new JSZip();
   const folderName = 'book';
   const folder = zip.folder(folderName);
 
-  for (let i = 0; i < book.pages.length; i++) {
-    const png = await renderPageToBlob(book.pages[i]);
+  for (let i = 0; i < pages.length; i++) {
+    const png = await renderPageToBlob(pages[i]);
     folder.file(`page-${i+1}.png`, png);
   }
 

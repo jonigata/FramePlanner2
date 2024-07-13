@@ -13,34 +13,28 @@
     if (ba == null || ba.length === 0) { return; }
     console.log("onTask", ba);
     const marks: boolean[] = $bookEditor.getMarks();
-    function onePage() {
-      const pages = $mainBook.pages;
-      const filteredPages = pages.filter((_, i) => marks[i]);
-      if (0 < filteredPages.length) {
-        return filteredPages[0];
-      } else {
-        return pages[0];
-      }
-    }
+    const pages = $mainBook.pages;
+    const filteredPages = pages.filter((_, i) => marks[i]);
+    const targetPages = 0 < filteredPages.length ? filteredPages : pages;
 
     try {
       for (let operation of ba) {
         switch (operation) {
           case 'download':
-            if ($mainBook.pages.length === 1) {
-              await saveAsPng($mainBook.pages[0]);
+            if (targetPages.length === 1) {
+              await saveAsPng(targetPages[0]);
             } else {
-              await saveAsZip($mainBook);
+              await saveAsZip(targetPages);
             }
             break;
           case 'copy':
-            await copyToClipboard(onePage())
+            await copyToClipboard(targetPages[0])
             break;
           case 'export-psd':
-            saveAsPSD(onePage());
+            saveAsPSD(targetPages[0]);
             break;
           case 'aipictors':
-            postToAiPictors(onePage());
+            postToAiPictors(targetPages[0]);
             break;
         }
       }
