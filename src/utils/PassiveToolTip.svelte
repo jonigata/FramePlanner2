@@ -3,6 +3,7 @@
   import { tick } from "svelte";
 
   let tooltip = null;
+  let upper = true;
 
   $: onRequest($toolTipRequest);
   async function onRequest(r: {message: string, rect: {left: number, top: number, width: number, height: number}}) {
@@ -10,12 +11,20 @@
     
     await tick(); // 多分要素の内容が更新されるまで待っている
     let x = r.rect.left + r.rect.width / 2;
-    const y = r.rect.top;
+    let y = r.rect.top - 10;
+    upper = true;
 
     // ツールチップの幅の半分が指定したx位置よりも大きい場合、left位置を調整
     if (x < tooltip.clientWidth / 2) {
       x = tooltip.clientWidth / 2;
     }
+
+    // y座標が小さすぎる場合、下に表示する
+    if (y < tooltip.clientHeight) {
+      y = r.rect.top + r.rect.height + 10;
+      upper = false;
+    }
+
     tooltip.style.top = `${y}px`;
     tooltip.style.left = `${x}px`;
   }
@@ -24,6 +33,8 @@
 <div
   class="tooltip-container variant-glass-secondary rounded-container-token"
   class:active={$toolTipRequest}
+  class:upper={upper}
+  class:lower={!upper}
   bind:this={tooltip}
   >
   <div class="tooltip">
@@ -39,13 +50,18 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s;
-    transform: translate(-50%, -100%);
     font-family: "Noto Sans JP", sans-serif;
     font-size: 18px;
     font-weight: 900;
     color: #000;
     z-index: 9999;
     padding: 8px;
+  }
+  .upper {
+    transform: translate(-50%, -100%);
+  }
+  .lower {
+    transform: translate(-50%, 0);
   }
   .tooltip-container.active {
     opacity: 1;
