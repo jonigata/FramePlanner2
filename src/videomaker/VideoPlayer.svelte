@@ -21,7 +21,7 @@
   let totalTime: number = 0;
   let cursor = 0;
 
-  $: if (canvas != null) { onRebuild(); }
+  $: if (canvas != null && book != null) { onRebuild(); }
   function onRebuild() {
     ({arrayLayer, layeredCanvas} = buildBookRenderer(canvas, book));
     layeredCanvas.render();
