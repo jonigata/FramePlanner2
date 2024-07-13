@@ -260,6 +260,9 @@
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
+  .drawer-outer :global(.panel) {
+    overflow: visible; /* こうしないとColorPickerが埋まる */
+  }
   .textarea {
     flex: 1;
     align-self: stretch;
