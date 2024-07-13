@@ -32,10 +32,12 @@
   import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoise } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
+  import { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
   let arrayLayer: ArrayLayer;
+  let focusKeeper: FocusKeeper;
   let bubbleSnapshot: string = null;
   let delayedCommiter = new DelayedCommiter(
     () => {
@@ -115,12 +117,14 @@
   }
 
   function insertPage(pageIndex: number) {
+    focusKeeper.setFocus(null);
+    $redrawToken = true;
     triggerTemplateChoise.trigger().then(result => {
-      console.log(result);
-
-      $newPageProperty.templateIndex = result;
-      insertNewPageToBook($mainBook, $newPageProperty, pageIndex);
-      commit(null);
+      if (result) {
+        $newPageProperty.templateIndex = result;
+        insertNewPageToBook($mainBook, $newPageProperty, pageIndex);
+        commit(null);
+      }
     });
   }
 
@@ -273,6 +277,7 @@
     console.log("setting layeredCanvas", layeredCanvas);
     layeredCanvas.redraw();
     arrayLayer = builtBook.arrayLayer;
+    focusKeeper = builtBook.focusKeeper;
   }
 
   $: onBubbleModified($bubble);

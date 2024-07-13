@@ -64,7 +64,7 @@ export function buildBookEditor(
         code === "Space";
   });
 
-  return { arrayLayer, layeredCanvas};
+  return { arrayLayer, layeredCanvas, focusKeeper };
 }
 
 export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number, gapX: number, gapY: number } {
