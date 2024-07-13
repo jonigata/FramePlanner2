@@ -39,7 +39,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -100%);
     font-family: "Noto Sans JP", sans-serif;
     font-size: 18px;
     font-weight: 900;

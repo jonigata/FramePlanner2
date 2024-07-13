@@ -16,7 +16,7 @@ export function toolTip(node, message) {
     timeoutId = setTimeout(() => {
       const r = node.getBoundingClientRect();
       const [cx, cy] = [r.left + r.width / 2, r.top /*+ r.height / 2*/];
-      toolTipRequest.set({ message, position: {x: cx, y: cy }});
+      toolTipRequest.set({ message, position: {x: cx, y: cy - 5 }});
     }, 1000);
   }
   const handleMouseLeave = (event) => {
