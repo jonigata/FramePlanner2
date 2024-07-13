@@ -134,9 +134,10 @@ export class ArrayLayer extends Layer {
         insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] - s[1] * 0.5 - gap * 0.5];
       } else {
         const gap = this.array.gapX;
+        const offset = (s[0] * 0.5 + gap * 0.5) * -this.array.direction;
         insertIcon.index = 0;
         insertIcon.pivot = [0.5, 0];
-        insertIcon.position = [c[0] + s[0] * 0.5 + gap * 0.5, c[1] + s[1] * 0.5 + 16];
+        insertIcon.position = [c[0] + offset, c[1] + s[1] * 0.5 + 16];
       }
     }
 
@@ -152,9 +153,10 @@ export class ArrayLayer extends Layer {
       insertIcon.position = [c[0] + s[0] * 0.5 + 60, c[1] + s[1] * 0.5 + gap * 0.5];
     } else {
       const gap = this.array.gapX;
+      const offset = (s[0] * 0.5 + gap * 0.5) * this.array.direction;
       insertIcon.index = 0;
       insertIcon.pivot = [0.5, 0];
-      insertIcon.position = [c[0] - s[0] * 0.5 - gap * 0.5, c[1] + s[1] * 0.5 + 32];
+      insertIcon.position = [c[0] + offset, c[1] + s[1] * 0.5 + 32];
     }
     if (this.markFlags.some(e => e)) {
       for (let i = 0; i <= this.array.papers.length; i++) {
