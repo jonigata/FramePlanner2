@@ -272,14 +272,21 @@ export class ArrayLayer extends Layer {
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (this.interactable) {
+      ctx.save();
       this.insertIcons.forEach(e => {
         e.render(ctx);
       });
       this.trashIcons.forEach(e => {
         e.render(ctx);
       });
-      this.markIcons.forEach(e => {
+      this.markIcons.forEach((e, i) => {
         e.render(ctx);
+        const r = e.boundingRect;
+        const rscale = e.rscale;
+        ctx.fillStyle = "white";
+        ctx.font = `${Math.floor(18*rscale)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText((i+1).toString(), r[0]+16*rscale, r[1]+19*rscale);
       });
       this.copyIcons.forEach(e => {
         e.render(ctx);
@@ -293,6 +300,7 @@ export class ArrayLayer extends Layer {
       this.tweakIcons.forEach(e => {
         e.render(ctx);
       });
+      ctx.restore();
     }
     this.array.papers.forEach((paper, i) => { 
       ctx.save();
