@@ -38,3 +38,10 @@ console.snapshot = function(obj) {
   const s = JSON.parse(JSON.stringify(obj, null, 2));
   console.tag("snapshot", "#778899", s);
 }
+
+function loadFont(family: string, filename: string, weight: string) { 
+  const url = new URL(`./assets/fonts/${filename}.woff2`, import.meta.url).href;
+  const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
+  document.fonts.add(font);
+}
+loadFont('源暎エムゴ', 'GenEiMGothic2-Black', '700');

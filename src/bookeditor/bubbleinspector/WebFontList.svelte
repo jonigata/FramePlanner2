@@ -1,8 +1,8 @@
 <svelte:options accessors={true}/>
 
 <script lang="ts">
-  import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
-  import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
+  import GoogleFont from "@svelte-web-fonts/google";
+  import type { GoogleFontVariant, GoogleFontDefinition } from "@svelte-web-fonts/google";
   import { createEventDispatcher } from 'svelte';
   import { parseFontFamily } from 'css-font-parser';
   import type { SearchOptions } from './fontStore';
