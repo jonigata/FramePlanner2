@@ -20,7 +20,7 @@ export class BubbleRenderInfo { // serializeしない
 }
 
 export class Bubble {
-  // n_p0, n_p1, n_offset, n_fontSize, n_strokeWidth, n_outlineWidth, n_charSkip, n_lineSkipはnormalized
+  // n_p0, n_p1, n_offset, n_fontSize, n_strokeWidth, n_outlineWidthはnormalized
   n_p0: Vector;
   n_p1: Vector;
   n_offset: Vector;
@@ -31,8 +31,8 @@ export class Bubble {
   fontStyle: string;
   fontWeight: string;
   n_fontSize: number;
-  n_charSkip: number;
-  n_lineSkip: number;
+  charSkip: number;
+  lineSkip: number;
   fontFamily: string;
   direction: string;
   fontColor: string;
@@ -82,8 +82,8 @@ export class Bubble {
     this.fontStyle = "normal";
     this.fontWeight = "400";
     this.n_fontSize = 32 * unit;
-    this.n_charSkip = 0;
-    this.n_lineSkip = 0;
+    this.charSkip = 0;
+    this.lineSkip = 0;
     this.fontFamily = "源暎アンチック";
     this.direction = 'v';
     this.fontColor = '#000000FF';
@@ -113,8 +113,8 @@ export class Bubble {
     b.fontStyle = this.fontStyle;
     b.fontWeight = this.fontWeight;
     b.n_fontSize = this.n_fontSize;
-    b.n_charSkip = this.n_charSkip;
-    b.n_lineSkip = this.n_lineSkip;
+    b.charSkip = this.charSkip;
+    b.lineSkip = this.lineSkip;
     b.fontFamily = this.fontFamily;
     b.direction = this.direction;
     b.fontColor = this.fontColor;
@@ -144,8 +144,8 @@ export class Bubble {
     this.fontStyle = c.fontStyle;
     this.fontWeight = c.fontWeight;
     this.n_fontSize = c.n_fontSize;
-    this.n_charSkip = c.n_charSkip;
-    this.n_lineSkip = c.n_lineSkip;
+    this.charSkip = c.charSkip;
+    this.lineSkip = c.lineSkip;
     this.fontFamily = c.fontFamily;
     this.direction = c.direction;
     this.fontColor = c.fontColor;
@@ -192,8 +192,8 @@ export class Bubble {
     } else if (json.fontSize) {
       b.n_fontSize = json.fontSize;
     }
-    b.n_charSkip = json.n_charSkip;
-    b.n_lineSkip = json.n_lineSkip;
+    b.charSkip = json.charSkip ?? 0;
+    b.lineSkip = json.lineSkip ?? 0;
     b.fontFamily = json.fontFamily ?? "Noto Sans JP";
     b.direction = json.direction ?? 'v';
     b.fontColor = json.fontColor ?? '#000000FF';
@@ -225,8 +225,8 @@ export class Bubble {
       fontStyle: b.fontStyle == "normal" ? undefined : b.fontStyle,
       fontWeight: b.fontWeight == "400" ? undefined : b.fontWeight,
       n_fontSize: equalNumber(b.n_fontSize, 26 * unit) ? undefined : b.n_fontSize,
-      n_charSkip: b.n_charSkip == 0 ? undefined : b.n_charSkip,
-      n_lineSkip: b.n_lineSkip == 0 ? undefined : b.n_lineSkip,
+      charSkip: b.charSkip == 0 ? undefined : b.charSkip,
+      lineSkip: b.lineSkip == 0 ? undefined : b.lineSkip,
       fontFamily: b.fontFamily == "Noto Sans JP" ? undefined : b.fontFamily,
       direction: b.direction == 'v' ? undefined : b.direction,
       fontColor: b.fontColor == '#000000FF' ? undefined : b.fontColor,
@@ -272,14 +272,6 @@ export class Bubble {
 
   getPhysicalFontSize(paperSize: Vector): number {
     return this.n_fontSize / Bubble.getUnit(paperSize);
-  }
-
-  getPhysicalCharSkip(paperSize: Vector): number {
-    return this.n_charSkip / Bubble.getUnit(paperSize);
-  }
-
-  getPhysicalLineSkip(paperSize: Vector): number {
-    return this.n_lineSkip / Bubble.getUnit(paperSize);
   }
 
   getPhysicalStrokeWidth(paperSize: Vector): number {
@@ -334,14 +326,6 @@ export class Bubble {
 
   setPhysicalFontSize(paperSize: Vector, n: number) {
     this.n_fontSize = n * Bubble.getUnit(paperSize);
-  }
-
-  setPhysicalCharSkip(paperSize: Vector, n: number) {
-    this.n_charSkip = n * Bubble.getUnit(paperSize);
-  }
-
-  setPhysicalLineSkip(paperSize: Vector, n: number) {
-    this.n_lineSkip = n * Bubble.getUnit(paperSize);
   }
 
   setPhysicalStrokeWidth(paperSize: Vector, n: number) {
@@ -473,10 +457,8 @@ export class Bubble {
 
   calculateFitSize(paperSize: Vector) {
     const fontSize = this.getPhysicalFontSize(paperSize);
-    const charSkipOffset = this.getPhysicalCharSkip(paperSize);
-    const lineSkipOffset = this.getPhysicalLineSkip(paperSize);
-    const baselineSkip = fontSize * 1.5 + lineSkipOffset;
-    const charSkip = fontSize + charSkipOffset;
+    const baselineSkip = fontSize * 1.5 * (1.0 + this.lineSkip);
+    const charSkip = fontSize * (1.0 + this.charSkip);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     let size: Vector =[0,0];

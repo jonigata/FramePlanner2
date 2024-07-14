@@ -85,6 +85,7 @@
       on:keydown={keydown}
       on:blur={handleBlur}
       class="input"
+      step={allowDecimal ? 0.01 : 1}
     />
     {/key}
   </div>

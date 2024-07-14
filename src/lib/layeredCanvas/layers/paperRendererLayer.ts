@@ -370,6 +370,8 @@ export class PaperRendererLayer extends Layer {
       fontStyle: bubble.fontStyle,
       fontWeight: bubble.fontWeight,
       fontSize: fontSize,
+      lineSkip: bubble.lineSkip,
+      charSkip: bubble.charSkip,
       fontFamily: bubble.fontFamily,
       text: bubble.text,
       direction: bubble.direction,
@@ -409,8 +411,8 @@ export class PaperRendererLayer extends Layer {
         text = "ロード中……";
       }
 
-      const baselineSkip = fontSize * 1.5;
-      const charSkip = fontSize;
+      const baselineSkip = fontSize * 1.5 * (1.0 + bubble.lineSkip);
+      const charSkip = fontSize * (1.0 + bubble.charSkip);
       const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
       const [tw, th] = [m.width, m.height];
       const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };

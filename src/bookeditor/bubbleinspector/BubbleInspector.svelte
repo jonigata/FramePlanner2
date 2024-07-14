@@ -26,8 +26,6 @@
   import verticalIcon from '../../assets/vertical.png';
   import embeddedIcon from '../../assets/embedded.png';
   import unembeddedIcon from '../../assets/unembedded.png';
-  import resetIcon from '../../assets/reset.png';
-  import movieIcon from '../../assets/movie.png';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -176,6 +174,20 @@
             <ExponentialRangeSlider name="fontsize" bind:value={fontSize} exponentialMin={100} step={1}/>
             <div class="text-xs slider-value-text">
               <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
+            </div>  
+        </div>
+        <div class="flex items-center gap-1" use:toolTip={"行間"}>
+          <div class="label">行間</div>
+            <RangeSlider name="lineskip" bind:value={$bubble.lineSkip} min={-1} max={5} step={0.1}/>
+            <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={$bubble.lineSkip} min={-1} max={5} allowDecimal={true}/></div>
+            </div>  
+        </div>
+        <div class="flex items-center gap-1" use:toolTip={"字間(現在は縦書きのみ有効)"}>
+          <div class="label">字間</div>
+          <RangeSlider name="charskip" bind:value={$bubble.charSkip} min={-1} max={5} step={0.1}/>
+          <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={$bubble.charSkip} min={-1} max={5} allowDecimal={true}/></div>
             </div>  
         </div>
         <div class="flex items-center">
