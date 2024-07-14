@@ -378,7 +378,6 @@
     gap: 4px;
   }
   .label {
-    font-family: '源暎エムゴ';
-    font-size: 13px;
+    font-size: 14px;
   }
 </style>
