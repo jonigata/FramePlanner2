@@ -1,6 +1,5 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { postContact } from '../firebase';
   import { mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
@@ -13,7 +12,6 @@
   let min = 256;
   let exponentialMin = 4096;
   let max = 9410;
-  let contactText = "";
 
   const scale = writableDerived(
   	viewport,
@@ -38,20 +36,6 @@
     p.paperSize[0] = w;
     p.paperSize[1] = h;
     $newPageProperty = p;
-  }
-
-  async function contact() {
-    console.log(contactText);
-    if (contactText == null || contactText == "") {
-      toastStore.trigger({ message: '要望を入力してください', timeout: 1500});
-      return;
-    }
-    if (contactText === "throw error") {
-      throw new Error("intentional error");
-    }
-    await postContact(contactText);
-    toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
-    contactText = null;
   }
 
 </script>
@@ -117,11 +101,6 @@
           拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:200px;"/>
           <div class="number-box"><NumberEdit bind:value={scalePercent} min={10} max={1000}/></div>
           <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
-        </div>
-      
-        <div class="hbox mx-2" style="margin-top: 4px;">
-          <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
-          <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>要望</button>
         </div>
       </div>
     </div>

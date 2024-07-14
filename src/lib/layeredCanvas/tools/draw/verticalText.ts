@@ -1,6 +1,6 @@
 import { kinsoku, isEmojiAt, getEmojiAt } from "../kinsoku";
 
-export function drawVerticalText(context, method, r, text, baselineSkip, m, charSkip, autoNewline) {
+export function drawVerticalText(context, method, r, text, baselineSkip, charSkip, m, autoNewline) {
   if (!m) {
     m = measureVerticalText(context, r.height, text, baselineSkip, charSkip, autoNewline);
   }

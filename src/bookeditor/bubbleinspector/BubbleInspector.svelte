@@ -164,83 +164,112 @@
 <div class="drawer-outer">
   <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
     <div class="drawer-content">
-      <div class="hbox gap-x-2 expand">
+      <h1>テキストスタイル</h1>
+      <div class="section">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="hbox expand selected-font variant-ghost-primary rounded-container-token grow" on:click={() => $fontChooserOpen = true}>{$bubble.fontFamily}</div>
-        <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
-          <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-            <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
-            <RadioItem bind:group={$bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
-          </RadioGroup>
+        <div class="self-stretch selected-font variant-ghost-primary rounded-container-token text-center" on:click={() => $fontChooserOpen = true}>
+          {$bubble.fontFamily}
         </div>
-        <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
+        <div class="flex items-center gap-1" use:toolTip={"フォントサイズ"}>
+          <div class="label">フォントサイズ</div>
+            <ExponentialRangeSlider name="fontsize" bind:value={fontSize} exponentialMin={100} step={1}/>
+            <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
+            </div>  
+        </div>
+        <div class="flex items-center">
+          <div class="label">塗りつぶし</div>
+          <div class="color-label" use:toolTip={"フォント色"}>
+            <ColorPicker bind:hex={$bubble.fontColor} label=""/>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="label">フチの太さ</div>
+          <RangeSlider name="outlinewidth" bind:value={$outlineWidth} max={20} step={1} style="width:80px;"/>
+          <div class="color-label flex items-center" use:toolTip={"フチの色"}>
+            <div class="label">フチの色</div>
+            <ColorPicker bind:hex={$bubble.outlineColor} label=""/>
+          </div>
+        </div>
+        <div class="flex gap-2 items-center">
+          <div class="label">縦書き/横書き</div>
+          <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
+            <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+              <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
+              <RadioItem bind:group={$bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
+            </RadioGroup>
+          </div>
+          <div class="label">自動改行</div>
+          <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
+        </div>
       </div>
 
-      <div class="hbox px-2 variant-ghost-primary rounded-container-token font-color-picker" style="align-self: stretch;">
-        <div class="font-bold slider-label">T</div>
-        <div class="hbox gap-0.5" use:toolTip={"フォントサイズ"}>
-          <ExponentialRangeSlider name="fontsize" bind:value={fontSize} exponentialMin={100} step={1}/>
-          <div class="text-xs slider-value-text">
-            <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
-          </div>  
-          <span style="width:20px;" use:toolTip={"フォント色"}><ColorPicker bind:hex={$bubble.fontColor} label="" /></span>
-        </div>
-        <span class="mx-2">/</span>
-        <div class="hbox gap-0.5" use:toolTip={"フチの太さ"}>
-          <span>フチ</span>
-          <RangeSlider name="outlinewidth" bind:value={$outlineWidth} max={20} step={1} style="width:50px;"/>
-          <span style="width:20px;" use:toolTip={"フチの色"}><ColorPicker bind:hex={$bubble.outlineColor} label="" /></span>
-        </div>
-      </div>
-
-      <div class="hbox expand gap-2">
+      <h1>テキスト</h1>
+      <div class="section">
         <textarea
-          class="my-2 rounded-container-token textarea" 
+          class="rounded-container-token textarea" 
           bind:value={$bubble.text}
           bind:this={textarea}
           on:keypress={onKeyPress}/>
-        <!-- style="font-family: {fontFamily}; font-weight: {fontWeight}; font-size: {fontSize}px;" -->
-        <div class="vbox gap-2">
-          <BubbleSample size={[64,96]} bind:shape={$chosenShape} on:click={chooseShape}/>
-          <button class="save-button btn btn-sm variant-filled paper-size" on:click={saveTemplate}>SAVE</button>
+      </div>  
+
+      <h1>シェイプ</h1>
+      <div class="section">
+        <div class="flex gap-2">
+          <div>
+            <BubbleSample size={[64,96]} bind:shape={$chosenShape} on:click={chooseShape}/>
+            <button class="save-button btn btn-sm variant-filled paper-size" on:click={saveTemplate}>SAVE</button>
+          </div>
+          <div>
+            <div class="flex items-center">
+              <div class="label">塗りつぶし</div>
+              <div class="color-label" use:toolTip={"フキダシ背景色"}>
+                <ColorPicker bind:hex={$bubble.fillColor} label=""/>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="label">線の太さ</div>
+              <RangeSlider name="outlinewidth" bind:value={$strokeWidth} max={20} step={1} style="width:80px;"/>
+              <div class="color-label flex items-center" use:toolTip={"フキダシのフチの色"}>
+                <div class="label">線の色</div>
+                <ColorPicker bind:hex={$bubble.strokeColor} label=""/>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <div class="label">コマへの埋め込み</div>
+              <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
+                <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+                  <RadioItem bind:group={$bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
+                  <RadioItem bind:group={$bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
+                </RadioGroup>
+              </div> 
+            </div>
+            <button class="btn btn-sm bg-warning-500 h-6" on:click={reset}>リセット</button>
+          </div>
+        </div>
+      </div>  
+
+      <h1>シェイプパラメータ</h1>
+      <div class="section">
+        <BubbleInspectorAppendix/>
+      </div>
+
+      <h1>ビデオパラメータ</h1>
+      <div class="section">
+        <div class="self-stretch variant-ghost-tertiary rounded-container-token pl-2">
+          <div class="hbox gap-2 grow left" use:toolTip={"ビデオ作成時のディレイ"}>
+            <span class="w-24 text-left">出現ディレイ</span>
+            <div style="width: 140px;">
+              <RangeSlider name="delay" bind:value={$bubble.appearanceDelay} min={0} max={10} step={0.1}/>
+            </div>
+            <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
+          </div>
         </div>
       </div>
 
-      <div class="hbox px-2 variant-ghost-secondary rounded-container-token font-color-picker" style="align-self: stretch;">
-        <div class="hbox" use:toolTip={"フキダシ背景色"}>
-          <div class="font-bold slider-label">fill</div>
-          <ColorPicker bind:hex={$bubble.fillColor} label="" />
-        </div>
-        <div class="hbox" use:toolTip={"フキダシ枠の色"}>
-          <div class="font-bold slider-label">stroke</div>
-          <ColorPicker bind:hex={$bubble.strokeColor} label="" />
-        </div>
-        <div class="hbox" use:toolTip={"フキダシ枠の太さ"}>
-          <RangeSlider name="line" bind:value={$strokeWidth} max={10} step={1} style="width:100px;"/>
-        </div>
-        <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
-          <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-            <RadioItem bind:group={$bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
-            <RadioItem bind:group={$bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
-          </RadioGroup>
-        </div> 
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <img class="reset-image" src={resetIcon} alt="reset" on:click={reset} use:toolTip={"リセット"}/>
-      </div>
-      <BubbleInspectorAppendix/>
-      <div class="movie-option-panel px-2 variant-ghost-tertiary rounded-container-token font-color-picker">
-        <img class="movie-option-panel-icon" src={movieIcon} alt="movie"/>
-        <div class="hbox gap-2 grow left" use:toolTip={"ビデオ作成時のディレイ"}>
-          <span class="w-24 text-left">出現ディレイ</span>
-          <div style="width: 140px;">
-            <RangeSlider name="delay" bind:value={$bubble.appearanceDelay} min={0} max={10} step={0.1}/>
-          </div>
-          <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
-        </div>
-      </div>
-      <div class="w-full text-left mt-4">
+      <h1>レイヤー</h1>
+      <div class="w-full text-left">
         <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
       </div>
     </div>
@@ -264,7 +293,6 @@
     overflow: visible; /* こうしないとColorPickerが埋まる */
   }
   .textarea {
-    flex: 1;
     align-self: stretch;
     resize: none;
     outline: none;
@@ -303,15 +331,15 @@
   .embed {
     margin-left: 8px;
   }
-  .font-color-picker :global(.color-picker) {
+  .color-label :global(.color-picker) {
     width: 20px;
   }
-  .font-color-picker :global(.container .color) {
+  .color-label :global(.container .color) {
     width: 15px;
     height: 15px;
     border-radius: 4px;
   }
-  .font-color-picker :global(.container .alpha) {
+  .color-label :global(.container .alpha) {
     width: 15px;
     height: 15px;
     border-radius: 4px;
@@ -329,18 +357,28 @@
   .save-button {
     height: 12px;
   }
-  .movie-option-panel {
-    position: relative;
-    align-self: stretch;
-    display: flex;
-    align-items: left;
-    font-size: 14px;
-  }
   .movie-option-panel-icon {
     position: absolute;
     width: 24px;
     height: 24px;
     top: -10px;
     right: 4px;
+  }
+  h1 {
+    font-family: '源暎エムゴ';
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .section {
+    margin-left: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 4px;
+  }
+  .label {
+    font-family: '源暎エムゴ';
+    font-size: 13px;
   }
 </style>

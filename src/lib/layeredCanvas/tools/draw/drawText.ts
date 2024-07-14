@@ -5,15 +5,15 @@ export { drawVerticalText, measureVerticalText };
 
 export function drawText(dir, ctx, method, r, text, baselineSkip, charSkip, m, autoNewline) {
   if (dir === 'v') {
-    drawVerticalText(ctx, method, r, text, baselineSkip, m, charSkip, autoNewline);
+    drawVerticalText(ctx, method, r, text, baselineSkip, charSkip, m, autoNewline);
   } else {
-    drawHorizontalText(ctx, method, r, text, baselineSkip, m, autoNewline);
+    drawHorizontalText(ctx, method, r, text, baselineSkip, charSkip, m, autoNewline);
   }
 }
 
-export function drawHorizontalText(context, method, r, text, baselineSkip, m, autoNewline) {
+export function drawHorizontalText(context, method, r, text, baselineSkip, charSkip, m, autoNewline) {
   if (!m) {
-    m = measureHorizontalText(context, r.width, text, baselineSkip, autoNewline);
+    m = measureHorizontalText(context, r.width, text, baselineSkip, charSkip, autoNewline);
   }
 
   for (let [i, line] of m.lines.entries()) {
@@ -28,7 +28,7 @@ export function drawHorizontalText(context, method, r, text, baselineSkip, m, au
 export function measureText(dir, ctx, w, h, text, baselineSkip, charSkip, autoNewline) {
   const m = dir === 'v' ?
     measureVerticalText(ctx, h * 0.85, text, baselineSkip, charSkip, autoNewline) :
-    measureHorizontalText(ctx, w * 0.85, text, baselineSkip, autoNewline);
+    measureHorizontalText(ctx, w * 0.85, text, baselineSkip, charSkip, autoNewline);
   return m;
 }
 
@@ -37,6 +37,7 @@ export function measureHorizontalText(
   maxWidth,
   text,
   baselineSkip,
+  charSkip,
   autoNewline) {
 
   if (!autoNewline) {

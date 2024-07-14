@@ -4,6 +4,9 @@
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
   import generateImageIcon from '../assets/generate-image.png'
+  import { postContact } from '../firebase';
+
+  let contactText = "";
 
   function showComic() {
     const d: ModalSettings = {
@@ -20,6 +23,21 @@
     };
     modalStore.trigger(d);    
   }
+  
+  async function contact() {
+    console.log(contactText);
+    if (contactText == null || contactText == "") {
+      toastStore.trigger({ message: '要望を入力してください', timeout: 1500});
+      return;
+    }
+    if (contactText === "throw error") {
+      throw new Error("intentional error");
+    }
+    await postContact(contactText);
+    toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
+    contactText = null;
+  }
+
 </script>
 
 
@@ -144,6 +162,12 @@
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <span class="comic-link" on:click={showLicense}>ライセンス</span>
     </p>
+
+    <h2>要望(Contact)</h2>
+    <div class="hbox mx-2" style="margin-top: 4px;">
+      <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
+      <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>送信</button>
+    </div>
   </div>
 </Drawer>
 </div>
