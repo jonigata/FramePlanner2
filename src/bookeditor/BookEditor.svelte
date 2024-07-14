@@ -12,8 +12,8 @@
   import { bubbleInspectorTarget, bubbleSplitCursor, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
-  import { undoBookHistory, redoBookHistory, commitBook, revertBook, newPage, collectBookContents, dealBookContents, swapBookContents } from './book';
-  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from './book';
+  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { DelayedCommiter } from '../utils/cancelableTask';
@@ -65,6 +65,13 @@
   $: if ($forceCommitDelayedToken) {
     $forceCommitDelayedToken = false;
     delayedCommiter.force();
+  }
+
+  $: onUndoCommand($undoToken);
+  function onUndoCommand(t: 'undo' | 'redo') {
+    $undoToken = null;
+    if (t == 'undo') { undo(); }
+    if (t == 'redo') { redo(); }
   }
 
   function hint(r: [number, number, number, number], s: string) {
