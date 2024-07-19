@@ -71,6 +71,31 @@ export class VideoMedia extends Media {
   }
 }
 
+export class Effect {
+  get tag(): string {
+    return this.constructor.name;
+  }
+
+  clone(): Effect {
+    throw new Error("Not implemented");
+  }
+}
+
+export class OutlineEffect extends Effect {
+  color: string;
+  width: number;
+
+  constructor(color: string, width: number) {
+    super();
+    this.color = color;
+    this.width = width;
+  }
+
+  clone(): Effect {
+    return new OutlineEffect(this.color, this.width);
+  }
+}
+
 export class Film  {
   media: Media;
   n_scale: number;
@@ -79,8 +104,10 @@ export class Film  {
   reverse: [number, number];
   visible: boolean;
   prompt: string | null;
+  effects: Effect[];
   selected: boolean; // 揮発性
   matrix: DOMMatrix; // 揮発性
+  index: number;
 
   constructor() {
     this.media = null;
@@ -90,6 +117,7 @@ export class Film  {
     this.reverse = [1, 1];
     this.visible = true;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+    this.effects = [new OutlineEffect("black", 0.01)];
     this.selected = false;
   }
 
@@ -102,6 +130,7 @@ export class Film  {
     f.reverse = [...this.reverse];
     f.visible = this.visible;
     f.prompt = this.prompt;
+    f.effects = this.effects.map(e => e.clone());
     return f;
   }
 

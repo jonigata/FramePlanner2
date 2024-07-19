@@ -27,6 +27,7 @@
   let insertPosition = 0;
 
 	function onDragStart (ev: DragEvent) {
+    console.log("onDragStart", ev.target);
 		ev.dataTransfer.setData("text/list-item", index.toString());
     ev.stopPropagation();
   }

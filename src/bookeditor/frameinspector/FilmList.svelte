@@ -1,15 +1,21 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Film, FilmStack, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
-  import ListBox from "../../utils/listbox/ListBox.svelte";
-  import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";
-  import FrameInspectorFilm from "./FrameInspectorFilm.svelte";
+  import { SortableList } from '@sonderbase/svelte-sortablejs';
+
+  // import ListBox from "../../utils/listbox/ListBox.svelte";
+  // import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";
+  import FilmListItem from "./FilmListItem.svelte";
 
   export let filmStack: FilmStack;
 
   const dispatch = createEventDispatcher();
 
   let key = 0;
+
+  for (let i = 0; i < filmStack.films.length; i++) {
+    filmStack.films[i].index = i;
+  }
 
   async function onNewFilm(e: CustomEvent<{ index: number, files: FileList }>) {
     let { index, files } = e.detail;
@@ -31,6 +37,23 @@
       dispatch('commit');
       key++;
     }
+  }
+
+  function moveFilm(oldIndex: number, newIndex: number) {
+    console.log("moveFilm(before)", oldIndex, newIndex, filmStack.films.map(f => f.index));
+
+    // reversed order
+    oldIndex = filmStack.films.length - 1 - oldIndex;
+    newIndex = filmStack.films.length - 1 - newIndex;
+    
+    if (oldIndex < newIndex) {
+      const film = filmStack.films.splice(oldIndex, 1)[0];
+      filmStack.films.splice(newIndex, 0, film);
+    } else {
+      const film = filmStack.films.splice(oldIndex, 1)[0];
+      filmStack.films.splice(newIndex, 0, film);
+    }
+    console.log("moveFilm(after)", oldIndex, newIndex, filmStack.films.map(f => f.index));
   }
 
   async function onMoveFilm(e: CustomEvent<{ index: number, sourceIndex: number }>) {
@@ -88,19 +111,22 @@
     dispatch('punch', e.detail);
   }
 
+  function onUpdate(e: {oldIndex: number, newIndex:number}) {
+    console.log("onUpdate", e.oldIndex, e.newIndex);
+    moveFilm(e.oldIndex, e.newIndex);
+    dispatch('commit');
+    key++;
+  }
+
 </script>
 
 {#key key}
-  <ListBox on:import={onNewFilm} on:move={onMoveFilm}>
-    <ListBoxItem draggable={false} transferTo={1}>
-      <FrameInspectorFilm film={null} on:select={onGenerate}/>
-    </ListBoxItem>
-    {#each filmStack.films.toReversed() as film}
-      <ListBoxItem>
-        <FrameInspectorFilm film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
-      </ListBoxItem>
-    {/each}
-  </ListBox>
+<FilmListItem film={null} on:select={onGenerate}/>
+<SortableList class="flex flex-col gap-2 mt-2" animation={100} onUpdate={onUpdate}>
+  {#each filmStack.films.toReversed() as film}
+    <FilmListItem film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+  {/each}
+</SortableList>  
 {/key}
 
 <style>

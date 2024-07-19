@@ -408,6 +408,7 @@ export class PaperRendererLayer extends Layer {
       //const text = `${bubble.text}:${bubble.pageNumber}`;
       let text = bubble.text;
       if (!document.fonts.check(ss)) {
+        console.log(`loading: ${ss}`);
         text = "ロード中……";
       }
 

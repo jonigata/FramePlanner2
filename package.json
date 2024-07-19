@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "^1.0.0",
+    "@sonderbase/svelte-sortablejs": "^2.0.2",
     "@sveltejs/vite-plugin-svelte": "^2.4.6",
     "@tsconfig/svelte": "^3.0.0",
     "@types/file-saver": "^2.0.7",
