@@ -191,9 +191,7 @@
 </script>
 
 <svelte:head>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin={"anonymous"} />
-  <GoogleFont fonts="{googleFonts}" display="swap" />
+  <GoogleFont fonts="{googleFonts}" display="swap"/>
 </svelte:head>
 
 <KeyValueStorage bind:this={kvs} dbName={"WebFontList"} storeName={"local-fonts"}/>

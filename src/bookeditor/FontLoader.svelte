@@ -1,18 +1,28 @@
 <script lang="ts">
+  import GoogleFont from "@svelte-web-fonts/google";
   import { getFontStyle } from "@svelte-web-fonts/google";
-  import type { GoogleFontVariant, GoogleFontFamily } from "@svelte-web-fonts/google";
+  import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { forceFontLoadToken, mainBook, redrawToken, fontLoadToken } from "./bookStore";
   import { onMount } from "svelte";
+
+  let googleFonts: GoogleFontDefinition[] = [];
 
   $: onBookChanged($mainBook, $forceFontLoadToken);
   async function onBookChanged(book, _fflt) {
     if (!book) { return; }
     $forceFontLoadToken = false;
 
+    googleFonts = [];
+    let redraws = false;
     for (let page of book.pages) {
       for (let bubble of page.bubbles) {
-        load(bubble.fontFamily, bubble.fontWeight);
+        if (load(bubble.fontFamily, bubble.fontWeight)) {
+          redraws = true;
+        }
       }
+    }
+    if (redraws) {
+      $redrawToken = true;
     }
   }
 
@@ -37,30 +47,39 @@
 
   // キャッシュ機構(重複管理など)はFontFace APIが持っているので、基本的には余計なことはしなくてよい
   // と思いきや一瞬ちらつくようなのでキャッシュする
-  function load(family: string, weight: string) {
-    if (cache.has(`${family}:${weight}`)) { return; }
+  function load(family: string, weight: string): boolean {
+    if (cache.has(`${family}:${weight}`)) { return false; }
     cache.add(`${family}:${weight}`);
 
-    console.log("load font", family, weight)
     const localFile = localFontFiles[family];
+    console.log("load font", family, weight, localFile)
     if (localFile) {
       const url = new URL(`../assets/fonts/${localFile}.woff2`, import.meta.url).href;
       const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
 
       document.fonts.add(font);
-      $redrawToken = true;
     } else {
       getFontStyle(family as GoogleFontFamily, weight as GoogleFontVariant);
+      const font: GoogleFontDefinition = {
+        family: family,
+        variants: [weight as GoogleFontVariant],
+      };
+      googleFonts.push(font);
     }
+    return true;
   }
 
   onMount(() => {
     document.fonts.addEventListener('loadingdone', (event) => {
-      console.tag("loadingdone", "orange", event);
+      console.tag("fonts.onloadingdone", "orange", event);
       $redrawToken = true;
     });
   });
 </script>
+
+<svelte:head>
+  <GoogleFont fonts="{googleFonts}" display="swap"/>
+</svelte:head>
 
 <style>
   

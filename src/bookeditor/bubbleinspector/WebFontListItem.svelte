@@ -1,9 +1,7 @@
 <script lang="ts">
-  import GoogleFont, { getFontStyle } from "@svelte-web-fonts/google";
-  import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
+  import type { GoogleFontDefinition } from "@svelte-web-fonts/google";
   import { onMount } from "svelte";
   import { createEventDispatcher } from 'svelte';
-  import type KeyValueStorage from "../../utils/KeyValueStorage.svelte";
 
   type FontDefinition = GoogleFontDefinition & { isGothic: boolean, isBold: boolean, isLocal: boolean };
 
