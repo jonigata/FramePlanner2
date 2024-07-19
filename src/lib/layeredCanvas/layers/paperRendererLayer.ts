@@ -407,7 +407,7 @@ export class PaperRendererLayer extends Layer {
       ctx.font = ss; // horizontal measureより先にないとだめ
       //const text = `${bubble.text}:${bubble.pageNumber}`;
       let text = bubble.text;
-      if (!document.fonts.check(ss)) {
+      if (!document.fonts.check(`${bubble.fontStyle} ${bubble.fontWeight} 20px '${bubble.fontFamily}'`)) {
         console.log(`loading: ${ss}`);
         text = "ロード中……";
       }
