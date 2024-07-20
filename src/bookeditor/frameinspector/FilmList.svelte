@@ -14,6 +14,9 @@
     filmStack.films[i].index = i;
   }
 
+  let isDragging = false;
+  let ghostIndex = -1;
+
   function importFiles(files: FileList): Film[] {
     console.log("importFiles");
     const file = files[0];
@@ -31,13 +34,18 @@
     return [];
   }
 
+  function updateList(fileList: Film[], newIsDragging: boolean, newGhostIndex: number) {
+    filmStack.films = fileList;
+    isDragging = newIsDragging;
+    ghostIndex = newGhostIndex;
+    console.log("updateList", ghostIndex);
+  }
+
   const fileDroppableContainer = new FileDroppableContainer(
     filmStack.films, 
     importFiles,
-    (fileList: Film[], pendingFiles: Film[] | null) => { 
-      filmStack.films = fileList;
-    },
-    true);
+    updateList,
+    false);
 
   function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean, metaKey: boolean }>) {
     const { film, ctrlKey, metaKey } = e.detail;
@@ -75,8 +83,10 @@
 
   function onUpdate(e: {oldIndex: number, newIndex:number}) {
     // reversed order
-    const oldIndex = filmStack.films.length - 1 - e.oldIndex;
-    const newIndex = filmStack.films.length - 1 - e.newIndex;
+    // const oldIndex = filmStack.films.length - 1 - e.oldIndex;
+    // const newIndex = filmStack.films.length - 1 - e.newIndex;
+    const oldIndex = e.oldIndex;
+    const newIndex = e.newIndex;
     moveInArray(filmStack.films, oldIndex, newIndex);
     dispatch('commit');
     filmStack = filmStack;
@@ -86,19 +96,30 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="film-list-container">
-  <FilmListItem film={null} on:select={onGenerate}/>
   <div 
     class="flex flex-col gap-2 mt-2" 
     use:sortableList={{animation: 100, onUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >
-    {#each filmStack.films.toReversed() as film (film.index)}
+    {#each filmStack.films as film, index (film.index)}
+      {#if isDragging && ghostIndex === index}
+        <div data-ghost class="ghost-element"/>
+      {/if}
       <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
     {/each}
+    {#if isDragging && ghostIndex === filmStack.films.length}
+      <div data-ghost class="ghost-element"/>
+    {/if}
   </div>  
+  <FilmListItem film={null} on:select={onGenerate}/>
 </div>
 
 <style>
+  .ghost-element {
+    height: 20px;
+    background-color: #007bff;
+    margin: 5px 0;
+  }
   :global(.listbox) {
     gap: 16px;
   }

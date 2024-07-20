@@ -105,9 +105,10 @@ export class Film  {
   visible: boolean;
   prompt: string | null;
   effects: Effect[];
+  
   selected: boolean; // 揮発性
   matrix: DOMMatrix; // 揮発性
-  index: number;
+  index: number; // 揮発性
 
   constructor() {
     this.media = null;

@@ -131,7 +131,7 @@
       </div>
     </div>
   {:else}
-    <div class="image-panel" bind:this={imagePanel} on:click={onClick}>
+    <div class="image-panel" class:ghost={film.ghost} bind:this={imagePanel} on:click={onClick}>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -265,5 +265,8 @@
     bottom: 4px;
     width: 32px;
     height: 32px;
+  }
+  .ghost {
+    filter: opacity(50%);
   }
 </style>

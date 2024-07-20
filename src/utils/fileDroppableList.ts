@@ -1,68 +1,101 @@
 type DropZoneOptions = {
   onFileDrop: (files: FileList, index: number) => void;
   onDragUpdate: (index: number) => void;
-  onDragEnter: (files: DataTransfer) => void;
-  onDragLeave: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
 };
 
 export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
-  let dragEnterCount = 0;
-
-  function getDropIndex(x: number, y: number) {
-    const children = Array.from(node.children);
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i] as HTMLElement;
-      const rect = child.getBoundingClientRect();
-      if (isPointInRect(x, y, rect)) {
-        return i;
-      }
-    }
-    return children.length;
-  }
-
-  function isPointInRect(x: number, y: number, rect: DOMRect) {
-    return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom;
-  }
+  let isDragging = false;
+  let lastIndex = -1;
 
   function onDragEnter(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    dragEnterCount++;
-    if (dragEnterCount === 1) {
-      options.onDragEnter(ev.dataTransfer);
+    if (isFileDrag(ev) && !isDragging) {
+      isDragging = true;
+      options.onDragStart();
     }
   }
 
   function onDragOver(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    const index = getDropIndex(ev.clientX, ev.clientY);
-    options.onDragUpdate(index);
+    if (isDragging) {
+      const index = getDropIndex(ev.clientY);
+      if (index !== lastIndex) {
+        lastIndex = index;
+        options.onDragUpdate(index);
+      }
+    }
   }
 
   function onDragLeave(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    dragEnterCount--;
-    if (dragEnterCount === 0) {
-      options.onDragLeave();
-      options.onDragUpdate(-1);
+    if (!node.contains(ev.relatedTarget as Node)) {
+      endDrag();
     }
   }
 
   function onDrop(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    dragEnterCount = 0;
-    options.onDragLeave();
-    options.onDragUpdate(-1);
-
-    const index = getDropIndex(ev.clientX, ev.clientY);
-    const dt = ev.dataTransfer;
-    const files = dt.files;
-    if (files && files.length > 0) {
-      options.onFileDrop(files, index);
+    if (isDragging) {
+      const index = getDropIndex(ev.clientY);
+      const dt = ev.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        options.onFileDrop(files, index);
+      }
     }
+    endDrag();
+  }
+
+  function endDrag() {
+    if (isDragging) {
+      isDragging = false;
+      lastIndex = -1;
+      options.onDragEnd();
+    }
+  }
+
+  function isFileDrag(ev: DragEvent): boolean {
+    if (ev.dataTransfer) {
+      if (ev.dataTransfer.types.includes('Files')) {
+        return true;
+      }
+      if (ev.dataTransfer.types.includes('application/x-moz-file')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function getDropIndex(y: number): number {
+    const children = Array.from(node.children);
+    const rect = node.getBoundingClientRect();
+    const relativeY = y - rect.top;
+
+    let realIndex = 0;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i] as HTMLElement;
+      const childRect = child.getBoundingClientRect();
+      const childBottom = childRect.bottom - rect.top;
+
+      if (relativeY < childBottom) {
+        if (child.dataset.ghost !== undefined) {
+          return realIndex;
+        }
+        return realIndex;
+      }
+
+      if (child.dataset.ghost === undefined) {
+        realIndex++;
+      }
+    }
+
+    return realIndex;
   }
 
   node.addEventListener('dragenter', onDragEnter);
@@ -85,15 +118,16 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
 
 export class FileDroppableContainer<T> {
   private fileList: T[];
-  private pendingFiles: T[] | null = null;
   private importer: (files: FileList) => T[];
-  private onUpdate: (fileList: T[], pendingFiles: T[] | null) => void;
+  private onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void;
   private isReversed: boolean;
+  private isDragging: boolean = false;
+  private ghostIndex: number = -1;
   
   constructor(
     initialList: T[],
     importer: (files: FileList) => T[], 
-    onUpdate: (fileList: T[], pendingFiles: T[] | null) => void,
+    onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void,
     isReversed: boolean = false
   ) {
     this.fileList = initialList;
@@ -106,74 +140,47 @@ export class FileDroppableContainer<T> {
     return this.isReversed ? this.fileList.length - index : index;
   }
 
-  private importFiles(files: FileList): T[] {
-    if (!this.pendingFiles) {
-      this.pendingFiles = this.importer(files);
-    }
-    return this.pendingFiles;
-  }
-
   handleFileDrop(files: FileList, index: number): void {
-    console.log('handleFileDrop', index);
-    const importedFiles = this.importFiles(files);
+    const importedFiles = this.importer(files);
     if (importedFiles.length === 0) {
-      this.pendingFiles = null;
       return;
     }
     const actualIndex = this.getActualIndex(index);
     this.fileList.splice(actualIndex, 0, ...importedFiles);
-    this.onUpdate(this.fileList, null);
-    this.pendingFiles = null;
+    this.isDragging = false;
+    this.ghostIndex = -1;
+    this.onUpdate(this.fileList, false, -1);
   }
 
   handleDragUpdate(index: number): void {
-    if (this.pendingFiles && this.pendingFiles.length > 0) {
-      const actualIndex = this.getActualIndex(index);
-      const currentIndex = this.fileList.indexOf(this.pendingFiles[0]);
-      if (currentIndex !== -1 && currentIndex !== actualIndex) {
-        this.fileList = this.fileList.filter(file => !this.pendingFiles.includes(file));
-        this.fileList.splice(actualIndex, 0, ...this.pendingFiles);
-        this.onUpdate(this.fileList, this.pendingFiles);
-      }
+    const actualIndex = this.getActualIndex(index);
+    if (actualIndex !== this.ghostIndex) {
+      this.ghostIndex = actualIndex;
+      this.onUpdate(this.fileList, this.isDragging, this.ghostIndex);
     }
   }
 
-  handleDragEnter(dataTransfer: DataTransfer): void {
-    if (dataTransfer && dataTransfer.files.length > 0) {
-      const importedFiles = this.importFiles(dataTransfer.files);
-      if (importedFiles.length > 0) {
-        if (this.isReversed) {
-          this.fileList.unshift(...importedFiles);
-        } else {
-          this.fileList.push(...importedFiles);
-        }
-        this.onUpdate(this.fileList, importedFiles);
-      }
-    }
+  handleDragStart(): void {
+    this.isDragging = true;
+    this.onUpdate(this.fileList, true, this.ghostIndex);
   }
 
-  handleDragLeave(): void {
-    if (this.pendingFiles) {
-      this.fileList = this.fileList.filter(file => !this.pendingFiles.includes(file));
-      this.pendingFiles = null;
-      this.onUpdate(this.fileList, null);
-    }
+  handleDragEnd(): void {
+    this.isDragging = false;
+    this.ghostIndex = -1;
+    this.onUpdate(this.fileList, false, -1);
   }
 
   getDropZoneProps() {
     return {
       onFileDrop: this.handleFileDrop.bind(this),
       onDragUpdate: this.handleDragUpdate.bind(this),
-      onDragEnter: this.handleDragEnter.bind(this),
-      onDragLeave: this.handleDragLeave.bind(this)
+      onDragStart: this.handleDragStart.bind(this),
+      onDragEnd: this.handleDragEnd.bind(this)
     };
   }
 
   getFileList(): T[] {
     return this.isReversed ? [...this.fileList].reverse() : [...this.fileList];
-  }
-
-  getPendingFiles(): T[] | null {
-    return this.pendingFiles;
   }
 }
