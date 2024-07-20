@@ -1,12 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Film, FilmStack, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
-  //import { SortableList } from '@sonderbase/svelte-sortablejs';
-  import { useSortable } from '../../utils/sortableList'
+  import { sortableList } from '../../utils/sortableList'
+  import { fileDroppableList, FileDroppableContainer } from '../../utils/fileDroppableList'
   import { moveInArray } from '../../utils/moveInArray';
-
-  // import ListBox from "../../utils/listbox/ListBox.svelte";
-  // import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";
   import FilmListItem from "./FilmListItem.svelte";
 
   export let filmStack: FilmStack;
@@ -17,27 +14,30 @@
     filmStack.films[i].index = i;
   }
 
-  async function onNewFilm(e: CustomEvent<{ index: number, files: FileList }>) {
-    let { index, files } = e.detail;
+  function importFiles(files: FileList): Film[] {
+    console.log("importFiles");
     const file = files[0];
     if (file.type.startsWith("image/")) {
+      console.log("image file");
       const imageURL = URL.createObjectURL(file);
       const image = new Image();
       image.src = imageURL;
-      await image.decode();
-
-      if (0 < index) {
-        index--;
-      }
-      index = filmStack.films.length - index;
 
       const film = new Film();
       film.media = new ImageMedia(image);
-      filmStack.films.splice(index, 0, film);
-      dispatch('commit');
-      filmStack = filmStack;
+      film.index = filmStack.films.length;
+      return [film];
     }
+    return [];
   }
+
+  const fileDroppableContainer = new FileDroppableContainer(
+    filmStack.films, 
+    importFiles,
+    (fileList: Film[], pendingFiles: Film[] | null) => { 
+      filmStack.films = fileList;
+    },
+    true);
 
   function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean, metaKey: boolean }>) {
     const { film, ctrlKey, metaKey } = e.detail;
@@ -82,31 +82,16 @@
     filmStack = filmStack;
   }
 
-  function onAdd(e) {
-    console.log("onAdd", e);
-  } 
-
-  function onDragOver(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-  }
-
-  function onDragLeave(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-  }
-
-  async function onDrop(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-  }
-
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="film-list-container" on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop}>
+<div class="film-list-container">
   <FilmListItem film={null} on:select={onGenerate}/>
-  <div class="flex flex-col gap-2 mt-2" use:useSortable={{animation: 100, onUpdate, onAdd}}>
+  <div 
+    class="flex flex-col gap-2 mt-2" 
+    use:sortableList={{animation: 100, onUpdate}} 
+    use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
+  >
     {#each filmStack.films.toReversed() as film (film.index)}
       <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
     {/each}
