@@ -2,6 +2,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import writableDerived from "svelte-writable-derived";
+  import Spreader from './Spreader.svelte';
 
   export let value: number;
   export let min: number = 1;
@@ -11,9 +12,6 @@
 
   const dispatch = createEventDispatcher();
   let original: number;
-  let container: HTMLDivElement;
-  let containerWidth = 0;
-  let containerHeight = 0;
 
   let key = 0; // undo防止
 
@@ -37,8 +35,6 @@
 
   onMount(() => {
     original = value;
-    containerWidth = container.offsetWidth;
-    containerHeight = container.offsetHeight;
   });
 
   function edit(event: FocusEvent) {
@@ -71,12 +67,8 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-  class="container"
-  id={id}
-  bind:this={container}
->
-  <div class="edit-box" style="width: {containerWidth}px; height: {containerHeight}px;">
+<Spreader>
+  <div class="edit-box">
     {#key key}
     <input
       type="number"
@@ -89,16 +81,9 @@
     />
     {/key}
   </div>
-</div>
+</Spreader>
 
 <style>
-  .container {
-    display: flex;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    align-items: center;
-  }
   input {
     background: white;
     font-size: inherit;
@@ -114,11 +99,12 @@
     border: none;
   }
   .edit-box {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-grow: 1;
-    height: 100%;
   }
 
   input[type="number"]::-webkit-outer-spin-button,

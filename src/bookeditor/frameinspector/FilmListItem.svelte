@@ -2,16 +2,16 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from '../bookStore';
-  import ListBox from "../../utils/listbox/ListBox.svelte";
-  import ListBoxItem from "../../utils/listbox/ListBoxItem.svelte";
   import FilmEffect from "./FilmEffect.svelte";
+  import { SortableList } from '@sonderbase/svelte-sortablejs';
+  import { moveInArray } from '../../utils/moveInArray';
 
-  import visibleIcon from '../../assets/frameInspector/eye.png';
-  import scribbleIcon from '../../assets/frameInspector/scribble.png';
-  // import generateIcon from '../../assets/frameInspector/generate.png';
-  import trashIcon from '../../assets/frameInspector/trash.png';
-  import punchIcon from '../../assets/frameInspector/punch.png';
-  import effectIcon from '../../assets/frameInspector/effect.png';
+  import visibleIcon from '../../assets/filmlist/eye.png';
+  import scribbleIcon from '../../assets/filmlist/scribble.png';
+  // import generateIcon from '../../assets/filmlist/generate.png';
+  import trashIcon from '../../assets/filmlist/trash.png';
+  import punchIcon from '../../assets/filmlist/punch.png';
+  import effectIcon from '../../assets/filmlist/effect.png';
   import { toolTip } from '../../utils/passiveToolTipStore';
 
   export let film: Film;
@@ -48,6 +48,7 @@
   }
 
   function onGenerate(ev: MouseEvent) {
+    // scribble用、今は使ってない
     console.log("onGenerate");
     ev.stopPropagation();
     ev.preventDefault();
@@ -95,10 +96,17 @@
 
   }
 
-  function ignoreDrag(ev: DragEvent) {
-    console.log("ignoreDrag");
-    ev.preventDefault();
-    ev.stopPropagation();
+  function onUpdateEffect(e: {oldIndex: number, newIndex:number}) {
+    console.log("onUpdate", e.oldIndex, e.newIndex);
+    moveInArray(film.effects, e.oldIndex, e.newIndex);
+    dispatch('commit');
+  }
+
+  function onDeleteEffect(index: number) {
+    console.log("onDeleteEffect", index);
+    film.effects.splice(index, 1);
+    film.effects = film.effects;
+    dispatch('commit');
   }
 
   onMount(() => {
@@ -115,8 +123,7 @@
   class="film"
   class:variant-filled-primary={film?.selected}
   class:variant-soft-tertiary={!film?.selected}
-  draggable={false}
-  on:click={onClick}>
+  draggable={false}>
   {#if !film}
     <div class="vbox">
       <div class="new-film"use:toolTip={"新規画像"} >
@@ -124,7 +131,7 @@
       </div>
     </div>
   {:else}
-    <div class="image-panel" bind:this={imagePanel}>
+    <div class="image-panel" bind:this={imagePanel} on:click={onClick}>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -134,7 +141,7 @@
       <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
       -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"落書き"} on:click={onToggleeffectVisible}/>
+      <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -145,18 +152,15 @@
     </div>
     {#if effectVisible}
       <div class="effect-panel">
-        <ListBox on:import={onNewEffect} on:move={onMoveEffect}>
-          {#each film.effects as effect}
-            <ListBoxItem>
-              <div class="effect-item variant-ghost-primary">
-                <FilmEffect effect={effect}/>
-              </div>
-            </ListBoxItem>
+        <SortableList class="flex flex-col gap-2 w-full" animation={100} onUpdate={onUpdateEffect}>
+          {#each film.effects as effect, index}
+            <div class="effect-item variant-ghost-primary p-2">
+              <FilmEffect effect={effect} on:delete={() => onDeleteEffect(index)}/>
+            </div>
           {/each}
-          <ListBoxItem draggable={false} transferTo={1}>
-            <div class="effect-item variant-ghost-primary">+</div>
-          </ListBoxItem>
-        </ListBox>
+        </SortableList>
+        <!-- centering -->
+        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl">+</div>
       </div>
     {/if}
   {/if}
@@ -194,7 +198,6 @@
   }
   .effect-item {
     width: 100%;
-    padding: 8px;
   }
   .new-film {
     font-size: 60px;
