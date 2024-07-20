@@ -1,7 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Film, FilmStack, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
-  import { SortableList } from '@sonderbase/svelte-sortablejs';
+  //import { SortableList } from '@sonderbase/svelte-sortablejs';
+  import { useSortable } from '../../utils/sortableList'
   import { moveInArray } from '../../utils/moveInArray';
 
   // import ListBox from "../../utils/listbox/ListBox.svelte";
@@ -73,22 +74,44 @@
   }
 
   function onUpdate(e: {oldIndex: number, newIndex:number}) {
-    console.log("onUpdate", e.oldIndex, e.newIndex);
-    console.log("moveFilm(before)", e.oldIndex, e.newIndex, filmStack.films.map(f => f.index));
-    moveInArray(filmStack.films, e.oldIndex, e.newIndex);
-    console.log("moveFilm(after)", e.oldIndex, e.newIndex, filmStack.films.map(f => f.index));
+    // reversed order
+    const oldIndex = filmStack.films.length - 1 - e.oldIndex;
+    const newIndex = filmStack.films.length - 1 - e.newIndex;
+    moveInArray(filmStack.films, oldIndex, newIndex);
     dispatch('commit');
     filmStack = filmStack;
   }
 
+  function onAdd(e) {
+    console.log("onAdd", e);
+  } 
+
+  function onDragOver(ev: DragEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+
+  function onDragLeave(ev: DragEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+
+  async function onDrop(ev: DragEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+
 </script>
 
-<FilmListItem film={null} on:select={onGenerate}/>
-<SortableList class="flex flex-col gap-2 mt-2" animation={100} onUpdate={onUpdate}>
-  {#each filmStack.films.toReversed() as film}
-    <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
-  {/each}
-</SortableList>  
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="film-list-container" on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop}>
+  <FilmListItem film={null} on:select={onGenerate}/>
+  <div class="flex flex-col gap-2 mt-2" use:useSortable={{animation: 100, onUpdate, onAdd}}>
+    {#each filmStack.films.toReversed() as film (film.index)}
+      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+    {/each}
+  </div>  
+</div>
 
 <style>
   :global(.listbox) {
