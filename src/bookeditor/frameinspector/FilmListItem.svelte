@@ -3,8 +3,8 @@
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from '../bookStore';
   import FilmEffect from "./FilmEffect.svelte";
-  import { SortableList } from '@sonderbase/svelte-sortablejs';
   import { moveInArray } from '../../utils/moveInArray';
+  import { sortableList } from '../../utils/sortableList'
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -153,13 +153,13 @@
     </div>
     {#if effectVisible}
       <div class="effect-panel">
-        <SortableList class="flex flex-col gap-2 w-full" animation={100} onUpdate={onUpdateEffect}>
-          {#each film.effects as effect, index}
+        <div class="flex flex-col gap-2 w-full" use:sortableList={{animation: 100, onUpdate: onUpdateEffect}}>
+          {#each film.effects as effect, index (effect.ulid)}
             <div class="effect-item variant-ghost-primary p-2">
               <FilmEffect effect={effect} on:delete={() => onDeleteEffect(index)}/>
             </div>
           {/each}
-        </SortableList>
+        </div>
         <!-- centering -->
         <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl">+</div>
       </div>

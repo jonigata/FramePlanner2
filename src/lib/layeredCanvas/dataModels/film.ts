@@ -1,3 +1,4 @@
+import { ulid } from 'ulid';
 import { type Vector, type Rect, getRectCenter, rectToCorners, reverse2D } from "../tools/geometry/geometry";
 
 export class Media {
@@ -72,6 +73,12 @@ export class VideoMedia extends Media {
 }
 
 export class Effect {
+  ulid: string;
+
+  constructor() {
+    this.ulid = ulid();
+  }
+
   get tag(): string {
     return this.constructor.name;
   }
