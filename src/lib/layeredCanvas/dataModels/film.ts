@@ -74,6 +74,7 @@ export class VideoMedia extends Media {
 
 export class Effect {
   ulid: string;
+  outputMedia: Media;
 
   constructor() {
     this.ulid = ulid();
@@ -84,6 +85,14 @@ export class Effect {
   }
 
   clone(): Effect {
+    throw new Error("Not implemented");
+  }
+
+  setDirty() {
+    this.outputMedia = null;
+  }
+
+  async apply(inputMedia: Media): Promise<Media> { 
     throw new Error("Not implemented");
   }
 }
@@ -100,6 +109,37 @@ export class OutlineEffect extends Effect {
 
   clone(): Effect {
     return new OutlineEffect(this.color, this.width);
+  }
+
+  async apply(inputMedia: Media): Promise<Media> { 
+    console.log("apply");
+    if (this.outputMedia) {
+      return this.outputMedia;
+    }
+    if (!(inputMedia instanceof ImageMedia)) {
+      return null;
+    }
+
+    const inputImage = inputMedia.image;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const image = inputMedia.image;
+    canvas.width = image.naturalWidth + this.width * 2;
+    canvas.height = image.naturalHeight + this.width * 2;
+
+    ctx.shadowOffsetX = 10;
+    ctx.shadowOffsetY = 10;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 1;    
+    ctx.drawImage(image, this.width, this.width);
+
+    const midImage = new Image();
+    midImage.src = canvas.toDataURL();
+    await midImage.decode();
+
+    this.outputMedia = new ImageMedia(midImage);
+    return this.outputMedia;
   }
 }
 

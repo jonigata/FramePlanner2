@@ -27,6 +27,11 @@
     dispatch("delete", effect);
   }
 
+  $: onEffectChanged(effect);
+  function onEffectChanged(effect: Effect) {
+    dispatch("update", effect);
+  }
+
   // 以下スライダーのドラッグがsortable listで誤動作しないようにするためのhack
   // https://stackoverflow.com/questions/64853147/draggable-div-getting-dragged-when-input-range-slider-is-used
   let id = ulid();
@@ -36,8 +41,6 @@
     e.addEventListener("dragstart", (ev) => {
       ev.preventDefault();
     });
-    console.log(effect["color"]);
-    console.log(effect["width"]);
   });
 </script>
 

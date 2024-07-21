@@ -4,12 +4,10 @@
   export let hex: string;
 
   function onUpdate(color: string) {
-    console.log("onUpdate", color);
     hex = color;
   }
 
   function onClick(e: MouseEvent) {
-    console.log("onClick");
     const position = {x: e.clientX, y: e.clientY};
     $colorPickerStore = {color: hex, onUpdate, position};
   }

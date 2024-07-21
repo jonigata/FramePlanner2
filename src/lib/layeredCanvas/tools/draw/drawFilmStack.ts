@@ -15,12 +15,19 @@ export function drawFilmStack(ctx: CanvasRenderingContext2D, filmStack: FilmStac
     ctx.rotate(-film.rotation * Math.PI / 180);
     ctx.scale(scale * film.reverse[0], scale * film.reverse[1]);
 
-    if (film.visible) {
-      ctx.save();
-      ctx.translate(-film.media.naturalWidth * 0.5, -film.media.naturalHeight * 0.5);
-      ctx.drawImage(film.media.drawSource, 0, 0, film.media.naturalWidth, film.media.naturalHeight);
-      ctx.restore();
+    let media = film.media;
+    for (let i = film.effects.length - 1; 0 <= i; i--) {
+      if (film.effects[i].outputMedia) {
+        media = film.effects[i].outputMedia;
+        break;
+      }
     }
+
+    ctx.save();
+    ctx.translate(-media.naturalWidth * 0.5, -media.naturalHeight * 0.5);
+    ctx.drawImage(media.drawSource, 0, 0, media.naturalWidth, media.naturalHeight);
+    ctx.restore();
+
     ctx.restore();
   }
 }

@@ -1,10 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
-  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
+  import type { Film, Effect } from "../../lib/layeredCanvas/dataModels/film";
   import { redrawToken } from '../bookStore';
   import FilmEffect from "./FilmEffect.svelte";
   import { moveInArray } from '../../utils/moveInArray';
   import { sortableList } from '../../utils/sortableList'
+  import { effectProcessorStore } from '../../utils/effectprocessor/effectProcessorStore';
+  import { DelayedCommiter } from '../../utils/cancelableTask';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -22,6 +24,12 @@
   let effectVisible = false;
 
   const dispatch = createEventDispatcher();
+
+  const delayedCommiter = new DelayedCommiter(
+    () => {
+      $effectProcessorStore.push(film);
+      $effectProcessorStore = $effectProcessorStore;
+    });
 
   function onClick(e: MouseEvent) {
     dispatch('select', { film, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
@@ -92,11 +100,7 @@
 
   }
 
-  function onMoveEffect(e: CustomEvent<{ index: number, sourceIndex: number }>) {
-
-  }
-
-  function onUpdateEffect(e: {oldIndex: number, newIndex:number}) {
+  function onUpdateEffectList(e: {oldIndex: number, newIndex:number}) {
     console.log("onUpdate", e.oldIndex, e.newIndex);
     moveInArray(film.effects, e.oldIndex, e.newIndex);
     dispatch('commit');
@@ -107,6 +111,19 @@
     film.effects.splice(index, 1);
     film.effects = film.effects;
     dispatch('commit');
+  }
+
+  function onUpdateEffect(e: CustomEvent<Effect>) {
+    let flag = false;
+    for (let i = 0; i < film.effects.length; i++) {
+      if (film.effects[i].ulid === e.detail.ulid) {
+        flag = true;
+      }
+      if (flag) {
+        film.effects[i].setDirty();
+      }
+    }
+    delayedCommiter.schedule(1000);
   }
 
   onMount(() => {
@@ -153,10 +170,10 @@
     </div>
     {#if effectVisible}
       <div class="effect-panel">
-        <div class="flex flex-col gap-2 w-full" use:sortableList={{animation: 100, onUpdate: onUpdateEffect}}>
+        <div class="flex flex-col gap-2 w-full" use:sortableList={{animation: 100, onUpdate: onUpdateEffectList}}>
           {#each film.effects as effect, index (effect.ulid)}
             <div class="effect-item variant-ghost-primary p-2">
-              <FilmEffect effect={effect} on:delete={() => onDeleteEffect(index)}/>
+              <FilmEffect effect={effect} on:delete={() => onDeleteEffect(index)} on:update={onUpdateEffect}/>
             </div>
           {/each}
         </div>

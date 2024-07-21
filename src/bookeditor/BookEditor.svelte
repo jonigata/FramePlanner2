@@ -39,7 +39,7 @@
   let arrayLayer: ArrayLayer;
   let focusKeeper: FocusKeeper;
   let bubbleSnapshot: string = null;
-  let delayedCommiter = new DelayedCommiter(
+  const delayedCommiter = new DelayedCommiter(
     () => {
       commit("bubble"); 
       layeredCanvas.redraw(); 
