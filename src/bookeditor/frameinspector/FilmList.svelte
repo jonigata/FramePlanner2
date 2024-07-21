@@ -34,17 +34,23 @@
     return [];
   }
 
-  function updateList(fileList: Film[], newIsDragging: boolean, newGhostIndex: number) {
-    filmStack.films = fileList;
+  function onAcceptDrop(newIndex: number, films: Film[]) {
+    const index = filmStack.films.length - newIndex;
+    filmStack.films.splice(index, 0, ...films);
+    console.log("onAcceptDrop", newIndex, index);
+  }
+
+  function onGhost(newIsDragging: boolean, newGhostIndex: number) {
     isDragging = newIsDragging;
     ghostIndex = newGhostIndex;
-    console.log("updateList", ghostIndex);
+    console.log("ghost", ghostIndex);
   }
 
   const fileDroppableContainer = new FileDroppableContainer(
     filmStack.films, 
     importFiles,
-    updateList);
+    onAcceptDrop,
+    onGhost);
 
   function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean, metaKey: boolean }>) {
     const { film, ctrlKey, metaKey } = e.detail;

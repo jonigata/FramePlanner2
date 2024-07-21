@@ -119,23 +119,16 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
 
 export class FileDroppableContainer<T> {
   private fileList: T[];
-  private importer: (files: FileList) => T[];
-  private onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void;
   private isDragging: boolean = false;
   private ghostIndex: number = -1;
   
   constructor(
     initialList: T[],
-    importer: (files: FileList) => T[], 
-    onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void
+    private importer: (files: FileList) => T[], 
+    private onAccept: (index: number, elements: T[]) => void,
+    private onGhost: (isDragging: boolean, ghostIndex: number) => void
   ) {
     this.fileList = initialList;
-    this.importer = importer;
-    this.onUpdate = onUpdate;
-  }
-
-  private getActualIndex(index: number): number {
-    return index;
   }
 
   handleFileDrop(files: FileList, index: number): void {
@@ -143,30 +136,27 @@ export class FileDroppableContainer<T> {
     if (importedFiles.length === 0) {
       return;
     }
-    const actualIndex = this.getActualIndex(index);
-    this.fileList.splice(actualIndex, 0, ...importedFiles);
     this.isDragging = false;
     this.ghostIndex = -1;
-    this.onUpdate(this.fileList, false, -1);
+    this.onAccept(index, importedFiles);
   }
 
   handleDragUpdate(index: number): void {
-    const actualIndex = this.getActualIndex(index);
-    if (actualIndex !== this.ghostIndex) {
-      this.ghostIndex = actualIndex;
-      this.onUpdate(this.fileList, this.isDragging, this.ghostIndex);
+    if (index !== this.ghostIndex) {
+      this.ghostIndex = index;
+      this.onGhost(this.isDragging, this.ghostIndex);
     }
   }
 
   handleDragStart(): void {
     this.isDragging = true;
-    this.onUpdate(this.fileList, true, this.ghostIndex);
+    this.onGhost(true, this.ghostIndex);
   }
 
   handleDragEnd(): void {
     this.isDragging = false;
     this.ghostIndex = -1;
-    this.onUpdate(this.fileList, false, -1);
+    this.onGhost(false, -1);
   }
 
   getDropZoneProps() {
