@@ -44,8 +44,7 @@
   const fileDroppableContainer = new FileDroppableContainer(
     filmStack.films, 
     importFiles,
-    updateList,
-    false);
+    updateList);
 
   function onSelectFilm(e: CustomEvent<{ film: Film, ctrlKey: boolean, metaKey: boolean }>) {
     const { film, ctrlKey, metaKey } = e.detail;
@@ -83,10 +82,10 @@
 
   function onUpdate(e: {oldIndex: number, newIndex:number}) {
     // reversed order
-    // const oldIndex = filmStack.films.length - 1 - e.oldIndex;
-    // const newIndex = filmStack.films.length - 1 - e.newIndex;
-    const oldIndex = e.oldIndex;
-    const newIndex = e.newIndex;
+    const oldIndex = filmStack.films.length - 1 - e.oldIndex;
+    const newIndex = filmStack.films.length - 1 - e.newIndex;
+    //const oldIndex = e.oldIndex;
+    // const newIndex = e.newIndex;
     moveInArray(filmStack.films, oldIndex, newIndex);
     dispatch('commit');
     filmStack = filmStack;
@@ -97,11 +96,11 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="film-list-container">
   <div 
-    class="flex flex-col gap-2 mt-2" 
+    class="flex flex-col gap-2 mb-2" 
     use:sortableList={{animation: 100, onUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >
-    {#each filmStack.films as film, index (film.index)}
+    {#each filmStack.films.toReversed() as film, index (film.index)}
       {#if isDragging && ghostIndex === index}
         <div data-ghost class="ghost-element"/>
       {/if}

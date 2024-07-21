@@ -121,24 +121,21 @@ export class FileDroppableContainer<T> {
   private fileList: T[];
   private importer: (files: FileList) => T[];
   private onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void;
-  private isReversed: boolean;
   private isDragging: boolean = false;
   private ghostIndex: number = -1;
   
   constructor(
     initialList: T[],
     importer: (files: FileList) => T[], 
-    onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void,
-    isReversed: boolean = false
+    onUpdate: (fileList: T[], isDragging: boolean, ghostIndex: number) => void
   ) {
     this.fileList = initialList;
     this.importer = importer;
     this.onUpdate = onUpdate;
-    this.isReversed = isReversed;
   }
 
   private getActualIndex(index: number): number {
-    return this.isReversed ? this.fileList.length - index : index;
+    return index;
   }
 
   handleFileDrop(files: FileList, index: number): void {
@@ -179,9 +176,5 @@ export class FileDroppableContainer<T> {
       onDragStart: this.handleDragStart.bind(this),
       onDragEnd: this.handleDragEnd.bind(this)
     };
-  }
-
-  getFileList(): T[] {
-    return this.isReversed ? [...this.fileList].reverse() : [...this.fileList];
   }
 }
