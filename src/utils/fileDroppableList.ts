@@ -81,16 +81,17 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
     for (let i = 0; i < children.length; i++) {
       const child = children[i] as HTMLElement;
       const childRect = child.getBoundingClientRect();
-      const childBottom = childRect.bottom - rect.top;
+      const childBottom = childRect.bottom - rect.top - childRect.height / 2;
+      const isGhost = child.dataset.ghost !== undefined;
 
       if (relativeY < childBottom) {
-        if (child.dataset.ghost !== undefined) {
+        if (isGhost) {
           return realIndex;
         }
         return realIndex;
       }
 
-      if (child.dataset.ghost === undefined) {
+      if (!isGhost) {
         realIndex++;
       }
     }

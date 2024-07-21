@@ -123,7 +123,8 @@
   class="film"
   class:variant-filled-primary={film?.selected}
   class:variant-soft-tertiary={!film?.selected}
-  draggable={false}>
+  draggable={false}
+>
   {#if !film}
     <div class="vbox">
       <div class="new-film"use:toolTip={"新規画像"} >

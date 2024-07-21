@@ -5,7 +5,7 @@
   import { fileDroppableList, FileDroppableContainer } from '../../utils/fileDroppableList'
   import { moveInArray } from '../../utils/moveInArray';
   import FilmListItem from "./FilmListItem.svelte";
-
+  
   export let filmStack: FilmStack;
 
   const dispatch = createEventDispatcher();
