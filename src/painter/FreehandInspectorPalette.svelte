@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ColorPicker from 'svelte-awesome-color-picker';
   import { ColorHarmonyGenerator } from '../utils/harmony';
+	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 
   export let color: string;
   export let themeColor: string
@@ -29,7 +29,9 @@
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="flex items-center gap-1 flex flex-col">
       <span class="text-xs">テーマ</span>
-      <ColorPicker bind:hex={themeColor} label="" />
+      <span class="color-label">
+        <ColorPickerLabel bind:hex={themeColor}/>
+      </span>
     </label>
   </div>
   <div class="flex space-x-1">
@@ -48,18 +50,8 @@
 </div>
 
 <style>
-  .color-picker :global(.color-picker) {
+  .color-label {
     width: 40px;
-  }
-  .color-picker :global(.container .color) {
-    width: 35px;
     height: 15px;
-    border-radius: 4px;
   }
-  .color-picker :global(.container .alpha) {
-    width: 35px;
-    height: 15px;
-    border-radius: 4px;
-  }
-
 </style>

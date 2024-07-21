@@ -43,11 +43,11 @@
     background-size: 20px 20px;
     background-position: 0 0, 10px 10px;
     background-color: white;
-    border-radius: 20%;
+    border-radius: 4px;
   }  
   .foreground {
     width: 100%;
     height: 100%;
-    border-radius: 20%;
+    border-radius: 4px;
   }
 </style>
