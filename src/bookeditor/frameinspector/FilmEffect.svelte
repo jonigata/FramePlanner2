@@ -3,7 +3,7 @@
   import type { Effect } from "../../lib/layeredCanvas/dataModels/film";
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../../utils/NumberEdit.svelte';
-	import ColorPicker from 'svelte-awesome-color-picker';
+	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { ulid } from 'ulid';
   import { onMount } from "svelte";
 
@@ -70,7 +70,7 @@
         <div class="row">
             <div class="label">{e.label}</div>
           <div class="color-label">
-            <ColorPicker bind:hex={effect[e.name]} label=""/>
+            <ColorPickerLabel bind:hex={effect[e.name]}/>
           </div>
         </div>
       {/if}
@@ -112,16 +112,6 @@
   .color-label :global(.color-picker) {
     width: 30px;
   }
-  .color-label :global(.container .color) {
-    width: 30px;
-    height: 15px;
-    border-radius: 4px;
-  }
-  .color-label :global(.container .alpha) {
-    width: 30px;
-    height: 15px;
-    border-radius: 4px;
-  }
   h1 {
     font-family: '源暎エムゴ';
     font-size: 16px;
@@ -136,5 +126,11 @@
     top: 0;
     width: 16px;
     height: 16px;
+  }
+  .color-label {
+    width: 30px;
+    height: 20px;
+    margin-left: 4px;
+    margin-right: 4px;
   }
 </style>

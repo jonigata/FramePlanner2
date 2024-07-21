@@ -1,10 +1,11 @@
 <script lang="ts">
   import { pageInspectorTarget } from './pageInspectorStore';
   import Drawer from '../../utils/Drawer.svelte'
-	import ColorPicker from 'svelte-awesome-color-picker';
+	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import { redrawToken, mainBook } from '../bookStore';
   import { commitBook } from '../book';
+  import { toolTip } from '../../utils/passiveToolTipStore';
 
 
   $: if ($pageInspectorTarget) {
@@ -29,8 +30,18 @@
   <Drawer placement="right" open={$pageInspectorTarget != null} size="350px" on:clickAway={onClickAway}>
     <div class="drawer-content">
       <div class="flex flex-col gap-2 m-2 paper-color-picker">
-        <h1>背景色</h1><ColorPicker bind:hex={$pageInspectorTarget.paperColor} label=""/>
-        <h1>枠色</h1><ColorPicker bind:hex={$pageInspectorTarget.frameColor} label="" />
+        <h1>背景色</h1>
+        <div class="flex flex-col items-center">
+          <div class="color-label" use:toolTip={"背景色"}>
+            <ColorPickerLabel bind:hex={$pageInspectorTarget.paperColor}/>
+          </div>
+        </div>
+        <h1>枠色</h1>
+        <div class="flex flex-col items-center">
+          <div class="color-label" use:toolTip={"枠色"}>
+            <ColorPickerLabel bind:hex={$pageInspectorTarget.frameColor}/>
+          </div>
+        </div>
         <h1>枠の幅</h1><RangeSlider name="line" bind:value={$pageInspectorTarget.frameWidth} max={10} step={1} style="width:100px;"/>
       </div>
     </div>
@@ -59,5 +70,11 @@
     width: 80px;
     height: 15px;
     border-radius: 4px;
+  }
+  .color-label {
+    width: 50px;
+    height: 20px;
+    margin-left: 4px;
+    margin-right: 4px;
   }
 </style>

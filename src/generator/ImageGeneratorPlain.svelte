@@ -1,7 +1,7 @@
 <script lang="ts">
   import { makePlainImage } from "../utils/imageUtil";
   import SliderEdit from '../utils/SliderEdit.svelte';
-	import ColorPicker from 'svelte-awesome-color-picker';
+	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 
   export let chosen: HTMLImageElement = null;
 
@@ -20,7 +20,9 @@
       <SliderEdit label="width" bind:value={width} min={512} max={1024} step={256}/>
       <SliderEdit label="height" bind:value={height} min={512} max={1024} step={256}/>
     </div>
-    <ColorPicker bind:hex={color} label="" />
+    <div class="color-label">
+      <ColorPickerLabel bind:hex={color}/>
+    </div>
   </div>
 
   <div class="hbox gap-5">
@@ -40,5 +42,11 @@
   }
   .generate-button {
     width: 160px;
+  }
+  .color-label {
+    width: 30px;
+    height: 20px;
+    margin-left: 4px;
+    margin-right: 4px;
   }
 </style>
