@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 public/ads
+junk
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +24,5 @@ public/ads
 *.sln
 *.sw?
 .firebase/*
+.editorconfig
+
