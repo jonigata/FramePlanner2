@@ -52,7 +52,8 @@
   import ToolBar from './toolbar/ToolBar.svelte'
   import AdContainer from './utils/AdContainer.svelte';
   import Downloader from './downloader/Downloader.svelte';
-  import TemplateChooser from './bookeditor/TemplateChooser.svelte'
+  import TemplateChooser from './bookeditor/TemplateChooser.svelte';
+  import ColorPickerDialog from './utils/colorpicker/ColorPickerDialog.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -134,6 +135,7 @@
 <MaterialBucket/>
 <BubbleBucket/>
 <Downloader/>
+<ColorPickerDialog/>
 
 <!-- root items -->
 <MaterialBucketButton />

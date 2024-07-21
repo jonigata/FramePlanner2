@@ -6,7 +6,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from '../../utils/ExponentialRangeSlider.svelte';
-	import ColorPicker from 'svelte-awesome-color-picker';
+	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { tick } from 'svelte';
   import { toolTip } from '../../utils/passiveToolTipStore';
   import { fontChooserOpen, chosenFont } from './fontStore';
@@ -193,15 +193,15 @@
         <div class="flex items-center">
           <div class="label">塗りつぶし</div>
           <div class="color-label" use:toolTip={"フォント色"}>
-            <ColorPicker bind:hex={$bubble.fontColor} label=""/>
+            <ColorPickerLabel bind:hex={$bubble.fontColor}/>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <div class="label">フチの太さ</div>
           <RangeSlider name="outlinewidth" bind:value={$outlineWidth} max={20} step={1} style="width:80px;"/>
-          <div class="color-label flex items-center" use:toolTip={"フチの色"}>
-            <div class="label">フチの色</div>
-            <ColorPicker bind:hex={$bubble.outlineColor} label=""/>
+          <div class="label">フチの色</div>
+          <div class="color-label" use:toolTip={"フチの色"}>
+            <ColorPickerLabel bind:hex={$bubble.outlineColor}/>
           </div>
         </div>
         <div class="flex gap-2 items-center">
@@ -237,15 +237,15 @@
             <div class="flex items-center">
               <div class="label">塗りつぶし</div>
               <div class="color-label" use:toolTip={"フキダシ背景色"}>
-                <ColorPicker bind:hex={$bubble.fillColor} label=""/>
+                <ColorPickerLabel bind:hex={$bubble.fillColor}/>
               </div>
             </div>
             <div class="flex items-center gap-2">
               <div class="label">線の太さ</div>
               <RangeSlider name="outlinewidth" bind:value={$strokeWidth} max={20} step={1} style="width:80px;"/>
-              <div class="color-label flex items-center" use:toolTip={"フキダシのフチの色"}>
-                <div class="label">線の色</div>
-                <ColorPicker bind:hex={$bubble.strokeColor} label=""/>
+              <div class="label">線の色</div>
+              <div class="color-label" use:toolTip={"フキダシのフチの色"}>
+                <ColorPickerLabel bind:hex={$bubble.strokeColor}/>
               </div>
             </div>
             <div class="flex items-center">
@@ -293,16 +293,16 @@
 <style>
   .drawer-content {
     width: 350px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     padding: 8px;
     gap: 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
-  }
-  .drawer-outer :global(.panel) {
-    overflow: visible; /* こうしないとColorPickerが埋まる */
   }
   .textarea {
     align-self: stretch;
@@ -343,18 +343,11 @@
   .embed {
     margin-left: 8px;
   }
-  .color-label :global(.color-picker) {
-    width: 20px;
-  }
-  .color-label :global(.container .color) {
-    width: 15px;
-    height: 15px;
-    border-radius: 4px;
-  }
-  .color-label :global(.container .alpha) {
-    width: 15px;
-    height: 15px;
-    border-radius: 4px;
+  .color-label {
+    width: 30px;
+    height: 20px;
+    margin-left: 4px;
+    margin-right: 4px;
   }
   .reset-image {
     width: 24px;
