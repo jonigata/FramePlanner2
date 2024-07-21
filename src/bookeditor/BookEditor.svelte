@@ -49,6 +49,7 @@
   let painter: Painter;
   let imageProvider: ImageProvider;
 
+  let forceRebuild = false;
   let pageIds: string[] = [];
   let readingDirection: ReadingDirection;
   let wrapMode: WrapMode;
@@ -196,8 +197,21 @@
     commit(null);
   }
 
+  $: onChangePaperSize($newPageProperty.paperSize);
+  function onChangePaperSize(paperSize: [number, number]) {
+    console.log("onChangePaperSize");
+    if ($mainBook == null) { return; }
+    for (const page of $mainBook.pages) {
+      page.paperSize = paperSize;
+    }
+    forceRebuild = true;
+    $mainBook = $mainBook;
+    commit(null);
+  }
+
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
+    console.log("onChangeBook");
     if (!canvas || !book) { return; }
 
     if (arrayLayer && 
@@ -222,21 +236,24 @@
     }
 
     const newPageIds = book.pages.map(p => p.id);
-    if (arrayLayer) {
-      if (pageIds.join(",") === newPageIds.join(",")) {
-        // frames/bubblesの再設定だけは毎回しておく
-        let i = 0;
-        for (const paper of arrayLayer.array.papers) {
-          const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
-          rendererLayer.setBubbles(book.pages[i].bubbles);
-          rendererLayer.setFrameTree(book.pages[i].frameTree);
-          i++;
-        } 
-        layeredCanvas.redraw();
-        return;
+    if (!forceRebuild) {
+      if (arrayLayer) {
+        if (pageIds.join(",") === newPageIds.join(",")) {
+          // frames/bubblesの再設定だけは毎回しておく
+          let i = 0;
+          for (const paper of arrayLayer.array.papers) {
+            const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
+            rendererLayer.setBubbles(book.pages[i].bubbles);
+            rendererLayer.setFrameTree(book.pages[i].frameTree);
+            i++;
+          } 
+          layeredCanvas.redraw();
+          return;
+        }
       }
     }
     pageIds = newPageIds;
+    forceRebuild = false;
 
     console.log("*********** buildBookEditor from BookEditor");
     if (layeredCanvas) {
