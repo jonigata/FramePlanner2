@@ -1,3 +1,3 @@
 import { createAsyncStore } from "../utils/asyncStore";
 
-export const triggerTemplateChoise = createAsyncStore<number>();
+export const triggerTemplateChoice = createAsyncStore<number>();

@@ -9,10 +9,11 @@
     "devbuild": "vite build --mode development",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.svelte-check.json",
-    "deploy": "firebase deploy --only hosting",
+    "deploy": "npm run stamp && firebase deploy --only hosting",
     "vitest": "vitest",
     "deploy:preview": "firebase hosting:channel:deploy preview",
-    "list-preview": "firebase hosting:channel:list"
+    "list-preview": "firebase hosting:channel:list",
+    "stamp": "git rev-parse HEAD > public/stamp.txt"
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "^1.0.0",
