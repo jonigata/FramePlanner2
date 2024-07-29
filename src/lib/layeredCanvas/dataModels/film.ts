@@ -1,5 +1,7 @@
 import { ulid } from 'ulid';
 import { type Vector, type Rect, getRectCenter, rectToCorners, reverse2D } from "../tools/geometry/geometry";
+import { generateDF } from 'fastsdf';
+import parseColor from 'color-parse';
 
 export class Media {
   fileId: { [key: string]: string}; // filesystemId => fileId
@@ -122,23 +124,28 @@ export class OutlineEffect extends Effect {
 
     const inputImage = inputMedia.image;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const image = inputMedia.image;
-    canvas.width = image.naturalWidth + this.width * 2;
-    canvas.height = image.naturalHeight + this.width * 2;
+    const baseWidth = Math.max(inputImage.naturalWidth, inputImage.naturalHeight);
+    const width = this.width * baseWidth;
+    console.log(width, baseWidth, this.width);
 
-    ctx.shadowOffsetX = 10;
-    ctx.shadowOffsetY = 10;
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 1;    
-    ctx.drawImage(image, this.width, this.width);
+    const c = parseColor(this.color);
+    const f = (t: number) => 0.1 <= t ? 1 : t * 10;
+    const dfCanvas: HTMLCanvasElement = await generateDF(
+      inputImage, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
 
-    const midImage = new Image();
-    midImage.src = canvas.toDataURL();
-    await midImage.decode();
+    const targetCanvas = document.createElement('canvas');
+    targetCanvas.width = inputImage.naturalWidth;
+    targetCanvas.height = inputImage.naturalHeight;
+    const ctx = targetCanvas.getContext('2d');
+    ctx.drawImage(inputImage, 0, 0);
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.drawImage(dfCanvas, 0, 0);
 
-    this.outputMedia = new ImageMedia(midImage);
+    const dfImage = new Image();
+    dfImage.src = targetCanvas.toDataURL();
+    await dfImage.decode();
+
+    this.outputMedia = new ImageMedia(dfImage);
     return this.outputMedia;
   }
 }
