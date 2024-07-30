@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
-  import type { Film, Effect } from "../../lib/layeredCanvas/dataModels/film";
+  import { createEventDispatcher } from 'svelte';
+  import { Film } from "../../lib/layeredCanvas/dataModels/film";
+  import { Effect } from "../../lib/layeredCanvas/dataModels/effect";
   import { redrawToken } from '../bookStore';
   import FilmEffect from "./FilmEffect.svelte";
   import { moveInArray } from '../../utils/moveInArray';

@@ -1,6 +1,7 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
-import { Film, FilmStack, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
+import { Film, FilmStack, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
+import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";

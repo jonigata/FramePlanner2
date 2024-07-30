@@ -1,6 +1,6 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { type FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf } from '../dataModels/frameTree';
-import { type Film, ImageMedia } from '../dataModels/film';
+import { type Film } from '../dataModels/film';
+import { ImageMedia } from '../dataModels/media';
 import type { Vector } from "../tools/geometry/geometry";
 import { type Trapezoid, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";

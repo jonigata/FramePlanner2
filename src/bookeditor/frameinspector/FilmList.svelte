@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { Film, FilmStack, ImageMedia } from "../../lib/layeredCanvas/dataModels/film";
+  import { Film, FilmStack } from "../../lib/layeredCanvas/dataModels/film";
+  import { ImageMedia } from '../../lib/layeredCanvas/dataModels/media';
   import { sortableList } from '../../utils/sortableList'
   import { fileDroppableList, FileDroppableContainer } from '../../utils/fileDroppableList'
   import { moveInArray } from '../../utils/moveInArray';

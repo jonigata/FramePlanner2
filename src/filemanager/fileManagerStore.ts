@@ -3,7 +3,8 @@ import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem
 import type { Page, Book, WrapMode, ReadingDirection, Prefix } from "../bookeditor/book.js";
 import { commitBook } from "../bookeditor/book.js";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
-import { Film, ImageMedia } from "../lib/layeredCanvas/dataModels/film";
+import { Film } from "../lib/layeredCanvas/dataModels/film";
+import { ImageMedia } from "../lib/layeredCanvas/dataModels/media";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";

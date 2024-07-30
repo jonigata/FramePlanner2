@@ -1,6 +1,7 @@
 import { Layer, sequentializePointer, type Dragging } from "../system/layeredCanvas";
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
-import { Film, Media, ImageMedia, VideoMedia, FilmStackTransformer } from "../dataModels/film";
+import { Film, FilmStackTransformer } from "../dataModels/film";
+import { Media, ImageMedia, VideoMedia } from "../dataModels/media";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";

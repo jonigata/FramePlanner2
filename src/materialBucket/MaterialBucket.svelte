@@ -9,7 +9,8 @@
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
-  import { Film, ImageMedia } from '../lib/layeredCanvas/dataModels/film';
+  import { Film } from '../lib/layeredCanvas/dataModels/film';
+  import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createCanvasFromBlob, createCanvasFromImage } from '../utils/imageUtil';
 
   let gallery: HTMLCanvasElement[];

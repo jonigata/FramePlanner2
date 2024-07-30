@@ -4,7 +4,8 @@
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
-  import { Film, ImageMedia, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
+  import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
+  import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
