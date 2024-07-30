@@ -11,8 +11,8 @@
 
   export let busy: boolean;
   export let prompt: string;
-  export let gallery: HTMLImageElement[];
-  export let chosen: HTMLImageElement;
+  export let gallery: HTMLCanvasElement[];
+  export let chosen: HTMLCanvasElement;
 
   let url: string = "http://localhost:7860";
   let imageRequest = {
@@ -72,8 +72,8 @@
     }
   });
 
-  async function generateWhiteImage() {
-    const img = await makePlainImage(imageRequest.width, imageRequest.height, "#ffffff");
+  function generateWhiteImage() {
+    const img = makePlainImage(imageRequest.width, imageRequest.height, "#ffffff");
     gallery.push(img);
     gallery = gallery;
   }
@@ -176,7 +176,7 @@
   </div>
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:images={gallery} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <KeyValueStorage bind:this={keyValueStorage} dbName={"stable-diffusion"} storeName={"default-parameters"}/>

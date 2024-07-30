@@ -7,7 +7,7 @@
   import { sortableList } from '../../utils/sortableList'
   import { effectProcessorStore } from '../../utils/effectprocessor/effectProcessorStore';
   import { DelayedCommiter } from '../../utils/cancelableTask';
-  import SpreadCanvas from '../../videomaker/SpreadCanvas.svelte';
+  import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -204,21 +204,6 @@
     width: 100%;
     height: 60px;
     color: black;
-  }
-  .image-container {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
-                      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
-    background-size: 20px 20px;
-    background-position: 0 0, 10px 10px;
-    background-color: white;
-  }
-  .film-content {
-    position: absolute;
-    width: 100%;
-    height: 100%;
   }
   .trash-icon {
     position: absolute;

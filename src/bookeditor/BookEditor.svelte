@@ -32,7 +32,8 @@
   import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoise } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
-  import { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
+  import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
+  import { createImageFromCanvas } from "../utils/imageUtil";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -497,9 +498,9 @@
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leafLayout = findLayoutOf(pageLayout, leaf);
     if (r) {
-      const { image, prompt } = r;
+      const { canvas, prompt } = r;
       const film = new Film();
-      film.media = new ImageMedia(image);
+      film.media = new ImageMedia(canvas);
       film.prompt = prompt;
       fit.frame.filmStack.films.push(film);
       fit.frame.prompt = prompt;
@@ -517,7 +518,7 @@
     const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
     if (r == null) { return; }
     const film = new Film();
-    film.media = new ImageMedia(r.image);
+    film.media = new ImageMedia(r.canvas);
     const paperSize = bit.page.paperSize;
     const bubbleSize = bubble.getPhysicalSize(paperSize);
     const scale = minimumBoundingScale(film.media.size, bubbleSize);
@@ -536,14 +537,11 @@
     
     console.log("B");
     const film = fit.commandTargetFilm;
-    const canvas = await predict(imageMedia.image);
+    const canvas = await predict(await createImageFromCanvas(imageMedia.canvas));
     console.log("C");
     const dataURL = canvas.toDataURL("image/png");
-    const newImage = new Image();
-    newImage.src = dataURL;
-    await newImage.decode();
     console.log("D");
-    film.media = new ImageMedia(newImage);
+    film.media = new ImageMedia(canvas);
     layeredCanvas.redraw();
     commit(null);
     $loading = false;
@@ -561,12 +559,8 @@
     await loadModel((s: string) => console.log(s));
     
     const film = bit.commandTargetFilm;
-    const canvas = await predict(imageMedia.image);
-    const dataURL = canvas.toDataURL("image/png");
-    const newImage = new Image();
-    newImage.src = dataURL;
-    await newImage.decode();
-    film.media = new ImageMedia(newImage);
+    const canvas = await predict(await createImageFromCanvas(imageMedia.canvas));
+    film.media = new ImageMedia(canvas);
     layeredCanvas.redraw();
     commit(null);
     $loading = false;

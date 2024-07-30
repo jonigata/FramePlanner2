@@ -3,25 +3,26 @@
   import { materialBucketOpen } from './materialBucketStore';
 	import Gallery from '../generator/Gallery.svelte';
   import { loading } from '../utils/loadingStore'
-  import { deleteMaterialImage, fileSystem, saveMaterialImage } from '../filemanager/fileManagerStore';
+  import { deleteMaterialCanvas, fileSystem, saveMaterialCanvas } from '../filemanager/fileManagerStore';
   import type { Folder } from '../lib/filesystem/fileSystem';
   import { dropzone } from '../utils/dropzone';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
   import { Film, ImageMedia } from '../lib/layeredCanvas/dataModels/film';
+  import { createCanvasFromBlob, createCanvasFromImage } from '../utils/imageUtil';
 
-  let gallery: HTMLImageElement[];
+  let gallery: HTMLCanvasElement[];
 
-  function onChooseImage(e: CustomEvent<HTMLImageElement>) {
+  function onChooseImage(e: CustomEvent<HTMLCanvasElement>) {
     console.log("onChooseImage");
 
     const page = $bookEditor.getFocusedPage();
 
-    const image = e.detail;
+    const canvas = e.detail;
     const bubble = new Bubble();
     const paperSize = page.paperSize;
-    const imageSize = [image.naturalWidth, image.naturalHeight];
+    const imageSize = [canvas.width, canvas.height];
     const x = Math.random() * (paperSize[0] - imageSize[0]);
     const y = Math.random() * (paperSize[1] - imageSize[1]);
     bubble.setPhysicalRect(paperSize, [x, y, ...imageSize] as Rect);
@@ -30,7 +31,7 @@
     bubble.initOptions();
     bubble.text = "";
     const film = new Film();
-    film.media = new ImageMedia(image);
+    film.media = new ImageMedia(canvas);
     bubble.filmStack.films.push(film);
     page.bubbles.push(bubble);
     $bookEditor.focusBubble(page, bubble);
@@ -44,19 +45,17 @@
 
   function onDelete(e: CustomEvent<HTMLImageElement>) {
     console.log("onDelete");
-    deleteMaterialImage($fileSystem, e.detail["materialBindId"]);
+    deleteMaterialCanvas($fileSystem, e.detail["materialBindId"]);
   }
 
   async function onFileDrop(files: FileList) {
     console.log("onFileDrop", files);
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      await img.decode();
-      const bindId = await saveMaterialImage($fileSystem, img);
-      img["materialBindId"] = bindId;
-      gallery.push(img);
+      const canvas = await createCanvasFromBlob(file);
+      const bindId = await saveMaterialCanvas($fileSystem, canvas);
+      canvas["materialBindId"] = bindId;
+      gallery.push(canvas);
     }
     gallery = gallery;
   }
@@ -89,7 +88,7 @@
   <Drawer open={$materialBucketOpen} size="720px" on:clickAway={() => $materialBucketOpen = false}>
     <div class="dropzone" use:dropzone={onFileDrop}>
       <div class="drawer-content" use:dropzone={onFileDrop}>
-        <Gallery columnWidth={220} bind:images={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+        <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
       </div>
     </div>  
   </Drawer>

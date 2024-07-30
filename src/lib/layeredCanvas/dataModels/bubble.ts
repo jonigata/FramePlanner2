@@ -55,7 +55,7 @@ export class Bubble {
   appearanceDelay: number; // ムービー生成時に使う出現までの時間(コマ単位)
   hidesText: boolean; // ムービー生成時に使うテキスト非表示フラグ
   prompt: string;
-  gallery: HTMLImageElement[];
+  gallery: HTMLCanvasElement[];
 
   renderInfo: BubbleRenderInfo;
 

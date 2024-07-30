@@ -20,20 +20,18 @@ export class Media {
 
   get naturalWidth(): number {return 0;}
   get naturalHeight(): number {return 0;}
-  get drawSource(): HTMLImageElement | HTMLVideoElement {return null;}
+  get drawSource(): HTMLCanvasElement | HTMLVideoElement {return null;}
   get size(): Vector {return [this.naturalWidth, this.naturalHeight];}
 }
 
 export class ImageMedia extends Media {
-  image: HTMLImageElement;
-  constructor(image: HTMLImageElement) {
+  constructor(public canvas: HTMLCanvasElement) {
     super();
-    this.image = image;
   }
 
-  get naturalWidth(): number { return this.image.naturalWidth; }
-  get naturalHeight(): number { return this.image.naturalHeight; }
-  get drawSource(): HTMLImageElement { return this.image; }
+  get naturalWidth(): number { return this.canvas.width; }
+  get naturalHeight(): number { return this.canvas.height; }
+  get drawSource(): HTMLCanvasElement { return this.canvas; }
 }
 
 export class VideoMedia extends Media {
@@ -122,30 +120,26 @@ export class OutlineEffect extends Effect {
       return null;
     }
 
-    const inputImage = inputMedia.image;
+    const inputCanvas = inputMedia.canvas;
 
-    const baseWidth = Math.max(inputImage.naturalWidth, inputImage.naturalHeight);
+    const baseWidth = Math.max(inputCanvas.width, inputCanvas.height);
     const width = this.width * baseWidth;
     console.log(width, baseWidth, this.width);
 
     const c = parseColor(this.color);
     const f = (t: number) => 0.1 <= t ? 1 : t * 10;
     const dfCanvas: HTMLCanvasElement = await generateDF(
-      inputImage, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
+      inputCanvas, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
 
     const targetCanvas = document.createElement('canvas');
-    targetCanvas.width = inputImage.naturalWidth;
-    targetCanvas.height = inputImage.naturalHeight;
+    targetCanvas.width = inputCanvas.width;
+    targetCanvas.height = inputCanvas.height;
     const ctx = targetCanvas.getContext('2d');
-    ctx.drawImage(inputImage, 0, 0);
+    ctx.drawImage(inputCanvas, 0, 0);
     ctx.globalCompositeOperation = 'destination-over';
     ctx.drawImage(dfCanvas, 0, 0);
 
-    const dfImage = new Image();
-    dfImage.src = targetCanvas.toDataURL();
-    await dfImage.decode();
-
-    this.outputMedia = new ImageMedia(dfImage);
+    this.outputMedia = new ImageMedia(targetCanvas);
     return this.outputMedia;
   }
 }

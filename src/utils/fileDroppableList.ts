@@ -1,5 +1,5 @@
 type DropZoneOptions = {
-  onFileDrop: (files: FileList, index: number) => void;
+  onFileDrop: (files: FileList, index: number) => Promise<void>;
   onDragUpdate: (index: number) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -118,21 +118,18 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
 }
 
 export class FileDroppableContainer<T> {
-  private fileList: T[];
   private isDragging: boolean = false;
   private ghostIndex: number = -1;
   
   constructor(
-    initialList: T[],
-    private importer: (files: FileList) => T[], 
+    private importer: (files: FileList) => Promise<T[]>, 
     private onAccept: (index: number, elements: T[]) => void,
     private onGhost: (isDragging: boolean, ghostIndex: number) => void
   ) {
-    this.fileList = initialList;
   }
 
-  handleFileDrop(files: FileList, index: number): void {
-    const importedFiles = this.importer(files);
+  async handleFileDrop(files: FileList, index: number): Promise<void> {
+    const importedFiles = await this.importer(files);
     if (importedFiles.length === 0) {
       return;
     }

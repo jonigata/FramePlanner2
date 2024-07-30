@@ -5,64 +5,64 @@
   import reference from '../assets/reference.png';
   import referenceSelected from '../assets/reference-selected.png';
 
-  export let image: HTMLImageElement = null;
+  export let canvas: HTMLCanvasElement = null;
   export let width = 160;
-  export let chosen: HTMLImageElement = null;
-  export let refered: HTMLImageElement = null;
+  export let chosen: HTMLCanvasElement = null;
+  export let refered: HTMLCanvasElement = null;
   let container: HTMLDivElement;
 
   const dispatch = createEventDispatcher();
 
   function onClick() {
     console.log("onClick");
-    if (chosen === image) {
-      dispatch("commit", image);
+    if (chosen === canvas) {
+      dispatch("commit", canvas);
       return;
     }
-    chosen = image;
+    chosen = canvas;
   }
 
-  function onDelete(e: MouseEvent, image: HTMLImageElement) {
+  function onDelete(e: MouseEvent, canvas: HTMLCanvasElement) {
     console.log("onDelete");
     e.stopPropagation();
-    dispatch("delete", image);
+    dispatch("delete", canvas);
   }
 
-  function onRefer(e: MouseEvent, image: HTMLImageElement) {
+  function onRefer(e: MouseEvent, canvas: HTMLCanvasElement) {
     console.log("onRefer");
     e.stopPropagation();
-    dispatch("refer", image);
+    dispatch("refer", canvas);
   }
 
   function onDragStart(e: DragEvent) {
     console.log("onDragStart");
-    dispatch("dragstart", image);
+    dispatch("dragstart", canvas);
   }
 
   // fix aspect ratio
   function getHeight() {
-    return (image.naturalHeight / image.naturalWidth) * width;
+    return (canvas.height / canvas.width) * width;
   }
 
   onMount(() => {
-    console.log("change image size", image.width, image.height, $imageGeneratorTarget);
+    console.log("change image size", canvas.width, canvas.height, $imageGeneratorTarget);
     if ($imageGeneratorTarget) {
-      image.width = width;
-      image.height = getHeight();
+      canvas.width = width;
+      canvas.height = getHeight();
     }
-    container.appendChild(image);
-    image.ondragstart = onDragStart;
+    container.appendChild(canvas);
+    canvas.ondragstart = onDragStart;
   });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="frame" class:selected={chosen === image} bind:this={container} on:click={onClick} style="width: {width}px; height: {getHeight()};">
-  <div class="delete-button" on:click={e => onDelete(e, image)}>
+<div class="frame" class:selected={chosen === canvas} bind:this={container} on:click={onClick} style="width: {width}px; height: {getHeight()};">
+  <div class="delete-button" on:click={e => onDelete(e, canvas)}>
     <img src={drop} alt="delete" />
   </div>
-  <div class="reference-button" on:click={e => onRefer(e, image)}>
-    {#if refered === image}
+  <div class="reference-button" on:click={e => onRefer(e, canvas)}>
+    {#if refered === canvas}
       <img src={referenceSelected} alt="reference"/>
     {:else}
       <img src={reference} alt="reference" />

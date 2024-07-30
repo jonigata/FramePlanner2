@@ -8,7 +8,7 @@
   export let min: number = 1;
   export let max: number = 100;
   export let allowDecimal = false;
-  export let id = null;
+  export const id = null;
 
   const dispatch = createEventDispatcher();
   let original: number;

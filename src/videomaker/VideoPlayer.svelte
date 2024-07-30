@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SpreadCanvas from './SpreadCanvas.svelte';
+  import SpreadCanvas from '../utils/SpreadCanvas.svelte';
   import SeekBar from './SeekBar.svelte';
   import { buildBookRenderer, type DisplayProgramEntry } from './buildProgram';
   import { onDestroy, onMount, tick } from 'svelte';

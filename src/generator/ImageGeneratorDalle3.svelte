@@ -5,11 +5,12 @@
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import OpenAI from 'openai';
+  import { createCanvasFromImage } from '../utils/imageUtil';
 
   export let busy: boolean;
   export let prompt: string;
-  export let gallery: HTMLImageElement[];
-  export let chosen: HTMLImageElement;
+  export let gallery: HTMLCanvasElement[];
+  export let chosen: HTMLCanvasElement;
 
   let imageRequest = {};
   let progress = 0;
@@ -46,8 +47,9 @@
       const imageJson = response.data[0].b64_json;
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
+      const canvas = createCanvasFromImage(img);
 
-      gallery.push(img);
+      gallery.push(canvas);
       gallery = gallery;
       progress = 1;
 
@@ -90,7 +92,7 @@
   </div>
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:images={gallery} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>

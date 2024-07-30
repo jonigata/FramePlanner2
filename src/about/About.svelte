@@ -5,6 +5,7 @@
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
   import generateImageIcon from '../assets/generate-image.png'
   import { postContact } from '../firebase';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   let contactText = "";
 

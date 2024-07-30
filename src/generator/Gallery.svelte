@@ -2,7 +2,7 @@
   import { createEventDispatcher, tick } from "svelte";
   import GalleryImage from "./GalleryImage.svelte";
 
-  export let images: HTMLImageElement[] = [];
+  export let canvases: HTMLCanvasElement[] = [];
   export let columnWidth = 220;
 
   export let chosen = null;
@@ -10,17 +10,17 @@
 
   const dispatch = createEventDispatcher();
 
-  function onCommit(e: CustomEvent<HTMLImageElement>) {
+  function onCommit(e: CustomEvent<HTMLCanvasElement>) {
     dispatch("commit", e.detail);
   }
 
-  async function onDelete(e: CustomEvent<HTMLImageElement>) {
-    console.log(images.indexOf(e.detail));
-    images.splice(images.indexOf(e.detail), 1);
-    const newImages = images;
-    images = [];
+  async function onDelete(e: CustomEvent<HTMLCanvasElement>) {
+    console.log(canvases.indexOf(e.detail));
+    canvases.splice(canvases.indexOf(e.detail), 1);
+    const newImages = canvases;
+    canvases = [];
     await tick();
-    images = newImages;
+    canvases = newImages;
     dispatch("delete", e.detail);
   }
 
@@ -34,8 +34,8 @@
 </script>
 
 <div>
-  {#each images as image}
-    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} image={image} on:commit={onCommit} on:delete={onDelete} on:refer={onRefer} on:dragstart={onDragStart}/>
+  {#each canvases as canvas}
+    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} canvas={canvas} on:commit={onCommit} on:delete={onDelete} on:refer={onRefer} on:dragstart={onDragStart}/>
   {/each}
 </div>
 

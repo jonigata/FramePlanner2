@@ -459,10 +459,10 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  createImageBubble(image: HTMLImageElement): void {
+  createImageBubble(canvas: HTMLCanvasElement): void {
     const bubble = new Bubble();
     const paperSize = this.getPaperSize();
-    const imageSize = [image.naturalWidth, image.naturalHeight];
+    const imageSize = [canvas.width, canvas.height];
     const x = Math.random() * (paperSize[0] - imageSize[0]);
     const y = Math.random() * (paperSize[1] - imageSize[1]);
     bubble.setPhysicalRect(paperSize, [x, y, ...imageSize] as Rect);
@@ -471,11 +471,11 @@ export class BubbleLayer extends Layer {
     bubble.initOptions();
     bubble.text = "";
 
-    const minImageDimension = Math.min(image.naturalWidth, image.naturalHeight) ;
+    const minImageDimension = Math.min(...imageSize) ;
     const minPageDimension = Math.min(paperSize[0], paperSize[1]);
     const n_scale = 1 / (minPageDimension / minImageDimension);
 
-    const film = this.newImageFilm(image);
+    const film = this.newImageFilm(canvas);
     film.n_scale = n_scale;
     bubble.filmStack.films.push(film);
     this.bubbles.push(bubble);
@@ -692,11 +692,11 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  dropped(position: Vector, image: HTMLImageElement): boolean {
+  dropped(position: Vector, canvas: HTMLCanvasElement): boolean {
     if (!this.interactable) { return; }
 
     if (this.createBubbleIcon.contains(position)) {
-      this.createImageBubble(image);
+      this.createImageBubble(canvas);
       this.onCommit();
       return true;
     }
@@ -705,7 +705,7 @@ export class BubbleLayer extends Layer {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, position)) {
-        const film = this.newImageFilm(image);
+        const film = this.newImageFilm(canvas);
         const masterBubble = this.getGroupMaster(bubble);
         masterBubble.filmStack.films.push(film);
         const bubbleSize = masterBubble.getPhysicalSize(paperSize);
@@ -774,7 +774,7 @@ export class BubbleLayer extends Layer {
     this.scaleIcon.position = cp([1,1],[-2,0]);
   }
 
-  async *createBubble(dragStart: Vector, createsSurface: boolean): AsyncGenerator<void, void, Vector> {
+  *createBubble(dragStart: Vector, createsSurface: boolean): Generator<void, void, Vector> {
     const paperSize = this.getPaperSize();
     this.unfocus();
     const bubble = this.defaultBubbleSlot.bubble.clone(false);
@@ -803,7 +803,7 @@ export class BubbleLayer extends Layer {
         this.onCommit();
         if (createsSurface) {
           const size = bubble.getPhysicalSize(paperSize);
-          const film = await this.newMinmumBoundingFilm(size);
+          const film = this.newMinmumBoundingFilm(size);
           bubble.filmStack.films.push(film);
         }
       }
@@ -1375,18 +1375,18 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  newImageFilm(image: HTMLImageElement): Film {
+  newImageFilm(canvas: HTMLCanvasElement): Film {
     const film = new Film();
-    film.media = new ImageMedia(image);
+    film.media = new ImageMedia(canvas);
     return film;
   }
 
-  async newMinmumBoundingFilm([w,h]: Vector): Promise<Film> {
+  newMinmumBoundingFilm([w,h]: Vector): Film {
     // 256ごとに切り上げ
     const unit = 16;
     const [w2,h2] = [Math.ceil(w / unit) * unit, Math.ceil(h / unit) * unit];
     console.log(w, h, w2, h2);
-    const image = await makePlainImage(w2, h2, "#ffffff00");
+    const image = makePlainImage(w2, h2, "#ffffff00");
     const film = this.newImageFilm(image);
     film.setShiftedScale(this.getPaperSize(), 1);
     console.log("n_scale", film.n_scale);

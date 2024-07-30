@@ -5,6 +5,7 @@
   import { fileDroppableList, FileDroppableContainer } from '../../utils/fileDroppableList'
   import { moveInArray } from '../../utils/moveInArray';
   import FilmListItem from "./FilmListItem.svelte";
+  import { createCanvasFromBlob } from '../../utils/imageUtil';
   
   export let filmStack: FilmStack;
 
@@ -17,17 +18,15 @@
   let isDragging = false;
   let ghostIndex = -1;
 
-  function importFiles(files: FileList): Film[] {
+  async function importFiles(files: FileList): Promise<Film[]> {
     console.log("importFiles");
     const file = files[0];
     if (file.type.startsWith("image/")) {
       console.log("image file");
-      const imageURL = URL.createObjectURL(file);
-      const image = new Image();
-      image.src = imageURL;
+      const canvas = await createCanvasFromBlob(file);
 
       const film = new Film();
-      film.media = new ImageMedia(image);
+      film.media = new ImageMedia(canvas);
       film.index = filmStack.films.length;
       return [film];
     }
@@ -47,7 +46,6 @@
   }
 
   const fileDroppableContainer = new FileDroppableContainer(
-    filmStack.films, 
     importFiles,
     onAcceptDrop,
     onGhost);

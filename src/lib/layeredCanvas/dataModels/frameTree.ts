@@ -39,7 +39,7 @@ export class FrameElement {
   filmStack: FilmStack;
 
   // 以下は揮発性
-  gallery: HTMLImageElement[];
+  gallery: HTMLCanvasElement[];
   focused: boolean;
   residenceTime: number;
 

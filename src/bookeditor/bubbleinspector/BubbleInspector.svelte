@@ -349,25 +349,8 @@
     margin-left: 4px;
     margin-right: 4px;
   }
-  .reset-image {
-    width: 24px;
-    height: 24px;
-    margin-left: 4px;
-    cursor: pointer;
-  }
-  .slider-label {
-    margin-left: 4px;
-    margin-right: 2px;
-  }
   .save-button {
     height: 12px;
-  }
-  .movie-option-panel-icon {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    top: -10px;
-    right: 4px;
   }
   h1 {
     font-family: '源暎エムゴ';

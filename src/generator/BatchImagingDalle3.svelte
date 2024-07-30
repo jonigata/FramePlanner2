@@ -7,6 +7,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
+  import { createCanvasFromImage } from "../utils/imageUtil";
 
   let keyValueStorage: KeyValueStorage = null;
   let storedApiKey: string = null;
@@ -43,10 +44,12 @@
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
 
+
       const film = new Film();
-      film.media = new ImageMedia(img);
+      const media = new ImageMedia(createCanvasFromImage(img));
+      film.media = media;
       frame.filmStack.films.push(film);
-      frame.gallery.push(img);
+      frame.gallery.push(media.canvas);
     } catch (e) {
       console.log(e);
       toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});

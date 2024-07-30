@@ -9,6 +9,7 @@ import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
+import { createCanvasFromImage, createImageFromCanvas } from "../utils/imageUtil";
 
 export type Dragging = {
   bindId: string;
@@ -28,7 +29,7 @@ export const fileManagerUsedSize: Writable<number> = writable(null);
 export const loadToken: Writable<NodeId> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
 
-const imageCache: { [fileSystemId: string]: { [fileId: string]: HTMLImageElement } } = {};
+const canvasCache: { [fileSystemId: string]: { [fileId: string]: HTMLCanvasElement } } = {};
 
 type SerializedPage = {
   id: string,
@@ -137,9 +138,9 @@ async function packFilms(films: Film[], fileSystem: FileSystem, imageFolder: Fol
   const packedFilms = [];
   for (const film of films) {
     if (!(film.media instanceof ImageMedia)) { continue; }
-    const image = film.media.image;
-    await saveImage(fileSystem, image, imageFolder);
-    const fileId = image["fileId"][fileSystem.id];
+    const canvas = film.media.canvas;
+    await saveCanvas(fileSystem, canvas, imageFolder);
+    const fileId = canvas["fileId"][fileSystem.id];
 
     const filmMarkUp = {
       image: fileId,
@@ -231,11 +232,11 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
 }
 
 async function unpackFrameImages(paperSize: Vector, markUp: any, fileSystem: FileSystem): Promise<FrameElement> {
-  return await unpackFrameImagesInternal(paperSize, markUp, fileSystem, loadImage);
+  return await unpackFrameImagesInternal(paperSize, markUp, fileSystem, loadCanvas);
 }
 
 async function unpackBubbleImages(paperSize: Vector, markUps: any[], fileSystem: FileSystem): Promise<Bubble[]> {
-  return await unpackBubbleImagesInternal(paperSize, markUps, fileSystem, loadImage);
+  return await unpackBubbleImagesInternal(paperSize, markUps, fileSystem, loadCanvas);
 }
 
 export async function newFile(fs: FileSystem, folder: Folder, name: string, book: Book): Promise<{file: File, bindId: BindId}> {
@@ -248,19 +249,20 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, book
   return { file, bindId };
 }
 
-async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLImageElement> {
-  imageCache[fileSystem.id] ??= {};
+async function loadCanvas(fileSystem: FileSystem, canvasId: string): Promise<HTMLCanvasElement> {
+  canvasCache[fileSystem.id] ??= {};
 
-  if (imageCache[fileSystem.id][imageId]) {
-    return imageCache[fileSystem.id][imageId];
+  if (canvasCache[fileSystem.id][canvasId]) {
+    return canvasCache[fileSystem.id][canvasId];
   } else {
     try {
-      const file = (await fileSystem.getNode(imageId as NodeId)).asFile();
+      const file = (await fileSystem.getNode(canvasId as NodeId)).asFile();
       const image = await file.readImage();
-      image["fileId"] ??= {}
-      image["fileId"][fileSystem.id] = file.id
-      imageCache[fileSystem.id][imageId] = image;
-      return image;
+      const canvas = createCanvasFromImage(image);
+      canvas["fileId"] ??= {}
+      canvas["fileId"][fileSystem.id] = file.id
+      canvasCache[fileSystem.id][canvasId] = canvas;
+      return canvas;
     }
     catch (e) {
       console.log(e);
@@ -269,19 +271,19 @@ async function loadImage(fileSystem: FileSystem, imageId: string): Promise<HTMLI
   }
 }
 
-async function saveImage(fileSystem: FileSystem, image: HTMLImageElement, imageFolder: Folder): Promise<void> {
-  imageCache[fileSystem.id] ??= {};
-  image["fileId"] ??= {}
+async function saveCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement, imageFolder: Folder): Promise<void> {
+  canvasCache[fileSystem.id] ??= {};
+  canvas["fileId"] ??= {}
 
-  const fileId = image["fileId"][fileSystem.id];
-  if (imageCache[fileSystem.id][fileId]) {
+  const fileId = canvas["fileId"][fileSystem.id];
+  if (canvasCache[fileSystem.id][fileId]) {
     return;
   }
   const file = await fileSystem.createFile();
-  await file.writeImage(image);
-  image["fileId"] ??= {}
-  image["fileId"][fileSystem.id] = file.id
-  imageCache[fileSystem.id][file.id] = image;
+  await file.writeImage(await createImageFromCanvas(canvas));
+  canvas["fileId"] ??= {}
+  canvas["fileId"][fileSystem.id] = file.id
+  canvasCache[fileSystem.id][file.id] = canvas;
   await imageFolder.link(file.id, file.id);
 }
 
@@ -349,14 +351,14 @@ async function dryUnpackBubbleImages(paperSize: Vector, markUps: any[], images: 
     });
 }
 
-async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<FrameElement> {
+async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadCanvasFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLCanvasElement>): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
   frameTree.gallery = [];
   if (markUp.image || markUp.scribble) {
     if (typeof markUp.image === 'string' || typeof markUp.scribble === 'string') {
-      function newFilm(anyImage: HTMLImageElement): Film {
-        const s_imageSize = Math.min(anyImage.width, anyImage.height) ;
+      function newFilm(anyCanvas: HTMLCanvasElement): Film {
+        const s_imageSize = Math.min(anyCanvas.width, anyCanvas.height) ;
         const s_pageSize = Math.min(paperSize[0], paperSize[1]);
         const scale = s_imageSize / s_pageSize;
     
@@ -367,7 +369,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
         const n_translation: Vector = [markUpTranlation[0] * scale, markUpTranlation[1] * scale];
     
         const film = new Film();
-        film.media = new ImageMedia(anyImage);
+        film.media = new ImageMedia(anyCanvas);
         film.n_scale = n_scale;
         film.n_translation = n_translation;
         film.rotation = markUp.rotation;
@@ -379,16 +381,16 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
       // 初期バージョン処理
       if (markUp.image) {
         console.tag("type A.1", "#004400");
-        const image = await loadImageFunc(fileSystem, markUp.image);
-        if (image) {
-          const film = newFilm(image);
-          frameTree.gallery.push(image);
+        const canvas = await loadCanvasFunc(fileSystem, markUp.image);
+        if (canvas) {
+          const film = newFilm(canvas);
+          frameTree.gallery.push(canvas);
           frameTree.filmStack.films.push(film);
         }
       }
       if (markUp.scribble) {
         console.tag("type A.2", "#004400");
-        const scribble = await loadImageFunc(fileSystem, markUp.scribble);
+        const scribble = await loadCanvasFunc(fileSystem, markUp.scribble);
         if (scribble) {
           const film = newFilm(scribble);
           frameTree.gallery.push(scribble);
@@ -397,9 +399,9 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
       } 
     } else {
       // 前期バージョン処理
-      function newFilm(anyImage: HTMLImageElement): Film {
+      function newFilm(anyCanvas: HTMLCanvasElement): Film {
         const film = new Film();
-        film.media = new ImageMedia(anyImage);
+        film.media = new ImageMedia(anyCanvas);
         film.n_scale = markUp.image.n_scale;
         film.n_translation = markUp.image.n_translation;
         film.rotation = markUp.image.rotation;
@@ -410,7 +412,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
 
       if (markUp.image.image) {
         console.tag("type B.1", "#004400");
-        const image = await loadImageFunc(fileSystem, markUp.image.image);
+        const image = await loadCanvasFunc(fileSystem, markUp.image.image);
         if (image) {
           const film = newFilm(image);
           frameTree.gallery.push(image);
@@ -419,7 +421,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
       }
       if (markUp.image.scribble) {
         console.tag("type B.2", "#004400");
-        const scribble = await loadImageFunc(fileSystem, markUp.image.scribble);
+        const scribble = await loadCanvasFunc(fileSystem, markUp.image.scribble);
         if (scribble) {
           const film = newFilm(scribble);
           frameTree.gallery.push(scribble);
@@ -434,7 +436,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
         console.tag("type C", "#004400");
       }
 
-      const films = await unpackFilms(paperSize, markUp.films, fileSystem, loadImageFunc);
+      const films = await unpackFilms(paperSize, markUp.films, fileSystem, loadCanvasFunc);
       frameTree.filmStack.films.push(...films);
     }
   }
@@ -444,7 +446,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
     frameTree.direction = markUp.column ? 'v' : 'h';
     frameTree.children = [];
     for (let child of children) {
-      frameTree.children.push(await unpackFrameImagesInternal(paperSize, child, fileSystem, loadImageFunc));
+      frameTree.children.push(await unpackFrameImagesInternal(paperSize, child, fileSystem, loadCanvasFunc));
     }
     frameTree.calculateLengthAndBreadth();
   }
@@ -452,7 +454,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
   return frameTree;
 }
 
-async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<Bubble[]> {
+async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLCanvasElement>): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
   for (const markUp of markUps) {
     const bubble: Bubble = Bubble.compile(paperSize, markUp);
@@ -491,7 +493,7 @@ async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fil
   return unpackedBubbles;
 }
 
-async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLImageElement>): Promise<Film[]> {
+async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLCanvasElement>): Promise<Film[]> {
   const films: Film[] = [];
   for (const filmMarkUp of markUp) {
     const image = await loadImageFunc(fileSystem, filmMarkUp.image);
@@ -510,15 +512,15 @@ async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSyste
   return films;
 }
 
-export async function saveMaterialImage(fileSystem: FileSystem, image: HTMLImageElement): Promise<BindId> {
+export async function saveMaterialCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement): Promise<BindId> {
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
   const file = await fileSystem.createFile();
-  await file.writeImage(image);
+  await file.writeImage(await createImageFromCanvas(canvas));
   return await materialFolder.link(file.id, file.id);
 }
 
-export async function deleteMaterialImage(fileSystem: FileSystem, materialBindId: BindId): Promise<void> {
+export async function deleteMaterialCanvas(fileSystem: FileSystem, materialBindId: BindId): Promise<void> {
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
   const nodeId = (await materialFolder.getEntry(materialBindId))[2];

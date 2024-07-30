@@ -3,14 +3,14 @@
   import SliderEdit from '../utils/SliderEdit.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 
-  export let chosen: HTMLImageElement = null;
+  export let chosen: HTMLCanvasElement = null;
 
   let width: number = 512;
   let height: number = 512;
   let color: string = "#ffffff00";
 
   async function generate() {
-    chosen = await makePlainImage(width, height, color);
+    chosen = makePlainImage(width, height, color);
   }
 </script>
 

@@ -234,7 +234,7 @@ export class FrameLayer extends Layer {
     this.litIcons.forEach(icon => icon.render(ctx));
   }
 
-  dropped(position: Vector, media: HTMLImageElement | HTMLVideoElement) {
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) {
     if (!this.interactable) { return; }
 
     const layout = calculatePhysicalLayout(
@@ -247,7 +247,7 @@ export class FrameLayer extends Layer {
       return false;
     }
 
-  if (media instanceof HTMLImageElement) {
+  if (media instanceof HTMLCanvasElement) {
       this.importMedia(layoutlet, new ImageMedia(media));
     }
     if (media instanceof HTMLVideoElement) {
@@ -371,9 +371,13 @@ export class FrameLayer extends Layer {
               const url = URL.createObjectURL(blob);
               const image = new Image();
               image.src = url;
-              image.onload = () => {
-                this.dropped(this.cursorPosition, image);
-              };
+              await image.decode();
+              const canvas = document.createElement("canvas");
+              canvas.width = image.width;
+              canvas.height = image.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(image, 0, 0);
+              this.dropped(this.cursorPosition, canvas);
               return true;
             }
           }

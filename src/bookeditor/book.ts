@@ -157,14 +157,14 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
   return book;
 }
 
-export function newImageBook(id: string, image: HTMLImageElement, prefix: Prefix): Book {
+export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Prefix): Book {
   const frameTree = FrameElement.compile(frameExamples[2].frameTree);
   const film = new Film();
-  film.media = new ImageMedia(image);
+  film.media = new ImageMedia(canvas);
   frameTree.children[0].filmStack.films = [film];
 
   const page = newPage(frameTree, []);
-  page.paperSize = [image.naturalWidth, image.naturalHeight];
+  page.paperSize = [canvas.width, canvas.height];
   const book: Book = {
     revision: { id, revision:1, prefix },
     pages: [page],

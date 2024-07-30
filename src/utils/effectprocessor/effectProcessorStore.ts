@@ -1,5 +1,5 @@
 import { type Writable, writable } from "svelte/store"
-import { Film } from "../../lib/layeredCanvas/dataModels/film";
+import type { Film } from "../../lib/layeredCanvas/dataModels/film";
 import { redrawToken } from "../../bookeditor/bookStore";
 
 export const effectProcessorStore: Writable<Film[]> = writable([]);

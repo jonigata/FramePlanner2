@@ -12,8 +12,8 @@
   let busy: boolean;
   let tabSet: number = 0;
   let prompt: string = 'zzz';
-  let gallery: HTMLImageElement[] = [];
-  let chosen: HTMLImageElement = null;
+  let gallery: HTMLCanvasElement[] = [];
+  let chosen: HTMLCanvasElement = null;
 
   $: onTargetChanged($imageGeneratorTarget);
   function onTargetChanged(igt: ImageGeneratorTarget) {
@@ -23,7 +23,7 @@
   }
 
   $: onChangeGallery($imageGeneratorTarget?.gallery);
-  async function onChangeGallery(g: HTMLImageElement[]) {
+  async function onChangeGallery(g: HTMLCanvasElement[]) {
     if (g) {
       gallery = [];
       await tick(); // HACK: なんかこうしないとHTMLが更新されない
@@ -32,12 +32,12 @@
   }
 
   $: onChosen(chosen);
-  function onChosen(c: HTMLImageElement) {
+  function onChosen(c: HTMLCanvasElement) {
     if (c != null) {
       const t = $imageGeneratorTarget;
       $imageGeneratorTarget = null;
       chosen = null;
-      t.onDone({ image: c, prompt: prompt });
+      t.onDone({ canvas: c, prompt: prompt });
     }
   }
 

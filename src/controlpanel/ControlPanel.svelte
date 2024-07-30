@@ -134,9 +134,6 @@
   .paper-size {
     height: 20px;
   }
-  .textarea {
-    resize: none;
-  }
   .radio-text {
     height: 10px;
   }

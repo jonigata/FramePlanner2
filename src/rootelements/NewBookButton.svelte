@@ -5,6 +5,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { hoverKey } from '../utils/hoverKeyStore';
   import { mainBook } from '../bookeditor/bookStore';
+  import { createCanvasFromBlob } from '../utils/imageUtil';
 
   async function createNewFile(e: MouseEvent) {
     if (e.ctrlKey) {
@@ -21,15 +22,8 @@
         console.log(type);
         if (type.startsWith("image/")) {
           const blob = await item.getType(type);
-          const imageURL = URL.createObjectURL(blob);
-          const image = new Image();
-
-          const imageLoaded = new Promise((resolve) => image.onload = resolve);          
-          image.src = imageURL;
-          await imageLoaded;
-          URL.revokeObjectURL(imageURL); // オブジェクトURLのリソースを解放
-
-          const book = newImageBook("not visited", image, "paste-")
+          const canvas = await createCanvasFromBlob(blob);
+          const book = newImageBook("not visited", canvas, "paste-")
           $newBookToken = book;
           return;
         }
@@ -51,13 +45,9 @@
       const file = files[0];
       console.log(file.type)
       if (file.type.startsWith("image/")) {
-        const imageURL = URL.createObjectURL(file);
-        const image = new Image();
-        image.src = imageURL;
-        await image.decode();
-
-        const page = newImageBook("not visited", image, "drop-")
-        $newBookToken = page;
+        const canvas = await createCanvasFromBlob(file);
+        const book = newImageBook("not visited", canvas, "drop-")
+        $newBookToken = book;
       }
     }
   }

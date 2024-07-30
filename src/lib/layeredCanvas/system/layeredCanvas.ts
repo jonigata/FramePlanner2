@@ -76,7 +76,7 @@ export class Layer {
   pointerCancel(position: Vector, payload: any) {}
   prerender() {}
   render(ctx: CanvasRenderingContext2D, depth: number) {}
-  dropped(position: Vector, media: HTMLImageElement | HTMLVideoElement) { return false; }
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) { return false; }
   beforeDoubleClick(position: Vector) { return false; }
   doubleClicked(position: Vector) { return false; }
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
@@ -149,7 +149,7 @@ export class Paper {
     dragging.layer.pointerCancel(p, dragging.payload);
   }
         
-  handleDrop(p: Vector, media: HTMLImageElement | HTMLVideoElement): boolean {
+  handleDrop(p: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.dropped(p, media)) {
@@ -492,9 +492,15 @@ export class LayeredCanvas {
       const image = new Image();
       image.src = URL.createObjectURL(file);
       await image.decode();
-
       console.log("image loaded", image.width, image.height);
-      this.rootPaper.handleDrop(p, image);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0);
+
+      this.rootPaper.handleDrop(p, canvas);
     }
     if (file.type.startsWith('video/')) {
       const video = await loadVideo(file);

@@ -10,6 +10,7 @@
   import { persistent } from '../utils/persistent';
   import { GenerateImageContext, generateImage } from '../utils/feathralImaging';
   import type { Stats } from "./batchImagingStore";
+  import { createCanvasFromImage } from '../utils/imageUtil';
 
   export let stats: Stats;
 
@@ -34,9 +35,10 @@
     const img = await generateImage(`${frame.prompt}, ${postfix}`, generateContext);
     if (img != null) {
       const film = new Film();
-      film.media = new ImageMedia(img);
+      const media = new ImageMedia(createCanvasFromImage(img));
+      film.media = media;
       frame.filmStack.films.push(film);
-      frame.gallery.push(img);
+      frame.gallery.push(media.canvas);
       stats.succeeded++;
     } else {
       stats.failed++;

@@ -11,30 +11,18 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import { createCanvasFromImage } from '../utils/imageUtil';
 
   export let busy: boolean;
   export let prompt: string;
-  export let gallery: HTMLImageElement[];
-  export let chosen: HTMLImageElement;
+  export let gallery: HTMLCanvasElement[];
+  export let chosen: HTMLCanvasElement;
 
   let progress = 0;
   let refered: HTMLImageElement = null;
   let initialSize = [1024, 1024];
   let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
-
-  /* LCM
-  let imageRequest = {
-    "model": "lcm-dark-sushi-mix-v2-25",
-    "prompt": "1 chibi girl, penguin costume",
-    "negative_prompt": "Disfigured, cartoon, blurry",
-    "width": 512,
-    "height": 512,
-    "steps": 4,
-    "seed": 0,
-    "output_format": "png"
-  };
-  */
 
   // essential
   let imageRequest = {
@@ -69,9 +57,10 @@
       console.log(data);
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + data.result.image;
+      const canvas = createCanvasFromImage(img);
 
       $onlineAccount.feathral = data.feathral;
-      gallery.push(img);
+      gallery.push(canvas);
       gallery = gallery;
       progress = 1;
 
@@ -156,7 +145,7 @@
   {/if}
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:images={gallery} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <style>

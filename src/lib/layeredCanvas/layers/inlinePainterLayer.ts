@@ -17,14 +17,12 @@ export class InlinePainterLayer extends Layer {
   translation: Vector;
   scale: Vector;
   maskPath: paper.PathItem;
-  history: string[];
+  history: HTMLCanvasElement[];
   historyIndex: number;
   onAutoGenerate: () => void;
 
 
   drawsBackground: boolean;
-  offscreenCanvas: HTMLCanvasElement;
-  offscreenContext: CanvasRenderingContext2D;
   // path: paper.Path;
   path: Path2D;
   strokeOptions: any; // perfect-freehandのオプション
@@ -43,7 +41,7 @@ export class InlinePainterLayer extends Layer {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    if (!this.image) {return;}
+    if (!this.canvas) {return;}
     if (depth !== this.depth) { return; }
 
     this.drawFilmFrame(ctx);
@@ -65,7 +63,7 @@ export class InlinePainterLayer extends Layer {
   }
 
   accepts(_point: Vector): any {
-    if (!this.image) {return null;}
+    if (!this.canvas) {return null;}
     return {};
   }
 
@@ -91,17 +89,18 @@ export class InlinePainterLayer extends Layer {
 
       this.redraw();      
     }
-    await this.snapshot();
+    this.snapshot();
     this.path = null;
     this.redraw();
     this.onAutoGenerate();
   }
 
-  async snapshot(): Promise<void> {
-    const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
+  snapshot(): void {
+    const [w, h] = [this.canvas.width, this.canvas.height];
 
-    const canvas = this.offscreenCanvas;
-    const ctx = this.offscreenContext;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(this.canvas, 0, 0); // 多分いる
 
     if (this.path) {
       ctx.save();
@@ -115,13 +114,15 @@ export class InlinePainterLayer extends Layer {
       ctx.restore();
     }
 
+    const ctx2 = this.canvas.getContext('2d');
+    ctx2.clearRect(0, 0, w, h);
+    ctx2.drawImage(canvas, 0, 0, w, h);
+
     const dataUrl = canvas.toDataURL();
-    this.image.src = dataUrl;
     this.history.length = this.historyIndex;
-    this.history.push(dataUrl);
+    this.history.push(canvas);
     this.historyIndex++;
     console.log("snapshot", this.historyIndex, this.history.length);
-    await this.image.decode();
   }
 
   setSurface(film: Film, trapezoid: Trapezoid, depth: number): void {
@@ -152,11 +153,12 @@ export class InlinePainterLayer extends Layer {
 
     this.translation = translation;
     this.scale = scale;
-    this.offscreenCanvas = document.createElement('canvas');
-    this.offscreenCanvas.width = iw;
-    this.offscreenCanvas.height = ih;
-    this.offscreenContext = this.offscreenCanvas.getContext('2d');
-    this.offscreenContext.drawImage(film.media.drawSource, 0, 0, iw, ih);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = iw;
+    canvas.height = ih;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(film.media.drawSource, 0, 0);
 
     const windowPath = new paper.Path();
     windowPath.moveTo(trapezoid.topLeft);
@@ -169,18 +171,18 @@ export class InlinePainterLayer extends Layer {
     this.maskPath = paperPath.subtract(windowPath);
     // this.maskPath = paperPath;
     console.log(this.maskPath.pathData);
-    this.history=[this.image.src];
+    this.history=[canvas];
     this.historyIndex = 1;
     this.redraw();
   }
 
-  get image(): HTMLImageElement {
+  get canvas(): HTMLCanvasElement {
     if (!this.film) { return null; }
     const media = this.film.media;
     if (!(media instanceof ImageMedia)) {
       return null;
     }
-    return media.image;
+    return media.canvas;
   }
 
   async undo() {
@@ -188,10 +190,10 @@ export class InlinePainterLayer extends Layer {
     if (this.historyIndex <= 1) { return; }
 
     this.historyIndex--;
-    this.image.src = this.history[this.historyIndex - 1];
-    await this.image.decode();
-    this.offscreenContext.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-    this.offscreenContext.drawImage(this.image, 0, 0, this.image.naturalWidth, this.image.naturalHeight);
+    const prevCanvas = this.history[this.historyIndex - 1];
+    const ctx = this.canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.drawImage(prevCanvas, 0, 0);
     this.redraw();
   }
 
@@ -200,16 +202,16 @@ export class InlinePainterLayer extends Layer {
     if (this.history.length <= this.historyIndex) { return; }
 
     this.historyIndex++;
-    this.image.src = this.history[this.historyIndex - 1];
-    await this.image.decode();
-    this.offscreenContext.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-    this.offscreenContext.drawImage(this.image, 0, 0, this.image.naturalWidth, this.image.naturalHeight);
+    const nextCanvas = this.history[this.historyIndex - 1];
+    const ctx = this.canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.drawImage(nextCanvas, 0, 0);
     this.redraw();
   }
 
   // paperRenderLayerからコピペ
   drawFilmFrame(ctx: CanvasRenderingContext2D): void {
-    const [w, h] = [this.image.naturalWidth, this.image.naturalHeight];
+    const [w, h] = [this.canvas.width, this.canvas.height];
 
     ctx.save();
     ctx.translate(this.translation[0], this.translation[1]);

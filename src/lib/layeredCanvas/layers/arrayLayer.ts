@@ -316,9 +316,9 @@ export class ArrayLayer extends Layer {
     });
   }
 
-  dropped(p: Vector, image: HTMLImageElement): boolean {
+  dropped(p: Vector, canvas: HTMLCanvasElement): boolean {
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    return paper.handleDrop(position, image);
+    return paper.handleDrop(position, canvas);
   }
 
   beforeDoubleClick(p: Vector): boolean { 
