@@ -54,6 +54,7 @@
   import Downloader from './downloader/Downloader.svelte';
   import TemplateChooser from './bookeditor/TemplateChooser.svelte';
   import ColorPickerDialog from './utils/colorpicker/ColorPickerDialog.svelte';
+  import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -157,6 +158,7 @@
 <About/>
 <BatchImaging/>
 <TemplateChooser/>
+<EffectChooser/>
 
 <!-- tools -->
 <PassiveToolTip />

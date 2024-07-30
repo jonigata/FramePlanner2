@@ -1,13 +1,14 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Film } from "../../lib/layeredCanvas/dataModels/film";
-  import { Effect } from "../../lib/layeredCanvas/dataModels/effect";
+  import { Effect, OutlineEffect } from "../../lib/layeredCanvas/dataModels/effect";
   import { redrawToken } from '../bookStore';
   import FilmEffect from "./FilmEffect.svelte";
   import { moveInArray } from '../../utils/moveInArray';
   import { sortableList } from '../../utils/sortableList'
   import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
+  import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -69,8 +70,18 @@
     effectVisible = !effectVisible;
   }
 
-  function onNewEffect(e: CustomEvent<{ index: number, files: FileList }>) {
-
+  function onNewEffect() {
+    console.log("onNewEffect");
+    $effectChoiceNotifier = (tag: string) => {
+      console.log("effectChoiceNotifier", tag);
+      switch (tag) {
+        case "OutlineEffect":
+          film.effects.push(new OutlineEffect("#000000", 0.01, 0.8));
+          break;
+      }
+      film.effects = film.effects;
+      effectProcessorQueue.publish(film);
+    };
   }
 
   function onUpdateEffectList(e: {oldIndex: number, newIndex:number}) {
@@ -83,6 +94,7 @@
     console.log("onDeleteEffect", index);
     film.effects.splice(index, 1);
     film.effects = film.effects;
+    effectProcessorQueue.publish(film);
     dispatch('commit');
   }
 
@@ -151,7 +163,7 @@
           {/each}
         </div>
         <!-- centering -->
-        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl">+</div>
+        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl" on:click={onNewEffect}>+</div>
       </div>
     {/if}
   {/if}
