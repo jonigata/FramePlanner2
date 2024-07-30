@@ -7,7 +7,6 @@
   import { moveInArray } from '../../utils/moveInArray';
   import { sortableList } from '../../utils/sortableList'
   import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
-  import { DelayedCommiter } from '../../utils/cancelableTask';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
@@ -24,11 +23,6 @@
   let effectVisible = false;
 
   const dispatch = createEventDispatcher();
-
-  const delayedCommiter = new DelayedCommiter(
-    () => {
-      effectProcessorQueue.publishUnique(film, x => x == film);
-    });
 
   function onClick(e: MouseEvent) {
     dispatch('select', { film, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
@@ -94,15 +88,15 @@
 
   function onUpdateEffect(e: CustomEvent<Effect>) {
     let flag = false;
-    for (let i = 0; i < film.effects.length; i++) {
-      if (film.effects[i].ulid === e.detail.ulid) {
+    for (const effect of film.effects) {
+      if (effect.ulid === e.detail.ulid) {
         flag = true;
       }
       if (flag) {
-        film.effects[i].setOutputDirty();
+        effect.setOutputDirty();
+        effectProcessorQueue.publish(film);
       }
     }
-    delayedCommiter.schedule(1000);
   }
 
   $: onCanvas(canvas);

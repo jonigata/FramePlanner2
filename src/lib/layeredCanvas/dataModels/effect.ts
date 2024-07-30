@@ -1,7 +1,13 @@
 import { ulid } from 'ulid';
 import { Media, ImageMedia } from './media';
-import { generateDF } from 'fastsdf';
+import { Computron, JFACompute, FloatField } from 'fastsdf';
 import parseColor from 'color-parse';
+
+const c = new Computron();
+await c.init();
+
+const jfa = new JFACompute(c);
+await jfa.init();
 
 export class Effect {
   ulid: string;
@@ -35,72 +41,54 @@ export class Effect {
 }
 
 export class OutlineEffect extends Effect {
-  color: string;
-  width: number;
+  rawDistanceField: FloatField;
 
-  constructor(color: string, width: number) {
+  constructor(public color: string, public width: number, public sharp: number) {
     super();
-    this.color = color;
-    this.width = width;
   }
 
   clone(): Effect {
-    return new OutlineEffect(this.color, this.width);
+    return new OutlineEffect(this.color, this.width, this.sharp);
   }
 
   async apply(inputMedia: Media): Promise<Media> { 
     console.log("apply");
-    // TODO: inputMediaが変わっているときだけNNを作成する
-    if (this.inputMedia == inputMedia) {
-      // 入力は変化してない
-      if (this.outputMedia) {
-        return this.outputMedia;
-      }
+
+    if (this.inputMedia != inputMedia) {
+      console.log("input media changed");
       const inputCanvas = (inputMedia as ImageMedia).canvas;
 
-      const baseWidth = Math.max(inputCanvas.width, inputCanvas.height);
-      const width = this.width * baseWidth;
-      console.log(width, baseWidth, this.width);
-  
-      const c = parseColor(this.color);
-      const f = (t: number) => 0.1 <= t ? 1 : t * 10;
-      const dfCanvas: HTMLCanvasElement = await generateDF(
-        inputCanvas, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
-  
-      const targetCanvas = document.createElement('canvas');
-      targetCanvas.width = inputCanvas.width;
-      targetCanvas.height = inputCanvas.height;
-      const ctx = targetCanvas.getContext('2d');
-      ctx.drawImage(inputCanvas, 0, 0);
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.drawImage(dfCanvas, 0, 0);
-  
-      this.outputMedia = new ImageMedia(targetCanvas);
-      return this.outputMedia;
+      const plainImage = FloatField.createFromImageOrCanvas(inputCanvas);
+      const seedMap = JFACompute.createJFASeedMap(plainImage, 0.5, false);
+      this.rawDistanceField = await jfa.compute(seedMap);
+      this.inputMedia = inputMedia;
     } else {
-      // 入力自体へんかしている
-      const inputCanvas = (inputMedia as ImageMedia).canvas;
-
-      const baseWidth = Math.max(inputCanvas.width, inputCanvas.height);
-      const width = this.width * baseWidth;
-      console.log(width, baseWidth, this.width);
-  
-      const c = parseColor(this.color);
-      const f = (t: number) => 0.1 <= t ? 1 : t * 10;
-      const dfCanvas: HTMLCanvasElement = await generateDF(
-        inputCanvas, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
-  
-      const targetCanvas = document.createElement('canvas');
-      targetCanvas.width = inputCanvas.width;
-      targetCanvas.height = inputCanvas.height;
-      const ctx = targetCanvas.getContext('2d');
-      ctx.drawImage(inputCanvas, 0, 0);
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.drawImage(dfCanvas, 0, 0);
-  
-      this.outputMedia = new ImageMedia(targetCanvas);
-      return this.outputMedia;
+      console.log("input media not changed");
     }
+
+    const inputCanvas = (inputMedia as ImageMedia).canvas;
+
+    // 入力自体へんかしている
+    const baseWidth = Math.max(inputMedia.naturalWidth, inputMedia.naturalHeight);
+    const width = this.width * baseWidth;
+
+    const c = parseColor(this.color);
+    const color = {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255};
+    const dull = 1.0 - this.sharp;
+    const f = (t: number) => dull <= t ? 1 : t * (1.0 / dull);
+    const distanceField = JFACompute.generateDistanceField(
+      this.rawDistanceField, color, width, f);
+
+    const targetCanvas = document.createElement('canvas');
+    targetCanvas.width = inputCanvas.width;
+    targetCanvas.height = inputCanvas.height;
+    const ctx = targetCanvas.getContext('2d');
+    ctx.drawImage(inputCanvas, 0, 0);
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.drawImage(distanceField.toCanvas(), 0, 0);
+
+    this.outputMedia = new ImageMedia(targetCanvas);
+    return this.outputMedia;
   }
 }
 

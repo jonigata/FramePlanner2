@@ -1,10 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { Effect } from "../../lib/layeredCanvas/dataModels/film";
+  import type { Effect } from "../../lib/layeredCanvas/dataModels/effect";
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../../utils/NumberEdit.svelte';
 	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
-  import { ulid } from 'ulid';
   import { onMount } from "svelte";
 
   import deleteIcon from '../../assets/filmlist/delete.png';
@@ -15,6 +14,7 @@
     "OutlineEffect": [
       { name: "color", label: "色", type: "color" },
       { name: "width", label: "幅", type: "number", min: 0, max: 0.1, step: 0.001 },
+      { name: "sharp", label: "シャープ", type: "number", min: 0, max: 1, step: 0.01 },
     ],
   }
   
@@ -34,13 +34,16 @@
 
   // 以下スライダーのドラッグがsortable listで誤動作しないようにするためのhack
   // https://stackoverflow.com/questions/64853147/draggable-div-getting-dragged-when-input-range-slider-is-used
-  let id = ulid();
   onMount(() => {
-    const e = document.getElementById(id);
-    e.setAttribute("draggable", "true");
-    e.addEventListener("dragstart", (ev) => {
-      ev.preventDefault();
-    });
+    for (const e of parameterLists[effect.tag]) {
+      if (e.type !== "number") continue;
+      console.log(`${effect.ulid}:${e.name}`);
+      const elem = document.getElementById(`${effect.ulid}:${e.name}`);
+      elem.setAttribute("draggable", "true");
+      elem.addEventListener("dragstart", (ev) => {
+        ev.preventDefault();
+      });
+    }
   });
 </script>
 
@@ -58,7 +61,7 @@
         <div class="row">
           <div class="label">{e.label}</div>
           <RangeSlider 
-            id={id}
+            id={`${effect.ulid}:${e.name}`}
             name={e.name} 
             bind:value={effect[e.name]} 
             min={e.min} 

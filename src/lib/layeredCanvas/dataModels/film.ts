@@ -24,7 +24,7 @@ export class Film  {
     this.reverse = [1, 1];
     this.visible = true;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
-    this.effects = [new OutlineEffect("blue", 0.01)];
+    this.effects = [new OutlineEffect("blue", 0.01, 0.1)];
     this.selected = false;
   }
 
