@@ -413,3 +413,34 @@ export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement
     content.sourcePage.bubbles.push(...swapContent.bubbles);
   }
 }
+
+export function collectAllFilms(book: Book): Film[] {
+  const films: Film[] = [];
+  for (let page of book.pages) {
+    collectPageFilms(page, films);
+    collectBubbleFilms(page.bubbles, films);
+  }
+  return films;
+} 
+
+function collectPageFilms(page: Page, films: Film[]): void {
+  collectFrameFilms(page.frameTree, films);
+}
+
+function collectFrameFilms(frameTree: FrameElement, films: Film[]): void {
+  if (frameTree.isLeaf()) {
+    if (frameTree.isAuthentic()) {
+      films.push(...frameTree.filmStack.films);
+    }
+  } else {
+    for (let child of frameTree.children) {
+      collectFrameFilms(child, films);
+    }
+  }
+}
+
+function collectBubbleFilms(bubbles: Bubble[], films: Film[]): void {
+  for (let b of bubbles) {
+    films.push(...b.filmStack.films);
+  }
+}

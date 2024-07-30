@@ -3,7 +3,7 @@
   import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
-  import { newBook, revisionEqual, commitBook, getHistoryWeight } from '../bookeditor/book';
+  import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../bookeditor/book';
   import { bookEditor, mainBook } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
@@ -26,6 +26,7 @@
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { mascotVisible } from '../mascot/mascotStore';
+  import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
 
   export let fileSystem: FileSystem;
 
@@ -71,6 +72,7 @@
 
       if (currentFile) {
         const newBook = await loadBookFrom(fileSystem, currentFile.asFile());
+        refreshFilms(newBook);
         currentRevision = {...newBook.revision};
         console.snapshot(newBook.pages[0]);
         $mainBook = newBook;
@@ -234,6 +236,7 @@
     $loading = true;
     const file = (await fileSystem.getNode(nodeId)).asFile();
     const book = await loadBookFrom(fileSystem, file);
+    refreshFilms(book);
     currentRevision = {...book.revision};
     $mainBook = book; // TODO: ここで無駄なセーブが走っている
     $frameInspectorTarget = null;
@@ -326,6 +329,14 @@
       reader.onerror = () => reject(reader.error);
       reader.readAsText(file);
     });
+  }
+
+  function refreshFilms(book: Book) {
+    // book内のfilmをすべてpublishする
+    const films = collectAllFilms(book);
+    for (const film of films) {
+      effectProcessorQueue.publish(film);
+    }
   }
 
   onMount(async () => {

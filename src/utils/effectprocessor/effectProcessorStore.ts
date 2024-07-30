@@ -1,31 +1,15 @@
-import { type Writable, writable } from "svelte/store"
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
 import { redrawToken } from "../../bookeditor/bookStore";
+import { PubSubQueue } from "../pubsub";
 
-export const effectProcessorStore: Writable<Film[]> = writable([]);
+export const effectProcessorQueue = new PubSubQueue<Film>();
+effectProcessorQueue.subscribe(async (film: Film) => {
+  console.log("Processing film", film);
+  let inputMedia = film.media;
+  for (const effect of film.effects) {
+    effect.cleanInput();
+    inputMedia = await effect.apply(inputMedia);
+  }
+  redrawToken.set(true);
+});
 
-let running = false;
-effectProcessorStore.subscribe(
-  async (films) => {
-    console.log("EffectProcessorStore", running, films.length);
-    if (running || films.length == 0) { return; }
-    running = true;
-
-    // unique
-    const unique = new Set<Film>();
-    for (const film of films) {
-      unique.add(film);
-    }
-    films = Array.from(unique);
-    console.log("EffectProcessorStore(unique)", films);
-
-    for (const film of films) {
-      let inputMedia = film.media;
-      for (const effect of film.effects) {
-        inputMedia = await effect.apply(inputMedia);
-      }
-    }
-    running = false;
-    effectProcessorStore.set([]);
-    redrawToken.set(true);
-  });

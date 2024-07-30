@@ -74,10 +74,12 @@ export class VideoMedia extends Media {
 
 export class Effect {
   ulid: string;
+  inputMedia: Media;
   outputMedia: Media;
 
   constructor() {
     this.ulid = ulid();
+    this.inputMedia = null;
   }
 
   get tag(): string {
@@ -88,7 +90,11 @@ export class Effect {
     throw new Error("Not implemented");
   }
 
-  setDirty() {
+  cleanInput() {
+    this.inputMedia = null;
+  }
+
+  setOutputDirty() {
     this.outputMedia = null;
   }
 
@@ -113,34 +119,57 @@ export class OutlineEffect extends Effect {
 
   async apply(inputMedia: Media): Promise<Media> { 
     console.log("apply");
-    if (this.outputMedia) {
+    // TODO: inputMediaが変わっているときだけNNを作成する
+    if (this.inputMedia == inputMedia) {
+      // 入力は変化してない
+      if (this.outputMedia) {
+        return this.outputMedia;
+      }
+      const inputCanvas = (inputMedia as ImageMedia).canvas;
+
+      const baseWidth = Math.max(inputCanvas.width, inputCanvas.height);
+      const width = this.width * baseWidth;
+      console.log(width, baseWidth, this.width);
+  
+      const c = parseColor(this.color);
+      const f = (t: number) => 0.1 <= t ? 1 : t * 10;
+      const dfCanvas: HTMLCanvasElement = await generateDF(
+        inputCanvas, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
+  
+      const targetCanvas = document.createElement('canvas');
+      targetCanvas.width = inputCanvas.width;
+      targetCanvas.height = inputCanvas.height;
+      const ctx = targetCanvas.getContext('2d');
+      ctx.drawImage(inputCanvas, 0, 0);
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.drawImage(dfCanvas, 0, 0);
+  
+      this.outputMedia = new ImageMedia(targetCanvas);
+      return this.outputMedia;
+    } else {
+      // 入力自体へんかしている
+      const inputCanvas = (inputMedia as ImageMedia).canvas;
+
+      const baseWidth = Math.max(inputCanvas.width, inputCanvas.height);
+      const width = this.width * baseWidth;
+      console.log(width, baseWidth, this.width);
+  
+      const c = parseColor(this.color);
+      const f = (t: number) => 0.1 <= t ? 1 : t * 10;
+      const dfCanvas: HTMLCanvasElement = await generateDF(
+        inputCanvas, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
+  
+      const targetCanvas = document.createElement('canvas');
+      targetCanvas.width = inputCanvas.width;
+      targetCanvas.height = inputCanvas.height;
+      const ctx = targetCanvas.getContext('2d');
+      ctx.drawImage(inputCanvas, 0, 0);
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.drawImage(dfCanvas, 0, 0);
+  
+      this.outputMedia = new ImageMedia(targetCanvas);
       return this.outputMedia;
     }
-    if (!(inputMedia instanceof ImageMedia)) {
-      return null;
-    }
-
-    const inputCanvas = inputMedia.canvas;
-
-    const baseWidth = Math.max(inputCanvas.width, inputCanvas.height);
-    const width = this.width * baseWidth;
-    console.log(width, baseWidth, this.width);
-
-    const c = parseColor(this.color);
-    const f = (t: number) => 0.1 <= t ? 1 : t * 10;
-    const dfCanvas: HTMLCanvasElement = await generateDF(
-      inputCanvas, {r: c.values[0] / 255, g: c.values[1] / 255, b: c.values[2] / 255}, 0.5, false, width, f);
-
-    const targetCanvas = document.createElement('canvas');
-    targetCanvas.width = inputCanvas.width;
-    targetCanvas.height = inputCanvas.height;
-    const ctx = targetCanvas.getContext('2d');
-    ctx.drawImage(inputCanvas, 0, 0);
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.drawImage(dfCanvas, 0, 0);
-
-    this.outputMedia = new ImageMedia(targetCanvas);
-    return this.outputMedia;
   }
 }
 
@@ -166,7 +195,7 @@ export class Film  {
     this.reverse = [1, 1];
     this.visible = true;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
-    this.effects = [new OutlineEffect("black", 0.01), new OutlineEffect("black", 0.1)];
+    this.effects = [new OutlineEffect("blue", 0.01)];
     this.selected = false;
   }
 

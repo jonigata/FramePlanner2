@@ -40,3 +40,12 @@ export async function createCanvasFromBlob(blob: Blob): Promise<HTMLCanvasElemen
   const image = await createImageFromBlob(blob);
   return createCanvasFromImage(image);
 }
+
+export function copyCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const newCanvas = document.createElement("canvas");
+  newCanvas.width = canvas.width;
+  newCanvas.height = canvas.height;
+  const ctx = newCanvas.getContext("2d")!;
+  ctx.drawImage(canvas, 0, 0);
+  return newCanvas;
+}

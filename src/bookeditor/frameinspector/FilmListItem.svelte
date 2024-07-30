@@ -5,7 +5,7 @@
   import FilmEffect from "./FilmEffect.svelte";
   import { moveInArray } from '../../utils/moveInArray';
   import { sortableList } from '../../utils/sortableList'
-  import { effectProcessorStore } from '../../utils/effectprocessor/effectProcessorStore';
+  import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
   import { DelayedCommiter } from '../../utils/cancelableTask';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
 
@@ -26,8 +26,7 @@
 
   const delayedCommiter = new DelayedCommiter(
     () => {
-      $effectProcessorStore.push(film);
-      $effectProcessorStore = $effectProcessorStore;
+      effectProcessorQueue.publishUnique(film, x => x == film);
     });
 
   function onClick(e: MouseEvent) {
@@ -99,7 +98,7 @@
         flag = true;
       }
       if (flag) {
-        film.effects[i].setDirty();
+        film.effects[i].setOutputDirty();
       }
     }
     delayedCommiter.schedule(1000);
