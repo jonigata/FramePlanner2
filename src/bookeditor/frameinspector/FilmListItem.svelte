@@ -131,7 +131,7 @@
 >
   {#if !film}
     <div class="w-full h-full" on:click={onClick}>
-      <div class="new-film"use:toolTip={"新規画像"} >
+      <div class="new-film" use:toolTip={"新規画像"} >
         ＋
       </div>
     </div>
@@ -163,7 +163,9 @@
           {/each}
         </div>
         <!-- centering -->
-        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl" on:click={onNewEffect}>+</div>
+        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl" on:click={onNewEffect} use:toolTip={"エフェクト追加"} >
+          +
+        </div>
       </div>
     {/if}
   {/if}

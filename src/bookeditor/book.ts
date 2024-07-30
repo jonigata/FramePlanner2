@@ -171,7 +171,7 @@ export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Pref
     pages: [page],
     history: { entries: [], cursor: 0 },
     direction: 'right-to-left',
-    wrapMode: 'one-page',
+    wrapMode: 'none',
     chatLogs: [],
   }
   commitBook(book, null);
