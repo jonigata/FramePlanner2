@@ -213,7 +213,6 @@
 
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
-    console.log("onChangeBook");
     if (!canvas || !book) { return; }
 
     if (arrayLayer && 
@@ -300,7 +299,6 @@
       $bookEditor,
       defaultBubbleSlot);
     layeredCanvas = builtBook.layeredCanvas;
-    console.log("setting layeredCanvas", layeredCanvas);
     layeredCanvas.redraw();
     arrayLayer = builtBook.arrayLayer;
     focusKeeper = builtBook.focusKeeper;
@@ -596,11 +594,9 @@
 
   $: onRedraw($redrawToken);
   function onRedraw(token: boolean) {
-    console.log("=================redrawToken", token, layeredCanvas);
     if (!token) { return; }
     if (layeredCanvas != null) {
       resetBubbleCache();
-      console.log("redraw");
       layeredCanvas.redraw();
     }
     $redrawToken = false; 

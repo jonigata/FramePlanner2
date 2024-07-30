@@ -73,7 +73,6 @@
   function onNewEffect() {
     console.log("onNewEffect");
     $effectChoiceNotifier = (tag: string) => {
-      console.log("effectChoiceNotifier", tag);
       switch (tag) {
         case "OutlineEffect":
           film.effects.push(new OutlineEffect("#000000", 0.01, 0.8));
@@ -114,7 +113,6 @@
   $: onCanvas(canvas);
   function onCanvas(c: HTMLCanvasElement) {
     if (!c) return;
-    console.log("onCanvas", c);
     const ctx = canvas.getContext('2d');
     ctx.drawImage(film.media.drawSource, 0, 0);
   }
@@ -125,8 +123,6 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="film"
-  class:variant-filled-primary={film?.selected}
-  class:variant-soft-tertiary={!film?.selected}
   draggable={false}
 >
   {#if !film}
@@ -136,7 +132,12 @@
       </div>
     </div>
   {:else}
-    <div class="image-panel" on:click={onClick}>
+    <div 
+      class="image-panel" 
+      class:variant-filled-primary={film?.selected}
+      class:variant-soft-tertiary={!film?.selected}
+      on:click={onClick}
+    >
       <SpreadCanvas width={film.media.drawSource.width} height={film.media.drawSource.height} bind:canvas={canvas}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>

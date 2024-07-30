@@ -43,14 +43,14 @@
   });
 </script>
 
-<div class="panel" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
+<div class="canvas-panel" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
   <div class="canvas-container" style="width: {displayWidth}px; height: {displayHeight}px;">
     <canvas width={width} height={height} bind:this={canvas} style="width: {displayWidth}px; height: {displayHeight}px;"/>
   </div>    
 </div>
 
 <style>
-  .panel {
+  .canvas-panel {
     width: 100%;
     height: 100%;
     display: flex;

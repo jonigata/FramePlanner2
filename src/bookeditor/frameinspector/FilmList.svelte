@@ -37,7 +37,8 @@
   function onAcceptDrop(newIndex: number, films: Film[]) {
     const index = filmStack.films.length - newIndex;
     filmStack.films.splice(index, 0, ...films);
-    console.log("onAcceptDrop", newIndex, index);
+    dispatch('commit');
+    filmStack = filmStack;
   }
 
   function onGhost(newIsDragging: boolean, newGhostIndex: number) {
