@@ -12,6 +12,7 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
+  import { makePlainImage } from "../utils/imageUtil";
 
   export let busy: boolean;
   export let prompt: string;
@@ -53,11 +54,15 @@
         5000, "画像が生成されました",
         async () => {
           return await generateImageFromTextWithFeathral(imageRequest);
+          // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
       console.log(data);
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + data.result.image;
+      await img.decode();
       const canvas = createCanvasFromImage(img);
+      // const canvas = data.result.image;
+      console.log(canvas.width, canvas.height);
 
       $onlineAccount.feathral = data.feathral;
       gallery.push(canvas);
@@ -120,11 +125,6 @@
 <!--      <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/> -->
     </div>
   </div>
-
-<!--
-  <div class="hbox gap-5" style="width: 700px;">
-  </div>
--->
 
   <div class="hbox gap-5">
     <button disabled={busy || $onlineAccount.feathral < 1} class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>

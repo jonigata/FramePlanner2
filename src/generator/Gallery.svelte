@@ -24,23 +24,19 @@
     dispatch("delete", e.detail);
   }
 
-  function onRefer(e: CustomEvent<HTMLImageElement>) {
-    refered = e.detail;
-  }
-
   function onDragStart(e: CustomEvent<HTMLImageElement>) {
     dispatch("dragstart", e.detail);
   }
 </script>
 
-<div>
+<div class="gallery">
   {#each canvases as canvas}
-    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} canvas={canvas} on:commit={onCommit} on:delete={onDelete} on:refer={onRefer} on:dragstart={onDragStart}/>
+    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} canvas={canvas} on:commit={onCommit} on:delete={onDelete} on:dragstart={onDragStart}/>
   {/each}
 </div>
 
 <style>
-  div {
+  .gallery {
     width: 100%;
     height: 100%;
     display: flex;
