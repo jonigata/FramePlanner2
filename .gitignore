@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 public/ads
+public/stamp.txt
 junk
 
 # Editor directories and files
