@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer } from "../system/layeredCanvas";
-import { type Film } from '../dataModels/film';
+import type { Film } from '../dataModels/film';
 import { ImageMedia } from '../dataModels/media';
 import type { Vector } from "../tools/geometry/geometry";
 import { type Trapezoid, trapezoidBoundingRect } from "../tools/geometry/trapezoid";

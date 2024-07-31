@@ -1,4 +1,4 @@
-import { type Vector } from "../tools/geometry/geometry";
+import type { Vector } from "../tools/geometry/geometry";
 
 export class Media {
   fileId: { [key: string]: string}; // filesystemId => fileId

@@ -1,6 +1,6 @@
 import { type Vector, type Rect, getRectCenter, rectToCorners, reverse2D } from "../tools/geometry/geometry";
-import { Media } from './media';
-import { Effect } from './effect';
+import type { Media } from './media';
+import type { Effect } from './effect';
 
 export class Film  {
   media: Media;

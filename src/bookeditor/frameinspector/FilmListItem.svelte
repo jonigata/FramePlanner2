@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { Film } from "../../lib/layeredCanvas/dataModels/film";
+  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { Effect, OutlineEffect } from "../../lib/layeredCanvas/dataModels/effect";
   import { redrawToken } from '../bookStore';
   import FilmEffect from "./FilmEffect.svelte";
