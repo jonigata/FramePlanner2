@@ -35,6 +35,7 @@
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
   import { createImageFromCanvas } from "../utils/imageUtil";
+  import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -496,20 +497,21 @@
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leafLayout = findLayoutOf(pageLayout, leaf);
-    if (r) {
-      const { canvas, prompt } = r;
-      const film = new Film();
-      film.media = new ImageMedia(canvas);
-      film.prompt = prompt;
-      fit.frame.filmStack.films.push(film);
-      fit.frame.prompt = prompt;
+    if (!r) { return; }
 
-      const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
-      transformer.scale(0.01);
-      constraintLeaf(page.paperSize, leafLayout);
+    const { canvas, prompt } = r;
+    const film = new Film();
+    film.media = new ImageMedia(canvas);
+    film.prompt = prompt;
 
-      commit(null);
-    }
+    const frameRect = trapezoidBoundingRect(leafLayout.corners);
+    const scale = minimumBoundingScale(film.media.size, [frameRect[2], frameRect[3]]);
+    film.setShiftedScale(page.paperSize, scale);
+
+    fit.frame.filmStack.films.push(film);
+    fit.frame.prompt = prompt;
+
+    commit(null);
   }
 
   async function modalBubbleGenerate(bit: BubbleInspectorTarget) {
