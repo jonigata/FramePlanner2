@@ -144,6 +144,7 @@ async function packFilms(films: Film[], fileSystem: FileSystem, imageFolder: Fol
     const fileId = canvas["fileId"][fileSystem.id];
 
     const filmMarkUp = {
+      ulid: film.ulid,
       image: fileId,
       n_scale: film.n_scale,
       n_translation: [...film.n_translation],
@@ -500,6 +501,7 @@ async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSyste
     const image = await loadImageFunc(fileSystem, filmMarkUp.image);
     if (image) {
       const film = new Film();
+      if (filmMarkUp.ulid) film.ulid = filmMarkUp.ulid;
       film.media = new ImageMedia(image);
       film.n_scale = filmMarkUp.n_scale;
       film.n_translation = filmMarkUp.n_translation;

@@ -1,8 +1,10 @@
 import { type Vector, type Rect, getRectCenter, rectToCorners, reverse2D } from "../tools/geometry/geometry";
 import type { Media } from './media';
 import type { Effect } from './effect';
+import { ulid } from 'ulid';
 
 export class Film  {
+  ulid: string;
   media: Media;
   n_scale: number;
   n_translation: Vector;
@@ -17,6 +19,7 @@ export class Film  {
   index: number; // 揮発性
 
   constructor() {
+    this.ulid = ulid();
     this.media = null;
     this.n_scale = 1;
     this.n_translation = [0, 0];

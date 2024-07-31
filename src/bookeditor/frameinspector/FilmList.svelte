@@ -106,7 +106,7 @@
     use:sortableList={{animation: 100, onUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >
-    {#each filmStack.films.toReversed() as film, index (film.index)}
+    {#each filmStack.films.toReversed() as film, index (film.ulid)}
       {#if isDragging && ghostIndex === index}
         <div data-ghost class="ghost-element"/>
       {/if}
