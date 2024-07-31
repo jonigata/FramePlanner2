@@ -55,7 +55,6 @@ export class InlinePainterLayer extends Layer {
 
     if (this.path) {
       ctx.save();
-      console.log("brush");
       this.applyBrush(ctx);
       this.drawPath(ctx);
       ctx.restore();
@@ -68,11 +67,7 @@ export class InlinePainterLayer extends Layer {
   }
 
   async *pointer(q: Vector, payload: any): AsyncGenerator<Vector, void, Vector> {
-    console.log("pointer", q, payload);
-
     const rawStroke: Vector[] = [];
-
-    console.log(this.strokeOptions);
 
     let p: Vector;
     while (p = yield) {
@@ -97,14 +92,16 @@ export class InlinePainterLayer extends Layer {
 
   snapshot(): void {
     const [w, h] = [this.canvas.width, this.canvas.height];
+    console.log("snapshot", [w,h]);
 
     const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(this.canvas, 0, 0); // 多分いる
+    ctx.drawImage(this.history[this.historyIndex-1], 0, 0);
 
     if (this.path) {
       ctx.save();
-      console.log("snapshot", this.translation, this.scale, [w, h]);
       ctx.translate(w * 0.5, h * 0.5);
       ctx.rotate(this.film.rotation * Math.PI / 180);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
@@ -153,12 +150,7 @@ export class InlinePainterLayer extends Layer {
 
     this.translation = translation;
     this.scale = scale;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = iw;
-    canvas.height = ih;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(film.media.drawSource, 0, 0);
+    console.log("setSurface", translation, scale, [iw, ih]);
 
     const windowPath = new paper.Path();
     windowPath.moveTo(trapezoid.topLeft);
@@ -171,6 +163,13 @@ export class InlinePainterLayer extends Layer {
     this.maskPath = paperPath.subtract(windowPath);
     // this.maskPath = paperPath;
     console.log(this.maskPath.pathData);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = iw;
+    canvas.height = ih;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(film.media.drawSource, 0, 0);
+
     this.history=[canvas];
     this.historyIndex = 1;
     this.redraw();

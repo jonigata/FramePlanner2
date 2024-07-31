@@ -86,8 +86,6 @@
   }  
 
   function onSetTool(e: CustomEvent<any>) {
-    console.log("setTool", e.detail);
-
     findLayer().strokeOptions = e.detail;
   }
 
