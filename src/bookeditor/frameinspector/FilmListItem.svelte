@@ -126,7 +126,7 @@
   draggable={false}
 >
   {#if !film}
-    <div class="w-full h-full" on:click={onClick}>
+    <div class="w-full h-full variant-soft-tertiary" on:click={onClick}>
       <div class="new-film" use:toolTip={"新規画像"} >
         ＋
       </div>

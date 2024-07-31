@@ -363,6 +363,7 @@ export class FrameLayer extends Layer {
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (event.code === "KeyV" && event.ctrlKey) {
       try {
+        console.log('クリップボードから画像を貼り付け');
         const items = await navigator.clipboard.read();
   
         for (let item of items) {
