@@ -264,7 +264,9 @@
 
     if (!$viewport || editingBookId !== book.revision.id) {
       console.log("================ viewport remake");
-      $viewport = new Viewport(canvas, hint);
+      const v = new Viewport(canvas, hint);
+      v.translate = [150, 0];
+      $viewport = v;
     }
     $viewport.dirty = true;
     editingBookId = book.revision.id;

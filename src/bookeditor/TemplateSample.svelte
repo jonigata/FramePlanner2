@@ -39,7 +39,7 @@
 </script>
 
 <div class="canvas-container" style="width: {size[0]}px; height: {size[1]}px;">
-  <canvas width="{size[0]}px" height="{size[1]}px" bind:this={canvas} on:click={onClick}/>
+  <canvas width="{size[0]}" height="{size[1]}" bind:this={canvas} on:click={onClick}/>
 </div>
 
 <style>

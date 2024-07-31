@@ -16,7 +16,7 @@ export class Viewport {
   constructor(c: HTMLCanvasElement, onHint: OnHint) {
     this.canvas = c;
     this.ctx = c.getContext('2d');
-    this.translate = [150, 0];
+    this.translate = [0, 0];
     this.viewTranslate = [0, 0];
     this.scale = 1;
     this.dirty = true;
