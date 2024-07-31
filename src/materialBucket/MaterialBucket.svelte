@@ -41,7 +41,9 @@
 
   function onChildDragStart(e: CustomEvent<HTMLImageElement>) {
     console.log("onDragStart");
-    $materialBucketOpen = false;
+    setTimeout(() => {
+      $materialBucketOpen = false;
+    }, 0);
   }
 
   function onDelete(e: CustomEvent<HTMLImageElement>) {
@@ -67,14 +69,15 @@
     const root = await $fileSystem.getRoot();
     const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
     const materials = await materialFolder.listEmbodied();
-    const images = [];
+    const canvases = [];
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
       const img = await material.asFile().readImage();
-      img["materialBindId"] = materials[i][0];
-      images.push(img);
+      const canvas = createCanvasFromImage(img);
+      canvas["materialBindId"] = materials[i][0];
+      canvases.push(canvas);
     }
-    gallery = images;
+    gallery = canvases;
     $loading = false;
   }
 

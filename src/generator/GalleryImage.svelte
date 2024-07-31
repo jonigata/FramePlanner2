@@ -12,6 +12,7 @@
 
   let container: HTMLDivElement;
   let height: number = 160;
+  let image: HTMLImageElement;
 
   const dispatch = createEventDispatcher();
 
@@ -56,19 +57,24 @@
 
   onMount(() => {
     console.log("change image size", canvas.width, canvas.height, $imageGeneratorTarget);
-    container.appendChild(canvas);
-    canvas.ondragstart = onDragStart;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
+    const w = Math.min(width, canvas.width);
+    const h = Math.min(height, canvas.height);
+
+    image = new Image();
+    image.src = canvas.toDataURL();
+
+    image.style.width = `${w}px`;
+    image.style.height = `${h}px`;
+    image.style.position = 'absolute';
+    image.style.top = (width / 2 - w / 2).toString() + 'px';
+    image.style.left = (height / 2 - h / 2).toString() + 'px';
+    container.appendChild(image);
   });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="frame" class:selected={chosen === canvas} bind:this={container} on:click={onClick} style="width: {width}px; height: {height}px;">
+<div class="frame" class:selected={chosen === canvas} bind:this={container} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
   <div class="delete-button" on:click={e => onDelete(e, canvas)}>
     <img src={drop} alt="delete" />
   </div>
