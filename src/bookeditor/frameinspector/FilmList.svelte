@@ -101,8 +101,9 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="film-list-container">
+  <FilmListItem film={null} on:select={onGenerate}/>
   <div 
-    class="flex flex-col gap-2 mb-2" 
+    class="flex flex-col gap-2 mt-2" 
     use:sortableList={{animation: 100, onUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >
@@ -116,7 +117,6 @@
       <div data-ghost class="ghost-element"/>
     {/if}
   </div>  
-  <FilmListItem film={null} on:select={onGenerate}/>
 </div>
 
 <style>
