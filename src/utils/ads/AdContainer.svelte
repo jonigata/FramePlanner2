@@ -22,13 +22,11 @@
 
 <div class="fixed inset-y-0 right-0 flex items-center z-50 pointer-events-none">
   <div class="flex flex-col items-end"> <!-- ボタンとパネルをグループ化 -->
-    <div class="pointer-events-auto">
-      <AdPanel {isOpen}>
-        <div class="content">
-          <EmbeddedHtml app="ads" url="/ads/{advertiser}/index.html" bind:reload={reload}/>
-        </div>
-      </AdPanel>
-    </div>
+    <AdPanel {isOpen}>
+      <div class="content">
+        <EmbeddedHtml app="ads" url="/ads/{advertiser}/index.html" bind:reload={reload}/>
+      </div>
+    </AdPanel>
     <button
       class="variant-soft-surface rounded-container-token px-3 py-1 rounded border-8 border-gray-400 pointer-events-auto"
       on:click={togglePanel}

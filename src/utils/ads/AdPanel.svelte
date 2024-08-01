@@ -15,9 +15,9 @@
   afterUpdate(updateWidth);
 </script>
 
-<div class="overflow-hidden" class:pointer-events-none={!isOpen}>
+<div class="overflow-hidden pointer-events-none">
   <div
-    class="transform transition-transform duration-300 ease-in-out"
+    class="transform transition-transform duration-300 ease-in-out pointer-events-auto"
     class:translate-x-full={!isOpen}
     style="width: {panelWidth}px"
   >
