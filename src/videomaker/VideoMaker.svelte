@@ -16,6 +16,7 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import { onDestroy, onMount } from 'svelte';
   import { writable, type Writable } from 'svelte/store';
+  import { initFFmpeg } from './generateMovieFile';
 
   const video: Writable<VideoSettings> = writable({
     width: 1920,
@@ -88,6 +89,7 @@
   });
 
   onDestroy(() => {
+    initFFmpeg();
     reflectDisplayProgram($mainBook, program);
     console.log(video);
     $mainBook.video = $video;
