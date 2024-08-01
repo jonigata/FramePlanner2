@@ -2,20 +2,21 @@
   import type { FileSystem, Folder, NodeId, BindId, Node } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize, importEnvelope } from "./fileManagerStore";
   import { newBook } from "../bookeditor/book";
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { loading } from '../utils/loadingStore'
+  import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
 
   import newFileIcon from '../assets/fileManager/new-file.png';
   import newFolderIcon from '../assets/fileManager/new-folder.png';
   import trashIcon from '../assets/fileManager/trash.png';
   import folderIcon from '../assets/fileManager/folder.png';
   import renameIcon from '../assets/fileManager/rename.png';
-  import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
+  import packageIcon from '../assets/fileManager/package-import.png';
 
   export let fileSystem: FileSystem;
   export let filename: string;
@@ -58,6 +59,19 @@
       console.log(ev);
       await moveToHere(ev.dataTransfer, 0);
     } else {
+      // jsonだったら、jsonの中身を見て、適切な処理をする
+      if (ev.dataTransfer.files.length === 1) {
+        const file = ev.dataTransfer.files[0];
+        if (file.type === "application/json") {
+          const json = await file.text();
+          console.log(json);
+          const newFile = await fileSystem.createFile();
+          await importEnvelope(json, fileSystem, newFile);
+          await node.link("パッケージ", newFile.id);
+          node = node;
+          return;
+        }
+      }
       console.log("not acceptable");
     }
   }
@@ -342,6 +356,7 @@
     width: 20px;
     height: 16px;
     display: flex;
+    gap: 4px;
   }
   .button {
     width: 16px;

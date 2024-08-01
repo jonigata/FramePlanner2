@@ -8,11 +8,13 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { saveAs } from 'file-saver';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { exportEnvelope } from "../filemanager/fileManagerStore";
 
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
   import fileIcon from '../assets/fileManager/file.png';
   import pasteIcon from '../assets/fileManager/paste.png'
+  import packageIcon from '../assets/fileManager/package-export.png'
 
   const dispatch = createEventDispatcher();
 
@@ -113,6 +115,13 @@
     toastStore.trigger({ message: 'マークされたページを\nコピーしました', timeout: 1500});
   }
 
+  async function makePackage() {
+    const file = (await fileSystem.getNode(nodeId)).asFile();
+    const s = await exportEnvelope(fileSystem, file);
+    const blob = new Blob([s], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "envelope.json");
+  }
+
   onMount(async () => {
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
@@ -142,6 +151,11 @@
       <img class="button" src={pasteIcon} alt="rename" on:click={copyMarkedPages} use:toolTip={"選択ページを\nこのファイルにコピー"}/>
     </div>  
   {/if}
+  <div class="button-container">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img class="button" src={packageIcon} alt="rename" on:click={makePackage} use:toolTip={"パッケージ作成"}/>
+  </div>  
   <div class="button-container">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->

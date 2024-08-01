@@ -67,7 +67,7 @@
     "svelvet": "^8.1.0",
     "ulid": "^2.3.0",
     "uuid": "^9.0.0",
-    "vitest": "^0.31.3",
+    "vitest": "^2.0.5",
     "webfontloader": "^1.6.28"
   }
 }

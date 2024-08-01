@@ -17,6 +17,7 @@
     {icon: aiPictorsIcon, label: "に投稿", onClick: postAIPictors},
     {label: "PSDでエクスポート", onClick: downloadPSD},
     {label: "シェア", onClick: shareBook},
+    {label: "パッケージ", onClick: downloadEnvelop},
   ];  
 
   function archive(op: BookArchiveOperation) {
@@ -49,6 +50,11 @@
   async function shareBook() {
     $commitIfDirtyToken = true;
     $shareBookToken = $mainBook;
+  }
+
+  async function downloadEnvelop() {
+    logEvent(getAnalytics(), 'download_envelop');
+    archive('envelope');
   }
 
 </script>
