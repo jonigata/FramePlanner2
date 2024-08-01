@@ -33,7 +33,7 @@
   import RulerButton from './rootelements/RulerButton.svelte';
   import AboutButton from './rootelements/AboutButton.svelte';
   import DownloadButton from './rootelements/DownloadButton.svelte';
-  // import VideoButton from './rootelements/VideoButton.svelte';
+  import VideoButton from './rootelements/VideoButton.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
@@ -48,7 +48,7 @@
   import MaterialBucket from './materialBucket/MaterialBucket.svelte';
   import BubbleBucket from './bubbleBucket/BubbleBucket.svelte';
   //  import JsonReader from './utils/JsonReader.svelte';
-  // import VideoMaker from './videomaker/VideoMaker.svelte';
+  import VideoMaker from './videomaker/VideoMaker.svelte';
   import ToolBar from './toolbar/ToolBar.svelte'
   import AdContainer from './utils/ads/AdContainer.svelte';
   import Downloader from './downloader/Downloader.svelte';
@@ -72,11 +72,9 @@
     signIn: {
       ref: SignIn,
     },
-    /*
     videoMaker: {
       ref: VideoMaker,
     }
-    */
   };
 
   onMount(async () => {
@@ -149,7 +147,7 @@
 <RulerButton/>
 <AboutButton/>
 <DownloadButton />
-<!--<VideoButton />-->
+<VideoButton />
 
 <!-- drawers -->
 <FontChooser/>
