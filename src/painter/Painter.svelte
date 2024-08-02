@@ -8,7 +8,6 @@
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
   import { mainBook } from '../bookeditor/bookStore';
   import FreehandInspector from './FreehandInspector.svelte';
-  import PainterAutoGenerate from './PainterAutoGenerate.svelte';
   import { rectToTrapezoid } from '../lib/layeredCanvas/tools/geometry/trapezoid';
   import { dominantMode } from '../uiStore'
 
@@ -19,7 +18,6 @@
   let painterPage: Page = null;
   let painterFilm: Film = null;
   let autoGeneration: boolean = false;
-  let painterAutoGenerate: PainterAutoGenerate = null;
   let onDoneHandler: () => void;
 
   $: onChangeAutoGeneration(autoGeneration);
@@ -137,9 +135,6 @@
     on:done={onDone} 
     on:redraw={onRedraw}
     opened={painterFilm != null}/>
-{#if painterFilm != null}
-  <PainterAutoGenerate bind:this={painterAutoGenerate}/>
-{/if}
 </div>
 
 <style>
