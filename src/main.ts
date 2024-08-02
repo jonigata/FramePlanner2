@@ -45,3 +45,6 @@ function loadFont(family: string, filename: string, weight: string) {
   document.fonts.add(font);
 }
 loadFont('源暎エムゴ', 'GenEiMGothic2-Black', '700');
+
+import { register } from 'swiper/element/bundle';
+register();
