@@ -1,6 +1,7 @@
 import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas";
+import { createCanvasFromImage } from "../utils/imageUtil";
 
-export async function generateImages(url, imageRequest) {
+export async function generateImages(url: string, imageRequest): Promise<HTMLCanvasElement[]> {
   url = removeLastSlash(url);
   try {
     const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount, alwaysonScripts, samplerName } = imageRequest;
@@ -31,13 +32,14 @@ export async function generateImages(url, imageRequest) {
     const data = await response.json();
     const images = data.images;
 
-    const imgs = [];
+    const canvases = [];
     for (let i of images) {
         const img = document.createElement('img');
         img.src = "data:image/png;base64," + i;
-        imgs.push(img);
+        await img.decode();
+        canvases.push(createCanvasFromImage(img));
     }
-    return imgs;
+    return canvases;
   } catch (error) {
     console.error('Error:', error);
     throw error;
@@ -74,7 +76,7 @@ function removeLastSlash(url) {
   return url;
 }
 
-export async function generateImageWithScribble(url: string, refered: HTMLImageElement, prompt: string, lcm: boolean): Promise<HTMLImageElement> {
+export async function generateImageWithScribble(url: string, refered: HTMLImageElement, prompt: string, lcm: boolean): Promise<HTMLCanvasElement> {
   await refered.decode();
 
   try {
