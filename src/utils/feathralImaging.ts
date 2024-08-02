@@ -11,13 +11,13 @@ export class GenerateImageContext {
   }
 }
 
-export async function generateImage(prompt: string, context: GenerateImageContext): Promise<HTMLImageElement> {
+export async function generateImage(prompt: string, width: number, height: number, context: GenerateImageContext): Promise<HTMLImageElement> {
   console.log("running feathral");
   try {
     let q = null;
     if (context.awakeWarningToken) {
       q = setTimeout(() => {
-        toastStore.trigger({ message: `サーバがスリープ状態だと、\n生成の初動が遅れることがあります`, timeout: 3000});
+        toastStore.trigger({ message: `サーバがスリープ状態だと、生成の初動が遅れたり\n失敗したりすることがあります`, timeout: 3000});
         q = null;
       }, 10000);
       context.awakeWarningToken = false;
@@ -25,8 +25,8 @@ export async function generateImage(prompt: string, context: GenerateImageContex
     let imageRequest = {
       "style": "anime",
       "prompt": prompt,
-      "width": 1024,
-      "height": 1024,
+      "width": width,
+      "height": height,
       "output_format": "png"
     };
     console.log(imageRequest);

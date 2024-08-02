@@ -44,7 +44,7 @@
       const imageJson = response.data[0].b64_json;
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
-
+      await img.decode();
 
       const film = new Film();
       const media = new ImageMedia(createCanvasFromImage(img));

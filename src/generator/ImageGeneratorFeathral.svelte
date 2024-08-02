@@ -13,6 +13,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
   import { makePlainImage } from "../utils/imageUtil";
+  import { GenerateImageContext, generateImage } from '../utils/feathralImaging';
 
   export let busy: boolean;
   export let prompt: string;
@@ -25,15 +26,6 @@
   let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
 
-  // essential
-  let imageRequest = {
-    "style": "anime",
-    "prompt": "1 chibi girl, penguin costume",
-    "width": 1024,
-    "height": 1024,
-    "output_format": "png"
-  };
-
   function onChooseImage({detail}) {
     chosen = detail;
   }
@@ -41,30 +33,20 @@
   async function generate() {
     busy = true;
     try {
-      imageRequest.prompt = prompt + ", " + postfix;
-      imageRequest.width = size[0];
-      imageRequest.height = size[1];
-      console.log(imageRequest);
-
       progress = 0;
       let delta = 1 / 8;
       const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
 
-      const data = await executeProcessAndNotify(
+      const img = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateImageFromTextWithFeathral(imageRequest);
+          return await generateImage(`${prompt}, ${postfix}`, size[0], size[1], new GenerateImageContext());
+          // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      console.log(data);
-      const img = document.createElement('img');
-      img.src = "data:image/png;base64," + data.result.image;
       await img.decode();
       const canvas = createCanvasFromImage(img);
-      // const canvas = data.result.image;
-      console.log(canvas.width, canvas.height);
 
-      $onlineAccount.feathral = data.feathral;
       gallery.push(canvas);
       gallery = gallery;
       progress = 1;

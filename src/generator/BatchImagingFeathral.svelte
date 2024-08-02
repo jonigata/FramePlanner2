@@ -33,8 +33,9 @@
   }
 
   async function generate(frame: FrameElement) {
-    const img = await generateImage(`${frame.prompt}, ${postfix}`, generateContext);
+    const img = await generateImage(`${frame.prompt}, ${postfix}`, 1024, 1024, generateContext);
     if (img != null) {
+      await img.decode();
       const film = new Film();
       const media = new ImageMedia(createCanvasFromImage(img));
       film.media = media;
