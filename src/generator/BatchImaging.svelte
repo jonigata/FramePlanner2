@@ -43,6 +43,7 @@
     commitBook($mainBook, null);
     $mainBook = $mainBook;
     $redrawToken = true;
+    $batchImagingPage = $batchImagingPage;
   }
 </script>
 
@@ -72,7 +73,7 @@
             </div>
             <div class="content">
               {#if tabSet === 0}
-                <BatchImagingDalle3 bind:this={dalle3}/>
+                <BatchImagingDalle3 bind:this={dalle3} bind:stats={stats}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
               {:else if tabSet === 1}
                 <BatchImagingFeathral bind:this={feathral} bind:stats={stats}/>

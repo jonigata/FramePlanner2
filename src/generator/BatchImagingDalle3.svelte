@@ -9,6 +9,9 @@
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { createCanvasFromImage } from "../utils/imageUtil";
+  import type { Stats } from "./batchImagingStore";
+
+  export let stats: Stats;
 
   let keyValueStorage: KeyValueStorage = null;
   let storedApiKey: string = null;
@@ -51,9 +54,11 @@
       film.media = media;
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
+      stats.succeeded++;
     } catch (e) {
       console.log(e);
       toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
+      stats.failed++;
     }
   }
 
@@ -64,6 +69,9 @@
       if (0 < leaf.filmStack.films.length) { continue; }
       promises.push(generate(leaf));
     }
+    stats.total = promises.length;
+    stats.succeeded = 0;
+    stats.failed = 0;
     await Promise.all(promises);
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
