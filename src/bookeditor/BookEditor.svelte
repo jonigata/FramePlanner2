@@ -480,6 +480,11 @@
     delayedCommiter.force();
     toolTipRequest.set(null);
     await painter.runWithFrame(fit.page, fit.frame, fit.commandTargetFilm);
+    const media = fit.commandTargetFilm.media;
+    if (media instanceof ImageMedia) {
+      const canvas = media.canvas;
+      canvas["clean"] = {};
+    }
     commit(null);
   }
 

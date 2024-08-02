@@ -10,8 +10,20 @@ import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
-import { createImageFromCanvas } from "../utils/imageUtil";
 
+// キャッシュの仕組み
+// 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
+// canvas["fileId"][fileSystemId] = fileId
+// というプロパティを追加してある
+// これがcanvasCache[fileSystemId]から検索する
+// このプロパティが存在しない場合、そのファイルシステムではまだファイル化されていない
+
+// ローカルファイルシステムでは基本的に内容で同一性判断をすることはない
+// scribbleしたときに上書きするため
+
+// save時にcanvas["clean"][fileSystemId] = trueする
+// scribbleしたときは、canvas["clean"]を空にする
+// 次にsaveするときにcanvas["clean"][fileSystemId]がない場合は、更新されたものとしてsaveする
 const canvasCache: { [fileSystemId: string]: { [fileId: string]: HTMLCanvasElement } } = {};
 
 export type Dragging = {
@@ -255,13 +267,17 @@ async function loadCanvas(fileSystem: FileSystem, canvasId: string): Promise<HTM
   canvasCache[fileSystem.id] ??= {};
 
   if (canvasCache[fileSystem.id][canvasId]) {
-    return canvasCache[fileSystem.id][canvasId];
+    const canvas = canvasCache[fileSystem.id][canvasId];
+    canvas["clean"][fileSystem.id] = true; // 途中クラッシュでもないと本来はあり得ないが、念のため
+    return canvas;
   } else {
     try {
       const file = (await fileSystem.getNode(canvasId as NodeId)).asFile();
       const canvas = await file.readCanvas();
       canvas["fileId"] ??= {}
       canvas["fileId"][fileSystem.id] = file.id
+      canvas["clean"] ??= {}
+      canvas["clean"][fileSystem.id] = true;
       canvasCache[fileSystem.id][canvasId] = canvas;
       return canvas;
     }
@@ -275,15 +291,26 @@ async function loadCanvas(fileSystem: FileSystem, canvasId: string): Promise<HTM
 async function saveCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement, imageFolder: Folder): Promise<void> {
   canvasCache[fileSystem.id] ??= {};
   canvas["fileId"] ??= {}
+  canvas["clean"] ??= {}
 
   const fileId = canvas["fileId"][fileSystem.id];
-  if (canvasCache[fileSystem.id][fileId]) {
-    return;
+  if (fileId != null) {
+    if (!canvas["clean"][fileSystem.id]) {
+      console.log("************** DIRTY CANVAS");
+      const file = (await fileSystem.getNode(fileId)).asFile();
+      await file.writeCanvas(canvas);    
+      return;
+    }
+    if (canvasCache[fileSystem.id][fileId]) {
+      return;
+    }
+    // ここには来ないはず
+    throw new Error("saveCanvas: fileId is not null but canvas is not in cache");
   }
   const file = await fileSystem.createFile();
   await file.writeCanvas(canvas);
-  canvas["fileId"] ??= {}
   canvas["fileId"][fileSystem.id] = file.id
+  canvas["clean"][fileSystem.id] = true;
   canvasCache[fileSystem.id][file.id] = canvas;
   await imageFolder.link(file.id, file.id);
 }
