@@ -11,6 +11,7 @@ import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
 import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas.js";
+import { createCanvasFromImage } from "../utils/imageUtil.js";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
@@ -589,25 +590,25 @@ export async function exportEnvelope(fileSystem: FileSystem, file: File): Promis
     }    
   }
 
-  function collectFrameImages(frameTree: FrameElement, images: { [fileId: string]: string }) {
+  function collectFrameImages(frameTree: FrameElement, canvases: { [fileId: string]: string }) {
     for (const film of frameTree.filmStack.films) {
       if (film.media instanceof ImageMedia) {
-        const image = film.media.image;
-        console.log(image["fileId"]);
-        images[image["fileId"][fileSystem.id]] = imageToBase64(image);
+        const canvas = film.media.canvas;
+        console.log(canvas["fileId"]);
+        canvases[canvas["fileId"][fileSystem.id]] = canvas.toDataURL("image/png");
       }
     }
     for (const child of frameTree.children) {
-      collectFrameImages(child, images);
+      collectFrameImages(child, canvases);
     }
   }
 
-  function collectBubbleImages(bubbles: Bubble[], images: { [fileId: string]: string }) {
+  function collectBubbleImages(bubbles: Bubble[], canvases: { [fileId: string]: string }) {
     for (const bubble of bubbles) {
       for (const film of bubble.filmStack.films) {
         if (film.media instanceof ImageMedia) {
-          const image = film.media.image;
-          images[image["fileId"][fileSystem.id]] = imageToBase64(image);
+          const canvas = film.media.canvas;
+          canvases[canvas["fileId"][fileSystem.id]] = canvas.toDataURL("image/png");
         }
       }
     }
@@ -657,17 +658,17 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
     await image.decode();
 
     const file = await fileSystem.createFile();
-    await file.writeImage(image);
+    await file.writeCanvas(createCanvasFromImage(image));
     await imageFolder.link(file.id, file.id);
     newImages[imageId] = file.id;
   }
 
-  async function loadImage(fileSystem: FileSystem, sourceFileId: string): Promise<HTMLImageElement> {
+  async function loadImage(fileSystem: FileSystem, sourceFileId: string): Promise<HTMLCanvasElement> {
     const targetFileId = newImages[sourceFileId];
     try {
       const file = (await fileSystem.getNode(targetFileId as NodeId)).asFile();
-      const image = await file.readImage();
-      return image;
+      const canvas = await file.readCanvas();
+      return canvas;
     }
     catch (e) {
       console.log(e);
