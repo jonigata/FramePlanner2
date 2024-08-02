@@ -54,8 +54,8 @@ export class File extends Node {
   asFile() { return this; }
   async read(): Promise<string> {return null;}
   async write(data: string): Promise<void> {}
-  async readImage(): Promise<HTMLImageElement> {return null;}
-  async writeImage(image: HTMLImageElement): Promise<void> {}
+  async readCanvas(): Promise<HTMLCanvasElement> {return null;}
+  async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {}
 }
 
 export class Folder extends Node {

@@ -27,6 +27,7 @@
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { mascotVisible } from '../mascot/mascotStore';
   import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
+  import { createImageFromCanvas } from '../utils/imageUtil';
 
   export let fileSystem: FileSystem;
 
@@ -250,8 +251,8 @@
     const usedImages = [];
     for (const imageFile of usedImageFiles) {
       const file = await fileSystem.getNode(imageFile as NodeId);
-      const image = await file.asFile().readImage();
-      await image.decode();
+      const canvas = await file.asFile().readCanvas();
+      const image = await createImageFromCanvas(canvas);
       console.log("loaded used image", imageFile);
       usedImages.push(image);
     }
@@ -259,8 +260,8 @@
     const strayImages = [];
     for (const imageFile of strayImageFiles) {
       const file = await fileSystem.getNode(imageFile as NodeId);
-      const image = await file.asFile().readImage();
-      await image.decode();
+      const canvas = await file.asFile().readCanvas();
+      const image = await createImageFromCanvas(canvas);
       console.log("loaded stray image", imageFile);
       strayImages.push(image);
     }

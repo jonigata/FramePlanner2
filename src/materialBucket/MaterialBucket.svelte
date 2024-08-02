@@ -72,8 +72,7 @@
     const canvases = [];
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
-      const img = await material.asFile().readImage();
-      const canvas = createCanvasFromImage(img);
+      const canvas = await material.asFile().readCanvas();
       canvas["materialBindId"] = materials[i][0];
       canvases.push(canvas);
     }

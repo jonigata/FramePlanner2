@@ -5,8 +5,8 @@ import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPa
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
-import { imageToBase64  } from '../layeredCanvas/tools/saveCanvas';
 import { getAuth } from '../../firebase';
+import { createCanvasFromBlob } from '../../utils/imageUtil';
 
 export class FirebaseFileSystem extends FileSystem {
   userId: string;
@@ -97,7 +97,7 @@ export class FirebaseFile extends File {
     await set(child(this.nodeRef, 'content'), data);
   }
 
-  async readImage(): Promise<HTMLImageElement> {
+  async readCanvas(): Promise<HTMLCanvasElement> {
     const snapshot = await get(child(this.nodeRef, 'link'));
     const id = snapshot.val();
 
@@ -105,27 +105,14 @@ export class FirebaseFile extends File {
     const storageFileRef = sref(storage, id);
     const blob = await getBlob(storageFileRef);
 
-    // Create an object URL from the Blob data
-    const url = URL.createObjectURL(blob);
-
-    // Create a new Image element and set its src attribute to the object URL
-    return new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = url;
-      img.onload = () => {
-        URL.revokeObjectURL(url);  // Revoke the object URL once the image has loaded
-        resolve(img);
-      };
-      img.onerror = (error) => reject(error);
-    });
+    const canvas = createCanvasFromBlob(blob);
+    return canvas;
   }
 
-  async writeImage(image: HTMLImageElement): Promise<void> {
-    console.log("*********** writeImage");
-    const base64Image = imageToBase64(image);
+  async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
+    console.log("*********** writeCanvas");
+    const base64Image = canvas.toDataURL('image/png');
     const id = await sha1(base64Image);
-    console.log(id);
 
     const storage = (this.fileSystem as FirebaseFileSystem).storage;
     const storageFileRef = sref(storage, id);

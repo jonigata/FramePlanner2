@@ -10,7 +10,9 @@ import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
-import { createCanvasFromImage, createImageFromCanvas } from "../utils/imageUtil";
+import { createImageFromCanvas } from "../utils/imageUtil";
+
+const canvasCache: { [fileSystemId: string]: { [fileId: string]: HTMLCanvasElement } } = {};
 
 export type Dragging = {
   bindId: string;
@@ -29,8 +31,6 @@ export const shareBookToken: Writable<Book> = writable(null);
 export const fileManagerUsedSize: Writable<number> = writable(null);
 export const loadToken: Writable<NodeId> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
-
-const canvasCache: { [fileSystemId: string]: { [fileId: string]: HTMLCanvasElement } } = {};
 
 type SerializedPage = {
   id: string,
@@ -259,8 +259,7 @@ async function loadCanvas(fileSystem: FileSystem, canvasId: string): Promise<HTM
   } else {
     try {
       const file = (await fileSystem.getNode(canvasId as NodeId)).asFile();
-      const image = await file.readImage();
-      const canvas = createCanvasFromImage(image);
+      const canvas = await file.readCanvas();
       canvas["fileId"] ??= {}
       canvas["fileId"][fileSystem.id] = file.id
       canvasCache[fileSystem.id][canvasId] = canvas;
@@ -282,7 +281,7 @@ async function saveCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement, ima
     return;
   }
   const file = await fileSystem.createFile();
-  await file.writeImage(await createImageFromCanvas(canvas));
+  await file.writeCanvas(canvas);
   canvas["fileId"] ??= {}
   canvas["fileId"][fileSystem.id] = file.id
   canvasCache[fileSystem.id][file.id] = canvas;
@@ -519,7 +518,7 @@ export async function saveMaterialCanvas(fileSystem: FileSystem, canvas: HTMLCan
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
   const file = await fileSystem.createFile();
-  await file.writeImage(await createImageFromCanvas(canvas));
+  await file.writeCanvas(canvas);
   return await materialFolder.link(file.id, file.id);
 }
 

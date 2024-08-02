@@ -2,8 +2,8 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { imageToBase64 } from "./../layeredCanvas/tools/saveCanvas";
 import { saveAs } from 'file-saver';
+import { createCanvasFromImage } from '../../utils/imageUtil';
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;
@@ -140,15 +140,16 @@ export class IndexedDBFile extends File {
     await this.db.put('nodes', { id: this.id, type: 'file', content: data });
   }
 
-  async readImage(): Promise<HTMLImageElement> {
+  async readCanvas(): Promise<HTMLCanvasElement> {
     const content = await this.read();
     const image = new Image();
     image.src = content;
-    return image;
+    await image.decode();
+    return createCanvasFromImage(image);
   }
 
-  async writeImage(image: HTMLImageElement): Promise<void> {
-    await this.write(imageToBase64(image));
+  async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
+    await this.write(canvas.toDataURL("image/png"));
   }
 }
 
