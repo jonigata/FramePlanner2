@@ -388,13 +388,20 @@
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} index={2} isTrash={true} path={[templates[0]]}/>
           {/if}
         </div>
-  -->
-      </div>
+-->
+<!--
       <div class="toolbar">
+        <div class="hbox gap mx-2" style="margin-top: 8px;">
+          インポート<input accept="application/json" bind:files={importFiles} id="import" name="import" type="file" />
+        </div>
+      </div>
+-->
+</div>
+      <div class="flex flex-row gap-2 items-center justify-center">
         <p>ファイルシステム使用量: {formatMillions($fileManagerUsedSize)}</p>
         <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
-      </div> 
-      <div class="toolbar">
+      </div>
+      <div class="flex flex-row gap-2 items-center justify-center">
         <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
         <div class="hbox gap mx-2" style="margin-top: 8px;">
           リストア<input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
@@ -403,13 +410,6 @@
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
         {/if}
       </div>
-<!--
-      <div class="toolbar">
-        <div class="hbox gap mx-2" style="margin-top: 8px;">
-          インポート<input accept="application/json" bind:files={importFiles} id="import" name="import" type="file" />
-        </div>
-      </div>
--->
     {/key}
   </Drawer>
 </div>

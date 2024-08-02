@@ -12,8 +12,11 @@ dist
 dist-ssr
 *.local
 public/ads
+.firebase/*
+junk/*
 public/stamp.txt
-junk
+.editorconfig
+
 
 # Editor directories and files
 .vscode/*
@@ -24,6 +27,3 @@ junk
 *.njsproj
 *.sln
 *.sw?
-.firebase/*
-.editorconfig
-

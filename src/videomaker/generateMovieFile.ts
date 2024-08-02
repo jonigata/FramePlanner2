@@ -8,9 +8,16 @@ export interface Scene {
   canvas: HTMLCanvasElement;
 }
 
-const ffmpeg = new FFmpeg<FFmpegConfigurationGPLExtended>({
-  config: 'gpl-extended',
-});
+let ffmpeg: FFmpeg<FFmpegConfigurationGPLExtended> = null;
+
+export function initFFmpeg() {
+  if (ffmpeg) {
+    return;
+  }
+  ffmpeg = new FFmpeg<FFmpegConfigurationGPLExtended>({
+    config: 'gpl-extended',
+  });
+}
 
 async function writeCanvasToFile(canvas: HTMLCanvasElement, filename: string): Promise<void> {
   return new Promise((resolve, reject) => {

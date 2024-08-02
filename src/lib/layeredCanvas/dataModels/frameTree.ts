@@ -859,4 +859,3 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
     film.setShiftedTranslation(paperSize, [m.e, m.f]);
   });
 }
-

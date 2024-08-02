@@ -50,14 +50,14 @@
   //  import JsonReader from './utils/JsonReader.svelte';
   import VideoMaker from './videomaker/VideoMaker.svelte';
   import ToolBar from './toolbar/ToolBar.svelte'
-  import AdContainer from './utils/AdContainer.svelte';
+  import AdContainer from './utils/ads/AdContainer.svelte';
   import Downloader from './downloader/Downloader.svelte';
   import TemplateChooser from './bookeditor/TemplateChooser.svelte';
   import ColorPickerDialog from './utils/colorpicker/ColorPickerDialog.svelte';
   import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
 
-  //const advertiser = "thumbnail_stories";
-  const advertiser = null;
+  const advertiser = "thumbnail_stories";
+  //const advertiser = null;
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {
@@ -176,7 +176,7 @@
 </Modals>
 <FullScreenLoading/>
 
-<!-- ads -->
+  <!-- ads -->
 {#if advertiser != null}
   <AdContainer advertiser={advertiser}/>
 {/if}

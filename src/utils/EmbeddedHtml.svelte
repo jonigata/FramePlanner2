@@ -3,6 +3,15 @@
 
   export let app;
   export let url;
+  export let reload: boolean;
+
+  let key = 0;
+
+  $: if (reload) {
+    console.log("reloading");
+    reload = false;
+    key++;
+  }
     
   onMount(() => {
     console.log(`Mounted ${app}`);
@@ -16,7 +25,8 @@
     console.log(`Destroyed ${app}`);
   });
 </script>
-  
+
+{#key key}
   <iframe
     title="{app}"
     id='microapp-{app}'
@@ -24,7 +34,7 @@
     scrolling='no'
     src={url}
   ></iframe>
-  
+{/key}  
   
   <style>
       iframe { width: 100%; height:100%; }

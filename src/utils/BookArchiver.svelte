@@ -7,6 +7,10 @@
   import { saveAsPSD } from "./saver/saveAsPSD";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { postToAiPictors } from "./saver/postToAiPictors";
+  import { exportEnvelope } from "../filemanager/fileManagerStore";
+  import { fileSystem } from '../filemanager/fileManagerStore';
+  import type { NodeId } from '../lib/filesystem/fileSystem';
+  import { saveAs } from 'file-saver';
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -36,11 +40,19 @@
           case 'aipictors':
             postToAiPictors(targetPages[0]);
             break;
+          case 'envelope':
+            console.log("envelope");
+            const file = (await $fileSystem.getNode($mainBook.revision.id as NodeId)).asFile();
+            const s = await exportEnvelope($fileSystem, file);
+            const blob = new Blob([s], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, "envelope.json");
+            break;
         }
       }
       $bookArchiver = [];      
     }
     catch(e) {
+      console.log(e);
       toastStore.trigger({ message: e, timeout: 1500});
     }
   }

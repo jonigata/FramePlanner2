@@ -1,21 +1,21 @@
 <script lang="ts">
   import Drawer from '../utils/Drawer.svelte'
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-  import { triggerTemplateChoise } from './templateChooserStore';
+  import { triggerTemplateChoice } from './templateChooserStore';
   import TemplateSample from './TemplateSample.svelte';
 
   function onClick(index: number) {
-    triggerTemplateChoise.resolve(index);
+    triggerTemplateChoice.resolve(index);
   }
 
   function onClickAway() {
-    triggerTemplateChoise.resolve(null);
+    triggerTemplateChoice.resolve(null);
   }
 </script>
 
 <div class="drawer-outer">
   <Drawer
-    open={$triggerTemplateChoise.isActive}
+    open={$triggerTemplateChoice.isActive}
     placement="right"
     size="480px"
     on:clickAway={onClickAway}

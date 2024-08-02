@@ -31,7 +31,7 @@
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
   import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
-  import { triggerTemplateChoise } from "./templateChooserStore";
+  import { triggerTemplateChoice } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
   import { createImageFromCanvas } from "../utils/imageUtil";
@@ -130,8 +130,8 @@
   function insertPage(pageIndex: number) {
     focusKeeper.setFocus(null);
     $redrawToken = true;
-    triggerTemplateChoise.trigger().then(result => {
-      if (result) {
+    triggerTemplateChoice.trigger().then(result => {
+      if (result != null) {
         $newPageProperty.templateIndex = result;
         insertNewPageToBook($mainBook, $newPageProperty, pageIndex);
         commit(null);

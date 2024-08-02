@@ -10,6 +10,7 @@ import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
+import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas.js";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
@@ -61,6 +62,13 @@ type SerializedBook = {
   wrapMode: WrapMode,
   chatLogs: ProtocolChatLog[],
 }
+
+type EnvelopedBook = {
+  pages: SerializedPage[],
+  direction: ReadingDirection,
+  wrapMode: WrapMode,
+  images: { [fileId: string]: string }
+};
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
   console.tag("saveBookTo", "cyan", file.id);
@@ -555,4 +563,133 @@ export async function deleteMaterialCanvas(fileSystem: FileSystem, materialBindI
   const nodeId = (await materialFolder.getEntry(materialBindId))[2];
   await materialFolder.unlink(materialBindId);
   await fileSystem.destroyNode(nodeId);
+}
+
+export async function exportEnvelope(fileSystem: FileSystem, file: File): Promise<string> {
+  console.tag("exportEnvelope", "cyan", file.id);
+  const content = await file.read();
+  let envelopedBook: EnvelopedBook = JSON.parse(content);
+
+  if (!envelopedBook.pages) {
+    const oldSerializedPage = envelopedBook as any;
+    const newSerializedPage = {
+      id: oldSerializedPage.id ?? ulid(),
+      frameTree: oldSerializedPage.frameTree,
+      bubbles: oldSerializedPage.bubbles,
+      paperSize: oldSerializedPage.paperSize,
+      paperColor: oldSerializedPage.paperColor,
+      frameColor: oldSerializedPage.frameColor,
+      frameWidth: oldSerializedPage.frameWidth,
+    }
+    envelopedBook = {
+      pages: [newSerializedPage],
+      direction: 'right-to-left',
+      wrapMode: 'none',
+      images: {}
+    }    
+  }
+
+  function collectFrameImages(frameTree: FrameElement, images: { [fileId: string]: string }) {
+    for (const film of frameTree.filmStack.films) {
+      if (film.media instanceof ImageMedia) {
+        const image = film.media.image;
+        console.log(image["fileId"]);
+        images[image["fileId"][fileSystem.id]] = imageToBase64(image);
+      }
+    }
+    for (const child of frameTree.children) {
+      collectFrameImages(child, images);
+    }
+  }
+
+  function collectBubbleImages(bubbles: Bubble[], images: { [fileId: string]: string }) {
+    for (const bubble of bubbles) {
+      for (const film of bubble.filmStack.films) {
+        if (film.media instanceof ImageMedia) {
+          const image = film.media.image;
+          images[image["fileId"][fileSystem.id]] = imageToBase64(image);
+        }
+      }
+    }
+  }
+
+  envelopedBook.images = {};
+  for (const envelopedPage of envelopedBook.pages) {
+    const frameTree = await unpackFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, fileSystem);
+    const bubbles = await unpackBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, fileSystem);
+
+    collectFrameImages(frameTree, envelopedBook.images);
+    collectBubbleImages(bubbles, envelopedBook.images);
+  }
+
+  const json = JSON.stringify(envelopedBook);
+  return json;
+}
+
+export async function importEnvelope(json: string, fileSystem: FileSystem, file: File): Promise<void> {
+  // この中で作られたimage等はセーブ後捨てられるので、キャッシュなどは一切無視する
+  console.tag("importEnvelope", "cyan");
+  const envelopedBook: EnvelopedBook = JSON.parse(json);
+
+  const root = await fileSystem.getRoot();
+  const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
+
+  const book: Book = {
+    revision: { id: file.id, revision: 1, prefix: 'envelope-' },
+    pages: [],
+    history: {
+      entries: [],
+      cursor: 0,
+    },
+    direction: envelopedBook.direction,
+    wrapMode: envelopedBook.wrapMode,
+    chatLogs: []
+  };
+
+  // envelopeに含まれるimage.fileIdがexport filesystem/import filesystemで被らないことが前提になっている
+  // ulidを使っているので、善意に基づけばこれは守られるが、jsonに悪意がある場合は成立しない
+  // したがって、newImages[source-image.fileId] = target-file.id として対応表を作り、
+  // envelope内のimage参照をtarget file.idに書き換える
+  const newImages = {};
+  for (const imageId in envelopedBook.images) {
+    const image = new Image();
+    image.src = envelopedBook.images[imageId];
+    await image.decode();
+
+    const file = await fileSystem.createFile();
+    await file.writeImage(image);
+    await imageFolder.link(file.id, file.id);
+    newImages[imageId] = file.id;
+  }
+
+  async function loadImage(fileSystem: FileSystem, sourceFileId: string): Promise<HTMLImageElement> {
+    const targetFileId = newImages[sourceFileId];
+    try {
+      const file = (await fileSystem.getNode(targetFileId as NodeId)).asFile();
+      const image = await file.readImage();
+      return image;
+    }
+    catch (e) {
+      console.log(e);
+      return null;
+    }
+  }
+  
+  for (const envelopedPage of envelopedBook.pages) {
+    const frameTree = await unpackFrameImagesInternal(envelopedPage.paperSize, envelopedPage.frameTree, fileSystem, loadImage);
+    const bubbles = await unpackBubbleImagesInternal(envelopedPage.paperSize, envelopedPage.bubbles, fileSystem, loadImage);
+
+    const page: Page = {
+      id: envelopedPage.id ?? ulid(),
+      frameTree: frameTree,
+      bubbles: bubbles,
+      paperSize: envelopedPage.paperSize,
+      paperColor: envelopedPage.paperColor,
+      frameColor: envelopedPage.frameColor,
+      frameWidth: envelopedPage.frameWidth,
+    };
+    book.pages.push(page);
+  }
+
+  await saveBookTo(book, fileSystem, file);
 }
