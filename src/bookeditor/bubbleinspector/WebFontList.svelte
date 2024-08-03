@@ -162,6 +162,20 @@
       isBold: false,
       isLocal: true,
     },
+    {
+      family: 'ふい字',
+      variants: ["400" as GoogleFontVariant],
+      isGothic: false,
+      isBold: false,
+      isLocal: true,
+    },
+    {
+      family: 'まきばフォント',
+      variants: ["400" as GoogleFontVariant],
+      isGothic: false,
+      isBold: false,
+      isLocal: true,
+    },
   ];
 
   let allFonts = [...localFonts, ...googleFonts];

@@ -3,11 +3,15 @@ import { Media, ImageMedia } from './media';
 import { Computron, JFACompute, FloatField } from 'fastsdf';
 import parseColor from 'color-parse';
 
-const c = new Computron();
-await c.init();
+let jfa: JFACompute;
+async function init() {
+  const c = new Computron();
+  await c.init();
 
-const jfa = new JFACompute(c);
-await jfa.init();
+  jfa = new JFACompute(c);
+  await jfa.init();
+}
+init();
 
 export class Effect {
   ulid: string;

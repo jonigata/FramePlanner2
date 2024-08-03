@@ -41,6 +41,8 @@
     '源暎ぽっぷる': 'GenEiPOPle-Bk',
     '源暎ラテゴ': 'GenEiLateMinN_v2',
     '源暎ラテミン': 'GenEiLateMinN_v2',
+    "ふい字": 'HuiFont29',
+    "まきばフォント": 'MakibaFont13',
   }
 
   const cache = new Set<string>();
