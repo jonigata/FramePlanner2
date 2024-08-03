@@ -27,8 +27,8 @@ export class FrameLayer extends Layer {
   onFocus: (layout: Layout) => void;
   onCommit: () => void;
   onRevert: () => void;
-  onInsert: (element: FrameElement) => void;
-  onSplice: (element: FrameElement) => void;
+  onShift: (element: FrameElement) => void;
+  onUnshift: (element: FrameElement) => void;
   onSwap: (element0: FrameElement, element1: FrameElement) => void;
   cursorPosition: Vector;
 
@@ -36,8 +36,8 @@ export class FrameLayer extends Layer {
   splitVerticalIcon: ClickableIcon;
   deleteIcon: ClickableIcon;
   duplicateIcon: ClickableIcon;
-  insertIcon: ClickableIcon;
-  spliceIcon: ClickableIcon;
+  shiftIcon: ClickableIcon;
+  unshiftIcon: ClickableIcon;
   resetPaddingIcon: ClickableIcon;
   zplusIcon: ClickableIcon;
   zminusIcon: ClickableIcon;
@@ -72,8 +72,8 @@ export class FrameLayer extends Layer {
     onFocus: (layout: Layout) => void,
     onCommit: () => void, 
     onRevert: () => void, 
-    onInsert: (element: FrameElement) => void, 
-    onSplice: (element: FrameElement) => void,
+    onShift: (element: FrameElement) => void, 
+    onUnshift: (element: FrameElement) => void,
     onSwap: (element0: FrameElement, element1: FrameElement) => void) {
     super();
     this.renderLayer = renderLayer;
@@ -82,8 +82,8 @@ export class FrameLayer extends Layer {
     this.onFocus = onFocus;
     this.onCommit = onCommit;
     this.onRevert = onRevert;
-    this.onInsert = onInsert;
-    this.onSplice = onSplice;
+    this.onShift = onShift;
+    this.onUnshift = onUnshift;
     this.onSwap = onSwap;
 
     this.cursorPosition = [-1, -1];
@@ -92,36 +92,36 @@ export class FrameLayer extends Layer {
     const mp = () => this.paper.matrix;
     const isFrameActive = () => this.interactable && this.selectedLayout && !this.pointerHandler;
     const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility && !this.pointerHandler;
-    this.splitHorizontalIcon = new ClickableIcon(["split-horizontal.png"],unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible, mp);
-    this.splitVerticalIcon = new ClickableIcon(["split-vertical.png"],unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible, mp);
-    this.deleteIcon = new ClickableIcon(["delete.png"],unit,[1,0],"削除", isFrameActive, mp);
-    this.duplicateIcon = new ClickableIcon(["duplicate.png"],unit,[1,0],"複製", isFrameActive, mp);
-    this.insertIcon = new ClickableIcon(["insert.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
-    this.spliceIcon = new ClickableIcon(["splice.png"],unit,[1,0],"画像のアンシフト", isFrameActive, mp);
-    this.resetPaddingIcon = new ClickableIcon(["reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActive, mp);
-    this.zplusIcon = new ClickableIcon(["zplus.png"],unit,[0,0],"手前に", isFrameActiveAndVisible, mp);
-    this.zminusIcon = new ClickableIcon(["zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible, mp);
-    this.visibilityIcon = new ClickableIcon(["visibility1.png","visibility2.png","visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
+    this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible, mp);
+    this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible, mp);
+    this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActive, mp);
+    this.duplicateIcon = new ClickableIcon(["frameLayer/duplicate.png"],unit,[1,0],"複製", isFrameActive, mp);
+    this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
+    this.unshiftIcon = new ClickableIcon(["frameLayer/unshift.png"],unit,[1,0],"画像のアンシフト", isFrameActive, mp);
+    this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActive, mp);
+    this.zplusIcon = new ClickableIcon(["frameLayer/zplus.png"],unit,[0,0],"手前に", isFrameActiveAndVisible, mp);
+    this.zminusIcon = new ClickableIcon(["frameLayer/zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible, mp);
+    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.png","frameLayer/visibility2.png","frameLayer/visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
     this.visibilityIcon.index = 2;
 
     const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
-    this.scaleIcon = new ClickableIcon(["scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
-    this.rotateIcon = new ClickableIcon(["rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
-    this.flipHorizontalIcon = new ClickableIcon(["flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive, mp);
-    this.flipVerticalIcon = new ClickableIcon(["flip-vertical.png"],unit,[0,1],"上下反転", isImageActive, mp);
-    this.fitIcon = new ClickableIcon(["fit.png"],unit,[0,1],"フィット", isImageActive, mp);
+    this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
+    this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
+    this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive, mp);
+    this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[0,1],"上下反転", isImageActive, mp);
+    this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[0,1],"フィット", isImageActive, mp);
 
     const isBorderActive = (dir) => this.interactable && this.selectedBorder?.layout.dir === dir;
-    this.expandHorizontalIcon = new ClickableIcon(["expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
-    this.slantHorizontalIcon = new ClickableIcon(["slant-horizontal.png"], unit,[0.5,0],"傾き", () => isBorderActive('h'), mp);
-    this.expandVerticalIcon = new ClickableIcon(["expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'), mp);
-    this.slantVerticalIcon = new ClickableIcon(["slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
+    this.expandHorizontalIcon = new ClickableIcon(["frameLayer/expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
+    this.slantHorizontalIcon = new ClickableIcon(["frameLayer/slant-horizontal.png"], unit,[0.5,0],"傾き", () => isBorderActive('h'), mp);
+    this.expandVerticalIcon = new ClickableIcon(["frameLayer/expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'), mp);
+    this.slantVerticalIcon = new ClickableIcon(["frameLayer/slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
 
     const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
-    this.swapIcon = new ClickableIcon(["swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
+    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.insertIcon, this.spliceIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
     this.litIcons = [this.swapIcon];
 
@@ -524,13 +524,13 @@ export class FrameLayer extends Layer {
       this.redraw();
       return "done";
     }
-    if (this.insertIcon.contains(point)) {
-      this.onInsert(layout.element);
+    if (this.shiftIcon.contains(point)) {
+      this.onShift(layout.element);
       this.redraw();
       return "done";
     }
-    if (this.spliceIcon.contains(point)) {
-      this.onSplice(layout.element);
+    if (this.unshiftIcon.contains(point)) {
+      this.onUnshift(layout.element);
       this.redraw();
       return "done";
     }
@@ -1059,8 +1059,8 @@ export class FrameLayer extends Layer {
     this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
     this.deleteIcon.position = cp([1,0],[0,0]);
     this.duplicateIcon.position = cp([1,0],[0,1]);
-    this.insertIcon.position = cp([1,0],[0,2]);
-    this.spliceIcon.position = cp([1,0],[0,3]);
+    this.shiftIcon.position = cp([1,0],[0,2]);
+    this.unshiftIcon.position = cp([1,0],[0,3]);
     this.resetPaddingIcon.position = cp([1,0],[0,4]);
     this.zplusIcon.position = cp([0,0],[2.5,0]);
     this.zminusIcon.position = cp([0,0],[1,0]);
