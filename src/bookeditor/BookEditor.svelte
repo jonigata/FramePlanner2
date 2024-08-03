@@ -14,7 +14,7 @@
   import { frameInspectorTarget, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from './book';
-  import { delayedCommiter, mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
+  import { delayedCommiter, mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, forceFontLoadToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
@@ -59,11 +59,6 @@
       return bit;
     }
   );
-
-  $: if ($forceCommitDelayedToken) {
-    $forceCommitDelayedToken = false;
-    delayedCommiter.force();
-  }
 
   $: onUndoCommand($undoToken);
   function onUndoCommand(t: 'undo' | 'redo') {

@@ -13,7 +13,6 @@ export const bookEditor: Writable<BookOperators> = writable(null);
 export const redrawToken = writable(false);
 export const undoToken: Writable<'undo' | 'redo'> = writable(null);
 export const forceFontLoadToken = writable(false);
-export const forceCommitDelayedToken: Writable<boolean> = writable(false);
 export const fontLoadToken: Writable<{family: string, weight: string}[]> = writable(null);
 
 export type NewPageProperty = {

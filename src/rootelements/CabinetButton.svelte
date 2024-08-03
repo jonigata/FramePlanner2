@@ -1,11 +1,11 @@
 <script type="ts">
   import fileManagerIcon from '../assets/file-manager.png';
-  import { forceCommitDelayedToken } from '../bookeditor/bookStore';
+  import { delayedCommiter } from '../bookeditor/bookStore';
   import { fileManagerOpen } from '../filemanager/fileManagerStore';
   import { toolTip } from '../utils/passiveToolTipStore';
   
   function openFileManager() {
-    $forceCommitDelayedToken = true;
+    delayedCommiter.force();
     $fileManagerOpen = !$fileManagerOpen;
   }
 </script>
