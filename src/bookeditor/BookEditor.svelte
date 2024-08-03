@@ -14,10 +14,9 @@
   import { frameInspectorTarget, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from './book';
-  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
+  import { delayedCommiter, mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, forceFontLoadToken, forceCommitDelayedToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
-  import { DelayedCommiter } from '../utils/delayedCommiter';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
@@ -42,11 +41,6 @@
   let arrayLayer: ArrayLayer;
   let focusKeeper: FocusKeeper;
   let bubbleSnapshot: string = null;
-  const delayedCommiter = new DelayedCommiter(
-    () => {
-      commit("bubble"); 
-      layeredCanvas.redraw(); 
-    });
   let editingBookId: string = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
@@ -87,12 +81,12 @@
     }
   }
 
-  export function commit(tag: HistoryTag) {
+  function commit(tag: HistoryTag) {
     delayedCommiter.force();
     commitBook($mainBook, tag);
     console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
     $mainBook = $mainBook;
-    $frameInspectorTarget = $frameInspectorTarget;
+    layeredCanvas.redraw();
   }
 
   function revert() {
@@ -182,21 +176,18 @@
   function insert(_page: Page, element: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     dealBookContents(frameSeq, element, null);
-    layeredCanvas.redraw();
     commit(null);
   }
 
   function splice(_page: Page, element: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     dealBookContents(frameSeq, null, element);
-    layeredCanvas.redraw();
     commit(null);
   }
 
   function swap(_page: Page, element0: FrameElement, element1: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     swapBookContents(frameSeq, element0, element1);
-    layeredCanvas.redraw();
     commit(null);
   }
 
@@ -318,7 +309,7 @@
       if (bubbleSnapshot !== snapshot) {
         bubbleSnapshot = snapshot;
         $forceFontLoadToken = true;
-        delayedCommiter.schedule(2000);
+        delayedCommiter.schedule("bubble", 2000);
       }
     }
   }
@@ -364,15 +355,6 @@
     $bubbleInspectorTarget.bubble = newBubble;
     commit(null);
     $redrawToken = true;
-  }
-
-  function findBubblePage(book: Book, bubble: Bubble) {
-    for (const page of book.pages) {
-      if (page.bubbles.includes(bubble)) {
-        return page;
-      }
-    }
-    return null;
   }
 
   function focusFrame(page: Page, f: FrameElement, p: Vector) {
@@ -432,8 +414,6 @@
         await modalFrameGenerate(fit);
       } else if (command === "punch") {
         await punchFrameFilm(fit);
-      } else if (command === "commit") {
-        commit(null);
       }
     }
   }
@@ -550,7 +530,6 @@
     const dataURL = canvas.toDataURL("image/png");
     console.log("D");
     film.media = new ImageMedia(canvas);
-    layeredCanvas.redraw();
     commit(null);
     $loading = false;
   }
@@ -569,7 +548,6 @@
     const film = bit.commandTargetFilm;
     const canvas = await predict(await createImageFromCanvas(imageMedia.canvas));
     film.media = new ImageMedia(canvas);
-    layeredCanvas.redraw();
     commit(null);
     $loading = false;
 

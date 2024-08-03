@@ -86,7 +86,8 @@
   function onUpdateEffectList(e: {oldIndex: number, newIndex:number}) {
     console.log("onUpdate", e.oldIndex, e.newIndex);
     moveInArray(film.effects, e.oldIndex, e.newIndex);
-    dispatch('commit');
+    console.log("--- onUpdateEffect ---");
+    dispatch('commit', true);
   }
 
   function onDeleteEffect(index: number) {
@@ -94,7 +95,8 @@
     film.effects.splice(index, 1);
     film.effects = film.effects;
     effectProcessorQueue.publish(film);
-    dispatch('commit');
+    console.log("--- onDeleteEffect ---");
+    dispatch('commit', true);
   }
 
   function onUpdateEffect(e: CustomEvent<Effect>) {
@@ -108,6 +110,7 @@
         effectProcessorQueue.publish(film);
       }
     }
+    dispatch('commit', false);
   }
 
   $: onCanvas(canvas);

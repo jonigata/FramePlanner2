@@ -2,12 +2,11 @@
   import writableDerived from "svelte-writable-derived";
   import { frameInspectorTarget } from './frameInspectorStore';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-  import { redrawToken } from "../bookStore"
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
   import Drawer from "../../utils/Drawer.svelte";
+  import { delayedCommiter } from "../bookStore";
 
-  let adjustedPosition = { x: window.innerWidth - 350 - 16, y: 16 };
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
 
@@ -22,13 +21,14 @@
 
   $: opened = $dominantMode != "painting" && $frame != null
 
-  function onDrag({offsetX, offsetY}) {
-    adjustedPosition = {x: offsetX, y: offsetY};
-  }
-
-  function onCommit() {
-    $frameInspectorTarget.command = "commit";
-    $redrawToken = true;
+  function onCommit(e: CustomEvent<boolean>) {
+    console.log("FrameInspector", e.detail);
+    if (e.detail) {
+      delayedCommiter.schedule("effect", 2000);
+    } else {
+      delayedCommiter.cancel();
+      delayedCommiter.schedule("effect", 0);
+    }
   }
 
   function onScribble(e: CustomEvent<Film>) {

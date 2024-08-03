@@ -28,7 +28,7 @@ export type Page = {
   frameWidth: number,
 }
 
-export type HistoryTag = 'bubble' | 'page-attribute' | null;
+export type HistoryTag = 'bubble' | 'page-attribute' | "effect" | null;
 
 export type HistoryWeight = "light" | "heavy";
 

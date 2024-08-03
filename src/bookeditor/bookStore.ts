@@ -1,10 +1,10 @@
 import { type Writable, writable, derived, get } from "svelte/store";
 import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
-import { type Book, type BookOperators, newPage } from './book';
+import { type Book, type BookOperators, newPage, commitBook } from './book';
 import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-//import writableDerived from "svelte-writable-derived";
+import { DelayedCommiter, DelayedCommiterGroup } from '../utils/delayedCommiter';
 
 export const mainBook = writable<Book>(null);
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
@@ -42,3 +42,16 @@ export function insertNewPageToBook(book: Book, p: NewPageProperty, index: numbe
   page.frameWidth = p.frameWidth;
   book.pages.splice(index, 0, page);
 }
+
+// FileManagerRootのsaveと二重にdelayedCommmiterがかかっているのは無駄に見えるが、
+// commitBookの中でaddBookHistoryが呼ばれており、これが全ページのcloneを行う重い処理なので
+// フキダシ編集のような軽微な変更でなんども呼び出されないようにここでも一応バッファリングしておく
+export const delayedCommiter = new DelayedCommiterGroup(
+  {
+    "bubble": () => {
+      get(bookEditor).commit("bubble");
+    },
+    "effect": () => {
+      get(bookEditor).commit("effect");
+    },
+  });

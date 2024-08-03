@@ -40,8 +40,8 @@
   let delayedCommiter = new DelayedCommiter(
     async () => {
       const book = $mainBook;
-      const file = await fileSystem.getNode(book.revision.id as NodeId);
       if (!$saveProhibitFlag) {
+        const file = await fileSystem.getNode(book.revision.id as NodeId);
         await saveBookTo(book, fileSystem, file.asFile());
       }
       currentRevision = {...book.revision};

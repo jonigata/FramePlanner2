@@ -37,7 +37,7 @@
   function onAcceptDrop(newIndex: number, films: Film[]) {
     const index = filmStack.films.length - newIndex;
     filmStack.films.splice(index, 0, ...films);
-    dispatch('commit');
+    dispatch('commit', true);
     filmStack = filmStack;
   }
 
@@ -68,7 +68,7 @@
   function onDeleteFilm(e: CustomEvent<Film>) {
     const film = e.detail;
     filmStack.films = filmStack.films.filter(f => f !== film);
-    dispatch('commit');
+    dispatch('commit', true);
     filmStack = filmStack;
   }
 
@@ -86,15 +86,20 @@
     dispatch('punch', e.detail);
   }
 
-  function onUpdate(e: {oldIndex: number, newIndex:number}) {
+  function onSortableUpdate(e: {oldIndex: number, newIndex:number}) {
     // reversed order
     const oldIndex = filmStack.films.length - 1 - e.oldIndex;
     const newIndex = filmStack.films.length - 1 - e.newIndex;
     //const oldIndex = e.oldIndex;
     // const newIndex = e.newIndex;
     moveInArray(filmStack.films, oldIndex, newIndex);
-    dispatch('commit');
+    dispatch('commit', true);
     filmStack = filmStack;
+  }
+
+  function onCommit(e: CustomEvent<boolean>) {
+    console.log(e.detail);
+    dispatch('commit', e.detail);
   }
 
 </script>
@@ -104,14 +109,14 @@
   <FilmListItem film={null} on:select={onGenerate}/>
   <div 
     class="flex flex-col gap-2 mt-2" 
-    use:sortableList={{animation: 100, onUpdate}} 
+    use:sortableList={{animation: 100, onUpdate: onSortableUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >
     {#each filmStack.films.toReversed() as film, index (film.ulid)}
       {#if isDragging && ghostIndex === index}
         <div data-ghost class="ghost-element"/>
       {/if}
-      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:commit={onCommit}/>
     {/each}
     {#if isDragging && ghostIndex === filmStack.films.length}
       <div data-ghost class="ghost-element"/>
