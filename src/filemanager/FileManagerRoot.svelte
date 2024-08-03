@@ -20,7 +20,7 @@
   import { collectGarbage } from '../utils/garbageCollection';
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
-  import { DelayedCommiter } from '../utils/cancelableTask';
+  import { DelayedCommiter } from '../utils/delayedCommiter';
   import { loading } from '../utils/loadingStore'
   import { toolTip } from '../utils/passiveToolTipStore';
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
