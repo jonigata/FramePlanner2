@@ -21,15 +21,6 @@ const PADDING_HANDLE_INNER_WIDTH = 20;
 const PADDING_HANDLE_OUTER_WIDTH = 10;
 
 export class FrameLayer extends Layer {
-  renderLayer: PaperRendererLayer;
-  focusKeeper: FocusKeeper;
-  frameTree: FrameElement;
-  onFocus: (layout: Layout) => void;
-  onCommit: () => void;
-  onRevert: () => void;
-  onShift: (element: FrameElement) => void;
-  onUnshift: (element: FrameElement) => void;
-  onSwap: (element0: FrameElement, element1: FrameElement) => void;
   cursorPosition: Vector;
 
   splitHorizontalIcon: ClickableIcon;
@@ -49,8 +40,10 @@ export class FrameLayer extends Layer {
   fitIcon: ClickableIcon;
   expandHorizontalIcon: ClickableIcon;
   slantHorizontalIcon: ClickableIcon;
+  insertHorizontalIcon: ClickableIcon;
   expandVerticalIcon: ClickableIcon;
   slantVerticalIcon: ClickableIcon;
+  insertVerticalIcon: ClickableIcon;
   swapIcon: ClickableIcon;
 
   frameIcons: ClickableIcon[];
@@ -66,25 +59,18 @@ export class FrameLayer extends Layer {
   canvasPattern: CanvasPattern;
 
   constructor(
-    renderLayer: PaperRendererLayer,
-    focusKeeper: FocusKeeper,
-    frameTree: FrameElement, 
-    onFocus: (layout: Layout) => void,
-    onCommit: () => void, 
-    onRevert: () => void, 
-    onShift: (element: FrameElement) => void, 
-    onUnshift: (element: FrameElement) => void,
-    onSwap: (element0: FrameElement, element1: FrameElement) => void) {
+    private renderLayer: PaperRendererLayer,
+    private focusKeeper: FocusKeeper,
+    private frameTree: FrameElement, 
+    private onFocus: (layout: Layout) => void,
+    private onCommit: () => void, 
+    private onRevert: () => void, 
+    private onShift: (element: FrameElement) => void, 
+    private onUnshift: (element: FrameElement) => void,
+    private onSwap: (element0: FrameElement, element1: FrameElement) => void,
+    private onInsert: (border: Border) => void
+  ) {
     super();
-    this.renderLayer = renderLayer;
-    this.focusKeeper = focusKeeper;
-    this.frameTree = frameTree;
-    this.onFocus = onFocus;
-    this.onCommit = onCommit;
-    this.onRevert = onRevert;
-    this.onShift = onShift;
-    this.onUnshift = onUnshift;
-    this.onSwap = onSwap;
 
     this.cursorPosition = [-1, -1];
 
@@ -115,14 +101,16 @@ export class FrameLayer extends Layer {
     const isBorderActive = (dir) => this.interactable && this.selectedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon(["frameLayer/expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
     this.slantHorizontalIcon = new ClickableIcon(["frameLayer/slant-horizontal.png"], unit,[0.5,0],"傾き", () => isBorderActive('h'), mp);
+    this.insertHorizontalIcon = new ClickableIcon(["frameLayer/insert-horizontal.png"],unit,[0.5,0],"コマ挿入", () => isBorderActive('h'), mp);
     this.expandVerticalIcon = new ClickableIcon(["frameLayer/expand-vertical.png"],unit,[1,0.5],"幅を変更", () => isBorderActive('v'), mp);
     this.slantVerticalIcon = new ClickableIcon(["frameLayer/slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
+    this.insertVerticalIcon = new ClickableIcon(["frameLayer/insert-vertical.png"],unit,[0,0.5],"コマ挿入", () => isBorderActive('v'), mp);
 
     const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
     this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
 
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
-    this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon];
+    this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
     this.litIcons = [this.swapIcon];
 
     this.makeCanvasPattern();
@@ -428,6 +416,9 @@ export class FrameLayer extends Layer {
     if (this.selectedBorder) {
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
+        if (r == 'done') {
+          return null;
+        }
         return r;
       }
       if (this.litBorder) {
@@ -482,6 +473,11 @@ export class FrameLayer extends Layer {
       keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"] ||
       this.slantHorizontalIcon.contains(p) || this.slantVerticalIcon.contains(p)) {
       return { border: this.selectedBorder, action: "slant" };
+    } else if (
+      this.insertHorizontalIcon.contains(p) || this.insertVerticalIcon.contains(p)) {
+      this.onInsert(this.selectedBorder);
+      this.selectedBorder = null;
+      return "done";
     } else if (isPointInTrapezoid(p, this.selectedBorder.corners)) {
       return { border: this.selectedBorder, action: "move" };
     }
@@ -1082,8 +1078,10 @@ export class FrameLayer extends Layer {
     const bt = border.corners;
     this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
     this.expandVerticalIcon.position = [bt.topRight[0],(bt.topRight[1] + bt.bottomRight[1]) * 0.5];
+    this.insertVerticalIcon.position = [bt.topLeft[0]-40,(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
     this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]];
     this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5,bt.bottomLeft[1]];
+    this.insertHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]-40];
   }
 
   relayoutLitIcons(layout: Layout): void {

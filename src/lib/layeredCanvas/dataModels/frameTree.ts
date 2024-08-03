@@ -386,6 +386,30 @@ export class FrameElement {
   isAuthentic(): boolean {
     return 0 < this.visibility && !this.pseudo
   }
+
+  insertElement(index: number) {
+    const parent = this;
+
+    let totalSize = 0;
+    for (let i = 0; i < parent.children.length; i++) {
+      totalSize += parent.children[i].rawSize;
+    }
+    const avgSize = totalSize / parent.children.length;
+
+    let totalDivider = 0;
+    for (let i = 0; i < parent.children.length-1; i++) {
+      totalDivider += parent.children[i].divider.spacing;
+    }
+    const avgDivider = totalDivider / (parent.children.length-1);
+    console.log("insertElement", avgSize, avgDivider);
+    
+    const newElement = new FrameElement(avgSize);
+    newElement.divider = { spacing: avgDivider, slant: 0 };
+    newElement.calculateLengthAndBreadth();
+    parent.children.splice(index, 0, newElement);
+    parent.calculateLengthAndBreadth();
+  }
+
 }
 
 function paddedSquare(rawOrigin: Vector, rawSize: Vector, cornerOffsets: CornerOffsets): [Vector, Vector] {

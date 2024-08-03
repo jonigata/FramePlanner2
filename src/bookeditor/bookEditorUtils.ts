@@ -9,10 +9,11 @@ import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLay
 import { initializeKeyCache } from '../lib/layeredCanvas/system/keyCache';
 import type { Book, Page, BookOperators, WrapMode, ReadingDirection } from './book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
-import type { FrameElement, Layout } from '../lib/layeredCanvas/dataModels/frameTree';
+import type { FrameElement, Layout, Border } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import { FocusKeeper } from '../lib/layeredCanvas/tools/focusKeeper';
+import { insertAt } from 'svelte-jsoneditor';
 
 export function buildBookEditor(
   viewport: Viewport,
@@ -87,7 +88,7 @@ export function getDirectionFromReadingDirection(readingDirection: ReadingDirect
   }
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book: Book, page: Page, {commit, revert, undo, redo, insert, splice, swap, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
+function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book: Book, page: Page, {commit, revert, undo, redo, shift, unshift, swap, insert, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize, false);
 
   // undo
@@ -117,9 +118,10 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     },
     () => { commit(null); },
     () => { revert(); },
-    (e: FrameElement) => { insert(page, e); },
-    (e: FrameElement) => { splice(page, e); },
-    (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); });
+    (e: FrameElement) => { shift(page, e); },
+    (e: FrameElement) => { unshift(page, e); },
+    (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); },
+    (e: Border) => { insert(page, e) });
   paper.addLayer(frameLayer);
 
   // bubbles

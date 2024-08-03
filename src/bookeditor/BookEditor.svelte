@@ -3,7 +3,7 @@
   import writableDerived from "svelte-writable-derived";
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
-  import { FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, calculatePhysicalLayout, findLayoutOf, type Border } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
@@ -187,13 +187,13 @@
     $bubbleBucketDirty = false;
   }
 
-  function insert(_page: Page, element: FrameElement) {
+  function shift(_page: Page, element: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     dealBookContents(frameSeq, element, null);
     commit(null);
   }
 
-  function splice(_page: Page, element: FrameElement) {
+  function unshift(_page: Page, element: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     dealBookContents(frameSeq, null, element);
     commit(null);
@@ -202,6 +202,13 @@
   function swap(_page: Page, element0: FrameElement, element1: FrameElement) {
     const frameSeq = collectBookContents($mainBook);
     swapBookContents(frameSeq, element0, element1);
+    commit(null);
+  }
+
+  function insert(_page: Page, border: Border) {
+    const element = border.layout.element;
+    const index = border.index;
+    element.insertElement(index);
     commit(null);
   }
 
@@ -284,9 +291,10 @@
       revert,
       undo,
       redo,
-      insert,
-      splice,
+      shift,
+      unshift,
       swap,
+      insert,
       focusFrame,
       focusBubble,
       viewportChanged,

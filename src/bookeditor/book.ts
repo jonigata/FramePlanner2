@@ -1,5 +1,5 @@
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement, type Layout, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { FrameElement, type Layout, type Border, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Film, FilmStack, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
@@ -186,9 +186,10 @@ export interface BookOperators {
   revert: () => void;
   undo: () => void;
   redo: () => void;
-  insert: (page: Page, frameElement: FrameElement) => void;
-  splice: (page: Page, frameElement: FrameElement) => void;
+  shift: (page: Page, frameElement: FrameElement) => void;
+  unshift: (page: Page, frameElement: FrameElement) => void;
   swap: (page: Page, frameElement0: FrameElement, frameElement1: FrameElement) => void;
+  insert: (page: Page, border: Border) => void;
   focusFrame: (page: Page, frame: FrameElement, p: Vector) => void;
   focusBubble: (page: Page, bubble: Bubble) => void;
   viewportChanged: () => void;
