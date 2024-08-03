@@ -323,6 +323,10 @@ export class FrameLayer extends Layer {
     }
 
     if (this.litLayout && this.litLayout.element != this.selectedLayout?.element) {
+      if (this.swapIcon.hintIfContains(position, this.hint)) {
+        return;
+      }
+
       const origin = this.litLayout.origin;
       const size = this.litLayout.size;
       const r: Rect = [...origin, ...size];
