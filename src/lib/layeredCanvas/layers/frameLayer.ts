@@ -188,10 +188,7 @@ export class FrameLayer extends Layer {
 
     if (this.litBorder) {
       fillTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.2)");
-      strokeTrapezoid(this.litBorder.corners, "rgba(255, 255, 255, 1)", 6);
-      strokeConnectors(this.litBorder.formalCorners, this.litBorder.corners, "rgba(255, 255, 255, 1)", 6);
       strokeTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.4)", 3);
-      strokeConnectors(this.litBorder.formalCorners, this.litBorder.corners, "rgba(0, 200,200, 0.4)", 3);
     } else if (this.litLayout) {
       if (this.litLayout.element != this.selectedLayout?.element) {
         fillTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.2)");
