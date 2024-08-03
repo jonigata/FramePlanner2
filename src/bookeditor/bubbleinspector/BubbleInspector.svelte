@@ -12,15 +12,16 @@
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
-  import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
+  import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { bubbleInspectorTarget, bubbleSplitCursor } from './bubbleInspectorStore';
   import { saveBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
   import { dominantMode } from "../../uiStore";
-  import { redrawToken } from "../bookStore";
+  import { redrawToken, forceFontLoadToken } from "../bookStore";
   import Drawer from "../../utils/Drawer.svelte";
+  import { bookEditor } from "../bookStore";
 
   import horizontalIcon from '../../assets/horizontal.png';
   import verticalIcon from '../../assets/vertical.png';
@@ -32,20 +33,13 @@
   let oldBubble = null;
   let textarea = null;
   let imageProvider: ImageProvider;
+  let bubbleSnapshot: string = null;
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
     (bit) => bit?.bubble,
     (b, bit) => {
       bit.bubble = b;
-      return bit;
-    }
-  );
-  const bubblePage = writableDerived(
-    bubbleInspectorTarget,
-    (bit) => bit?.page,
-    (b, bit) => {
-      bit.page = b;
       return bit;
     }
   );
@@ -82,13 +76,27 @@
 
   $:onChangeBubble($bubble);
   async function onChangeBubble(b: Bubble) {
-    if (b === oldBubble) {return;}
-    oldBubble = b;
-    if (b) {
-      $chosenShape = b.shape;
-      await tick();
-      textarea.focus({preventScroll: true});
-      textarea.select();
+    if (b === oldBubble) {
+      if (bubbleSnapshot && b) {
+        const snapshot = makeSnapshot(b);
+        if (bubbleSnapshot !== snapshot) {
+          bubbleSnapshot = snapshot;
+          $forceFontLoadToken = true;
+          $redrawToken = true;
+          $bookEditor.commit("bubble");
+        }
+      }
+    } else {
+      oldBubble = b;
+      if (b) {
+        $chosenShape = b.shape;
+        await tick();
+        textarea.focus({preventScroll: true});
+        textarea.select();
+        bubbleSnapshot = makeSnapshot(b);
+      } else {
+        bubbleSnapshot = null;
+      }
     }
   }
 
@@ -107,6 +115,25 @@
       $bubble.fontFamily = f.fontFamily;
       $bubble.fontWeight = f.fontWeight;
     }
+  }
+
+  function makeSnapshot(b: Bubble) {
+    let films = [];
+    for (let film of b.filmStack.films) {
+      const f = {
+        media: film.media.fileId,
+        n_scale: film.n_scale,
+        n_translation: film.n_translation,
+        rotation: film.rotation,
+        reverse: film.reverse,
+        visible: film.visible,
+        prompt: film.prompt,
+      }
+      films.push(f);
+    }
+    const jsonObject = Bubble.decompile(b);
+    jsonObject.films = films;
+    return JSON.stringify(jsonObject);
   }
 
   function chooseShape() {
@@ -136,9 +163,9 @@
     $saveBubbleToken = $bubble;
   }
 
-  function onCommit() {
-    $bubbleInspectorTarget.command = "commit";
-    $redrawToken = true;
+  function onCommit(e: CustomEvent<boolean>) {
+    console.log("onCommit", e.detail);
+    $bookEditor.commit(e.detail ? null : "effect");
   }
 
   function onScribble(e: CustomEvent<Film>) {

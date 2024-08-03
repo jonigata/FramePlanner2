@@ -70,10 +70,8 @@ export class OutlineEffect extends Effect {
   }
 
   async apply(inputMedia: Media): Promise<Media> { 
-    console.log("apply");
 
     if (this.inputMedia != inputMedia) {
-      console.log("input media changed");
       const inputCanvas = (inputMedia as ImageMedia).canvas;
 
       const plainImage = FloatField.createFromImageOrCanvas(inputCanvas);
@@ -81,7 +79,6 @@ export class OutlineEffect extends Effect {
       this.rawDistanceField = await jfa.compute(seedMap);
       this.inputMedia = inputMedia;
     } else {
-      console.log("input media not changed");
     }
 
     const inputCanvas = (inputMedia as ImageMedia).canvas;

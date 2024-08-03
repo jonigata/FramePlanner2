@@ -3,7 +3,7 @@ import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
 import type { Page } from '../book';
 
-type BubbleInspectorCommand = "generate" | "scribble" | "punch" | "commit";
+type BubbleInspectorCommand = "generate" | "scribble" | "punch";
 
 export type BubbleInspectorPosition = {
   center: {x: number, y: number},

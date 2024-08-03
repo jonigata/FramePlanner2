@@ -181,6 +181,8 @@ export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Pref
 export interface BookOperators {
   hint: (r: [number, number, number, number], s: String) => void;
   commit: (tag: HistoryTag) => void;
+  forceDelayedCommit(): void;
+  cancelDelayedCommit(): void;
   revert: () => void;
   undo: () => void;
   redo: () => void;

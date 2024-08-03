@@ -5,7 +5,7 @@
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
   import Drawer from "../../utils/Drawer.svelte";
-  import { delayedCommiter } from "../bookStore";
+  import { bookEditor } from "../bookStore";
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -23,12 +23,7 @@
 
   function onCommit(e: CustomEvent<boolean>) {
     console.log("FrameInspector", e.detail);
-    if (e.detail) {
-      delayedCommiter.schedule("effect", 2000);
-    } else {
-      delayedCommiter.cancel();
-      delayedCommiter.schedule("effect", 0);
-    }
+    $bookEditor.commit(e.detail ? null : "effect");
   }
 
   function onScribble(e: CustomEvent<Film>) {

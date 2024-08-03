@@ -14,7 +14,7 @@
   import { frameInspectorTarget, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from './book';
-  import { delayedCommiter, mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, forceFontLoadToken, insertNewPageToBook } from './bookStore';
+  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
@@ -35,12 +35,12 @@
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
   import { createImageFromCanvas } from "../utils/imageUtil";
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
+  import { DelayedCommiterGroup } from '../utils/delayedCommiter';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
   let arrayLayer: ArrayLayer;
   let focusKeeper: FocusKeeper;
-  let bubbleSnapshot: string = null;
   let editingBookId: string = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
@@ -76,12 +76,31 @@
     }
   }
 
-  function commit(tag: HistoryTag) {
-    delayedCommiter.force();
+  // FileManagerRootのsaveと二重にdelayedCommmiterがかかっているのは無駄に見えるが、
+  // commitBookの中でaddBookHistoryが呼ばれており、これが全ページのcloneを行う重い処理なので
+  // フキダシ編集のような軽微な変更でなんども呼び出されないようにここでも一応バッファリングしておく
+  const delayedCommiter = new DelayedCommiterGroup(
+    {
+      "standard": () => {
+        commitInternal(null);
+      },
+      "bubble": () => {
+        commitInternal("bubble");
+      },
+      "effect": () => {
+        commitInternal("effect");
+      },
+    });
+
+  function commitInternal(tag: HistoryTag) {
     commitBook($mainBook, tag);
     console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
     $mainBook = $mainBook;
     layeredCanvas.redraw();
+  }
+
+  function commit(tag: HistoryTag) {
+    delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
   }
 
   function revert() {
@@ -260,6 +279,8 @@
     const bookEditorInstance: BookOperators = {
       hint,
       commit,
+      forceDelayedCommit: delayedCommiter.force,
+      cancelDelayedCommit: delayedCommiter.cancel,
       revert,
       undo,
       redo,
@@ -291,22 +312,6 @@
     layeredCanvas.redraw();
     arrayLayer = builtBook.arrayLayer;
     focusKeeper = builtBook.focusKeeper;
-  }
-
-  $: onBubbleModified($bubble);
-  function onBubbleModified(bubble: Bubble) {
-    if (!layeredCanvas) { return; }
-
-    layeredCanvas.redraw();
-
-    if (bubbleSnapshot && bubble) {
-      const snapshot = makeSnapshot(bubble);
-      if (bubbleSnapshot !== snapshot) {
-        bubbleSnapshot = snapshot;
-        $forceFontLoadToken = true;
-        delayedCommiter.schedule("bubble", 2000);
-      }
-    }
   }
 
   $:onSplitCursor($bubbleSplitCursor);
@@ -382,7 +387,6 @@
       const offset = canvas.height / 2 < cy ? -1 : 1;
       const bubbleSize = b.getPhysicalSize(page.paperSize);
       
-      bubbleSnapshot = makeSnapshot(b); // サイズは比較時に合致してればいいので適当に
       $bubbleInspectorTarget = {
         bubble: b,
         page,
@@ -392,7 +396,6 @@
       defaultBubbleSlot.bubble = b;
     } else {
       console.log("hide bubble");
-      bubbleSnapshot = null;
       $bubbleInspectorTarget = null;
     }
   }
@@ -425,8 +428,6 @@
         await modalBubbleGenerate(bit);
       } else if (command === "punch") {
         await punchBubbleFilm(bit);
-      } else if (command === "commit") {
-        commit(null);
       }
     }
   }
