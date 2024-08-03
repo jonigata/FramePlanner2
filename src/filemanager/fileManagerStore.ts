@@ -10,8 +10,8 @@ import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
-import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas.js";
 import { createCanvasFromImage } from "../utils/imageUtil.js";
+import { Effect } from "../lib/layeredCanvas/dataModels/effect";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
@@ -160,6 +160,13 @@ async function packFilms(films: Film[], fileSystem: FileSystem, imageFolder: Fol
   const packedFilms = [];
   for (const film of films) {
     if (!(film.media instanceof ImageMedia)) { continue; }
+
+    const effects = [];
+    for (const effect of film.effects) {
+      const markUp = effect.decompile();
+      effects.push({ tag: effect.tag, properties: markUp });
+    }
+
     const canvas = film.media.canvas;
     await saveCanvas(fileSystem, canvas, imageFolder);
     const fileId = canvas["fileId"][fileSystem.id];
@@ -173,12 +180,12 @@ async function packFilms(films: Film[], fileSystem: FileSystem, imageFolder: Fol
       reverse: [...film.reverse],
       visible: film.visible,
       prompt: film.prompt,
+      effects
     }
     packedFilms.push(filmMarkUp);
   }
   return packedFilms;
 }
-
 
 export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
   console.tag("loadBookFrom", "cyan", file.id);
@@ -535,6 +542,15 @@ async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSyste
   for (const filmMarkUp of markUp) {
     const image = await loadImageFunc(fileSystem, filmMarkUp.image);
     if (image) {
+      const effects = [];
+      if (filmMarkUp.effects) {
+        for (const effectMarkUp of filmMarkUp.effects) {
+          console.log("===============", effectMarkUp);
+          const effect = Effect.compile(effectMarkUp);
+          effects.push(effect);
+        }
+      }
+
       const film = new Film();
       if (filmMarkUp.ulid) film.ulid = filmMarkUp.ulid;
       film.media = new ImageMedia(image);
@@ -544,6 +560,7 @@ async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSyste
       film.reverse = filmMarkUp.reverse;
       film.visible = filmMarkUp.visible;
       film.prompt = filmMarkUp.prompt;
+      film.effects = effects;
       films.push(film);
     }
   }

@@ -42,6 +42,20 @@ export class Effect {
   async apply(inputMedia: Media): Promise<Media> { 
     throw new Error("Not implemented");
   }
+
+  decompile(): any {
+    throw new Error("Not implemented");
+  }
+
+  static compile(markUp: any) {
+    switch (markUp.tag) {
+      case "OutlineEffect":
+        const p = markUp.properties;
+        return new OutlineEffect(p.color, p.width, p.sharp);
+      default:
+        throw new Error("Unknown effect tag: " + markUp.tag);
+    }
+  }
 }
 
 export class OutlineEffect extends Effect {
@@ -93,6 +107,14 @@ export class OutlineEffect extends Effect {
 
     this.outputMedia = new ImageMedia(targetCanvas);
     return this.outputMedia;
+  }
+
+  decompile(): any {
+    return {
+      color: this.color,
+      width: this.width,
+      sharp: this.sharp,
+    };
   }
 }
 
