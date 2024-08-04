@@ -260,7 +260,7 @@ export function collectBookContents(book: Book): FrameSequence {
   return { slots, contents };
 }
 
-function collectPageContents(page: Page, pageNumber: number, dir: ReadingDirection): FrameSequence {
+export function collectPageContents(page: Page, pageNumber: number, dir: ReadingDirection): FrameSequence {
   const layout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   const bubbles = [...page.bubbles];
   return collectFrameContents(page, pageNumber, page.frameTree, layout, bubbles, dir);
