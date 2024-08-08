@@ -37,15 +37,15 @@
       let delta = 1 / 8;
       const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
 
-      const img = await executeProcessAndNotify(
+      const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
           return await generateImage(`${prompt}, ${postfix}`, size[0], size[1], new GenerateImageContext());
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      await img.decode();
-      const canvas = createCanvasFromImage(img);
+      await result.image.decode();
+      const canvas = createCanvasFromImage(result.image);
 
       gallery.push(canvas);
       gallery = gallery;
@@ -53,6 +53,8 @@
 
       logEvent(getAnalytics(), 'generate_feathral');
       clearInterval(q);
+
+      $onlineAccount.feathral = result.feathral;
     }
     catch(error) {
       console.log(error);
@@ -73,7 +75,7 @@
   <p><Feathral/></p>
 
   <p>スタイル</p>
-  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style'}}/>
+  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   <p>プロンプト</p>
   <textarea bind:value={prompt}/>
 <!--

@@ -1,63 +1,54 @@
 import { openDB } from 'idb';
 
-export function persistent(node: HTMLElement, parameters: any) {
-  const dbName = parameters.db as string;
-  const storeName = parameters.store as string;
-  const key = parameters.key as string;
-  const version = parameters.version as number || 1; // バージョンはパラメータで指定、デフォルトは1
+interface PersistentOptions {
+  db: string;
+  store: string;
+  key: string;
+  version?: number;
+  onLoad?: (value: string) => void;
+}
 
-  async function open() {
-    const db = await openDB(dbName, version, {
-      upgrade(db) {
-        db.createObjectStore(storeName);
-      }
-    });
-    return db;
-  }
+export function persistent(node: HTMLElement, options: PersistentOptions) {
+  const { db, store, key, version = 1, onLoad } = options;
 
-  const dbPromise = open();
-
-  async function save(value: any) {
-    console.log("save", storeName, key, value);
-    await (await dbPromise).put(storeName, value, key);
-  }
+  const dbPromise = openDB(db, version, {
+    upgrade(db) {
+      db.createObjectStore(store);
+    }
+  });
 
   async function load() {
-    console.log('load');
-    return (await dbPromise).get(storeName, key);
-  }
-
-  async function updateValue() {
-    const value = await load();
-    console.log("load", value);
+    const value = await (await dbPromise).get(store, key) || '';
+    if (onLoad) {
+      onLoad(value);
+    }
     if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
-      node.value = value || '';
+      node.value = value;
     } else {
-      node.textContent = value || '';
+      node.textContent = value;
     }
   }
 
-  async function onInput() {
-    console.log("onInput");
-    if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
-      await save(node.value);
-    } else {
-      await save(node.textContent);
-    }
+  async function save(value: string) {
+    await (await dbPromise).put(store, value, key);
   }
 
-  function setup() {
-    node.addEventListener('input', onInput);
-
-    console.log("setup");
-    updateValue();
+  function onInput() {
+    const value = node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement
+      ? node.value
+      : node.textContent || '';
+    save(value);
   }
 
-  setup();
+  node.addEventListener('input', onInput);
+  load(); // 初期ロード
 
   return {
+    update(newOptions: PersistentOptions) {
+      Object.assign(options, newOptions);
+    },
     destroy() {
-      node.removeEventListener("input", onInput);
+      node.removeEventListener('input', onInput);
     }
   };
 }

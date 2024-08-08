@@ -9,7 +9,7 @@
   import { onlineAccount, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
-  import { GenerateImageContext, generateImage } from '../utils/feathralImaging';
+  import { GenerateImageContext, generateFluxImage } from '../utils/feathralImaging';
   import type { Stats } from "./batchImagingStore";
   import { createCanvasFromImage } from '../utils/imageUtil';
 
@@ -33,7 +33,7 @@
   }
 
   async function generate(frame: FrameElement) {
-    const result = await generateImage(`${frame.prompt}, ${postfix}`, 1024, 1024, generateContext);
+    const result = await generateFluxImage(`${frame.prompt}, ${postfix}`, "square_hd", false, generateContext);
     if (result != null) {
       await result.image.decode();
       const film = new Film();

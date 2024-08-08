@@ -5,11 +5,13 @@
   import Drawer from '../utils/Drawer.svelte'
   import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
   import BatchImagingFeathral from './BatchImagingFeathral.svelte';
-  import "../box.css"  
-  import feathralIcon from '../assets/feathral.png';
+  import BatchImagingFlux from './BatchImagingFlux.svelte';
   import { commitBook, type Page } from "../bookeditor/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
+
+  import "../box.css"  
+  import feathralIcon from '../assets/feathral.png';
 
   let busy: boolean;
   let tabSet: number = 0;
@@ -17,6 +19,7 @@
   let filledCount = 0;
   let dalle3;
   let feathral;
+  let flux;
   let stats: Stats = { total: 0, succeeded: 0, failed: 0 };
 
   $: updateImageInfo($batchImagingPage);
@@ -51,7 +54,8 @@
   <div class="drawer-content">
     <TabGroup regionList="h-12">
       <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={0}>Dall・E 3</Tab>
-      <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={1}><span class="tab"><img class="image" src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab2" value={1}><span class="tab"><img class="image" src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={2}><span class="tab"><img class="image" src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
       <svelte:fragment slot="panel">
         {#if busy}
           <div class="content">
@@ -78,6 +82,9 @@
               {:else if tabSet === 1}
                 <BatchImagingFeathral bind:this={feathral} bind:stats={stats}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
+              {:else if tabSet === 2}
+                <BatchImagingFlux bind:this={flux} bind:stats={stats}/>
+                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
               {/if}
             </div>
           </div>

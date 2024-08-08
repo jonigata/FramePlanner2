@@ -11,7 +11,12 @@ export class GenerateImageContext {
   }
 }
 
-export async function generateImage(prompt: string, width: number, height: number, context: GenerateImageContext): Promise<HTMLImageElement> {
+export type GenerateResult = {
+  image: HTMLImageElement;
+  feathral: number;
+};
+
+export async function generateImage(prompt: string, width: number, height: number, context: GenerateImageContext): Promise<GenerateResult> {
   console.log("running feathral");
   try {
     let q = null;
@@ -36,10 +41,10 @@ export async function generateImage(prompt: string, width: number, height: numbe
       clearTimeout(q);
     }
     console.log(data);
-    const img = document.createElement('img');
-    img.src = "data:image/png;base64," + data.result.image;
+    const image = document.createElement('img');
+    image.src = "data:image/png;base64," + data.result.image;
 
-    return img;
+    return { image, feathral: data.feathral };
   }
   catch(error) {
     console.log(error);
@@ -48,21 +53,30 @@ export async function generateImage(prompt: string, width: number, height: numbe
   }
 }
 
-export async function generateFluxImage(prompt: string, width: number, height: number, pro: boolean): Promise<HTMLImageElement> {
+export async function generateFluxImage(prompt: string, image_size: string, pro: boolean, context: GenerateImageContext): Promise<GenerateResult> {
   console.log("running feathral");
   try {
-    let imageRequest = {
-      "prompt": prompt,
-      "image_size": "square_hd",
-      "pro": pro,
-    };
+    let q = null;
+    if (context.awakeWarningToken) {
+      q = setTimeout(() => {
+        toastStore.trigger({ message: `サーバがスリープ状態だと、生成の初動が遅れたり\n失敗したりすることがあります`, timeout: 3000});
+        q = null;
+      }, 10000);
+      context.awakeWarningToken = false;
+    }
+    let imageRequest = {prompt, image_size, pro};
     console.log(imageRequest);
 
+    const perf = performance.now();
     const data = await generateImageFromTextWithFlux(imageRequest);
-    const img = document.createElement('img');
-    img.src = "data:image/png;base64," + data.result.image;
+    if (q != null) {
+      clearTimeout(q);
+    }
+    console.log("generateImageFromTextWithFlux", performance.now() - perf);
+    const image = document.createElement('img');
+    image.src = "data:image/png;base64," + data.result.image;
 
-    return img;
+    return { image, feathral: data.feathral };
   }
   catch(error) {
     console.log(error);

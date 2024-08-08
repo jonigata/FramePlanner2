@@ -21,7 +21,7 @@
 
   let progress = 0;
   let refered: HTMLImageElement = null;
-  let initialSize = [1024, 1024];
+  let initialSize = "square_hd";
   let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
   let pro = false;
@@ -34,18 +34,19 @@
     busy = true;
     try {
       progress = 0;
-      let delta = 1 / 5;
+      let delta = pro ? 1 / 24 : 1 / 5;
       const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
 
-      const img = await executeProcessAndNotify(
+      const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${prompt}, ${postfix}`, size[0], size[1], pro);
+          return await generateFluxImage(`${prompt}, ${postfix}`, size, pro, new GenerateImageContext());
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      await img.decode();
-      const canvas = createCanvasFromImage(img);
+      await result.image.decode();
+      console.log("GENERATED image size:", result.image.width, result.image.height);
+      const canvas = createCanvasFromImage(result.image);
 
       gallery.push(canvas);
       gallery = gallery;
@@ -53,6 +54,8 @@
 
       logEvent(getAnalytics(), 'generate_flux');
       clearInterval(q);
+
+      $onlineAccount.feathral = result.feathral;
     }
     catch(error) {
       console.log(error);
@@ -76,7 +79,7 @@
   <input type="checkbox" bind:checked={pro}/>
 
   <p>スタイル</p>
-  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style'}}/>
+  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   <p>プロンプト</p>
   <textarea bind:value={prompt}/>
 <!--
@@ -94,14 +97,13 @@
     <div class="vbox left gap-2">
       <RadioGroup>
         <RadioItem bind:group={size} name={"size"} value={initialSize}>1024x1024</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={[1024,1280]}>1024x1280</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={[1024,1536]}>1024x1536</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={[1024,1792]}>1024x1792</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={"square"}>512x512</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={"landscape_4_3"}>1024x768</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={"landscape_16_9"}>1024x576</RadioItem>
       </RadioGroup>
       <RadioGroup>
-        <RadioItem bind:group={size} name={"size"} value={[1280,1024]}>1280x1024</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={[1536,1024]}>1536x1024</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={[1792,1024]}>1792x1024</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={"portrait_4_3"}>768x1024</RadioItem>
+        <RadioItem bind:group={size} name={"size"} value={"portrait_16_9"}>576x1024</RadioItem>
       </RadioGroup>
     </div>
 
