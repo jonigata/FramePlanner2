@@ -138,6 +138,12 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<any>
   return r;
 }
 
+export async function generateImageFromTextWithFlux(data: any): Promise<any> {
+  const r = await callFunc('generateimagefromtextflux', data, 180);
+  logEvent(getAnalytics(), 'feathral_generate');
+  return r;
+}
+
 export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument[]): Promise<any> {
   const r = await callFunc('chat', {log, documents}, 180);
   logEvent(getAnalytics(), 'chat');

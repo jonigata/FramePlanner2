@@ -1,4 +1,4 @@
-import { generateImageFromTextWithFeathral } from '../firebase';
+import { generateImageFromTextWithFeathral, generateImageFromTextWithFlux } from '../firebase';
 import { toastStore } from '@skeletonlabs/skeleton';
 
 export class GenerateImageContext {
@@ -36,6 +36,29 @@ export async function generateImage(prompt: string, width: number, height: numbe
       clearTimeout(q);
     }
     console.log(data);
+    const img = document.createElement('img');
+    img.src = "data:image/png;base64," + data.result.image;
+
+    return img;
+  }
+  catch(error) {
+    console.log(error);
+    toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
+    return null;
+  }
+}
+
+export async function generateFluxImage(prompt: string, width: number, height: number, pro: boolean): Promise<HTMLImageElement> {
+  console.log("running feathral");
+  try {
+    let imageRequest = {
+      "prompt": prompt,
+      "image_size": "square_hd",
+      "pro": pro,
+    };
+    console.log(imageRequest);
+
+    const data = await generateImageFromTextWithFlux(imageRequest);
     const img = document.createElement('img');
     img.src = "data:image/png;base64," + data.result.image;
 

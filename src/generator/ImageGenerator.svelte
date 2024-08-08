@@ -7,6 +7,7 @@
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";
   import ImageGeneratorFeathral from "./ImageGeneratorFeathral.svelte";
+  import ImageGeneratorFlux from "./ImageGeneratorFlux.svelte";
   import ImageGeneratorPlain from "./ImageGeneratorPlain.svelte";
 
   let busy: boolean;
@@ -61,7 +62,8 @@
       <Tab bind:group={tabSet} name="tab1" value={0}>Dall・E 3</Tab>
       <Tab bind:group={tabSet} name="tab2" value={1}>Stable Diffusion</Tab>
       <Tab bind:group={tabSet} name="tab3" value={2}><span class="tab"><img src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
-      <Tab bind:group={tabSet} name="tab4" value={3}>白紙</Tab>
+      <Tab bind:group={tabSet} name="tab3" value={3}><span class="tab"><img src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
+      <Tab bind:group={tabSet} name="tab4" value={4}>白紙</Tab>
       <!-- Tab Panels --->
       <svelte:fragment slot="panel">
         {#if tabSet === 0}
@@ -71,6 +73,8 @@
           {:else if tabSet === 2}
           <ImageGeneratorFeathral bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
           {:else if tabSet === 3}
+          <ImageGeneratorFlux bind:busy={busy} bind:prompt={prompt} bind:gallery={gallery} bind:chosen={chosen}/>
+          {:else if tabSet === 4}
           <ImageGeneratorPlain bind:chosen={chosen}/>
         {/if}
       </svelte:fragment>
