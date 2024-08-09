@@ -140,7 +140,7 @@ export async function generateImageFromTextWithFeathral(data: any): Promise<any>
 
 export async function generateImageFromTextWithFlux(data: any): Promise<any> {
   const r = await callFunc('generateimagefromtextflux', data, 180);
-  logEvent(getAnalytics(), 'feathral_generate');
+  logEvent(getAnalytics(), 'flux_generate');
   return r;
 }
 

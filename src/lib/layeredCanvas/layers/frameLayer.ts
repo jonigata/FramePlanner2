@@ -874,7 +874,11 @@ export class FrameLayer extends Layer {
     try {
       while ((p = yield)) {
         const op = p[dir] - s[dir];
-        prev.divider.slant = Math.max(-42, Math.min(42, rawSlant + op * 0.2));
+        let newSlant = rawSlant + op * 0.2;
+        if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+          newSlant = Math.round(newSlant / 15) * 15;
+        }
+        prev.divider.slant = Math.max(-42, Math.min(42, newSlant));
         this.updateBorder(border);
         this.redraw();
       }
