@@ -13,6 +13,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
   import { GenerateImageContext, generateFluxImage } from '../utils/feathralImaging';
+  import SliderEdit from '../utils/SliderEdit.svelte';
 
   export let busy: boolean;
   export let prompt: string;
@@ -25,6 +26,7 @@
   let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
   let pro = false;
+  let batchCount = 1;
 
   function onChooseImage({detail}) {
     chosen = detail;
@@ -40,15 +42,23 @@
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${prompt}`, size, pro, new GenerateImageContext());
+          return await generateFluxImage(`${postfix}\n${prompt}`, size, pro, batchCount, new GenerateImageContext());
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      await result.image.decode();
-      console.log("GENERATED image size:", result.image.width, result.image.height);
-      const canvas = createCanvasFromImage(result.image);
 
-      gallery.push(canvas);
+      const promises = [];
+      for (let i = 0; i < result.images.length; i++) {
+        promises.push(result.images[i].decode());
+      }
+      await Promise.all(promises);
+      
+      const canvases = [];
+      for (let i = 0; i < result.images.length; i++) {
+        canvases.push(createCanvasFromImage(result.images[i]));
+      }
+
+      gallery.push(...canvases);
       gallery = gallery;
       progress = 1;
 
@@ -108,7 +118,7 @@
     </div>
 
     <div class="vbox">
-<!--      <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/> -->
+      <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/>
 <!--      <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/> -->
     </div>
   </div>

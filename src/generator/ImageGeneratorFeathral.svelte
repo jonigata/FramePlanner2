@@ -44,8 +44,8 @@
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      await result.image.decode();
-      const canvas = createCanvasFromImage(result.image);
+      await result.images[0].decode();
+      const canvas = createCanvasFromImage(result.images[0]);
 
       gallery.push(canvas);
       gallery = gallery;

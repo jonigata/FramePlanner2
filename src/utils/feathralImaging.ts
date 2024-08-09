@@ -12,7 +12,7 @@ export class GenerateImageContext {
 }
 
 export type GenerateResult = {
-  image: HTMLImageElement;
+  images: HTMLImageElement[];
   feathral: number;
 };
 
@@ -44,7 +44,7 @@ export async function generateImage(prompt: string, width: number, height: numbe
     const image = document.createElement('img');
     image.src = "data:image/png;base64," + data.result.image;
 
-    return { image, feathral: data.feathral };
+    return { images: [image], feathral: data.feathral };
   }
   catch(error) {
     console.log(error);
@@ -53,7 +53,7 @@ export async function generateImage(prompt: string, width: number, height: numbe
   }
 }
 
-export async function generateFluxImage(prompt: string, image_size: string, pro: boolean, context: GenerateImageContext): Promise<GenerateResult> {
+export async function generateFluxImage(prompt: string, image_size: string, pro: boolean, num_images: number, context: GenerateImageContext): Promise<GenerateResult> {
   console.log("running feathral");
   try {
     let q = null;
@@ -64,7 +64,7 @@ export async function generateFluxImage(prompt: string, image_size: string, pro:
       }, 10000);
       context.awakeWarningToken = false;
     }
-    let imageRequest = {prompt, image_size, pro};
+    let imageRequest = {prompt, image_size, pro, num_images};
     console.log(imageRequest);
 
     const perf = performance.now();
@@ -73,10 +73,15 @@ export async function generateFluxImage(prompt: string, image_size: string, pro:
       clearTimeout(q);
     }
     console.log("generateImageFromTextWithFlux", performance.now() - perf);
-    const image = document.createElement('img');
-    image.src = "data:image/png;base64," + data.result.image;
 
-    return { image, feathral: data.feathral };
+    const images = [];
+    for (let i = 0; i < data.result.images.length; i++) {
+      const image = document.createElement('img');
+      image.src = "data:image/png;base64," + data.result.images[i];
+      images.push(image);
+    }
+
+    return { images, feathral: data.feathral };
   }
   catch(error) {
     console.log(error);

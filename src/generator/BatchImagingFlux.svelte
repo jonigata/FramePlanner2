@@ -34,11 +34,11 @@
 
   async function generate(frame: FrameElement) {
     console.log("postfix", postfix);
-    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", false, generateContext);
+    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", false, 1, generateContext);
     if (result != null) {
-      await result.image.decode();
+      await result.images[0].decode();
       const film = new Film();
-      const media = new ImageMedia(createCanvasFromImage(result.image));
+      const media = new ImageMedia(createCanvasFromImage(result.images[0]));
       film.media = media;
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
