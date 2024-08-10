@@ -150,6 +150,12 @@ export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument
   return r;
 }
 
+export async function advise(data: any): Promise<{feathral: number, result: any}> {
+  const r = await callFunc('advise', data, 180);
+  logEvent(getAnalytics(), 'advise');
+  return r;
+}
+
 export async function listSharedImages(): Promise<any> {
   const r = await callFunc('cleansharedimages', {}, 180);
   return r;

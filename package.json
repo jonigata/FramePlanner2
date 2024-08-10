@@ -53,6 +53,7 @@
     "firebase": "^10.12.2",
     "firebaseui": "^6.1.0",
     "idb": "^7.1.1",
+    "io-ts": "^2.2.21",
     "jsonc-parser": "^3.2.0",
     "jszip": "^3.10.1",
     "openai": "^4.16.1",

@@ -2,15 +2,16 @@
   import bellIcon from '../assets/bell.png';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { mascotVisible } from '../mascot/mascotStore';
+  import { notebookOpen } from '../notebook/notebookStore';  
   
   function callFairy() {
-    $mascotVisible = !$mascotVisible;
+    $notebookOpen = !$notebookOpen;
   }
 </script>
 
 <button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={callFairy}
-  use:toolTip={`カイルちゃん！`}>
-  <img src={bellIcon} alt="call fairy"/>
+  use:toolTip={`クリエイティブノート`}>
+  <img src={bellIcon} alt="creative notebook"/>
 </button>
 
 <style>

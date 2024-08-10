@@ -55,6 +55,7 @@
   import TemplateChooser from './bookeditor/TemplateChooser.svelte';
   import ColorPickerDialog from './utils/colorpicker/ColorPickerDialog.svelte';
   import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
+  import Notebook from './notebook/Notebook.svelte';
 
   const advertiser = "thumbnail_stories";
   //const advertiser = null;
@@ -159,6 +160,7 @@
 <BatchImaging/>
 <TemplateChooser/>
 <EffectChooser/>
+<Notebook/>
 
 <!-- tools -->
 <PassiveToolTip />
