@@ -2,8 +2,8 @@ import * as t from "io-ts";
 
 export const Character = t.type({
   name: t.string,
-  appearance: t.string,
   personality: t.string,
+  appearance: t.string,
 });
 
 export const Notebook = t.type({

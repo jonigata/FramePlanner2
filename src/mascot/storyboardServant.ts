@@ -20,6 +20,7 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
     } else {
       sample = aiTemplates[storyboardPage.panels.length - 2];
     }
+    console.log(storyboardPage.panels.length - 2, sample);
     const frameTree = FrameElement.compile(sample.frameTree);
     const bubbles = sample.bubbles.map(b => Bubble.compile(paperSize, b));
 

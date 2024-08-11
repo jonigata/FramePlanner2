@@ -1,26 +1,29 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import AutoSizeTextarea from './AutoSizeTextarea.svelte';
+
   import bellIcon from '../assets/bell.png';
 
   const dispatch = createEventDispatcher();
 
   export let value = '';
   export let waiting = false;
-  export let height = 24;
+  export let minHeight = 60;
+
 </script>
 
 <div class="textarea-container">
   {#if waiting}
-    <div class="waiting rounded-corner-token textarea">
+    <div class="waiting rounded-corner-token textarea" style="min-height: {minHeight}px; height: {minHeight}px;">
       <ProgressRadial stroke={100} width="w-10"/>
     </div>
   {:else}
-    <textarea class="rounded-corner-token textarea h-{height}" bind:value={value}></textarea>
+    <AutoSizeTextarea minHeight={minHeight} bind:value={value}/>
     <div class="icon-container">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={bellIcon} alt="AI生成" on:click={() => dispatch('advise', value)}/>
+      <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)}/>
     </div>
   {/if}
 </div>        
@@ -35,11 +38,13 @@
     padding: 4px;
     font-family: '源暎アンチック';
     font-size: 14px;
+    height: auto;
+    max-height: 360px;
   }
   .icon-container {
     position: absolute;
     right: 16px;
-    top: 4px;
+    top: -30px;
   }
   img {
     width: 24px;
