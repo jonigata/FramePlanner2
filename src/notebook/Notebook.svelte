@@ -122,7 +122,7 @@
     const result = await executeProcessAndNotify(
       5000, "画像が生成されました",
       async () => {
-        return await generateFluxImage(`${postfix}\n${c.appearanceEn}`, "square", false, 1, new GenerateImageContext());
+        return await generateFluxImage(`${postfix}\n${c.appearanceEn}, white background`, "square", false, 1, new GenerateImageContext());
       });
     await result.images[0].decode();
     console.log(result);
@@ -156,8 +156,9 @@
         <div class="w-full">
           <NotebookCharacterList bind:characters={characters} waiting={charactersWaiting} on:advise={onCharactersAdvice} on:add={onAddCharacter} on:portrait={onGeneratePortrait}/>
         </div>
-        <div class="flex flex-row gap-2 mt-2 items-center">
-          <span class="w-16">スタイル</span><textarea class="flex-grow textarea h-8 p-1" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+        <div class="flex flex-row mt-2 items-center">
+          <span class="w-16">スタイル</span>
+          <input type="text" class="input portrait-style" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
         </div>
       </div>
       <div class="section">
@@ -202,5 +203,13 @@
   }
   .section {
     margin-bottom: 16px;
+  }
+  .portrait-style {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: '源暎アンチック';
+    border-radius: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 </style>

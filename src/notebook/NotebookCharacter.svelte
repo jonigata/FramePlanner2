@@ -18,8 +18,8 @@
 
 <div class="character">
   <div class="flex flex-col">
-    <div class="flex flex-row gap-8 items-center">
-      <span class="character-name">{character.name}</span> 
+    <div class="flex flex-row gap-4 items-center mb-2">
+      <input type="text" bind:value={character.name} class="input character-name"/>
       <img class="trash" src={trashIcon} alt="削除"/>
     </div>
     <div class="flex flex-row gap-1">
@@ -30,6 +30,9 @@
           </div>
         {:else if character.portrait}
           <img src={character.portrait.src} alt="見た目"/>
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+          <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={() => portrait(character)}/>
         {:else}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -51,11 +54,23 @@
     border-width: 1px;
     border-style: solid;
     border-color: black;
+    position: relative;
+  }
+  .portrait-bell {
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
   }
   .character-name {
     font-size: 16px;
     font-weight: 700;
     font-family: '源暎アンチック';
+    border-radius: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+    width: 240px;
   }
   .trash {
     width: 20px;
