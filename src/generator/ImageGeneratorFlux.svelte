@@ -89,9 +89,9 @@
   <input type="checkbox" bind:checked={pro}/>
 
   <p>スタイル</p>
-  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+  <textarea class="w-96 textarea" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   <p>プロンプト</p>
-  <textarea bind:value={prompt}/>
+  <textarea class="textarea" bind:value={prompt}/>
 <!--
   <p>negative prompt</p>
   <textarea bind:value={imageRequest.negative_prompt}/>

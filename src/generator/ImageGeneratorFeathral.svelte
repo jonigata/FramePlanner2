@@ -3,7 +3,7 @@
 	import Gallery from './Gallery.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import { onMount } from 'svelte';
-  import { updateFeathral, generateImageFromTextWithFeathral } from '../firebase';
+  import { updateFeathral } from '../firebase';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
@@ -12,7 +12,6 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
-  import { makePlainImage } from "../utils/imageUtil";
   import { GenerateImageContext, generateImage } from '../utils/feathralImaging';
 
   export let busy: boolean;
@@ -75,9 +74,9 @@
   <p><Feathral/></p>
 
   <p>スタイル</p>
-  <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+  <textarea class="w-96 textarea" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   <p>プロンプト</p>
-  <textarea bind:value={prompt}/>
+  <textarea class="textarea" bind:value={prompt}/>
 <!--
   <p>negative prompt</p>
   <textarea bind:value={imageRequest.negative_prompt}/>

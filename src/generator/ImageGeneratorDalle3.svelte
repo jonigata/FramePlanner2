@@ -82,9 +82,9 @@
 
 <div class="drawer-content">
   <p>API key</p>
-  <input type="password" bind:value={apiKey} autocomplete="off"/>
+  <input class="input" type="password" bind:value={apiKey} autocomplete="off"/>
   <p>prompt</p>
-  <textarea bind:value={prompt}/>
+  <textarea class="textarea" bind:value={prompt}/>
 
   <div class="hbox gap-5">
     <button disabled={busy} class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>

@@ -138,11 +138,11 @@
 
 <div class="drawer-content">
   <p>URL</p>
-  <input style="width: 100%;" bind:value={url}/>
+  <input class="input" style="width: 100%;" bind:value={url}/>
   <p>prompt</p>
-  <textarea bind:value={prompt}/>
+  <textarea class="textarea" bind:value={prompt}/>
   <p>negative prompt</p>
-  <textarea bind:value={imageRequest.negative}/>
+  <textarea class="textarea" bind:value={imageRequest.negative}/>
 
   <div class="hbox gap-5">
     <div class="vbox" style="width: 400px;">
