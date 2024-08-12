@@ -16,7 +16,6 @@
   import trashIcon from '../assets/fileManager/trash.png';
   import folderIcon from '../assets/fileManager/folder.png';
   import renameIcon from '../assets/fileManager/rename.png';
-  import packageIcon from '../assets/fileManager/package-import.png';
 
   export let fileSystem: FileSystem;
   export let filename: string;

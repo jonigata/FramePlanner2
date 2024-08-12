@@ -1,9 +1,12 @@
 import * as t from "io-ts";
+import { ignore } from "typai";
 
 export const Character = t.type({
   name: t.string,
   personality: t.string,
   appearance: t.string,
+  appearanceEn: t.string,
+  portrait: ignore(t.any), // 'loading' | HTMLImageElement
 });
 
 export const Notebook = t.type({
