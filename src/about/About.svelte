@@ -183,13 +183,23 @@
     padding-top: 16px;
     padding-left: 16px;
   }
+  h1 {
+    font-family: '源暎エムゴ';
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
   h2 {
+    font-family: '源暎エムゴ';
+    font-size: 24px;
     margin-top: 16px;
   }
   h3 { 
+    font-family: '源暎エムゴ';
+    font-size: 18px;
     margin-top: 8px;
   }
   p {
+    font-family: '源暎アンチック';
     margin-left: 32px;
   }
   dt {
