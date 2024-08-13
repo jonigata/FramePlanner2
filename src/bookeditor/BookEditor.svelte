@@ -501,6 +501,7 @@
 
     fit.frame.filmStack.films.push(film);
     fit.frame.prompt = prompt;
+    $frameInspectorTarget = $frameInspectorTarget;
 
     commit(null);
   }
@@ -517,6 +518,7 @@
     film.setShiftedScale(paperSize, scale);
     bubble.filmStack.films.push(film);
     bubble.prompt = r.prompt;
+    $bubbleInspectorTarget = $bubbleInspectorTarget;
   }
 
   async function punchFrameFilm(fit: FrameInspectorTarget) {
