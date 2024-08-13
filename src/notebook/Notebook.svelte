@@ -15,6 +15,7 @@
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from '../utils/accountStore';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import { ulid } from 'ulid';
 
   let theme = '';
   let themeWaiting = false;
@@ -54,7 +55,11 @@
     const result = await advise({action:'characters', notebook:makeNotebook()});
     charactersWaiting = false;
     console.log(result);
-    characters = result.result;
+    const newCharacters = result.result;
+    for (const c of newCharacters) {
+      c.ulid = ulid();
+    }
+    characters = newCharacters;
     $onlineAccount.feathral = result.feathral;
   }
 
@@ -66,8 +71,11 @@
     const newCharacters = result.result;
     for (const c of newCharacters) {
       const index = characters.findIndex((v) => v.name === c.name);
-      if (index !== -1) {
+      if (index < 0) {
+        c.ulid = ulid();
+      } else {
         c.portrait = characters[index].portrait;
+        c.ulid = characters[index].ulid;
       }
     }
     characters = newCharacters;
@@ -130,6 +138,15 @@
     characters = characters;
   }
 
+  function onRemoveCharacter(e: CustomEvent<Character>) {
+    const c = e.detail;
+    const index = characters.findIndex((v) => v.ulid === c.ulid);
+    if (index >= 0) {
+      characters.splice(index, 1);
+      characters = characters;
+    }
+  }
+
 </script>
 
 <div class="drawer-outer">
@@ -154,7 +171,7 @@
       <div class="section">
         <h2>登場人物</h2>
         <div class="w-full">
-          <NotebookCharacterList bind:characters={characters} waiting={charactersWaiting} on:advise={onCharactersAdvice} on:add={onAddCharacter} on:portrait={onGeneratePortrait}/>
+          <NotebookCharacterList bind:characters={characters} waiting={charactersWaiting} on:advise={onCharactersAdvice} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter}/>
         </div>
         <div class="flex flex-row mt-2 items-center">
           <span class="w-16">スタイル</span>

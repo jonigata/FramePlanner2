@@ -25,6 +25,10 @@
   function portrait(e: CustomEvent<Character>) {
     dispatch('portrait', e.detail);
   }
+
+  function remove(e: CustomEvent<Character>) {
+    dispatch('remove', e.detail);
+  }
 </script>
 
 <div class="character-container">
@@ -42,8 +46,8 @@
     </div>
   {:else}
     <div class="rounded-corner-token textarea p-2 flex flex-col gap-4">
-      {#each characters as character (character.name)}
-        <NotebookCharacter bind:character={character} on:portrait={portrait}/>
+      {#each characters as character (character.ulid)}
+        <NotebookCharacter bind:character={character} on:portrait={portrait} on:remove={remove}/>
       {/each}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->

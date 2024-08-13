@@ -2,6 +2,7 @@ import * as t from "io-ts";
 import { ignore } from "typai";
 
 export const Character = t.type({
+  ulid: ignore(t.string),
   name: t.string,
   personality: t.string,
   appearance: t.string,

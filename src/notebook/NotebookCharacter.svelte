@@ -11,8 +11,12 @@
 
   export let character: Character;
 
-  function portrait(c: Character) {
-    dispatch('portrait', c);
+  function portrait() {
+    dispatch('portrait', character);
+  }
+
+  function remove() {
+    dispatch('remove', character);
   }
 </script>
 
@@ -20,7 +24,9 @@
   <div class="flex flex-col">
     <div class="flex flex-row gap-4 items-center mb-2">
       <input type="text" bind:value={character.name} class="input character-name"/>
-      <img class="trash" src={trashIcon} alt="削除"/>
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <img class="trash" src={trashIcon} alt="削除" on:click={remove}/>
     </div>
     <div class="flex flex-row gap-1">
       <div class="portrait flex justify-center items-center">
@@ -32,11 +38,11 @@
           <img src={character.portrait.src} alt="見た目"/>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={() => portrait(character)}/>
+          <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={portrait}/>
         {:else}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="no-portrait" src={bellIcon} alt="見た目" on:click={() => portrait(character)}/>
+          <img class="no-portrait" src={bellIcon} alt="見た目" on:click={portrait}/>
         {/if}
       </div>
       <div class="flex flex-col flex-grow gap-1">

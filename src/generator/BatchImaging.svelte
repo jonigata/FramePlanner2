@@ -53,9 +53,9 @@
 <Drawer open={$batchImagingPage != null} size="220px" on:clickAway={() => $batchImagingPage = null} placement={"top"}>
   <div class="drawer-content">
     <TabGroup regionList="h-12">
-      <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={0}>Dall・E 3</Tab>
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={0}><span class="tab"><img class="image" src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
       <Tab regionTab="w-24" bind:group={tabSet} name="tab2" value={1}><span class="tab"><img class="image" src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
-      <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={2}><span class="tab"><img class="image" src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={2}>Dall・E 3</Tab>
       <svelte:fragment slot="panel">
         {#if busy}
           <div class="content">
@@ -77,14 +77,14 @@
             </div>
             <div class="content">
               {#if tabSet === 0}
-                <BatchImagingDalle3 bind:this={dalle3} bind:stats={stats}/>
-                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
+                <BatchImagingFlux bind:this={flux} bind:stats={stats}/>
+                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
               {:else if tabSet === 1}
                 <BatchImagingFeathral bind:this={feathral} bind:stats={stats}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
               {:else if tabSet === 2}
-                <BatchImagingFlux bind:this={flux} bind:stats={stats}/>
-                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
+                <BatchImagingDalle3 bind:this={dalle3} bind:stats={stats}/>
+                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
               {/if}
             </div>
           </div>
