@@ -3,6 +3,8 @@ import { Media, ImageMedia } from './media';
 import { Computron, JFACompute, FloatField } from 'fastsdf';
 import parseColor from 'color-parse';
 
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.VITEST;
+
 let jfa: JFACompute;
 async function init() {
   const c = new Computron();
@@ -11,7 +13,9 @@ async function init() {
   jfa = new JFACompute(c);
   await jfa.init();
 }
-init();
+if (!isTestEnvironment) {
+  init();
+}
 
 export class Effect {
   ulid: string;

@@ -4,6 +4,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize, importEnvelope } from "./fileManagerStore";
   import { newBook } from "../bookeditor/book";
+  import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
@@ -176,7 +177,8 @@
   }
 
   async function recycle() {
-    await recycleNode(node);
+    const editingId = $mainBook.revision.id as NodeId;
+    await recycleNode(node, editingId);
     $loading = true;
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
     console.log("usedImageFiles", usedImageFiles);
@@ -189,15 +191,16 @@
     node = node;
   }
 
-  async function recycleNode(curr: Node) {
+  async function recycleNode(curr: Node, editingId: NodeId) {
     if (curr.getType() === "folder") {
       const folder = curr.asFolder();
       const entries = await folder.listEmbodied();
       for (const entry of entries) {
+        if (entry[2].id === editingId) { continue; } // 編集中のファイルは消さない
         if (curr.id === node.id) { // node以外はどうせ親を消すのでunlink不要
           await folder.unlink(entry[0]);
         }
-        await recycleNode(entry[2]);
+        await recycleNode(entry[2], editingId);
       }
     }
     if (curr.id !== node.id) {

@@ -1,4 +1,4 @@
-import type { FileSystem, NodeId, File, Folder } from '../lib/filesystem/fileSystem';
+import type { FileSystem, NodeId, Folder } from '../lib/filesystem/fileSystem';
 import { dryLoadBookFrom } from "../filemanager/fileManagerStore";
 
 export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImageFiles: NodeId[], strayImageFiles: NodeId[] }> {

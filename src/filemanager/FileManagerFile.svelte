@@ -162,7 +162,7 @@
     <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
   </div>  
   <div class="button-container">
-    {#if !selected}
+    {#if !(selected && !isDiscardable)} <!-- ゴミ箱で選択されてるとき以外 -->
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="button" src={trashIcon} alt="trash" on:click={removeFile} use:toolTip={"捨てる"}/>

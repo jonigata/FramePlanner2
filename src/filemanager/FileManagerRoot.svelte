@@ -358,15 +358,6 @@
   >
     {#key $fileManagerRefreshKey}
       <div class="drawer-content">
-<!--
-        {#if desktop}
-          <div class="desktop">
-            <div class="desktop-sheet variant-soft-primary surface rounded-container-token">
-                <FileManagerDesktop fileSystem={fileSystem} node={desktop}/>
-            </div>
-          </div>
-        {/if}
--->
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
           {#if desktop}
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]}/>
@@ -382,21 +373,7 @@
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
           {/if}
         </div>
-<!--
-        <div class="cabinet variant-ghost-secondary rounded-container-token">
-          {#if templates}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} name={"テンプレート"} bindId={templates[0]} parent={root} index={2} isTrash={true} path={[templates[0]]}/>
-          {/if}
-        </div>
--->
-<!--
-      <div class="toolbar">
-        <div class="hbox gap mx-2" style="margin-top: 8px;">
-          インポート<input accept="application/json" bind:files={importFiles} id="import" name="import" type="file" />
-        </div>
       </div>
--->
-</div>
       <div class="flex flex-row gap-2 items-center justify-center">
         <p>ファイルシステム使用量: {formatMillions($fileManagerUsedSize)}</p>
         <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
