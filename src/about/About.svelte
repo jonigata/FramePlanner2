@@ -183,11 +183,6 @@
     padding-top: 16px;
     padding-left: 16px;
   }
-  h1 {
-    font-family: '源暎エムゴ';
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
   h2 {
     font-family: '源暎エムゴ';
     font-size: 24px;

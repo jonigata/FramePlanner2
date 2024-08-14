@@ -12,6 +12,7 @@ import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
 import { createCanvasFromImage } from "../utils/imageUtil.js";
 import { Effect } from "../lib/layeredCanvas/dataModels/effect";
+import type { Notebook } from "../notebook/notebook";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
@@ -56,12 +57,14 @@ type SerializedPage = {
   frameWidth: number,
 }
 
+
 type SerializedBook = {
   revision: {id: string, revision: number, prefix: Prefix},
   pages: SerializedPage[],
   direction: ReadingDirection,
   wrapMode: WrapMode,
   chatLogs: ProtocolChatLog[],
+  notebook: Notebook,
 }
 
 type EnvelopedBook = {
@@ -69,6 +72,7 @@ type EnvelopedBook = {
   direction: ReadingDirection,
   wrapMode: WrapMode,
   images: { [fileId: string]: string }
+  notebook: Notebook,
 };
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
@@ -83,6 +87,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     direction: book.direction,
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
+    notebook: book.notebook,
   };
   for (const page of book.pages) {
     const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
@@ -111,6 +116,7 @@ export function serializeBook(book: Book): SerializedBook {
     direction: book.direction,
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
+    notebook: book.notebook,
   }
 }
 
@@ -212,6 +218,12 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     direction: serializedBook.direction ?? 'right-to-left',
     wrapMode: serializedBook.wrapMode ?? 'none',
     chatLogs,
+    notebook: serializedBook.notebook ?? {
+      theme: '',
+      characters: [],
+      plot: '',
+      scenario: '',
+    },
   };
 
   for (const serializedPage of serializedBook.pages) {
@@ -255,6 +267,12 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
     direction: 'right-to-left',
     wrapMode: 'none',
     chatLogs: [],
+    notebook: {
+      theme: '',
+      characters: [],
+      plot: '',
+      scenario: '',
+    },
   };
   commitBook(book, null);
 
@@ -603,7 +621,8 @@ export async function exportEnvelope(fileSystem: FileSystem, file: File): Promis
       pages: [newSerializedPage],
       direction: 'right-to-left',
       wrapMode: 'none',
-      images: {}
+      images: {},
+      notebook: null,
     }    
   }
 
@@ -661,7 +680,13 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
     },
     direction: envelopedBook.direction,
     wrapMode: envelopedBook.wrapMode,
-    chatLogs: []
+    chatLogs: [],
+    notebook: envelopedBook.notebook ?? {
+      theme: '',
+      characters: [],
+      plot: '',
+      scenario: '',
+    }
   };
 
   // envelopeに含まれるimage.fileIdがexport filesystem/import filesystemで被らないことが前提になっている

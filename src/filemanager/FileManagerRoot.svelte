@@ -153,6 +153,7 @@
         direction: 'right-to-left',
         wrapMode: 'none',
         chatLogs: [],
+        notebook: { theme: '', characters: [], plot: '', scenario: '' },
       }
       commitBook(book, null);
       await saveBookTo(book, fileSystem, localFile);

@@ -33,14 +33,6 @@
     position: relative;
     width: 100%;
   }
-  textarea {
-    width: 100%;
-    padding: 4px;
-    font-family: '源暎アンチック';
-    font-size: 14px;
-    height: auto;
-    max-height: 360px;
-  }
   .icon-container {
     position: absolute;
     right: 16px;

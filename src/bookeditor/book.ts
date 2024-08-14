@@ -7,6 +7,7 @@ import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry"
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { ulid } from 'ulid';
 import type { RichChatLog } from '../utils/richChat';
+import type { Notebook } from "../notebook/notebook";
 
 // history処理では基本的にすべてdeep copyを使う
 
@@ -60,6 +61,7 @@ export type Book = {
   direction: ReadingDirection;
   wrapMode: WrapMode;
   chatLogs: RichChatLog[];
+  notebook: Notebook;
 
   // 以下揮発性
   video?: VideoSettings;
@@ -153,6 +155,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
     direction: 'right-to-left',
     wrapMode: 'two-pages',
     chatLogs: [],
+    notebook: { theme: '', characters: [], plot: '', scenario: '' },
   }
   commitBook(book, null);
   return book;
@@ -173,6 +176,7 @@ export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Pref
     direction: 'right-to-left',
     wrapMode: 'none',
     chatLogs: [],
+    notebook: { theme: '', characters: [], plot: '', scenario: '' },
   }
   commitBook(book, null);
   return book;
@@ -225,6 +229,7 @@ export function cloneBook(book: Book): Book {
     direction: book.direction,
     wrapMode: book.wrapMode,
     chatLogs: book.chatLogs.map(l => ({ ...l })),
+    notebook: { ...book.notebook, characters: book.notebook.characters.map(c => ({ ...c })) },
   };
 }
 
