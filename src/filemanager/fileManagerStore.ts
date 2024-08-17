@@ -12,7 +12,7 @@ import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
 import { createCanvasFromImage } from "../utils/imageUtil.js";
 import { Effect } from "../lib/layeredCanvas/dataModels/effect";
-import type { Notebook } from "../notebook/notebook";
+import { type Notebook, emptyNotebook } from "../notebook/notebook";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
@@ -218,12 +218,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     direction: serializedBook.direction ?? 'right-to-left',
     wrapMode: serializedBook.wrapMode ?? 'none',
     chatLogs,
-    notebook: serializedBook.notebook ?? {
-      theme: '',
-      characters: [],
-      plot: '',
-      scenario: '',
-    },
+    notebook: serializedBook.notebook ?? emptyNotebook(),
   };
 
   for (const serializedPage of serializedBook.pages) {
@@ -238,6 +233,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
       paperColor: serializedPage.paperColor,
       frameColor: serializedPage.frameColor,
       frameWidth: serializedPage.frameWidth,
+      source: null,
     };
     book.pages.push(page);
   }
@@ -255,6 +251,7 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
     paperColor: serializedPage.paperColor,
     frameColor: serializedPage.frameColor,
     frameWidth: serializedPage.frameWidth,
+    source: null,
   };
 
   const book: Book = {
@@ -267,12 +264,7 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
     direction: 'right-to-left',
     wrapMode: 'none',
     chatLogs: [],
-    notebook: {
-      theme: '',
-      characters: [],
-      plot: '',
-      scenario: '',
-    },
+    notebook: emptyNotebook(),
   };
   commitBook(book, null);
 
@@ -681,12 +673,7 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
     direction: envelopedBook.direction,
     wrapMode: envelopedBook.wrapMode,
     chatLogs: [],
-    notebook: envelopedBook.notebook ?? {
-      theme: '',
-      characters: [],
-      plot: '',
-      scenario: '',
-    }
+    notebook: envelopedBook.notebook ?? emptyNotebook(),
   };
 
   // envelopeに含まれるimage.fileIdがexport filesystem/import filesystemで被らないことが前提になっている
@@ -730,6 +717,7 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
       paperColor: envelopedPage.paperColor,
       frameColor: envelopedPage.frameColor,
       frameWidth: envelopedPage.frameWidth,
+      source: null,
     };
     book.pages.push(page);
   }

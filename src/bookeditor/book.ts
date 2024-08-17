@@ -7,7 +7,7 @@ import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry"
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { ulid } from 'ulid';
 import type { RichChatLog } from '../utils/richChat';
-import type { Notebook } from "../notebook/notebook";
+import { emptyNotebook, type Notebook } from "../notebook/notebook";
 
 // history処理では基本的にすべてdeep copyを使う
 
@@ -27,6 +27,7 @@ export type Page = {
   paperColor: string,
   frameColor: string,
   frameWidth: number,
+  source: any; // 一時的、Storyboard.Bubble
 }
 
 export type HistoryTag = 'bubble' | 'page-attribute' | "effect" | null;
@@ -140,6 +141,7 @@ export function newPage(frameTree: FrameElement, bubbles: Bubble[]) {
     paperColor: '#ffffff',
     frameColor: '#000000',
     frameWidth: 2,
+    source: null,
   }
   return page;
 }
@@ -155,7 +157,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
     direction: 'right-to-left',
     wrapMode: 'two-pages',
     chatLogs: [],
-    notebook: { theme: '', characters: [], plot: '', scenario: '' },
+    notebook: emptyNotebook(),
   }
   commitBook(book, null);
   return book;
@@ -176,7 +178,7 @@ export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Pref
     direction: 'right-to-left',
     wrapMode: 'none',
     chatLogs: [],
-    notebook: { theme: '', characters: [], plot: '', scenario: '' },
+    notebook: emptyNotebook(),
   }
   commitBook(book, null);
   return book;
@@ -206,6 +208,7 @@ export interface BookOperators {
   tweak: (index: number) => void;
   chase: () => void;
   getMarks: () => boolean[];
+  setMarks: (marks: boolean[]) => void;
   getFocusedPage: () => Page;
 }
 
@@ -218,6 +221,7 @@ export function clonePage(page: Page): Page {
     paperColor: page.paperColor,
     frameColor: page.frameColor,
     frameWidth: page.frameWidth,
+    source: page.source,
   }
 }
 

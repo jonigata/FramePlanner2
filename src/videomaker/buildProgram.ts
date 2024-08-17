@@ -18,8 +18,9 @@ export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book) {
   }
   const direction = getDirectionFromReadingDirection(book.direction);
   const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(book.wrapMode);
+  const marks = [];
   const arrayLayer = new ArrayLayer(
-    papers, fold, gapX, gapY, direction,
+    papers, marks, fold, gapX, gapY, direction,
     () => {},
     () => {},
     () => {},

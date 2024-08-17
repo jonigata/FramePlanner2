@@ -1,15 +1,33 @@
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
-import type { Context } from "./servantContext";
 import { frameExamples, aiTemplates } from '../lib/layeredCanvas/tools/frameExamples'
 import { newPage } from "../bookeditor/book";
 import type * as Storyboard from './storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import { newPageProperty } from '../bookeditor/bookStore';
 import { get } from "svelte/store";
+import parseColor from 'color-parse';
 
-export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
+function whitenColor(s: string, ratio: number): string {
+  const c = parseColor(s);
+  if (ratio < 0 || ratio > 1) {
+    throw new Error("Ratio must be between 0 and 1");
+  }
+  
+  // 白との混合
+  const r = Math.round(c.values[0] * (1 - ratio) + 255 * ratio);
+  const g = Math.round(c.values[1] * (1 - ratio) + 255 * ratio);
+  const b = Math.round(c.values[2] * (1 - ratio) + 255 * ratio);
+
+  // hexで返す
+  return "#" + 
+    r.toString(16).padStart(2, '0') + 
+    g.toString(16).padStart(2, '0') + 
+    b.toString(16).padStart(2, '0');
+}
+
+export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
   console.log(JSON.stringify(storyboard));
   const paperSize = get(newPageProperty).paperSize;
 
@@ -58,13 +76,20 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
             bubble.setPhysicalCenter(page.paperSize, cc);
             const size = bubble.calculateFitSize(paperSize);
             bubble.setPhysicalSize(paperSize, size);
+
+            bubble.fontFamily = "源暎エムゴ"
+            bubble.n_outlineWidth = 0.005;
+            bubble.outlineColor = '#ffffff';
+            bubble.fillColor = whitenColor(b.color, 0.85);
+            bubble.optionContext['shapeExpand'] = 0.06;
+
             page.bubbles.push(bubble);
           }
         })
       }
     });
 
-    context.book.pages.push(page);
+    page.source = storyboardPage;
     pages.push(page);
   }
   return pages;

@@ -41,6 +41,7 @@
   let layeredCanvas : LayeredCanvas;
   let arrayLayer: ArrayLayer;
   let focusKeeper: FocusKeeper;
+  let marks: boolean[];
   let editingBookId: string = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
@@ -307,6 +308,7 @@
       tweak,
       chase,
       getMarks,
+      setMarks,
       getFocusedPage,
     };
     $bookEditor = bookEditorInstance;
@@ -320,6 +322,7 @@
     layeredCanvas.redraw();
     arrayLayer = builtBook.arrayLayer;
     focusKeeper = builtBook.focusKeeper;
+    marks = builtBook.marks;
   }
 
   $:onSplitCursor($bubbleSplitCursor);
@@ -582,7 +585,11 @@
   }
 
   function getMarks() {
-    return arrayLayer.markFlags;
+    return marks;
+  }
+
+  function setMarks(m: boolean[]) {
+    marks = m;
   }
 
   $: onRedraw($redrawToken);

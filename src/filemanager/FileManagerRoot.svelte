@@ -28,6 +28,7 @@
   import { mascotVisible } from '../mascot/mascotStore';
   import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
   import { createImageFromCanvas } from '../utils/imageUtil';
+  import { emptyNotebook } from '../notebook/notebook';
 
   export let fileSystem: FileSystem;
 
@@ -153,7 +154,7 @@
         direction: 'right-to-left',
         wrapMode: 'none',
         chatLogs: [],
-        notebook: { theme: '', characters: [], plot: '', scenario: '' },
+        notebook: emptyNotebook(),
       }
       commitBook(book, null);
       await saveBookTo(book, fileSystem, localFile);

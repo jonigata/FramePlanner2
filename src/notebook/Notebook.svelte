@@ -3,12 +3,9 @@
   import { notebookOpen } from './notebookStore';
   import NotebookTextarea from './NotebookTextarea.svelte';
   import NotebookCharacterList from './NotebookCharacterList.svelte';
-  import { Notebook } from './notebook';
   import { advise } from '../firebase';
   import type { Character } from './notebook';
-  import type { Context } from "../mascot/servantContext";
-  import { makePage } from '../mascot/storyboardServant';
-  import { mainBook } from '../bookeditor/bookStore'
+  import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { GenerateImageContext, generateFluxImage } from '../utils/feathralImaging';
   import { persistent } from '../utils/persistent';
@@ -16,117 +13,127 @@
   import { onlineAccount } from '../utils/accountStore';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { ulid } from 'ulid';
+  import { onMount, tick } from 'svelte';
+  import {makePagesFromStoryboard} from './makePage';
 
-  let theme = '';
+  $: notebook = $mainBook ? $mainBook.notebook : null;
+
   let themeWaiting = false;
-  let characters: Character[] = [];
   let charactersWaiting = false;
-  let plot = '';
   let plotWaiting = false;
-  let scenario = '';
   let scenarioWaiting = false;
   let storyboardWaiting = false;
+  let critiqueWaiting = false;
   let postfix: string = "";
 
-  function makeNotebook(): Notebook {
-    console.log('make notebook');
-    return {
-      characters,
-      theme,
-      plot,
-      scenario,
-    }
-  }
-
-  async function onThemeAdvice(e: CustomEvent<string>) {
+  async function onThemeAdvise(e: CustomEvent<string>) {
     console.log(e.detail);
     themeWaiting = true;
-    const result = await advise({action:'theme', notebook:makeNotebook()});
+    const result = await advise({action:'theme', notebook});
     themeWaiting = false;
     console.log(result);
-    theme = result.result;
+    notebook.theme = result.result;
     $onlineAccount.feathral = result.feathral;
   }
 
-  async function onCharactersAdvice(e: CustomEvent) {
+  async function onCharactersAdvise(e: CustomEvent) {
     console.log(e.detail);
     charactersWaiting = true;
-    characters = [];
-    const result = await advise({action:'characters', notebook:makeNotebook()});
+    notebook.characters = [];
+    const result = await advise({action:'characters', notebook});
     charactersWaiting = false;
     console.log(result);
     const newCharacters = result.result;
     for (const c of newCharacters) {
       c.ulid = ulid();
     }
-    characters = newCharacters;
+    notebook.characters = newCharacters;
     $onlineAccount.feathral = result.feathral;
   }
 
   async function onAddCharacter() {
     charactersWaiting = true;
-    const result = await advise({action:'characters', notebook:makeNotebook()});
+    const result = await advise({action:'characters', notebook});
     charactersWaiting = false;
     console.log(result);
     const newCharacters = result.result;
     for (const c of newCharacters) {
-      const index = characters.findIndex((v) => v.name === c.name);
+      const index = notebook.characters.findIndex((v) => v.name === c.name);
       if (index < 0) {
         c.ulid = ulid();
       } else {
-        c.portrait = characters[index].portrait;
-        c.ulid = characters[index].ulid;
+        c.portrait = notebook.characters[index].portrait;
+        c.ulid = notebook.characters[index].ulid;
       }
     }
-    characters = newCharacters;
+    notebook.characters = newCharacters;
     $onlineAccount.feathral = result.feathral;
   }
 
-  async function onPlotAdvice(e: CustomEvent<string>) {
+  async function onPlotAdvise(e: CustomEvent<string>) {
     console.log(e.detail);
     plotWaiting = true;
-    const result = await advise({action:'plot', notebook:makeNotebook()});
+    const result = await advise({action:'plot', notebook});
     plotWaiting = false;
     console.log(result);
-    plot = result.result;
+    notebook.plot = result.result;
     $onlineAccount.feathral = result.feathral;
   }
 
-  async function onScenarioAdvice(e: CustomEvent<string>) {
+  async function onScenarioAdvise(e: CustomEvent<string>) {
     console.log(e.detail);
     scenarioWaiting = true;
-    const result = await advise({action:'scenario', notebook:makeNotebook()});
+    const result = await advise({action:'scenario', notebook});
     scenarioWaiting = false;
     console.log(result);
-    scenario = result.result;
+    notebook.scenario = result.result;
     $onlineAccount.feathral = result.feathral;
   }
 
   function reset() {
-    theme = '';
-    characters = [];
-    plot = '';
-    scenario = '';
+    notebook.theme = '';
+    notebook.characters = [];
+    notebook.plot = '';
+    notebook.scenario = '';
   }
 
   async function buildStoryboard() {
     console.log('build storyboard');
     storyboardWaiting = true;
-    const result = await advise({action:'storyboard', notebook:makeNotebook()});
+    const result = await advise({action:'storyboard', notebook});
+    notebook.storyboard = result.result;
     storyboardWaiting = false;
     console.log(result);
-    const context: Context = {
-      book: $mainBook,
-      pageIndex: 0,
-    };
-    makePage(context, result.result);
+    const receivedPages = makePagesFromStoryboard(result.result);
+    let marks = $bookEditor.getMarks();
+    const newPages = $mainBook.pages.filter((p, i) => !marks[i]);
+    const oldLength = newPages.length;
+    newPages.push(...receivedPages);
+    $mainBook.pages = newPages;
     $mainBook = $mainBook;
+
+    await tick();
+    marks = $bookEditor.getMarks();
+    newPages.forEach((p, i) => {
+      if (oldLength <= i) marks[i] = true;
+    });
+    $bookEditor.setMarks(marks);
+    $redrawToken = true;
+  }
+
+  async function onCritiqueAdvise() {
+    critiqueWaiting = true;
+    const result = await advise({action:'critique', notebook});
+    critiqueWaiting = false;
+    console.log(result);
+    notebook.critique = result.result.critique;
+    $onlineAccount.feathral = result.feathral;
   }
 
   async function onGeneratePortrait(e: CustomEvent<Character>) {
     const c = e.detail;
     c.portrait = 'loading';
-    characters = characters;
+    notebook.characters = notebook.characters;
     const result = await executeProcessAndNotify(
       5000, "画像が生成されました",
       async () => {
@@ -135,22 +142,34 @@
     await result.images[0].decode();
     console.log(result);
     c.portrait = result.images[0]; // HTMLImageElement
-    characters = characters;
+    notebook.characters = notebook.characters;
   }
 
   function onRemoveCharacter(e: CustomEvent<Character>) {
     const c = e.detail;
-    const index = characters.findIndex((v) => v.ulid === c.ulid);
+    const index = notebook.characters.findIndex((v) => v.ulid === c.ulid);
     if (index >= 0) {
-      characters.splice(index, 1);
-      characters = characters;
+      notebook.characters.splice(index, 1);
+      notebook.characters = notebook.characters;
     }
   }
+
+  function close() {
+    if (JSON.stringify(notebook) !== oldNotebook) {
+      $bookEditor.commit(null);
+    }
+    $notebookOpen = false;
+  }
+
+  let oldNotebook: string = null;
+  onMount(async () => {
+    oldNotebook = JSON.stringify(notebook);
+  });
 
 </script>
 
 <div class="drawer-outer">
-  <Drawer placement="right" open={$notebookOpen} size="720px" on:clickAway={() => $notebookOpen = false}>
+  <Drawer placement="right" open={$notebookOpen} size="720px" on:clickAway={close}>
     {#if storyboardWaiting}
     <div class="h-full flex flex-col justify-center items-center">
       <h2>ネーム作成中</h2>
@@ -165,13 +184,13 @@
       <div class="section">
         <h2>テーマ</h2>
         <div class="w-full">
-          <NotebookTextarea bind:value={theme} waiting={themeWaiting} on:advise={onThemeAdvice}/>
+          <NotebookTextarea bind:value={notebook.theme} waiting={themeWaiting} on:advise={onThemeAdvise}/>
         </div>
       </div>
       <div class="section">
         <h2>登場人物</h2>
         <div class="w-full">
-          <NotebookCharacterList bind:characters={characters} waiting={charactersWaiting} on:advise={onCharactersAdvice} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter}/>
+          <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter}/>
         </div>
         <div class="flex flex-row mt-2 items-center">
           <span class="w-16">スタイル</span>
@@ -181,20 +200,28 @@
       <div class="section">
         <h2>プロット</h2>
         <div class="w-full">
-          <NotebookTextarea bind:value={plot} waiting={plotWaiting} on:advise={onPlotAdvice} minHeight={180}/>
+          <NotebookTextarea bind:value={notebook.plot} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
         </div>
       </div>
       <div class="section">
         <h2>シナリオ</h2>
         <div class="w-full">
-          <NotebookTextarea bind:value={scenario} waiting={scenarioWaiting} on:advise={onScenarioAdvice} minHeight={240}/>
+          <NotebookTextarea bind:value={notebook.scenario} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
         </div>
       </div>
-      <div class="flex flex-row gap-4">
+      <div class="flex flex-row gap-4 mb-4">
         <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
         <span class="flex-grow"></span>
         <button class="btn variant-filled-primary" on:click={buildStoryboard}>ネーム作成！</button>
       </div>
+      {#if notebook.storyboard}
+        <div class="section">
+          <h2>ネームはどう？</h2>
+          <div class="w-full">
+            <NotebookTextarea bind:value={notebook.critique} waiting={critiqueWaiting} on:advise={onCritiqueAdvise} minHeight={240}/>
+          </div>
+        </div>
+      {/if}
     </div>
     {/if}
   </Drawer>

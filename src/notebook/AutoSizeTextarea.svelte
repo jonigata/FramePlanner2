@@ -12,9 +12,7 @@
   let internalValue = null;
   $: onValueChanged(value);
   async function onValueChanged(value) {
-    console.log('value changed#1', value, internalValue);
     if (value === internalValue) return;
-    console.log('value changed#2', value, internalValue);
     internalValue = value;
     await tick();
     textarea.style.height = (textarea.scrollHeight + 2) + 'px';

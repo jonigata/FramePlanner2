@@ -40,8 +40,9 @@ export function buildBookEditor(
   }
   const direction = getDirectionFromReadingDirection(book.direction);
   const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(book.wrapMode);
+  const marks: boolean[] = [];
   const arrayLayer = new ArrayLayer(
-    papers, fold, gapX, gapY, direction,
+    papers, marks, fold, gapX, gapY, direction,
     editor.insertPage,
     editor.deletePage,
     editor.movePages,
@@ -65,7 +66,7 @@ export function buildBookEditor(
         code === "Space";
   });
 
-  return { arrayLayer, layeredCanvas, focusKeeper };
+  return { arrayLayer, layeredCanvas, focusKeeper, marks };
 }
 
 export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number, gapX: number, gapY: number } {

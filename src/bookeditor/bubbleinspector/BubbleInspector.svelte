@@ -114,6 +114,7 @@
     if ($bubble && f && ($bubble.fontFamily !== f.fontFamily || $bubble.fontWeight !== f.fontWeight)) {
       $bubble.fontFamily = f.fontFamily;
       $bubble.fontWeight = f.fontWeight;
+      $forceFontLoadToken = true;
     }
   }
 

@@ -41,6 +41,7 @@ export function createPage(source: ExPage, imagePromptPrefix: string): InPage {
     paperColor: source.background_color,
     frameColor: source.border_color,
     frameWidth: source.border_width,
+    source: null,
   }
   const layout = calculatePhysicalLayout(target.frameTree, target.paperSize, [0,0]);
 

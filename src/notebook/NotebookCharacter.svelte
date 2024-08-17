@@ -3,6 +3,8 @@
   import type { Character } from './notebook';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
+	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
+
   import bellIcon from '../assets/bell.png';
 
   import trashIcon from '../assets/trash.png'
@@ -27,6 +29,9 @@
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="trash" src={trashIcon} alt="削除" on:click={remove}/>
+      <div class="color-label">
+        <ColorPickerLabel bind:hex={character.themeColor}/>
+      </div>
     </div>
     <div class="flex flex-row gap-1">
       <div class="portrait flex justify-center items-center">
@@ -93,5 +98,10 @@
     width: 64px;
     height: 64px;
   }
-
+  .color-label {
+    width: 30px;
+    height: 20px;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
 </style>

@@ -408,7 +408,6 @@ export class PaperRendererLayer extends Layer {
       //const text = `${bubble.text}:${bubble.pageNumber}`;
       let text = bubble.text;
       if (!document.fonts.check(`${bubble.fontStyle} ${bubble.fontWeight} 20px '${bubble.fontFamily}'`)) {
-        console.log(`loading: ${ss}`);
         // どうもcheckが信用ならないので以下のコードは潰す
         // text = "ロード中……";
       }

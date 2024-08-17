@@ -27,6 +27,7 @@ export class ArrayLayer extends Layer {
 
   constructor(
     papers: Paper[], 
+    marks: boolean[],
     fold: number, 
     gapX: number, 
     gapY: number,
@@ -41,6 +42,7 @@ export class ArrayLayer extends Layer {
 
     super();
     this.array = new PaperArray(papers, fold, gapX, gapY, direction);
+    this.markFlags = marks;
     this.onInsert = onInsert;
     this.onDelete = onDelete;
     this.onMove = onMove;
@@ -53,7 +55,7 @@ export class ArrayLayer extends Layer {
     for (let i = 0; i < this.array.papers.length; i++) {
       const trashIcon = new ClickableIcon(["page-trash.png"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
       this.trashIcons.push(trashIcon);
-      const markIcon = new ClickableIcon(["page-mark.png", "page-mark-on.png"],[32,32],[0.5,0],"ページマーク", () => 1 < this.array.papers.length, mp);
+      const markIcon = new ClickableIcon(["page-mark.png", "page-mark-on.png"],[32,32],[0.5,0],"ページマーク", null, mp);
       this.markIcons.push(markIcon);
       const imagingIcon = new ClickableIcon(["page-imaging.png"],[32,32],[0.5,0],"バッチ画像生成", null, mp);
       this.imagingIcons.push(imagingIcon);

@@ -3,7 +3,7 @@ import { Media, ImageMedia } from './media';
 import { Computron, JFACompute, FloatField } from 'fastsdf';
 import parseColor from 'color-parse';
 
-const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.VITEST;
+const isTestEnvironment = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST);
 
 let jfa: JFACompute;
 async function init() {
