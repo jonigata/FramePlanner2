@@ -47,12 +47,9 @@ export class PaperRendererLayer extends Layer {
     const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.thisFrameRenderData;
 
     if (depth === 0) {
-      this.cutOut(ctx);
-
       for (let { layout } of backgrounds) {
         this.renderFrameBackground(ctx, layout);
       }
-
       foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
       for (let { layout, inheritanceContext } of foregrounds) {
         this.renderFrame(ctx, layout, inheritanceContext, embeddedBubbles);
@@ -62,15 +59,6 @@ export class PaperRendererLayer extends Layer {
     if (depth === 1) {
       this.renderBubbles(ctx, floatingBubbles);
     }
-  }
-
-  cutOut(ctx: CanvasRenderingContext2D) {
-    // 外側を透明にする
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.fillStyle = "rgb(255,255,255, 1)";
-    ctx.fillRect(0, 0, ...this.getPaperSize());
-    ctx.restore();
   }
 
   setUpRenderData(layout: Layout): RenderData {
