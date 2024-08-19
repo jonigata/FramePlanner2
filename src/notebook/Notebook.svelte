@@ -15,6 +15,7 @@
   import { ulid } from 'ulid';
   import { onMount, tick } from 'svelte';
   import {makePagesFromStoryboard} from './makePage';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 
@@ -28,66 +29,100 @@
 
   async function onThemeAdvise(e: CustomEvent<string>) {
     console.log(e.detail);
-    themeWaiting = true;
-    const result = await advise({action:'theme', notebook});
-    themeWaiting = false;
-    console.log(result);
-    notebook.theme = result.result;
-    $onlineAccount.feathral = result.feathral;
+    try {
+      themeWaiting = true;
+      const result = await advise({action:'theme', notebook});
+      console.log(result);
+      notebook.theme = result.result;
+      $onlineAccount.feathral = result.feathral;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    } finally {
+      themeWaiting = false;
+    }
   }
 
   async function onCharactersAdvise(e: CustomEvent) {
     console.log(e.detail);
-    charactersWaiting = true;
-    notebook.characters = [];
-    const result = await advise({action:'characters', notebook});
-    charactersWaiting = false;
-    console.log(result);
-    const newCharacters = result.result;
-    for (const c of newCharacters) {
-      c.ulid = ulid();
+    try {
+      charactersWaiting = true;
+      notebook.characters = [];
+      const result = await advise({action:'characters', notebook});
+      charactersWaiting = false;
+      console.log(result);
+      const newCharacters = result.result;
+      for (const c of newCharacters) {
+        c.ulid = ulid();
+      }
+      notebook.characters = newCharacters;
+      $onlineAccount.feathral = result.feathral;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    } finally {
+      charactersWaiting = false;
     }
-    notebook.characters = newCharacters;
-    $onlineAccount.feathral = result.feathral;
   }
 
   async function onAddCharacter() {
-    charactersWaiting = true;
-    const result = await advise({action:'characters', notebook});
-    charactersWaiting = false;
-    console.log(result);
-    const newCharacters = result.result;
-    for (const c of newCharacters) {
-      const index = notebook.characters.findIndex((v) => v.name === c.name);
-      if (index < 0) {
-        c.ulid = ulid();
-      } else {
-        c.portrait = notebook.characters[index].portrait;
-        c.ulid = notebook.characters[index].ulid;
+    try {
+      charactersWaiting = true;
+      const result = await advise({action:'characters', notebook});
+      charactersWaiting = false;
+      console.log(result);
+      const newCharacters = result.result;
+      for (const c of newCharacters) {
+        const index = notebook.characters.findIndex((v) => v.name === c.name);
+        if (index < 0) {
+          c.ulid = ulid();
+        } else {
+          c.portrait = notebook.characters[index].portrait;
+          c.ulid = notebook.characters[index].ulid;
+        }
       }
+      notebook.characters = newCharacters;
+      $onlineAccount.feathral = result.feathral;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    } finally {
+      charactersWaiting = false;
     }
-    notebook.characters = newCharacters;
-    $onlineAccount.feathral = result.feathral;
   }
 
   async function onPlotAdvise(e: CustomEvent<string>) {
     console.log(e.detail);
-    plotWaiting = true;
-    const result = await advise({action:'plot', notebook});
-    plotWaiting = false;
-    console.log(result);
-    notebook.plot = result.result;
-    $onlineAccount.feathral = result.feathral;
+    try {
+      plotWaiting = true;
+      const result = await advise({action:'plot', notebook});
+      plotWaiting = false;
+      console.log(result);
+      notebook.plot = result.result;
+      $onlineAccount.feathral = result.feathral;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    } finally {
+      plotWaiting = false;
+    }
   }
 
   async function onScenarioAdvise(e: CustomEvent<string>) {
     console.log(e.detail);
-    scenarioWaiting = true;
-    const result = await advise({action:'scenario', notebook});
-    scenarioWaiting = false;
-    console.log(result);
-    notebook.scenario = result.result;
-    $onlineAccount.feathral = result.feathral;
+    try {
+      scenarioWaiting = true;
+      const result = await advise({action:'scenario', notebook});
+      scenarioWaiting = false;
+      console.log(result);
+      notebook.scenario = result.result;
+      $onlineAccount.feathral = result.feathral;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    } finally {
+      scenarioWaiting = false;
+    }
   }
 
   function reset() {
@@ -99,50 +134,68 @@
 
   async function buildStoryboard() {
     console.log('build storyboard');
-    storyboardWaiting = true;
-    const result = await advise({action:'storyboard', notebook});
-    notebook.storyboard = result.result;
-    storyboardWaiting = false;
-    console.log(result);
-    const receivedPages = makePagesFromStoryboard(result.result);
-    let marks = $bookEditor.getMarks();
-    const newPages = $mainBook.pages.filter((p, i) => !marks[i]);
-    const oldLength = newPages.length;
-    newPages.push(...receivedPages);
-    $mainBook.pages = newPages;
-    $mainBook = $mainBook;
+    try {
+      storyboardWaiting = true;
+      const result = await advise({action:'storyboard', notebook});
+      notebook.storyboard = result.result;
+      storyboardWaiting = false;
+      console.log(result);
+      const receivedPages = makePagesFromStoryboard(result.result);
+      let marks = $bookEditor.getMarks();
+      const newPages = $mainBook.pages.filter((p, i) => !marks[i]);
+      const oldLength = newPages.length;
+      newPages.push(...receivedPages);
+      $mainBook.pages = newPages;
+      $mainBook = $mainBook;
 
-    await tick();
-    marks = $bookEditor.getMarks();
-    newPages.forEach((p, i) => {
-      if (oldLength <= i) marks[i] = true;
-    });
-    $bookEditor.setMarks(marks);
-    $redrawToken = true;
+      await tick();
+      marks = $bookEditor.getMarks();
+      newPages.forEach((p, i) => {
+        if (oldLength <= i) marks[i] = true;
+      });
+      $bookEditor.setMarks(marks);
+      $redrawToken = true;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    }
   }
 
   async function onCritiqueAdvise() {
-    critiqueWaiting = true;
-    const result = await advise({action:'critique', notebook});
-    critiqueWaiting = false;
-    console.log(result);
-    notebook.critique = result.result.critique;
-    $onlineAccount.feathral = result.feathral;
+    try {
+      critiqueWaiting = true;
+      const result = await advise({action:'critique', notebook});
+      critiqueWaiting = false;
+      console.log(result);
+      notebook.critique = result.result.critique;
+      $onlineAccount.feathral = result.feathral;
+    } catch (e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    } finally {
+      critiqueWaiting = false;
+    }
   }
 
   async function onGeneratePortrait(e: CustomEvent<Character>) {
     const c = e.detail;
-    c.portrait = 'loading';
-    notebook.characters = notebook.characters;
-    const result = await executeProcessAndNotify(
-      5000, "画像が生成されました",
-      async () => {
-        return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, new GenerateImageContext());
-      });
-    await result.images[0].decode();
-    console.log(result);
-    c.portrait = result.images[0]; // HTMLImageElement
-    notebook.characters = notebook.characters;
+    try {
+      c.portrait = 'loading';
+      notebook.characters = notebook.characters;
+      const result = await executeProcessAndNotify(
+        5000, "画像が生成されました",
+        async () => {
+          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, new GenerateImageContext());
+        });
+      await result.images[0].decode();
+      console.log(result);
+      c.portrait = result.images[0]; // HTMLImageElement
+      notebook.characters = notebook.characters;
+    } catch (e) {
+      toastStore.trigger({ message: '画像生成エラー', timeout: 1500});
+      console.error(e);
+      c.portrait = null;
+    }
   }
 
   function onRemoveCharacter(e: CustomEvent<Character>) {
