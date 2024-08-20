@@ -25,6 +25,11 @@
       upper = false;
     }
 
+    // ツールチップが画面外に出ないようにする
+    if (x + tooltip.clientWidth / 2 > window.innerWidth) {
+      x = window.innerWidth - tooltip.clientWidth / 2;
+    }
+
     tooltip.style.top = `${y}px`;
     tooltip.style.left = `${x}px`;
   }

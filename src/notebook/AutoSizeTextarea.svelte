@@ -6,6 +6,7 @@
 
   export let value = '';
   export let minHeight = 24;
+  export let placeholder ='';
 
   let textarea;
 
@@ -24,7 +25,7 @@
 
 </script>
 
-<textarea class="rounded-corner-token textarea" style="min-height: {minHeight}px" bind:value={internalValue} bind:this={textarea}></textarea>
+<textarea class="rounded-corner-token textarea" style="min-height: {minHeight}px" bind:value={internalValue} bind:this={textarea} placeholder={placeholder}></textarea>
 
 <style>
   textarea {

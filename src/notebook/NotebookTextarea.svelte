@@ -2,6 +2,7 @@
   import { createEventDispatcher, tick } from 'svelte';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
+  import { toolTip } from '../utils/passiveToolTipStore';
 
   import bellIcon from '../assets/bell.png';
 
@@ -10,6 +11,7 @@
   export let value = '';
   export let waiting = false;
   export let minHeight = 60;
+  export let placeholder = '';
 
 </script>
 
@@ -19,11 +21,11 @@
       <ProgressRadial stroke={100} width="w-10"/>
     </div>
   {:else}
-    <AutoSizeTextarea minHeight={minHeight} bind:value={value}/>
+    <AutoSizeTextarea minHeight={minHeight} bind:value={value} placeholder={placeholder}/>
     <div class="icon-container">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)}/>
+      <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！"} />
     </div>
   {/if}
 </div>        
@@ -48,5 +50,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 7px;
   }
 </style>
