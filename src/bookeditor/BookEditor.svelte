@@ -381,7 +381,9 @@
         commandTargetFilm: null,
       };
     } else {
-      $frameInspectorTarget = null;      
+      if (page == $frameInspectorTarget?.page) {
+        $frameInspectorTarget = null;
+      }
     }
   }
 
@@ -406,8 +408,10 @@
       };
       defaultBubbleSlot.bubble = b;
     } else {
-      console.log("hide bubble");
-      $bubbleInspectorTarget = null;
+      if (page == $bubbleInspectorTarget?.page) {
+        console.log("hide bubble");
+        $bubbleInspectorTarget = null;
+      }
     }
   }
 

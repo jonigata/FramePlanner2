@@ -599,7 +599,6 @@ export class BubbleLayer extends Layer {
   }
 
   changeFocus(layer: Layer) {
-    console.log("BubbleLayer.changeFocus", layer);
     if (layer != this) {
       // unfocus呼ぶと再帰呼び出しになるので注意
       if (this.selected) {

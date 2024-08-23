@@ -655,7 +655,6 @@ export class FrameLayer extends Layer {
   }
 
   changeFocus(layer: Layer) {
-    console.log("FrameLayer.changeFocus", layer);
     if (layer != this) {
       if (this.selectedLayout || this.selectedBorder) {
         this.selectedBorder = null;
