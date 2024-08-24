@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 import {annotate} from "typai";
+import {LayoutPage, LayoutColumn, LayoutRow} from "./layout";
 
 // Format enum
 const Format = annotate(t.string, {
@@ -37,6 +38,7 @@ const Panel = t.type({
 // Page definition
 const Page = t.type({
   panels: t.array(Panel),
+  layout: annotate(LayoutPage, {description: "コマの配置", default: null}),
 });
 
 // Main MangaName structure
@@ -61,4 +63,7 @@ export {
   Panel,
   Page,
   Storyboard,
+  LayoutPage,
+  LayoutRow,
+  LayoutColumn,
 };

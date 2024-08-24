@@ -33,13 +33,10 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
 
   const pages = [];
   for (const storyboardPage of storyboard.pages) {
-    let sample = null;
-    if (storyboard.format === "4koma" && storyboardPage.panels.length === 4) {
-      sample = frameExamples[3];
-    } else {
-      sample = aiTemplates[storyboardPage.panels.length - 2];
-    }
-    console.log(storyboardPage.panels.length - 2, sample);
+    console.log(storyboardPage.layout);
+
+    const sample = makePageTemplateFromLightLayout(storyboardPage.layout);
+    console.log(sample);
     const frameTree = FrameElement.compile(sample.frameTree);
     const bubbles = sample.bubbles.map(b => Bubble.compile(paperSize, b));
 
@@ -93,4 +90,78 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
     pages.push(page);
   }
   return pages;
+}
+
+interface FrameTreeNode {
+  visibility?: number;
+  width?: number;
+  height?: number;
+  column?: FrameTreeNode[];
+  row?: FrameTreeNode[];
+  divider?: { spacing: number };
+  bgColor?: string;
+}
+
+interface ConvertedLayout {
+  frameTree: FrameTreeNode;
+  bubbles: any[]; // bubbles の型は提供されていないため any[] としています
+}
+
+export function makePageTemplateFromLightLayout(layout: Storyboard.LayoutPage): ConvertedLayout {
+  const convertedLayout: ConvertedLayout = {
+    frameTree: {
+      bgColor: "white",
+      row: [],
+      height: 100
+    },
+    bubbles: []
+  };
+
+  // 左右の余白を追加
+  convertedLayout.frameTree.row.push({ visibility: 0, width: 3 });
+
+  // 各行を変換
+  const centerColumn: FrameTreeNode = {
+    width: 94,
+    column: []
+  };
+
+  // 上下の余白を追加
+  centerColumn.column.push({ visibility: 0, height: 3 });
+
+  layout.rows.forEach((row: Storyboard.LayoutRow, rowIndex: number) => {
+    const convertedRow: FrameTreeNode = {
+      row: [],
+      height: Math.round(row.ratio * 100)
+    };
+    if (rowIndex < layout.rows.length - 1) {
+      // 最後の行以外にdividerを追加
+      convertedRow.divider = { spacing: 3 };
+    }
+
+    // 各列を変換
+    row.columns.forEach((column: Storyboard.LayoutColumn, columnIndex: number) => {
+      const convertedColumn: FrameTreeNode = {
+        width: Math.round(column.ratio * 100)
+      };
+      if (columnIndex < row.columns.length - 1) {
+        // 最後の列以外にdividerを追加
+        convertedColumn.divider = { spacing: 2 };
+      }      
+
+      convertedRow.row.push(convertedColumn);
+    });
+
+    centerColumn.column.push(convertedRow);
+  });
+
+  // 上下の余白を追加
+  centerColumn.column.push({ visibility: 0, height: 3 });
+
+  convertedLayout.frameTree.row.push(centerColumn);
+
+  // 左右の余白を追加
+  convertedLayout.frameTree.row.push({ visibility: 0, width: 3 });
+
+  return convertedLayout;
 }
