@@ -37,19 +37,20 @@ export function drawVerticalText(
       let c0 = line[j].char;
       let c1 = line[j+1]?.char;
       let color0 = line[j].color;
-      let color1 = line[j+1]?.color;
       const m = context.measureText(c0);
       const cw = m.width;
       
       function drawChar(ax: number, ay: number): void {
         context.save();
         if (method === "fill") {
+          if (color0) { context.fillStyle = color0; }
           context.fillText(
             c0, 
             cursorX - cw * 0.5 + cw * ax, 
             r.y + charSkip + lineH + charSkip * ay
           );
         } else if (method === "stroke") {
+          if (color0) { context.strokeStyle = color0; }
           context.strokeText(
             c0,
             cursorX - cw * 0.5 + cw * ax,
