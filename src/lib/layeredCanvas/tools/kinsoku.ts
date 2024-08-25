@@ -1,14 +1,29 @@
-function makeTable(chars) {
+// 型定義
+type WrapDetectorResult = {
+  size: number;
+  wrap: boolean;
+};
+
+type WrapDetector = (chars: string[]) => WrapDetectorResult;
+
+type KinsokuResult = {
+  index: number;
+  text: string;
+  size: number | null;
+  wrap: boolean;
+};
+
+function makeTable(chars: string): Set<string> {
   return new Set(chars.trim().replace(/\n/g, "").split(''));
 }
 
-const leaderChars = makeTable(`
-‘“（〔［｛〈《「『【
+const leaderChars: Set<string> = makeTable(`
+'"（〔［｛〈《「『【
 ([{
 `);
 
-const trailerChars = makeTable(`
-、。，．・：；？！ー”）〕］｝〉》」』】
+const trailerChars: Set<string> = makeTable(`
+、。，．・：；？！ー"）〕］｝〉》」』】
 ヽヾゝゞ々
 ぁぃぅぇぉっゃゅょゎ
 ァィゥェォッャュョヮ
@@ -18,28 +33,32 @@ const trailerChars = makeTable(`
 const maxBurasageDepth = 2;
 const maxOidashiDepth = 2;
 
-function* kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex) {
+function* kinsokuGenerator(
+  wrapDetector: WrapDetector,
+  wrapSize: number | null,
+  getNext: () => string | null,
+  startIndex: number
+): Generator<KinsokuResult> {
   let index = startIndex;
 
-  const buffer = [];
+  const buffer: string[] = [];
   let cursor = 0;
 
-  function peek() {
+  function peek(): string | null {
     if (cursor < buffer.length) { return buffer[cursor]; }
     const next = getNext();
     if (next != null) { buffer.push(next); }
     return next;
   }
 
-  function countOidashi() {
-    for (let back = 0 ; back < maxOidashiDepth ; back++) {
-      // index<0のときはundefinedなのでhas(index)=false
+  function countOidashi(): number {
+    for (let back = 0; back < maxOidashiDepth; back++) {
       if (!leaderChars.has(buffer[cursor-1-back])) { return back; }
     }
     return maxOidashiDepth;
   }
 
-  let lineSize = null;
+  let lineSize: number | null = null;
   while (true) {
     const c = peek();
     if (c == null) { break; }
@@ -53,23 +72,20 @@ function* kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex) {
       if (!wrap) { lineSize = size; cursor++; continue; }
     }
 
-    // 折りたたみ
     if (wrapSize != null) { lineSize = wrapSize; }
 
-    // 追い出し処理
     let back = countOidashi();
     if (back === 0) {
-      // ぶら下げ処理
-      for (let depth = 0 ; depth < maxBurasageDepth ; depth++) {
+      for (let depth = 0; depth < maxBurasageDepth; depth++) {
         const c = peek();
-        if (!trailerChars.has(c)) { break; }
+        if (c === null || !trailerChars.has(c)) { break; }
         cursor++;
       }
     } else {
       cursor -= back;
     }
 
-    const text = buffer.splice(0, cursor).join(''); // + `(${back},${buffered})`;
+    const text = buffer.splice(0, cursor).join('');
     yield { index, text, size: lineSize, wrap: true };
     index += text.length;
     cursor = 0;
@@ -80,12 +96,16 @@ function* kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex) {
   }
 }
 
-export function kinsoku(wrapDetector, wrapSize, ss) {
-  let a = [];
+export function kinsoku(
+  wrapDetector: WrapDetector,
+  wrapSize: number | null,
+  ss: string
+): KinsokuResult[] {
+  let a: KinsokuResult[] = [];
   let startIndex = 0;
   for (let s of ss.split('\n')) {
     let i = 0;
-    function getNext() {
+    function getNext(): string | null {
       if (s.length <= i) { return null; }
       if (isEmojiAt(s, i)) { const c = getEmojiAt(s, i); i+=c.length; return c; }
       return s.charAt(i++);
@@ -96,24 +116,23 @@ export function kinsoku(wrapDetector, wrapSize, ss) {
   return a;
 }
 
-export function isEmojiAt(str, index) {
-  const codePoint = String.fromCodePoint(str.codePointAt(index));
+export function isEmojiAt(str: string, index: number): boolean {
+  const codePoint = String.fromCodePoint(str.codePointAt(index) || 0);
   const regex = /\p{Emoji}/u;
 
   return regex.test(codePoint);
 }
 
-export function getEmojiAt(str, index) {
+export function getEmojiAt(str: string, index: number): string {
   let endIndex = index + 1;
-  if (str.codePointAt(index) > 0xFFFF) {
-      // This is a surrogate pair, so the emoji is 2 characters long
-      endIndex++;
+  if (str.codePointAt(index) && str.codePointAt(index)! > 0xFFFF) {
+    endIndex++;
   }
   return str.slice(index, endIndex);
 }
 
 /*
-const a = kinsoku(s=> {
-  return ({ size: s.length, wrap: 5 < s.length })
+const a = kinsoku((s: string[]) => {
+  return { size: s.length, wrap: 5 < s.length };
 }, 5, "♫⏯😥♫⏯");
 */
