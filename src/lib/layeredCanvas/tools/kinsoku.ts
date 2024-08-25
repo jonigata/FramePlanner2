@@ -6,9 +6,9 @@ type WrapDetectorResult = {
 
 type WrapDetector = (chars: string[]) => WrapDetectorResult;
 
-type KinsokuResult = {
+type KinsokuResult<T> = {
   index: number;
-  text: string;
+  buffer: T[];
   size: number | null;
   wrap: boolean;
 };
@@ -17,12 +17,12 @@ function makeTable(chars: string): Set<string> {
   return new Set(chars.trim().replace(/\n/g, "").split(''));
 }
 
-const leaderChars: Set<string> = makeTable(`
+export const leaderChars: Set<string> = makeTable(`
 '"（〔［｛〈《「『【
 ([{
 `);
 
-const trailerChars: Set<string> = makeTable(`
+export const trailerChars: Set<string> = makeTable(`
 、。，．・：；？！ー"）〕］｝〉》」』】
 ヽヾゝゞ々
 ぁぃぅぇぉっゃゅょゎ
@@ -33,36 +33,33 @@ const trailerChars: Set<string> = makeTable(`
 const maxBurasageDepth = 2;
 const maxOidashiDepth = 2;
 
-export function* kinsokuGenerator(
-  wrapDetector: WrapDetector,
+export function* kinsokuGenerator<T>(
+  wrapDetector: (buffer: T[]) => { size: number; wrap: boolean },
   wrapSize: number | null,
-  getNext: () => string | null,
-  startIndex: number
-): Generator<KinsokuResult> {
+  getNext: () => T | null,
+  startIndex: number,
+  isLeader: (char: T) => boolean,
+  isTrailer: (char: T) => boolean
+): Generator<KinsokuResult<T>> {
   let index = startIndex;
-
-  const buffer: string[] = [];
+  const buffer: T[] = [];
   let cursor = 0;
-
-  function peek(): string | null {
+  function peek(): T | null {
     if (cursor < buffer.length) { return buffer[cursor]; }
     const next = getNext();
     if (next != null) { buffer.push(next); }
     return next;
   }
-
   function countOidashi(): number {
     for (let back = 0; back < maxOidashiDepth; back++) {
-      if (!leaderChars.has(buffer[cursor-1-back])) { return back; }
+      if (!isLeader(buffer[cursor-1-back])) { return back; }
     }
     return maxOidashiDepth;
   }
-
   let lineSize: number | null = null;
   while (true) {
     const c = peek();
     if (c == null) { break; }
-
     if (cursor === 0) { 
       cursor = 1;
       lineSize = 1;
@@ -71,28 +68,24 @@ export function* kinsokuGenerator(
       const { size, wrap } = wrapDetector(buffer.slice(0, cursor+1));
       if (!wrap) { lineSize = size; cursor++; continue; }
     }
-
     if (wrapSize != null) { lineSize = wrapSize; }
-
     let back = countOidashi();
     if (back === 0) {
       for (let depth = 0; depth < maxBurasageDepth; depth++) {
         const c = peek();
-        if (c === null || !trailerChars.has(c)) { break; }
+        if (c === null || !isTrailer(c)) { break; }
         cursor++;
       }
     } else {
       cursor -= back;
     }
-
-    const text = buffer.splice(0, cursor).join('');
-    yield { index, text, size: lineSize, wrap: true };
-    index += text.length;
+    const buffer2 = buffer.splice(0, cursor);
+    yield { index, buffer: buffer2, size: lineSize, wrap: true };
+    index += buffer2.length;
     cursor = 0;
   }
-
   if (0 < buffer.length) {
-    yield { index, text: buffer.join(''), size: lineSize, wrap: false }; 
+    yield { index, buffer, size: lineSize, wrap: false }; 
   }
 }
 
@@ -100,8 +93,8 @@ export function kinsoku(
   wrapDetector: WrapDetector,
   wrapSize: number | null,
   ss: string
-): KinsokuResult[] {
-  let a: KinsokuResult[] = [];
+): {index: number;text: string;size: number | null;wrap: boolean;}[] {
+  let a: KinsokuResult<string>[] = [];
   let startIndex = 0;
   for (let s of ss.split('\n')) {
     let i = 0;
@@ -110,10 +103,11 @@ export function kinsoku(
       if (isEmojiAt(s, i)) { const c = getEmojiAt(s, i); i+=c.length; return c; }
       return s.charAt(i++);
     }
-    a.push(...kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex));
+    a.push(...kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex, leaderChars.has.bind(leaderChars), trailerChars.has.bind(trailerChars)));
     startIndex += s.length + 1;
   }
-  return a;
+  const aa = a.map(({ index, buffer, size, wrap }) => ({ index, text: buffer.join(''), size, wrap }));
+  return aa;
 }
 
 export function isEmojiAt(str: string, index: number): boolean {

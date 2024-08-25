@@ -111,6 +111,10 @@ const exampleSentences = {
   [
     { index: 0, text: 'た', size: 1, wrap: false }
   ],
+  "「":
+  [
+    { index: 0, text: '「', size: 1, wrap: false }
+  ],
 };
 
 describe('禁則処理', () => {
@@ -119,6 +123,5 @@ describe('禁則処理', () => {
       const a = kinsoku(s => ({ size: s.length, wrap: 5 < s.length }), 5, k);
       expect(a).toStrictEqual(v);
     });
-    expect(kinsoku(s=> ({ size: s.length, wrap: 1 < s.length }), 1, "「")).toStrictEqual([{ index: 0, text: '「', wrap: false, size: 1 }]);
   });
 });
