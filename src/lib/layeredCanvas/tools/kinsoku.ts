@@ -33,7 +33,7 @@ const trailerChars: Set<string> = makeTable(`
 const maxBurasageDepth = 2;
 const maxOidashiDepth = 2;
 
-function* kinsokuGenerator(
+export function* kinsokuGenerator(
   wrapDetector: WrapDetector,
   wrapSize: number | null,
   getNext: () => string | null,

@@ -116,20 +116,13 @@ export function measureVerticalText(
 ): MeasuredText {
   if (!autoNewline) { maxHeight = Infinity; }
   
-  function calcHeight(ca: string): number {
+  function calcHeight(ca: string[]): number {
     let h = 0;
     for (let i = 0 ; i < ca.length ; i++) {
       let c0 = ca[i];
       let c1 = ca[i + 1];
-      switch (true) {
-        case /[0-9!?][0-9!?]/.test(c0+c1):
-          i++;
-          break;
-        case isEmojiAt(c0, 0):
-          i+=c0.length-1;
-          break;
-        default:
-          break;
+      if (/[0-9!?][0-9!?]/.test(c0+c1)) {
+        i++;
       }
       h += charSkip;
       if (i < ca.length - 1) {
@@ -140,7 +133,7 @@ export function measureVerticalText(
   }
   
   const a = kinsoku(
-    (s: string) => {
+    (s: string[]) => {
       const h = calcHeight(s);
       return { size: h, wrap: maxHeight < h };
     }, 

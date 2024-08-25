@@ -925,7 +925,6 @@ export class BubbleLayer extends Layer {
 
       let p;
       while ((p = yield)) {
-        console.log("resizeBubble(1)");
         const pp = Bubble.normalizedPosition(paperSize, p);
         this.resizeBubbleAux(bubble, handle, q0, q1, pp);
 
