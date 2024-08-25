@@ -9,7 +9,7 @@ type WrapDetector = (chars: string[]) => WrapDetectorResult;
 type KinsokuResult<T> = {
   index: number;
   buffer: T[];
-  size: number | null;
+  size: number;
   wrap: boolean;
 };
 
@@ -36,7 +36,7 @@ const maxOidashiDepth = 2;
 export function* kinsokuGenerator<T>(
   wrapDetector: (buffer: T[]) => { size: number; wrap: boolean },
   wrapSize: number | null,
-  getNext: () => T | null,
+  iterator: Iterator<T>,
   startIndex: number,
   isLeader: (char: T) => boolean,
   isTrailer: (char: T) => boolean
@@ -46,9 +46,9 @@ export function* kinsokuGenerator<T>(
   let cursor = 0;
   function peek(): T | null {
     if (cursor < buffer.length) { return buffer[cursor]; }
-    const next = getNext();
-    if (next != null) { buffer.push(next); }
-    return next;
+    const next = iterator.next();
+    if (!next.done) { buffer.push(next.value); }
+    return next.done ? null : next.value;
   }
   function countOidashi(): number {
     for (let back = 0; back < maxOidashiDepth; back++) {
@@ -56,7 +56,7 @@ export function* kinsokuGenerator<T>(
     }
     return maxOidashiDepth;
   }
-  let lineSize: number | null = null;
+  let lineSize: number = null;
   while (true) {
     const c = peek();
     if (c == null) { break; }
@@ -91,19 +91,34 @@ export function* kinsokuGenerator<T>(
 
 export function kinsoku(
   wrapDetector: WrapDetector,
-  wrapSize: number | null,
+  wrapSize: number,
   ss: string
-): {index: number;text: string;size: number | null;wrap: boolean;}[] {
+): {index: number; text: string; size: number | null; wrap: boolean;}[] {
   let a: KinsokuResult<string>[] = [];
   let startIndex = 0;
   for (let s of ss.split('\n')) {
-    let i = 0;
-    function getNext(): string | null {
-      if (s.length <= i) { return null; }
-      if (isEmojiAt(s, i)) { const c = getEmojiAt(s, i); i+=c.length; return c; }
-      return s.charAt(i++);
+    function* createIterator(): Iterator<string> {
+      let i = 0;
+      while (i < s.length) {
+        if (isEmojiAt(s, i)) {
+          const c = getEmojiAt(s, i);
+          i += c.length;
+          yield c;
+        } else {
+          yield s.charAt(i);
+          i++;
+        }
+      }
     }
-    a.push(...kinsokuGenerator(wrapDetector, wrapSize, getNext, startIndex, leaderChars.has.bind(leaderChars), trailerChars.has.bind(trailerChars)));
+
+    a.push(...kinsokuGenerator(
+      wrapDetector,
+      wrapSize,
+      createIterator(),
+      startIndex,
+      leaderChars.has.bind(leaderChars),
+      trailerChars.has.bind(trailerChars)
+    ));
     startIndex += s.length + 1;
   }
   const aa = a.map(({ index, buffer, size, wrap }) => ({ index, text: buffer.join(''), size, wrap }));

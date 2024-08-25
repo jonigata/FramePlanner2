@@ -1,4 +1,5 @@
-import { kinsoku, isEmojiAt, getEmojiAt } from "../kinsoku";
+import { kinsokuGenerator, isEmojiAt, leaderChars, trailerChars } from "../kinsoku";
+import { parseMarkdownToJson, richTextIterator, type RichChar } from "./richText";
 
 interface Rectangle {
   x: number;
@@ -7,13 +8,10 @@ interface Rectangle {
   height: number;
 }
 
-interface MeasuredText {
+interface RenderingText {
   height: number;
   width: number;
-  lines: Array<{
-    text: string;
-    size: number;
-  }>;
+  lines: RichChar[][];
 }
 
 type DrawMethod = "fill" | "stroke";
@@ -25,7 +23,7 @@ export function drawVerticalText(
   text: string, 
   baselineSkip: number, 
   charSkip: number, 
-  m?: MeasuredText, 
+  m?: RenderingText, 
   autoNewline?: boolean
 ): void {
   if (!m) {
@@ -33,10 +31,13 @@ export function drawVerticalText(
   }
   let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
   for (let [i, line] of m.lines.entries()) {
+    console.log(line);
     let lineH = 0;
-    for (let j = 0; j < line.text.length; j++) {
-      let c0 = line.text.charAt(j);
-      let c1 = line.text.charAt(j + 1);
+    for (let j = 0; j < line.length; j++) {
+      let c0 = line[j].char;
+      let c1 = line[j+1]?.char;
+      let color0 = line[j].color;
+      let color1 = line[j+1]?.color;
       const m = context.measureText(c0);
       const cw = m.width;
       
@@ -45,13 +46,13 @@ export function drawVerticalText(
         if (method === "fill") {
           context.fillText(
             c0, 
-            cursorX - cw * c0.length * 0.5 + cw * ax, 
+            cursorX - cw * 0.5 + cw * ax, 
             r.y + charSkip + lineH + charSkip * ay
           );
         } else if (method === "stroke") {
           context.strokeText(
             c0,
-            cursorX - cw * c0.length * 0.5 + cw * ax,
+            cursorX - cw * 0.5 + cw * ax,
             r.y + charSkip + lineH + charSkip * ay
           );
         }
@@ -86,14 +87,12 @@ export function drawVerticalText(
         case /[ー…～―]/.test(c0):
           drawRotatedChar(90, -0.1, -0.4, -1);
           break;
-        case /[0-9!?][0-9!?]/.test(c0+c1):
-          c0 += c1; j++;
-          if (c0 == '!?') { drawChar(-0.2, 0); } else { drawChar(0, 0); }
+        case /[0-9!?]{2}/.test(c0):
+          if (c0 == '!?') { drawChar(0, 0); } else { drawChar(0, 0); }
           break;
-        case isEmojiAt(line.text, j):
-          c0 = getEmojiAt(line.text, j);
-          drawChar((c0.length-1)*0.3, 0); 
-          j+=c0.length-1;
+        case isEmojiAt(c0, 0):
+          console.log("Emoji:", c0, c0.length, cw);
+          drawChar(0, 0); 
           break;
         default:
           drawChar(0, 0);
@@ -113,38 +112,51 @@ export function measureVerticalText(
   baselineSkip: number, 
   charSkip: number, 
   autoNewline?: boolean
-): MeasuredText {
+): RenderingText {
   if (!autoNewline) { maxHeight = Infinity; }
-  
-  function calcHeight(ca: string[]): number {
+
+  function calcHeight(ca: RichChar[]): number {
     let h = 0;
     for (let i = 0 ; i < ca.length ; i++) {
-      let c0 = ca[i];
-      let c1 = ca[i + 1];
-      if (/[0-9!?][0-9!?]/.test(c0+c1)) {
-        i++;
-      }
       h += charSkip;
       if (i < ca.length - 1) {
-        h += limitedKerning(ca[i], ca[i+1]) * charSkip;
+        h += limitedKerning(ca[i].char, ca[i+1].char) * charSkip;
       }
     }
     return h;
   }
-  
-  const a = kinsoku(
-    (s: string[]) => {
-      const h = calcHeight(s);
-      return { size: h, wrap: maxHeight < h };
-    }, 
-    maxHeight, 
-    text
-  );
+
+  const textLines = text.split('\n');
+  const a: { size: number; text: RichChar[]; }[] = [];
+
+  for (const line of textLines) {
+    const segments = parseMarkdownToJson(line);
+    console.log(segments);
+    
+    const richIterator = createMergedIterator(richTextIterator(segments));
+    
+    const iterator = kinsokuGenerator(
+      (s: RichChar[]) => {
+        const h = calcHeight(s);
+        return { size: h, wrap: maxHeight < h };
+      }, 
+      maxHeight,
+      richIterator,
+      0,
+      (c: RichChar) => leaderChars.has(c.char),
+      (c: RichChar) => trailerChars.has(c.char));
+    
+    for (const result of iterator) {
+      console.log(result);
+      a.push({ size: result.size, text: result.buffer });
+    }
+  }
+  console.log(a);
     
   return {
     height: a.reduce((max, item) => Math.max(max, item.size), 0),
     width: baselineSkip * a.length,
-    lines: a,
+    lines: a.map(item => item.text)
   };
 }
 
@@ -154,3 +166,47 @@ function limitedKerning(c0: string, c1: string): number {
   }
   return 0;
 }
+
+function* createMergedIterator(baseIterator: Generator<RichChar, void, unknown>): Generator<RichChar, void, unknown> {
+  // [0-9!?]をまとめる
+
+  let stock: RichChar | null = null;
+
+  function getNext() {
+    if (stock == null) {
+      const result = baseIterator.next();
+      if (result.done) return;
+      return result.value as RichChar;
+    }
+    const nc = stock;
+    stock = null;
+    return nc;
+  }
+
+  while (true) {
+    const currChar = getNext();
+    if (currChar == null) {
+      return;
+    }
+
+    if (/^[0-9!?]$/.test(currChar.char)) {
+      const nextChar = getNext();
+      if (nextChar == null) {
+        yield currChar;
+        return;
+      }
+      if (/^[0-9!?]$/.test(nextChar.char)) {
+        // TODO: colorとか見てない
+        yield {
+          char: currChar.char + nextChar.char
+        };
+      } else {
+        yield currChar;
+        stock = nextChar;
+      }
+    } else {
+      yield currChar;
+    }
+  }
+}
+
