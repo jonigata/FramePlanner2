@@ -248,19 +248,6 @@
 {/if}
 
 <style>
-  .drawer-content {
-    width: 100%;
-    height: 100%;
-    padding: 16px;
-  }
-  .drawer-outer :global(.drawer .panel) {
-    background-color: rgb(var(--color-surface-100));
-  }
-  h1 {
-    font-family: '源暎エムゴ';
-    font-size: 22px;
-    margin-bottom: 8px;
-  }
   h2 {
     font-family: '源暎エムゴ';
     font-size: 18px;

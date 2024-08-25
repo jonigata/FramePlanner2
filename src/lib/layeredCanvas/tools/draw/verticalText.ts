@@ -1,38 +1,64 @@
 import { kinsoku, isEmojiAt, getEmojiAt } from "../kinsoku";
 
-export function drawVerticalText(context, method, r, text, baselineSkip, charSkip, m, autoNewline) {
+interface Rectangle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface MeasuredText {
+  height: number;
+  width: number;
+  lines: Array<{
+    text: string;
+    size: number;
+  }>;
+}
+
+type DrawMethod = "fill" | "stroke";
+
+export function drawVerticalText(
+  context: CanvasRenderingContext2D, 
+  method: DrawMethod, 
+  r: Rectangle, 
+  text: string, 
+  baselineSkip: number, 
+  charSkip: number, 
+  m?: MeasuredText, 
+  autoNewline?: boolean
+): void {
   if (!m) {
     m = measureVerticalText(context, r.height, text, baselineSkip, charSkip, autoNewline);
   }
-
   let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
   for (let [i, line] of m.lines.entries()) {
     let lineH = 0;
     for (let j = 0; j < line.text.length; j++) {
       let c0 = line.text.charAt(j);
       let c1 = line.text.charAt(j + 1);
-
       const m = context.measureText(c0);
       const cw = m.width;
-
-      function drawChar(ax, ay) {
+      
+      function drawChar(ax: number, ay: number): void {
         context.save();
         if (method === "fill") {
           context.fillText(
             c0, 
             cursorX - cw * c0.length * 0.5 + cw * ax, 
-            r.y + charSkip + lineH + charSkip * ay);
+            r.y + charSkip + lineH + charSkip * ay
+          );
         } else if (method === "stroke") {
           context.strokeText(
             c0,
             cursorX - cw * c0.length * 0.5 + cw * ax,
-            r.y + charSkip + lineH + charSkip * ay);
+            r.y + charSkip + lineH + charSkip * ay
+          );
         }
         context.restore();
       }
-
-      function drawRotatedChar(angle, ax, ay, xscale) {
-        // draw 90 degree rotated text
+      
+      function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number): void {
         const pivotX = cursorX + cw * ax;
         const pivotY = r.y + charSkip + lineH + charSkip * ay;
         context.save();
@@ -40,16 +66,16 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
         context.rotate(angle * Math.PI / 180);
         context.scale(1, xscale);
         if (method === "fill") {
-            context.fillText(c0, -cw * 0.5, charSkip * 0.5);
+          context.fillText(c0, -cw * 0.5, charSkip * 0.5);
         } else if (method === "stroke") {
-            context.strokeText(c0, -cw * 0.5, charSkip * 0.5);
+          context.strokeText(c0, -cw * 0.5, charSkip * 0.5);
         }
         context.restore();
       }
-
+      
       switch (true) {
         case /[、。]/.test(c0):
-          drawChar(0.7, -0.6)
+          drawChar(0.7, -0.6);
           break;
         case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c0):
           drawChar(0.1, -0.1);
@@ -73,7 +99,6 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
           drawChar(0, 0);
           break;
       }
-
       lineH += charSkip;
       lineH += limitedKerning(c0, c1) * charSkip;
     }
@@ -81,15 +106,21 @@ export function drawVerticalText(context, method, r, text, baselineSkip, charSki
   }
 }
 
-export function measureVerticalText(context, maxHeight, text, baselineSkip, charSkip, autoNewline) {
+export function measureVerticalText(
+  context: CanvasRenderingContext2D, 
+  maxHeight: number, 
+  text: string, 
+  baselineSkip: number, 
+  charSkip: number, 
+  autoNewline?: boolean
+): MeasuredText {
   if (!autoNewline) { maxHeight = Infinity; }
-
-  function calcHeight(ca) {
+  
+  function calcHeight(ca: string): number {
     let h = 0;
     for (let i = 0 ; i < ca.length ; i++) {
       let c0 = ca[i];
       let c1 = ca[i + 1];
-
       switch (true) {
         case /[0-9!?][0-9!?]/.test(c0+c1):
           i++;
@@ -100,7 +131,6 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
         default:
           break;
       }
-
       h += charSkip;
       if (i < ca.length - 1) {
         h += limitedKerning(ca[i], ca[i+1]) * charSkip;
@@ -108,12 +138,15 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
     }
     return h;
   }
-
+  
   const a = kinsoku(
-    s => {
+    (s: string) => {
       const h = calcHeight(s);
       return { size: h, wrap: maxHeight < h };
-    }, maxHeight, text);
+    }, 
+    maxHeight, 
+    text
+  );
     
   return {
     height: a.reduce((max, item) => Math.max(max, item.size), 0),
@@ -122,7 +155,7 @@ export function measureVerticalText(context, maxHeight, text, baselineSkip, char
   };
 }
 
-function limitedKerning(c0, c1) {
+function limitedKerning(c0: string, c1: string): number {
   if (/[、。」』）】〕〟]/.test(c0)) {
     if (/[「『（【〔〝]/.test(c1)) { return -1; } else if (/[、。]/.test(c1)) { return -0.5; }
   }
