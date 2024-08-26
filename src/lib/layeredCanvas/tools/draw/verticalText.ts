@@ -1,5 +1,5 @@
 import { kinsokuGenerator, isEmojiAt, leaderChars, trailerChars } from "../kinsoku";
-import { parseMarkdownToJson, richTextIterator, type RichChar } from "./richText";
+import { parseMarkdownToJson, richTextIterator, type RichFragment } from "./richText";
 
 interface Rectangle {
   x: number;
@@ -11,7 +11,7 @@ interface Rectangle {
 interface RenderingText {
   height: number;
   width: number;
-  lines: RichChar[][];
+  lines: RichFragment[][];
 }
 
 type DrawMethod = "fill" | "stroke";
@@ -31,101 +31,142 @@ export function drawVerticalText(
   }
 
   let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
-  for (let [i, line] of m.lines.entries()) {
-    let indexJ = 0;
-    let indexK = 0;
-    let stock = null;
-    function peekNext(): { char: string; color: string; } | null {
-      if (stock) { return stock; }
-      if (line.length <= indexJ) { return null; }
-      const char = line[indexJ].chars[indexK];
-      const color = line[indexJ].color;
-      stock = { char, color }; // charといってもlatin1文字列や絵文字などが含まれる。richText.ts参照のこと
-      return stock;
-    }
-    function getNext(): { char: string; color: string; } | null {
-      const result = peekNext();
-      stock = null;
-      if (!result) { return null; }
-      indexK++;
-      if (line[indexJ].chars.length <= indexK) {
-        indexJ++;
-        indexK = 0;
-      }
-      return result;
-    }
-  
+  for (const line of m.lines) {
     let lineH = 0;
-    while(true) {
-      const c0 = getNext();
-      console.log(c0);
-      if (c0 == null) { break; }
-      const m = context.measureText(c0.char);
-      const cw = m.width;
-      
-      function drawChar(ax: number, ay: number): void {
-        context.save();
-        if (method === "fill") {
-          if (c0.color) { context.fillStyle = c0.color; }
-          context.fillText(
-            c0.char, 
-            cursorX - cw * 0.5 + cw * ax, 
-            r.y + charSkip + lineH + charSkip * ay
-          );
-        } else if (method === "stroke") {
-          if (c0.color) { context.strokeStyle = c0.color; }
-          context.strokeText(
-            c0.char,
-            cursorX - cw * 0.5 + cw * ax,
-            r.y + charSkip + lineH + charSkip * ay
-          );
+    let prev = null;
+    for (const frag of line) {
+      let startH: number, endH: number;
+      ({lineH, prev, startH, endH} = drawFragment(context, r, cursorX, lineH, charSkip, method, frag, 1, false, prev));
+      if (frag.ruby) {
+        /*
+        context.strokeStyle = "red";
+        context.beginPath();
+        context.moveTo(cursorX - baselineSkip * 0.5, r.y + startH);
+        context.lineTo(cursorX + baselineSkip * 0.5, r.y + startH);
+        context.stroke();
+        context.strokeStyle = "green";
+        context.beginPath();
+        context.moveTo(cursorX - baselineSkip * 0.5, r.y + endH);
+        context.lineTo(cursorX + baselineSkip * 0.5, r.y + endH);
+        context.stroke();
+        */
+
+        const region = endH - startH;
+        const rubyCharSkip = region / frag.ruby.length;
+        const rubyX = cursorX + baselineSkip * 0.65;
+        const rubyFragment = {
+          chars: frag.ruby,
+          color: frag.color
         }
-        context.restore();
+        console.log(charSkip, rubyCharSkip);
+        drawFragment(context, r, rubyX, startH, rubyCharSkip, method, rubyFragment, 0.4, true, null);
       }
-      
-      function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number): void {
-        const pivotX = cursorX + cw * ax;
-        const pivotY = r.y + charSkip + lineH + charSkip * ay;
-        context.save();
-        context.translate(pivotX, pivotY);
-        context.rotate(angle * Math.PI / 180);
-        context.scale(1, xscale);
-        if (method === "fill") {
-          context.fillText(c0.char, -cw * 0.5, charSkip * 0.5);
-        } else if (method === "stroke") {
-          context.strokeText(c0.char, -cw * 0.5, charSkip * 0.5);
-        }
-        context.restore();
-      }
-      
-      switch (true) {
-        case /[、。]/.test(c0.char):
-          drawChar(0.7, -0.6);
-          break;
-        case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c0.char):
-          drawChar(0.1, -0.1);
-          break;
-        case /[「」『』（）＜＞【】〔〕≪≫＜＞｛｝：；〝〟]/.test(c0.char):
-          drawRotatedChar(90, 0.2, -0.4, 1);
-          break;
-        case /[ー…～―]/.test(c0.char):
-          drawRotatedChar(90, -0.1, -0.4, -1);
-          break;
-        case /[0-9!?]{2}/.test(c0.char):
-          drawChar(0, 0);
-          break;
-        case isEmojiAt(c0.char, 0):
-          drawChar(0, 0); 
-          break;
-        default:
-          drawChar(0, 0);
-          break;
-      }
-      lineH += charSkip;
-      lineH += limitedKerning(c0.char, peekNext()?.char) * charSkip;
     }
     cursorX -= baselineSkip;
   }
+}
+
+function drawFragment(
+  context: CanvasRenderingContext2D, 
+  r: Rectangle, 
+  cursorX: number, 
+  lineH: number, 
+  charSkip: number, 
+  method: DrawMethod,
+  frag: RichFragment,
+  charScale: number,
+  justify: boolean,
+  prev: string): { lineH: number, prev: string, startH: number, endH: number } {
+
+  let startH = null;
+  let endH = null;
+
+  function drawChar(ax: number, ay: number, s: string): void {
+    const tm: TextMetrics = context.measureText(s);
+    const cw = tm.width;
+    const ch = tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
+
+    if (startH === null) { startH = lineH + charSkip - tm.actualBoundingBoxAscent; }
+    endH = lineH + charSkip + tm.actualBoundingBoxDescent;
+
+    context.save();
+    context.translate(cursorX - cw * 0.5 + cw * ax, r.y + lineH + charSkip + charSkip * ay);
+    if (justify) {
+      context.translate(0, (ch * charScale - charSkip) * 0.5);
+    }
+    context.scale(charScale, charScale);
+    if (method === "fill") {
+      if (frag.color) { context.fillStyle = frag.color; }
+      context.fillText(s,0,0);
+      /*
+      if (justify) {
+        context.strokeStyle = "red";
+        context.beginPath();
+        context.moveTo(0, -tm.actualBoundingBoxAscent);
+        context.lineTo(cw, -tm.actualBoundingBoxAscent);
+        context.stroke();
+        context.strokeStyle = "green";
+        context.beginPath();
+        context.moveTo(0, tm.actualBoundingBoxDescent);
+        context.lineTo(cw, tm.actualBoundingBoxDescent);
+        context.stroke();
+      }
+      */
+    } else if (method === "stroke") {
+      if (frag.color) { context.strokeStyle = frag.color; }
+      context.strokeText(s,0,0);
+    }
+    context.restore();
+  }
+  
+  function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number, s: string): void {
+    const tm: TextMetrics = context.measureText(s);
+    const cw = tm.width;
+
+    if (startH === null) { startH = lineH; }
+    endH = lineH + charSkip;
+
+    const pivotX = cursorX + cw * ax;
+    const pivotY = r.y + charSkip + lineH + charSkip * ay;
+    context.save();
+    context.translate(pivotX, pivotY);
+    context.rotate(angle * Math.PI / 180);
+    context.scale(charScale, charScale * xscale);
+    if (method === "fill") {
+      context.fillText(s, -cw * 0.5, charSkip * 0.5);
+    } else if (method === "stroke") {
+      context.strokeText(s, -cw * 0.5, charSkip * 0.5);
+    }
+    context.restore();
+  }
+
+  for (const c of frag.chars) {
+    lineH += limitedKerning(prev, c) * charSkip;
+    switch (true) {
+      case /[、。]/.test(c):
+        drawChar(0.7, -0.6, c);
+        break;
+      case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c):
+        drawChar(0.1, -0.1, c);
+        break;
+      case /[「」『』（）＜＞【】〔〕≪≫＜＞｛｝：；〝〟]/.test(c):
+        drawRotatedChar(90, 0.2, -0.4, 1, c);
+        break;
+      case /[ー…～―]/.test(c):
+        drawRotatedChar(90, -0.1, -0.4, -1, c);
+        break;
+      case isEmojiAt(c, 0):
+        drawChar(0, 0, c);
+        break;
+      default:
+        drawChar(0, 0, c);
+        break;
+    }
+    lineH += charSkip;
+    prev = c;
+  }
+
+  return {lineH, prev, startH, endH};
 }
 
 export function measureVerticalText(
@@ -138,19 +179,21 @@ export function measureVerticalText(
 ): RenderingText {
   if (!autoNewline) { maxHeight = Infinity; }
 
-  function calcHeight(ca: RichChar[]): number {
+  function calcHeight(ca: RichFragment[]): number {
     let h = 0;
-    for (let i = 0 ; i < ca.length ; i++) {
-      h += charSkip;
-      if (i < ca.length - 1) {
-        h += limitedKerningCharRichChar(ca[i], ca[i+1]) * charSkip;
+    let prev = null;
+    for (const frag of ca) {
+      for (const c of frag.chars) {
+        h += limitedKerning(prev, c);
+        h += charSkip;
+        prev = c;
       }
     }
     return h;
   }
 
   const textLines = text.split('\n');
-  const a: { size: number; text: RichChar[]; }[] = [];
+  const a: { size: number; text: RichFragment[]; }[] = [];
 
   for (const line of textLines) {
     const segments = parseMarkdownToJson(line);
@@ -158,15 +201,15 @@ export function measureVerticalText(
     const richIterator = richTextIterator(segments);
     
     const iterator = kinsokuGenerator(
-      (s: RichChar[]) => {
+      (s: RichFragment[]) => {
         const h = calcHeight(s);
         return { size: h, wrap: maxHeight < h };
       }, 
       maxHeight,
       richIterator,
       0,
-      (c: RichChar) => c.chars.length == 1 && leaderChars.has(c.chars[0]),
-      (c: RichChar) => c.chars.length == 1 && trailerChars.has(c.chars[0]));
+      (c: RichFragment) => c.chars.length == 1 && leaderChars.has(c.chars[0]),
+      (c: RichFragment) => c.chars.length == 1 && trailerChars.has(c.chars[0]));
     
     for (const result of iterator) {
       a.push({ size: result.size, text: result.buffer });
@@ -181,15 +224,10 @@ export function measureVerticalText(
 }
 
 function limitedKerning(c0: string, c1: string): number {
-  if (!c1) { return 0; }
+  if (!c0) { return 0; }
   if (/[、。」』）】〕〟]/.test(c0)) {
     if (/[「『（【〔〝]/.test(c1)) { return -1; } else if (/[、。]/.test(c1)) { return -0.5; }
-  }
+  } // TODO: "お馬が「通る」"の開きカッコのいちも考慮する
   return 0;
-}
-
-function limitedKerningCharRichChar(c0: RichChar, c1: RichChar): number {
-  if (c0.chars.length != 1 || c1.chars.length != 1) { return 0; }
-  return limitedKerning(c0.chars[0], c1.chars[0]);
 }
 

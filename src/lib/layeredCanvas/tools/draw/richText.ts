@@ -59,10 +59,10 @@ export function parseMarkdownToJson(sourceText: string): Segment[] {
   return parse(sourceText);
 }
 
-export interface RichChar {
+export interface RichFragment {
   chars: string[];
   color?: string;
-  ruby?: string;
+  ruby?: string[];
   rotated?: boolean;
 }
 
@@ -118,7 +118,7 @@ function* characterGroupIterator(text: string): Generator<string, void, unknown>
   if (current) yield current;
 }
 
-export function* richTextIterator(segments: Segment[]): Generator<RichChar, void, unknown> {
+export function* richTextIterator(segments: Segment[]): Generator<RichFragment, void, unknown> {
   for (const segment of segments) {
     const chars = [...characterGroupIterator(segment.content)];
     
@@ -126,7 +126,7 @@ export function* richTextIterator(segments: Segment[]): Generator<RichChar, void
       yield {
         chars: chars,
         color: segment.color,
-        ruby: segment.ruby,
+        ruby: [...characterGroupIterator(segment.ruby)],
         rotated: segment.rotated
       };
     } else if (segment.rotated) {
@@ -169,7 +169,7 @@ console.log([...richTextIterator(segments)]);
   { "chars": ["は"], "color": undefined, "rotated": undefined },
   { "chars": ["赤"], "color": "red", "rotated": undefined },
   { "chars": ["い"], "color": "red", "rotated": undefined },
-  { "chars": ["文", "字"], "color": undefined, "ruby": "もじ", "rotated": undefined },
+  { "chars": ["文", "字"], "color": undefined, "ruby": ["も", "じ"], "rotated": undefined },
   { "chars": ["と"], "color": undefined, "rotated": undefined },
   { "chars": ["ABC"], "color": undefined, "rotated": true },
   { "chars": ["絵"], "color": undefined, "rotated": undefined },
