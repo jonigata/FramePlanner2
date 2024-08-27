@@ -81,6 +81,31 @@ function drawFragment(
   let startH = null;
   let endH = null;
 
+  if (frag.rotated) {
+    const s = frag.chars.join('');
+    const tm: TextMetrics = context.measureText(s);
+    const cw = tm.width;
+    const ch = tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
+    const adjustDown = charSkip * 0.15;// 日本語文字の平均的なdescent分のヒューリスティック;
+
+    if (startH === null) { startH = lineH; }
+    endH = lineH + cw;
+
+    context.save();
+    context.translate(cursorX - ch * 0.5, r.y + lineH + adjustDown); 
+    context.rotate(90 * Math.PI / 180);
+    context.scale(charScale, charScale);
+    if (method === "fill") {
+      if (frag.color) { context.fillStyle = frag.color; }
+      context.fillText(s, 0, 0);
+    } else if (method === "stroke") {
+      if (frag.color) { context.strokeStyle = frag.color; }
+      context.strokeText(s, 0, 0);
+    }
+    context.restore();
+    return {lineH: lineH + cw, prev, startH, endH};
+  }
+
   function drawChar(ax: number, ay: number, s: string): void {
     const tm: TextMetrics = context.measureText(s);
     const cw = tm.width;
@@ -142,6 +167,7 @@ function drawFragment(
 
   for (const c of frag.chars) {
     lineH += limitedKerning(prev, c) * charSkip;
+    // 基本的に以下の数値はヒューリスティック、フォントによっては合わないこともある
     switch (true) {
       case /[、。]/.test(c):
         drawChar(0.7, -0.6, c);
@@ -183,10 +209,15 @@ export function measureVerticalText(
     let h = 0;
     let prev = null;
     for (const frag of ca) {
-      for (const c of frag.chars) {
-        h += limitedKerning(prev, c);
-        h += charSkip;
-        prev = c;
+      if (frag.rotated) {
+        const m = context.measureText(frag.chars.join(''));
+        h += m.width;
+      } else {
+        for (const c of frag.chars) {
+          h += limitedKerning(prev, c);
+          h += charSkip;
+          prev = c;
+        }
       }
     }
     return h;
@@ -227,7 +258,10 @@ function limitedKerning(c0: string, c1: string): number {
   if (!c0) { return 0; }
   if (/[、。」』）】〕〟]/.test(c0)) {
     if (/[「『（【〔〝]/.test(c1)) { return -1; } else if (/[、。]/.test(c1)) { return -0.5; }
-  } // TODO: "お馬が「通る」"の開きカッコのいちも考慮する
+    return -0.4;
+  } else {
+    if (/[「『（【〔〝]/.test(c1)) { return -0.4; }
+  }
   return 0;
 }
 
