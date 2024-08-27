@@ -22,7 +22,9 @@ export function drawVerticalText(
   r: Rectangle, 
   text: string, 
   baselineSkip: number, 
-  charSkip: number, 
+  charSkip: number,
+  rubySize: number,
+  rubyDistance: number, 
   m?: RenderingText, 
   autoNewline?: boolean
 ): void {
@@ -53,13 +55,12 @@ export function drawVerticalText(
 
         const region = endH - startH;
         const rubyCharSkip = region / frag.ruby.length;
-        const rubyX = cursorX + baselineSkip * 0.65;
+        const rubyX = cursorX + baselineSkip * rubyDistance;
         const rubyFragment = {
           chars: frag.ruby,
           color: frag.color
         }
-        console.log(charSkip, rubyCharSkip);
-        drawFragment(context, r, rubyX, startH, rubyCharSkip, method, rubyFragment, 0.4, true, null);
+        drawFragment(context, r, rubyX, startH, rubyCharSkip, method, rubyFragment, rubySize, true, null);
       }
     }
     cursorX -= baselineSkip;
@@ -111,20 +112,22 @@ function drawFragment(
     const cw = tm.width;
     const ch = tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
 
-    if (startH === null) { startH = lineH + charSkip - tm.actualBoundingBoxAscent; }
+    if (startH === null) {
+      startH = lineH + charSkip - tm.actualBoundingBoxAscent; 
+    }
     endH = lineH + charSkip + tm.actualBoundingBoxDescent;
 
     context.save();
     context.translate(cursorX - cw * 0.5 + cw * ax, r.y + lineH + charSkip + charSkip * ay);
     if (justify) {
-      context.translate(0, (ch * charScale - charSkip) * 0.5);
+      context.translate(0, (charSkip - ch * charScale) * -0.5 - tm.actualBoundingBoxDescent * charScale);
     }
     context.scale(charScale, charScale);
     if (method === "fill") {
       if (frag.color) { context.fillStyle = frag.color; }
       context.fillText(s,0,0);
       /*
-      if (justify) {
+      if (frag.ruby || justify) {
         context.strokeStyle = "red";
         context.beginPath();
         context.moveTo(0, -tm.actualBoundingBoxAscent);

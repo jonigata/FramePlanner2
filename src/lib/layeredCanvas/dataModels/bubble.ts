@@ -47,6 +47,8 @@ export class Bubble {
   creationContext: string;
   filmStack: FilmStack;
   scaleLock: boolean;
+  rubySize: number;
+  rubyDistance: number;
   optionContext: any;
 
   // 以下一時的
@@ -95,6 +97,8 @@ export class Bubble {
     this.autoNewline = false;
     this.appearanceDelay = 0;
     this.hidesText = false;
+    this.rubySize = 0.4;    
+    this.rubyDistance = 0.65;
   }
 
   getStackTrace() {
@@ -125,6 +129,8 @@ export class Bubble {
     b.n_outlineWidth = this.n_outlineWidth;
     b.autoNewline = this.autoNewline;
     b.appearanceDelay = this.appearanceDelay;
+    b.rubySize = this.rubySize;
+    b.rubyDistance = this.rubyDistance;
 
     if (hard) {
       b.uuid = this.uuid;
@@ -156,6 +162,8 @@ export class Bubble {
     this.n_outlineWidth = c.n_outlineWidth;
     this.autoNewline = c.autoNewline;
     this.optionContext = {...c.optionContext};
+    this.rubySize = c.rubySize;
+    this.rubyDistance = c.rubyDistance;
   }
 
   static getUnit(paperSize: Vector): number {
@@ -205,6 +213,8 @@ export class Bubble {
     b.autoNewline = json.autoNewline ?? true;
     b.uuid = json.uuid ?? ulid();
     b.parent = json.parent;
+    b.rubySize = json.rubySize ?? 0.4;
+    b.rubyDistance = json.rubyDistance ?? 0.65;
     b.optionContext = Bubble.getInitialOptions(b);
     Object.assign(b.optionContext, json.optionContext ?? {});
     b.forceEnoughSize(paperSize);
@@ -238,6 +248,8 @@ export class Bubble {
       autoNewline: b.autoNewline ? undefined : b.autoNewline,
       uuid: b.uuid,
       parent: b.parent,
+      rubySize: b.rubySize == 0.4 ? undefined : b.rubySize,
+      rubyDistance: b.rubyDistance == 0.65 ? undefined : b.rubyDistance,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
     };
   }

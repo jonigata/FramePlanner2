@@ -197,6 +197,17 @@
         <div class="self-stretch selected-font variant-ghost-primary rounded-container-token text-center" on:click={() => $fontChooserOpen = true}>
           {$bubble.fontFamily}
         </div>
+        <div class="flex gap-2 items-center">
+          <div class="label">縦書き/横書き</div>
+          <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
+            <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+              <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
+              <RadioItem bind:group={$bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
+            </RadioGroup>
+          </div>
+          <div class="label">自動改行</div>
+          <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
+        </div>
         <div class="flex items-center gap-1" use:toolTip={"フォントサイズ"}>
           <div class="label">フォントサイズ</div>
             <ExponentialRangeSlider name="fontsize" bind:value={fontSize} exponentialMin={100} step={1}/>
@@ -204,21 +215,7 @@
               <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
             </div>  
         </div>
-        <div class="flex items-center gap-1" use:toolTip={"行間"}>
-          <div class="label">行間</div>
-            <RangeSlider name="lineskip" bind:value={$bubble.lineSkip} min={-1} max={5} step={0.1}/>
-            <div class="text-xs slider-value-text">
-              <div class="number-box"><NumberEdit bind:value={$bubble.lineSkip} min={-1} max={5} allowDecimal={true}/></div>
-            </div>  
-        </div>
-        <div class="flex items-center gap-1" use:toolTip={"字間(現在は縦書きのみ有効)"}>
-          <div class="label">字間</div>
-          <RangeSlider name="charskip" bind:value={$bubble.charSkip} min={-1} max={5} step={0.1}/>
-          <div class="text-xs slider-value-text">
-              <div class="number-box"><NumberEdit bind:value={$bubble.charSkip} min={-1} max={5} allowDecimal={true}/></div>
-            </div>  
-        </div>
-        <div class="flex items-center">
+        <div class="flex items-center mt-2">
           <div class="label">塗りつぶし</div>
           <div class="color-label" use:toolTip={"フォント色"}>
             <ColorPickerLabel bind:hex={$bubble.fontColor}/>
@@ -232,16 +229,33 @@
             <ColorPickerLabel bind:hex={$bubble.outlineColor}/>
           </div>
         </div>
-        <div class="flex gap-2 items-center">
-          <div class="label">縦書き/横書き</div>
-          <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
-            <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-              <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
-              <RadioItem bind:group={$bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
-            </RadioGroup>
-          </div>
-          <div class="label">自動改行</div>
-          <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
+        <div class="flex items-center gap-1 mt-2" use:toolTip={"行間"}>
+          <div class="label">行間</div>
+            <RangeSlider name="lineskip" bind:value={$bubble.lineSkip} min={-1} max={5} step={0.1}/>
+            <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={$bubble.lineSkip} min={-1} max={5} allowDecimal={true}/></div>
+            </div>  
+        </div>
+        <div class="flex items-center gap-1" use:toolTip={"字間(現在は縦書きのみ有効)"}>
+          <div class="label">字間</div>
+          <RangeSlider name="charskip" bind:value={$bubble.charSkip} min={-1} max={5} step={0.1}/>
+          <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={$bubble.charSkip} min={-1} max={5} allowDecimal={true}/></div>
+            </div>  
+        </div>
+        <div class="flex items-center gap-1 mt-2" use:toolTip={"行間"}>
+          <div class="label">ルビ サイズ</div>
+            <RangeSlider name="lineskip" bind:value={$bubble.rubySize} min={0} max={1} step={0.05}/>
+            <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={$bubble.rubySize} min={0} max={1} allowDecimal={true}/></div>
+            </div>  
+        </div>
+        <div class="flex items-center gap-1" use:toolTip={"字間(現在は縦書きのみ有効)"}>
+          <div class="label">ルビ 間隔</div>
+          <RangeSlider name="charskip" bind:value={$bubble.rubyDistance} min={0} max={1} step={0.05}/>
+          <div class="text-xs slider-value-text">
+              <div class="number-box"><NumberEdit bind:value={$bubble.rubyDistance} min={0} max={1} allowDecimal={true}/></div>
+            </div>  
         </div>
       </div>
 

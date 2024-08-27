@@ -402,6 +402,8 @@ export class PaperRendererLayer extends Layer {
 
       const baselineSkip = fontSize * 1.5 * (1.0 + bubble.lineSkip);
       const charSkip = fontSize * (1.0 + bubble.charSkip);
+      const rubySize = bubble.rubySize;
+      const rubyDistance = bubble.rubyDistance;
       const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
       const [tw, th] = [m.width, m.height];
       const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
@@ -409,7 +411,7 @@ export class PaperRendererLayer extends Layer {
       // 本体
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = bubble.fontColor;
-      drawText(bubble.direction, ctx, 'fill', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
+      drawText(bubble.direction, ctx, 'fill', r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, bubble.autoNewline);
   
       // フチ
       if (0 < outlineWidth) {
@@ -418,7 +420,7 @@ export class PaperRendererLayer extends Layer {
         ctx.lineWidth = outlineWidth;
         ctx.font = ss;
         ctx.lineJoin = 'round';
-        drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, m, bubble.autoNewline);
+        drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, bubble.autoNewline);
       }
 
       // console.log(`rendering took ${performance.now() - startTime} ms`);

@@ -3,9 +3,9 @@ import { kinsoku } from "../kinsoku";
 
 export { drawVerticalText, measureVerticalText };
 
-export function drawText(dir, ctx, method, r, text, baselineSkip, charSkip, m, autoNewline) {
+export function drawText(dir, ctx, method, r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, autoNewline) {
   if (dir === 'v') {
-    drawVerticalText(ctx, method, r, text, baselineSkip, charSkip, m, autoNewline);
+    drawVerticalText(ctx, method, r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, autoNewline);
   } else {
     drawHorizontalText(ctx, method, r, text, baselineSkip, charSkip, m, autoNewline);
   }
