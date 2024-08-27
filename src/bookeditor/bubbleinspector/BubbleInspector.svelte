@@ -22,6 +22,8 @@
   import { redrawToken, forceFontLoadToken } from "../bookStore";
   import Drawer from "../../utils/Drawer.svelte";
   import { bookEditor } from "../bookStore";
+  import { selection, type SelectionInfo } from '../../utils/selection';
+
 
   import horizontalIcon from '../../assets/horizontal.png';
   import verticalIcon from '../../assets/vertical.png';
@@ -34,6 +36,8 @@
   let textarea = null;
   let imageProvider: ImageProvider;
   let bubbleSnapshot: string = null;
+  let textSelection: SelectionInfo = null;
+  let textSelected = false;
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -183,6 +187,37 @@
     $bubbleInspectorTarget.commandTargetFilm = e.detail;
     $bubbleInspectorTarget.command = "punch";
   }
+
+  function onSelectionChanged(info: SelectionInfo) {
+    textSelection = info;
+    textSelected = info.hasSelection;
+  }
+
+  function wrapRange(range: SelectionInfo, prefix: string, suffix: string) {
+    const start = range.start;
+    const end = range.end;
+    const text = textarea.value;
+    const before = text.substring(0, start);
+    const selected = text.substring(start, end);
+    const after = text.substring(end);
+    const wrapped = prefix + selected + suffix;
+    const newText = before + wrapped + after;
+    textarea.value = newText;
+    textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    $bubble.text = newText;
+  }
+
+  function onWrapColor() {
+    wrapRange(textSelection, "{", "|red}");
+  }
+
+  function onWrapRuby() {
+    wrapRange(textSelection, "[", "](ルビ)");
+  }
+
+  function onWrapRotation() {
+    wrapRange(textSelection, "<<", ">>");
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -190,8 +225,9 @@
 <div class="drawer-outer">
   <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
     <div class="drawer-content">
-      <h1>テキストスタイル</h1>
+      <h1>テキスト</h1>
       <div class="section">
+        <h2>スタイル</h2>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="self-stretch selected-font variant-ghost-primary rounded-container-token text-center" on:click={() => $fontChooserOpen = true}>
@@ -215,7 +251,8 @@
               <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
             </div>  
         </div>
-        <div class="flex items-center mt-2">
+        <h2>カラー</h2>
+        <div class="flex items-center">
           <div class="label">塗りつぶし</div>
           <div class="color-label" use:toolTip={"フォント色"}>
             <ColorPickerLabel bind:hex={$bubble.fontColor}/>
@@ -229,7 +266,8 @@
             <ColorPickerLabel bind:hex={$bubble.outlineColor}/>
           </div>
         </div>
-        <div class="flex items-center gap-1 mt-2" use:toolTip={"行間"}>
+        <h2>レイアウト</h2>
+        <div class="flex items-center gap-1" use:toolTip={"行間"}>
           <div class="label">行間</div>
             <RangeSlider name="lineskip" bind:value={$bubble.lineSkip} min={-1} max={5} step={0.1}/>
             <div class="text-xs slider-value-text">
@@ -243,7 +281,8 @@
               <div class="number-box"><NumberEdit bind:value={$bubble.charSkip} min={-1} max={5} allowDecimal={true}/></div>
             </div>  
         </div>
-        <div class="flex items-center gap-1 mt-2" use:toolTip={"行間"}>
+        <h2>ルビ</h2>
+        <div class="flex items-center gap-1" use:toolTip={"行間"}>
           <div class="label">ルビ サイズ</div>
             <RangeSlider name="lineskip" bind:value={$bubble.rubySize} min={0} max={1} step={0.05}/>
             <div class="text-xs slider-value-text">
@@ -257,16 +296,19 @@
               <div class="number-box"><NumberEdit bind:value={$bubble.rubyDistance} min={0} max={1} allowDecimal={true}/></div>
             </div>  
         </div>
-      </div>
-
-      <h1>テキスト</h1>
-      <div class="section">
+        <h2>内容</h2>
         <textarea
           class="rounded-container-token textarea" 
           bind:value={$bubble.text}
           bind:this={textarea}
-          on:keypress={onKeyPress}/>
-      </div>  
+          on:keypress={onKeyPress}
+          use:selection={onSelectionChanged}/>
+        <div class="btn-group variant-filled-primary h-6">
+          <button disabled={!textSelected} on:click={onWrapColor}><span class="text-sm text-white">色</span></button>
+          <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">ルビ</span></button>
+          <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">回転</span></button>
+        </div>
+      </div>
 
       <h1>シェイプ</h1>
       <div class="section">
@@ -398,6 +440,11 @@
     font-family: '源暎エムゴ';
     font-size: 18px;
     margin-bottom: 8px;
+  }
+  h2 {
+    font-family: '源暎エムゴ';
+    font-size: 16px;
+    line-height: normal;
   }
   .section {
     margin-left: 16px;
