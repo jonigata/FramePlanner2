@@ -117,8 +117,11 @@ function drawFragment(
     }
     endH = lineH + charSkip + tm.actualBoundingBoxDescent;
 
+    const pivotX = cursorX - cw * 0.5 + cw * ax;
+    const pivotY =  r.y + lineH + charSkip + charSkip * ay;
+
     context.save();
-    context.translate(cursorX - cw * 0.5 + cw * ax, r.y + lineH + charSkip + charSkip * ay);
+    context.translate(pivotX, pivotY);
     if (justify) {
       context.translate(0, (charSkip - ch * charScale) * -0.5 - tm.actualBoundingBoxDescent * charScale);
     }
@@ -147,19 +150,20 @@ function drawFragment(
     context.restore();
   }
   
-  function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number, s: string): void {
+  function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number, yscale: number, s: string): void {
     const tm: TextMetrics = context.measureText(s);
     const cw = tm.width;
 
     if (startH === null) { startH = lineH; }
     endH = lineH + charSkip;
 
-    const pivotX = cursorX + (cw * ax);
-    const pivotY = r.y + charSkip + lineH + charSkip * ay;
+    const pivotX = cursorX - cw * 0.5 + cw * ax;
+    const pivotY =  r.y + lineH + charSkip + charSkip * ay;
+
     context.save();
     context.translate(pivotX, pivotY);
     context.rotate(angle * Math.PI / 180);
-    context.scale(charScale, charScale * xscale);
+    context.scale(charScale * xscale, charScale * yscale);
     if (method === "fill") {
       context.fillText(s, -cw * 0.5, charSkip * 0.5);
     } else if (method === "stroke") {
@@ -169,20 +173,39 @@ function drawFragment(
   }
 
   for (const c of frag.chars) {
+    // ヒューリスティック、源暎アンチックを基準にしているが、
+    // 源暎エムゴなどでは合わないこともあるので若干緩和している
     lineH += limitedKerning(prev, c) * charSkip;
-    // 基本的に以下の数値はヒューリスティック、フォントによっては合わないこともある
     switch (true) {
       case /[、。]/.test(c):
         drawChar(0.7, -0.6, c);
         break;
+      case /[“]/.test(c):
+        drawRotatedChar(0, 1.1, 0, -1, 1, "〝");
+        break;
+      case /[”]/.test(c):
+        drawRotatedChar(0, -0.1, -0.9, -1, 1, "〟");
+        break;
       case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c):
         drawChar(0.1, -0.1, c);
         break;
-      case /[「」『』（）＜＞【】〔〕≪≫＜＞｛｝：；〝〟]/.test(c):
-        drawRotatedChar(90, 0.2, -0.4, 1, c);
+      case /[「『：；]/.test(c):
+        drawRotatedChar(90, 0.7, -0.25, 1, 1, c);
         break;
-      case /[ー…～―]/.test(c):
-        drawRotatedChar(90, -0.1, -0.4, -1, c);
+      case /[」』]/.test(c):
+        drawRotatedChar(90, 0.6, -0.25, 1, 1, c);
+        break;
+      case /[＜（【〔≪｛]/.test(c):
+        drawRotatedChar(90, 0.65, -0.3, 1, 1, c);
+        break;
+      case /[＞）】〕≫｝]/.test(c):
+        drawRotatedChar(90, 0.65, -0.4, 1, 1, c);
+        break;
+      case /[ー…―]/.test(c):
+        drawRotatedChar(90, 0.35, -0.4, 1, -1, c);
+        break;
+      case /[～]/.test(c):
+        drawRotatedChar(90, 0.6, -0.4, 1, 1, c);
         break;
       case isEmojiAt(c, 0):
         drawChar(0, 0, c);
@@ -258,12 +281,15 @@ export function measureVerticalText(
 }
 
 function limitedKerning(c0: string, c1: string): number {
-  if (!c0) { return 0; }
-  if (/[、。」』）】〕〟]/.test(c0)) {
-    if (/[「『（【〔〝]/.test(c1)) { return -1; } else if (/[、。]/.test(c1)) { return -0.5; }
+  if (!c0) { 
+    if (/[「『（【〔“]/.test(c1)) { return -0.3; } 
+    return 0;
+  }
+  if (/[、。」』）】〕”]/.test(c0)) {
+    if (/[「『（【〔“]/.test(c1)) { return -0.5; } else if (/[、。]/.test(c1)) { return -0.5; }
     return -0.4;
   } else {
-    if (/[「『（【〔〝]/.test(c1)) { return -0.4; }
+    if (/[「『（【〔“]/.test(c1)) { return -0.4; }
   }
   return 0;
 }
