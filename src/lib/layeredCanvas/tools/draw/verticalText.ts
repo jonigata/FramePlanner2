@@ -67,6 +67,14 @@ export function drawVerticalText(
   }
 }
 
+function drawLine(context: CanvasRenderingContext2D, x: number, y: number, w: number, color: string): void {;
+  context.strokeStyle = color;
+  context.beginPath();
+  context.moveTo(x, y);
+  context.lineTo(x+w, y);
+  context.stroke();
+}
+
 function drawFragment(
   context: CanvasRenderingContext2D, 
   r: Rectangle, 
@@ -107,7 +115,7 @@ function drawFragment(
     return {lineH: lineH + cw, prev, startH, endH};
   }
 
-  function drawChar(ax: number, ay: number, s: string): void {
+  function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number, yscale: number, s: string): void {
     const tm: TextMetrics = context.measureText(s);
     const cw = tm.width;
     const ch = tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
@@ -117,59 +125,34 @@ function drawFragment(
     }
     endH = lineH + charSkip + tm.actualBoundingBoxDescent;
 
-    const pivotX = cursorX - cw * 0.5 + cw * ax;
-    const pivotY =  r.y + lineH + charSkip + charSkip * ay;
+    const pivotX = cursorX;
+    const pivotY = r.y + lineH + charSkip * 0.5; // 空間の中央
 
     context.save();
     context.translate(pivotX, pivotY);
-    if (justify) {
-      context.translate(0, (charSkip - ch * charScale) * -0.5 - tm.actualBoundingBoxDescent * charScale);
-    }
+    /*
+    drawLine(context, -charSkip * 0.5, 0, charSkip, "blue"); // 空間の中心
+    drawLine(context, -charSkip * 0.5, charSkip * 0.5, charSkip, "green");
+    */
     context.scale(charScale, charScale);
+    context.translate(ax * charSkip, ay * charSkip); // オフセット
+    context.rotate(angle * Math.PI / 180);
+    context.scale(xscale, yscale);
+
+    // フォントAPIは左下から始まるので、文字の中心に合わせるために調整
+    context.translate(- cw * 0.5, charSkip * 0.5);
     if (method === "fill") {
       if (frag.color) { context.fillStyle = frag.color; }
       context.fillText(s,0,0);
-      /*
-      if (frag.ruby || justify) {
-        context.strokeStyle = "red";
-        context.beginPath();
-        context.moveTo(0, -tm.actualBoundingBoxAscent);
-        context.lineTo(cw, -tm.actualBoundingBoxAscent);
-        context.stroke();
-        context.strokeStyle = "green";
-        context.beginPath();
-        context.moveTo(0, tm.actualBoundingBoxDescent);
-        context.lineTo(cw, tm.actualBoundingBoxDescent);
-        context.stroke();
-      }
-      */
     } else if (method === "stroke") {
       if (frag.color) { context.strokeStyle = frag.color; }
       context.strokeText(s,0,0);
     }
     context.restore();
   }
-  
-  function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number, yscale: number, s: string): void {
-    const tm: TextMetrics = context.measureText(s);
-    const cw = tm.width;
 
-    if (startH === null) { startH = lineH; }
-    endH = lineH + charSkip;
-
-    const pivotX = cursorX - cw * 0.5 + cw * ax;
-    const pivotY =  r.y + lineH + charSkip + charSkip * ay;
-
-    context.save();
-    context.translate(pivotX, pivotY);
-    context.rotate(angle * Math.PI / 180);
-    context.scale(charScale * xscale, charScale * yscale);
-    if (method === "fill") {
-      context.fillText(s, -cw * 0.5, charSkip * 0.5);
-    } else if (method === "stroke") {
-      context.strokeText(s, -cw * 0.5, charSkip * 0.5);
-    }
-    context.restore();
+  function drawChar(ax: number, ay: number, s: string) {
+    drawRotatedChar(0, ax, ay, 1, 1, s);
   }
 
   for (const c of frag.chars) {
@@ -181,31 +164,31 @@ function drawFragment(
         drawChar(0.7, -0.6, c);
         break;
       case /[“]/.test(c):
-        drawRotatedChar(0, 1.1, 0, -1, 1, "〝");
+        drawRotatedChar(0, 0.5, 0.5, -1, 1, "〝");
         break;
       case /[”]/.test(c):
-        drawRotatedChar(0, -0.1, -0.9, -1, 1, "〟");
+        drawRotatedChar(0, -0.4, -0.4, -1, 1, "〟");
         break;
       case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c):
         drawChar(0.1, -0.1, c);
         break;
       case /[「『：；]/.test(c):
-        drawRotatedChar(90, 0.7, -0.25, 1, 1, c);
+        drawRotatedChar(90, 0.2, 0.1, 1, 1, c);
         break;
       case /[」』]/.test(c):
-        drawRotatedChar(90, 0.6, -0.25, 1, 1, c);
+        drawRotatedChar(90, 0.1, 0.3, 1, 1, c);
         break;
       case /[＜（【〔≪｛]/.test(c):
-        drawRotatedChar(90, 0.65, -0.3, 1, 1, c);
+        drawRotatedChar(90, 0.15, 0.15, 1, 1, c);
         break;
       case /[＞）】〕≫｝]/.test(c):
-        drawRotatedChar(90, 0.65, -0.4, 1, 1, c);
+        drawRotatedChar(90, 0.15, 0.15, 1, 1, c);
         break;
       case /[ー…―]/.test(c):
-        drawRotatedChar(90, 0.35, -0.4, 1, -1, c);
+        drawRotatedChar(90, -0.1, 0.1, 1, -1, c);
         break;
       case /[～]/.test(c):
-        drawRotatedChar(90, 0.6, -0.4, 1, 1, c);
+        drawRotatedChar(90, 0.1, 0.1, 1, 1, c);
         break;
       case isEmojiAt(c, 0):
         drawChar(0, 0, c);
