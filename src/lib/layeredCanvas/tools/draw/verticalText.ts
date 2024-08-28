@@ -170,7 +170,7 @@ function drawFragment(
         drawRotatedChar(0, -0.4, -0.4, -1, 1, "〟");
         break;
       case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c):
-        drawChar(0.1, -0.1, c);
+        drawChar(0.1, -0.2, c);
         break;
       case /[「『：；]/.test(c):
         drawRotatedChar(90, 0.2, 0.1, 1, 1, c);
