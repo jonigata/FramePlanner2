@@ -82,7 +82,7 @@ function drawFragment(
   let startH = null;
   let endH = null;
 
-  if (frag.rotated) {
+  if (frag.romanHanging) {
     const s = frag.chars.join('');
     const tm: TextMetrics = context.measureText(s);
     const cw = tm.width;
@@ -154,7 +154,7 @@ function drawFragment(
     if (startH === null) { startH = lineH; }
     endH = lineH + charSkip;
 
-    const pivotX = cursorX + cw * ax;
+    const pivotX = cursorX + (cw * ax);
     const pivotY = r.y + charSkip + lineH + charSkip * ay;
     context.save();
     context.translate(pivotX, pivotY);
@@ -212,7 +212,7 @@ export function measureVerticalText(
     let h = 0;
     let prev = null;
     for (const frag of ca) {
-      if (frag.rotated) {
+      if (frag.romanHanging) {
         const m = context.measureText(frag.chars.join(''));
         h += m.width;
       } else {

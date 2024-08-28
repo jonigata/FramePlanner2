@@ -2,13 +2,13 @@ interface Segment {
   content: string;
   color?: string;
   ruby?: string;
-  rotated?: boolean;
+  romanHanging?: boolean;
 }
 
 export function parseMarkdownToJson(sourceText: string): Segment[] {
   const colorPattern = /\{([^{}]+)\|([^{}]+)\}/;
   const rubyPattern = /\[([^\[\]]+)\]\(([^\(\)]+)\)/;
-  const rotatedPattern = /\<\<([^<>]+)\>\>/;
+  const romanHangingPattern = /\<\<([^<>]+)\>\>/;
 
   function parse(text: string, color?: string, ruby?: string): Segment[] {
     const result: Segment[] = [];
@@ -17,12 +17,12 @@ export function parseMarkdownToJson(sourceText: string): Segment[] {
     while (remainingText) {
       const colorMatch = remainingText.match(colorPattern);
       const rubyMatch = remainingText.match(rubyPattern);
-      const rotatedMatch = remainingText.match(rotatedPattern);
+      const romanHangingMatch = remainingText.match(romanHangingPattern);
 
       const matches = [
         { type: 'color', match: colorMatch },
         { type: 'ruby', match: rubyMatch },
-        { type: 'rotated', match: rotatedMatch }
+        { type: 'romanHanging', match: romanHangingMatch }
       ].filter(m => m.match).sort((a, b) => a.match!.index! - b.match!.index!);
 
       if (matches.length > 0) {
@@ -41,8 +41,8 @@ export function parseMarkdownToJson(sourceText: string): Segment[] {
           case 'ruby':
             result.push(...parse(content, color, param));
             break;
-          case 'rotated':
-            result.push({ content, color, ruby, rotated: true });
+          case 'romanHanging':
+            result.push({ content, color, ruby, romanHanging: true });
             break;
         }
 
@@ -63,7 +63,7 @@ export interface RichFragment {
   chars: string[];
   color?: string;
   ruby?: string[];
-  rotated?: boolean;
+  romanHanging?: boolean;
 }
 
 export function isEmojiAt(str: string, index: number): boolean {
@@ -127,20 +127,20 @@ export function* richTextIterator(segments: Segment[]): Generator<RichFragment, 
         chars: chars,
         color: segment.color,
         ruby: [...characterGroupIterator(segment.ruby)],
-        rotated: segment.rotated
+        romanHanging: segment.romanHanging
       };
-    } else if (segment.rotated) {
+    } else if (segment.romanHanging) {
       yield {
         chars: [segment.content],
         color: segment.color,
-        rotated: segment.rotated
+        romanHanging: segment.romanHanging
       };
     } else {
       for (const char of chars) {
         yield {
           chars: [char],
           color: segment.color,
-          rotated: segment.rotated
+          romanHanging: segment.romanHanging
         };
       }
     }
@@ -154,9 +154,9 @@ const segments: Segment[] = [
   { content: "赤い", color: "red" },
   { content: "文字", ruby: "もじ" },
   { content: "と" },
-  { content: "ABC", rotated: true },
+  { content: "ABC", romanHanging: true },
   { content: "絵文字😊と" },
-  { content: "Latin1 text", rotated: true },
+  { content: "Latin1 text", romanHanging: true },
   { content: "そしてひらがな" },
   { content: "赤いABCだよ" }   
 ];
@@ -164,31 +164,31 @@ const segments: Segment[] = [
 console.log([...richTextIterator(segments)]);
 
 [
-  { "chars": ["こ"], "color": undefined, "rotated": undefined },
-  { "chars": ["れ"], "color": undefined, "rotated": undefined },
-  { "chars": ["は"], "color": undefined, "rotated": undefined },
-  { "chars": ["赤"], "color": "red", "rotated": undefined },
-  { "chars": ["い"], "color": "red", "rotated": undefined },
-  { "chars": ["文", "字"], "color": undefined, "ruby": ["も", "じ"], "rotated": undefined },
-  { "chars": ["と"], "color": undefined, "rotated": undefined },
-  { "chars": ["ABC"], "color": undefined, "rotated": true },
-  { "chars": ["絵"], "color": undefined, "rotated": undefined },
-  { "chars": ["文"], "color": undefined, "rotated": undefined },
-  { "chars": ["字"], "color": undefined, "rotated": undefined },
-  { "chars": ["😊"], "color": undefined, "rotated": undefined },
-  { "chars": ["と"], "color": undefined, "rotated": undefined },
-  { "chars": ["Latin1 text"], "color": undefined, "rotated": true },
-  { "chars": ["そ"], "color": undefined, "rotated": undefined },
-  { "chars": ["し"], "color": undefined, "rotated": undefined },
-  { "chars": ["て"], "color": undefined, "rotated": undefined },
-  { "chars": ["ひ"], "color": undefined, "rotated": undefined },
-  { "chars": ["ら"], "color": undefined, "rotated": undefined },
-  { "chars": ["が"], "color": undefined, "rotated": undefined },
-  { "chars": ["な"], "color": undefined, "rotated": undefined },
-  { "chars": ["赤"], "color": undefined, "rotated": undefined },
-  { "chars": ["い"], "color": undefined, "rotated": undefined },
-  { "chars": ["ABC"], "color": undefined, "rotated": undefined },
-  { "chars": ["だ"], "color": undefined, "rotated": undefined },
-  { "chars": ["よ"], "color": undefined, "rotated": undefined }
+  { "chars": ["こ"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["れ"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["は"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["赤"], "color": "red", "romanHanging": undefined },
+  { "chars": ["い"], "color": "red", "romanHanging": undefined },
+  { "chars": ["文", "字"], "color": undefined, "ruby": ["も", "じ"], "romanHanging": undefined },
+  { "chars": ["と"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["ABC"], "color": undefined, "romanHanging": true },
+  { "chars": ["絵"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["文"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["字"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["😊"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["と"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["Latin1 text"], "color": undefined, "romanHanging": true },
+  { "chars": ["そ"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["し"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["て"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["ひ"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["ら"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["が"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["な"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["赤"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["い"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["ABC"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["だ"], "color": undefined, "romanHanging": undefined },
+  { "chars": ["よ"], "color": undefined, "romanHanging": undefined }
 ]
 */

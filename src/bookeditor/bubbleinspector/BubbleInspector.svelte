@@ -341,7 +341,7 @@
           <div class="btn-group variant-filled-primary h-6">
             <button disabled={!textSelected} on:click={onWrapColor}><span class="text-sm text-white">色</span></button>
             <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">ルビ</span></button>
-            <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">回転</span></button>
+            <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">縦中横</span></button>
           </div>
         </div>
       </details>
