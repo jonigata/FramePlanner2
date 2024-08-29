@@ -6,6 +6,7 @@ interface Segment {
 }
 
 export function parseMarkdownToJson(sourceText: string): Segment[] {
+  console.log(sourceText);
   const colorPattern = /\{([^{}]+)\|([^{}]+)\}/;
   const rubyPattern = /\[([^\[\]]+)\]\(([^\(\)]+)\)/;
   const romanHangingPattern = /\<\<([^<>]+)\>\>/;
@@ -66,19 +67,13 @@ export interface RichFragment {
   romanHanging?: boolean;
 }
 
-export function isEmojiAt(str: string, index: number): boolean {
-  const codePoint = String.fromCodePoint(str.codePointAt(index) || 0);
-  const regex = /\p{Emoji}/u;
-
-  return regex.test(codePoint);
-}
-
-export function getEmojiAt(str: string, index: number): string {
-  let endIndex = index + 1;
-  if (str.codePointAt(index) && str.codePointAt(index)! > 0xFFFF) {
-    endIndex++;
+function getCompleteEmojiSequence(text: string, index: number): string | null {
+  const regex = /(\p{Emoji}(\uFE0F|\u200D\p{Emoji})*)/u;
+  const match = text.slice(index).match(regex);
+  if (match && match.index === 0) {
+    return match[0];
   }
-  return str.slice(index, endIndex);
+  return null;
 }
 
 function isLatin1(char: string): boolean {
@@ -91,24 +86,27 @@ function* characterGroupIterator(text: string): Generator<string, void, unknown>
   let i = 0;
 
   while (i < text.length) {
-    if (isEmojiAt(text, i)) {
+    const char = text[i];
+    const emojiSequence = getCompleteEmojiSequence(text, i);
+
+    if (emojiSequence) {
       if (current) yield current;
-      yield getEmojiAt(text, i);
+      yield emojiSequence;
       current = '';
       isCurrentLatin1 = false;
-      i += getEmojiAt(text, i).length;
-    } else if (isLatin1(text[i])) {
+      i += emojiSequence.length;
+    } else if (isLatin1(char)) {
       if (isCurrentLatin1) {
-        current += text[i];
+        current += char;
       } else {
         if (current) yield current;
-        current = text[i];
+        current = char;
         isCurrentLatin1 = true;
       }
       i++;
     } else {
       if (current) yield current;
-      yield text[i];
+      yield char;
       current = '';
       isCurrentLatin1 = false;
       i++;
@@ -137,6 +135,7 @@ export function* richTextIterator(segments: Segment[]): Generator<RichFragment, 
       };
     } else {
       for (const char of chars) {
+        console.log(char);
         yield {
           chars: [char],
           color: segment.color,
