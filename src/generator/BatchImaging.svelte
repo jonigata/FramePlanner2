@@ -1,6 +1,6 @@
 <script lang="ts">
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
-  import { batchImagingPage, type Stats } from "./batchImagingStore";
+  import { batchImagingPage } from "./batchImagingStore";
   import { collectLeaves } from '../lib/layeredCanvas/dataModels/frameTree';
   import Drawer from '../utils/Drawer.svelte'
   import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
@@ -9,6 +9,7 @@
   import { commitBook, type Page } from "../bookeditor/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { ImagingContext } from '../utils/feathralImaging';
 
   import "../box.css"  
   import feathralIcon from '../assets/feathral.png';
@@ -20,7 +21,7 @@
   let dalle3;
   let feathral;
   let flux;
-  let stats: Stats = { total: 0, succeeded: 0, failed: 0 };
+  let imagingContext: ImagingContext = new ImagingContext();
 
   $: updateImageInfo($batchImagingPage);
   function updateImageInfo(page: Page) {
@@ -39,7 +40,6 @@
   async function execute(child: any) {
     console.log('execute');
     busy = true;
-    stats = { total: 0, succeeded: 0, failed: 0 };
     await child.excecute($batchImagingPage);
     busy = false;     
     console.log('execute done');
@@ -62,11 +62,11 @@
             <ProgressRadial width={"w-16"}/>
             <div class="hbox gap-2">
               <div>成功</div>
-              <div>{stats.succeeded}</div>
+              <div>{imagingContext.succeeded}</div>
               <div>失敗</div>
-              <div>{stats.failed}</div>
+              <div>{imagingContext.failed}</div>
               <div>合計</div>
-              <div>{stats.total}</div>
+              <div>{imagingContext.total}</div>
             </div>
           </div>
         {:else}
@@ -77,13 +77,13 @@
             </div>
             <div class="content">
               {#if tabSet === 0}
-                <BatchImagingFlux bind:this={flux} bind:stats={stats}/>
+                <BatchImagingFlux bind:this={flux} bind:imagingContext={imagingContext}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
               {:else if tabSet === 1}
-                <BatchImagingFeathral bind:this={feathral} bind:stats={stats}/>
+                <BatchImagingFeathral bind:this={feathral} bind:imagingContext={imagingContext}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
               {:else if tabSet === 2}
-                <BatchImagingDalle3 bind:this={dalle3} bind:stats={stats}/>
+                <BatchImagingDalle3 bind:this={dalle3} bind:imagingContext={imagingContext}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
               {/if}
             </div>

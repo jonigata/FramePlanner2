@@ -1,22 +1,28 @@
 import { generateImageFromTextWithFeathral, generateImageFromTextWithFlux } from '../firebase';
 import { toastStore } from '@skeletonlabs/skeleton';
 
-export class GenerateImageContext {
+export class ImagingContext {
   awakeWarningToken: boolean;
   errorToken: boolean;
+  total: number;
+  succeeded: number;
+  failed: number;
 
   reset() {
     this.awakeWarningToken = true;
     this.errorToken = true;
+    this.total = 0;
+    this.succeeded = 0;
+    this.failed = 0;
   }
 }
 
-export type GenerateResult = {
+export type ImagingResult = {
   images: HTMLImageElement[];
   feathral: number;
 };
 
-export async function generateImage(prompt: string, width: number, height: number, context: GenerateImageContext): Promise<GenerateResult> {
+export async function generateImage(prompt: string, width: number, height: number, context: ImagingContext): Promise<ImagingResult> {
   console.log("running feathral");
   try {
     let q = null;
@@ -53,7 +59,7 @@ export async function generateImage(prompt: string, width: number, height: numbe
   }
 }
 
-export async function generateFluxImage(prompt: string, image_size: string, pro: boolean, num_images: number, context: GenerateImageContext): Promise<GenerateResult> {
+export async function generateFluxImage(prompt: string, image_size: string, pro: boolean, num_images: number, context: ImagingContext): Promise<ImagingResult> {
   console.log("running feathral");
   try {
     let q = null;

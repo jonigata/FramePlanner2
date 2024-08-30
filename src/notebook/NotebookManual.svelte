@@ -5,7 +5,7 @@
   import { Character } from './notebook';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
-  import { GenerateImageContext, generateFluxImage } from '../utils/feathralImaging';
+  import { ImagingContext, generateFluxImage } from '../utils/feathralImaging';
   import { persistent } from '../utils/persistent';
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from '../utils/accountStore';
@@ -168,7 +168,7 @@
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, new GenerateImageContext());
+          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, new ImagingContext());
         });
       await result.images[0].decode();
       console.log(result);

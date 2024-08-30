@@ -8,10 +8,9 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import {makePagesFromStoryboard} from './makePage';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
-  import { GenerateImageContext, generateFluxImage } from '../utils/feathralImaging';
+  import { ImagingContext, generateFluxImage } from '../utils/feathralImaging';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Page } from '../bookeditor/book';
-  import type { Stats } from "../generator/batchImagingStore";
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createCanvasFromImage } from '../utils/imageUtil';
@@ -142,11 +141,9 @@
   }
 
   // BatchImagingFluxからコピペ
-  let stats: Stats = { total: 0, succeeded: 0, failed: 0 };
-
   async function generate(frame: FrameElement) {
     console.log("postfix", postfix);
-    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", false, 1, generateContext);
+    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", false, 1, imagingContext);
     if (result != null) {
       await result.images[0].decode();
       const film = new Film();
@@ -154,25 +151,25 @@
       film.media = media;
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
-      stats.succeeded++;
+      imagingContext.succeeded++;
       $redrawToken = true;
     } else {
-      stats.failed++;
+      imagingContext.failed++;
     }
     imageProgress += 1 / imageProgressDenominator;
   }
 
-  let generateContext = new GenerateImageContext();
+  let imagingContext = new ImagingContext();
   async function generateAll(page: Page) {
-    generateContext.reset();
+    imagingContext.reset();
     const leaves = collectLeaves(page.frameTree);
     const promises = [];
     for (const leaf of leaves) {
       promises.push(generate(leaf));
     }
-    stats.total = promises.length;
-    stats.succeeded = 0;
-    stats.failed = 0;
+    imagingContext.total = promises.length;
+    imagingContext.succeeded = 0;
+    imagingContext.failed = 0;
     await Promise.all(promises);
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
@@ -232,9 +229,9 @@
         <div class="w-full pl-4 flex flex-row items-center text-black mb-2">
           <span class="w-24">スタイル</span> <input type="text" class="input image-style pl-4" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
         </div>          
-        {#if stats.total > 0}
+        {#if imagingContext.total > 0}
         <div class="w-full pl-4 items-center mb-2">
-          <ProgressBar label="Progress Bar" value={stats.succeeded + stats.failed} max={stats.total} />
+          <ProgressBar label="Progress Bar" value={imagingContext.succeeded + imagingContext.failed} max={imagingContext.total} />
         </div>
         <div class="w-full pl-4 items-center mb-2">
           <ProgressBar label="Progress Bar" value={imageProgress} max={1} />
