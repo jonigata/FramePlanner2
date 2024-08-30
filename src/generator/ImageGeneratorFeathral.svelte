@@ -12,7 +12,7 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
-  import { ImagingContext, generateImage } from '../utils/feathralImaging';
+  import { type ImagingContext, generateImage } from '../utils/feathralImaging';
 
   export let busy: boolean;
   export let prompt: string;
@@ -35,11 +35,18 @@
       progress = 0;
       let delta = 1 / 8;
       const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
+      let imagingContext: ImagingContext = {
+        awakeWarningToken: false,
+        errorToken: false,
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+      };
 
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateImage(`${prompt}, ${postfix}`, size[0], size[1], new ImagingContext());
+          return await generateImage(`${prompt}, ${postfix}`, size[0], size[1], imagingContext);
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });

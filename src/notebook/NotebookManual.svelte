@@ -1,13 +1,10 @@
 <script lang="ts">
-  import NotebookTextarea from './NotebookTextarea.svelte';
-  import NotebookCharacterList from './NotebookCharacterList.svelte';
   import { advise } from '../firebase';
   import { Character } from './notebook';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
-  import { ImagingContext, generateFluxImage } from '../utils/feathralImaging';
+  import { type ImagingContext, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
   import { persistent } from '../utils/persistent';
-  import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from '../utils/accountStore';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { ulid } from 'ulid';
@@ -15,9 +12,15 @@
   import {makePagesFromStoryboard} from './makePage';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { callAdvise } from './callAdvise';
+  import { toolTip } from '../utils/passiveToolTipStore';
+  import NotebookTextarea from './NotebookTextarea.svelte';
+  import NotebookCharacterList from './NotebookCharacterList.svelte';
+  import Feathral from '../utils/Feathral.svelte';
+  import { ProgressBar } from '@skeletonlabs/skeleton';
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 
+  let fullAutoRunning = false;
   let themeWaiting = false;
   let charactersWaiting = false;
   let plotWaiting = false;
@@ -25,8 +28,52 @@
   let storyboardWaiting = false;
   let critiqueWaiting = false;
   let postfix: string = "";
+  let imageProgress = 0;
+  let imagingContext: ImagingContext = {
+    awakeWarningToken: false,
+    errorToken: false,
+    total: 0,
+    succeeded: 0,
+    failed: 0,
+  };
 
-  async function onThemeAdvise(e: CustomEvent<string>) {
+  async function onStartFullAuto() {
+    fullAutoRunning = true;
+    if (!notebook.theme) {
+      await onThemeAdvise();
+    }
+    if (notebook.characters.length === 0) {
+      await onCharactersAdvise();
+    }
+    if (!notebook.plot) {
+      await onPlotAdvise();
+    }
+    if (!notebook.scenario) {
+      await onScenarioAdvise();
+    }
+    await buildStoryboard();
+
+    imageProgress = 0.001;
+    imagingContext = {
+      awakeWarningToken: false,
+      errorToken: false,
+      total: 0,
+      succeeded: 0,
+      failed: 0,
+    };
+    await generateMarkedPageImages(
+      imagingContext, 
+      postfix, 
+      (x: number) => {
+        imageProgress = x;
+        imagingContext = imagingContext;
+      });
+    imageProgress = 1;
+
+    fullAutoRunning = false;
+  }
+
+  async function onThemeAdvise() {
     try {
       themeWaiting = true;
       notebook.theme = await callAdvise('theme', notebook);
@@ -40,7 +87,7 @@
     }
   }
 
-  async function onCharactersAdvise(e: CustomEvent) {
+  async function onCharactersAdvise() {
     try {
       charactersWaiting = true;
       const newCharacters = await callAdvise('characters', notebook);
@@ -80,7 +127,7 @@
     }
   }
 
-  async function onPlotAdvise(e: CustomEvent<string>) {
+  async function onPlotAdvise() {
     try {
       plotWaiting = true;
       notebook.plot = await callAdvise('plot', notebook);
@@ -94,7 +141,7 @@
     }
   }
 
-  async function onScenarioAdvise(e: CustomEvent<string>) {
+  async function onScenarioAdvise() {
     try {
       scenarioWaiting = true;
       notebook.scenario = await callAdvise('scenario', notebook);
@@ -165,10 +212,17 @@
     try {
       c.portrait = 'loading';
       notebook.characters = notebook.characters;
+      let imagingContext: ImagingContext = {
+        awakeWarningToken: false,
+        errorToken: false,
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+      };
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, new ImagingContext());
+          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, imagingContext);
         });
       await result.images[0].decode();
       console.log(result);
@@ -197,6 +251,16 @@
   <h2>ネーム作成中</h2>
   <ProgressRadial width="w-48"/>
 </div>
+{:else if 0 < imageProgress && imageProgress < 1}
+<div class="h-full flex flex-col justify-center items-center">
+  <h2>画像生成中</h2>
+  <div class="w-full pl-4 items-center mb-2">
+    <ProgressBar label="Progress Bar" value={imagingContext.succeeded + imagingContext.failed} max={imagingContext.total || 1} />
+  </div>
+  <div class="w-full pl-4 items-center mb-2">
+    <ProgressBar label="Progress Bar" value={imageProgress} max={1} />
+  </div>
+</div>
 {:else}
 <div class="drawer-content">
   <h1>カイルちゃんの創作ノート</h1>
@@ -204,13 +268,24 @@
     <Feathral/>
   </div>
   <div class="section">
-    <h2>テーマ</h2>
+    <h2 class:progress={themeWaiting}>テーマ
+      {#if themeWaiting}
+        <ProgressRadial stroke={200} width="w-5"/>
+      {/if}
+    </h2>
     <div class="w-full">
-      <NotebookTextarea bind:value={notebook.theme} waiting={themeWaiting} on:advise={onThemeAdvise}/>
+      <NotebookTextarea bind:value={notebook.theme} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
     </div>
+    {#if !fullAutoRunning}
+      <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
+    {/if}
   </div>
   <div class="section">
-    <h2>登場人物</h2>
+    <h2 class:progress={charactersWaiting}>登場人物
+      {#if charactersWaiting}
+        <ProgressRadial stroke={200} width="w-5"/>
+      {/if}
+    </h2>
     <div class="w-full">
       <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter}/>
     </div>
@@ -220,13 +295,21 @@
     </div>
   </div>
   <div class="section">
-    <h2>プロット</h2>
+    <h2 class:progress={plotWaiting}>プロット
+      {#if plotWaiting}
+        <ProgressRadial stroke={200} width="w-5"/>
+      {/if}
+    </h2>
     <div class="w-full">
       <NotebookTextarea bind:value={notebook.plot} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
     </div>
   </div>
   <div class="section">
-    <h2>シナリオ</h2>
+    <h2 class:progress={scenarioWaiting}>シナリオ
+      {#if scenarioWaiting}
+        <ProgressRadial stroke={200} width="w-5"/>
+      {/if}
+    </h2>
     <div class="w-full">
       <NotebookTextarea bind:value={notebook.scenario} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
     </div>
@@ -256,6 +339,12 @@
   h2 {
     font-family: '源暎エムゴ';
     font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2.progress {
+    color: #0a851a
   }
   .section {
     margin-bottom: 16px;
@@ -267,5 +356,9 @@
     border-radius: 2px;
     padding-left: 8px;
     padding-right: 8px;
+  }
+  button {
+    font-family: '源暎エムゴ';
+    height: 30px;
   }
 </style>

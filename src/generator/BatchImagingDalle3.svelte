@@ -9,7 +9,7 @@
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { createCanvasFromImage } from "../utils/imageUtil";
-  import { ImagingContext } from '../utils/feathralImaging';
+  import type { ImagingContext } from '../utils/feathralImaging';
 
   export let imagingContext: ImagingContext;
 

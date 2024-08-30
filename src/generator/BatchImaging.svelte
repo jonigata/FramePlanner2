@@ -9,7 +9,7 @@
   import { commitBook, type Page } from "../bookeditor/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
-  import { ImagingContext } from '../utils/feathralImaging';
+  import type { ImagingContext } from '../utils/feathralImaging';
 
   import "../box.css"  
   import feathralIcon from '../assets/feathral.png';
@@ -21,7 +21,13 @@
   let dalle3;
   let feathral;
   let flux;
-  let imagingContext: ImagingContext = new ImagingContext();
+  let imagingContext: ImagingContext = {
+    awakeWarningToken: false,
+    errorToken: false,
+    total: 0,
+    succeeded: 0,
+    failed: 0,
+  };
 
   $: updateImageInfo($batchImagingPage);
   function updateImageInfo(page: Page) {

@@ -9,7 +9,7 @@
   import { onlineAccount, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
-  import { ImagingContext, generateFluxImage } from '../utils/feathralImaging';
+  import { type ImagingContext, generateFluxImage } from '../utils/feathralImaging';
   import { createCanvasFromImage } from '../utils/imageUtil';
 
   export let imagingContext: ImagingContext;
@@ -48,7 +48,8 @@
   }
 
   async function generateAll(page: Page) {
-    imagingContext.reset();
+    imagingContext.awakeWarningToken = true;
+    imagingContext.errorToken = true;
     const leaves = collectLeaves(page.frameTree).filter(
       (leaf) => 0 == leaf.filmStack.films.length);
     const promises = [];
