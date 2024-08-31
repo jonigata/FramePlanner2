@@ -147,7 +147,7 @@ function drawFragment(
     lineH += limitedKerning(prev, c) * charSkip;
     switch (true) {
       case /[、。]/.test(c):
-        drawChar(0.7, -0.6, c);
+        drawChar(0.6, -0.6, c);
         break;
       case /[“]/.test(c):
         drawRotatedChar(0, 0.5, 0.5, -1, 1, "〝");
@@ -156,7 +156,7 @@ function drawFragment(
         drawRotatedChar(0, -0.4, -0.4, -1, 1, "〟");
         break;
       case /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヵヶ]/.test(c):
-        drawChar(0.1, -0.2, c);
+        drawChar(0.1, -0.1, c);
         break;
       case /[「『：；]/.test(c):
         drawRotatedChar(90, 0.2, 0.1, 1, 1, c);
