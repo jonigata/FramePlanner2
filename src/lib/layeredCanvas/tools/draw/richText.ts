@@ -6,7 +6,6 @@ interface Segment {
 }
 
 export function parseMarkdownToJson(sourceText: string): Segment[] {
-  console.log(sourceText);
   const colorPattern = /\{([^{}]+)\|([^{}]+)\}/;
   const rubyPattern = /\[([^\[\]]+)\]\(([^\(\)]+)\)/;
   const romanHangingPattern = /\<\<([^<>]+)\>\>/;
@@ -135,7 +134,6 @@ export function* richTextIterator(segments: Segment[]): Generator<RichFragment, 
       };
     } else {
       for (const char of chars) {
-        console.log(char);
         yield {
           chars: [char],
           color: segment.color,

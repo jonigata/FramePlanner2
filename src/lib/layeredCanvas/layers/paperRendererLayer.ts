@@ -4,7 +4,7 @@ import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoi
 import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
 import { drawFilmStack } from "../tools/draw/drawFilmStack";
 import type { Layout } from "../dataModels/frameTree";
-import { drawText, measureText } from "../tools/draw/drawText";
+import { drawText, measureText, type Direction } from "../tools/draw/drawText";
 import { Layer } from "../system/layeredCanvas";
 import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
 
@@ -404,14 +404,14 @@ export class PaperRendererLayer extends Layer {
       const charSkip = fontSize * (1.0 + bubble.charSkip);
       const rubySize = bubble.rubySize;
       const rubyDistance = bubble.rubyDistance;
-      const m = measureText(bubble.direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
+      const m = measureText(bubble.direction as Direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
       const [tw, th] = [m.width, m.height];
       const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
   
       // 本体
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = bubble.fontColor;
-      drawText(bubble.direction, ctx, 'fill', r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, bubble.autoNewline);
+      drawText(bubble.direction as Direction, ctx, 'fill', r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, bubble.autoNewline);
   
       // フチ
       if (0 < outlineWidth) {
@@ -420,7 +420,7 @@ export class PaperRendererLayer extends Layer {
         ctx.lineWidth = outlineWidth;
         ctx.font = ss;
         ctx.lineJoin = 'round';
-        drawText(bubble.direction, ctx, 'stroke', r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, bubble.autoNewline);
+        drawText(bubble.direction as Direction, ctx, 'stroke', r, text, baselineSkip, charSkip, rubySize, rubyDistance, m, bubble.autoNewline);
       }
 
       // console.log(`rendering took ${performance.now() - startTime} ms`);

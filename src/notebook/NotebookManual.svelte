@@ -1,6 +1,7 @@
 <script lang="ts">
   import { advise } from '../firebase';
   import { Character } from './notebook';
+  import { commitBook } from '../bookeditor/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
@@ -37,6 +38,11 @@
     failed: 0,
   };
 
+  function commit() {
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
+  }
+
   async function onStartFullAuto() {
     fullAutoRunning = true;
     if (!notebook.theme) {
@@ -51,24 +57,9 @@
     if (!notebook.scenario) {
       await onScenarioAdvise();
     }
-    await buildStoryboard();
+    await onBuildStoryboard();
 
-    imageProgress = 0.001;
-    imagingContext = {
-      awakeWarningToken: false,
-      errorToken: false,
-      total: 0,
-      succeeded: 0,
-      failed: 0,
-    };
-    await generateMarkedPageImages(
-      imagingContext, 
-      postfix, 
-      (x: number) => {
-        imageProgress = x;
-        imagingContext = imagingContext;
-      });
-    imageProgress = 1;
+    await onGenerateImages();
 
     fullAutoRunning = false;
   }
@@ -77,6 +68,7 @@
     try {
       themeWaiting = true;
       notebook.theme = await callAdvise('theme', notebook);
+      commit();
     }
     catch(e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
@@ -93,6 +85,7 @@
       const newCharacters = await callAdvise('characters', notebook);
       newCharacters.forEach(c => c.ulid = ulid());
       notebook.characters = newCharacters;
+      commit();
     }
     catch(e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
@@ -117,6 +110,7 @@
         }
       }
       notebook.characters = newCharacters;
+      commit();
     }
     catch(e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
@@ -131,6 +125,7 @@
     try {
       plotWaiting = true;
       notebook.plot = await callAdvise('plot', notebook);
+      commit();
     }
     catch(e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
@@ -145,6 +140,7 @@
     try {
       scenarioWaiting = true;
       notebook.scenario = await callAdvise('scenario', notebook);
+      commit();
     }
     catch(e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
@@ -160,9 +156,10 @@
     notebook.characters = [];
     notebook.plot = '';
     notebook.scenario = '';
+    notebook.storyboard = null;
   }
 
-  async function buildStoryboard() {
+  async function onBuildStoryboard() {
     console.log('build storyboard');
     try {
       storyboardWaiting = true;
@@ -176,7 +173,7 @@
       const oldLength = newPages.length;
       newPages.push(...receivedPages);
       $mainBook.pages = newPages;
-      $mainBook = $mainBook;
+      commit();
 
       await tick();
       marks = $bookEditor.getMarks();
@@ -188,6 +185,7 @@
     } catch (e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
       console.error(e);
+      storyboardWaiting = false;
     }
   }
 
@@ -242,6 +240,25 @@
       notebook.characters.splice(index, 1);
       notebook.characters = notebook.characters;
     }
+  }
+
+  async function onGenerateImages() {
+    imageProgress = 0.001;
+    imagingContext = {
+      awakeWarningToken: false,
+      errorToken: false,
+      total: 0,
+      succeeded: 0,
+      failed: 0,
+    };
+    await generateMarkedPageImages(
+      imagingContext, 
+      postfix, 
+      (x: number) => {
+        imageProgress = Math.max(0.001, x);
+        imagingContext = imagingContext;
+      });
+    imageProgress = 1;
   }
 
 </script>
@@ -317,9 +334,13 @@
   <div class="flex flex-row gap-4 mb-4">
     <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
     <span class="flex-grow"></span>
-    <button class="btn variant-filled-primary" on:click={buildStoryboard}>ネーム作成！</button>
+    <button class="btn variant-filled-primary" on:click={onBuildStoryboard}>ネーム作成！</button>
   </div>
   {#if notebook.storyboard}
+    <div class="flex flex-row gap-4 mb-4">
+      <span class="flex-grow"></span>
+      <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
+    </div>
     <div class="section">
       <h2>ネームはどう？</h2>
       <div class="w-full">

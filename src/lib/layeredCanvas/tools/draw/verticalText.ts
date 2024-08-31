@@ -1,20 +1,6 @@
 import { kinsokuGenerator, isEmojiAt, leaderChars, trailerChars } from "../kinsoku";
 import { parseMarkdownToJson, richTextIterator, type RichFragment } from "./richText";
-
-interface Rectangle {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface RenderingText {
-  height: number;
-  width: number;
-  lines: RichFragment[][];
-}
-
-type DrawMethod = "fill" | "stroke";
+import type { Rectangle, RenderingText, DrawMethod } from "./typeSetting";
 
 export function drawVerticalText(
   context: CanvasRenderingContext2D, 
@@ -33,7 +19,7 @@ export function drawVerticalText(
   }
 
   let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
-  for (const line of m.lines) {
+  for (const line of m.verticalLines) {
     let lineH = 0;
     let prev = null;
     for (const frag of line) {
@@ -155,7 +141,6 @@ function drawFragment(
     drawRotatedChar(0, ax, ay, 1, 1, s);
   }
 
-  console.log(frag.chars);
   for (const c of frag.chars) {
     // ヒューリスティック、源暎アンチックを基準にしているが、
     // 源暎エムゴなどでは合わないこともあるので若干緩和している
@@ -260,7 +245,7 @@ export function measureVerticalText(
   return {
     height: a.reduce((max, item) => Math.max(max, item.size), 0),
     width: baselineSkip * a.length,
-    lines: a.map(item => item.text)
+    verticalLines: a.map(item => item.text)
   };
 }
 

@@ -106,7 +106,6 @@ export async function generateMarkedPageImages(imagingContext: ImagingContext, p
     const leaves = collectLeaves(page.frameTree);
     sum += leaves.length;
   }
-  onProgress(0.001);
 
   let progress = 0;
   function onProgress2() {
