@@ -120,6 +120,7 @@
     } else {
       undoBookHistory($mainBook);
       revert();
+      focusKeeper.setFocus(null);
     }
   }
 
@@ -129,6 +130,7 @@
     } else {
       redoBookHistory($mainBook);
       revert();
+      focusKeeper.setFocus(null);
     }
   }
 

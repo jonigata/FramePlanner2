@@ -80,6 +80,9 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
             bubble.fillColor = whitenColor(b.color, 0.85);
             bubble.optionContext['shapeExpand'] = 0.06;
 
+            // ３つ以上のピリオドが連続している場合、……に変換
+            bubble.text = bubble.text.replace(/\.{3,}/g, '……');
+
             page.bubbles.push(bubble);
           }
         })
