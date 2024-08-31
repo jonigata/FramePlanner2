@@ -35,10 +35,8 @@
     ctx.translate(size[0] * 0.5, size[1] * 0.5);
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
-    ctx["bubbleDrawMethod"] = "fill";
-    drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
-    ctx["bubbleDrawMethod"] = "stroke";
-    drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    drawBubble(ctx, "fill", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    drawBubble(ctx, "stroke", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
     ctx.restore();
   }
 

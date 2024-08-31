@@ -313,15 +313,14 @@ export class PaperRendererLayer extends Layer {
   }
 
   drawBubble(ctx: CanvasRenderingContext2D, size: Vector, method: string, bubble: Bubble) {
-    ctx['bubbleDrawMethod'] = method; // 行儀が悪い
     const ri = bubble.renderInfo;
     if (ri.unitedPath) {
-      drawPath(ctx, ri.unitedPath, bubble.optionContext);
+      drawPath(ctx, method, ri.unitedPath, bubble.optionContext);
     } else if (!bubble.parent) {
       if (ri.path) {
-        drawPath(ctx, ri.path, bubble.optionContext);
+        drawPath(ctx, method, ri.path, bubble.optionContext);
       } else {
-        drawBubble(ctx, bubble.text, size, bubble.shape, bubble.optionContext);
+        drawBubble(ctx, method, bubble.text, size, bubble.shape, bubble.optionContext);
       }
     }
   }
