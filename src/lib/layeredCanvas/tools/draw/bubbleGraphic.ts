@@ -7,7 +7,10 @@ import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionS
 import { PaperOffset } from 'paperjs-offset'
 import type { Vector, Rect } from "../geometry/geometry";
 import rough from 'roughjs';
-import { Paper } from "../../system/layeredCanvas";
+// import { getStroke, type StrokeOptions } from 'perfect-freehand'
+// import { Paper } from "../../system/layeredCanvas";
+
+// type PressuredPoint = [number, number, number];
 
 export function drawBubble(context: CanvasRenderingContext2D, method: string, seed: string, size: [number, number], shape: string, opts: any) {
   seed = opts.randomSeed ?? 0;
@@ -726,13 +729,13 @@ function drawRoundedMindBubble(context, method, seed, size, opts) {
   drawPath(context, method, path, opts);
 }
 
-export function drawPath(context, method, unified, opts) {
+export function drawPath(context: CanvasRenderingContext2D, method: string, unified: paper.PathItem, opts: any) {
   context.beginPath();
   switch(method) {
     case 'fill':
       if (opts?.shapeExpand && 0 < opts?.shapeExpand) {
         let expansion = Math.min(unified.bounds.width, unified.bounds.height) * opts.shapeExpand;
-        let path = PaperOffset.offset(unified, expansion);
+        let path = PaperOffset.offset(unified as any, expansion);
         context.fill(new Path2D(path.pathData));
       } else {
         context.fill(new Path2D(unified.pathData));
@@ -742,7 +745,7 @@ export function drawPath(context, method, unified, opts) {
       const roughness = opts.roughness ?? 0;
       if (0 < roughness) {
         const seed = (opts.randomSeed ?? 0) + 1;
-        const rc = rough.canvas(context.canvas, {options:{seed, roughness, strokeWidth: context.strokeWidth, stroke: context.strokeStyle}});
+        const rc = rough.canvas(context.canvas, {options:{seed, roughness, strokeWidth: context.lineWidth, stroke: context.strokeStyle as string}});
         rc.path(unified.pathData);
       } else {
         context.stroke(new Path2D(unified.pathData));
@@ -752,6 +755,17 @@ export function drawPath(context, method, unified, opts) {
       context.clip(new Path2D(unified.pathData));
       break;
   }
+}
+
+/*
+function pathToPoints(path, segments = 200) {
+  let points = [];
+  const length = path.length;
+  for (let i = 0; i <= segments; i++) {
+    let point = path.getPointAt(i / segments * length);
+    points.push(point);
+  }
+  return points;
 }
 
 function drawPoints(context, points, color) {
@@ -767,6 +781,7 @@ function drawPoints(context, points, color) {
   context.stroke();
   context.restore();
 }
+*/
 
 function addMind(path: paper.PathItem, seed: string, size: [number, number], opts: any, newOpts: any) {
   const trail = [[0.97, 0.04], [0.8, 0.05], [0.6, 0.08], [0.3, 0.12]];

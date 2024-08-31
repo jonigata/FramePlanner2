@@ -502,6 +502,7 @@ export const bubbleOptionSets = {
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "square": {
     link: {hint:"結合", icon:"unite"}, 
@@ -512,6 +513,7 @@ export const bubbleOptionSets = {
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "ellipse": {
     link: {hint:"結合", icon:"unite"}, 
@@ -522,6 +524,7 @@ export const bubbleOptionSets = {
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0.1 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "concentration": {
     lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
@@ -540,6 +543,7 @@ export const bubbleOptionSets = {
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "strokes": {
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
@@ -569,6 +573,7 @@ export const bubbleOptionSets = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.1 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "shout": {
     link: {hint:"結合", icon:"unite"},
@@ -583,6 +588,7 @@ export const bubbleOptionSets = {
     depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 1.5, step: 0.01, init: b => 0.5, sampleInit: b => 0.1  },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "soft": {
     link: {hint:"結合", icon:"unite"}, 
@@ -599,16 +605,19 @@ export const bubbleOptionSets = {
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     smoothing: { label: "スムース", type: "boolean", init: b => true },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "heart" : {
     link: {hint:"結合", icon:"unite"},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "diamond": {
     link: {hint:"結合", icon:"unite"},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "arrow": {
     link: {hint:"結合", icon:"unite"},
@@ -616,6 +625,7 @@ export const bubbleOptionSets = {
     headLength: { label: "矢じりの長さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "motion-lines": {
     focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
@@ -642,6 +652,7 @@ export const bubbleOptionSets = {
     tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "soft-mind": {
     link: {hint:"結合", icon:"unite"}, 
@@ -656,6 +667,7 @@ export const bubbleOptionSets = {
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     smoothing: { label: "スムース", type: "boolean", init: b => true },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "rounded-mind": {
     link: {hint:"結合", icon:"unite"}, 
@@ -666,6 +678,7 @@ export const bubbleOptionSets = {
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: b => false},
   },
   "none": {},
 };
