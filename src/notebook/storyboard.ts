@@ -24,6 +24,11 @@ const Bubble = annotate(
     owner: t.string,
     speech: annotate(t.string, {description: "セリフは10文字前後までとしろ。また、適切に改行コード(\\n)を入れ、1行5文字程度に収めろ"}),
     color: annotate(t.string, {description: "セリフの色。話者のテーマカラー"}),
+    shape: annotate(t.string, {
+      description: "セリフの形",
+      default: "ellipse",
+      enum: ["rounded", "square", "ellipse", "polygon", "shout", "soft"],
+    }),
   }),
   {description: "キャラクターのセリフ"},
 );

@@ -411,8 +411,10 @@ export class FrameLayer extends Layer {
 
     // 選択ボーダー操作
     if (this.selectedBorder) {
+      console.log("A");
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
+        console.log("B");
         if (r == 'done') {
           return null;
         }
@@ -432,14 +434,7 @@ export class FrameLayer extends Layer {
     } else {
       if (this.litBorder) {
         if (keyDownFlags["KeyT"]) {
-          const target = this.litBorder.layout.element.children[this.litBorder.index-1];
-          FrameElement.transposeDivider(this.frameTree, target);
-          this.onCommit();
-          this.litLayout = null;
-          this.selectedBorder = null;
-          this.litBorder = null;
-          this.selectLayout(null);
-          this.redraw();
+          this.transposeBorder(this.litBorder);
           return null;
         } else {
           return { border: this.litBorder };
@@ -470,6 +465,9 @@ export class FrameLayer extends Layer {
       keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"] ||
       this.slantHorizontalIcon.contains(p) || this.slantVerticalIcon.contains(p)) {
       return { border: this.selectedBorder, action: "slant" };
+    } else if (keyDownFlags["KeyT"]) {
+      this.transposeBorder(this.selectedBorder);
+      return "done";
     } else if (
       this.insertHorizontalIcon.contains(p) || this.insertVerticalIcon.contains(p)) {
       this.onInsert(this.selectedBorder);
@@ -1175,6 +1173,17 @@ export class FrameLayer extends Layer {
     ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
     drawFilmStackBorders(ctx, element.filmStack, paperSize);
     ctx.restore();
+  }
+
+  transposeBorder(border: Border): void {
+    const target = border.layout.element.children[border.index-1];
+    FrameElement.transposeDivider(this.frameTree, target);
+    this.onCommit();
+    this.litLayout = null;
+    this.selectedBorder = null;
+    this.litBorder = null;
+    this.selectLayout(null);
+    this.redraw();
   }
 
 

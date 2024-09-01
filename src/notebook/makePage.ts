@@ -57,6 +57,7 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
         const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
         const n = panel.bubbles.length;
         panel.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
+          console.log(b);
           if (!b.owner || !b.speech) { 
             // do nothing
           } else {
@@ -74,6 +75,7 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
             const size = bubble.calculateFitSize(paperSize);
             bubble.setPhysicalSize(paperSize, size);
 
+            bubble.shape = b.shape;
             bubble.fontFamily = "源暎エムゴ"
             bubble.n_outlineWidth = 0.005;
             bubble.outlineColor = '#ffffff';
@@ -82,6 +84,8 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
 
             // ３つ以上のピリオドが連続している場合、……に変換
             bubble.text = bubble.text.replace(/\.{3,}/g, '……');
+
+            bubble.initOptions();
 
             page.bubbles.push(bubble);
           }
