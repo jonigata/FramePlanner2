@@ -57,8 +57,8 @@
   import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
   import Notebook from './notebook/Notebook.svelte';
 
-  const advertiser = "thumbnail_stories";
-  //const advertiser = null;
+  //const advertiser = "thumbnail_stories";
+  const advertiser = null;
 
   const modalComponentRegistry: Record<string, ModalComponent> = {
     comic: {

@@ -306,7 +306,6 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
     }
   } else {
     for (let ii = 0; ii < frameTree.children.length; ii++) {
-      console.log(dir);
       const i = dir === 'left-to-right' && frameTree.direction == 'h' ? frameTree.children.length - ii - 1 : ii;
       const child = frameTree.children[i];
       const { slots: l, contents: c } = collectFrameContents(page, pageNumber, child, pageLayout, bubbles, dir);
@@ -352,6 +351,10 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
 
     for (let b of content.bubbles) {
       b.pageNumber = slot.pageNumber;
+      if (slot.page !== content.sourcePage) {
+        content.sourcePage.bubbles.splice(content.sourcePage.bubbles.findIndex(e => e === b), 1);
+        slot.page.bubbles.push(b);
+      }
       const bc = b.getPhysicalCenter(content.sourcePage.paperSize);
       const cc: Vector = [
         tx + tw * (bc[0] - sx) / sw,
