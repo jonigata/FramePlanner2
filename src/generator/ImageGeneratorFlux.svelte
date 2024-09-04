@@ -14,6 +14,7 @@
   import { createCanvasFromImage } from '../utils/imageUtil';
   import { type ImagingContext, generateFluxImage } from '../utils/feathralImaging';
   import SliderEdit from '../utils/SliderEdit.svelte';
+  import feathralIcon from '../assets/feathral.png';
 
   export let busy: boolean;
   export let prompt: string;
@@ -25,8 +26,8 @@
   let initialSize = "square_hd";
   let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
-  let pro = false;
   let batchCount = 1;
+  let mode = "schnell";
 
   function onChooseImage({detail}) {
     chosen = detail;
@@ -36,7 +37,18 @@
     busy = true;
     try {
       progress = 0;
-      let delta = pro ? 1 / 24 : 1 / 5;
+      let delta = 0;
+      switch (mode) {
+        case "schnell":
+          delta = 1 / 5;
+          break;
+        case "pro":
+          delta = 1 / 24;
+          break;
+        case "chibi":
+          delta = 1 / 12;
+          break;
+      }
       const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
       let imagingContext: ImagingContext = {
         awakeWarningToken: false,
@@ -49,7 +61,7 @@
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${prompt}`, size, pro, batchCount, imagingContext);
+          return await generateFluxImage(`${postfix}\n${prompt}`, size, mode, batchCount, imagingContext);
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
@@ -92,8 +104,23 @@
   {#if $onlineAccount != null}
   <p><Feathral/></p>
 
-  <p>プロ(feathral x10)</p>
-  <input type="checkbox" bind:checked={pro}/>
+  <p>モード</p>
+  <div class="vbox left gap-2 mode">
+    <RadioGroup>
+      <RadioItem bind:group={mode} name={"mode"} value={"schnell"}>
+        <span class="w-64">Schnell</span>
+        <span class="w-64 flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x1</span>
+      </RadioItem>
+      <RadioItem bind:group={mode} name={"mode"} value={"pro"}>
+        <span class="w-64">Pro</span>
+        <span class="w-64 flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x10</span>
+      </RadioItem>
+      <RadioItem bind:group={mode} name={"mode"} value={"chibi"}>
+        <span class="w-64">ちび</span>
+        <span class="w-64 flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x10</span>
+      </RadioItem>
+    </RadioGroup>
+  </div>
 
   <p>スタイル</p>
   <textarea class="w-96 textarea" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
@@ -169,4 +196,7 @@
   .warning {
     color: #d22;
   }
+  .mode :global(.radio-item) {
+    width: 80px;
+  }  
 </style>

@@ -22,6 +22,8 @@ export type ImagingResult = {
   feathral: number;
 };
 
+export type Mode = "schnell" | "pro" | "chibi";
+
 export async function generateImage(prompt: string, width: number, height: number, context: ImagingContext): Promise<ImagingResult> {
   console.log("running feathral");
   try {
@@ -59,7 +61,7 @@ export async function generateImage(prompt: string, width: number, height: numbe
   }
 }
 
-export async function generateFluxImage(prompt: string, image_size: string, pro: boolean, num_images: number, context: ImagingContext): Promise<ImagingResult> {
+export async function generateFluxImage(prompt: string, image_size: string, mode: Mode, num_images: number, context: ImagingContext): Promise<ImagingResult> {
   console.log("running feathral");
   try {
     let q = null;
@@ -70,7 +72,7 @@ export async function generateFluxImage(prompt: string, image_size: string, pro:
       }, 10000);
       context.awakeWarningToken = false;
     }
-    let imageRequest = {prompt, image_size, pro, num_images};
+    let imageRequest = {prompt, image_size, mode, num_images};
     console.log(imageRequest);
 
     const perf = performance.now();
@@ -154,7 +156,7 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
 
 async function generateFrameImage(imagingContext: ImagingContext, postfix: string, frame: FrameElement) {
   console.log("postfix", postfix);
-  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", false, 1, imagingContext);
+  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", "schnell", 1, imagingContext);
   if (result != null) {
     await result.images[0].decode();
     const film = new Film();
