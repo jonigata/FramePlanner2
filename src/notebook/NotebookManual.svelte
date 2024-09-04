@@ -220,7 +220,7 @@
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", false, 1, imagingContext);
+          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", "schnell", 1, imagingContext);
         });
       await result.images[0].decode();
       console.log(result);

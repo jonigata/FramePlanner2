@@ -12,7 +12,7 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
-  import { type ImagingContext, generateFluxImage } from '../utils/feathralImaging';
+  import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import feathralIcon from '../assets/feathral.png';
 
@@ -27,7 +27,7 @@
   let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
   let batchCount = 1;
-  let mode = "schnell";
+  let mode: Mode = "schnell";
 
   function onChooseImage({detail}) {
     chosen = detail;

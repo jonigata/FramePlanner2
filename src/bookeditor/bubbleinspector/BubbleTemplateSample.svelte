@@ -28,10 +28,8 @@
     ctx.fillStyle = bubble.fillColor;
     ctx.strokeStyle = 0 < bubble.n_strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
     ctx.lineWidth = bubble.getPhysicalStrokeWidth(size) * 4;
-    ctx["bubbleDrawMethod"] = "fill";
-    drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
-    ctx["bubbleDrawMethod"] = "stroke";
-    drawBubble(ctx, 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    drawBubble(ctx, 'sample', "fill", [canvas.width - 16, canvas.height - 16], p, opts);
+    drawBubble(ctx, 'sample', "stroke", [canvas.width - 16, canvas.height - 16], p, opts);
     ctx.restore();
   });
 

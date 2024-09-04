@@ -33,7 +33,7 @@
 
   async function generate(frame: FrameElement) {
     console.log("postfix", postfix);
-    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", false, 1, imagingContext);
+    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", "schnell", 1, imagingContext);
     if (result != null) {
       await result.images[0].decode();
       const film = new Film();
