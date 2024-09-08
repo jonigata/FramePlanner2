@@ -22,7 +22,7 @@ export type ImagingResult = {
   feathral: number;
 };
 
-export type Mode = "schnell" | "pro" | "chibi";
+export type Mode = "schnell" | "pro" | "chibi" | "manga";
 
 export async function generateImage(prompt: string, width: number, height: number, context: ImagingContext): Promise<ImagingResult> {
   console.log("running feathral");
@@ -98,7 +98,7 @@ export async function generateFluxImage(prompt: string, image_size: string, mode
   }
 }
 
-export async function generateMarkedPageImages(imagingContext: ImagingContext, postfix: string, onProgress: (progress: number) => void) {
+export async function generateMarkedPageImages(imagingContext: ImagingContext, postfix: string, mode: Mode, onProgress: (progress: number) => void) {
   const marks = get(bookEditor).getMarks();
   const newPages = get(mainBook).pages.filter((p, i) => marks[i]);
 
@@ -121,11 +121,11 @@ export async function generateMarkedPageImages(imagingContext: ImagingContext, p
     imagingContext.succeeded = 0;
     imagingContext.failed = 0;
     onProgress(progress / sum);
-    await generatePageImages(imagingContext, postfix, page, onProgress2);
+    await generatePageImages(imagingContext, postfix, mode, page, onProgress2);
   }
 }
 
-export async function generatePageImages(imagingContext: ImagingContext, postfix: string, page: Page, onProgress: () => void) {
+export async function generatePageImages(imagingContext: ImagingContext, postfix: string, mode: Mode, page: Page, onProgress: () => void) {
   imagingContext.awakeWarningToken = true;
   imagingContext.errorToken = true;
   const leaves = collectLeaves(page.frameTree);
@@ -133,7 +133,7 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
   for (const leaf of leaves) {
     promises.push(
       (async (): Promise<void> => {
-        await generateFrameImage(imagingContext, postfix, leaf);
+        await generateFrameImage(imagingContext, postfix, mode, leaf);
         onProgress();
       })());
   }
@@ -154,9 +154,9 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
 }
 
 
-async function generateFrameImage(imagingContext: ImagingContext, postfix: string, frame: FrameElement) {
+async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: Mode, frame: FrameElement) {
   console.log("postfix", postfix);
-  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", "schnell", 1, imagingContext);
+  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", mode, 1, imagingContext);
   if (result != null) {
     await result.images[0].decode();
     const film = new Film();

@@ -4,7 +4,7 @@
   import { commitBook } from '../bookeditor/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
-  import { type ImagingContext, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
+  import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
   import { persistent } from '../utils/persistent';
   import { onlineAccount } from '../utils/accountStore';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
@@ -18,6 +18,7 @@
   import NotebookCharacterList from './NotebookCharacterList.svelte';
   import Feathral from '../utils/Feathral.svelte';
   import { ProgressBar } from '@skeletonlabs/skeleton';
+  import FluxModes from '../generator/FluxModes.svelte';
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 
@@ -37,6 +38,7 @@
     succeeded: 0,
     failed: 0,
   };
+  let imagingMode: Mode = "schnell";
 
   function commit() {
     commitBook($mainBook, null);
@@ -220,7 +222,7 @@
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", "schnell", 1, imagingContext);
+          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, "square", imagingMode, 1, imagingContext);
         });
       await result.images[0].decode();
       console.log(result);
@@ -254,6 +256,7 @@
     await generateMarkedPageImages(
       imagingContext, 
       postfix, 
+      imagingMode,
       (x: number) => {
         imageProgress = Math.max(0.001, x);
         imagingContext = imagingContext;
@@ -337,7 +340,8 @@
     <button class="btn variant-filled-primary" on:click={onBuildStoryboard}>ネーム作成！</button>
   </div>
   {#if notebook.storyboard}
-    <div class="flex flex-row gap-4 mb-4">
+    <div class="flex flex-row gap-4 mb-4 items-center">
+      <FluxModes bind:mode={imagingMode}/>
       <span class="flex-grow"></span>
       <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
     </div>

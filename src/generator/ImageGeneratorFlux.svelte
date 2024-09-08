@@ -14,7 +14,7 @@
   import { createCanvasFromImage } from '../utils/imageUtil';
   import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
   import SliderEdit from '../utils/SliderEdit.svelte';
-  import feathralIcon from '../assets/feathral.png';
+  import FluxModes from './FluxModes.svelte';
 
   export let busy: boolean;
   export let prompt: string;
@@ -46,6 +46,9 @@
           delta = 1 / 24;
           break;
         case "chibi":
+          delta = 1 / 12;
+          break;
+        case "manga":
           delta = 1 / 12;
           break;
       }
@@ -106,20 +109,7 @@
 
   <p>モード</p>
   <div class="vbox left gap-2 mode">
-    <RadioGroup>
-      <RadioItem bind:group={mode} name={"mode"} value={"schnell"}>
-        <span class="w-64">Schnell</span>
-        <span class="w-64 flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x1</span>
-      </RadioItem>
-      <RadioItem bind:group={mode} name={"mode"} value={"pro"}>
-        <span class="w-64">Pro</span>
-        <span class="w-64 flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x10</span>
-      </RadioItem>
-      <RadioItem bind:group={mode} name={"mode"} value={"chibi"}>
-        <span class="w-64">ちび</span>
-        <span class="w-64 flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x10</span>
-      </RadioItem>
-    </RadioGroup>
+    <FluxModes bind:mode={mode}/>
   </div>
 
   <p>スタイル</p>
@@ -196,7 +186,4 @@
   .warning {
     color: #d22;
   }
-  .mode :global(.radio-item) {
-    width: 80px;
-  }  
 </style>
