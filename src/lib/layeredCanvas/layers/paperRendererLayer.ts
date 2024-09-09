@@ -1,5 +1,5 @@
 import { type Vector, reverse2D } from "../tools/geometry/geometry";
-import { drawBubble, getPath, drawPath } from "../tools/draw/bubbleGraphic";
+import { drawBubble, getPath, drawPath, type DrawMethod } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
 import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
 import { drawFilmStack } from "../tools/draw/drawFilmStack";
@@ -312,7 +312,7 @@ export class PaperRendererLayer extends Layer {
     ctx.restore();
   }
 
-  drawBubble(ctx: CanvasRenderingContext2D, size: Vector, method: string, bubble: Bubble) {
+  drawBubble(ctx: CanvasRenderingContext2D, size: Vector, method: DrawMethod, bubble: Bubble) {
     const ri = bubble.renderInfo;
     if (ri.unitedPath) {
       drawPath(ctx, method, ri.unitedPath, bubble.optionContext);

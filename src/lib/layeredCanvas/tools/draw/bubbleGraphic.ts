@@ -12,7 +12,9 @@ import rough from 'roughjs';
 
 // type PressuredPoint = [number, number, number];
 
-export function drawBubble(context: CanvasRenderingContext2D, method: string, seed: string, size: [number, number], shape: string, opts: any) {
+export type DrawMethod = "fill" | "stroke" | "clip";
+
+export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: [number, number], shape: string, opts: any) {
   seed = opts.randomSeed ?? 0;
 
   switch (shape) {
