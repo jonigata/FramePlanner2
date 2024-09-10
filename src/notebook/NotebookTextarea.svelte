@@ -3,8 +3,10 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   import bellIcon from '../assets/bell.png';
+  import clipboardIcon from '../assets/clipboard.png';
 
   const dispatch = createEventDispatcher();
 
@@ -13,6 +15,10 @@
   export let minHeight = 60;
   export let placeholder = '';
 
+  function copyToClipboard() {
+    navigator.clipboard.writeText(value);
+    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+  }
 </script>
 
 <div class="textarea-container">
@@ -22,10 +28,13 @@
     </div>
   {:else}
     <AutoSizeTextarea minHeight={minHeight} bind:value={value} placeholder={placeholder}/>
-    <div class="icon-container">
+    <div class="icon-container flex flex-row-reverse gap-2">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！"} />
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <img src={clipboardIcon} alt="クリップボードにコピー" on:click={copyToClipboard} use:toolTip={"クリップボードにコピー"} />
     </div>
   {/if}
 </div>        
