@@ -84,6 +84,7 @@
   async function onCharactersAdvise() {
     try {
       charactersWaiting = true;
+      notebook.characters = [];
       const newCharacters = await callAdvise('characters', notebook);
       newCharacters.forEach(c => c.ulid = ulid());
       notebook.characters = newCharacters;
