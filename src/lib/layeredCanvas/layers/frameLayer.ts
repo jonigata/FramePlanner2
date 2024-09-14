@@ -1042,7 +1042,7 @@ export class FrameLayer extends Layer {
 
   relayoutFrameIcons(layout: Layout): void {
     const rscale = 1 / this.paper.matrix.a;
-    const minSize = 320 * rscale;
+    const minSize = 240 * rscale;
     const origin = layout.rawOrigin;
     const size = layout.rawSize;
     const [x, y, w, h] = ensureMinRectSize(minSize, [...origin, ...size]);
