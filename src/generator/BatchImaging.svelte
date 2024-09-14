@@ -4,7 +4,6 @@
   import { collectLeaves } from '../lib/layeredCanvas/dataModels/frameTree';
   import Drawer from '../utils/Drawer.svelte'
   import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
-  import BatchImagingFeathral from './BatchImagingFeathral.svelte';
   import BatchImagingFlux from './BatchImagingFlux.svelte';
   import { commitBook, type Page } from "../bookeditor/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
@@ -60,8 +59,7 @@
   <div class="drawer-content">
     <TabGroup regionList="h-12">
       <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={0}><span class="tab"><img class="image" src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
-      <Tab regionTab="w-24" bind:group={tabSet} name="tab2" value={1}><span class="tab"><img class="image" src={feathralIcon} alt="feathral" width=24 height=24/>Feathral</span></Tab>
-      <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={2}>Dall・E 3</Tab>
+      <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={1}>Dall・E 3</Tab>
       <svelte:fragment slot="panel">
         {#if busy}
           <div class="content">
@@ -86,9 +84,6 @@
                 <BatchImagingFlux bind:this={flux} bind:imagingContext={imagingContext}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
               {:else if tabSet === 1}
-                <BatchImagingFeathral bind:this={feathral} bind:imagingContext={imagingContext}/>
-                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(feathral)}>開始</button>
-              {:else if tabSet === 2}
                 <BatchImagingDalle3 bind:this={dalle3} bind:imagingContext={imagingContext}/>
                 <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
               {/if}
