@@ -56,43 +56,43 @@
 </script>
 
 <Drawer open={$batchImagingPage != null} size="220px" on:clickAway={() => $batchImagingPage = null} placement={"top"}>
-  <div class="drawer-content">
+  <div class="drawer-content flex flex-col">
     <TabGroup regionList="h-12">
       <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={0}><span class="tab"><img class="image" src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
       <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={1}>Dall・E 3</Tab>
-      <svelte:fragment slot="panel">
-        {#if busy}
-          <div class="content">
-            <ProgressRadial width={"w-16"}/>
-            <div class="hbox gap-2">
-              <div>成功</div>
-              <div>{imagingContext.succeeded}</div>
-              <div>失敗</div>
-              <div>{imagingContext.failed}</div>
-              <div>合計</div>
-              <div>{imagingContext.total}</div>
-            </div>
-          </div>
-        {:else}
-          <div class="hbox">
-            <div class="common w-64">
-              <div>画像一括生成</div>
-              <div>{filledCount}/{totalCount}</div>
-            </div>
-            <div class="content">
-              {#if tabSet === 0}
-                <BatchImagingFlux bind:this={flux} bind:imagingContext={imagingContext}/>
-                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
-              {:else if tabSet === 1}
-                <BatchImagingDalle3 bind:this={dalle3} bind:imagingContext={imagingContext}/>
-                <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
-              {/if}
-            </div>
-          </div>
-        {/if}
-      </svelte:fragment> 
     </TabGroup>  
-  </div>
+    <div class="w-full h-full">
+      {#if busy}
+        <div class="content">
+          <ProgressRadial width={"w-16"}/>
+          <div class="hbox gap-2">
+            <div>成功</div>
+            <div>{imagingContext.succeeded}</div>
+            <div>失敗</div>
+            <div>{imagingContext.failed}</div>
+            <div>合計</div>
+            <div>{imagingContext.total}</div>
+          </div>
+        </div>
+      {:else}
+        <div class="hbox h-full">
+          <div class="common w-64 h-full flex flex-col justify-center gap-2">
+            <div>画像一括生成</div>
+            <div>{filledCount}/{totalCount}</div>
+          </div>
+          <div class="content h-full flex flex-col justify-center gap-2">
+            {#if tabSet === 0}
+              <BatchImagingFlux bind:this={flux} bind:imagingContext={imagingContext}/>
+              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
+            {:else if tabSet === 1}
+              <BatchImagingDalle3 bind:this={dalle3} bind:imagingContext={imagingContext}/>
+              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </div> 
+</div>
 </Drawer>  
 
 <style>
@@ -105,7 +105,7 @@
     flex-direction: row;
   }
   .common {
-    font-family: 'Yu Gothic', sans-serif;
+    font-family: '源暎エムゴ';
     font-weight: 500;
     font-size: 24px;
     text-align: center;

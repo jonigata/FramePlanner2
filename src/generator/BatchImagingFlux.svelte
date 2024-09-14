@@ -79,7 +79,7 @@
   });
 </script>
 
-<div class="drawer-content">
+<div class="flex flex-col justify-center gap-2">
   <div class="hbox gap-2">
     スタイル
     <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>

@@ -91,19 +91,13 @@
   });
 </script>
 
-<div class="drawer-content">
+<div class="flex flex-col justify-center gap-2">
   <div class="hbox gap-2">API key <input type="password" autocomplete="off" bind:value={apiKey}/></div>
 </div>
 
 <KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
-  .drawer-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-  }
   input {
     width: 450px;
     font-size: 15px;
