@@ -35,7 +35,7 @@ export class BubbleLayer extends Layer {
   bubbles: Bubble[];
   fold: number;
   onFocus: (bubble: Bubble) => void;
-  onCommit: () => void;
+  onCommit: (weak?: boolean) => void;
   onRevert: () => void;
   onPotentialCrossPage: (bubble: Bubble) => void;
   defaultBubbleSlot: DefaultBubbleSlot;
@@ -64,7 +64,7 @@ export class BubbleLayer extends Layer {
     bubbles: Bubble[],
     fold: number,
     onFocus: (bubble: Bubble) => void,
-    onCommit: () => void,
+    onCommit: (weak?: boolean) => void,
     onRevert: () => void,
     onPotentialCrossPage: (bubble: Bubble) => void) {
 
@@ -376,6 +376,31 @@ export class BubbleLayer extends Layer {
     if (event.code === "KeyV" && event.ctrlKey) {
       console.log("paste");
       return await this.pasteBubble();
+    }
+    // カーソルキー
+    if (this.selected) {
+      if (event.code === 'ArrowLeft') {
+        if (this.selected.optionSet.randomSeed) {
+          this.selected.optionContext.randomSeed -= 1;
+          if (this.selected.optionContext.randomSeed < 0) {
+            this.selected.optionContext.randomSeed = 100;
+          }
+          this.onCommit(true);
+          this.redraw();
+          return true;
+        }
+      }
+      if (event.code === 'ArrowRight') {
+        if (this.selected.optionSet.randomSeed) {
+          this.selected.optionContext.randomSeed += 1;
+          if (100 < this.selected.optionContext.randomSeed) {
+            this.selected.optionContext.randomSeed = 0;
+          }
+          this.onCommit(true);
+          this.redraw();
+          return true;
+        }
+      }
     }
     return false;
   }

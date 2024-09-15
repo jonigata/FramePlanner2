@@ -136,7 +136,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     (bubble: Bubble) => { 
       focusBubble(page, bubble);
     },
-    () => { commit(null); },
+    (weak?: boolean) => { commit(weak ? 'bubble' : null); },
     () => { revert(); },
     (bubble: Bubble) => { potentialCrossPage(layeredCanvas, book, page, bubble); });
   paper.addLayer(bubbleLayer);

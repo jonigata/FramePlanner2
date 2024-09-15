@@ -23,7 +23,7 @@ export function getBubbleName(shape: string) {
     case "polygon": return "多角形";
     case "strokes": return "線";
     case "double-strokes":  return "二重線";
-    case "harsh":   return "怒り";
+    case "harsh":   return "トゲトゲ";
     case "shout":   return "シャウト";
     case "soft":    return "やわらか";
     case "heart":   return "ハート";

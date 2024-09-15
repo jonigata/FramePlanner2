@@ -102,6 +102,9 @@
 
   function commit(tag: HistoryTag) {
     delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
+    if (tag === 'bubble') {
+      $bubble = $bubble;
+    }
   }
 
   function revert() {
