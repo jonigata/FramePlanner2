@@ -14,6 +14,35 @@ import rough from 'roughjs';
 
 export type DrawMethod = "fill" | "stroke" | "clip";
 
+export function getBubbleName(shape: string) {
+  switch (shape) {
+    case "rounded": return "角丸";
+    case "square":  return "四角形";
+    case "ellipse": return "楕円";
+    case "concentration": return "意識";
+    case "polygon": return "多角形";
+    case "strokes": return "線";
+    case "double-strokes":  return "二重線";
+    case "harsh":   return "怒り";
+    case "shout":   return "シャウト";
+    case "soft":    return "やわらか";
+    case "heart":   return "ハート";
+    case "diamond": return "ダイヤ";
+    case "arrow":   return "矢印";
+    case "motion-lines":  return "集中線";
+    case "speed-lines":   return "流線";
+    case "ellipse-mind":  return "楕円？";
+    case "soft-mind":     return "やわらか？";
+    case "rounded-mind":  return "角丸？";
+    case "none":      return "なし";
+    default:
+      throw new Error(
+        `Unknown bubble : ${shape}`
+      );
+  }
+}
+
+
 export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: [number, number], shape: string, opts: any) {
   seed = opts.randomSeed ?? 0;
 

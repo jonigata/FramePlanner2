@@ -107,12 +107,13 @@
         const index = notebook.characters.findIndex((v) => v.name === c.name);
         if (index < 0) {
           c.ulid = ulid();
+          notebook.characters.push(c);
         } else {
           c.portrait = notebook.characters[index].portrait;
           c.ulid = notebook.characters[index].ulid;
+          notebook.characters[index] = c;
         }
       }
-      notebook.characters = newCharacters;
       commit();
     }
     catch(e) {

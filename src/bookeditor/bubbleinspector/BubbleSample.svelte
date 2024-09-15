@@ -1,17 +1,19 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
   import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
-  import { drawBubble } from "../../lib/layeredCanvas/tools/draw/bubbleGraphic";
+  import { drawBubble, getBubbleName } from "../../lib/layeredCanvas/tools/draw/bubbleGraphic";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
 
   export let size: Vector = [64, 96];
   export let shape = 'rounded';
 
   let canvas: HTMLCanvasElement;
+  let displayName = '？？';
 
   const dispatch = createEventDispatcher();
 
   onMount(() => {
+    displayName = getBubbleName(shape);
     redraw(shape);
   });
 
@@ -44,6 +46,7 @@
 
 <div class="canvas-container" style="width: {size[0]}px; height: {size[1]}px;">
   <canvas width="{size[0]}px" height="{size[1]}px" bind:this={canvas} on:click={click}/>
+  <span class="caption">{displayName}</span>
 </div>
 
 <style>
@@ -60,5 +63,16 @@
     top: 0;
     left: 0;
     cursor: pointer;
+  }
+  .caption {
+    position: absolute;
+    font-size: 12px;
+    color: rgb(8, 7, 75);
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    -webkit-text-stroke: 0.4px #ddd;    
+    font-family: '源暎エムゴ';
+    height: 18px;
   }
 </style>
