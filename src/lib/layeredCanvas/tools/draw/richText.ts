@@ -66,49 +66,51 @@ export interface RichFragment {
   romanHanging?: boolean;
 }
 
+function isHalfWidth(char: string): boolean {
+  return /^[\u0020-\u007E\uFF61-\uFF9F]$/.test(char);
+}
+
 function getCompleteEmojiSequence(text: string, index: number): string | null {
   const regex = /(\p{Emoji}(\uFE0F|\u200D\p{Emoji})*)/u;
   const match = text.slice(index).match(regex);
-  if (match && match.index === 0) {
+  if (match && match.index === 0 && !isHalfWidth(match[0])) {
     return match[0];
   }
   return null;
 }
 
-function isLatin1(char: string): boolean {
-  return /^[\u0000-\u00FF]$/.test(char);
-}
-
 function* characterGroupIterator(text: string): Generator<string, void, unknown> {
   let current = '';
-  let isCurrentLatin1 = false;
+  let isCurrentHalfWidth = false;
   let i = 0;
 
   while (i < text.length) {
     const char = text[i];
-    const emojiSequence = getCompleteEmojiSequence(text, i);
 
-    if (emojiSequence) {
-      if (current) yield current;
-      yield emojiSequence;
-      current = '';
-      isCurrentLatin1 = false;
-      i += emojiSequence.length;
-    } else if (isLatin1(char)) {
-      if (isCurrentLatin1) {
+    if (isHalfWidth(char)) {
+      if (isCurrentHalfWidth) {
         current += char;
       } else {
         if (current) yield current;
         current = char;
-        isCurrentLatin1 = true;
+        isCurrentHalfWidth = true;
       }
       i++;
     } else {
-      if (current) yield current;
-      yield char;
-      current = '';
-      isCurrentLatin1 = false;
-      i++;
+      const emojiSequence = getCompleteEmojiSequence(text, i);
+      if (emojiSequence) {
+        if (current) yield current;
+        yield emojiSequence;
+        current = '';
+        isCurrentHalfWidth = false;
+        i += emojiSequence.length;
+      } else {
+        if (current) yield current;
+        yield char;
+        current = '';
+        isCurrentHalfWidth = false;
+        i++;
+      }
     }
   }
 
@@ -118,6 +120,7 @@ function* characterGroupIterator(text: string): Generator<string, void, unknown>
 export function* richTextIterator(segments: Segment[]): Generator<RichFragment, void, unknown> {
   for (const segment of segments) {
     const chars = [...characterGroupIterator(segment.content)];
+    console.log("RTI", chars);
     
     if (segment.ruby) {
       yield {
