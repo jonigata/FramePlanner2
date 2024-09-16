@@ -110,6 +110,7 @@
 <style> 
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
+    padding: 8px;
   }
   .drawer-content {
     position: relative;
@@ -138,6 +139,10 @@
   .font-sample img {
     margin-left: 8px;
     cursor: pointer;
+  }
+  h1 {
+    font-family: '源暎エムゴ';
+    font-size: 32px;
   }
 
 </style>

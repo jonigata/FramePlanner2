@@ -11,6 +11,7 @@
   import { fileSystem } from '../filemanager/fileManagerStore';
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
+  import { exportPrompts } from "./saver/exportPrompts";
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -46,6 +47,10 @@
             const s = await exportEnvelope($fileSystem, file);
             const blob = new Blob([s], {type: "text/plain;charset=utf-8"});
             saveAs(blob, "envelope.json");
+            break;
+          case 'export-prompts':
+            await exportPrompts(targetPages);
+
             break;
         }
       }

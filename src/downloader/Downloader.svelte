@@ -18,6 +18,7 @@
     {label: "PSDでエクスポート", onClick: downloadPSD},
     {label: "シェア", onClick: shareBook},
     {label: "パッケージ", onClick: downloadEnvelop},
+    {label: "プロンプトをクリップボードにコピー", onClick: exportPrompts},
   ];  
 
   function archive(op: BookArchiveOperation) {
@@ -39,7 +40,6 @@
     logEvent(getAnalytics(), 'copy_book_to_clipboard');
     archive('copy');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
-
   }
 
   async function downloadPSD() {
@@ -55,6 +55,12 @@
   async function downloadEnvelop() {
     logEvent(getAnalytics(), 'download_envelop');
     archive('envelope');
+  }
+
+  async function exportPrompts() {
+    logEvent(getAnalytics(), 'export_prompts');
+    archive('export-prompts');
+    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
 
 </script>
