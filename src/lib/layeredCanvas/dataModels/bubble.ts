@@ -79,7 +79,7 @@ export class Bubble {
     const unit = 1 / 840;
     this.n_offset = [0, 0];
     this.rotation = 0;
-    this.shape = "rounded";
+    this.shape = "soft";
     this.embedded = false;
     this.fontStyle = "normal";
     this.fontWeight = "400";

@@ -73,6 +73,7 @@
     <button class="drawer-page-left px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={() => drawerPage = 0}>&lt; Webフォント</button>
     {/if}
     <h1>フォント</h1>
+    ctrlキーを押しながらクリックで閉じずに選択
     {#if drawerPage === 0}
     <div class="hbox gap my-2">
       <SlideToggle name="slider-label" size="sm" bind:checked={searchOptions.mincho}></SlideToggle>明
