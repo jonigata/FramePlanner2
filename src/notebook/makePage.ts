@@ -1,7 +1,6 @@
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
-import { frameExamples, aiTemplates } from '../lib/layeredCanvas/tools/frameExamples'
 import { newPage } from "../bookeditor/book";
 import type * as Storyboard from './storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';

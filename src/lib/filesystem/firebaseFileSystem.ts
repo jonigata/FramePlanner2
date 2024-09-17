@@ -1,11 +1,11 @@
 import { ulid } from 'ulid';
 import type { NodeId, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
-import { getAuth } from '../../firebase';
+import { getAuth, getCurrentUserOrSignInAnonymously } from '../../firebase';
 import { createCanvasFromBlob } from '../../utils/imageUtil';
 
 export class FirebaseFileSystem extends FileSystem {
@@ -21,8 +21,7 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async open(referenceUserId: string) {
-    const auth = getAuth();
-    const userCredential = await signInAnonymously(auth);
+    const userCredential = await getCurrentUserOrSignInAnonymously();
 
     referenceUserId ??= userCredential.user.uid;
     console.log(`anonymousUsers/${referenceUserId}`);
@@ -198,18 +197,6 @@ export class FirebaseFolder extends Folder {
     const entries = await this.list();
     return entries.filter((entry) => entry[1] === name);
   }
-}
-
-export async function signUp(email: string, password: string): Promise<string> {
-  const auth = getAuth();
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  return userCredential.user.uid;
-}
-
-export async function signIn(email: string, password: string): Promise<string> {
-  const auth = getAuth();
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  return userCredential.user.uid;
 }
 
 async function sha1(message: string) {

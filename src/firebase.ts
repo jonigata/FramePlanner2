@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { type FirebaseApp, initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { getAuth, signInAnonymously, type UserCredential, onAuthStateChanged, type User } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type { Storyboard } from "./utils/hiruma";
 import firebase from 'firebase/compat/app';
@@ -36,9 +36,33 @@ export function initializeApp2(authDomain: string) {
   app = initializeApp(firebaseConfig);
 }
 
+export async function getCurrentUserOrSignInAnonymously(): Promise<UserCredential> {
+  const auth = getAuth(app);
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+      unsubscribe(); // リスナーを解除
+      try {
+        if (user) {
+          // 既存のユーザーが見つかった場合
+          resolve({
+            user: user,
+            providerId: user.providerId,
+            operationType: "signIn"
+          } as UserCredential);
+        } else {
+          // ユーザーが見つからない場合、匿名サインインを実行
+          const userCredential = await signInAnonymously(auth);
+          resolve(userCredential);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
 export async function postContact(s) {
-    const auth = getAuth(app);
-    const userCredential = await signInAnonymously(auth);
+    const userCredential = await getCurrentUserOrSignInAnonymously();
 
     const userId = userCredential.user.uid;
     const database = getDatabase(app);
@@ -51,8 +75,7 @@ export async function postContact(s) {
 }
 
 export async function shareTemplate(doc) {
-  const auth = getAuth(app);
-  const userCredential = await signInAnonymously(auth);
+  const userCredential = await getCurrentUserOrSignInAnonymously();
 
   const userId = userCredential.user.uid;
   const database = getDatabase(app);
@@ -73,8 +96,7 @@ export async function loadTemplate(key) {
 }
 
 export async function getLayover(key: string): Promise<Storyboard> {
-  const auth = getAuth(app);
-  await signInAnonymously(auth);
+  const userCredential = await getCurrentUserOrSignInAnonymously();
 
   const database = getDatabase(app);
   const docRef = ref(database, `layover/${key}/data`);
