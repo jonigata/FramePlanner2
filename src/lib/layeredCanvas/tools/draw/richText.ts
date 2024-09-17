@@ -120,7 +120,6 @@ function* characterGroupIterator(text: string): Generator<string, void, unknown>
 export function* richTextIterator(segments: Segment[]): Generator<RichFragment, void, unknown> {
   for (const segment of segments) {
     const chars = [...characterGroupIterator(segment.content)];
-    console.log("RTI", chars);
     
     if (segment.ruby) {
       yield {
