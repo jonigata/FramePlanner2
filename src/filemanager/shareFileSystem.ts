@@ -3,7 +3,7 @@ import { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
 
 export async function buildFileSystem(referenceUserId: string): Promise<FileSystem> {
   const fs = new FirebaseFileSystem();
-  await fs.open(referenceUserId);
+  await fs.openShared(referenceUserId);
   const root = await fs.getRoot();
 
   const imageFolder = await root.getEntryByName('画像');

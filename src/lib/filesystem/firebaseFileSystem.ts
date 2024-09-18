@@ -1,35 +1,40 @@
 import { ulid } from 'ulid';
 import type { NodeId, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
-import { getAuth, getCurrentUserOrSignInAnonymously } from '../../firebase';
 import { createCanvasFromBlob } from '../../utils/imageUtil';
+import { getCurrentUserOrSignInAnonymously } from '../../firebase';
 
 export class FirebaseFileSystem extends FileSystem {
-  userId: string;
   database: Database;
-  userRef: DatabaseReference;
+  boxRef: DatabaseReference;
   nodesRef: DatabaseReference;
   storage: FirebaseStorage;
+  boxId: string;
 
   constructor() {
     super();
     this.storage = getStorage();
   }
 
-  async open(referenceUserId: string) {
+  async openShared(key: string) {
+    this.database = getDatabase();
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
-    referenceUserId ??= userCredential.user.uid;
-    console.log(`anonymousUsers/${referenceUserId}`);
+    if (key) {
+      console.log(`read shares/${key}`);
+      this.boxRef = ref(this.database, `shares/${key}`);
+    } else {
+      console.log(`write shares/${key}`);
+      this.boxRef = ref(this.database, `shares/${ulid()}`);
+      // set author
+      await set(child(this.boxRef, 'author'), userCredential.user.uid);
+    }
 
-    this.userId = userCredential.user.uid;
-    this.database = getDatabase();
-    this.userRef = ref(this.database, `anonymousUsers/${referenceUserId}`);
-    this.nodesRef = child(this.userRef, 'fileSystem/nodes');
+    this.nodesRef = child(this.boxRef, 'fileSystem/nodes');
+    this.boxId = this.boxRef.key;
   }
 
   async createFile(_type: string): Promise<File> {

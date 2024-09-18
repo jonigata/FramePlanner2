@@ -112,31 +112,30 @@
 
   async function loadSharedBook(): Promise<boolean> {
     console.log("loadSharedBook");
-    const root = await fileSystem.getRoot();
-    const desktop = (await root.getNodeByName("デスクトップ")).asFolder();
+    const localFileSystem = fileSystem; // ややこしいのでalias
+    const localRoot = await localFileSystem.getRoot();
+    const localDesktop = (await localRoot.getNodeByName("デスクトップ")).asFolder();
 
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
-    if (urlParams.has('user') && urlParams.get('key')) {
+    if (urlParams.has('box') && urlParams.get('file')) {
       logEvent(getAnalytics(), 'shared');
-      const user = urlParams.get('user');
-      const key = urlParams.get('key');
-      console.log("user:key = ", user, key);
+      const box = urlParams.get('box');
+      const file = urlParams.get('file');
+      console.log("box:file = ", box, file);
 
-      if (await fileSystem.getNode(key as NodeId) == null) {
+      if (await localFileSystem.getNode(file as NodeId) == null) {
         // 読んだことがなければ読み込んでローカルに保存
         console.log("shared page load from server", window.location.href);
-        const remoteFileSystem = (await buildShareFileSystem(user)) as FirebaseFileSystem;
-        const remoteFile = await remoteFileSystem.getNode(key as NodeId);
+        const remoteFileSystem = (await buildShareFileSystem(box)) as FirebaseFileSystem;
+        const remoteFile = await remoteFileSystem.getNode(file as NodeId);
         const book = await loadBookFrom(remoteFileSystem, remoteFile.asFile());
 
-        // ここでidはulidではなくfirebaseのpushで与えられるidになるが、
-        // 重なることはほぼないので、そのまま使う
-        const localFile = await fileSystem.createFileWithId(key as NodeId);
-        await saveBookTo(book, fileSystem, localFile);
-        await desktop.link("シェア " + getCurrentDateTime(), localFile.id);
+        const localFile = await localFileSystem.createFileWithId(file as NodeId);
+        await saveBookTo(book, localFileSystem, localFile);
+        await localDesktop.link("シェア " + getCurrentDateTime(), localFile.id);
       }
-      await recordCurrentFileId(key as NodeId);
+      await recordCurrentFileId(file as NodeId);
     } else if (urlParams.has('build')) {
       console.log("loadSharedBook: build");
       logEvent(getAnalytics(), 'layover');
@@ -146,7 +145,7 @@
 
       const page = createPage(storyboard.pages[0], '');
 
-      const localFile = await fileSystem.createFile();
+      const localFile = await localFileSystem.createFile();
       const book: Book = {
         revision: { id: localFile.id, revision:1, prefix: 'hiruma-' },
         pages: [page],
@@ -157,8 +156,8 @@
         notebook: emptyNotebook(),
       }
       commitBook(book, null);
-      await saveBookTo(book, fileSystem, localFile);
-      await desktop.link(getCurrentDateTime(), localFile.id);
+      await saveBookTo(book, localFileSystem, localFile);
+      await localDesktop.link(getCurrentDateTime(), localFile.id);
       await recordCurrentFileId(localFile.id as NodeId);
     } else if (urlParams.has('reset')) {
       await recordCurrentFileId(undefined);
@@ -220,8 +219,8 @@
     // URL作成
     const url = new URL(window.location.href);
     const params = url.searchParams;
-    params.set('user', fileSystem.userId);
-    params.set('key', file.id);
+    params.set('box', fileSystem.boxId);
+    params.set('file', file.id);
     url.search = params.toString();
     const shareUrl = url.toString();
     navigator.clipboard.writeText(shareUrl);

@@ -74,27 +74,6 @@ export async function postContact(s) {
     });
 }
 
-export async function shareTemplate(doc) {
-  const userCredential = await getCurrentUserOrSignInAnonymously();
-
-  const userId = userCredential.user.uid;
-  const database = getDatabase(app);
-  const sharesRef = ref(database, 'shares');
-  const newShareRef = push(sharesRef);
-  await set(newShareRef, {
-      value: doc,
-      author: userId
-  });
-  return newShareRef.key;
-}
-
-export async function loadTemplate(key) {
-  const database = getDatabase(app);
-  const docRef = ref(database, `shares/${key}`);
-  const snapshot = await get(docRef);
-  return snapshot.val();
-}
-
 export async function getLayover(key: string): Promise<Storyboard> {
   const userCredential = await getCurrentUserOrSignInAnonymously();
 
