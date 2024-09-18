@@ -37,6 +37,16 @@ export class FirebaseFileSystem extends FileSystem {
     this.boxId = this.boxRef.key;
   }
 
+  async openCloud() {
+    this.database = getDatabase();
+    const userCredential = await getCurrentUserOrSignInAnonymously();
+
+    this.boxRef = ref(this.database, `cloud/${userCredential.user.uid}`);
+    this.nodesRef = child(this.boxRef, 'fileSystem/nodes');
+    this.boxId = this.boxRef.key;
+    console.log(`write cloud/${this.boxId}`);
+  }
+
   async createFile(_type: string): Promise<File> {
     return this.createFileWithId(push(this.nodesRef).key as NodeId, _type);
   }

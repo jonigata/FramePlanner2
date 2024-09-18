@@ -1,7 +1,6 @@
 <script type="ts">
   import bellIcon from '../assets/bell.png';
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { mascotVisible } from '../mascot/mascotStore';
   import { notebookOpen } from '../notebook/notebookStore';  
   
   function callFairy() {

@@ -9,8 +9,7 @@
   import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-  import { buildFileSystem as buildShareFileSystem } from './shareFileSystem';
-  import type { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
+  import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { getLayover } from "../firebase";
@@ -29,6 +28,7 @@
   import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
   import { createImageFromCanvas } from '../utils/imageUtil';
   import { emptyNotebook } from '../notebook/notebook';
+  import { onlineAccount, type OnlineAccount } from '../utils/accountStore';
 
   export let fileSystem: FileSystem;
 
@@ -36,6 +36,20 @@
   let desktop = null;
   let cabinet = null;
   let trash = null;
+
+  let cloudFileSystem = null;
+  let cloudRoot = null;
+  let cloudCabinet = null;
+
+  $: onBuildCloudFileSystem($onlineAccount);
+  async function onBuildCloudFileSystem(oa: OnlineAccount) { 
+    if (!oa) { return; }
+    cloudFileSystem = await buildCloudFileSystem();
+
+    cloudRoot = await cloudFileSystem.getRoot();
+    cloudCabinet = await cloudRoot.getEmbodiedEntryByName("キャビネット");
+  }
+
   // let templates: [BindId, string, Node] = null;
   let currentRevision: Revision = null;
   let delayedCommiter = new DelayedCommiter(
@@ -127,7 +141,7 @@
       if (await localFileSystem.getNode(file as NodeId) == null) {
         // 読んだことがなければ読み込んでローカルに保存
         console.log("shared page load from server", window.location.href);
-        const remoteFileSystem = (await buildShareFileSystem(box)) as FirebaseFileSystem;
+        const remoteFileSystem = await buildShareFileSystem(box);
         const remoteFile = await remoteFileSystem.getNode(file as NodeId);
         const book = await loadBookFrom(remoteFileSystem, remoteFile.asFile());
 
@@ -211,7 +225,7 @@
 
     console.log("onSharePageRequest");
     $shareBookToken = null;
-    const fileSystem = (await buildShareFileSystem(null)) as FirebaseFileSystem;
+    const fileSystem = await buildShareFileSystem(null);
     const file = await fileSystem.createFile('text');
     await saveBookTo(book, fileSystem, file);
     console.log(file.id);
@@ -374,6 +388,11 @@
             <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
           {/if}
         </div>
+        {#if cloudCabinet}
+          <div class="cabinet variant-ghost-primary rounded-container-token">
+              <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]}/>
+          </div>
+        {/if}
       </div>
       <div class="flex flex-row gap-2 items-center justify-center">
         <p>ファイルシステム使用量: {formatMillions($fileManagerUsedSize)}</p>
