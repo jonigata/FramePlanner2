@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
-  import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
+  import { fileManagerUsedSizeToken, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
+  import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../bookeditor/book';
   import { bookEditor, mainBook } from '../bookeditor/bookStore';
@@ -32,14 +32,17 @@
 
   export let fileSystem: FileSystem;
 
-  let root = null;
-  let desktop = null;
-  let cabinet = null;
-  let trash = null;
+  let root: Folder = null;
+  let desktop: EmbodiedEntry = null;
+  let cabinet: EmbodiedEntry = null;
+  let trash: EmbodiedEntry = null;
 
-  let cloudFileSystem = null;
-  let cloudRoot = null;
-  let cloudCabinet = null;
+  let cloudFileSystem: FileSystem = null;
+  let cloudRoot: Folder = null;
+  let cloudCabinet: EmbodiedEntry = null;
+  let cloudTrash: EmbodiedEntry = null;
+
+  let usedSize: string;
 
   $: onBuildCloudFileSystem($onlineAccount);
   async function onBuildCloudFileSystem(oa: OnlineAccount) { 
@@ -48,6 +51,7 @@
 
     cloudRoot = await cloudFileSystem.getRoot();
     cloudCabinet = await cloudRoot.getEmbodiedEntryByName("キャビネット");
+    cloudTrash = await cloudRoot.getEmbodiedEntryByName("ごみ箱");
   }
 
   // let templates: [BindId, string, Node] = null;
@@ -70,9 +74,14 @@
   async function onOpen(open: boolean) {
     if (open) {
       $fileManagerMarkedFlag = $bookEditor.getMarks().some((m) => m);
-      $fileManagerUsedSize = await fileSystem.collectTotalSize();
+      $fileManagerUsedSizeToken = fileSystem;
       console.log("used size updated");
     }
+  }
+
+  $: onUsedSizeUpdate($fileManagerUsedSizeToken);
+  async function onUsedSizeUpdate(fs: FileSystem) {
+    usedSize = formatMillions(await fileSystem.collectTotalSize());
   }
 
   $:onUpdateBook($mainBook);
@@ -379,38 +388,43 @@
   >
     {#key $fileManagerRefreshKey}
       <div class="drawer-content">
+        <h2>ローカル</h2>
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
-          {#if desktop}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]}/>
+          {#if desktop && trash}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-tertiary rounded-container-token">
-          {#if cabinet}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]}/>
+          {#if cabinet && trash}
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]} trash={trash[2].asFolder()}/>
           {/if}
         </div>
         <div class="cabinet variant-ghost-secondary rounded-container-token">
           {#if trash}
-            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"ごみ箱"} bindId={trash[0]} parent={root} index={1} isTrash={true} path={[trash[0]]}/>
+            <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"ごみ箱"} bindId={trash[0]} parent={root} index={1} path={[trash[0]]} trash={null}/>
           {/if}
         </div>
-        {#if cloudCabinet}
-          <div class="cabinet variant-ghost-primary rounded-container-token">
-              <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]}/>
-          </div>
-        {/if}
-      </div>
-      <div class="flex flex-row gap-2 items-center justify-center">
-        <p>ファイルシステム使用量: {formatMillions($fileManagerUsedSize)}</p>
-        <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
-      </div>
-      <div class="flex flex-row gap-2 items-center justify-center">
-        <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
-        <div class="hbox gap mx-2" style="margin-top: 8px;">
-          リストア<input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
+        <div class="flex flex-row gap-2 items-center justify-center">
+          <p>ファイルシステム使用量: {usedSize}</p>
+          <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
         </div>
-        {#if dumpFiles}
-          <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
+        <div class="flex flex-row gap-2 items-center justify-center">
+          <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
+          <div class="hbox gap mx-2" style="margin-top: 8px;">
+            リストア<input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
+          </div>
+          {#if dumpFiles}
+            <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
+          {/if}
+        </div>
+        {#if cloudCabinet && cloudTrash}
+          <h2>クラウド</h2>
+          <div class="cabinet variant-ghost-primary rounded-container-token">
+            <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
+          </div>
+          <div class="cabinet variant-ghost-primary rounded-container-token">
+            <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドごみ箱"} bindId={cloudTrash[0]} parent={cloudRoot} index={1} path={[cloudTrash[0]]} trash={null}/>
+          </div>
         {/if}
       </div>
     {/key}
@@ -424,5 +438,11 @@
   }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
+  }
+  h2 {
+    font-family: '源暎エムゴ';
+    font-size: 24px;
+    margin-top: 16px;
+    margin-left: 8px;
   }
 </style>

@@ -15,7 +15,8 @@ export async function buildCloudFileSystem(): Promise<FirebaseFileSystem> {
   const fs = new FirebaseFileSystem();
   await fs.openCloud();
 
-  const specialFolders = ['画像', 'キャビネット'];
+  // garbageCollectionがデスクトップ前提になっているので
+  const specialFolders = ['デスクトップ', 'キャビネット', 'ごみ箱', 'テンプレート', '画像', 'プリファレンス', '素材'];
   await makeFolders(fs, specialFolders);
 
   return fs;

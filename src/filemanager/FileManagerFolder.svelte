@@ -2,7 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize, importEnvelope, copyBookFolderInterFileSystem } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, importEnvelope, copyBookFolderInterFileSystem } from "./fileManagerStore";
   import { newBook } from "../bookeditor/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
@@ -11,7 +11,6 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { loading } from '../utils/loadingStore'
   import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
-  import { ulid } from 'ulid';
 
   import newFileIcon from '../assets/fileManager/new-file.png';
   import newFolderIcon from '../assets/fileManager/new-folder.png';
@@ -23,7 +22,7 @@
   export let filename: string;
   export let bindId: BindId;
   export let parent: Folder;
-  export let isTrash = false;
+  export let trash: Folder; // 捨てるときの対象、ごみ箱自身はnull
   export let removability: "removable" | "unremovable" = "removable";
   export let spawnability: "file-spawnable" | "folder-spawnable" | "unspawnable" = "unspawnable";
   export let index: number;
@@ -35,6 +34,7 @@
   let isDiscardable = false;
   let renameEdit = null;
   let renaming = false;
+  let isRootTrash = false;
 
   const dispatch = createEventDispatcher();
 
@@ -96,24 +96,21 @@
   }
 
   async function removeChild(e: CustomEvent<BindId>) {
-    console.log("remove child", e.detail);
+    console.log("remove child", e.detail, trash);
     const childBindId = e.detail as BindId;
     const childEntry = await node.getEntry(childBindId);
-    if (!isTrash) {
-      const trash = (await (await fileSystem.getRoot()).getNodeByName("ごみ箱")).asFolder();
+    if (trash) {
+      console.log("trash link", trash.id);
       await trash.link(childEntry[1], childEntry[2]);
-      $trashUpdateToken = true;
+      $trashUpdateToken = trash;
     }
     await node.unlink(childBindId);
     node = node;
   }
 
-  $:onUpdate(isTrash && $trashUpdateToken);
-  function onUpdate(token: boolean) {
-    if (token) {
-      $trashUpdateToken = false;
-      node = node;
-    }
+  $: if (node && $trashUpdateToken?.id == node.id) { // node?.id使うとnullのときにも発火してしまう
+    $trashUpdateToken = null;
+    node = node;
   }
 
   function onInsertToParent(ev: CustomEvent<DataTransfer>) {
@@ -128,14 +125,9 @@
 
   let entry: [BindId, string, Node];
   onMount(async () => {
-    console.log("FileManagerFolder", bindId, parent.id, filename);
     entry = await parent.getEmbodiedEntry(bindId)
     node = entry[2] as Folder;
-    console.log(node);
-
-    const root = await fileSystem.getRoot();
-    const trash = await root.getEntryByName("ごみ箱");
-    isDiscardable = removability === "removable" && !path.includes(trash[0]);
+    isDiscardable = removability === "removable" && trash != null;
   });
 
   function onDragStart(ev: DragEvent) {
@@ -196,7 +188,7 @@
     const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
     $loading = false;
-    $fileManagerUsedSize = await fileSystem.collectTotalSize();
+    $fileManagerUsedSizeToken = fileSystem;
     $fileManagerRefreshKey++;
     node = node;
   }
@@ -236,6 +228,11 @@
     renaming = false;
   }
 
+  onMount(async () => {
+    const root = await fileSystem.getRoot();
+    isRootTrash = trash == null && parent.id === root.id;
+  });
+
 </script>
 
 {#if node}
@@ -256,7 +253,7 @@
         <img class="button" src={folderIcon} alt="symbol"/>
         <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       </div>
-      {#if isTrash}
+      {#if isRootTrash}
         <button class="btn btn-sm variant-filled recycle-button px-1 py-0" on:click={recycle}>空にする</button>
       {/if}
       <div class="button-container">
@@ -300,9 +297,9 @@
     {:then children}
       {#each children as [bindId, filename, childNode], index}
         {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild}/>
+          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild} trash={trash}/>
         {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild}/>
+          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild} trash={trash}/>
         {/if}
       {/each}
       <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>

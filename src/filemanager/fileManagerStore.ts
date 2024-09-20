@@ -42,14 +42,14 @@ export type LoadToken = {
 
 // TODO: 要らないの混じってると思う
 export const fileManagerOpen = writable(false);
-export const trashUpdateToken = writable(false);
+export const trashUpdateToken: Writable<Folder> = writable(null);
 export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);
 export const saveBubbleToken: Writable<Bubble> = writable(null);
 export const fileSystem: Writable<FileSystem> = writable(null);
 export const shareBookToken: Writable<Book> = writable(null);
-export const fileManagerUsedSize: Writable<number> = writable(null);
+export const fileManagerUsedSizeToken: Writable<FileSystem> = writable(null);
 export const loadToken: Writable<LoadToken> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
 export const mainBookFileSystem: Writable<FileSystem> = writable(null);
@@ -762,9 +762,9 @@ async function copyBookFolderInterFileSystemInternal(sourceFileSystem: FileSyste
     // file is book
     const sourceFile = sourceNode.asFile();
     const book = await loadBookFrom(sourceFileSystem, sourceFile);
-    book.revision.id = ulid();
 
-    const targetFile = await targetFileSystem.createFileWithId(book.revision.id as NodeId, 'text');
+    const targetFile = await targetFileSystem.createFile('text');
+    book.revision.id = targetFile.id;
     await saveBookTo(book, targetFileSystem, targetFile);
     return targetFile.id;
   }

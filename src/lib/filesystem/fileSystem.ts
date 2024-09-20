@@ -94,6 +94,7 @@ export async function makeFolders(fs: FileSystem, folders: string[]): Promise<vo
   for (const f of folders) {
     const found = children.find((c) => c[1] === f);
     if (!found) {
+      console.log("not found", f);
       const folder = await fs.createFolder();
       await root.link(f, folder.id);
     }

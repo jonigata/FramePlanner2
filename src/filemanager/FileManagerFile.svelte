@@ -23,6 +23,7 @@
   export let bindId: BindId;
   export let filename: string;
   export let parent: Folder;
+  export let trash: Folder; // 捨てるときの対象、ごみ箱の中身の場合はnull
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
   export let path: string[];
@@ -39,9 +40,6 @@
 
   $: ondrag($fileManagerDragging);
   function ondrag(dragging: Dragging) {
-    if (dragging) {
-      console.log("file ondrag", path, dragging.bindId);
-    }
     acceptable = dragging && !path.includes(dragging.bindId);
   }
 
@@ -123,10 +121,7 @@
   }
 
   onMount(async () => {
-    const root = await fileSystem.getRoot();
-    const trash = await root.getEntryByName("ごみ箱");
-    // TODO: クラウドストレージでゴミ箱に捨てられない
-    isDiscardable = removability === "removable" && trash && !path.includes(trash[0]);
+    isDiscardable = removability === "removable" && trash != null;
   });
   
 </script>
@@ -163,7 +158,7 @@
     <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
   </div>  
   <div class="button-container">
-    {#if !(selected && !isDiscardable)} <!-- ゴミ箱で選択されてるとき以外 -->
+    {#if isDiscardable}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img class="button" src={trashIcon} alt="trash" on:click={removeFile} use:toolTip={"捨てる"}/>

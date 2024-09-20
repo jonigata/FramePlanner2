@@ -12,9 +12,6 @@
 
   $: ondrag($fileManagerDragging);
   function ondrag(dragging: Dragging) {
-    if (dragging) {
-      console.log("tail ondrag", path, dragging.bindId);
-    }
     acceptable = dragging && !path.includes(dragging.bindId);
   }
 
