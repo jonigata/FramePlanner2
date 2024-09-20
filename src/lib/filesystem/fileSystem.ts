@@ -87,3 +87,15 @@ export class Folder extends Node {
   async getNodesByName(name: string): Promise<Node[]> { return ((await this.getEmbodiedEntriesByName(name))).map(e => e[2]); }
   async getBindId(nodeId: NodeId): Promise<BindId> { throw 'not implemented'; }
 }
+
+export async function makeFolders(fs: FileSystem, folders: string[]): Promise<void> {
+  const root = await fs.getRoot();
+  const children = await root.list();
+  for (const f of folders) {
+    const found = children.find((c) => c[1] === f);
+    if (!found) {
+      const folder = await fs.createFolder();
+      await root.link(f, folder.id);
+    }
+  }
+}
