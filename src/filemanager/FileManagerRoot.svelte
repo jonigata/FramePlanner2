@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken } from "./fileManagerStore";
+  import { fileManagerUsedSize, fileManagerOpen, fileManagerRefreshKey, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId } from '../lib/filesystem/fileSystem';
   import type { Book } from '../bookeditor/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../bookeditor/book';
@@ -56,11 +56,13 @@
     async () => {
       const book = $mainBook;
       if (!$saveProhibitFlag) {
-        const file = await fileSystem.getNode(book.revision.id as NodeId);
-        await saveBookTo(book, fileSystem, file.asFile());
+        const file = await $mainBookFileSystem.getNode(book.revision.id as NodeId);
+        await saveBookTo(book, $mainBookFileSystem, file.asFile());
       }
       currentRevision = {...book.revision};
-      await recordCurrentFileId(book.revision.id as NodeId);
+      if ($mainBookFileSystem.id === fileSystem.id) {
+        await recordCurrentFileId(book.revision.id as NodeId);
+      }
     });
   let undumpCounter = 0;
 
@@ -91,6 +93,7 @@
         refreshFilms(newBook);
         currentRevision = {...newBook.revision};
         console.snapshot(newBook.pages[0]);
+        $mainBookFileSystem = fileSystem;
         $mainBook = newBook;
         $frameInspectorTarget = null;
         logEvent(getAnalytics(), 'continue_book');
@@ -103,6 +106,7 @@
         await recordCurrentFileId(book.revision.id);
 
         currentRevision = {...book.revision};
+        $mainBookFileSystem = fileSystem;
         $mainBook = book;
         $fileManagerRefreshKey++;
         logEvent(getAnalytics(), 'new_book');
@@ -199,6 +203,7 @@
       const { file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
       await recordCurrentFileId(file.id as NodeId);
       currentRevision = {...book.revision};
+      $mainBookFileSystem = fileSystem;
       $mainBook = book;
       $frameInspectorTarget = null;
       $fileManagerRefreshKey++;
@@ -244,16 +249,17 @@
   }
 
   $:onLoadRequest($loadToken);
-  async function onLoadRequest(nodeId: NodeId) {
-    if (!nodeId) { return; }
+  async function onLoadRequest(lt: LoadToken) {
+    if (!lt) { return; }
     $loadToken = null;
     $mascotVisible = false;
 
     $loading = true;
-    const file = (await fileSystem.getNode(nodeId)).asFile();
-    const book = await loadBookFrom(fileSystem, file);
+    const file = (await lt.fileSystem.getNode(lt.nodeId)).asFile();
+    const book = await loadBookFrom(lt.fileSystem, file);
     refreshFilms(book);
     currentRevision = {...book.revision};
+    $mainBookFileSystem = lt.fileSystem;
     $mainBook = book; // TODO: ここで無駄なセーブが走っている
     $frameInspectorTarget = null;
     $loading = false;

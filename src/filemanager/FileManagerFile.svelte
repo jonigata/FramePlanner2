@@ -46,7 +46,7 @@
   }
 
   async function onDoubleClick() {
-    $loadToken = nodeId;
+    $loadToken = { fileSystem, nodeId };
   }
 
 	async function onDragStart (ev: DragEvent) {
@@ -60,7 +60,7 @@
     ev.stopPropagation();
     setTimeout(() => {
       // こうしないとなぜかdragendが即時発火してしまう
-      $fileManagerDragging = { bindId, parent: parent.id };
+      $fileManagerDragging = { fileSystem, bindId, parent: parent.id };
     }, 0);
 	}
 
@@ -125,7 +125,8 @@
   onMount(async () => {
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
-    isDiscardable = removability === "removable" && !path.includes(trash[0]);
+    // TODO: クラウドストレージでゴミ箱に捨てられない
+    isDiscardable = removability === "removable" && trash && !path.includes(trash[0]);
   });
   
 </script>

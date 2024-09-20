@@ -2,7 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize, importEnvelope } from "./fileManagerStore";
+  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSize, importEnvelope, copyBookFolderInterFileSystem } from "./fileManagerStore";
   import { newBook } from "../bookeditor/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
@@ -11,6 +11,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { loading } from '../utils/loadingStore'
   import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
+  import { ulid } from 'ulid';
 
   import newFileIcon from '../assets/fileManager/new-file.png';
   import newFolderIcon from '../assets/fileManager/new-folder.png';
@@ -57,7 +58,7 @@
     ev.stopPropagation();
     if (acceptable) {
       console.log(ev);
-      await moveToHere(ev.dataTransfer, 0);
+      await moveToHere(0);
     } else {
       // jsonだったら、jsonの中身を見て、適切な処理をする
       if (ev.dataTransfer.files.length === 1) {
@@ -127,8 +128,10 @@
 
   let entry: [BindId, string, Node];
   onMount(async () => {
+    console.log("FileManagerFolder", bindId, parent.id, filename);
     entry = await parent.getEmbodiedEntry(bindId)
     node = entry[2] as Folder;
+    console.log(node);
 
     const root = await fileSystem.getRoot();
     const trash = await root.getEntryByName("ごみ箱");
@@ -146,34 +149,41 @@
     ev.stopPropagation();
     setTimeout(() => {
       // こうしないとなぜかdragendが即時発火してしまう
-      $fileManagerDragging = { bindId, parent: parent.id };
+      $fileManagerDragging = { fileSystem, bindId, parent: parent.id };
     }, 0);
   }
 
   async function onInsert(e: CustomEvent<{ dataTransfer: DataTransfer, index: number }>) {
     console.log("insert", e.detail);
-    await moveToHere(e.detail.dataTransfer, e.detail.index);
+    await moveToHere(e.detail.index);
   }
 
-  async function moveToHere(dataTransfer: DataTransfer, index: number) {
-    console.log("++++++++++++ moveToHere", dataTransfer, index);
+  async function moveToHere(index: number) {
+    const dragging = $fileManagerDragging;
+    console.log("++++++++++++ moveToHere", dragging, index);
 
-    const sourceParentId = dataTransfer.getData("parent") as string as NodeId;
-    const bindId = dataTransfer.getData("bindId") as string as BindId;
+    if (fileSystem.id === dragging.fileSystem.id) {
+      const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
+      const mover = await sourceParent.getEntry(dragging.bindId);
 
-    const sourceParent = (await fileSystem.getNode(sourceParentId)) as Folder;
-    const mover = await sourceParent.getEntry(bindId);
+      if (index === null) {
+        index = (await node.list()).length;      
+      }
 
-    if (index === null) {
-      index = (await node.list()).length;      
+      console.log("insert", node.id, "index =", index);
+
+      await sourceParent.unlink(dragging.bindId);
+      await node.insert(mover[1], mover[2], index);
+      $fileManagerRefreshKey++;
+      console.log("insert done");
+    } else {
+      const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
+      const entry = await sourceParent.getEntry(dragging.bindId);
+      const sourceNodeId = entry[2];
+      const targetFileId = await copyBookFolderInterFileSystem(dragging.fileSystem, fileSystem, sourceNodeId);
+      await node.insert(entry[1], targetFileId, index);
+      $fileManagerRefreshKey++;
     }
-
-    console.log("insert", sourceParentId, bindId, node.id, "index=", index);
-
-    await sourceParent.unlink(bindId);
-    await node.insert(mover[1], mover[2], index);
-    $fileManagerRefreshKey++;
-    console.log("insert done");
   }
 
   async function recycle() {
@@ -261,7 +271,7 @@
           <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} use:toolTip={"フォルダ作成"}/>
         {/if}
       </div> 
-  </div>
+    </div>
     <div class="buttons hbox gap-2">
       <div class="button-container">
         {#if isDiscardable}

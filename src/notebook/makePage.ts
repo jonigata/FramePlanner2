@@ -7,6 +7,7 @@ import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trape
 import { newPageProperty } from '../bookeditor/bookStore';
 import { get } from "svelte/store";
 import parseColor from 'color-parse';
+import AutoSizeTextarea from './AutoSizeTextarea.svelte';
 
 function whitenColor(s: string, ratio: number): string {
   const c = parseColor(s);
@@ -72,6 +73,8 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
             }
             bubble.setPhysicalCenter(page.paperSize, cc);
             const size = bubble.calculateFitSize(paperSize);
+            size[0] *= 1.1;
+            size[1] *= 1.1;
             bubble.setPhysicalSize(paperSize, size);
 
             bubble.shape = b.shape;

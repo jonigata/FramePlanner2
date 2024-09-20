@@ -1,6 +1,6 @@
-import { type Writable, writable, derived, get } from "svelte/store";
+import { type Writable, writable, derived } from "svelte/store";
 import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
-import { type Book, type BookOperators, newPage, commitBook } from './book';
+import { type Book, type BookOperators, newPage } from './book';
 import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";

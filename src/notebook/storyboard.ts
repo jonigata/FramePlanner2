@@ -27,7 +27,7 @@ const Bubble = annotate(
     shape: annotate(t.string, {
       description: "セリフの形",
       default: "ellipse",
-      enum: ["rounded", "square", "ellipse", "polygon", "shout", "soft"],
+      enum: ["rounded", "square", "ellipse", "polygon", "shout", "soft", "none"],
     }),
   }),
   {description: "キャラクターのセリフ"},

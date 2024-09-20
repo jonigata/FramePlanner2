@@ -10,6 +10,7 @@ import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
 import type { ProtocolChatLog, RichChatDocument } from "./utils/richChat";
+import { getStorage } from "firebase/storage";
 
 function useEmulatorIfDevelopment() {
   if (storeGet(developmentFlag)) {
@@ -168,6 +169,14 @@ function getAuth2() {
 
 function getDatabase2() {
   return getDatabase(app);
+}
+
+export function getShareStorage() {
+  return getStorage(app);
+}
+
+export function getCloudStorage() {
+  return getStorage(app, "gs://frameplanner-e5569-m24tg");
 }
 
 export { getAuth2 as getAuth, getDatabase2 as getDatabase, initializeApp2 as initializeApp };

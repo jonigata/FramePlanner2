@@ -3,9 +3,9 @@ import type { NodeId, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
-import { getStorage, ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
+import { ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
 import { createCanvasFromBlob } from '../../utils/imageUtil';
-import { getCurrentUserOrSignInAnonymously } from '../../firebase';
+import { getCurrentUserOrSignInAnonymously, getShareStorage, getCloudStorage } from '../../firebase';
 
 export class FirebaseFileSystem extends FileSystem {
   database: Database;
@@ -16,11 +16,11 @@ export class FirebaseFileSystem extends FileSystem {
 
   constructor() {
     super();
-    this.storage = getStorage();
   }
 
   async openShared(key: string) {
     this.database = getDatabase();
+    this.storage = getShareStorage();
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     if (key) {
@@ -39,6 +39,7 @@ export class FirebaseFileSystem extends FileSystem {
 
   async openCloud() {
     this.database = getDatabase();
+    this.storage = getCloudStorage();
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     this.boxRef = ref(this.database, `cloud/${userCredential.user.uid}`);
@@ -71,8 +72,10 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async getNode(id: NodeId): Promise<Node> {
+    console.log(`firebase getNode ${id}`);
     const snapshot = await get(child(this.nodesRef, id));
     if (snapshot.exists()) {
+      console.log("snapshot exists", snapshot.val());
       if (snapshot.val().type === 'file') {
         const file = new FirebaseFile(this, id);
         return file;
@@ -80,6 +83,8 @@ export class FirebaseFileSystem extends FileSystem {
         const folder = new FirebaseFolder(this, id);
         return folder;
       }
+    } else {
+      console.log("snapshot not exists");
     }
     return null;
   }
@@ -104,6 +109,7 @@ export class FirebaseFile extends File {
 
   async read(): Promise<string> {
     const snapshot = await get(child(this.nodeRef, 'content'));
+    console.log("read", snapshot.val());
     return snapshot.val() ?? '';
   }
 

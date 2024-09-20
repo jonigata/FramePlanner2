@@ -30,8 +30,14 @@ import { type Notebook, emptyNotebook } from "../notebook/notebook";
 const canvasCache: { [fileSystemId: string]: { [fileId: string]: HTMLCanvasElement } } = {};
 
 export type Dragging = {
-  bindId: string;
-  parent: string;
+  fileSystem: FileSystem;
+  bindId: BindId;
+  parent: NodeId;
+}
+
+export type LoadToken = {
+  fileSystem: FileSystem;
+  nodeId: NodeId;
 }
 
 // TODO: 要らないの混じってると思う
@@ -44,8 +50,9 @@ export const saveBubbleToken: Writable<Bubble> = writable(null);
 export const fileSystem: Writable<FileSystem> = writable(null);
 export const shareBookToken: Writable<Book> = writable(null);
 export const fileManagerUsedSize: Writable<number> = writable(null);
-export const loadToken: Writable<NodeId> = writable(null);
+export const loadToken: Writable<LoadToken> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
+export const mainBookFileSystem: Writable<FileSystem> = writable(null);
 
 type SerializedPage = {
   id: string,
@@ -292,12 +299,14 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, book
 async function loadCanvas(fileSystem: FileSystem, canvasId: string): Promise<HTMLCanvasElement> {
   canvasCache[fileSystem.id] ??= {};
 
+  console.log("loadCanvas1");
   if (canvasCache[fileSystem.id][canvasId]) {
     const canvas = canvasCache[fileSystem.id][canvasId];
     canvas["clean"][fileSystem.id] = true; // 途中クラッシュでもないと本来はあり得ないが、念のため
     return canvas;
   } else {
     try {
+      console.log("loadCanvas", canvasId);
       const file = (await fileSystem.getNode(canvasId as NodeId)).asFile();
       const canvas = await file.readCanvas();
       canvas["fileId"] ??= {}
@@ -488,6 +497,7 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
     if (markUp.films) {
       if (0 < markUp.films.length) {
         console.tag("type C", "#004400");
+        console.log(JSON.stringify(markUp.films));
       }
 
       const films = await unpackFilms(paperSize, markUp.films, fileSystem, loadCanvasFunc);
@@ -550,6 +560,7 @@ async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fil
 async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLCanvasElement>): Promise<Film[]> {
   const films: Film[] = [];
   for (const filmMarkUp of markUp) {
+    console.log("unpackFilms", filmMarkUp);
     const image = await loadImageFunc(fileSystem, filmMarkUp.image);
     if (image) {
       const effects = [];
@@ -723,4 +734,38 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
   }
 
   await saveBookTo(book, fileSystem, file);
+}
+
+export async function copyBookFolderInterFileSystem(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId): Promise<NodeId> {
+  return copyBookFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceNodeId, {});
+}
+
+async function copyBookFolderInterFileSystemInternal(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId, copied: { [NodeId: string]: NodeId }): Promise<NodeId> {
+  if (copied[sourceNodeId]) {
+    return copied[sourceNodeId];
+  }
+
+  const sourceNode = await sourceFileSystem.getNode(sourceNodeId);
+  const sourceFolder = sourceNode.asFolder();
+  if (sourceFolder) {
+    const targetFolder = await targetFileSystem.createFolder();
+    copied[sourceNodeId] = targetFolder.id;
+
+    const entries = await sourceFolder.list();
+    for (const entry of entries) {
+      const sourceChildNodeId = entry[2];
+      const targetChildNodeId = await copyBookFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceChildNodeId, copied);
+      await targetFolder.link(entry[1], targetChildNodeId);
+    }
+    return targetFolder.id;
+  } else {
+    // file is book
+    const sourceFile = sourceNode.asFile();
+    const book = await loadBookFrom(sourceFileSystem, sourceFile);
+    book.revision.id = ulid();
+
+    const targetFile = await targetFileSystem.createFileWithId(book.revision.id as NodeId, 'text');
+    await saveBookTo(book, targetFileSystem, targetFile);
+    return targetFile.id;
+  }
 }
