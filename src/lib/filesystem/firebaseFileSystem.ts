@@ -166,33 +166,34 @@ export class FirebaseFolder extends Folder {
   }
 
   async link(name: string, nodeId: NodeId): Promise<BindId> {
-    const bindId = ulid() as BindId;
-    const entry: Entry = [bindId, name, nodeId];
-    const entries = await this.list();
-    entries.push(entry);
-    await set(child(this.nodeRef, 'content'), JSON.stringify(entries));
-    return bindId;
+    return await this.insert(name, nodeId, -1);
   }
 
   async unlink(bindId: BindId): Promise<void> {
     const entries = await this.list();
     const newEntries = entries.filter((entry) => entry[0] !== bindId);
     await set(child(this.nodeRef, 'content'), JSON.stringify(newEntries));
+    super.notifyDelete(bindId);
   }
 
-  async rename(bindId: BindId, newname: string): Promise<void> {
+  async rename(bindId: BindId, newName: string): Promise<void> {
     const entries = await this.list();
     const entry = entries.find((entry) => entry[0] === bindId);
-    entry[1] = newname;
+    entry[1] = newName;
     await set(child(this.nodeRef, 'content'), JSON.stringify(entries));
+    super.notifyRename(bindId, newName);
   }
 
   async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> {
     const bindId = ulid() as BindId;
     const entry: Entry = [bindId, name, nodeId];
     const entries = await this.list();
+    if (index < 0) {
+      index = entries.length;
+    }
     entries.splice(index, 0, entry);
     await set(child(this.nodeRef, 'content'), JSON.stringify(entries));
+    super.notifyInsert(bindId, index, null);
     return bindId;
   }
 

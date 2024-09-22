@@ -1,6 +1,6 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry, Watcher } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
 import { createCanvasFromImage } from '../../utils/imageUtil';
@@ -197,19 +197,7 @@ export class IndexedDBFolder extends Folder {
   }
 
   async link(name: string, nodeId: NodeId): Promise<BindId> {
-    const bindId = ulid() as BindId;
-
-    const tx = this.db.transaction("nodes", "readwrite");
-    const store = tx.store;
-    const value = await store.get(this.id);
-
-    if (value && Array.isArray(value.children)) {
-      value.children.push([bindId, name, nodeId]);
-      await store.put(value);
-    }
-
-    await tx.done;
-    return bindId;
+    return await this.insert(name, nodeId, -1);
   }
 
   async unlink(bindId: BindId): Promise<void> {
@@ -217,10 +205,10 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    if (value && Array.isArray(value.children)) {
-      value.children = value.children.filter(([b, _, __]) => b !== bindId);
-      await store.put(value);
-    }
+    value.children = value.children.filter(([b, _, __]) => b !== bindId);
+    await store.put(value);
+
+    super.notifyDelete(bindId);
 
     await tx.done;
   }
@@ -230,9 +218,11 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    if (value && Array.isArray(value.children)) {
-      value.children = value.children.filter(([b, _, __]) => !bindIds.includes(b));
-      await store.put(value);
+    value.children = value.children.filter(([b, _, __]) => !bindIds.includes(b));
+    await store.put(value);
+
+    for (const bindId of bindIds) {
+      super.notifyDelete(bindId);
     }
 
     await tx.done;
@@ -243,13 +233,13 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    if (value && Array.isArray(value.children)) {
-      const entry = value.children.find(([b, _, __]) => b === bindId);
-      if (entry) {
-        entry[1] = newname;
-        await store.put(value);
-      }
+    const entry = value.children.find(([b, _, __]) => b === bindId);
+    if (entry) {
+      entry[1] = newname;
+      await store.put(value);
     }
+
+    super.notifyRename(bindId, newname);
 
     await tx.done;
   }
@@ -261,10 +251,13 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    if (value && Array.isArray(value.children)) {
-      value.children.splice(index, 0, [bindId, name, nodeId]);
-      await store.put(value);
+    if (index < 0) {
+      index = value.children.length;
     }
+    value.children.splice(index, 0, [bindId, name, nodeId]);
+    await store.put(value);
+
+    super.notifyInsert(bindId, index, null);
 
     await tx.done;
     return bindId;
@@ -293,4 +286,5 @@ export class IndexedDBFolder extends Folder {
 
     return value ? value.children.filter(([_, n, __]) => n === name) : [];
   }
+
 }

@@ -8,8 +8,15 @@ export type FileSystemId = string & { _FileSystemId: never };
 export type Entry = [BindId, string, NodeId];
 export type EmbodiedEntry = [BindId, string, Node];
 
+export interface Watcher {
+  onInsert: (bindId: BindId, index: number, sourceParent: Folder | null) => void;
+  onDelete: (bindId: BindId) => void;
+  onRename: (bindId: BindId, newName: string) => void;
+}
+
 export class FileSystem {
   id: FileSystemId;
+  watchers: { [key: NodeId]: Watcher[] } = {};
 
   constructor() {
     this.id = ulid() as FileSystemId;
@@ -25,6 +32,17 @@ export class FileSystem {
   async getRoot(): Promise<Folder> { throw 'not implemented'; }
 
   async collectTotalSize(): Promise<number> { throw 'not implemented'; }
+
+  watch(nodeId: NodeId, watcher: Watcher) {
+    this.watchers[nodeId] ??= [];
+    this.watchers[nodeId].push(watcher);
+  }
+  unwatch(nodeId: NodeId, watcher: Watcher) { 
+    this.watchers[nodeId] = this.watchers[nodeId]?.filter(w => w !== watcher) ?? [];
+  }
+  getWatchers(nodeId: NodeId): Watcher[] {
+    return this.watchers[nodeId] ?? [];
+  }
 }
 
 export class Node {
@@ -69,6 +87,7 @@ export class Folder extends Node {
   async unlinkv(bindIds: BindId[]): Promise<void> {
     for (const bindId of bindIds) {
       await this.unlink(bindId);
+      this.notifyDelete(bindId);
     }
   }
   async rename(bindId: BindId, newname: string): Promise<void> { throw 'not implemented'; }
@@ -86,6 +105,28 @@ export class Folder extends Node {
   async getNodeByName(name: string): Promise<Node> { return (await this.getEmbodiedEntryByName(name))[2]; }
   async getNodesByName(name: string): Promise<Node[]> { return ((await this.getEmbodiedEntriesByName(name))).map(e => e[2]); }
   async getBindId(nodeId: NodeId): Promise<BindId> { throw 'not implemented'; }
+
+  watch(watcher: Watcher) {
+    this.fileSystem.watch(this.id, watcher);
+  }
+  unwatch(watcher: Watcher) { 
+    this.fileSystem.unwatch(this.id, watcher);
+  }
+  notifyInsert(bindId: BindId, index: number, sourceParent: Folder | null) {
+    for (const watcher of this.fileSystem.getWatchers(this.id)) {
+      watcher.onInsert(bindId, index, sourceParent);
+    }
+  }
+  notifyDelete(bindId: BindId) {
+    for (const watcher of this.fileSystem.getWatchers(this.id)) {
+      watcher.onDelete(bindId);
+    }
+  }
+  notifyRename(bindId: BindId, newName: string) {
+    for (const watcher of this.fileSystem.getWatchers(this.id)) {
+      watcher.onRename(bindId, newName);
+    }
+  }
 }
 
 export async function makeFolders(fs: FileSystem, folders: string[]): Promise<void> {

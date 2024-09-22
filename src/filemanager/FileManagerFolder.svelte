@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { FileSystem, Folder, NodeId, BindId, Node } from "../lib/filesystem/fileSystem";
+  import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { trashUpdateToken, fileManagerRefreshKey, fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, importEnvelope, copyBookFolderInterFileSystem } from "./fileManagerStore";
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, importEnvelope, copyBookFolderInterFileSystem } from "./fileManagerStore";
   import { newBook } from "../bookeditor/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
@@ -35,8 +35,16 @@
   let renameEdit = null;
   let renaming = false;
   let isRootTrash = false;
+  let embodiedEntries: EmbodiedEntry[] = [];
 
   const dispatch = createEventDispatcher();
+
+  $: updateEntries(node);
+  async function updateEntries(node: Folder) {
+    if (node) {
+      embodiedEntries = await node.listEmbodied();
+    }
+  }
 
   $: ondrag($fileManagerDragging);
   function ondrag(dragging: Dragging) {
@@ -102,14 +110,8 @@
     if (trash) {
       console.log("trash link", trash.id);
       await trash.link(childEntry[1], childEntry[2]);
-      $trashUpdateToken = trash;
     }
     await node.unlink(childBindId);
-    node = node;
-  }
-
-  $: if (node && $trashUpdateToken?.id == node.id) { // node?.id使うとnullのときにも発火してしまう
-    $trashUpdateToken = null;
     node = node;
   }
 
@@ -122,13 +124,6 @@
     ev.stopPropagation();
     $fileManagerDragging = null;
   }
-
-  let entry: [BindId, string, Node];
-  onMount(async () => {
-    entry = await parent.getEmbodiedEntry(bindId)
-    node = entry[2] as Folder;
-    isDiscardable = removability === "removable" && trash != null;
-  });
 
   function onDragStart(ev: DragEvent) {
     console.log("folder drag start", bindId, parent.id, renaming);
@@ -166,15 +161,15 @@
 
       await sourceParent.unlink(dragging.bindId);
       await node.insert(mover[1], mover[2], index);
-      $fileManagerRefreshKey++;
       console.log("insert done");
     } else {
+      $loading = true;
       const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
       const entry = await sourceParent.getEntry(dragging.bindId);
       const sourceNodeId = entry[2];
       const targetFileId = await copyBookFolderInterFileSystem(dragging.fileSystem, fileSystem, sourceNodeId);
       await node.insert(entry[1], targetFileId, index);
-      $fileManagerRefreshKey++;
+      $loading = false;
     }
   }
 
@@ -189,7 +184,6 @@
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
     $loading = false;
     $fileManagerUsedSizeToken = fileSystem;
-    $fileManagerRefreshKey++;
     node = node;
   }
 
@@ -228,9 +222,34 @@
     renaming = false;
   }
 
+  const watcher = {
+    onInsert: (bindId: BindId, index: number, sourceParent: Folder | null) => {
+      console.log("onInsert", bindId, index, sourceParent);
+      node = node;
+    },
+    onDelete: (bindId: BindId) => {
+      console.log("onDelete", bindId);
+      node = node;
+    },
+    onRename: (bindId: BindId, newName: string) => {
+      console.log("onRename", bindId, newName);
+      node = node;
+    }
+  }
+
+  let entry: [BindId, string, Node];
   onMount(async () => {
     const root = await fileSystem.getRoot();
     isRootTrash = trash == null && parent.id === root.id;
+
+    entry = await parent.getEmbodiedEntry(bindId)
+    node = entry[2] as Folder;
+    isDiscardable = removability === "removable" && trash != null;
+    node.watch(watcher);
+  });
+
+  onDestroy(() => {
+    node.unwatch(watcher);
   });
 
 </script>
@@ -292,20 +311,14 @@
   <div class="folder-contents"
     class:acceptable={isDraggingOver && acceptable}
   >
-    {#await node.listEmbodied()}
-      <div>loading...</div>
-    {:then children}
-      {#each children as [bindId, filename, childNode], index}
-        {#if childNode.getType() === 'folder'}
-          <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild} trash={trash}/>
-        {:else if childNode.getType() === 'file'}
-          <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild} trash={trash}/>
-        {/if}
-      {/each}
-      <FileManagerFolderTail index={children.length} on:insert={onInsert} path={[...path, 'tail']}/>
-    {:catch error}
-      <div>error: {error.message}</div>
-    {/await}
+    {#each embodiedEntries as [bindId, filename, childNode], index (childNode.id)}
+      {#if childNode.getType() === 'folder'}
+        <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild} trash={trash}/>
+      {:else if childNode.getType() === 'file'}
+        <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild} trash={trash}/>
+      {/if}
+    {/each}
+    <FileManagerFolderTail index={embodiedEntries.length} on:insert={onInsert} path={[...path, 'tail']}/>
   </div>
 </div>
 {/if}

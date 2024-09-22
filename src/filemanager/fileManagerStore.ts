@@ -42,8 +42,6 @@ export type LoadToken = {
 
 // TODO: 要らないの混じってると思う
 export const fileManagerOpen = writable(false);
-export const trashUpdateToken: Writable<Folder> = writable(null);
-export const fileManagerRefreshKey = writable(0);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);
 export const saveBubbleToken: Writable<Bubble> = writable(null);

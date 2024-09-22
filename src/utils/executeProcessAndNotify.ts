@@ -1,4 +1,3 @@
-import { Result } from "postcss";
 import { toastStore } from '@skeletonlabs/skeleton';
 
 export async function executeProcessAndNotify<T>(
