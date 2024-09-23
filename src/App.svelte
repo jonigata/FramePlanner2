@@ -165,7 +165,7 @@
 
 <!-- tools -->
 <PassiveToolTip />
-<Toast/>
+<Toast zIndex={"z-[1001]"}/>
 <BookArchiver/>
 <FontLoader/>
 

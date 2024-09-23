@@ -40,7 +40,6 @@ export type LoadToken = {
   nodeId: NodeId;
 }
 
-// TODO: 要らないの混じってると思う
 export const fileManagerOpen = writable(false);
 export const fileManagerDragging: Writable<Dragging> = writable(null);
 export const newBookToken: Writable<Book> = writable(null);

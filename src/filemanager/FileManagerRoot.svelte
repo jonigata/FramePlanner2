@@ -6,7 +6,7 @@
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../bookeditor/book';
   import { bookEditor, mainBook } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
-  import { recordCurrentFileId, fetchCurrentFileId } from './currentFile';
+  import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
@@ -29,6 +29,8 @@
   import { createImageFromCanvas } from '../utils/imageUtil';
   import { emptyNotebook } from '../notebook/notebook';
   import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
+  import { waitForChange } from '../utils/reactUtil';
+  import { writable } from 'svelte/store';
 
   export let fileSystem: FileSystem;
 
@@ -41,6 +43,7 @@
   let cloudRoot: Folder = null;
   let cloudCabinet: EmbodiedEntry = null;
   let cloudTrash: EmbodiedEntry = null;
+  const cloudReady = writable(false);
 
   let usedSize: string;
 
@@ -52,6 +55,7 @@
     cloudRoot = await cloudFileSystem.getRoot();
     cloudCabinet = await cloudRoot.getEmbodiedEntryByName("キャビネット");
     cloudTrash = await cloudRoot.getEmbodiedEntryByName("ごみ箱");
+    $cloudReady = true;
   }
 
   // let templates: [BindId, string, Node] = null;
@@ -64,9 +68,11 @@
         await saveBookTo(book, $mainBookFileSystem, file.asFile());
       }
       currentRevision = {...book.revision};
-      if ($mainBookFileSystem.id === fileSystem.id) {
-        await recordCurrentFileId(book.revision.id as NodeId);
+      const info: CurrentFileInfo = {
+        id: book.revision.id as NodeId,
+        fileSystem: $mainBookFileSystem.id === fileSystem.id ? 'local' : 'cloud',
       }
+      await recordCurrentFileInfo(info);
     });
   let undumpCounter = 0;
 
@@ -87,39 +93,55 @@
   $:onUpdateBook($mainBook);
   async function onUpdateBook(book: Book) {
     if (book == null) {
-      $loading = true;
+      try {
+        $loading = true;
 
-      if (await loadSharedBook()) {
-        // shared bookがある場合、内部でリダイレクトする
-        return;
-      }
+        if (await loadSharedBook()) {
+          // shared bookがある場合、内部でリダイレクトする
+          return;
+        }
 
-      const currentFileId = (await fetchCurrentFileId()) as NodeId;
-      if (currentFileId) {
-        let currentFile = await fileSystem.getNode(currentFileId);
-        const newBook = await loadBookFrom(fileSystem, currentFile.asFile());
-        refreshFilms(newBook);
-        currentRevision = {...newBook.revision};
-        console.snapshot(newBook.pages[0]);
-        $mainBookFileSystem = fileSystem;
-        $mainBook = newBook;
-        $frameInspectorTarget = null;
-        logEvent(getAnalytics(), 'continue_book');
-      } else {
-        // 初起動の場合はデスクトップにセーブ
+        const currentFileInfo = await fetchCurrentFileInfo();
+        if (currentFileInfo) {
+          if (currentFileInfo.fileSystem === 'cloud') {
+            toastStore.trigger({ message: "最終アクセスファイルがクラウドファイルのため、\nクラウドストレージの接続を待っています", timeout: 3000});
+            await waitForChange(onlineStatus, s => s != 'unknown');
+          }
+          console.log($onlineStatus);
+          if ($onlineStatus === 'signed-out') {
+            toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
+          } else {
+            await waitForChange(cloudReady, x => x);
+            toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
+            const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
+            let currentFile = await fs.getNode(currentFileInfo.id);
+            const newBook = await loadBookFrom(fs, currentFile.asFile());
+            refreshFilms(newBook);
+            currentRevision = {...newBook.revision};
+            console.snapshot(newBook.pages[0]);
+            $mainBookFileSystem = fileSystem;
+            $mainBook = newBook;
+            $frameInspectorTarget = null;
+            logEvent(getAnalytics(), 'continue_book');
+            return;
+          }
+        }
+
+        // 初起動またはクラウドストレージ接続失敗の場合デスクトップにセーブ
         const root = await fileSystem.getRoot();
         const desktop = await root.getNodeByName("デスクトップ");
         book = newBook('not visited', "initial-", 0);
         await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
-        await recordCurrentFileId(book.revision.id);
+        await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local' });
 
         currentRevision = {...book.revision};
         $mainBookFileSystem = fileSystem;
         $mainBook = book;
         logEvent(getAnalytics(), 'new_book');
       }
-
-      $loading = false;
+      finally {
+        $loading = false;
+      }
     } else {
       if (revisionEqual(book.revision, currentRevision)) {
         return;
@@ -160,7 +182,7 @@
         await saveBookTo(book, localFileSystem, localFile);
         await localDesktop.link("シェア " + getCurrentDateTime(), localFile.id);
       }
-      await recordCurrentFileId(file as NodeId);
+      await recordCurrentFileInfo({id: file as NodeId, fileSystem: 'local'});
     } else if (urlParams.has('build')) {
       console.log("loadSharedBook: build");
       logEvent(getAnalytics(), 'layover');
@@ -183,9 +205,9 @@
       commitBook(book, null);
       await saveBookTo(book, localFileSystem, localFile);
       await localDesktop.link(getCurrentDateTime(), localFile.id);
-      await recordCurrentFileId(localFile.id as NodeId);
+      await recordCurrentFileInfo({id: localFile.id as NodeId, fileSystem: 'local'});
     } else if (urlParams.has('reset')) {
-      await recordCurrentFileId(undefined);
+      await recordCurrentFileInfo(undefined);
     } else {
       return false;
     }
@@ -208,7 +230,7 @@
       const root = await fileSystem.getRoot();
       const desktop = await root.getNodeByName("デスクトップ");
       const { file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
-      await recordCurrentFileId(file.id as NodeId);
+      await recordCurrentFileInfo({id: file.id as NodeId, fileSystem: 'local'});
       currentRevision = {...book.revision};
       $mainBookFileSystem = fileSystem;
       $mainBook = book;
@@ -261,12 +283,17 @@
     $mascotVisible = false;
 
     $loading = true;
+    const isCloud = lt.fileSystem.id !== fileSystem.id;
+    if (isCloud) {
+      toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
+    }
     const file = (await lt.fileSystem.getNode(lt.nodeId)).asFile();
     const book = await loadBookFrom(lt.fileSystem, file);
     refreshFilms(book);
     currentRevision = {...book.revision};
     $mainBookFileSystem = lt.fileSystem;
-    $mainBook = book; // TODO: ここで無駄なセーブが走っている
+    $mainBook = book;
+    recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: isCloud ? 'cloud' : 'local'});
     $frameInspectorTarget = null;
     $loading = false;
   }
