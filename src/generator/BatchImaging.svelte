@@ -1,24 +1,19 @@
 <script lang="ts">
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
-  import { batchImagingPage } from "./batchImagingStore";
+  import { batchImagingPage, busy } from "./batchImagingStore";
   import { collectLeaves } from '../lib/layeredCanvas/dataModels/frameTree';
   import Drawer from '../utils/Drawer.svelte'
   import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
   import BatchImagingFlux from './BatchImagingFlux.svelte';
-  import { commitBook, type Page } from "../bookeditor/book";
+  import type { Page } from "../bookeditor/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { mainBook, redrawToken } from '../bookeditor/bookStore';
   import type { ImagingContext } from '../utils/feathralImaging';
+  import ImagingProgressBar from './ImagingProgressBar.svelte';
 
   import "../box.css"  
   import feathralIcon from '../assets/feathral.png';
 
-  let busy: boolean;
   let tabSet: number = 0;
-  let totalCount = 1;
-  let filledCount = 0;
-  let dalle3;
-  let flux;
   let imagingContext: ImagingContext = {
     awakeWarningToken: false,
     errorToken: false,
@@ -36,22 +31,11 @@
     const m = leaves.length;
     const n = leaves.filter((leaf) => 0 < leaf.filmStack.films.length).length;
 
-    totalCount = m;
-    filledCount = n;
-    console.log(totalCount, filledCount);
+    imagingContext.total = m;
+    imagingContext.succeeded = n;
+    console.log(imagingContext);
   }
 
-  async function execute(child: any) {
-    console.log('execute');
-    busy = true;
-    await child.excecute($batchImagingPage);
-    busy = false;     
-    console.log('execute done');
-    commitBook($mainBook, null);
-    $mainBook = $mainBook;
-    $redrawToken = true;
-    $batchImagingPage = $batchImagingPage;
-  }
 </script>
 
 <Drawer open={$batchImagingPage != null} size="220px" on:clickAway={() => $batchImagingPage = null} placement={"top"}>
@@ -61,37 +45,29 @@
       <Tab regionTab="w-24" bind:group={tabSet} name="tab1" value={1}>Dall・E 3</Tab>
     </TabGroup>  
     <div class="w-full h-full">
-      {#if busy}
-        <div class="content">
-          <ProgressRadial width={"w-16"}/>
-          <div class="hbox gap-2">
-            <div>成功</div>
-            <div>{imagingContext.succeeded}</div>
-            <div>失敗</div>
-            <div>{imagingContext.failed}</div>
-            <div>合計</div>
-            <div>{imagingContext.total}</div>
+      {#if $busy}
+        <div class="w-full h-full flex flex-row justify-center">
+          <div class="progress-container">
+            <ImagingProgressBar bind:imagingContext={imagingContext}/>
           </div>
         </div>
       {:else}
         <div class="hbox h-full">
           <div class="common w-64 h-full flex flex-col justify-center gap-2">
             <div>画像一括生成</div>
-            <div>{filledCount}/{totalCount}</div>
+            <div>{imagingContext.succeeded}/{imagingContext.total}</div>
           </div>
           <div class="content h-full flex flex-col justify-center gap-2">
             {#if tabSet === 0}
-              <BatchImagingFlux bind:this={flux} bind:imagingContext={imagingContext}/>
-              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(flux)}>開始</button>
+              <BatchImagingFlux bind:imagingContext={imagingContext}/>
             {:else if tabSet === 1}
-              <BatchImagingDalle3 bind:this={dalle3} bind:imagingContext={imagingContext}/>
-              <button class="btn btn-sm variant-filled w-32" disabled={filledCount === totalCount} on:click={()=> execute(dalle3)}>開始</button>
+              <BatchImagingDalle3 bind:imagingContext={imagingContext}/>
             {/if}
           </div>
         </div>
       {/if}
     </div> 
-</div>
+  </div>
 </Drawer>  
 
 <style>
@@ -120,5 +96,15 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
+  }
+  .progress-container {
+    width: 600px;
+    height: 100%;
+    align-self: center;
+  }
+  h2 {
+    font-family: '源暎エムゴ';
+    font-weight: 500;
+    font-size: 24px;
   }
 </style>

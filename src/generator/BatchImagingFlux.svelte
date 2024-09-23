@@ -1,6 +1,4 @@
 <script lang="ts">
-  import "../box.css"  
-  import { onMount } from 'svelte';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
@@ -11,24 +9,27 @@
   import { persistent } from '../utils/persistent';
   import { type ImagingContext, generateFluxImage } from '../utils/feathralImaging';
   import { createCanvasFromImage } from '../utils/imageUtil';
+  import { busy, batchImagingPage } from './batchImagingStore';
+  import { mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { commitBook } from '../bookeditor/book';
+  import "../box.css"  
 
   export let imagingContext: ImagingContext;
 
   let keyValueStorage: KeyValueStorage = null;
-  let storedApiKey: string = null;
-  let apiKey: string;
   let postfix: string = "";
-  
 
-  $: onUpdateApiKey(apiKey);
-  async function onUpdateApiKey(ak: string) {
-    if (!keyValueStorage || !keyValueStorage.isReady() || ak === storedApiKey) { return; }
-    await keyValueStorage.set("apiKey", ak);
-    storedApiKey = ak;
-  }
+  async function execute() {
+    console.log('execute');
+    $busy = true;
+    await generateAll($batchImagingPage);
+    $busy = false;
+    console.log('execute done');
 
-  export async function excecute(page: Page) {
-    await generateAll(page);
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
+    $redrawToken = true;
+    $batchImagingPage = $batchImagingPage;
   }
 
   async function generate(frame: FrameElement) {
@@ -71,12 +72,6 @@
     }
     $updateToken = true;
   }
-
-  onMount(async () => {
-    await keyValueStorage.waitForReady();
-    storedApiKey = await keyValueStorage.get("apiKey") ?? '';
-    apiKey = storedApiKey;
-  });
 </script>
 
 <div class="flex flex-col justify-center gap-2">
@@ -86,6 +81,7 @@
     <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
   <p><Feathral/></p>
+  <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
   {:else}
   <p>ログインしてください</p>
   {/if}

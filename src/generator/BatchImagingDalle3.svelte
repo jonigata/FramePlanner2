@@ -1,5 +1,4 @@
 <script lang="ts">
-  import "../box.css"  
   import { onMount } from 'svelte';
   import OpenAI from 'openai';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
@@ -10,10 +9,16 @@
   import type { Page } from '../bookeditor/book';
   import { createCanvasFromImage } from "../utils/imageUtil";
   import type { ImagingContext } from '../utils/feathralImaging';
+  import { busy, batchImagingPage } from './batchImagingStore';
+  import { mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { commitBook } from '../bookeditor/book';
+  import { persistent } from '../utils/persistent';
+  import "../box.css"  
 
   export let imagingContext: ImagingContext;
 
   let keyValueStorage: KeyValueStorage = null;
+  let postfix: string = "";
   let storedApiKey: string = null;
   let apiKey: string;
 
@@ -24,8 +29,17 @@
     storedApiKey = ak;
   }
 
-  export async function excecute(page: Page) {
-    await generateAll(page);
+  async function execute() {
+    console.log('execute');
+    $busy = true;
+    await generateAll($batchImagingPage);
+    $busy = false;
+    console.log('execute done');
+
+    commitBook($mainBook, null);
+    $mainBook = $mainBook;
+    $redrawToken = true;
+    $batchImagingPage = $batchImagingPage;
   }
 
   // ImageGeneratorDalle3からコピペした
@@ -40,7 +54,7 @@
       let n = 0;
       const response: OpenAI.Images.ImagesResponse = await openai.images.generate({
         model: 'dall-e-3',
-        prompt: frame.prompt,
+        prompt: `${postfix}\n${frame.prompt}`,
         response_format: 'b64_json',
       });
 
@@ -93,6 +107,11 @@
 
 <div class="flex flex-col justify-center gap-2">
   <div class="hbox gap-2">API key <input type="password" autocomplete="off" bind:value={apiKey}/></div>
+  <div class="hbox gap-2">
+    スタイル
+    <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+  </div>
+  <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
 </div>
 
 <KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>

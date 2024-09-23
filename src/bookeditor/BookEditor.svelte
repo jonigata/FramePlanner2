@@ -174,6 +174,8 @@
 
   function batchImaging(index: number) {
     console.log("batchImaging", index);
+    $frameInspectorTarget = null;
+    $bubbleInspectorTarget = null;
     $batchImagingPage = $mainBook.pages[index];
   }
 
