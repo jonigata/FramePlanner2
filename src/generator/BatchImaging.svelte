@@ -72,6 +72,7 @@
 
 <style>
   .drawer-content {
+    font-family: '源暎エムゴ';
     background-color: rgb(var(--color-surface-100));
     height: 100%;
   }
@@ -80,7 +81,6 @@
     flex-direction: row;
   }
   .common {
-    font-family: '源暎エムゴ';
     font-weight: 500;
     font-size: 24px;
     text-align: center;

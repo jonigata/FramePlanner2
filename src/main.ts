@@ -44,6 +44,7 @@ function loadFont(family: string, filename: string, weight: string) {
   const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
   document.fonts.add(font);
 }
+loadFont('源暎アンチック', 'GenEiAntiqueNv5-M', '400');
 loadFont('源暎エムゴ', 'GenEiMGothic2-Black', '700');
 
 import { register } from 'swiper/element/bundle';

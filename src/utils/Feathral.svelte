@@ -3,6 +3,14 @@
   import feathralIcon from '../assets/feathral.png';
 </script>
 
-<div class="hbox">
-  <img src={feathralIcon} alt="feathral" width=24 height=24/>Feathral: {$onlineAccount.feathral}
+<div class="flex flex-row">
+  <img src={feathralIcon} alt="feathral" width=24 height=24/>
+  <span class="caption">Feathral: {$onlineAccount.feathral}</span>
 </div>
+
+<style>
+  .caption {
+    font-family: '源暎アンチック';
+    font-size: 18px;
+  }
+</style>

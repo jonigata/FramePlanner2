@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import OpenAI from 'openai';
-  import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type Layout } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -39,13 +39,14 @@
     commitBook($mainBook, null);
     $mainBook = $mainBook;
     $redrawToken = true;
-    $batchImagingPage = $batchImagingPage;
+    $batchImagingPage = null;
   }
 
-  // ImageGeneratorDalle3からコピペした
-  async function generate(frame: FrameElement) {
+  async function generate(paperSize: [number, number], leafLayout: Layout) {
     console.log("running dalle3");
     try {
+      const frame = leafLayout.element;
+
       const openai = new OpenAI({
         apiKey,
         dangerouslyAllowBrowser: true
@@ -68,6 +69,13 @@
       film.media = media;
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
+
+      const transformer = new FilmStackTransformer(paperSize, frame.filmStack.films);
+      transformer.scale(0.01);
+      console.log("scaled");
+      constraintLeaf(paperSize, leafLayout);
+      $redrawToken = true;
+
       imagingContext.succeeded++;
     } catch (e) {
       console.log(e);
@@ -77,25 +85,21 @@
   }
 
   async function generateAll(page: Page) {
+    imagingContext.awakeWarningToken = true;
+    imagingContext.errorToken = true;
+
+    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leaves = collectLeaves(page.frameTree);
     const promises = [];
     for (const leaf of leaves) {
       if (0 < leaf.filmStack.films.length) { continue; }
-      promises.push(generate(leaf));
+      const leafLayout = findLayoutOf(pageLayout, leaf);
+      promises.push(generate(page.paperSize, leafLayout));
     }
     imagingContext.total = promises.length;
     imagingContext.succeeded = 0;
     imagingContext.failed = 0;
     await Promise.all(promises);
-
-    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-    for (const leaf of leaves) {
-      if (0 < leaf.filmStack.films.length) { continue; }
-      const layout = findLayoutOf(pageLayout, leaf);
-      const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
-      transformer.scale(0.01);
-      constraintLeaf(page.paperSize, layout);
-    }
   }
 
   onMount(async () => {
@@ -105,20 +109,41 @@
   });
 </script>
 
-<div class="flex flex-col justify-center gap-2">
-  <div class="hbox gap-2">API key <input type="password" autocomplete="off" bind:value={apiKey}/></div>
-  <div class="hbox gap-2">
-    スタイル
-    <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+<div class="flex flex-col gap-2 mt-2 w-full h-full">
+  <div class="flex flex-row gap-2">
+    <h3>API key</h3>
+    <input class="input" type="password" autocomplete="off" bind:value={apiKey}/>
+  </div>
+  <div class="flex flex-row gap-2 items-center">
+    <h3>スタイル</h3>
+    <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
   <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
 </div>
+
+
+
 
 <KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
   input {
-    width: 450px;
+    width: 300px;
     font-size: 15px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  h3 {
+    font-family: '源暎エムゴ';
+    font-weight: 500;
+    font-size: 20px;
+  }
+  .textarea-style {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: '源暎アンチック';
+    border-radius: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 </style>
