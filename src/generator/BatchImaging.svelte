@@ -18,7 +18,6 @@
   let totalCount = 1;
   let filledCount = 0;
   let dalle3;
-  let feathral;
   let flux;
   let imagingContext: ImagingContext = {
     awakeWarningToken: false,

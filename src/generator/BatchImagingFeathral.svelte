@@ -6,7 +6,7 @@
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
-  import { onlineAccount, updateToken } from "../utils/accountStore";
+  import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
   import { type ImagingContext, generateImage } from '../utils/feathralImaging';
@@ -82,7 +82,7 @@
     スタイル
     <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
-  {#if $onlineAccount}
+  {#if $onlineStatus == 'signed-in'}
   <p><Feathral/></p>
   {/if}
 </div>

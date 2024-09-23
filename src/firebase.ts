@@ -116,7 +116,7 @@ export function startAuth(elementId: string) {
   ui.start(elementId, uiConfig);  
 }
 
-export async function updateFeathral(): Promise<number> {
+export async function getFeathral(): Promise<number> {
   const functions = getFunctions(app);
   useEmulatorIfDevelopment();
   const updateFeathral = httpsCallable(functions, 'updatefeathralifneeded');

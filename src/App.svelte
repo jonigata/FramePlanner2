@@ -9,7 +9,7 @@
   import * as Sentry from "@sentry/svelte";
   import { Modals } from 'svelte-modals'
   import { mascotVisible } from './mascot/mascotStore';
-  import { onlineAccount } from './utils/accountStore';
+  import { bootstrap, onlineStatus } from './utils/accountStore';
   import { developmentFlag } from "./utils/developmentFlagStore";
 
   //import '../app.postcss';  
@@ -40,7 +40,6 @@
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
   import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
-  import Account from './utils/Account.svelte';
   import Mascot from './mascot/Mascot.svelte'
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
@@ -81,6 +80,8 @@
 
   onMount(async () => {
     document.body.style.overflow = 'hidden'; // HACK
+
+    bootstrap();
 
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
@@ -127,7 +128,7 @@
 <PageInspector/>
 <FrameInspector/>
 <BubbleInspector/>
-{#if $mascotVisible && $onlineAccount != null}
+{#if $mascotVisible && $onlineStatus === 'signed-in'}
   <Mascot/>
 {/if}
 <DebugOnly>
@@ -143,7 +144,7 @@
 <MaterialBucketButton />
 <NewBookButton  />
 <CabinetButton />
-{#if $onlineAccount != null}
+{#if $onlineStatus === 'signed-in'}
   <BellButton />
 {/if}
 <RulerButton/>
@@ -167,7 +168,6 @@
 <Toast/>
 <BookArchiver/>
 <FontLoader/>
-<Account/>
 
 <!-- skeletonのModal -->
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>

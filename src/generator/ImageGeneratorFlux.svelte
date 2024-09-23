@@ -1,9 +1,9 @@
 <script lang="ts">
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
-  import { onlineAccount } from "../utils/accountStore";
+  import { onlineAccount, onlineStatus } from "../utils/accountStore";
   import { onMount } from 'svelte';
-  import { updateFeathral } from '../firebase';
+  import { getFeathral } from '../firebase';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
@@ -97,14 +97,14 @@
   }
 
   onMount(async () => {
-    $onlineAccount.feathral = await updateFeathral();
+    $onlineAccount.feathral = await getFeathral();
     console.log($onlineAccount.feathral);
   });
 
 </script>
 
 <div class="drawer-content">
-  {#if $onlineAccount != null}
+  {#if $onlineStatus === 'signed-in'}
   <p><Feathral/></p>
 
   <p>モード</p>
@@ -160,13 +160,13 @@
     {#if $onlineAccount.feathral < 1}
     <div class="warning">Feathralが足りません</div>
     {/if}
+
+    <ProgressBar label="Progress Bar" value={progress} max={1} />
+    <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
   </div>
   {:else}
     <p>サインインしてください</p>
   {/if}
-
-  <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <style>

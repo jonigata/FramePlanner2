@@ -28,7 +28,7 @@
   import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
   import { createImageFromCanvas } from '../utils/imageUtil';
   import { emptyNotebook } from '../notebook/notebook';
-  import { onlineAccount, type OnlineAccount } from '../utils/accountStore';
+  import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
 
   export let fileSystem: FileSystem;
 
@@ -44,9 +44,9 @@
 
   let usedSize: string;
 
-  $: onBuildCloudFileSystem($onlineAccount);
-  async function onBuildCloudFileSystem(oa: OnlineAccount) { 
-    if (!oa) { return; }
+  $: onBuildCloudFileSystem($onlineStatus);
+  async function onBuildCloudFileSystem(status: OnlineStatus) { 
+    if (status != 'signed-in') { return; }
     cloudFileSystem = await buildCloudFileSystem();
 
     cloudRoot = await cloudFileSystem.getRoot();

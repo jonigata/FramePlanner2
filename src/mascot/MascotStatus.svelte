@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { accountUser } from "../utils/accountStore";
+  import { onlineAccount } from "../utils/accountStore";
   import { getDatabase } from "../firebase";
   import { ref, off, onValue, type DatabaseReference } from "firebase/database";
 
@@ -23,7 +23,7 @@
   onMount(() => {
     // firebase realtime databaseの/Users/${$accountUser.uid}/aiStatusを監視する
     const database = getDatabase();
-    aiStatusRef = ref(database, `/Users/${$accountUser.uid}/aiStatus`);
+    aiStatusRef = ref(database, `/Users/${$onlineAccount.user.uid}/aiStatus`);
     onValue(aiStatusRef, (snapshot) => {
       const data = snapshot.val();
       console.log(data);

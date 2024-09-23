@@ -6,7 +6,7 @@
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
-  import { onlineAccount, updateToken } from "../utils/accountStore";
+  import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistent } from '../utils/persistent';
   import { type ImagingContext, generateFluxImage } from '../utils/feathralImaging';
@@ -80,12 +80,14 @@
 </script>
 
 <div class="flex flex-col justify-center gap-2">
+  {#if $onlineStatus === 'signed-in'}
   <div class="hbox gap-2">
     スタイル
     <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
-  {#if $onlineAccount}
   <p><Feathral/></p>
+  {:else}
+  <p>ログインしてください</p>
   {/if}
 </div>
 
