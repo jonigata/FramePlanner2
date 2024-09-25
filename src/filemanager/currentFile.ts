@@ -15,11 +15,12 @@ export async function fetchCurrentFileInfo(): Promise<CurrentFileInfo | null> {
   const info = sessionStorage.getItem('currentFileId');
   if (!info) { return null; }
 
-  const parsed = JSON.parse(info);
-  // 互換性
-  if (typeof parsed === 'string') {
-    console.log('compatibility');
-    return {id: parsed, fileSystem: 'local'};
+  try {
+    const parsed = JSON.parse(info);
+    return parsed;  
   }
-  return parsed;  
+  catch {
+    // 互換性
+    return {id: info as NodeId, fileSystem: 'local'};
+  }
 }
