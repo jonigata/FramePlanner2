@@ -376,8 +376,8 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
 export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement, frameElement1: FrameElement): void {
   const { slots, contents } = seq;
 
-  let content0 = null;
-  let content1 = null;
+  let content0: FrameContent = null;
+  let content1: FrameContent = null;
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const layout = slot.layout;
@@ -389,12 +389,12 @@ export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement
     }
   }
 
-  for (let i = 0; i < seq.slots.length; i++) {
+  for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const layout = slot.layout;
     const frameTree = layout.element;
     const content = contents[i];
-    let swapContent = null;
+    let swapContent: FrameContent = null;
     if (frameTree === frameElement0) {
       swapContent = content1;
     } else if (frameTree === frameElement1) {
