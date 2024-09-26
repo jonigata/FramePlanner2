@@ -376,58 +376,69 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
 export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement, frameElement1: FrameElement): void {
   const { slots, contents } = seq;
 
+  let slot0: FrameSlot = null;
   let content0: FrameContent = null;
+  let slot1: FrameSlot = null;
   let content1: FrameContent = null;
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const layout = slot.layout;
     const frameTree = layout.element;
     if (frameTree === frameElement0) {
+      slot0 = slot;
       content0 = contents[i];
     } else if (frameTree === frameElement1) {
+      slot1 = slot;
       content1 = contents[i];
     }
   }
 
-  for (let i = 0; i < slots.length; i++) {
-    const slot = slots[i];
-    const layout = slot.layout;
-    const frameTree = layout.element;
-    const content = contents[i];
-    let swapContent: FrameContent = null;
-    if (frameTree === frameElement0) {
-      swapContent = content1;
-    } else if (frameTree === frameElement1) {
-      swapContent = content0;
-    }
-    if (swapContent == null) { 
-      content.sourcePage.bubbles.push(...content.bubbles);
-      continue; 
-    }
+  if (!slot0 || !slot1) {
+    console.log("swapBookContents: not found");
+    return;
+  }
 
-    frameTree.filmStack = new FilmStack();
-    frameTree.filmStack.films = [...swapContent.filmStack.films];
-    frameTree.prompt = swapContent.prompt;
+  const element0 = slot0.layout.element;
+  const element1 = slot1.layout.element;
 
-    const transformer = new FilmStackTransformer(slot.page.paperSize, frameTree.filmStack.films);
+  const swapFilmStack = element0.filmStack;
+  element0.filmStack = element1.filmStack;
+  element1.filmStack = swapFilmStack;
+
+  const swapPrompt = element0.prompt;
+  element0.prompt = element1.prompt;
+  element1.prompt = swapPrompt;
+
+  function fitFilms(paperSize: Vector, layout: Layout): void {
+    const transformer = new FilmStackTransformer(paperSize, layout.element.filmStack.films);
     transformer.scale(0.01);
-    constraintLeaf(slot.page.paperSize, layout);
+    constraintLeaf(paperSize, layout);
+  }
+  fitFilms(slot0.page.paperSize, slot0.layout);
+  fitFilms(slot1.page.paperSize, slot1.layout);
 
-    const [sx, sy, sw, sh] = swapContent.sourceRect;
-    const [tx, ty, tw, th] = trapezoidBoundingRect(layout.corners);
-    console.log([sx, sy, sw, sh], [tx, ty, tw, th]);
-    for (let b of swapContent.bubbles) {
-      b.pageNumber = slot.pageNumber;
-      const bc = b.getPhysicalCenter(swapContent.sourcePage.paperSize);
+  function alignBubbles(targetSlot: FrameSlot, sourceContent: FrameContent) {
+    const [sx, sy, sw, sh] = sourceContent.sourceRect;
+    const [tx, ty, tw, th] = trapezoidBoundingRect(targetSlot.layout.corners);
+
+    for (let b of sourceContent.bubbles) {
+      b.pageNumber = targetSlot.pageNumber;
+      if (targetSlot.page !== sourceContent.sourcePage) {
+        const sourceBubbles = sourceContent.sourcePage.bubbles;
+        sourceBubbles.splice(sourceBubbles.findIndex(e => e === b), 1);
+        targetSlot.page.bubbles.push(b);
+      }
+
+      const bc = b.getPhysicalCenter(sourceContent.sourcePage.paperSize);
       const cc: Vector = [
         tx + tw * (bc[0] - sx) / sw,
         ty + th * (bc[1] - sy) / sh,
       ];
-      console.log(bc, cc, slot.page.paperSize);
-      b.setPhysicalCenter(slot.page.paperSize, cc);
+      b.setPhysicalCenter(targetSlot.page.paperSize, cc);
     }
-    content.sourcePage.bubbles.push(...swapContent.bubbles);
   }
+  alignBubbles(slot0, content1);
+  alignBubbles(slot1, content0);
 }
 
 export function collectAllFilms(book: Book): Film[] {
