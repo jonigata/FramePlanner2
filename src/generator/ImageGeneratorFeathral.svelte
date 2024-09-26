@@ -7,7 +7,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
-  import { persistent } from '../utils/persistent';
+  import { persistentText } from '../utils/persistentText';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
@@ -81,7 +81,7 @@
   <p><Feathral/></p>
 
   <p>スタイル</p>
-  <textarea class="w-96 textarea" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+  <textarea class="w-96 textarea" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   <p>プロンプト</p>
   <textarea class="textarea" bind:value={prompt}/>
 <!--

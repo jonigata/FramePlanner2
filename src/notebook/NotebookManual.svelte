@@ -5,7 +5,7 @@
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
-  import { persistent } from '../utils/persistent';
+  import { persistentText } from '../utils/persistentText';
   import { onlineAccount } from '../utils/accountStore';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { ulid } from 'ulid';
@@ -313,7 +313,7 @@
     </div>
     <div class="flex flex-row mt-2 items-center">
       <span class="w-16">スタイル</span>
-      <input type="text" class="input portrait-style" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+      <input type="text" class="input portrait-style" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
     </div>
   </div>
   <div class="section">

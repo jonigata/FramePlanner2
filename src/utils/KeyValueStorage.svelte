@@ -11,7 +11,7 @@
 
   // IndexedDBを開く
   onMount(async () => {
-    db.set(await openDB(dbName, 2, {
+    db.set(await openDB(dbName, 1, {
       async upgrade(db) {
         db.createObjectStore(storeName, { keyPath: 'key' });
       }

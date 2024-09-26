@@ -6,7 +6,7 @@
   import type { Page } from '../bookeditor/book';
   import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
-  import { persistent } from '../utils/persistent';
+  import { persistentText } from '../utils/persistentText';
   import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
   import { createCanvasFromImage } from '../utils/imageUtil';
   import { busy, batchImagingPage } from './batchImagingStore';
@@ -89,7 +89,7 @@
       <h3>モード</h3>
       <FluxModes bind:mode={mode}/>
       <h3>スタイル</h3>
-      <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+      <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
       </div>
     <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
   {/if}

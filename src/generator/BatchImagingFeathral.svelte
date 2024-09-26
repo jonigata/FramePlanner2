@@ -8,7 +8,7 @@
   import type { Page } from '../bookeditor/book';
   import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
-  import { persistent } from '../utils/persistent';
+  import { persistentText } from '../utils/persistentText';
   import { type ImagingContext, generateImage } from '../utils/feathralImaging';
   import { createCanvasFromImage } from '../utils/imageUtil';
 
@@ -80,7 +80,7 @@
 <div class="flex flex-col justify-center gap-2">
   <div class="hbox gap-2">
     スタイル
-    <textarea class="w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+    <textarea class="w-96" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
   {#if $onlineStatus == 'signed-in'}
   <p><Feathral/></p>

@@ -2,8 +2,49 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import type { Mode } from '../utils/feathralImaging';
   import feathralIcon from '../assets/feathral.png';
+  import { openDB } from 'idb';
+  import { onMount } from 'svelte';
   
+  function createPersistent<T>(dbName: string, storeName: string, key: string) {
+    const dbPromise = openDB(dbName, 1, {
+      async upgrade(db) {
+        db.createObjectStore(storeName);
+      }
+    });
+
+    let saved: T = undefined;
+    return {
+      get: async () => {
+        saved = await (await dbPromise).get(storeName, key);
+        return saved;
+      },
+      getOrDefault: async (defaultValue: T) => {
+        saved = await (await dbPromise).get(storeName, key);
+        if (saved === undefined) {
+          saved = defaultValue;
+          await (await dbPromise).put(storeName, defaultValue, key);
+        }
+        return saved;
+      },
+      set: async (value: T) => {
+        if (value !== saved) {
+          saved = value;
+          await (await dbPromise).put(storeName, value, key);
+        }
+      }
+    };
+  }
+
   export let mode: Mode
+
+  const persistent = createPersistent<Mode>("preferences", "flux", "mode");
+
+  onMount(async () => {
+    mode = await persistent.getOrDefault(mode);
+  });
+
+  $: persistent.set(mode).then(() => console.log("save done", mode));
+
 </script>
 
 <div class="vbox left gap-2 mode">

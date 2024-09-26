@@ -12,7 +12,7 @@
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
   import { commitBook } from '../bookeditor/book';
-  import { persistent } from '../utils/persistent';
+  import { persistentText } from '../utils/persistentText';
   import "../box.css"  
 
   export let imagingContext: ImagingContext;
@@ -116,7 +116,7 @@
   </div>
   <div class="flex flex-row gap-2 items-center">
     <h3>スタイル</h3>
-    <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistent={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+    <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
   <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
 </div>

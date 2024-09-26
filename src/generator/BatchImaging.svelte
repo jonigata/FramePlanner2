@@ -102,9 +102,4 @@
     height: 100%;
     align-self: center;
   }
-  h2 {
-    font-family: '源暎エムゴ';
-    font-weight: 500;
-    font-size: 24px;
-  }
 </style>

@@ -8,7 +8,7 @@ interface PersistentOptions {
   onLoad?: (value: string) => void;
 }
 
-export function persistent(node: HTMLElement, options: PersistentOptions) {
+export function persistentText(node: HTMLElement, options: PersistentOptions) {
   const { db, store, key, version = 1, onLoad } = options;
 
   const dbPromise = openDB(db, version, {
