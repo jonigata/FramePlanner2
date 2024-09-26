@@ -1,10 +1,8 @@
 <script lang="ts">
   import "../box.css"  
-  import { onMount } from 'svelte';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
@@ -14,17 +12,7 @@
 
   export let imagingContext: ImagingContext;
 
-  let keyValueStorage: KeyValueStorage = null;
-  let storedApiKey: string = null;
-  let apiKey: string;
   let postfix: string = "";
-
-  $: onUpdateApiKey(apiKey);
-  async function onUpdateApiKey(ak: string) {
-    if (!keyValueStorage || !keyValueStorage.isReady() || ak === storedApiKey) { return; }
-    await keyValueStorage.set("apiKey", ak);
-    storedApiKey = ak;
-  }
 
   export async function excecute(page: Page) {
     await generateAll(page);
@@ -69,25 +57,17 @@
     }
     $updateToken = true;
   }
-
-  onMount(async () => {
-    await keyValueStorage.waitForReady();
-    storedApiKey = await keyValueStorage.get("apiKey") ?? '';
-    apiKey = storedApiKey;
-  });
 </script>
 
 <div class="flex flex-col justify-center gap-2">
   <div class="hbox gap-2">
     スタイル
-    <textarea class="w-96" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+    <textarea class="w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
   {#if $onlineStatus == 'signed-in'}
   <p><Feathral/></p>
   {/if}
 </div>
-
-<KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
 </style>

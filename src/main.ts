@@ -49,3 +49,6 @@ loadFont('源暎エムゴ', 'GenEiMGothic2-Black', '700');
 
 import { register } from 'swiper/element/bundle';
 register();
+
+import { assurePreferences } from "./preferences";
+assurePreferences();

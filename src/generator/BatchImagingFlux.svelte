@@ -2,7 +2,6 @@
   import { collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type Layout } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
@@ -17,7 +16,6 @@
 
   export let imagingContext: ImagingContext;
 
-  let keyValueStorage: KeyValueStorage = null;
   let postfix: string = "";
   let mode: Mode = "schnell";
 
@@ -37,7 +35,7 @@
   async function generate(paperSize: [number, number], leafLayout: Layout) {
     console.log("postfix", postfix);
     const frame = leafLayout.element;
-    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", "schnell", 1, imagingContext);
+    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", mode, 1, imagingContext);
     if (result != null) {
       await result.images[0].decode();
       const film = new Film();
@@ -89,13 +87,11 @@
       <h3>モード</h3>
       <FluxModes bind:mode={mode}/>
       <h3>スタイル</h3>
-      <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+      <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
       </div>
     <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
   {/if}
 </div>
-
-<KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
   h3 {

@@ -3,11 +3,11 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
   import SliderEdit from '../utils/SliderEdit.svelte';
-  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makePlainImage } from "../utils/imageUtil";
   import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas";
+  import { createPreference } from '../preferences';
 
   export let busy: boolean;
   export let prompt: string;
@@ -25,12 +25,14 @@
      "cfgScale": 7,
   }
   let progress = 0;
-  let keyValueStorage: KeyValueStorage = null;
   let refered: HTMLImageElement = null;
 
+  const preference1 = createPreference<string>("imaging", "imageRequest");
+  const preference2 = createPreference<string>("imaging", "url");
+
   async function generate() {
-    await keyValueStorage.set("imageRequest", JSON.stringify(imageRequest));
-    await keyValueStorage.set("url", url);
+    await preference1.set(JSON.stringify(imageRequest));
+    await preference2.set(url);
 
     let f = null;
     f = async () => {
@@ -64,12 +66,11 @@
   }
 
   onMount(async () => {
-    await keyValueStorage.waitForReady();
-    const data = await keyValueStorage.get("imageRequest");
-    url = await keyValueStorage.get("url") ?? url;
+    const data = await preference1.get();
     if (data) {
       imageRequest = JSON.parse(data);
     }
+    url = await preference2.get();
   });
 
   function generateWhiteImage() {
@@ -84,8 +85,8 @@
       return;
     } 
 
-    await keyValueStorage.set("imageRequest", JSON.stringify(imageRequest));
-    await keyValueStorage.set("url", url);
+    await preference1.set(JSON.stringify(imageRequest));
+    await preference2.set(url);
 
     let f = null;
     f = async () => {
@@ -178,8 +179,6 @@
   <ProgressBar label="Progress Bar" value={progress} max={1} />
   <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
-
-<KeyValueStorage bind:this={keyValueStorage} dbName={"stable-diffusion"} storeName={"default-parameters"}/>
 
 <style>
   .drawer-content {

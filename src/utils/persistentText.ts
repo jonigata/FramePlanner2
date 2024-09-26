@@ -1,36 +1,32 @@
-import { openDB } from 'idb';
+import { createPreference } from '../preferences';
 
 interface PersistentOptions {
-  db: string;
   store: string;
   key: string;
-  version?: number;
   onLoad?: (value: string) => void;
 }
 
 export function persistentText(node: HTMLElement, options: PersistentOptions) {
-  const { db, store, key, version = 1, onLoad } = options;
+  const { store, key, onLoad } = options;
 
-  const dbPromise = openDB(db, version, {
-    upgrade(db) {
-      db.createObjectStore(store);
-    }
-  });
+  const preference = createPreference<string>(store, key);
 
   async function load() {
-    const value = await (await dbPromise).get(store, key) || '';
-    if (onLoad) {
-      onLoad(value);
-    }
-    if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
-      node.value = value;
-    } else {
-      node.textContent = value;
+    const value = await preference.get();
+    if (value) {
+      if (onLoad) {
+        onLoad(value);
+      }
+      if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
+        node.value = value;
+      } else {
+        node.textContent = value;
+      }
     }
   }
 
   async function save(value: string) {
-    await (await dbPromise).put(store, value, key);
+    await preference.set(value);
   }
 
   function onInput() {

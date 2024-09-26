@@ -313,7 +313,7 @@
     </div>
     <div class="flex flex-row mt-2 items-center">
       <span class="w-16">スタイル</span>
-      <input type="text" class="input portrait-style" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+      <input type="text" class="input portrait-style" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
     </div>
   </div>
   <div class="section">

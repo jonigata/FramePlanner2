@@ -7,9 +7,6 @@
   import { parseFontFamily } from 'css-font-parser';
   import type { SearchOptions } from './fontStore';
   import WebFontListItem from "./WebFontListItem.svelte";
-  import KeyValueStorage from "../../utils/KeyValueStorage.svelte";
-
-  let kvs: KeyValueStorage = null;
 
   type FontDefinition = GoogleFontDefinition & { isGothic: boolean, isBold: boolean, isLocal: boolean };
 
@@ -208,21 +205,17 @@
   <GoogleFont fonts="{googleFonts}" display="swap"/>
 </svelte:head>
 
-<KeyValueStorage bind:this={kvs} dbName={"WebFontList"} storeName={"local-fonts"}/>
-
 <!--
 <div class="font-sample" style="font-family: 'genei-antique'; font-weight: 400; font-style: normal;">
   <span on:click={e=>{}}>源暎アンチック(ローカル) 今日はいい天気ですね</span>
 </div>
 -->
 
-{#if kvs}
-  {#each filteredFonts as font}
-    {#each font.variants as variant}
-      <WebFontListItem font={font} on:choose={chooseFont}/>
-    {/each}
+{#each filteredFonts as font}
+  {#each font.variants as variant}
+    <WebFontListItem font={font} on:choose={chooseFont}/>
   {/each}
-{/if}
+{/each}
 
 <style>
 </style>

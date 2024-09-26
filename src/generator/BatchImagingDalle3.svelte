@@ -5,7 +5,6 @@
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import type { Page } from '../bookeditor/book';
   import { createCanvasFromImage } from "../utils/imageUtil";
   import type { ImagingContext } from '../utils/feathralImaging';
@@ -13,20 +12,21 @@
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
   import { commitBook } from '../bookeditor/book';
   import { persistentText } from '../utils/persistentText';
+  import { createPreference } from '../preferences';
   import "../box.css"  
 
   export let imagingContext: ImagingContext;
 
-  let keyValueStorage: KeyValueStorage = null;
   let postfix: string = "";
-  let storedApiKey: string = null;
   let apiKey: string;
+
+  const apiKeyPreference1 = createPreference<string>("imaging", "openAiApiKey");
 
   $: onUpdateApiKey(apiKey);
   async function onUpdateApiKey(ak: string) {
-    if (!keyValueStorage || !keyValueStorage.isReady() || ak === storedApiKey) { return; }
-    await keyValueStorage.set("apiKey", ak);
-    storedApiKey = ak;
+    if (ak) {
+      await apiKeyPreference1.set(ak);
+    }
   }
 
   async function execute() {
@@ -103,9 +103,7 @@
   }
 
   onMount(async () => {
-    await keyValueStorage.waitForReady();
-    storedApiKey = await keyValueStorage.get("apiKey") ?? '';
-    apiKey = storedApiKey;
+    apiKey = await apiKeyPreference1.getOrDefault('');
   });
 </script>
 
@@ -116,15 +114,10 @@
   </div>
   <div class="flex flex-row gap-2 items-center">
     <h3>スタイル</h3>
-    <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+    <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
   <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
 </div>
-
-
-
-
-<KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
   input {

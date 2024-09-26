@@ -1,29 +1,28 @@
 <script lang="ts">
   import { ProgressBar } from '@skeletonlabs/skeleton';
 	import Gallery from './Gallery.svelte';
-  import KeyValueStorage from "../utils/KeyValueStorage.svelte";
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import OpenAI from 'openai';
   import { createCanvasFromImage } from '../utils/imageUtil';
+  import { createPreference } from '../preferences';
 
   export let busy: boolean;
   export let prompt: string;
   export let gallery: HTMLCanvasElement[];
   export let chosen: HTMLCanvasElement;
 
-  let imageRequest = {};
   let progress = 0;
-  let keyValueStorage: KeyValueStorage = null;
   let refered: HTMLImageElement = null;
-  let storedApiKey: string = null;
   let apiKey: string = '';
+
+  const apiKeyPreference1 = createPreference<string>("imaging", "openAiApiKey");
 
   $: onUpdateApiKey(apiKey);
   async function onUpdateApiKey(ak: string) {
-    if (!keyValueStorage || ak === storedApiKey) { return; }
-    await keyValueStorage.set("apiKey", ak);
-    storedApiKey = ak;
+    if (ak) {
+      await apiKeyPreference1.set(ak);
+    }
   }
 
   async function generate() {
@@ -69,15 +68,8 @@
   }
 
   onMount(async () => {
-    await keyValueStorage.waitForReady();
-    const data = await keyValueStorage.get("imageRequest");
-    if (data) {
-      imageRequest = JSON.parse(data);
-    }
-    storedApiKey = await keyValueStorage.get("apiKey") ?? '';
-    apiKey = storedApiKey;
+    apiKey = await apiKeyPreference1.getOrDefault('');
   });
-
 </script>
 
 <div class="drawer-content">
@@ -95,8 +87,6 @@
   <ProgressBar label="Progress Bar" value={progress} max={1} />
   <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
-
-<KeyValueStorage bind:this={keyValueStorage} dbName={"dall-e-3"} storeName={"default-parameters"}/>
 
 <style>
   .drawer-content {

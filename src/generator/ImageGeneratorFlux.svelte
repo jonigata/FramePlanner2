@@ -113,7 +113,7 @@
   </div>
 
   <p>スタイル</p>
-  <textarea class="w-96 textarea" bind:value={postfix} use:persistentText={{db: 'preferences', store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+  <textarea class="w-96 textarea" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   <p>プロンプト</p>
   <textarea class="textarea" bind:value={prompt}/>
 <!--
