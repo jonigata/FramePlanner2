@@ -424,6 +424,7 @@
 
   $: onFrameCommand($frameInspectorTarget);
   async function onFrameCommand(fit: FrameInspectorTarget) {
+    delayedCommiter.force();
     if (fit && fit.command != null) {
       $frameInspectorTarget = { ...fit, command: null };
 
@@ -440,6 +441,7 @@
 
   $: onBubbleCommand($bubbleInspectorTarget);
   async function onBubbleCommand(bit: BubbleInspectorTarget) {
+    delayedCommiter.force();
     if (bit && bit.command != null) {
       $bubbleInspectorTarget = { ...bit, command: null };
 
