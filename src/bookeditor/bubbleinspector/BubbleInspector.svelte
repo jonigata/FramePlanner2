@@ -94,6 +94,32 @@
   fontSizeStore.subscribe((v) => fontSize = v);
   $: $fontSizeStore = fontSize;
 
+  function reset() {
+    if (!$bubble) { return; }
+    $bubble.reset();
+    $bubble.initOptions();
+    $chosenShape = $bubble.shape;
+    $bubble = $bubble;
+  }
+
+  $:onChangeShape($chosenShape);
+  function onChangeShape(s: string) {
+    if ($bubble && $bubble.shape !== s) {
+      console.log("onChangeShape", s);
+      $bubble.shape = s;
+      $bubble.initOptions();
+    }
+  }
+
+  $:onChangeFont($chosenFont);
+  function onChangeFont(f: { fontFamily: string, fontWeight: string }) {
+    if ($bubble && f && ($bubble.fontFamily !== f.fontFamily || $bubble.fontWeight !== f.fontWeight)) {
+      $bubble.fontFamily = f.fontFamily;
+      $bubble.fontWeight = f.fontWeight;
+      $forceFontLoadToken = true;
+    }
+  }
+
   $:onChangeBubble($bubble);
   async function onChangeBubble(b: Bubble) {
     if (b === oldBubble) {
@@ -120,24 +146,6 @@
     }
   }
 
-  $:onChangeShape($chosenShape);
-  function onChangeShape(s: string) {
-    if ($bubble && $bubble.shape !== s) {
-      console.log("onChangeShape", s);
-      $bubble.shape = s;
-      $bubble.initOptions();
-    }
-  }
-
-  $:onChangeFont($chosenFont);
-  function onChangeFont(f: { fontFamily: string, fontWeight: string }) {
-    if ($bubble && f && ($bubble.fontFamily !== f.fontFamily || $bubble.fontWeight !== f.fontWeight)) {
-      $bubble.fontFamily = f.fontFamily;
-      $bubble.fontWeight = f.fontWeight;
-      $forceFontLoadToken = true;
-    }
-  }
-
   function makeSnapshot(b: Bubble) {
     let films = [];
     for (let film of b.filmStack.films) {
@@ -159,14 +167,6 @@
 
   function chooseShape() {
     $shapeChooserOpen = true;
-  }
-
-  function reset() {
-    if (!$bubble) { return; }
-    $bubble.reset();
-    $bubble.initOptions();
-    $bubble = $bubble;    
-    $chosenShape = $bubble.shape;
   }
 
   function split() {
