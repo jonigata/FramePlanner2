@@ -24,6 +24,7 @@
   import { bookEditor } from "../bookStore";
   import { selection, type SelectionInfo } from '../../utils/selection';
   import { transformText } from '../../firebase';
+  import { ProgressRadial } from '@skeletonlabs/skeleton';
 
   import horizontalIcon from '../../assets/horizontal.png';
   import verticalIcon from '../../assets/vertical.png';
@@ -40,6 +41,7 @@
   let textSelected = false;
   let drawerContent: HTMLDivElement;
   let transformTextMethod = "translateToEnglish";
+  let transforming = false;
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -238,9 +240,14 @@
 
   async function onTransformText() {
     console.log("onTransformText", transformTextMethod, $bubble.text);
+    transforming = true;
     const r = await transformText(transformTextMethod, $bubble.text);
     console.log(r);
+    transforming = false;
     $bubble.text = r.result.text;
+    if (transformTextMethod == "translateToEnglish") {
+      $bubble.direction = "h";
+    }
   }
 </script>
 
@@ -340,12 +347,18 @@
               </div>  
           </div>
           <h2>内容</h2>
-          <textarea
-            class="rounded-container-token textarea" 
-            bind:value={$bubble.text}
-            bind:this={textarea}
-            on:keypress={onKeyPress}
-            use:selection={onSelectionChanged}/>
+          {#if transforming}
+            <div class="textarea flex items-center justify-center">
+              <ProgressRadial stroke={100} width="w-10"/>
+            </div>
+          {:else}
+            <textarea
+              class="rounded-container-token textarea" 
+              bind:value={$bubble.text}
+              bind:this={textarea}
+              on:keypress={onKeyPress}
+              use:selection={onSelectionChanged}/>
+          {/if}
           <div class="btn-group variant-filled-primary h-6">
             <button disabled={!textSelected} on:click={onWrapColor}><span class="text-sm text-white">色</span></button>
             <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">ルビ</span></button>
