@@ -7,7 +7,7 @@ import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trape
 import { newPageProperty } from '../bookeditor/bookStore';
 import { get } from "svelte/store";
 import parseColor from 'color-parse';
-import AutoSizeTextarea from './AutoSizeTextarea.svelte';
+import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 
 function whitenColor(s: string, ratio: number): string {
   const c = parseColor(s);
@@ -29,13 +29,19 @@ function whitenColor(s: string, ratio: number): string {
 
 export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
   console.log(JSON.stringify(storyboard));
+  console.log(storyboard.format);
   const paperSize = get(newPageProperty).paperSize;
 
   const pages = [];
   for (const storyboardPage of storyboard.pages) {
     console.log(storyboardPage.layout);
 
-    const sample = makePageTemplateFromLightLayout(storyboardPage.layout);
+    let sample: ConvertedLayout = null;
+    if (storyboard.format == '4koma') {
+      sample = frameExamples[3];
+    } else {
+      sample = makePageTemplateFromLightLayout(storyboardPage.layout);
+    }
     console.log(sample);
     const frameTree = FrameElement.compile(sample.frameTree);
     const bubbles = sample.bubbles.map(b => Bubble.compile(paperSize, b));
