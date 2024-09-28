@@ -98,7 +98,7 @@ export class Bubble {
     this.appearanceDelay = 0;
     this.hidesText = false;
     this.rubySize = 0.4;    
-    this.rubyDistance = 0.65;
+    this.rubyDistance = 0.45;
   }
 
   getStackTrace() {
@@ -214,7 +214,7 @@ export class Bubble {
     b.uuid = json.uuid ?? ulid();
     b.parent = json.parent;
     b.rubySize = json.rubySize ?? 0.4;
-    b.rubyDistance = json.rubyDistance ?? 0.65;
+    b.rubyDistance = json.rubyDistance ?? 0.45;
     b.optionContext = Bubble.getInitialOptions(b);
     Object.assign(b.optionContext, json.optionContext ?? {});
     b.forceEnoughSize(paperSize);
@@ -249,7 +249,7 @@ export class Bubble {
       uuid: b.uuid,
       parent: b.parent,
       rubySize: b.rubySize == 0.4 ? undefined : b.rubySize,
-      rubyDistance: b.rubyDistance == 0.65 ? undefined : b.rubyDistance,
+      rubyDistance: b.rubyDistance == 0.45 ? undefined : b.rubyDistance,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
     };
   }

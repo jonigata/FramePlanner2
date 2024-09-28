@@ -23,7 +23,7 @@
   import Drawer from "../../utils/Drawer.svelte";
   import { bookEditor } from "../bookStore";
   import { selection, type SelectionInfo } from '../../utils/selection';
-
+  import { transformText } from '../../firebase';
 
   import horizontalIcon from '../../assets/horizontal.png';
   import verticalIcon from '../../assets/vertical.png';
@@ -39,6 +39,7 @@
   let textSelection: SelectionInfo = null;
   let textSelected = false;
   let drawerContent: HTMLDivElement;
+  let transformTextMethod = "translateToEnglish";
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -234,6 +235,13 @@
   function onWrapRotation() {
     wrapRange(textSelection, "<<", ">>");
   }
+
+  async function onTransformText() {
+    console.log("onTransformText", transformTextMethod, $bubble.text);
+    const r = await transformText(transformTextMethod, $bubble.text);
+    console.log(r);
+    $bubble.text = r.result.text;
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -343,6 +351,13 @@
             <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">ルビ</span></button>
             <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">縦中横</span></button>
           </div>
+          <div class="flex flex-row w-full gap-2">
+            <select class="select h-8 p-0 w-full" bind:value={transformTextMethod}>
+              <option value="translateToEnglish">英訳</option>
+              <option value="addFurigana">ふりがな</option>
+            </select>
+            <button type="button" class="btn btn-sm variant-filled" on:click={onTransformText}><span class="text-sm text-white">適用</span></button>
+          </div>          
         </div>
       </details>
 

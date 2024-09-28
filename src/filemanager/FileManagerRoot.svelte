@@ -112,7 +112,9 @@
             toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
           } else {
             await waitForChange(cloudReady, x => x);
-            toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
+            if (currentFileInfo.fileSystem === 'cloud') {
+              toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
+            }
             const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
             let currentFile = await fs.getNode(currentFileInfo.id);
             const newBook = await loadBookFrom(fs, currentFile.asFile());

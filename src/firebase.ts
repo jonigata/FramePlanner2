@@ -163,6 +163,11 @@ export async function listSharedImages(): Promise<any> {
   return r;
 }
 
+export async function transformText(method: string, text: string): Promise<any> {
+  const r = await callFunc('transformtext', {method, text}, 180);
+  return r;
+}
+
 function getAuth2() {
   return getAuth(app);
 }
