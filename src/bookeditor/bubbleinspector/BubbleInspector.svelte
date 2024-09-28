@@ -354,17 +354,19 @@
               <BubbleSample size={[64,96]} bind:shape={$chosenShape} on:click={chooseShape}/>
               <button class="save-button btn btn-sm variant-filled paper-size" on:click={saveTemplate}>SAVE</button>
             </div>
-            <div>
+            <div class="flex flex-col gap-2">
               <div class="flex items-center">
-                <div class="label">塗りつぶし</div>
+                <div class="label w-16">塗りつぶし</div>
                 <div class="color-label" use:toolTip={"フキダシ背景色"}>
                   <ColorPickerLabel bind:hex={$bubble.fillColor}/>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <div class="label">線の太さ</div>
+              <div class="flex items-center">
+                <div class="label w-16">線の太さ</div>
                 <RangeSlider name="outlinewidth" bind:value={$strokeWidth} max={20} step={1} style="width:80px;"/>
-                <div class="label">線の色</div>
+              </div>
+              <div class="flex items-center">
+                <div class="label w-16">線の色</div>
                 <div class="color-label" use:toolTip={"フキダシのフチの色"}>
                   <ColorPickerLabel bind:hex={$bubble.strokeColor}/>
                 </div>

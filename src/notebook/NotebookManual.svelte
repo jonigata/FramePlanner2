@@ -39,6 +39,7 @@
     failed: 0,
   };
   let imagingMode: Mode = "schnell";
+  let plotInstruction: string = '';
 
   function commit() {
     commitBook($mainBook, null);
@@ -128,7 +129,7 @@
   async function onPlotAdvise() {
     try {
       plotWaiting = true;
-      notebook.plot = await callAdvise('plot', notebook);
+      notebook.plot = await callAdvise('plot', notebook, plotInstruction);
       commit();
     }
     catch(e) {
@@ -324,6 +325,12 @@
     </h2>
     <div class="w-full">
       <NotebookTextarea bind:value={notebook.plot} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
+      {#if notebook.plot}
+        <div class="flex flex-row items-center">
+          <span class="w-24">変更指示</span>
+          <input type="text" bind:value={plotInstruction} class="input portrait-style"/>
+        </div>
+      {/if}
     </div>
   </div>
   <div class="section">
