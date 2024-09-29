@@ -14,7 +14,7 @@
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-  import { bubbleInspectorTarget, bubbleSplitCursor } from './bubbleInspectorStore';
+  import { bubbleInspectorRebuildToken, bubbleInspectorTarget, bubbleSplitCursor } from './bubbleInspectorStore';
   import { saveBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
@@ -369,7 +369,7 @@
               <option value="translateToEnglish">英訳</option>
               <option value="addFurigana">ふりがな</option>
             </select>
-            <button type="button" class="btn btn-sm variant-filled" on:click={onTransformText}><span class="text-sm text-white">適用</span></button>
+            <button type="button" class="btn btn-sm variant-filled" on:click={onTransformText}><span class="text-sm text-white" use:toolTip={"AIテキスト編集の実行[1]"}>適用</span></button>
           </div>          
         </div>
       </details>
@@ -428,7 +428,9 @@
 
       <h1>レイヤー</h1>
       <div class="w-full text-left">
-        <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+        {#key $bubbleInspectorRebuildToken}
+          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+        {/key}
       </div>
     </div>
   </Drawer>

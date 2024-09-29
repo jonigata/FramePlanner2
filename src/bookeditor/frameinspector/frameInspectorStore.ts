@@ -19,3 +19,4 @@ export type FrameInspectorTarget = {
 }
 
 export const frameInspectorTarget: Writable<FrameInspectorTarget> = writable(null);
+export const frameInspectorRebuildToken: Writable<number> = writable(0);

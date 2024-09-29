@@ -10,8 +10,8 @@
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { bubbleInspectorTarget, bubbleSplitCursor, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
-  import { frameInspectorTarget, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
+  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
+  import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from './book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
@@ -21,7 +21,6 @@
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import ImageProvider from '../generator/ImageProvider.svelte';
-  import { loadModel, predict } from '../utils/rmbg';
   import { loading } from '../utils/loadingStore'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import { batchImagingPage } from '../generator/batchImagingStore';
@@ -33,9 +32,9 @@
   import { triggerTemplateChoice } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
-  import { createImageFromCanvas } from "../utils/imageUtil";
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
+  import { punchFilm } from '../utils/punchFilm'
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -101,6 +100,7 @@
   }
 
   function commit(tag: HistoryTag) {
+    $frameInspectorRebuildToken++;
     delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
     if (tag === 'bubble') {
       $bubble = $bubble;
@@ -424,6 +424,7 @@
 
   $: onFrameCommand($frameInspectorTarget);
   async function onFrameCommand(fit: FrameInspectorTarget) {
+    console.log("onFrameCommand", fit);
     delayedCommiter.force();
     if (fit && fit.command != null) {
       $frameInspectorTarget = { ...fit, command: null };
@@ -436,6 +437,7 @@
       } else if (command === "punch") {
         await punchFrameFilm(fit);
       }
+      $frameInspectorRebuildToken++;
     }
   }
 
@@ -453,6 +455,7 @@
       } else if (command === "punch") {
         await punchBubbleFilm(bit);
       }
+      $bubbleInspectorRebuildToken++;
     }
   }
 
@@ -538,42 +541,25 @@
   }
 
   async function punchFrameFilm(fit: FrameInspectorTarget) {
-    const imageMedia = fit.commandTargetFilm.media as ImageMedia;
+    const film = fit.commandTargetFilm;
+    const imageMedia = film.media as ImageMedia;
     if (!(imageMedia instanceof ImageMedia)) { return; }
 
     $loading = true;
-    console.log("A");
-    await loadModel((s: string) => console.log(s));
-    
-    console.log("B");
-    const film = fit.commandTargetFilm;
-    const canvas = await predict(await createImageFromCanvas(imageMedia.canvas));
-    console.log("C");
-    const dataURL = canvas.toDataURL("image/png");
-    console.log("D");
-    film.media = new ImageMedia(canvas);
+    await punchFilm(film)
     commit(null);
     $loading = false;
   }
 
   async function punchBubbleFilm(bit: BubbleInspectorTarget) {
-    console.log("punchBubbleFilm");
-    const imageMedia = bit.commandTargetFilm.media as ImageMedia;
-    if (!(imageMedia instanceof ImageMedia)) { 
-      console.log("not ImageMedia", bit.commandTargetFilm.media);
-      return; 
-    }
+    const film = bit.commandTargetFilm;
+    const imageMedia = film.media as ImageMedia;
+    if (!(imageMedia instanceof ImageMedia)) { return; }
 
     $loading = true;
-    await loadModel((s: string) => console.log(s));
-    
-    const film = bit.commandTargetFilm;
-    const canvas = await predict(await createImageFromCanvas(imageMedia.canvas));
-    film.media = new ImageMedia(canvas);
+    await punchFilm(film)
     commit(null);
     $loading = false;
-
-    $bubble = $bubble;
   }
 
   onDestroy(() => {

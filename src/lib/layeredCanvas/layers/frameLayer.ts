@@ -999,6 +999,7 @@ export class FrameLayer extends Layer {
     const transformer = new FilmStackTransformer(paperSize, layoutlet.element.filmStack.films);
     transformer.scale(0.01);
     constraintLeaf(paperSize, layoutlet);
+    this.onCommit();
     this.redraw();
   }
 

@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import type { Character } from './notebook';
+  import { toolTip } from '../utils/passiveToolTipStore';
   import NotebookCharacter from './NotebookCharacter.svelte';
 
   import bellIcon from '../assets/bell.png';
@@ -42,7 +43,7 @@
     <div class="icon-container">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="advise" src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)}/>
+      <img class="advise" src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！[2]"}/>
     </div>
   {:else}
     <div class="rounded-corner-token textarea p-2 flex flex-col gap-4">

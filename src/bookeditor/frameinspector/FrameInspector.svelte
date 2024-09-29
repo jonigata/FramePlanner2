@@ -1,6 +1,6 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { frameInspectorTarget } from './frameInspectorStore';
+  import { frameInspectorTarget, frameInspectorRebuildToken } from './frameInspectorStore';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
@@ -12,7 +12,10 @@
 
   const frame = writableDerived(
     frameInspectorTarget,
-    (fit) => fit?.frame,
+    (fit) => {
+      console.log("FrameInspectorTarget changed");
+      return fit?.frame;
+    },
     (f, fit) => {
       fit.frame = f;
       return fit;
@@ -47,7 +50,9 @@
 <div class="drawer-outer">
   <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
     <div class="drawer-content">
-      <FilmList filmStack={$frame.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+      {#key $frameInspectorRebuildToken}
+        <FilmList filmStack={$frame.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+      {/key}
     </div>
   </Drawer>
 </div>

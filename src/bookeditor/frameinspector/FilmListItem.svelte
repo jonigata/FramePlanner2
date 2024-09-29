@@ -155,7 +155,7 @@
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="punch-icon" src={punchIcon} alt="背景除去" use:toolTip={"背景除去"} on:click={onPunch}/>
+      <img draggable={false} class="punch-icon" src={punchIcon} alt="背景除去" use:toolTip={"背景除去[1]"} on:click={onPunch}/>
     </div>
     {#if effectVisible}
       <div class="effect-panel">

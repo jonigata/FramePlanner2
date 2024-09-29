@@ -4,6 +4,7 @@
   import feathralIcon from '../assets/feathral.png';
   import { onMount } from 'svelte';
   import { createPreference } from '../preferences';
+  import FeathralCost from '../utils/FeathralCost.svelte';
 
   export let mode: Mode;
   let internalMode: Mode
@@ -23,20 +24,28 @@
 <div class="vbox left gap-2 mode">
   <RadioGroup>
     <RadioItem bind:group={internalMode} name={"mode"} value={"schnell"}>
-      <span>Schnell</span>
-      <span class="flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x1</span>
+      <div class="flex flex-col items-center">
+        <span>Schnell</span>
+        <FeathralCost cost={1} showsLabel={false}/>
+      </div>      
     </RadioItem>
     <RadioItem bind:group={internalMode} name={"mode"} value={"pro"}>
-      <span>Pro</span>
-      <span class="flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x10</span>
+      <div class="flex flex-col items-center">
+        <span>Pro</span>
+        <FeathralCost cost={10} showsLabel={false}/>
+      </div>
     </RadioItem>
     <RadioItem bind:group={internalMode} name={"mode"} value={"chibi"}>
-      <span>ちび</span>
-      <span class="flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x7</span>
+      <div class="flex flex-col items-center">
+        <span>ちび</span>
+        <FeathralCost cost={7} showsLabel={false}/>
+      </div>
     </RadioItem>
     <RadioItem bind:group={internalMode} name={"mode"} value={"manga"}>
-      <span>まんが</span>
-      <span class="flex"><img class="inline" src={feathralIcon} alt="feathral" width=24 height=24/>x7</span>
+      <div class="flex flex-col items-center">
+        <span>まんが</span>
+        <FeathralCost cost={7} showsLabel={false}/>
+      </div>
     </RadioItem>
   </RadioGroup>
 </div>

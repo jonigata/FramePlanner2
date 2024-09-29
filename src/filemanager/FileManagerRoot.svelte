@@ -440,6 +440,7 @@
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
         {/if}
       </div>
+<!--
       {#if cloudCabinet && cloudTrash}
         <h2>クラウド</h2>
         <div class="notice">この機能はβ版です。断りなくサービス停止する可能性があります。</div>
@@ -450,6 +451,7 @@
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドごみ箱"} bindId={cloudTrash[0]} parent={cloudRoot} index={1} path={[cloudTrash[0]]} trash={null}/>
         </div>
       {/if}
+-->            
     </div>
   </Drawer>
 </div>

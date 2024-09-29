@@ -297,7 +297,7 @@
       {/if}
     </h2>
     <div class="w-full">
-      <NotebookTextarea bind:value={notebook.theme} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
+      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
     </div>
     {#if !fullAutoRunning}
       <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
@@ -324,7 +324,7 @@
       {/if}
     </h2>
     <div class="w-full">
-      <NotebookTextarea bind:value={notebook.plot} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
+      <NotebookTextarea bind:value={notebook.plot} cost={2} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
       {#if notebook.plot}
         <div class="flex flex-row items-center">
           <span class="w-24">変更指示</span>
@@ -340,13 +340,13 @@
       {/if}
     </h2>
     <div class="w-full">
-      <NotebookTextarea bind:value={notebook.scenario} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
+      <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
     </div>
   </div>
   <div class="flex flex-row gap-4 mb-4">
     <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
     <span class="flex-grow"></span>
-    <button class="btn variant-filled-primary" on:click={onBuildStoryboard}>ネーム作成！</button>
+    <button class="btn variant-filled-primary" on:click={onBuildStoryboard} use:toolTip={"コマ割り、プロンプト・フキダシ作成[15]"}>ネーム作成！</button>
   </div>
   {#if notebook.storyboard}
     <div class="flex flex-row gap-4 mb-4 items-center">
@@ -357,7 +357,7 @@
     <div class="section">
       <h2>ネームはどう？</h2>
       <div class="w-full">
-        <NotebookTextarea bind:value={notebook.critique} waiting={critiqueWaiting} on:advise={onCritiqueAdvise} minHeight={240}/>
+        <NotebookTextarea bind:value={notebook.critique} cost={2} waiting={critiqueWaiting} on:advise={onCritiqueAdvise} minHeight={240}/>
       </div>
     </div>
   {/if}

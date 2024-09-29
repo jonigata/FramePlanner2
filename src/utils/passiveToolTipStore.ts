@@ -1,10 +1,25 @@
 import { type Writable, writable } from "svelte/store";
 
-export const toolTipRequest: Writable<{message: string, rect: {left: number, top: number, width: number, height: number}}> = writable(null);
+export const toolTipRequest: Writable<
+  {
+    message: string, 
+    rect: {left: number, top: number, width: number, height: number},
+    cost?: number
+  }> = writable(null);
 
-export function toolTip(node, message) {
+export function toolTip(node: HTMLElement, message: string) {
   let timeoutId = null;
   let observer = null;
+
+  // messageに[cost]が含まれている場合、costを取り出す
+  const match = message.match(/\[(\d+)\]/);
+  let cost = match ? parseInt(match[1]) : undefined;
+  if (cost === 0) {
+    cost = undefined;
+  }
+  if (match) {
+    message = message.replace(match[0], "");
+  }
 
   const handleMouseEnter = (event) => {
     const topElement = document.elementFromPoint(event.clientX, event.clientY);
@@ -14,7 +29,7 @@ export function toolTip(node, message) {
     }
     timeoutId = setTimeout(() => {
       const rect = node.getBoundingClientRect();
-      toolTipRequest.set({ message, rect });
+      toolTipRequest.set({ message, rect, cost });
     }, 400);
   }
 

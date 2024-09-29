@@ -14,6 +14,7 @@
   export let waiting = false;
   export let minHeight = 60;
   export let placeholder = '';
+  export let cost: number = 0;
 
   function copyToClipboard() {
     navigator.clipboard.writeText(value);
@@ -31,7 +32,7 @@
     <div class="icon-container flex flex-row-reverse gap-2">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！"} />
+      <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={`カイルちゃん考えて！[${cost}]`} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img src={clipboardIcon} alt="クリップボードにコピー" on:click={copyToClipboard} use:toolTip={"クリップボードにコピー"} />

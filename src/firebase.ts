@@ -168,6 +168,11 @@ export async function transformText(method: string, text: string): Promise<any> 
   return r;
 }
 
+export async function removeBg(dataUrl: string): Promise<any> {
+  const r = await callFunc('removebg', {dataUrl}, 180);
+  return r;
+}
+
 function getAuth2() {
   return getAuth(app);
 }
