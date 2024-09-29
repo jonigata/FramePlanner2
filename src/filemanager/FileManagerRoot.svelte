@@ -106,27 +106,25 @@
           if (currentFileInfo.fileSystem === 'cloud') {
             toastStore.trigger({ message: "最終アクセスファイルがクラウドファイルのため、\nクラウドストレージの接続を待っています", timeout: 3000});
             await waitForChange(onlineStatus, s => s != 'unknown');
+            if ($onlineStatus === 'signed-out') {
+              toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
+            } else {
+              await waitForChange(cloudReady, x => x);
+            }
+            toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
           }
           console.log($onlineStatus);
-          if ($onlineStatus === 'signed-out') {
-            toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
-          } else {
-            await waitForChange(cloudReady, x => x);
-            if (currentFileInfo.fileSystem === 'cloud') {
-              toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
-            }
-            const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
-            let currentFile = await fs.getNode(currentFileInfo.id);
-            const newBook = await loadBookFrom(fs, currentFile.asFile());
-            refreshFilms(newBook);
-            currentRevision = {...newBook.revision};
-            console.snapshot(newBook.pages[0]);
-            $mainBookFileSystem = fileSystem;
-            $mainBook = newBook;
-            $frameInspectorTarget = null;
-            logEvent(getAnalytics(), 'continue_book');
-            return;
-          }
+          const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
+          let currentFile = await fs.getNode(currentFileInfo.id);
+          const newBook = await loadBookFrom(fs, currentFile.asFile());
+          refreshFilms(newBook);
+          currentRevision = {...newBook.revision};
+          console.snapshot(newBook.pages[0]);
+          $mainBookFileSystem = fileSystem;
+          $mainBook = newBook;
+          $frameInspectorTarget = null;
+          logEvent(getAnalytics(), 'continue_book');
+          return;
         }
 
         // 初起動またはクラウドストレージ接続失敗の場合デスクトップにセーブ

@@ -35,6 +35,7 @@
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
   import { punchFilm } from '../utils/punchFilm'
+  import { onlineStatus } from "../utils/accountStore";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -541,6 +542,11 @@
   }
 
   async function punchFrameFilm(fit: FrameInspectorTarget) {
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      return;
+    }
+
     const film = fit.commandTargetFilm;
     const imageMedia = film.media as ImageMedia;
     if (!(imageMedia instanceof ImageMedia)) { return; }
@@ -552,6 +558,11 @@
   }
 
   async function punchBubbleFilm(bit: BubbleInspectorTarget) {
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      return;
+    }
+
     const film = bit.commandTargetFilm;
     const imageMedia = film.media as ImageMedia;
     if (!(imageMedia instanceof ImageMedia)) { return; }

@@ -25,6 +25,8 @@
   import { selection, type SelectionInfo } from '../../utils/selection';
   import { transformText } from '../../firebase';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
+  import { toastStore } from '@skeletonlabs/skeleton';
+  import { onlineStatus } from "../../utils/accountStore";
 
   import horizontalIcon from '../../assets/horizontal.png';
   import verticalIcon from '../../assets/vertical.png';
@@ -239,6 +241,10 @@
   }
 
   async function onTransformText() {
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      return;
+    }
     console.log("onTransformText", transformTextMethod, $bubble.text);
     transforming = true;
     const r = await transformText(transformTextMethod, $bubble.text);
