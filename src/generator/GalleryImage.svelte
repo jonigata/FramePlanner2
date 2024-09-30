@@ -1,9 +1,14 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   import { imageGeneratorTarget } from "./imageGeneratorStore";
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { imageViewerTarget } from '../utils/imageViewerStore';
+  import { toolTip } from '../utils/passiveToolTipStore';
+
   import drop from '../assets/drop.png';
   import reference from '../assets/reference.png';
   import referenceSelected from '../assets/reference-selected.png';
+  import telescope from '../assets/telescope.png';
 
   export let canvas: HTMLCanvasElement = null;
   export let width = 160;
@@ -30,6 +35,12 @@
       return;
     }
     chosen = canvas;
+
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'imageViewer',
+    };
+    modalStore.trigger(d);    
   }
 
   function onDelete(e: MouseEvent, canvas: HTMLCanvasElement) {
@@ -47,6 +58,17 @@
   function onDragStart(e: DragEvent) {
     console.log("onDragStart");
     dispatch("dragstart", canvas);
+  }
+
+  function onView(e: MouseEvent, canvas: HTMLCanvasElement) {
+    console.log("onView");
+    $imageViewerTarget = canvas;
+    e.stopPropagation();
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'imageViewer',
+    };
+    modalStore.trigger(d);
   }
 
   // fix aspect ratio
@@ -78,11 +100,16 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="frame" class:selected={chosen === canvas} bind:this={container} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
-  <div class="delete-button" on:click={e => onDelete(e, canvas)}>
-    <img src={drop} alt="delete" />
+<div class="frame" class:selected={chosen === canvas} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
+  <div class="container w-full h-full" bind:this={container} >
   </div>
-  <div class="reference-button" on:click={e => onRefer(e, canvas)}>
+  <div class="delete-button" on:click={e => onDelete(e, canvas)} use:toolTip={"削除"}>
+    <img src={drop} alt="delete"/>
+  </div>
+  <div class="telescope-button" on:click={e => onView(e, canvas)} use:toolTip={"見る"}>
+    <img src={telescope} alt="view" />
+  </div>
+  <div class="reference-button" on:click={e => onRefer(e, canvas)} use:toolTip={"i2i参照"}>
     {#if refered === canvas}
       <img src={referenceSelected} alt="reference"/>
     {:else}
@@ -107,18 +134,28 @@
     position: absolute;
     top: 4px;
     right: 4px;
-    z-index: 1;
     cursor: pointer;
     width: 20px;
     height: 20px;
+    filter: drop-shadow(0 0 2px black);
   }
   .reference-button {
     position: absolute;
     bottom: 4px;
     left: 4px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    filter: drop-shadow(0 0 2px black);
+  }
+  .telescope-button {
+    position: absolute;
+    top: 4px;
+    left: 4px;
     z-index: 1;
     cursor: pointer;
     width: 20px;
     height: 20px;
+    filter: drop-shadow(0 0 2px black);
   }
 </style>

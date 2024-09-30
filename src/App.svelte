@@ -55,6 +55,7 @@
   import ColorPickerDialog from './utils/colorpicker/ColorPickerDialog.svelte';
   import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
   import Notebook from './notebook/Notebook.svelte';
+  import ImageViewer from './utils/ImageViewer.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -75,7 +76,10 @@
     },
     videoMaker: {
       ref: VideoMaker,
-    }
+    },
+    imageViewer: {
+      ref: ImageViewer,
+    },
   };
 
   onMount(async () => {
