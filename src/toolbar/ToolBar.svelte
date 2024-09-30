@@ -2,6 +2,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { undoToken } from '../bookeditor/bookStore';
   import { onlineStatus, type OnlineStatus, signIn, signOut } from '../utils/accountStore';
+  import Feathral from '../utils/Feathral.svelte';
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -17,6 +18,9 @@
 
 <div class="w-screen h-8 bg-surface-900 text-slate-100 gap-2 flex items-center pl-4 pr-2 pt-2 pb-2">
   <div class="flex-grow"></div>
+  {#if $onlineStatus === "signed-in"}
+    <Feathral/>
+  {/if}
   <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={undo} use:toolTip={"アンドゥ"}>
     <img src={undoIcon} alt="undo" class="h-6 w-auto"/>
   </button>
