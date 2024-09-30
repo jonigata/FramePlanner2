@@ -68,7 +68,7 @@ export class FrameLayer extends Layer {
     private onShift: (element: FrameElement) => void, 
     private onUnshift: (element: FrameElement) => void,
     private onSwap: (element0: FrameElement, element1: FrameElement) => void,
-    private onInsert: (border: Border) => void
+    private onInsert: (border: Border) => void,
   ) {
     super();
 
@@ -233,15 +233,16 @@ export class FrameLayer extends Layer {
       return false;
     }
 
-  if (media instanceof HTMLCanvasElement) {
+    if (media instanceof HTMLCanvasElement) {
       this.importMedia(layoutlet, new ImageMedia(media));
+      layoutlet.element.gallery.push(media)
     }
     if (media instanceof HTMLVideoElement) {
       this.importMedia(layoutlet, new VideoMedia(media));
     }
     this.onCommit();
     return true;
-}
+  }
 
   updateLit(point: Vector): void {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);

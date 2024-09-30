@@ -736,6 +736,7 @@ export class BubbleLayer extends Layer {
         const bubbleSize = masterBubble.getPhysicalSize(paperSize);
         const scale = minimumBoundingScale(film.media.size, bubbleSize);
         film.setShiftedScale(paperSize, scale);
+        bubble.gallery.push(canvas);
         this.onFocus(bubble);
         this.focusKeeper.setFocus(this);
         this.onCommit();

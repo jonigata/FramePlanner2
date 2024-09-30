@@ -61,14 +61,18 @@
     const h = Math.min(height, canvas.height);
 
     image = new Image();
-    image.src = canvas.toDataURL();
+    canvas.toBlob(function(blob) {
+      const image = new Image();
+      const url = URL.createObjectURL(blob);
+      image.src = url;
 
-    image.style.width = `${w}px`;
-    image.style.height = `${h}px`;
-    image.style.position = 'absolute';
-    image.style.top = (width / 2 - w / 2).toString() + 'px';
-    image.style.left = (height / 2 - h / 2).toString() + 'px';
-    container.appendChild(image);
+      image.style.width = `${w}px`;
+      image.style.height = `${h}px`;
+      image.style.position = 'absolute';
+      image.style.top = (width / 2 - w / 2).toString() + 'px';
+      image.style.left = (height / 2 - h / 2).toString() + 'px';
+      container.appendChild(image);
+    }, 'image/png');
   });
 </script>
 

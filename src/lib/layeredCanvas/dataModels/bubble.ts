@@ -73,6 +73,7 @@ export class Bubble {
     this.filmStack = new FilmStack();
     this.optionContext = {};
     this.fontRenderVersion = 0;
+    this.gallery = [];
   }
 
   reset() {
