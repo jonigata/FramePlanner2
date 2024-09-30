@@ -35,7 +35,7 @@
   async function generate(paperSize: [number, number], leafLayout: Layout) {
     console.log("postfix", postfix);
     const frame = leafLayout.element;
-    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", mode, 1, imagingContext);
+    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
     if (result != null) {
       await result.images[0].decode();
       const film = new Film();
@@ -85,7 +85,7 @@
     <p><Feathral/></p>
     <div class="flex flex-row gap-2 items-center">
       <h3>モード</h3>
-      <FluxModes bind:mode={mode}/>
+      <FluxModes bind:mode={mode} comment={"1コマあたり"}/>
       <h3>スタイル</h3>
       <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
       </div>

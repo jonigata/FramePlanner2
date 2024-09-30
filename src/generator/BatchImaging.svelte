@@ -38,7 +38,7 @@
 
 </script>
 
-<Drawer open={$batchImagingPage != null} size="220px" on:clickAway={() => $batchImagingPage = null} placement={"top"}>
+<Drawer open={$batchImagingPage != null} size="240px" on:clickAway={() => $batchImagingPage = null} placement={"top"}>
   <div class="drawer-content flex flex-col">
     <TabGroup regionList="h-12">
       <Tab regionTab="w-24" bind:group={tabSet} name="tab3" value={0}><span class="tab"><img class="image" src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>

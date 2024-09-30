@@ -12,12 +12,13 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { createCanvasFromImage } from '../utils/imageUtil';
-  import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
+  import { type ImagingContext, type Mode, calculateCost, generateFluxImage } from '../utils/feathralImaging';
   import { toolTip } from '../utils/passiveToolTipStore';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import FluxModes from './FluxModes.svelte';
 
   import clipboardIcon from '../assets/clipboard.png';
+  import FeathralCost from '../utils/FeathralCost.svelte';
 
   export let busy: boolean;
   export let prompt: string;
@@ -26,11 +27,12 @@
 
   let progress = 0;
   let refered: HTMLImageElement = null;
-  let initialSize = "square_hd";
-  let size = initialSize; // こうしないと最初に選択してくれない
   let postfix: string = "";
   let batchCount = 1;
   let mode: Mode = "schnell";
+  let width = 1024;
+  let height = 1024;
+  let estimatedCost = 0;
 
   function onChooseImage({detail}) {
     chosen = detail;
@@ -40,21 +42,14 @@
     busy = true;
     try {
       progress = 0;
-      let delta = 0;
-      switch (mode) {
-        case "schnell":
-          delta = 1 / 5;
-          break;
-        case "pro":
-          delta = 1 / 24;
-          break;
-        case "chibi":
-          delta = 1 / 12;
-          break;
-        case "manga":
-          delta = 1 / 12;
-          break;
+      let pixelRatio = width * height / 1024 / 1024;
+      const factorTable = {
+        "schnell": 5,
+        "pro": 24,
+        "chibi": 12,
+        "manga": 12,
       }
+      const delta = 1 / factorTable[mode] / pixelRatio;
       const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
       let imagingContext: ImagingContext = {
         awakeWarningToken: false,
@@ -67,7 +62,7 @@
       const result = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${prompt}`, size, mode, batchCount, imagingContext);
+          return await generateFluxImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, imagingContext);
           // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
@@ -103,6 +98,8 @@
     navigator.clipboard.writeText(prompt);
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
+
+  $: estimatedCost = batchCount * calculateCost({width,height}, mode);
 
   onMount(async () => {
     $onlineAccount.feathral = await getFeathral();
@@ -143,17 +140,11 @@
       <SliderEdit label="height" bind:value={imageRequest.height} min={512} max={1024} step={256}/>
     </div>
 -->
-    <div class="vbox left gap-2">
-      <RadioGroup>
-        <RadioItem bind:group={size} name={"size"} value={initialSize}>1024x1024</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={"square"}>512x512</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={"landscape_4_3"}>1024x768</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={"landscape_16_9"}>1024x576</RadioItem>
-      </RadioGroup>
-      <RadioGroup>
-        <RadioItem bind:group={size} name={"size"} value={"portrait_4_3"}>768x1024</RadioItem>
-        <RadioItem bind:group={size} name={"size"} value={"portrait_16_9"}>576x1024</RadioItem>
-      </RadioGroup>
+    <div class="hbox gap-5">
+      <div class="vbox" style="width: 400px;">
+        <SliderEdit label="width" bind:value={width} min={512} max={1536} step={128}/>
+        <SliderEdit label="height" bind:value={height} min={512} max={1536} step={128}/>
+      </div>
     </div>
 
     <div class="vbox">
@@ -162,13 +153,14 @@
     </div>
   </div>
 
-  <div class="flex flex-row gap-5 w-full items-center mt-4">
+  <div class="flex flex-row gap-5 w-full items-center my-4 ">
     <button disabled={busy || $onlineAccount.feathral < 1} class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
       <div class="flex justify-center items-center h-6">
         {#if busy}
           <ProgressRadial stroke={220} meter="stroke-success-200" track="stroke-success-400" width="w-4"/>
         {:else}
           生成
+          <FeathralCost showsLabel={false} cost={estimatedCost} />
         {/if}
         </div>
     </button>

@@ -350,7 +350,7 @@
   </div>
   {#if notebook.storyboard}
     <div class="flex flex-row gap-4 mb-4 items-center">
-      <FluxModes bind:mode={imagingMode}/>
+      <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
       <span class="flex-grow"></span>
       <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
     </div>

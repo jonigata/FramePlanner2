@@ -7,6 +7,7 @@
   import FeathralCost from '../utils/FeathralCost.svelte';
 
   export let mode: Mode;
+  export let comment: string = '';
   let internalMode: Mode
 
   const preference = createPreference<Mode>("imaging", "fluxMode");
@@ -48,6 +49,9 @@
       </div>
     </RadioItem>
   </RadioGroup>
+  {#if comment}
+    <div class="comment">{comment}</div>
+  {/if}
 </div>
 
 <style>
@@ -55,5 +59,12 @@
     width: 88px;
     font-family: '源暎アンチック';
   }  
+  .comment {
+    font-family: '源暎アンチック';
+    font-size: 12px;
+    margin-top: -8px;
+    width: 100%;
+    text-align: center;
+  }
 </style>
 

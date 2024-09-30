@@ -61,7 +61,7 @@ export async function generateImage(prompt: string, width: number, height: numbe
   }
 }
 
-export async function generateFluxImage(prompt: string, image_size: string, mode: Mode, num_images: number, context: ImagingContext): Promise<ImagingResult> {
+export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<ImagingResult> {
   console.log("running feathral");
   try {
     let q = null;
@@ -156,7 +156,7 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
 
 async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: Mode, frame: FrameElement) {
   console.log("postfix", postfix);
-  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, "square_hd", mode, 1, imagingContext);
+  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
   if (result != null) {
     await result.images[0].decode();
     const film = new Film();
@@ -169,5 +169,18 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
   } else {
     imagingContext.failed++;
   }
+}
+
+export function calculateCost(size: {width:number,height:number}, mode: Mode): number {
+  const pixels = size.width * size.height;
+  const costs: {[key: Mode]: number} = {
+    "schnell": 1,
+    "pro": 10,
+    "chibi": 7,
+    "manga": 7,
+  };
+  let cost = costs[mode];
+  cost = Math.ceil(cost * pixels / 1024 / 1024);
+  return cost;
 }
 
