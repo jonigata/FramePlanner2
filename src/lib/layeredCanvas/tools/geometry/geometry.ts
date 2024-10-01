@@ -281,3 +281,13 @@ export function scaleRect(r: Rect, s: number): Rect {
 export function minimumBoundingScale(objectSize: Vector, containerSize: Vector): number {
   return Math.max(containerSize[0] / objectSize[0], containerSize[1] / objectSize[1]);
 }
+
+export function isPointInQuadrilateral(p: Vector, quad: [Vector, Vector, Vector, Vector]): boolean {
+  const [A, B, C, D] = quad;
+  
+  const q = intersection([A, B], [C, D]);
+  if (q) {
+    return isPointInTriangle(p, [A, q, D]) || isPointInTriangle(p, [B, q, C]);
+  }
+  return isPointInTriangle(p, [A, B, C]) || isPointInTriangle(p, [A, D, C]);
+}
