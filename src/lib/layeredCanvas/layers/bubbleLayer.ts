@@ -544,7 +544,12 @@ export class BubbleLayer extends Layer {
     return false;
   }
 
-  accepts(point: Vector): any {
+  acceptDepths(): number[] {
+    return [0,1];
+  }
+
+  accepts(point: Vector, _button: number, depth: number): any {
+    console.log("accepts", depth);
     if (!this.interactable) {
       return null;
     }
@@ -563,6 +568,17 @@ export class BubbleLayer extends Layer {
       return { action: "create" };
     }
 
+    if (depth == 1) {
+      const q = this.acceptsForeground(point, _button);
+      console.log("q", q);
+      return q;
+    } else {
+      return this.acceptsBackground(point, _button);
+    }
+  }
+
+  acceptsForeground(point: Vector, _button: number): any {
+    console.log("acceptsForeground");
     const paperSize = this.getPaperSize();
 
     if (this.selected) {
@@ -604,9 +620,30 @@ export class BubbleLayer extends Layer {
           return { action: "image-move", bubble: gm };
         }
       }
+
+      // 貫通
+      console.log("pass through");
+    }
+    return null;
+  } 
+  
+  acceptsBackground(point: Vector, _button: number): any {
+    const paperSize = this.getPaperSize();
+
+    // 選択中のフキダシがある場合、その下でないと受け付けない
+    // ない場合は一番最初のフキダシを選択
+    let selectableFlag = true;
+    if (this.selected) {
+      selectableFlag = false;
     }
 
-    for (let bubble of [...this.bubbles].reverse()) {
+    for (let bubble of this.bubbles.toReversed()) {
+      if (!selectableFlag) { 
+        if (bubble === this.selected) {
+          selectableFlag = true;
+        }
+        continue; 
+      }
       if (bubble.contains(paperSize, point)) {
         if (keyDownFlags["KeyQ"]) {
           return { action: "remove", bubble };

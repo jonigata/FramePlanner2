@@ -29,7 +29,8 @@ export class FloorLayer extends Layer {
     return true;
   }
 
-  accepts(_point: Vector, button: number): boolean {
+  accepts(_point: Vector, button: number, depth: number): any {
+    if (0 < depth) return null;
     return keyDownFlags["Space"] || 0 < button;
   }
 

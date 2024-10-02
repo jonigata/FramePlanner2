@@ -185,7 +185,7 @@ export class ArrayLayer extends Layer {
     return false;
   }
 
-  accepts(p: Vector, button: number): any { 
+  accepts(p: Vector, button: number, depth: number): any { 
     if (keyDownFlags["Space"] || 0 < button) {return null;}
 
     for (let [i, e] of this.insertIcons.entries()) {
@@ -240,7 +240,7 @@ export class ArrayLayer extends Layer {
     }
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
-    const innerDragging = paper.handleAccepts(position, button);
+    const innerDragging = paper.handleAccepts(position, button, depth);
     return innerDragging ? { paper, index, innerDragging } : null;
   }
 
@@ -355,6 +355,12 @@ export class ArrayLayer extends Layer {
   renderDepths(): number[] { 
     // paper全部から集めてsort/uniq
     const depths = this.array.papers.flatMap(p => p.paper.renderDepths());
+    return [...new Set(depths)].sort((a,b) => a - b);
+  }
+
+  acceptDepths(): number[] { 
+    // paper全部から集めてsort/uniq
+    const depths = this.array.papers.flatMap(p => p.paper.acceptDepths());
     return [...new Set(depths)].sort((a,b) => a - b);
   }
 

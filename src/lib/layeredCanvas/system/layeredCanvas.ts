@@ -69,7 +69,7 @@ export class Layer {
   showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
 
   pointerHover(position: Vector): boolean { return false; }
-  accepts(position: Vector, button: number) { return null; }
+  accepts(position: Vector, button: number, depth: number): any { return null; }
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
   pointerUp(position: Vector, payload: any) {}
@@ -83,6 +83,7 @@ export class Layer {
   wheel(position: Vector, delta: number) { return false; }
   flushHints(viewport: Viewport) {}
   renderDepths(): number[] { return []; }
+  acceptDepths(): number[] { return []; }
 
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
@@ -106,11 +107,11 @@ export class Paper {
     this.layers = [];
   }
 
-  handleAccepts(p: Vector, button: number): Dragging {
+  handleAccepts(p: Vector, button: number, depth: number): Dragging {
     var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      const payload = layer.accepts(p, button);
+      const payload = layer.accepts(p, button, depth);
       if (payload) {
         result = {layer, payload};
         break;
@@ -300,6 +301,13 @@ export class Paper {
     return uniq;
   }
 
+  acceptDepths(): number[] {
+    const depths = this.layers.flatMap(e => e.acceptDepths());
+    const uniq = [...new Set(depths)];
+    uniq.sort((a, b) => a - b);
+    return uniq;
+  }
+
   mode_: any = null;
   set mode(mode: any) { this.mode_ = mode; this.layers.forEach(e => e.mode = mode); }
   get mode(): any { return this.mode_; }
@@ -403,7 +411,12 @@ export class LayeredCanvas {
     
   handlePointerDown(event: PointerEvent): void {
     const p = this.eventPositionToRootPaperPosition(event);
-    this.dragging = this.rootPaper.handleAccepts(p, event.button);
+
+    const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
+    for (let depth of depths) {
+      this.dragging = this.rootPaper.handleAccepts(p, event.button, depth);
+      if (this.dragging) { break; }
+    }
     if (this.dragging) {
       this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);

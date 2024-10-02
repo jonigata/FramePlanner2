@@ -382,7 +382,12 @@ export class FrameLayer extends Layer {
     return false;
   }
 
-  accepts(point: Vector): any {
+  acceptDepths(): number[] {
+    return [0,1];
+  }
+
+  accepts(point: Vector, _button: number, _depth: number): any {
+    if (0 < _depth) { return null;} 
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 

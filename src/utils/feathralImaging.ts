@@ -173,7 +173,7 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
 
 export function calculateCost(size: {width:number,height:number}, mode: Mode): number {
   const pixels = size.width * size.height;
-  const costs: {[key: Mode]: number} = {
+  const costs: Record<Mode, number> = {
     "schnell": 1,
     "pro": 10,
     "chibi": 7,
