@@ -1,4 +1,4 @@
-import { isPointInTriangle } from "./geometry";
+import { isPointInTriangle, segmentIntersection, triangleToPointDistance, rectContains } from "./geometry";
 import type { Vector, Rect } from "./geometry";
 
 export type Trapezoid = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
@@ -34,6 +34,34 @@ export function trapezoidCenter(corners: Trapezoid): Vector {
 export function isPointInTrapezoid(p: Vector, t: Trapezoid) {
   return isPointInTriangle(p, [t.topLeft, t.topRight, t.bottomRight]) ||
     isPointInTriangle(p, [t.topLeft, t.bottomRight, t.bottomLeft]);
+}
+
+// 自己交差があっても正しく判定する
+export function isPointInQuadrilateral(p: Vector, t: Trapezoid): boolean {
+  const [A, B, C, D] = [t.topLeft, t.topRight, t.bottomRight, t.bottomLeft];
+
+  const q = segmentIntersection([A, B], [C, D]);
+  let result = false;
+  if (q) {
+    result = isPointInTriangle(p, [A, q, D]) || isPointInTriangle(p, [B, q, C]);
+  } else {
+    result =  isPointInTriangle(p, [A, B, C]) || isPointInTriangle(p, [A, D, C]);
+  }
+
+  const r = trapezoidBoundingRect(t);  
+  if (result && !rectContains(r, p)) {
+    console.log("out of bounding rect", t, p, q);
+  }
+  
+  return result;
+}
+
+export function quadrilateralToPointDistance(t: Trapezoid, p: Vector): number {
+  if (isPointInQuadrilateral(p, t)) return 0;
+  return Math.min(
+    triangleToPointDistance([t.topLeft, t.topRight, t.bottomRight], p),
+    triangleToPointDistance([t.topLeft, t.bottomRight, t.bottomLeft], p),
+  );
 }
 
 export function extendTrapezoid(t: Trapezoid, x: number, y: number): Trapezoid {

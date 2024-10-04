@@ -1,3 +1,5 @@
+import segseg from 'segseg'
+
 export type Vector = [number, number];
 export type Rect = [number, number, number, number]; // x, y, w, h
 export type Box = [Vector, Vector]; // [topLeft, bottomRight
@@ -129,7 +131,7 @@ export function line2(p1: Vector, theta: number, offset: Vector = [0, 0]): [Vect
   return [q, [q[0] + Math.cos(theta), q[1] + Math.sin(theta)]];
 }
 
-export function intersection(line1: [Vector, Vector], line2: [Vector, Vector]): Vector | null {
+export function lineIntersection(line1: [Vector, Vector], line2: [Vector, Vector]): Vector | null {
   const [[x1, y1], [x2, y2]] = line1;
   const [[x3, y3], [x4, y4]] = line2;
 
@@ -141,6 +143,15 @@ export function intersection(line1: [Vector, Vector], line2: [Vector, Vector]): 
   const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
   const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
   return [x, y];
+}
+
+export function segmentIntersection(s0: [Vector, Vector], s1: [Vector, Vector]): Vector | null {
+  const isect: Vector = [NaN, NaN];
+  if (segseg(isect, ...s0, ...s1)) {
+    return isect;
+  } else {
+    return null;
+  }
 }
 
 export function deg2rad(deg: number): number {
@@ -176,6 +187,25 @@ export function isPointInTriangle(p: Vector, t: [Vector, Vector, Vector]) {
   const d3 = (x - x2) * (y0 - y2) - (x0 - x2) * (y - y2);
 
   return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
+}
+
+export function triangleToPointDistance(t: [Vector, Vector, Vector], p: Vector): number {
+  const [A, B, C] = t;
+  const AB = subtract2D(B, A);
+  const AC = subtract2D(C, A);
+  const BC = subtract2D(C, B);
+
+  const AP = subtract2D(p, A);
+  const BP = subtract2D(p, B);
+  const CP = subtract2D(p, C);
+
+  const areaABC = Math.abs(cross2D(AB, AC));
+  const areaABP = Math.abs(cross2D(AB, AP));
+  const areaBCP = Math.abs(cross2D(BC, BP));
+  const areaCAP = Math.abs(cross2D(AC, CP));
+
+  const s = (areaABP + areaBCP + areaCAP) / areaABC;
+  return Math.min(distance2D(p, A), distance2D(p, B), distance2D(p, C), Math.sqrt(areaABC) * 2 * s);
 }
 
 export function rectIntersectsRect(r0: Rect, r1: Rect): boolean {
@@ -280,14 +310,4 @@ export function scaleRect(r: Rect, s: number): Rect {
 
 export function minimumBoundingScale(objectSize: Vector, containerSize: Vector): number {
   return Math.max(containerSize[0] / objectSize[0], containerSize[1] / objectSize[1]);
-}
-
-export function isPointInQuadrilateral(p: Vector, quad: [Vector, Vector, Vector, Vector]): boolean {
-  const [A, B, C, D] = quad;
-  
-  const q = intersection([A, B], [C, D]);
-  if (q) {
-    return isPointInTriangle(p, [A, q, D]) || isPointInTriangle(p, [B, q, C]);
-  }
-  return isPointInTriangle(p, [A, B, C]) || isPointInTriangle(p, [A, D, C]);
 }

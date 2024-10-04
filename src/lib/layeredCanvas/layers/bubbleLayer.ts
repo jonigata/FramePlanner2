@@ -549,7 +549,7 @@ export class BubbleLayer extends Layer {
   }
 
   accepts(point: Vector, _button: number, depth: number): any {
-    console.log("accepts", depth);
+    console.log("bubble accepts", depth);
     if (!this.interactable) {
       return null;
     }
@@ -569,9 +569,7 @@ export class BubbleLayer extends Layer {
     }
 
     if (depth == 1) {
-      const q = this.acceptsForeground(point, _button);
-      console.log("q", q);
-      return q;
+      return this.acceptsForeground(point, _button);
     } else {
       return this.acceptsBackground(point, _button);
     }
@@ -629,12 +627,14 @@ export class BubbleLayer extends Layer {
   
   acceptsBackground(point: Vector, _button: number): any {
     const paperSize = this.getPaperSize();
+    const current = this.selected;
 
-    // 選択中のフキダシがある場合、その下でないと受け付けない
-    // ない場合は一番最初のフキダシを選択
+    // currentがあってcurrentにヒットする場合、それより奥のものを返す
     let selectableFlag = true;
-    if (this.selected) {
-      selectableFlag = false;
+    if (current) {
+      if (current.contains(paperSize, point)) {
+        selectableFlag = false;
+      }
     }
 
     for (let bubble of this.bubbles.toReversed()) {

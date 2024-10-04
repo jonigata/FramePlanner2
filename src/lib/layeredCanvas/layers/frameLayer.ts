@@ -166,6 +166,7 @@ export class FrameLayer extends Layer {
     function strokeTrapezoid(corners: Trapezoid, color: string, width: number) {
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
+      ctx.setLineDash([10, 10]);
       ctx.beginPath();
       trapezoidPath(ctx, corners);
       ctx.stroke();
@@ -187,15 +188,16 @@ export class FrameLayer extends Layer {
     }
 
     if (this.litBorder) {
-      fillTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.2)");
-      strokeTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.4)", 3);
+      fillTrapezoid(this.litBorder.corners, "rgba(0, 200, 200, 0.2)");
+      strokeTrapezoid(this.litBorder.formalCorners, "rgba(0, 200, 200, 0.4)", 1);
+      strokeConnectors(this.litBorder.corners, this.litBorder.formalCorners, "rgba(0, 200, 200, 0.4)", 1);
     } else if (this.litLayout) {
       if (this.litLayout.element != this.selectedLayout?.element) {
-        fillTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.2)");
-        strokeTrapezoid(this.litLayout.formalCorners, "rgba(255, 255, 255, 1)", 6);
-        strokeTrapezoid(this.litLayout.corners, "rgba(0, 0, 255, 0.4)", 3);
-        strokeConnectors(this.litLayout.formalCorners, this.litLayout.corners, "rgba(255, 255, 255, 1)", 6);
-        strokeConnectors(this.litLayout.formalCorners, this.litLayout.corners, "rgba(0, 0, 255, 0.4)", 3);
+        fillTrapezoid(this.litLayout.corners, "rgba(0, 0, 255, 0.2)");
+        strokeTrapezoid(this.litLayout.corners, "rgba(255, 255, 255, 1)", 6);
+        strokeTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
+        strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(255, 255, 255, 1)", 6);
+        strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
       }
     }
 
@@ -276,11 +278,13 @@ export class FrameLayer extends Layer {
     }
 
     this.litBorder = findBorderAt(layout, point, BORDER_MARGIN);
-    if (!this.litBorder) {
-      this.litLayout = findLayoutAt(layout, point);
-      if (this.litLayout) {
-        this.relayoutLitIcons(this.litLayout);
-      }
+    if (this.litBorder) {
+      return;
+    }
+
+    this.litLayout = findLayoutAt(layout, point);
+    if (this.litLayout) {
+      this.relayoutLitIcons(this.litLayout);
     }
   }
 
@@ -386,12 +390,25 @@ export class FrameLayer extends Layer {
     return [0,1];
   }
 
-  accepts(point: Vector, _button: number, _depth: number): any {
-    if (0 < _depth) { return null;} 
+  accepts(point: Vector, _button: number, depth: number): any {
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
-    this.updateLit(point);
+    console.log("frame accepts", depth);
+    if (depth == 1) {
+      return this.acceptsForeground(point, _button);
+    } else {
+      return this.acceptsBackground(point, _button);
+    }
+  }
+
+  acceptsForeground(point: Vector, _button: number): any {
+    if (keyDownFlags["KeyT"]) {
+      if (this.litBorder) {
+        this.transposeBorder(this.litBorder);
+      }
+      return null;
+    }
 
     if (this.selectedLayout) {
       const q = this.acceptsOnSelectedFrameIcons(point);
@@ -417,11 +434,9 @@ export class FrameLayer extends Layer {
 
     // 選択ボーダー操作
     if (this.selectedBorder) {
-      console.log("A");
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
-        console.log("B");
-        if (r == 'done') {
+        if (r == "done") {
           return null;
         }
         return r;
@@ -437,28 +452,7 @@ export class FrameLayer extends Layer {
         this.redraw();
       } 
       // return null; このあとフレーム選択処理が入るかもしれないので放棄しない
-    } else {
-      if (this.litBorder) {
-        if (keyDownFlags["KeyT"]) {
-          this.transposeBorder(this.litBorder);
-          return null;
-        } else {
-          return { border: this.litBorder };
-        }
-      }
     }
-
-    const r = this.acceptsOnFrame(point);
-    if (r) {
-      if (r == "done") {
-        return null;
-      }
-      return r;
-    }
-
-    this.selectLayout(null);
-    this.relayoutIcons();
-    this.redraw();
     return null;
   }
 
@@ -589,10 +583,34 @@ export class FrameLayer extends Layer {
     return null;
   }
 
-  acceptsOnFrame(point: Vector): any {
-    let layout = this.litLayout;
-    if (!layout) { return null; }
+  acceptsBackground(point: Vector, _button: number): any {
+    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
+    const border = findBorderAt(layout, point, BORDER_MARGIN);
+    if (border) {
+      this.selectLayout(null);
+      this.selectedBorder = border;
+      this.redraw();
+      return null;
+    }
+
+    const layoutlet = findLayoutAt(layout, point, this.selectedLayout);
+    if (layoutlet) {
+      const r = this.acceptsOnFrame(layoutlet);
+      if (r) {
+        if (r == "done") {
+          return null;
+        }
+        return r;
+      }
+    }
+    
+    this.selectLayout(null);
+    this.redraw();
+    return null; 
+  }
+
+  acceptsOnFrame(layout: Layout): any {
     const paperSize = this.getPaperSize();
     if (keyDownFlags["KeyQ"]) {
       FrameElement.eraseElement(this.frameTree, layout.element);
@@ -648,8 +666,8 @@ export class FrameLayer extends Layer {
       this.redraw();
       return "done";
     }
-    if (this.selectedLayout?.element != this.litLayout?.element) {
-      this.selectLayout(this.litLayout);
+    if (this.selectedLayout?.element != layout.element) {
+      this.selectLayout(layout);
       this.relayoutIcons();
       this.redraw();
       return { select: layout };
@@ -1082,10 +1100,10 @@ export class FrameLayer extends Layer {
   relayoutBorderIcons(border: Border): void {
     const bt = border.corners;
     this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
-    this.expandVerticalIcon.position = [bt.topRight[0],(bt.topRight[1] + bt.bottomRight[1]) * 0.5];
+    this.expandVerticalIcon.position = [(bt.topRight[0] + bt.topRight[0]) * 0.5, (bt.topRight[1] + bt.bottomRight[1]) * 0.5];
     this.insertVerticalIcon.position = [bt.topLeft[0]-40,(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
     this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]];
-    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5,bt.bottomLeft[1]];
+    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5, (bt.bottomLeft[1] + bt.bottomRight[1]) * 0.5];
     this.insertHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]-40];
   }
 
@@ -1133,6 +1151,8 @@ export class FrameLayer extends Layer {
     return false;
   }
 
+  // 基本的には直接呼び出さない
+  // changeFocusとselectLayoutからのみ
   videoRedrawInterval: NodeJS.Timer;
   doSelectLayout(layout: Layout): void {
     if (layout != this.selectedLayout) {

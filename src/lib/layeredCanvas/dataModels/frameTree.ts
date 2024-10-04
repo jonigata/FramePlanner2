@@ -1,5 +1,5 @@
-import { type Vector, intersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect } from "../tools/geometry/geometry";
-import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid } from "../tools/geometry/trapezoid";
+import { type Vector, lineIntersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect } from "../tools/geometry/geometry";
+import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid, isPointInQuadrilateral } from "../tools/geometry/trapezoid";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
 import { type Film, FilmStack, calculateMinimumBoundingRect } from "./film";
 
@@ -490,10 +490,10 @@ function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector,
       const leftLine = i === element.children.length - 1 ? leftmostLine : line2(leftCenter, deg2rad(child.divider.slant + 90));
 
       const childCorners: Trapezoid = {
-        topLeft: intersection(topLine, leftLine),
-        topRight: intersection(topLine, rightLine),
-        bottomLeft: intersection(bottomLine, leftLine),
-        bottomRight: intersection(bottomLine, rightLine),
+        topLeft: lineIntersection(topLine, leftLine),
+        topRight: lineIntersection(topLine, rightLine),
+        bottomLeft: lineIntersection(bottomLine, leftLine),
+        bottomRight: lineIntersection(bottomLine, rightLine),
       }
       children.push(calculatePhysicalLayoutAux(child, childSize, childOrigin, childCorners));
       x += child.rawSize + child.divider.spacing;
@@ -515,10 +515,10 @@ function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector,
       const bottomLine = i === element.children.length - 1 ? bottommostLine : line2(bottomCenter, deg2rad(-child.divider.slant));
 
       const childCorners = {
-        topLeft: intersection(topLine, leftLine),
-        topRight: intersection(topLine, rightLine),
-        bottomLeft: intersection(bottomLine, leftLine),
-        bottomRight: intersection(bottomLine, rightLine),
+        topLeft: lineIntersection(topLine, leftLine),
+        topRight: lineIntersection(topLine, rightLine),
+        bottomLeft: lineIntersection(bottomLine, leftLine),
+        bottomRight: lineIntersection(bottomLine, rightLine),
       }
       children.push(calculatePhysicalLayoutAux(child, childSize, childOrigin, childCorners));
       y += child.rawSize + child.divider.spacing;
@@ -539,36 +539,54 @@ function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, raw
 
   // 長さが0のときは交点を作れない
   const corners = {
-    topLeft: intersection(topLine, leftLine) || formalCorners.topLeft,
-    topRight: intersection(topLine, rightLine) || formalCorners.topRight,
-    bottomLeft: intersection(bottomLine, leftLine) || formalCorners.bottomLeft,
-    bottomRight: intersection(bottomLine, rightLine) || formalCorners.bottomRight, 
+    topLeft: lineIntersection(topLine, leftLine) || formalCorners.topLeft,
+    topRight: lineIntersection(topLine, rightLine) || formalCorners.topRight,
+    bottomLeft: lineIntersection(bottomLine, leftLine) || formalCorners.bottomLeft,
+    bottomRight: lineIntersection(bottomLine, rightLine) || formalCorners.bottomRight, 
   }
 
   return { size, origin, rawSize, rawOrigin, element, corners, formalCorners };
 }
 
-export function findLayoutAt(layout: Layout, position: Vector): Layout {
-  return findLayoutAtAux(layout, position, null);
-}
+export function findLayoutAt(layout: Layout, point: Vector, current: Layout = null): Layout {
+  const layoutlets = collectLayoutlets(layout);
+  layoutlets.sort((a, b) => a.element.z - b.element.z);
+  layoutlets.reverse();
 
-export function findLayoutAtAux(layout: Layout, position: Vector, current: Layout): Layout {
-  if (layout.children != null) {
-    for (let i = 0; i < layout.children.length; i++) {
-      const child = layout.children[i];
-      current = findLayoutAtAux(child, position, current);
-    }
-    return current;
-  } else {
-    if (isPointInTrapezoid(position, layout.corners)) {
-      if (current != null && layout.element.z < current.element.z) { 
-        return current; 
-      }
-      return layout;
-    } else {
-      return current;
+  // currentがあってcurrentにヒットする場合、それより奥のものを返す
+  let selectableFlag = true;
+  if (current) {
+    if (isPointInQuadrilateral(point, current.corners)) {
+      selectableFlag = false;
     }
   }
+  for (let layoutlet of layoutlets) {
+    if (!selectableFlag) { 
+      if (layoutlet.element === current?.element) {
+        selectableFlag = true;
+      }
+      continue; 
+    }
+    if (isPointInQuadrilateral(point, layoutlet.corners)) {
+      return layoutlet;
+    }
+  }
+  return null;
+}
+
+function collectLayoutlets(layout: Layout): Layout[] {
+  const layouts: Layout[] = [];;
+
+  if (layout.children) {
+    for (let i = 0; i < layout.children.length; i++) {
+      const childLayouts = collectLayoutlets(layout.children[i]);
+      layouts.push(...childLayouts);
+    }
+  } else {
+    layouts.push(layout);
+  }
+
+  return layouts;
 }
 
 export function findLayoutOf(layout: Layout, element: FrameElement): Layout {
