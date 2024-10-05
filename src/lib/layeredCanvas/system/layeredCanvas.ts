@@ -57,6 +57,11 @@ export interface Dragging {
   payload: any;
 }
 
+export interface Picked {
+  layer: Layer;
+  payload: any;
+}
+
 export class Layer {
   paper: Paper = null;
   hint: (rect: Rect, message: string) => void; // bind(this)しないと面倒なので
@@ -69,7 +74,7 @@ export class Layer {
   showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
 
   pointerHover(position: Vector): boolean { return false; }
-  accepts(position: Vector, button: number, depth: number): any { return null; }
+  accepts(position: Vector, button: number, depth: number, picked: Picked): any { return null; }
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
   pointerUp(position: Vector, payload: any) {}
@@ -84,6 +89,7 @@ export class Layer {
   flushHints(viewport: Viewport) {}
   renderDepths(): number[] { return []; }
   acceptDepths(): number[] { return []; }
+  pick(p: Vector): Picked { return null; }
 
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
@@ -107,11 +113,11 @@ export class Paper {
     this.layers = [];
   }
 
-  handleAccepts(p: Vector, button: number, depth: number): Dragging {
+  handleAccepts(p: Vector, button: number, depth: number, picked: Picked): Dragging {
     var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      const payload = layer.accepts(p, button, depth);
+      const payload = layer.accepts(p, button, depth, picked);
       if (payload) {
         result = {layer, payload};
         break;
@@ -199,6 +205,17 @@ export class Paper {
       }
     }
     return false;
+  }
+
+  pick(p: Vector): Picked {
+    for (let i = this.layers.length - 1; i >= 0; i--) {
+      const layer = this.layers[i];
+      const result = layer.pick(p);
+      if (result) {
+        return result;
+      }
+    }
+    return null;    
   }
 
   prerender(): void {
@@ -413,9 +430,11 @@ export class LayeredCanvas {
     const p = this.eventPositionToRootPaperPosition(event);
 
     console.log("================");
+    const picked = this.rootPaper.pick(p);
+    console.log("rootPpaer.pick", picked);
     const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
     for (let depth of depths) {
-      this.dragging = this.rootPaper.handleAccepts(p, event.button, depth);
+      this.dragging = this.rootPaper.handleAccepts(p, event.button, depth, picked);
       if (this.dragging) { break; }
     }
     if (this.dragging) {

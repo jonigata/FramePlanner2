@@ -1,4 +1,4 @@
-import { Layer, Paper, type Dragging, type Viewport } from '../system/layeredCanvas';
+import { Layer, Paper, type Picked, type Viewport } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
@@ -185,7 +185,7 @@ export class ArrayLayer extends Layer {
     return false;
   }
 
-  accepts(p: Vector, button: number, depth: number): any { 
+  accepts(p: Vector, button: number, depth: number, picked: Picked): any { 
     if (keyDownFlags["Space"] || 0 < button) {return null;}
 
     for (let [i, e] of this.insertIcons.entries()) {
@@ -240,7 +240,7 @@ export class ArrayLayer extends Layer {
     }
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
-    const innerDragging = paper.handleAccepts(position, button, depth);
+    const innerDragging = paper.handleAccepts(position, button, depth, picked);
     return innerDragging ? { paper, index, innerDragging } : null;
   }
 
@@ -362,6 +362,14 @@ export class ArrayLayer extends Layer {
     // paper全部から集めてsort/uniq
     const depths = this.array.papers.flatMap(p => p.paper.acceptDepths());
     return [...new Set(depths)].sort((a,b) => a - b);
+  }
+
+  pick(p: Vector): Picked {
+    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    if (paper.contains(position)) {
+      return paper.pick(position);
+    }
+    return null;
   }
 
   get redrawRequired(): boolean {

@@ -1,4 +1,4 @@
-import { Layer, sequentializePointer, type Dragging } from "../system/layeredCanvas";
+import { Layer, sequentializePointer, type Picked } from "../system/layeredCanvas";
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
 import { Media, ImageMedia, VideoMedia } from "../dataModels/media";
@@ -6,7 +6,7 @@ import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter } from "../tools/geometry/trapezoid";
+import { pointToQuadrilateralDistance, extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
@@ -18,7 +18,7 @@ import type { FocusKeeper } from "../tools/focusKeeper";
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
 const PADDING_HANDLE_INNER_WIDTH = 20;
-const PADDING_HANDLE_OUTER_WIDTH = 10;
+const PADDING_HANDLE_OUTER_WIDTH = 20;
 
 export class FrameLayer extends Layer {
   cursorPosition: Vector;
@@ -230,7 +230,7 @@ export class FrameLayer extends Layer {
       this.getPaperSize(),
       [0, 0]
     );
-    let layoutlet = findLayoutAt(layout, position);
+    let layoutlet = findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
     if (!layoutlet) {
       return false;
     }
@@ -282,7 +282,7 @@ export class FrameLayer extends Layer {
       return;
     }
 
-    this.litLayout = findLayoutAt(layout, point);
+    this.litLayout = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH);
     if (this.litLayout) {
       this.relayoutLitIcons(this.litLayout);
     }
@@ -386,23 +386,35 @@ export class FrameLayer extends Layer {
     return false;
   }
 
+  pick(point: Vector): Picked {
+    console.log("pick:A");
+    if (this.selectedLayout) {
+      console.log("pick:B");
+      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, true) < PADDING_HANDLE_OUTER_WIDTH) {
+        console.log("pick:C");
+        return { layer: this, payload: this.selectedLayout };
+      }
+    }
+    return null;
+  }
+
   acceptDepths(): number[] {
     return [0,1];
   }
 
-  accepts(point: Vector, _button: number, depth: number): any {
+  accepts(point: Vector, button: number, depth: number, picked: Picked): any {
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
-    console.log("frame accepts", depth);
+    console.log("frame accepts", picked);
     if (depth == 1) {
-      return this.acceptsForeground(point, _button);
+      return this.acceptsForeground(point, button, picked);
     } else {
-      return this.acceptsBackground(point, _button);
+      return this.acceptsBackground(point, button, picked);
     }
   }
 
-  acceptsForeground(point: Vector, _button: number): any {
+  acceptsForeground(point: Vector, _button: number, picked: Picked): any {
     if (keyDownFlags["KeyT"]) {
       if (this.litBorder) {
         this.transposeBorder(this.litBorder);
@@ -441,17 +453,10 @@ export class FrameLayer extends Layer {
         }
         return r;
       }
-      if (this.litBorder) {
-        if (this.litBorder.layout.element != this.selectedBorder.layout.element ||
-            this.litBorder.index != this.selectedBorder.index) {
-          return { border: this.litBorder };
-        }
-      } else { 
-        this.selectedBorder = null;
-        this.relayoutIcons();
-        this.redraw();
-      } 
-      // return null; このあとフレーム選択処理が入るかもしれないので放棄しない
+      this.selectedBorder = null;
+      this.relayoutIcons();
+      this.redraw();
+      return null;
     }
     return null;
   }
@@ -473,7 +478,7 @@ export class FrameLayer extends Layer {
       this.onInsert(this.selectedBorder);
       this.selectedBorder = null;
       return "done";
-    } else if (isPointInTrapezoid(p, this.selectedBorder.corners)) {
+    } else if (pointToQuadrilateralDistance(p, this.selectedBorder.corners, true) < BORDER_MARGIN) {
       return { border: this.selectedBorder, action: "move" };
     }
     return null;
@@ -583,18 +588,23 @@ export class FrameLayer extends Layer {
     return null;
   }
 
-  acceptsBackground(point: Vector, _button: number): any {
+  acceptsBackground(point: Vector, _button: number, picked: Picked): any {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
     const border = findBorderAt(layout, point, BORDER_MARGIN);
     if (border) {
       this.selectLayout(null);
       this.selectedBorder = border;
+      this.relayoutBorderIcons(border);
       this.redraw();
       return null;
     }
 
-    const layoutlet = findLayoutAt(layout, point, this.selectedLayout);
+    console.log("acceptsBackground", picked, picked?.layer === this);
+
+    const current = picked?.layer === this ? picked.payload : null;
+    console.log(current);
+    const layoutlet = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH, current);
     if (layoutlet) {
       const r = this.acceptsOnFrame(layoutlet);
       if (r) {
@@ -668,7 +678,6 @@ export class FrameLayer extends Layer {
     }
     if (this.selectedLayout?.element != layout.element) {
       this.selectLayout(layout);
-      this.relayoutIcons();
       this.redraw();
       return { select: layout };
     } else {
@@ -705,9 +714,8 @@ export class FrameLayer extends Layer {
     } else if (payload.padding) {
       yield* this.expandPadding(p, payload.padding);
     } else {
-      this.selectLayout(null);
       this.selectedBorder = payload.border;
-      this.relayoutIcons();
+      this.selectLayout(null);
       this.redraw();
       if (payload.action === "expand") {
         yield* this.expandBorder(p, payload.border);
@@ -1183,6 +1191,7 @@ export class FrameLayer extends Layer {
     }
 
     this.selectedLayout = layout;
+    this.relayoutIcons();
     this.onFocus(layout);
   }
 

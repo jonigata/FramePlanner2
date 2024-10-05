@@ -12,6 +12,10 @@ export function subtract2D(v0: Vector, v1: Vector): Vector {
   return [v0[0] - v1[0], v0[1] - v1[1]];
 }
 
+export function scale2D(v: Vector, n: number): Vector {
+  return [v[0] * n, v[1] * n];
+}
+
 export function multiply2D(v0: Vector, v1: Vector): Vector {
   return [v0[0] * v1[0], v0[1] * v1[1]];
 }
@@ -176,36 +180,81 @@ export function center2D(p0: Vector, p1: Vector): Vector {
   return [(p0[0] + p1[0]) * 0.5, (p0[1] + p1[1]) * 0.5];
 }
 
-export function isPointInTriangle(p: Vector, t: [Vector, Vector, Vector]) {
-  const [x, y] = p;
-  const [x0, y0] = t[0];
-  const [x1, y1] = t[1]
-  const [x2, y2] = t[2]
+export function isPointInTriangle(p: Vector, tri: [Vector,Vector,Vector]): boolean {
+  const [p0, p1, p2] = tri;
 
-  const d1 = (x - x0) * (y1 - y0) - (x1 - x0) * (y - y0);
-  const d2 = (x - x1) * (y2 - y1) - (x2 - x1) * (y - y1);
-  const d3 = (x - x2) * (y0 - y2) - (x0 - x2) * (y - y2);
+  const area2 =
+    (p1[0] - p0[0]) * (p2[1] - p0[1]) - 
+    (p1[1] - p0[1]) * (p2[0] - p0[0]);
+  if (area2 === 0) {
+    // 退化しているため、false を返す
+    return 
+  }
 
-  return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
+  const s = (p0[0] - p2[0]) * (p[1] - p2[1]) - (p0[1] - p2[1]) * (p[0] - p2[0]);
+  const t = (p1[0] - p0[0]) * (p[1] - p0[1]) - (p1[1] - p0[1]) * (p[0] - p0[0]);
+
+  if ((s < 0) !== (t < 0) && s !== 0 && t !== 0) {
+      return false;
+  }
+
+  const d = (p2[0] - p1[0]) * (p[1] - p1[1]) - (p2[1] - p1[1]) * (p[0] - p1[0]);
+
+  return d === 0 || (d < 0) === (s + t <= 0);
 }
 
-export function triangleToPointDistance(t: [Vector, Vector, Vector], p: Vector): number {
+export function pointToLineDistance(p: Vector, line: [Vector, Vector]): number {
+  const [a, b] = line;
+  const ab = subtract2D(b, a);
+  const ap = subtract2D(p, a);
+
+  const abLength = Math.hypot(ab[0], ab[1]);
+
+  // 線分がほぼゼロ長の場合、点aから点pへの距離を返す
+  if (abLength < 1e-10) {
+    return Math.hypot(ap[0], ap[1]);
+  }
+
+  // 外積を利用して距離を計算
+  const cross = Math.abs(ab[0] * ap[1] - ab[1] * ap[0]);
+  return cross / abLength;
+}
+
+export function pointToSegmentDistance(p: Vector, segment: [Vector, Vector]): number {
+  const [a, b] = segment;
+  const ab = subtract2D(b, a);
+  const ap = subtract2D(p, a);
+  const abSquared = dot2D(ab, ab);
+
+  // 線分がほぼゼロ長の場合、点aから点pへの距離を返す
+  if (abSquared < 1e-10) {
+    return Math.hypot(ap[0], ap[1]);
+  }
+
+  // 投影係数 t を計算し、0から1にクランプする
+  const t = Math.max(0, Math.min(1, dot2D(ap, ab) / abSquared));
+
+  // 投影点の座標を計算
+  const projection: Vector = [a[0] + ab[0] * t, a[1] + ab[1] * t];
+
+  // 点pから投影点への距離を計算
+  return Math.hypot(p[0] - projection[0], p[1] - projection[1]);
+}
+
+export function pointToTriangleDistance(p: Vector, t: [Vector, Vector, Vector], ignoresinverted: boolean = false): number {
+  if (ignoresinverted && !isTriangleClockwise(t)) {
+    return Infinity;
+  }
+
+  if (isPointInTriangle(p, t)) {
+    return 0;
+  }
+
   const [A, B, C] = t;
-  const AB = subtract2D(B, A);
-  const AC = subtract2D(C, A);
-  const BC = subtract2D(C, B);
-
-  const AP = subtract2D(p, A);
-  const BP = subtract2D(p, B);
-  const CP = subtract2D(p, C);
-
-  const areaABC = Math.abs(cross2D(AB, AC));
-  const areaABP = Math.abs(cross2D(AB, AP));
-  const areaBCP = Math.abs(cross2D(BC, BP));
-  const areaCAP = Math.abs(cross2D(AC, CP));
-
-  const s = (areaABP + areaBCP + areaCAP) / areaABC;
-  return Math.min(distance2D(p, A), distance2D(p, B), distance2D(p, C), Math.sqrt(areaABC) * 2 * s);
+  const d0 = pointToSegmentDistance(p, [A, B]);
+  const d1 = pointToSegmentDistance(p, [B, C]);
+  const d2 = pointToSegmentDistance(p, [C, A]);
+  return Math.min(d0, d1, d2);
 }
 
 export function rectIntersectsRect(r0: Rect, r1: Rect): boolean {
@@ -310,4 +359,9 @@ export function scaleRect(r: Rect, s: number): Rect {
 
 export function minimumBoundingScale(objectSize: Vector, containerSize: Vector): number {
   return Math.max(containerSize[0] / objectSize[0], containerSize[1] / objectSize[1]);
+}
+
+export function isTriangleClockwise([v0, v1, v2]: [Vector, Vector, Vector]): boolean {
+  const cross = (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v1[1] - v0[1]) * (v2[0] - v0[0]);
+  return 0 < cross; // Y軸が数学的座標系と逆のため
 }

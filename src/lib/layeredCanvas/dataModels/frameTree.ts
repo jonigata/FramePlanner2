@@ -1,5 +1,5 @@
 import { type Vector, lineIntersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect } from "../tools/geometry/geometry";
-import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid, isPointInQuadrilateral } from "../tools/geometry/trapezoid";
+import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid, pointToQuadrilateralDistance } from "../tools/geometry/trapezoid";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
 import { type Film, FilmStack, calculateMinimumBoundingRect } from "./film";
 
@@ -548,30 +548,37 @@ function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, raw
   return { size, origin, rawSize, rawOrigin, element, corners, formalCorners };
 }
 
-export function findLayoutAt(layout: Layout, point: Vector, current: Layout = null): Layout {
+export function findLayoutAt(layout: Layout, point: Vector, margin: number, current: Layout = null): Layout {
   const layoutlets = collectLayoutlets(layout);
   layoutlets.sort((a, b) => a.element.z - b.element.z);
-  layoutlets.reverse();
+
+  let result = null;
+  let distance = Infinity;
 
   // currentがあってcurrentにヒットする場合、それより奥のものを返す
   let selectableFlag = true;
   if (current) {
-    if (isPointInQuadrilateral(point, current.corners)) {
+    const d = pointToQuadrilateralDistance(point, current.corners, false);
+    if (d <= margin) {
       selectableFlag = false;
     }
   }
+  let index = 0;
   for (let layoutlet of layoutlets) {
+    index++;
     if (!selectableFlag) { 
       if (layoutlet.element === current?.element) {
         selectableFlag = true;
       }
       continue; 
     }
-    if (isPointInQuadrilateral(point, layoutlet.corners)) {
-      return layoutlet;
+    const d = pointToQuadrilateralDistance(point, layoutlet.corners, false);
+    if (d <= margin && d < distance) {
+      distance = d;
+      result = layoutlet;
     }
   }
-  return null;
+  return result;
 }
 
 function collectLayoutlets(layout: Layout): Layout[] {
@@ -602,22 +609,23 @@ export function findLayoutOf(layout: Layout, element: FrameElement): Layout {
   return null;
 }
 
-export function findBorderAt(layout: Layout, position: Vector, margin: number): Border {
-  const [x,y] = position;
-
+export function findBorderAt(layout: Layout, point: Vector, margin: number, debug = false): Border {
   if (layout.children) {
     for (let i = 1; i < layout.children.length; i++) {
-      const corners = makeBorderCorners(layout, i, margin);
-      if (isPointInTrapezoid([x, y], corners)) {
+      const corners = makeBorderCorners(layout, i, 0);
+      const q = pointToQuadrilateralDistance(point, corners, true);
+      if (q <= margin) {
         const formalCorners = makeBorderFormalCorners(layout, i);
+        if (debug) {
+          console.log("find debug", corners, formalCorners);
+        }
         return { layout, index: i, corners, formalCorners};
       }
     }
     for (let i = 0; i < layout.children.length; i++) {
-      const found = findBorderAt(layout.children[i], position, margin);
+      const found = findBorderAt(layout.children[i], point, margin, debug);
       if (found) { return found; }
     }
-    return null;
   }
   return null;
 }
