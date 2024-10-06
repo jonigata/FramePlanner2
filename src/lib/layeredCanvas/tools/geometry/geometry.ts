@@ -1,5 +1,3 @@
-import segseg from 'segseg'
-
 export type Vector = [number, number];
 export type Rect = [number, number, number, number]; // x, y, w, h
 export type Box = [Vector, Vector]; // [topLeft, bottomRight
@@ -32,8 +30,16 @@ export function magnitude2D(vector: Vector): number {
   return Math.hypot(...vector);
 }
 
+export function magnitudeSq2D(vector: Vector): number {
+  return vector[0] * vector[0] + vector[1] * vector[1];
+}
+
 export function distance2D(v0: Vector, v1: Vector): number {
   return magnitude2D(subtract2D(v0, v1));
+}
+
+export function distanceSq2D(v0: Vector, v1: Vector): number {
+  return magnitudeSq2D(subtract2D(v0, v1));
 }
 
 export function perpendicular2D(v: Vector, n: number = 1): Vector {
@@ -149,15 +155,6 @@ export function lineIntersection(line1: [Vector, Vector], line2: [Vector, Vector
   return [x, y];
 }
 
-export function segmentIntersection(s0: [Vector, Vector], s1: [Vector, Vector]): Vector | null {
-  const isect: Vector = [NaN, NaN];
-  if (segseg(isect, ...s0, ...s1)) {
-    return isect;
-  } else {
-    return null;
-  }
-}
-
 export function deg2rad(deg: number): number {
   return deg * Math.PI / 180;
 }
@@ -242,14 +239,23 @@ export function pointToSegmentDistance(p: Vector, segment: [Vector, Vector]): nu
 }
 
 export function pointToTriangleDistance(p: Vector, t: [Vector, Vector, Vector], ignoresinverted: boolean = false): number {
-  if (ignoresinverted && !isTriangleClockwise(t)) {
+  // 3点が同一直線上にある場合、点と直線の距離を返す
+  const colinear = getColinearLineSegment(t);
+  if (colinear) {
+    return pointToSegmentDistance(p, colinear);
+  }
+
+  // 三角形が反時計回りの場合、オプションによっては無視する
+  if (ignoresinverted && isTriangleCounterClockwise(t)) {
     return Infinity;
   }
 
+  // 三角形内部に点がある場合、0を返す
   if (isPointInTriangle(p, t)) {
     return 0;
   }
 
+  // 最も近い辺までの距離を計算
   const [A, B, C] = t;
   const d0 = pointToSegmentDistance(p, [A, B]);
   const d1 = pointToSegmentDistance(p, [B, C]);
@@ -364,4 +370,87 @@ export function minimumBoundingScale(objectSize: Vector, containerSize: Vector):
 export function isTriangleClockwise([v0, v1, v2]: [Vector, Vector, Vector]): boolean {
   const cross = (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v1[1] - v0[1]) * (v2[0] - v0[0]);
   return 0 < cross; // Y軸が数学的座標系と逆のため
+}
+
+export function isTriangleCounterClockwise([v0, v1, v2]: [Vector, Vector, Vector]): boolean {
+  const cross = (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v1[1] - v0[1]) * (v2[0] - v0[0]);
+  return cross < 0; // Y軸が数学的座標系と逆のため
+}
+
+export function getColinearLineSegment(tri: [Vector, Vector, Vector]): [Vector, Vector] | null {
+  const [p1, p2, p3] = tri;
+
+  function vectorNearlyEquals(v0: Vector, v1: Vector): boolean {
+    return distanceSq2D(v0, v1) < 1e-10;
+  }
+  
+  // 同一点の判定(結果が結局点になることもある)
+  if (vectorNearlyEquals(p1, p3)) {return [p1, p2];}
+  if (vectorNearlyEquals(p1, p2)) {return [p2, p3];}
+  if (vectorNearlyEquals(p2, p3)) {return [p1, p3];}
+
+  // ここまできたら3点すべて別
+
+  const [x1, y1] = p1;
+  const [x2, y2] = p2;
+  const [x3, y3] = p3;
+  if (1e-10 <= Math.abs((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1))) {
+    // 面積がある＝直線ではない
+    return null;
+  }
+
+  const [dx, dy] = subtract2D(p3, p1);
+  const lengthSquared = magnitudeSq2D([dx, dy]); // すでに判定済みなので0でない
+  let t = ((x2 - x1) * dx + (y2 - y1) * dy) / lengthSquared;
+
+  if (t <= 0) {
+      return [p2, p3];
+  } else if (t >= 1) {
+      return [p1, p2];
+  } else {
+      return [p1, p3];
+  }
+}
+
+export function signed2DTriangleArea(a: Vector, b: Vector, c: Vector): number {
+  return (a[0] - c[0]) * (b[1] - c[1]) - (a[1] - c[1]) * (b[0] - c[0]);
+}
+
+// ゲームプログラミングのためのリアルタイム衝突判定 p151
+// ただしいくつかの境界条件を加味してrobustにした
+export function testSegmentIntersection(s0: [Vector, Vector], s1: [Vector, Vector]): [number, Vector] | null {
+  const [a, b] = s0;
+  const [c, d] = s1;
+
+  const a1 = signed2DTriangleArea(a, b, d);
+  const a2 = signed2DTriangleArea(a, b, c);
+
+  // 修正点: < 0 を <= 0 に変更して端点での交差を許容
+  if (a1 * a2 <= 0) {
+    const a3 = signed2DTriangleArea(c, d, a);
+    const a4 = signed2DTriangleArea(c, d, b);
+
+    // 同様に < 0 を <= 0 に変更
+    if (a3 * a4 <= 0) {
+      const denominator = a1 - a2;
+      // denominator が 0 の場合、線分が平行または重なっている
+      if (denominator === 0) {
+        // 特殊ケースの処理（必要に応じて実装）
+        return null;
+      }
+      const t = a3 / denominator;
+      // t が 0 <= t <= 1 の範囲にあることを確認
+      if (t >= 0 && t <= 1) {
+        const p = lerp2D(a, b, t);
+        return [t, p];
+      }
+    }
+  }
+
+  return null;
+}
+
+export function segmentIntersection(s0: [Vector, Vector], s1: [Vector, Vector]): Vector | null {
+  const result = testSegmentIntersection(s0, s1);
+  return result ? result[1] : null;
 }

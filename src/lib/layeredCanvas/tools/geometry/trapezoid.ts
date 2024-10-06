@@ -1,5 +1,7 @@
-import { isPointInTriangle, segmentIntersection, pointToTriangleDistance, subtract2D, cross2D } from "./geometry";
+import { isPointInTriangle, segmentIntersection, pointToTriangleDistance, subtract2D, cross2D, isTriangleClockwise } from "./geometry";
 import type { Vector, Rect } from "./geometry";
+import * as paper from 'paper';
+import { PaperOffset } from "paperjs-offset";
 
 export type Trapezoid = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
 export type TrapezoidCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
@@ -76,7 +78,7 @@ export function isPointInQuadrilateral(p: Vector, t: Trapezoid): boolean {
   return result;
 }
 
-export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinverted: boolean): number {
+export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinverted: boolean, debug=false): number {
   const [A, B, C, D] = [t.topLeft, t.topRight, t.bottomRight, t.bottomLeft];
 
   // A C
@@ -84,6 +86,9 @@ export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinv
   // D B
   const q = segmentIntersection([A, B], [C, D]);
   if (q) {
+    if (debug) {
+      console.log("A", A, B, C, D, q);
+    }
     return Math.min(
       pointToTriangleDistance(p, [A, q, D], ignoresinverted), 
       pointToTriangleDistance(p, [C, q, B], ignoresinverted));
@@ -94,6 +99,9 @@ export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinv
   // C-D
   const q2 = segmentIntersection([A, D], [B, C]);
   if (q2) {
+    if (debug) {
+      console.log("B", A, B, C, D, q2);
+    }
     return Math.min(
       pointToTriangleDistance(p, [A, B, q2], ignoresinverted),
       pointToTriangleDistance(p, [q2, C, D], ignoresinverted));
@@ -102,6 +110,9 @@ export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinv
   // A-B
   // | |
   // D-C
+  if (debug) {
+    console.log("C", A, B, C, D);
+  }
   return Math.min(
     pointToTriangleDistance(p, [A, B, C], ignoresinverted), 
     pointToTriangleDistance(p, [A, C, D], ignoresinverted));
@@ -131,4 +142,77 @@ export function isQuadrilateralConvex(t: Trapezoid): boolean {
 
   // すべての外積が正または0であれば凸
   return true;
+}
+
+export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: boolean): Path2D {
+  const [A, B, C, D] = [[...t.topLeft] as Vector, [...t.topRight] as Vector, [...t.bottomRight] as Vector, [...t.bottomLeft] as Vector];
+
+  // 縮退ポリゴンを正しく扱えていないため、小細工
+  let flag = true;
+  while (flag) {
+    flag = false;
+    if (A[0] == B[0] && A[1] == B[1]) {
+      B[0] += 0.1;
+      flag = true;
+    }
+    if (B[0] == C[0] && B[1] == C[1]) {
+      C[1] += 0.1;
+      flag = true;
+    }
+    if (C[0] == D[0] && C[1] == D[1]) {
+      D[0] -= 0.1;
+      flag = true;
+    }
+    if (D[0] == A[0] && D[1] == A[1]) {
+      A[1] -= 0.1;
+      flag = true;
+    }
+  }
+
+  const path = new paper.Path();
+  const join = "round";
+
+  function addTriangle(a: Vector, b: Vector, c: Vector) {
+    if (!ignoresInverted || isTriangleClockwise([a, b, c])) {
+      path.add(a, b, c);
+      path.closed = true;
+      return 1;
+    }
+    return 0;
+  }
+
+  // A C
+  // |X|
+  // D B
+  const q = segmentIntersection([A, B], [C, D]);
+  if (q) {
+    let n = 0;
+    n += addTriangle(A, q, D);
+    n += addTriangle(C, q, B);
+    if (n == 0) { return new Path2D(); }
+    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+  }
+
+  // A-B
+  //  X
+  // C-D
+  const q2 = segmentIntersection([A, D], [B, C]);
+  if (q2) {
+    let n = 0;
+    n += addTriangle(A, B, q2);
+    n += addTriangle(q2, C, D);
+    if (n == 0) { return new Path2D(); }
+    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+  }
+
+  // A-B
+  // | |
+  // D-C
+  if (ignoresInverted || isTriangleClockwise([A, B, C])) {
+    path.add(A, B, C, D);
+    path.closed = true;
+    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+  }
+
+  return new Path2D();
 }

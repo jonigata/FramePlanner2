@@ -6,7 +6,7 @@ import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { pointToQuadrilateralDistance, extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter } from "../tools/geometry/trapezoid";
+import { pointToQuadrilateralDistance, extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
@@ -188,24 +188,30 @@ export class FrameLayer extends Layer {
     }
 
     if (this.litBorder) {
-      fillTrapezoid(this.litBorder.corners, "rgba(0, 200, 200, 0.2)");
-      strokeTrapezoid(this.litBorder.formalCorners, "rgba(0, 200, 200, 0.4)", 1);
-      strokeConnectors(this.litBorder.corners, this.litBorder.formalCorners, "rgba(0, 200, 200, 0.4)", 1);
+      const corners = this.litBorder.corners;
+      console.log("litBorder", corners);
+      const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
+
+      // 線のスタイルを設定して描画
+      ctx.fillStyle = "rgba(0, 200, 200, 0.2)";
+      ctx.fill(canvasPath);
     } else if (this.litLayout) {
       if (this.litLayout.element != this.selectedLayout?.element) {
         fillTrapezoid(this.litLayout.corners, "rgba(0, 0, 255, 0.2)");
-        strokeTrapezoid(this.litLayout.corners, "rgba(255, 255, 255, 1)", 6);
         strokeTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
-        strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(255, 255, 255, 1)", 6);
+        strokeTrapezoid(this.litLayout.corners, "rgba(192, 192, 255, 1)", 3);
         strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
       }
     }
 
     if (this.selectedBorder) {
+      const corners = this.selectedBorder.corners;
+      console.log("litBorder", corners);
+      const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
+
+      // 線のスタイルを設定して描画
       ctx.fillStyle = this.canvasPattern;
-      ctx.beginPath();
-      trapezoidPath(ctx, this.selectedBorder.corners);
-      ctx.fill();
+      ctx.fill(canvasPath);
     } else if (this.selectedLayout) {
       const paperSize = this.getPaperSize();
       const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
@@ -261,8 +267,7 @@ export class FrameLayer extends Layer {
         }
       }
 
-      const corners = extendTrapezoid(this.selectedLayout.corners, PADDING_HANDLE_OUTER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
-      if (isPointInTrapezoid(point, corners)) {
+      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, true) < PADDING_HANDLE_OUTER_WIDTH) {
         const padding = findPaddingOn(this.selectedLayout, point, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
         this.focusedPadding = padding;
         this.litLayout = this.selectedLayout;
@@ -277,10 +282,12 @@ export class FrameLayer extends Layer {
       }
     }
 
-    this.litBorder = findBorderAt(layout, point, BORDER_MARGIN);
+    this.litBorder = findBorderAt(layout, point, BORDER_MARGIN, true);
     if (this.litBorder) {
+      console.log("find litBorder");
       return;
     }
+    console.log("dont find litBorder");
 
     this.litLayout = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH);
     if (this.litLayout) {
@@ -591,7 +598,7 @@ export class FrameLayer extends Layer {
   acceptsBackground(point: Vector, _button: number, picked: Picked): any {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
-    const border = findBorderAt(layout, point, BORDER_MARGIN);
+    const border = findBorderAt(layout, point, BORDER_MARGIN, true);
     if (border) {
       this.selectLayout(null);
       this.selectedBorder = border;
@@ -714,7 +721,7 @@ export class FrameLayer extends Layer {
     } else if (payload.padding) {
       yield* this.expandPadding(p, payload.padding);
     } else {
-      this.selectedBorder = payload.border;
+      this.litBorder = this.selectedBorder = payload.border;
       this.selectLayout(null);
       this.redraw();
       if (payload.action === "expand") {
@@ -1054,7 +1061,7 @@ export class FrameLayer extends Layer {
   }
 
   updateBorderTrapezoid(border: Border): void {
-    const corners = makeBorderCorners(border.layout, border.index, BORDER_MARGIN);
+    const corners = makeBorderCorners(border.layout, border.index, 0);
     const formalCorners = makeBorderFormalCorners(border.layout, border.index);
     border.corners = corners;
     border.formalCorners = formalCorners;

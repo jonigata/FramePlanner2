@@ -551,6 +551,7 @@ function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, raw
 export function findLayoutAt(layout: Layout, point: Vector, margin: number, current: Layout = null): Layout {
   const layoutlets = collectLayoutlets(layout);
   layoutlets.sort((a, b) => a.element.z - b.element.z);
+  layoutlets.reverse();
 
   let result = null;
   let distance = Infinity;
@@ -613,7 +614,7 @@ export function findBorderAt(layout: Layout, point: Vector, margin: number, debu
   if (layout.children) {
     for (let i = 1; i < layout.children.length; i++) {
       const corners = makeBorderCorners(layout, i, 0);
-      const q = pointToQuadrilateralDistance(point, corners, true);
+      const q = pointToQuadrilateralDistance(point, corners, true, debug);
       if (q <= margin) {
         const formalCorners = makeBorderFormalCorners(layout, i);
         if (debug) {
