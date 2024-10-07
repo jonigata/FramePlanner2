@@ -6,6 +6,7 @@ export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string,
 
   // まず白で枠を描く
   ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+  ctx.setLineDash([]);
   ctx.lineWidth = farLineWidth;
   ctx.beginPath();
   trapezoidPath(ctx, trapezoid);

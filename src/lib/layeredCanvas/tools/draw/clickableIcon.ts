@@ -12,6 +12,7 @@ export class ClickableIcon {
   visibleConditionProvider: () => boolean;
   matrixProvider: () => DOMMatrix;
   index: number;
+  shadowColor: string;
   
   constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: () => boolean, matrixProvider: () => DOMMatrix) {
     this.images = srcs.map(src => {
@@ -26,6 +27,7 @@ export class ClickableIcon {
     this.visibleConditionProvider = visibleConditionProvider;
     this.matrixProvider = matrixProvider;
     this.index = 0;
+    this.shadowColor = '#ffffff';
   }
 
   isVisible(): boolean {
@@ -80,7 +82,7 @@ export class ClickableIcon {
 
     ctx.save();
     const [x, y, w, h] = this.boundingRect;
-    ctx.shadowColor = '#ffffff';
+    ctx.shadowColor = this.shadowColor;
     ctx.shadowBlur = 10;
     ctx.drawImage(ClickableIcon.tmpCanvas, x, y, w, h);
     ctx.restore();
@@ -101,7 +103,8 @@ export class ClickableIcon {
   }
 
   get rscale(): number {
-    return Math.min(1 / this.matrixProvider().a, 3);
+    // return Math.min(1 / this.matrixProvider().a, 3);
+    return 1 / this.matrixProvider().a;
   }
 
   static calcPosition(rect: Rect, unit: Vector, regularizedOrigin: Vector, offsetUnit: Vector): Vector {

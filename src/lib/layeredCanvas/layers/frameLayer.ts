@@ -6,19 +6,22 @@ import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { pointToQuadrilateralDistance, extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
+import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
+import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
+import * as paper from 'paper';
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
 const PADDING_HANDLE_INNER_WIDTH = 20;
 const PADDING_HANDLE_OUTER_WIDTH = 20;
+const SHEET_TOP_MARGIN = 48;
+const SHEET_MARGIN = 16;
 
 export class FrameLayer extends Layer {
   cursorPosition: Vector;
@@ -78,8 +81,8 @@ export class FrameLayer extends Layer {
     const mp = () => this.paper.matrix;
     const isFrameActive = () => this.interactable && this.selectedLayout && !this.pointerHandler;
     const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility && !this.pointerHandler;
-    this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible, mp);
-    this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible, mp);
+    this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0,1],"横に分割", isFrameActiveAndVisible, mp);
+    this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0,1],"縦に分割", isFrameActiveAndVisible, mp);
     this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActive, mp);
     this.duplicateIcon = new ClickableIcon(["frameLayer/duplicate.png"],unit,[1,0],"複製", isFrameActive, mp);
     this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
@@ -112,6 +115,10 @@ export class FrameLayer extends Layer {
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
     this.litIcons = [this.swapIcon];
+
+    for (let icon of this.frameIcons) {
+      icon.shadowColor = "#222";
+    }
 
     this.makeCanvasPattern();
 
@@ -219,13 +226,49 @@ export class FrameLayer extends Layer {
       ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
       drawFilmStackBorders(ctx, this.selectedLayout.element.filmStack, paperSize);
       ctx.restore();
-  
+
+      // シート角丸
+      this.drawSheet(ctx, this.selectedLayout.corners);
+
+      // 選択枠
       drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
     }
 
     this.frameIcons.forEach(icon => icon.render(ctx));
     this.borderIcons.forEach(icon => icon.render(ctx));
     this.litIcons.forEach(icon => icon.render(ctx));
+  }
+
+  calculateSheetRect(corners: Trapezoid): Rect {
+    const rscale = 1 / this.paper.matrix.a;
+    const r = extendRect(trapezoidBoundingRect(corners), SHEET_MARGIN * rscale);
+    r[1] -= SHEET_TOP_MARGIN * rscale;
+    r[3] += SHEET_TOP_MARGIN * rscale * 2;
+    const minSize = 320 * rscale;
+    return ensureMinRectSize(minSize, r);
+  }
+
+  drawSheet(ctx: CanvasRenderingContext2D, corners: Trapezoid) {
+    const r = this.calculateSheetRect(corners);
+    const paperr = new paper.Rectangle(...r);
+    const path1 = new paper.Path.Rectangle(paperr, [8, 8]);
+
+    const path2 = new paper.Path();
+    const points = [corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft];
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) {
+        path2.moveTo(p as Vector);
+      } else {
+        path2.lineTo(p as Vector);
+      }
+    }
+    path2.closed = true;
+
+    const path3 = path1.subtract(path2);
+    
+    ctx.fillStyle = "rgba(64, 64, 128, 0.7)";
+    ctx.fill(new Path2D(path3.pathData));
   }
 
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) {
@@ -1081,11 +1124,8 @@ export class FrameLayer extends Layer {
   }
 
   relayoutFrameIcons(layout: Layout): void {
+    const [x, y, w, h] = this.calculateSheetRect(layout.corners);
     const rscale = 1 / this.paper.matrix.a;
-    const minSize = 240 * rscale;
-    const origin = layout.rawOrigin;
-    const size = layout.rawSize;
-    const [x, y, w, h] = ensureMinRectSize(minSize, [...origin, ...size]);
 
     const rect: Rect = [x+10, y+10, w-20, h-20];
     const unit: Vector = [...iconUnit];
@@ -1093,23 +1133,26 @@ export class FrameLayer extends Layer {
     unit[1] *= rscale;
     const cp = (ro, ou) => ClickableIcon.calcPosition(rect, unit, ro, ou);
 
-    this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
-    this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
-    this.deleteIcon.position = cp([1,0],[0,0]);
-    this.duplicateIcon.position = cp([1,0],[0,1]);
-    this.shiftIcon.position = cp([1,0],[0,2]);
-    this.unshiftIcon.position = cp([1,0],[0,3]);
-    this.resetPaddingIcon.position = cp([1,0],[0,4]);
-    this.zplusIcon.position = cp([0,0],[2.5,0]);
-    this.zminusIcon.position = cp([0,0],[1,0]);
     this.visibilityIcon.position = cp([0,0],[0,0]);
     this.visibilityIcon.index = layout.element.visibility;
+    this.zminusIcon.position = cp([0,0],[1,0]);
+    this.zplusIcon.position = cp([0,0],[2.5,0]);
+
+    this.deleteIcon.position = cp([1,0],[0,0]);
+    this.duplicateIcon.position = cp([1,0],[-1,0]);
+    this.shiftIcon.position = cp([1,0],[-2,0]);
+    this.unshiftIcon.position = cp([1,0],[-3,0]);
+    this.resetPaddingIcon.position = cp([1,0],[-4,0]);
+
+    this.splitHorizontalIcon.position = cp([0,1],[0,0]);
+    this.splitVerticalIcon.position = cp([0,1],[1,0]);
+
+    this.flipHorizontalIcon.position = cp([0,1], [2.5,0]);
+    this.flipVerticalIcon.position = cp([0,1], [3.5,0]);
+    this.fitIcon.position = cp([0,1], [4.5,0]);
 
     this.scaleIcon.position = cp([1,1],[0,0]);
     this.rotateIcon.position = cp([1,1],[-1,0]);
-    this.flipHorizontalIcon.position = cp([0,1], [2,0]);
-    this.flipVerticalIcon.position = cp([0,1], [3,0]);
-    this.fitIcon.position = cp([0,1], [4,0]);
 }
 
   relayoutBorderIcons(border: Border): void {

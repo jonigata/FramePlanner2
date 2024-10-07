@@ -286,6 +286,10 @@ export function rectToCorners(r: Rect): [Vector, Vector, Vector, Vector] {
   return [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
 }
 
+export function extendRect(r: Rect, n: number): Rect {
+  return [r[0] - n, r[1] - n, r[2] + 2 * n, r[3] + 2 * n];
+}
+
 export function vectorEquals(v0: Vector, v1: Vector): boolean {
   return v0[0] === v1[0] && v0[1] === v1[1];
 }
@@ -302,7 +306,7 @@ export function box2Rect(b: Box): Rect {
   return [b[0][0], b[0][1], b[1][0] - b[0][0], b[1][1] - b[0][1]];
 }
 
-export function ensureMinRectSize(minSize: number, r: Rect) {
+export function ensureMinRectSize(minSize: number, r: Rect): Rect {
   let [x, y, w, h] = r;
   const nw = Math.max(w, minSize);
   const nh = Math.max(h, minSize);
