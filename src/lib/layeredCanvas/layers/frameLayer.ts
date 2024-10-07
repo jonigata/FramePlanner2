@@ -7,7 +7,7 @@ import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect } from '../tools/geometry/geometry';
+import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect, rectContains } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
@@ -196,7 +196,6 @@ export class FrameLayer extends Layer {
 
     if (this.litBorder) {
       const corners = this.litBorder.corners;
-      console.log("litBorder", corners);
       const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
 
       // 線のスタイルを設定して描画
@@ -310,7 +309,7 @@ export class FrameLayer extends Layer {
         }
       }
 
-      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, true) < PADDING_HANDLE_OUTER_WIDTH) {
+      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
         const padding = findPaddingOn(this.selectedLayout, point, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
         this.focusedPadding = padding;
         this.litLayout = this.selectedLayout;
@@ -325,12 +324,10 @@ export class FrameLayer extends Layer {
       }
     }
 
-    this.litBorder = findBorderAt(layout, point, BORDER_MARGIN, true);
+    this.litBorder = findBorderAt(layout, point, BORDER_MARGIN);
     if (this.litBorder) {
-      console.log("find litBorder");
       return;
     }
-    console.log("dont find litBorder");
 
     this.litLayout = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH);
     if (this.litLayout) {
@@ -440,7 +437,7 @@ export class FrameLayer extends Layer {
     console.log("pick:A");
     if (this.selectedLayout) {
       console.log("pick:B");
-      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, true) < PADDING_HANDLE_OUTER_WIDTH) {
+      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
         console.log("pick:C");
         return { layer: this, payload: this.selectedLayout };
       }
@@ -467,7 +464,7 @@ export class FrameLayer extends Layer {
   acceptsForeground(point: Vector, _button: number, picked: Picked): any {
     if (keyDownFlags["KeyT"]) {
       if (this.litBorder) {
-        this.transposeBorder(this.litBorder);
+        return { action: "transpose-border", border: this.litBorder };
       }
       return null;
     }
@@ -475,38 +472,39 @@ export class FrameLayer extends Layer {
     if (this.selectedLayout) {
       const q = this.acceptsOnSelectedFrameIcons(point);
       if (q) {
-        if (q == "done") {
-          return null;
-        }
         return q;
+      }
+
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+
+      if (rectContains(r, point) && this.selectedLayout.element.filmStack.films.length !== 0) {
+        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+          return { action: "scale", layout: this.selectedLayout };
+        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+          return { action: "rotate", layout: this.selectedLayout };
+        } else {
+          return { action: "translate", layout: this.selectedLayout };
+        }
       }
 
       if (this.litLayout && this.litLayout.element != this.selectedLayout.element) {
         if (this.swapIcon.contains(point)) {
-          this.swapContent(this.selectedLayout.element, this.litLayout.element);
-          return null;
+          return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
         }
       }
     }
 
     // パディング操作
     if (this.focusedPadding) {
-      return { padding: this.focusedPadding };
+      return { action: "move-padding", padding: this.focusedPadding };
     }
 
     // 選択ボーダー操作
     if (this.selectedBorder) {
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
-        if (r == "done") {
-          return null;
-        }
         return r;
       }
-      this.selectedBorder = null;
-      this.relayoutIcons();
-      this.redraw();
-      return null;
     }
     return null;
   }
@@ -514,22 +512,19 @@ export class FrameLayer extends Layer {
   acceptsOnSelectedBorder(p: Vector): any {
     if (
       keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] ||
-       this.expandHorizontalIcon.contains(p) ||this.expandVerticalIcon.contains(p)) {
-      return { border: this.selectedBorder, action: "expand" };
+      this.expandHorizontalIcon.contains(p) ||this.expandVerticalIcon.contains(p)) {
+      return { action: "expand-border" , border: this.selectedBorder };
     } else if (
       keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"] ||
       this.slantHorizontalIcon.contains(p) || this.slantVerticalIcon.contains(p)) {
-      return { border: this.selectedBorder, action: "slant" };
+      return { action: "slant-border" , border: this.selectedBorder};
     } else if (keyDownFlags["KeyT"]) {
-      this.transposeBorder(this.selectedBorder);
-      return "done";
+      return { action: "transpose-border", border: this.selectedBorder };
     } else if (
       this.insertHorizontalIcon.contains(p) || this.insertVerticalIcon.contains(p)) {
-      this.onInsert(this.selectedBorder);
-      this.selectedBorder = null;
-      return "done";
-    } else if (pointToQuadrilateralDistance(p, this.selectedBorder.corners, true) < BORDER_MARGIN) {
-      return { border: this.selectedBorder, action: "move" };
+      return { action: "insert", border: this.selectedBorder };
+    } else if (pointToQuadrilateralDistance(p, this.selectedBorder.corners, false) < BORDER_MARGIN) {
+      return { action: "move-border" , border: this.selectedBorder };
     }
     return null;
   }
@@ -537,103 +532,49 @@ export class FrameLayer extends Layer {
   acceptsOnSelectedFrameIcons(point: Vector): any {
     const layout = this.selectedLayout;
     if (this.splitHorizontalIcon.contains(point)) {
-      FrameElement.splitElementHorizontal(
-        this.frameTree,
-        layout.element
-      );
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-horizontal", layout: layout };
     }
     if (this.splitVerticalIcon.contains(point)) {
-      FrameElement.splitElementVertical(
-        this.frameTree,
-        layout.element
-      );
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-vertical", layout: layout };
     }
     if (this.deleteIcon.contains(point)) {
-      FrameElement.eraseElement(this.frameTree, layout.element);
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "erase", layout: layout };
     }
     if (this.duplicateIcon.contains(point)) {
-      FrameElement.duplicateElement(this.frameTree, layout.element);
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "duplicate", layout: layout };
     }
     if (this.shiftIcon.contains(point)) {
-      this.onShift(layout.element);
-      this.redraw();
-      return "done";
+      return { action: "shift", layout: layout };
     }
     if (this.unshiftIcon.contains(point)) {
-      this.onUnshift(layout.element);
-      this.redraw();
-      return "done";
+      return { action: "unshift", layout: layout };
     }
     if (this.resetPaddingIcon.contains(point)) {
-      this.resetPadding();
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "reset-padding", layout: layout };
     }
     if (this.zplusIcon.contains(point)) {
-      layout.element.z += 1;
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "zplus", layout: layout };
     }
     if (this.zminusIcon.contains(point)) {
-      layout.element.z -= 1;
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "zminus", layout: layout };
     }
     if (this.visibilityIcon.contains(point)) {
-      this.visibilityIcon.increment();
-      layout.element.visibility = this.visibilityIcon.index;
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "visibility", layout: layout };
     }
     if (this.flipHorizontalIcon.contains(point)) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[0] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-horizontal", layout: layout };
     } 
     if (this.flipVerticalIcon.contains(point)) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[1] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-vertical", layout: layout };
     } 
     if (this.fitIcon.contains(point)) {
-      const paperSize = this.getPaperSize();
-      const transformer = new FilmStackTransformer(paperSize, layout.element.filmStack.films);
-      transformer.scale(0.01);
-      constraintLeaf(paperSize, layout);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "fit", layout: layout };
     } 
-    if (this.scaleIcon.contains(point) || this.rotateIcon.contains(point)) {
-      return { layout: layout };
+    if (this.scaleIcon.contains(point)) {
+      return { action: "scale", layout: layout };
+    }
+    if (this.rotateIcon.contains(point)) {
+      return { action: "rotate", layout: layout };
     }
     return null;
   }
@@ -641,13 +582,9 @@ export class FrameLayer extends Layer {
   acceptsBackground(point: Vector, _button: number, picked: Picked): any {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
-    const border = findBorderAt(layout, point, BORDER_MARGIN, true);
+    const border = findBorderAt(layout, point, BORDER_MARGIN);
     if (border) {
-      this.selectLayout(null);
-      this.selectedBorder = border;
-      this.relayoutBorderIcons(border);
-      this.redraw();
-      return null;
+      return { action: "select-border", border: border };
     }
 
     console.log("acceptsBackground", picked, picked?.layer === this);
@@ -658,81 +595,36 @@ export class FrameLayer extends Layer {
     if (layoutlet) {
       const r = this.acceptsOnFrame(layoutlet);
       if (r) {
-        if (r == "done") {
-          return null;
-        }
         return r;
       }
     }
-    
-    this.selectLayout(null);
-    this.redraw();
     return null; 
   }
 
   acceptsOnFrame(layout: Layout): any {
     const paperSize = this.getPaperSize();
     if (keyDownFlags["KeyQ"]) {
-      FrameElement.eraseElement(this.frameTree, layout.element);
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "erase", layout: layout };
     }
     if (keyDownFlags["KeyW"]) {
-      this.litLayout = null;
-      FrameElement.splitElementHorizontal(
-        this.frameTree,
-        layout.element
-      );
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-horizontal", layout: layout };
     }
     if (keyDownFlags["KeyS"]) {
-      this.litLayout = null;
-      FrameElement.splitElementVertical(
-        this.frameTree,
-        layout.element
-      );
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-vertical", layout: layout };
     }
     if (keyDownFlags["KeyD"]) {
-      layout.element.filmStack.films = [];
-      this.redraw();
-      return "done";
+      return { action: "discard-films", layout: layout };
     }
     if (keyDownFlags["KeyT"]) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[0] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-horizontal", layout: layout };
     }
     if (keyDownFlags["KeyY"]) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[1] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-vertical", layout: layout };
     }
     if (keyDownFlags["KeyE"]) {
-      constraintLeaf(paperSize, layout);
-      this.redraw();
-      return "done";
+      return { action: "fit", layout: layout };
     }
-    if (this.selectedLayout?.element != layout.element) {
-      this.selectLayout(layout);
-      this.redraw();
-      return { select: layout };
-    } else {
-      return { layout: layout };
-    }
+    return { action: "select", layout: layout };
   }
 
   changeFocus(layer: Layer) {
@@ -745,35 +637,146 @@ export class FrameLayer extends Layer {
   }
 
   async *pointer(p: Vector, payload: any) {
-    if (payload.select) {
-      // changeFocusのためにacceptsに{select:layout}を変えさせたので、ここでは何もしない 
-    } else if (payload.layout) {
-      const layout: Layout = payload.layout;
-      const element: FrameElement = layout.element;
-      if (0< element.filmStack.films.length) {
-        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
-            this.scaleIcon.contains(p)) {
-          yield* this.scaleImage(p, layout);
-        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] ||
-                  this.rotateIcon.contains(p)) {
-          yield* this.rotateImage(p, layout);
-        } else {
-          yield* this.translateImage(p, layout);
-        }
-      }
-    } else if (payload.padding) {
-      yield* this.expandPadding(p, payload.padding);
-    } else {
-      this.litBorder = this.selectedBorder = payload.border;
-      this.selectLayout(null);
-      this.redraw();
-      if (payload.action === "expand") {
+    switch (payload.action) {
+      case "transpose-border":
+        this.transposeBorder(this.litBorder);
+        break;
+      case "swap":
+        this.swapContent(payload.element0, payload.element1);
+        break;
+  
+      case "move-padding":
+        yield* this.expandPadding(p, payload.padding);
+        break;
+      case "reset-padding":
+        this.resetPadding();
+        this.onCommit();
+        this.redraw();
+        return "done";
+
+      case "select-border":
+        this.selectLayout(null);
+        this.selectedBorder = payload.border;
+        this.relayoutBorderIcons(payload.border);
+        this.redraw();
+        break;
+      case "expand-border":
         yield* this.expandBorder(p, payload.border);
-      } else if(payload.action === "slant") {
+        break;
+      case "slant-border":
         yield* this.slantBorder(p, payload.border);
-      } else {
+        break;
+      case "move-border":
         yield* this.moveBorder(p, payload.border);
-      }
+        break;
+
+      case "select":
+        this.selectedBorder = null;
+        this.selectLayout(payload.layout);
+        this.relayoutIcons();
+        this.redraw();
+        break;
+      case "split-horizontal":
+        FrameElement.splitElementHorizontal(
+          this.frameTree,
+          payload.layout.element
+        );
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "split-vertical":
+        FrameElement.splitElementVertical(
+          this.frameTree,
+          payload.layout.element
+        );
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "erase":
+        FrameElement.eraseElement(this.frameTree, payload.layout.element);
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "duplicate":
+        FrameElement.duplicateElement(this.frameTree, payload.layout.element);
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "shift":
+        this.onShift(payload.layout.element);
+        this.redraw();
+        break;
+      case "unshift":
+        this.onUnshift(payload.layout.element);
+        this.redraw();
+        break;
+      case "insert":
+        this.onInsert(this.selectedBorder);
+        this.selectedBorder = null;
+        break;
+
+      case "zplus":
+        payload.layout.element.z += 1;
+        this.onCommit();
+        this.redraw();
+        break;
+      case "zminus":
+        payload.layout.element.z -= 1;
+        this.onCommit();
+        this.redraw();
+        break;
+      case "visibility":
+        this.visibilityIcon.increment();
+        payload.layout.element.visibility = this.visibilityIcon.index;
+        this.onCommit();
+        this.redraw();
+        break;
+
+      case "flip-horizontal":
+        payload.layout.element.filmStack.films.forEach(film => {
+          film.reverse[0] *= -1;
+        });
+        this.redraw();
+        break;
+      case "flip-vertical":
+        payload.layout.element.filmStack.films.forEach(film => {
+          film.reverse[1] *= -1;
+        });
+        this.redraw();
+        break;
+      case "fit":
+        const paperSize = this.getPaperSize();
+        const transformer = new FilmStackTransformer(paperSize, payload.layout.element.filmStack.films);
+        transformer.scale(0.01);
+        constraintLeaf(paperSize, payload.layout);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "discard-films":
+        payload.layout.element.filmStack.films = [];
+        this.redraw();
+        break;
+
+      case "scale":
+        yield* this.scaleImage(p, payload.layout);
+        break;
+      case "rotate":
+        yield* this.rotateImage(p, payload.layout);
+        break;
+      case "translate":
+        yield* this.translateImage(p, payload.layout);
+        break;
+
+      default:
+        console.error("unknown action", payload.action);
     }
   }
 

@@ -78,7 +78,7 @@ export function isPointInQuadrilateral(p: Vector, t: Trapezoid): boolean {
   return result;
 }
 
-export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinverted: boolean, debug=false): number {
+export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinverted: boolean): number {
   const [A, B, C, D] = [t.topLeft, t.topRight, t.bottomRight, t.bottomLeft];
 
   // A C
@@ -86,9 +86,6 @@ export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinv
   // D B
   const q = segmentIntersection([A, B], [C, D]);
   if (q) {
-    if (debug) {
-      console.log("A", A, B, C, D, q);
-    }
     return Math.min(
       pointToTriangleDistance(p, [A, q, D], ignoresinverted), 
       pointToTriangleDistance(p, [C, q, B], ignoresinverted));
@@ -99,9 +96,6 @@ export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinv
   // C-D
   const q2 = segmentIntersection([A, D], [B, C]);
   if (q2) {
-    if (debug) {
-      console.log("B", A, B, C, D, q2);
-    }
     return Math.min(
       pointToTriangleDistance(p, [A, B, q2], ignoresinverted),
       pointToTriangleDistance(p, [q2, C, D], ignoresinverted));
@@ -110,9 +104,6 @@ export function pointToQuadrilateralDistance(p: Vector, t: Trapezoid, ignoresinv
   // A-B
   // | |
   // D-C
-  if (debug) {
-    console.log("C", A, B, C, D);
-  }
   return Math.min(
     pointToTriangleDistance(p, [A, B, C], ignoresinverted), 
     pointToTriangleDistance(p, [A, C, D], ignoresinverted));

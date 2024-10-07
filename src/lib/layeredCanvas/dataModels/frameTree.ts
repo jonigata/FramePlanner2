@@ -610,21 +610,18 @@ export function findLayoutOf(layout: Layout, element: FrameElement): Layout {
   return null;
 }
 
-export function findBorderAt(layout: Layout, point: Vector, margin: number, debug = false): Border {
+export function findBorderAt(layout: Layout, point: Vector, margin: number): Border {
   if (layout.children) {
     for (let i = 1; i < layout.children.length; i++) {
       const corners = makeBorderCorners(layout, i, 0);
-      const q = pointToQuadrilateralDistance(point, corners, true, debug);
+      const q = pointToQuadrilateralDistance(point, corners, false);
       if (q <= margin) {
         const formalCorners = makeBorderFormalCorners(layout, i);
-        if (debug) {
-          console.log("find debug", corners, formalCorners);
-        }
         return { layout, index: i, corners, formalCorners};
       }
     }
     for (let i = 0; i < layout.children.length; i++) {
-      const found = findBorderAt(layout.children[i], point, margin, debug);
+      const found = findBorderAt(layout.children[i], point, margin);
       if (found) { return found; }
     }
   }
