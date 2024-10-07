@@ -125,7 +125,7 @@ export class FrameLayer extends Layer {
     focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
-  calculateLayout(matrix: DOMMatrix): void {
+  rebuildPageLayouts(matrix: DOMMatrix): void {
     this.relayoutIcons();
   }
 
@@ -434,11 +434,8 @@ export class FrameLayer extends Layer {
   }
 
   pick(point: Vector): Picked {
-    console.log("pick:A");
     if (this.selectedLayout) {
-      console.log("pick:B");
       if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
-        console.log("pick:C");
         return { layer: this, payload: this.selectedLayout };
       }
     }

@@ -111,7 +111,7 @@ export class BubbleLayer extends Layer {
     focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
-  calculateLayout(matrix: DOMMatrix): void {
+  rebuildPageLayouts(matrix: DOMMatrix): void {
     if (this.selected != null) {
       this.setIconPositions();
     }

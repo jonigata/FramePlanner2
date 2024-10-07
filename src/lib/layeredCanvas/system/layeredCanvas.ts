@@ -62,14 +62,20 @@ export interface Picked {
   payload: any;
 }
 
-export class Layer {
+export interface Layer {
+  // 型チェックしたくなったら足す
+  accepts(position: Vector, button: number, depth: number, picked: Picked): any;
+  rebuildPageLayouts(matrix: DOMMatrix): void;
+}
+
+export class Layer implements Layer {
   paper: Paper = null;
   hint: (rect: Rect, message: string) => void; // bind(this)しないと面倒なので
 
   constructor() { this.hint = this.showHint.bind(this); }
 
   getPaperSize() {return this.paper.size;}
-  calculateLayout(matrix: DOMMatrix) {}
+  rebuildPageLayouts(matrix: DOMMatrix) {}
   redraw() { this.redrawRequired = true; }
   showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
 
@@ -264,11 +270,11 @@ export class Paper {
     this.layers.push(layer);
   }
 
-  calculateLayout(matrix: DOMMatrix): void {
+  rebuildPageLayouts(matrix: DOMMatrix): void {
     const m = matrix.translate(this.size[0] * -0.5, this.size[1] * -0.5);
     this.matrix = m;
     for (let layer of this.layers) {
-      layer.calculateLayout(m);
+      layer.rebuildPageLayouts(m);
     }
   }
 
@@ -347,11 +353,11 @@ export class LayeredCanvas {
     this.rootPaper = new Paper([0,0], true);
 
     const beforeHandler = () => {
-      this.calculateLayout();
+      this.rebuildPageLayouts();
     }
 
     const afterHandler = () => {
-      this.calculateLayout();
+      this.rebuildPageLayouts();
       this.redrawIfRequired();
       this.rootPaper.flushHints(this.viewport);
     }
@@ -388,7 +394,7 @@ export class LayeredCanvas {
   takeOver() {
     if (this.listeners.length === 0) { return; }
     if (this.pointerCursor) {
-      this.calculateLayout();
+      this.rebuildPageLayouts();
       this.rootPaper.handlePointerHover(this.pointerCursor);
     }
   }
@@ -557,7 +563,7 @@ export class LayeredCanvas {
 
   async handleKeyDown(event: KeyboardEvent): Promise<void> {
     // このハンドラだけはdocumentに登録する
-    this.calculateLayout();
+    this.rebuildPageLayouts();
     if (!this.isPointerOnCanvas()) {
       return;
     }
@@ -567,7 +573,7 @@ export class LayeredCanvas {
   }
 
   render(): void {
-    this.calculateLayout();
+    this.rebuildPageLayouts();
 
     const canvas = this.viewport.canvas;
     const ctx = this.viewport.ctx;
@@ -604,7 +610,7 @@ export class LayeredCanvas {
     return f;
   }
 
-  calculateLayout(): void {
+  rebuildPageLayouts(): void {
     if (!this.viewport.dirty) { return; }
 
     this.viewport.dirty = false;
@@ -617,7 +623,7 @@ export class LayeredCanvas {
     matrix = matrix.translate(...this.viewport.viewTranslate);         // Temporary Pan
     matrix = matrix.scale(this.viewport.scale, this.viewport.scale);
 
-    this.rootPaper.calculateLayout(matrix);
+    this.rootPaper.rebuildPageLayouts(matrix);
   }
 
   set mode(mode: any) {this.rootPaper.mode = mode;}

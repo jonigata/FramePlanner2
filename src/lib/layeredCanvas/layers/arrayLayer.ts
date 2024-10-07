@@ -74,11 +74,11 @@ export class ArrayLayer extends Layer {
     this.calculateIconPositions();
   }
 
-  calculateLayout(matrix: DOMMatrix) {
+  rebuildPageLayouts(matrix: DOMMatrix) {
     this.array.recalculatePaperCenter();
     for (let paper of this.array.papers) {
       let m = matrix.translate(...paper.center);
-      paper.paper.calculateLayout(m);
+      paper.paper.rebuildPageLayouts(m);
     }
 
     this.calculateIconPositions();
