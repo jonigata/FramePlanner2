@@ -58,15 +58,20 @@ export interface Dragging {
 }
 
 export interface Picked {
-  layer: Layer;
-  payload: any;
+  selected: boolean;
+  action: () => void;
 }
 
 export interface Layer {
   // 型チェックしたくなったら足す
-  accepts(position: Vector, button: number, depth: number, picked: Picked): any;
+  accepts(position: Vector, button: number, depth: number): any;
   rebuildPageLayouts(matrix: DOMMatrix): void;
+  pick(p: Vector): Picked[]
 }
+
+// pierce, pick
+// pierceは貫通走査リクエスト
+// pickは貫通されるオブジェクトとそれが選ばれたときのアクションを列挙する
 
 export class Layer implements Layer {
   paper: Paper = null;
@@ -77,10 +82,11 @@ export class Layer implements Layer {
   getPaperSize() {return this.paper.size;}
   rebuildPageLayouts(matrix: DOMMatrix) {}
   redraw() { this.redrawRequired = true; }
+  pierce() { this.pierceRequired = true; }
   showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
 
   pointerHover(position: Vector): boolean { return false; }
-  accepts(position: Vector, button: number, depth: number, picked: Picked): any { return null; }
+  accepts(position: Vector, button: number, depth: number): any { return null; }
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
   pointerUp(position: Vector, payload: any) {}
@@ -95,11 +101,15 @@ export class Layer implements Layer {
   flushHints(viewport: Viewport) {}
   renderDepths(): number[] { return []; }
   acceptDepths(): number[] { return []; }
-  pick(p: Vector): Picked { return null; }
+  pick(p: Vector): Picked[] { return []; }
 
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
   set redrawRequired(f: boolean) { this.redrawRequired_ = f; }
+
+  pierceRequired_: boolean = false;
+  get pierceRequired(): boolean { return this.pierceRequired_; }
+  set pierceRequired(f: boolean) { this.pierceRequired_ = f; }
 
   mode_: any = null;
   set mode(mode: any) { this.mode_ = mode; }
@@ -119,11 +129,11 @@ export class Paper {
     this.layers = [];
   }
 
-  handleAccepts(p: Vector, button: number, depth: number, picked: Picked): Dragging {
+  handleAccepts(p: Vector, button: number, depth: number): Dragging {
     var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      const payload = layer.accepts(p, button, depth, picked);
+      const payload = layer.accepts(p, button, depth);
       if (payload) {
         result = {layer, payload};
         break;
@@ -213,15 +223,13 @@ export class Paper {
     return false;
   }
 
-  pick(p: Vector): Picked {
+  pick(p: Vector): Picked[] {
+    let picked = [];
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      const result = layer.pick(p);
-      if (result) {
-        return result;
-      }
+      picked.push(...layer.pick(p));
     }
-    return null;    
+    return picked;
   }
 
   prerender(): void {
@@ -250,18 +258,22 @@ export class Paper {
   }
 
   get redrawRequired(): boolean {
-    for (let i = 0; i < this.layers.length; i++) {
-      const layer = this.layers[i];
-      if (layer.redrawRequired) {
-        return true;
-      }
-    }
-    return false;
+    return this.layers.some(e => e.redrawRequired);
   }
 
   set redrawRequired(value: boolean) {
     for (let layer of this.layers) {
       layer.redrawRequired = value;
+    }
+  }
+
+  get pierceRequired(): boolean {
+    return this.layers.some(e => e.pierceRequired);
+  }
+
+  set pierceRequired(value: boolean) {
+    for (let layer of this.layers) {
+      layer.pierceRequired = value;
     }
   }
   
@@ -358,6 +370,7 @@ export class LayeredCanvas {
 
     const afterHandler = () => {
       this.rebuildPageLayouts();
+      this.pierceIfRequired();
       this.redrawIfRequired();
       this.rootPaper.flushHints(this.viewport);
     }
@@ -436,11 +449,9 @@ export class LayeredCanvas {
     const p = this.eventPositionToRootPaperPosition(event);
 
     console.log("================");
-    const picked = this.rootPaper.pick(p);
-    console.log("rootPpaer.pick", picked);
     const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
     for (let depth of depths) {
-      this.dragging = this.rootPaper.handleAccepts(p, event.button, depth, picked);
+      this.dragging = this.rootPaper.handleAccepts(p, event.button, depth);
       if (this.dragging) { break; }
     }
     if (this.dragging) {
@@ -598,6 +609,31 @@ export class LayeredCanvas {
       this.rootPaper.redrawRequired = false;
       this.render();
       return;
+    }
+  }
+
+  pierceIfRequired(): void {
+    if (this.rootPaper.pierceRequired) {
+      this.rootPaper.pierceRequired = false;
+      const picked = this.rootPaper.pick(this.pointerCursor);
+      console.log("picked", picked);
+
+      if (0 < picked.length) {
+        // 選択されたものがある場合はその次のactionを実行
+        // 選択されたものがない場合は最初のactionを実行
+        const index = picked.findIndex(e => e.selected);
+        if (0 <= index) {
+          if (index < picked.length - 1) {
+            const next = picked[index + 1];
+            next.action();
+          } else {
+            // TODO:このときの挙動が決まってない
+          }
+        } else {
+          const next = picked[0];
+          next.action();
+        }
+      }
     }
   }
 

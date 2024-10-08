@@ -1,4 +1,4 @@
-import { Layer, Paper, type Picked, type Viewport } from '../system/layeredCanvas';
+import { Layer, Paper, type Viewport, type Picked } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
@@ -185,7 +185,7 @@ export class ArrayLayer extends Layer {
     return false;
   }
 
-  accepts(p: Vector, button: number, depth: number, picked: Picked): any { 
+  accepts(p: Vector, button: number, depth: number): any { 
     if (keyDownFlags["Space"] || 0 < button) {return null;}
 
     for (let [i, e] of this.insertIcons.entries()) {
@@ -240,7 +240,7 @@ export class ArrayLayer extends Layer {
     }
 
     const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
-    const innerDragging = paper.handleAccepts(position, button, depth, picked);
+    const innerDragging = paper.handleAccepts(position, button, depth);
     return innerDragging ? { paper, index, innerDragging } : null;
   }
 
@@ -364,12 +364,12 @@ export class ArrayLayer extends Layer {
     return [...new Set(depths)].sort((a,b) => a - b);
   }
 
-  pick(p: Vector): Picked {
+  pick(p: Vector): Picked[] {
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
     if (paper.contains(position)) {
       return paper.pick(position);
     }
-    return null;
+    return [];
   }
 
   get redrawRequired(): boolean {
@@ -377,6 +377,13 @@ export class ArrayLayer extends Layer {
   }
   set redrawRequired(value: boolean) {
     this.array.redrawRequired = value;
+  }
+
+  get pierceRequired(): boolean {
+    return this.array.pierceRequired;
+  }
+  set pierceRequired(value: boolean) {
+    this.array.pierceRequired = value;
   }
 
   set mode(mode: any) { 

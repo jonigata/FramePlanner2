@@ -1,4 +1,4 @@
-import { isPointInTriangle, segmentIntersection, pointToTriangleDistance, subtract2D, cross2D, isTriangleClockwise } from "./geometry";
+import { isPointInTriangle, segmentIntersection, pointToTriangleDistance, subtract2D, cross2D, isTriangleClockwise, distance2D } from "./geometry";
 import type { Vector, Rect } from "./geometry";
 import * as paper from 'paper';
 import { PaperOffset } from "paperjs-offset";
@@ -138,23 +138,23 @@ export function isQuadrilateralConvex(t: Trapezoid): boolean {
 export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: boolean): Path2D {
   const [A, B, C, D] = [[...t.topLeft] as Vector, [...t.topRight] as Vector, [...t.bottomRight] as Vector, [...t.bottomLeft] as Vector];
 
-  // 縮退ポリゴンを正しく扱えていないため、小細工
+  // PaperOffset.offsetが縮退ポリゴンを正しく扱えていないため、小細工
   let flag = true;
   while (flag) {
     flag = false;
-    if (A[0] == B[0] && A[1] == B[1]) {
+    if (distance2D(A, B) < 0.05) {
       B[0] += 0.1;
       flag = true;
     }
-    if (B[0] == C[0] && B[1] == C[1]) {
+    if (distance2D(B, C) < 0.05) {
       C[1] += 0.1;
       flag = true;
     }
-    if (C[0] == D[0] && C[1] == D[1]) {
+    if (distance2D(C, D) < 0.05) {
       D[0] -= 0.1;
       flag = true;
     }
-    if (D[0] == A[0] && D[1] == A[1]) {
+    if (distance2D(D, A) < 0.05) {
       A[1] -= 0.1;
       flag = true;
     }
@@ -202,7 +202,13 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
   if (ignoresInverted || isTriangleClockwise([A, B, C])) {
     path.add(A, B, C, D);
     path.closed = true;
-    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+    try {
+      return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+    }
+    catch (e) {
+      console.error(e);
+      console.log(A, B, C, D, margin, ignoresInverted);
+    }
   }
 
   return new Path2D();

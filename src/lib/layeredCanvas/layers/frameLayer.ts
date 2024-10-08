@@ -1,5 +1,5 @@
 import { Layer, sequentializePointer, type Picked } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, listLayoutsAt } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
 import { Media, ImageMedia, VideoMedia } from "../dataModels/media";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
@@ -79,8 +79,8 @@ export class FrameLayer extends Layer {
 
     const unit = iconUnit;
     const mp = () => this.paper.matrix;
-    const isFrameActive = () => this.interactable && this.selectedLayout && !this.pointerHandler;
-    const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility && !this.pointerHandler;
+    const isFrameActive = () => this.interactable && !!this.selectedLayout;
+    const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility;
     this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0,1],"横に分割", isFrameActiveAndVisible, mp);
     this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0,1],"縦に分割", isFrameActiveAndVisible, mp);
     this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActive, mp);
@@ -212,7 +212,6 @@ export class FrameLayer extends Layer {
 
     if (this.selectedBorder) {
       const corners = this.selectedBorder.corners;
-      console.log("litBorder", corners);
       const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
 
       // 線のスタイルを設定して描画
@@ -227,7 +226,9 @@ export class FrameLayer extends Layer {
       ctx.restore();
 
       // シート角丸
-      this.drawSheet(ctx, this.selectedLayout.corners);
+      if (0 < this.selectedLayout.element.visibility) {
+        this.drawSheet(ctx, this.selectedLayout.corners);
+      }
 
       // 選択枠
       drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
@@ -364,9 +365,7 @@ export class FrameLayer extends Layer {
         return;
       }
 
-      const origin = this.litLayout.origin;
-      const size = this.litLayout.size;
-      const r: Rect = [...origin, ...size];
+      const r = trapezoidBoundingRect(this.litLayout.corners);
       this.hint(r, "画像をドロップ");
     } else if (this.litBorder && this.litBorder.layout.element != this.selectedBorder?.layout.element) {
       if (isPointInTrapezoid(position, this.litBorder.corners)) {
@@ -392,8 +391,6 @@ export class FrameLayer extends Layer {
         }
         if (this.selectedLayout.element.filmStack.films.length !== 0) {
           this.hint(r, "ドラッグで変更");
-        } else if (0 < this.selectedLayout.element.visibility) {
-          this.hint(r, "画像をドロップ");
         }
       } else {
         hintIfContains(this.litIcons);
@@ -433,32 +430,34 @@ export class FrameLayer extends Layer {
     return false;
   }
 
-  pick(point: Vector): Picked {
-    if (this.selectedLayout) {
-      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
-        return { layer: this, payload: this.selectedLayout };
-      }
-    }
-    return null;
+  pick(point: Vector): Picked[] {
+    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+    return listLayoutsAt(layout, point, PADDING_HANDLE_OUTER_WIDTH).map(
+      layout => {
+        return {
+          selected: layout.element === this.selectedLayout?.element,
+          action: () => this.selectLayout(layout),
+        };
+      });
   }
 
   acceptDepths(): number[] {
     return [0,1];
   }
 
-  accepts(point: Vector, button: number, depth: number, picked: Picked): any {
+  accepts(point: Vector, button: number, depth: number): any {
+    console.log("frame accepts", depth);
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
-    console.log("frame accepts", picked);
     if (depth == 1) {
-      return this.acceptsForeground(point, button, picked);
+      return this.acceptsForeground(point, button);
     } else {
-      return this.acceptsBackground(point, button, picked);
+      return this.acceptsBackground(point, button);
     }
   }
 
-  acceptsForeground(point: Vector, _button: number, picked: Picked): any {
+  acceptsForeground(point: Vector, _button: number): any {
     if (keyDownFlags["KeyT"]) {
       if (this.litBorder) {
         return { action: "transpose-border", border: this.litBorder };
@@ -576,7 +575,7 @@ export class FrameLayer extends Layer {
     return null;
   }
 
-  acceptsBackground(point: Vector, _button: number, picked: Picked): any {
+  acceptsBackground(point: Vector, _button: number): any {
     const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
 
     const border = findBorderAt(layout, point, BORDER_MARGIN);
@@ -584,17 +583,16 @@ export class FrameLayer extends Layer {
       return { action: "select-border", border: border };
     }
 
-    console.log("acceptsBackground", picked, picked?.layer === this);
-
-    const current = picked?.layer === this ? picked.payload : null;
-    console.log(current);
-    const layoutlet = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH, current);
+    const layoutlet = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH, null);
     if (layoutlet) {
       const r = this.acceptsOnFrame(layoutlet);
       if (r) {
         return r;
       }
     }
+
+    this.selectLayout(null);
+    this.redraw();
     return null; 
   }
 
@@ -824,6 +822,9 @@ export class FrameLayer extends Layer {
   }
 
   *translateImage(p: Vector, layout: Layout) {
+    // クリック判定と兼用
+    const startingTime = performance.now();
+
     const paperSize = this.getPaperSize();
     const element = layout.element;
     const films = element.filmStack.getOperationTargetFilms();
@@ -848,6 +849,11 @@ export class FrameLayer extends Layer {
       if (e === "cancel") {
         this.onRevert();
       }
+    }
+
+    if (performance.now() - startingTime < 200) {
+      // クリック判定
+      this.pierce();
     }
   }
 
@@ -1213,7 +1219,7 @@ export class FrameLayer extends Layer {
   // changeFocusとselectLayoutからのみ
   videoRedrawInterval: NodeJS.Timer;
   doSelectLayout(layout: Layout): void {
-    if (layout != this.selectedLayout) {
+    if (layout?.element !== this.selectedLayout?.element) {
       clearInterval(this.videoRedrawInterval);
       this.videoRedrawInterval = null;      
       if (this.selectedLayout) {

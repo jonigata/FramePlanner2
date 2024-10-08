@@ -544,19 +544,25 @@ export class BubbleLayer extends Layer {
     return false;
   }
 
-  pick(point: Vector): Picked {
+  pick(point: Vector): Picked[] {
     const paperSize = this.getPaperSize();
-    if (this.selected?.contains(paperSize, point)) {
-      return { layer: this, payload: this.selected };
+    const picked: Picked[] = [];
+    for (let bubble of this.bubbles.toReversed()) {
+      if (bubble.contains(paperSize, point)) {
+        picked.push({
+          selected: bubble === this.selected, 
+          action: () => { this.selectBubble(bubble)}
+        });
+      }
     }
-    return null;
+    return picked;
   }
 
   acceptDepths(): number[] {
     return [0,1];
   }
 
-  accepts(point: Vector, _button: number, depth: number, picked: Picked): any {
+  accepts(point: Vector, _button: number, depth: number): any {
     console.log("bubble accepts", depth);
     if (!this.interactable) {
       return null;
@@ -577,13 +583,13 @@ export class BubbleLayer extends Layer {
     }
 
     if (depth == 1) {
-      return this.acceptsForeground(point, _button, picked);
+      return this.acceptsForeground(point, _button);
     } else {
-      return this.acceptsBackground(point, _button, picked);
+      return this.acceptsBackground(point, _button);
     }
   }
 
-  acceptsForeground(point: Vector, _button: number, picked: Picked): any {
+  acceptsForeground(point: Vector, _button: number): any {
     const paperSize = this.getPaperSize();
 
     if (this.selected) {
@@ -627,12 +633,13 @@ export class BubbleLayer extends Layer {
       }
 
       // 貫通
-      console.log("pass through");
+      this.pierce();
+      return { action: "pierce" };
     }
     return null;
   } 
   
-  acceptsBackground(point: Vector, _button: number, picked: Picked): any {
+  acceptsBackground(point: Vector, _button: number): any {
     const paperSize = this.getPaperSize();
 
     if (keyDownFlags["KeyQ"] || keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] || keyDownFlags["KeyS"]) {
@@ -648,16 +655,7 @@ export class BubbleLayer extends Layer {
       }
     }
 
-    if (picked && picked.layer !== this) { return null; }
-    let current: Bubble = picked?.payload;
-
     for (let bubble of this.bubbles.toReversed()) {
-      if (current) {
-        if (current === bubble) { 
-          current = null;
-        }
-        continue; 
-      }
       if (!bubble.contains(paperSize, point)) { continue; }
       return { action: "select", bubble };
     }

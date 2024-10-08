@@ -582,6 +582,21 @@ export function findLayoutAt(layout: Layout, point: Vector, margin: number, curr
   return result;
 }
 
+export function listLayoutsAt(layout: Layout, point: Vector, margin: number): Layout[] {
+  const layoutlets = collectLayoutlets(layout);
+  layoutlets.sort((a, b) => a.element.z - b.element.z);
+  layoutlets.reverse();
+
+  const results = [];
+  for (let layoutlet of layoutlets) {
+    const d = pointToQuadrilateralDistance(point, layoutlet.corners, false);
+    if (d <= margin) {
+      results.push(layoutlet);
+    }
+  }
+  return results;
+}
+
 function collectLayoutlets(layout: Layout): Layout[] {
   const layouts: Layout[] = [];;
 
@@ -614,7 +629,7 @@ export function findBorderAt(layout: Layout, point: Vector, margin: number): Bor
   if (layout.children) {
     for (let i = 1; i < layout.children.length; i++) {
       const corners = makeBorderCorners(layout, i, 0);
-      const q = pointToQuadrilateralDistance(point, corners, false);
+      const q = pointToQuadrilateralDistance(point, corners, true);
       if (q <= margin) {
         const formalCorners = makeBorderFormalCorners(layout, i);
         return { layout, index: i, corners, formalCorners};
