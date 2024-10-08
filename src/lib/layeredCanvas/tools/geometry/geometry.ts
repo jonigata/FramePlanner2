@@ -306,10 +306,17 @@ export function box2Rect(b: Box): Rect {
   return [b[0][0], b[0][1], b[1][0] - b[0][0], b[1][1] - b[0][1]];
 }
 
-export function ensureMinRectSize(minSize: number, r: Rect): Rect {
+export function ensureMinRectSize(minSize: number | Vector, r: Rect): Rect {
+  let mx: number, my: number;
+  if (typeof minSize === 'number') {
+    mx = my = minSize;
+  } else {
+    [mx, my] = minSize;
+  }
+
   let [x, y, w, h] = r;
-  const nw = Math.max(w, minSize);
-  const nh = Math.max(h, minSize);
+  const nw = Math.max(w, mx);
+  const nh = Math.max(h, my);
   x = x + (w - nw) / 2;
   y = y + (h - nh) / 2;
   w = nw;

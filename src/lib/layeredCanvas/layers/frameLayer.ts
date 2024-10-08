@@ -10,19 +10,16 @@ import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, tra
 import { type Vector, type Rect, box2Rect, add2D, scale2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect, rectContains } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
-import { drawSelectionFrame } from "../tools/draw/selectionFrame";
+import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
-import * as paper from 'paper';
 import { Grid } from "../tools/grid";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
 const PADDING_HANDLE_INNER_WIDTH = 20;
 const PADDING_HANDLE_OUTER_WIDTH = 20;
-const SHEET_TOP_MARGIN = 48;
-const SHEET_MARGIN = 16;
 
 export class FrameLayer extends Layer {
   cursorPosition: Vector;
@@ -251,35 +248,11 @@ export class FrameLayer extends Layer {
   }
 
   calculateSheetRect(corners: Trapezoid): Rect {
-    const rscale = 1 / this.paper.matrix.a;
-    const r = extendRect(trapezoidBoundingRect(corners), SHEET_MARGIN * rscale);
-    r[1] -= SHEET_TOP_MARGIN * rscale;
-    r[3] += SHEET_TOP_MARGIN * rscale * 2;
-    const minSize = 320 * rscale;
-    return ensureMinRectSize(minSize, r);
+    return calculateSheetRect(corners, [320, 320], 1 / this.paper.matrix.a);
   }
 
   drawSheet(ctx: CanvasRenderingContext2D, corners: Trapezoid) {
-    const r = this.calculateSheetRect(corners);
-    const paperr = new paper.Rectangle(...r);
-    const path1 = new paper.Path.Rectangle(paperr, [8, 8]);
-
-    const path2 = new paper.Path();
-    const points = [corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft];
-    for (let i = 0; i < points.length; i++) {
-      const p = points[i];
-      if (i === 0) {
-        path2.moveTo(p as Vector);
-      } else {
-        path2.lineTo(p as Vector);
-      }
-    }
-    path2.closed = true;
-
-    const path3 = path1.subtract(path2);
-    
-    ctx.fillStyle = "rgba(64, 64, 128, 0.7)";
-    ctx.fill(new Path2D(path3.pathData));
+    drawSheet(ctx, corners, this.calculateSheetRect(corners), "rgba(64, 64, 128, 0.7)");
   }
 
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) {
@@ -400,9 +373,6 @@ export class FrameLayer extends Layer {
         if (hintIfContains(this.frameIcons)) {
           return;
         }
-        if (this.selectedLayout.element.filmStack.films.length !== 0) {
-          this.hint(r, "ドラッグで変更");
-        }
       }
     }
   }
@@ -460,9 +430,13 @@ export class FrameLayer extends Layer {
     if (keyDownFlags["Space"]) {return null;}
 
     if (depth == 1) {
-      return this.acceptsForeground(point, button);
+      const q = this.acceptsForeground(point, button);
+      console.log("q1", q);
+      return q;
     } else {
-      return this.acceptsBackground(point, button);
+      const q = this.acceptsBackground(point, button);
+      console.log("q2", q);
+      return q;
     }
   }
 
@@ -482,13 +456,18 @@ export class FrameLayer extends Layer {
 
       const r = this.calculateSheetRect(this.selectedLayout.corners);
 
-      if (rectContains(r, point) && this.selectedLayout.element.filmStack.films.length !== 0) {
-        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
-          return { action: "scale", layout: this.selectedLayout };
-        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
-          return { action: "rotate", layout: this.selectedLayout };
+      if (rectContains(r, point)) {
+        if (this.selectedLayout.element.filmStack.films.length !== 0) {
+          if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+            return { action: "scale", layout: this.selectedLayout };
+          } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+            return { action: "rotate", layout: this.selectedLayout };
+          } else {
+            return { action: "translate", layout: this.selectedLayout };
+          }
         } else {
-          return { action: "translate", layout: this.selectedLayout };
+          // TODO: 多分ここpierceとすべき
+          return null;
         }
       }
 
@@ -496,10 +475,6 @@ export class FrameLayer extends Layer {
         if (this.swapIcon.contains(point)) {
           return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
         }
-      }
-
-      if (rectContains(r, point)) {
-        return { action: "ignore" };
       }
     }
 
@@ -610,7 +585,6 @@ export class FrameLayer extends Layer {
   }
 
   acceptsOnFrame(layout: Layout): any {
-    const paperSize = this.getPaperSize();
     if (keyDownFlags["KeyQ"]) {
       return { action: "erase", layout: layout };
     }
