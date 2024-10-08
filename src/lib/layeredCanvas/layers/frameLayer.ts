@@ -5,9 +5,9 @@ import { Media, ImageMedia, VideoMedia } from "../dataModels/media";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
-import { ClickableIcon } from "../tools/draw/clickableIcon";
+import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
 import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect, rectContains } from '../tools/geometry/geometry';
+import { type Vector, type Rect, box2Rect, add2D, scale2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect, rectContains } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
@@ -15,6 +15,7 @@ import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import * as paper from 'paper';
+import { Grid } from "../tools/grid";
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
@@ -48,10 +49,11 @@ export class FrameLayer extends Layer {
   slantVerticalIcon: ClickableIcon;
   insertVerticalIcon: ClickableIcon;
   swapIcon: ClickableIcon;
+  zvalue: ClickableSelfRenderer;
 
-  frameIcons: ClickableIcon[];
-  borderIcons: ClickableIcon[];
-  litIcons: ClickableIcon[];
+  frameIcons: ClickableSlate[];
+  borderIcons: ClickableSlate[];
+  litIcons: ClickableSlate[];
 
   litLayout: Layout;
   litBorder: Border;
@@ -78,6 +80,7 @@ export class FrameLayer extends Layer {
     this.cursorPosition = [-1, -1];
 
     const unit = iconUnit;
+    const spinUnit: Vector = [unit[0], unit[1] * 1 / 6];
     const mp = () => this.paper.matrix;
     const isFrameActive = () => this.interactable && !!this.selectedLayout;
     const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility;
@@ -88,10 +91,21 @@ export class FrameLayer extends Layer {
     this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
     this.unshiftIcon = new ClickableIcon(["frameLayer/unshift.png"],unit,[1,0],"画像のアンシフト", isFrameActive, mp);
     this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActive, mp);
-    this.zplusIcon = new ClickableIcon(["frameLayer/zplus.png"],unit,[0,0],"手前に", isFrameActiveAndVisible, mp);
-    this.zminusIcon = new ClickableIcon(["frameLayer/zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible, mp);
+    this.zplusIcon = new ClickableIcon(["frameLayer/increment.png"],spinUnit,[0,0],"手前に", isFrameActiveAndVisible, mp);
+    this.zminusIcon = new ClickableIcon(["frameLayer/decrement.png"],spinUnit,[0,0],"奥に", isFrameActiveAndVisible, mp);
     this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.png","frameLayer/visibility2.png","frameLayer/visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
     this.visibilityIcon.index = 2;
+    this.zvalue = new ClickableSelfRenderer(
+      (ctx: CanvasRenderingContext2D, csr: ClickableSelfRenderer) => {
+        const b = csr.boundingRect;
+        const l = this.selectedLayout;
+        ctx.fillStyle = "#222222";
+        // ctx.fillRect(b[0], b[1], b[2], b[3]);
+        ctx.font = '24px serif';
+        ctx.fillStyle = "#86C8FF";
+        ctx.fillText((l.element.z + 3).toString(), b[0] + 8, b[1]+b[3] - 4);
+      },
+      unit, [0,0], "z値", isFrameActiveAndVisible, mp);
 
     const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
@@ -112,13 +126,17 @@ export class FrameLayer extends Layer {
     const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
     this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
     this.litIcons = [this.swapIcon];
 
     for (let icon of this.frameIcons) {
-      icon.shadowColor = "#222";
+      if (icon instanceof ClickableIcon) {
+        icon.shadowColor = "#222";
+      }
     }
+    this.zplusIcon.marginBottom = 16;
+    this.zminusIcon.marginTop = 16;
 
     this.makeCanvasPattern();
 
@@ -155,13 +173,6 @@ export class FrameLayer extends Layer {
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.interactable) { return; }
     if (depth !== 0) { return; }
-
-    if (0 < this.selectedLayout?.element.visibility) {  // z値を表示
-      ctx.font = '24px serif';
-      ctx.fillStyle = "#86C8FF";
-      const l = this.selectedLayout;
-      ctx.fillText(l.element.z.toString(), l.rawOrigin[0]+74, l.rawOrigin[1]+38);
-    }
 
     function fillTrapezoid(corners: Trapezoid, color: string) {
       ctx.fillStyle = color;
@@ -351,7 +362,7 @@ export class FrameLayer extends Layer {
   }
 
   decideHint(position: Vector): void {
-    const hintIfContains = (a: ClickableIcon[]): boolean => {
+    const hintIfContains = (a: ClickableSlate[]): boolean => {
       for (let e of a) {
         if (e.hintIfContains(position, this.hint)) {
           return true;
@@ -487,6 +498,10 @@ export class FrameLayer extends Layer {
         if (this.swapIcon.contains(point)) {
           return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
         }
+      }
+
+      if (rectContains(r, point)) {
+        return { action: "ignore" };
       }
     }
 
@@ -770,6 +785,9 @@ export class FrameLayer extends Layer {
         yield* this.translateImage(p, payload.layout);
         break;
 
+      case "ignore":
+        break;
+
       default:
         console.error("unknown action", payload.action);
     }
@@ -888,11 +906,6 @@ export class FrameLayer extends Layer {
       }
     }
 
-    function getCenter(): Vector {
-      const r = getRect();
-      return [r[0] + r[2] / 2, r[1] + r[3] / 2];
-    }
-  
     try {
       const s: Vector = p;
       let q = p;
@@ -1130,19 +1143,14 @@ export class FrameLayer extends Layer {
   }
 
   relayoutFrameIcons(layout: Layout): void {
-    const [x, y, w, h] = this.calculateSheetRect(layout.corners);
-    const rscale = 1 / this.paper.matrix.a;
-
-    const rect: Rect = [x+10, y+10, w-20, h-20];
-    const unit: Vector = [...iconUnit];
-    unit[0] *= rscale;
-    unit[1] *= rscale;
-    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, unit, ro, ou);
+    const grid = this.makeGrid(layout);
+    const cp = grid.calcPosition.bind(grid);
 
     this.visibilityIcon.position = cp([0,0],[0,0]);
     this.visibilityIcon.index = layout.element.visibility;
-    this.zminusIcon.position = cp([0,0],[1,0]);
-    this.zplusIcon.position = cp([0,0],[2.5,0]);
+    this.zplusIcon.position = cp([0,0],[1,-0.05]);
+    this.zminusIcon.position = cp([0,0],[1,0.9]);
+    this.zvalue.position = cp([0,0],[1.025,-0.075]);
 
     this.deleteIcon.position = cp([1,0],[0,0]);
     this.duplicateIcon.position = cp([1,0],[-1,0]);
@@ -1159,7 +1167,14 @@ export class FrameLayer extends Layer {
 
     this.scaleIcon.position = cp([1,1],[0,0]);
     this.rotateIcon.position = cp([1,1],[-1,0]);
-}
+  }
+
+  makeGrid(layout: Layout) {
+    const rscale = 1 / this.paper.matrix.a;
+    const unit: Vector = scale2D([...iconUnit], rscale);
+    const grid = new Grid(this.calculateSheetRect(layout.corners), -10, unit)
+    return grid;
+  }
 
   relayoutBorderIcons(border: Border): void {
     const bt = border.corners;
