@@ -81,6 +81,7 @@
   }
 
   onMount(() => {
+    console.log("initFFmpeg");
     initFFmpeg();
     if ($mainBook.video) {
       console.log("video is already set", $mainBook.video);
