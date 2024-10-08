@@ -457,6 +457,9 @@ export class FrameLayer extends Layer {
       const r = this.calculateSheetRect(this.selectedLayout.corners);
 
       if (rectContains(r, point)) {
+        if (this.focusedPadding) {
+          return { action: "move-padding", padding: this.focusedPadding };
+        }
         if (this.selectedLayout.element.filmStack.films.length !== 0) {
           if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
             return { action: "scale", layout: this.selectedLayout };
@@ -466,8 +469,7 @@ export class FrameLayer extends Layer {
             return { action: "translate", layout: this.selectedLayout };
           }
         } else {
-          // TODO: 多分ここpierceとすべき
-          return null;
+          return { action: "pierce" };
         }
       }
 
@@ -476,11 +478,6 @@ export class FrameLayer extends Layer {
           return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
         }
       }
-    }
-
-    // パディング操作
-    if (this.focusedPadding) {
-      return { action: "move-padding", padding: this.focusedPadding };
     }
 
     // 選択ボーダー操作
@@ -758,6 +755,9 @@ export class FrameLayer extends Layer {
         break;
 
       case "ignore":
+        break;
+      case "pierce":
+        this.pierce();
         break;
 
       default:

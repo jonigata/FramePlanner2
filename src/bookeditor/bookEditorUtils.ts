@@ -25,7 +25,7 @@ export function buildBookEditor(
 
   const layeredCanvas = new LayeredCanvas(viewport, true);
 
-  const floorLayer = new FloorLayer(layeredCanvas.viewport, editor.viewportChanged);
+  const floorLayer = new FloorLayer(layeredCanvas.viewport, editor.viewportChanged, focusKeeper);
   layeredCanvas.rootPaper.addLayer(floorLayer);
 
   let papers: Paper[] = [];
