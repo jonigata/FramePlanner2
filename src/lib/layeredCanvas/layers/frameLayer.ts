@@ -111,9 +111,9 @@ export class FrameLayer extends Layer {
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
     this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
     this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
-    this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive, mp);
-    this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[0,1],"上下反転", isImageActive, mp);
-    this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[0,1],"フィット", isImageActive, mp);
+    this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[1,1],"左右反転", isImageActive, mp);
+    this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[1,1],"上下反転", isImageActive, mp);
+    this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[1,1],"フィット", isImageActive, mp);
 
     const isBorderActive = (dir) => this.interactable && this.selectedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon(["frameLayer/expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
@@ -391,10 +391,10 @@ export class FrameLayer extends Layer {
       }
       return;
     } else if (this.selectedLayout) { 
-      const origin = this.selectedLayout.origin;
-      const size = this.selectedLayout.size;
-      const r: Rect = [...origin, ...size];
-      if (this.focusedPadding) {
+      const r = trapezoidBoundingRect(this.selectedLayout.corners);
+      if (hintIfContains(this.frameIcons)) {
+        return;
+      } else if (this.focusedPadding) {
         this.hint(r, "ドラッグでパディング変更");
       } else if (isPointInTrapezoid(position, this.selectedLayout.corners)) {
         if (hintIfContains(this.frameIcons)) {
@@ -403,8 +403,6 @@ export class FrameLayer extends Layer {
         if (this.selectedLayout.element.filmStack.films.length !== 0) {
           this.hint(r, "ドラッグで変更");
         }
-      } else {
-        hintIfContains(this.litIcons);
       }
     }
   }
@@ -1161,9 +1159,9 @@ export class FrameLayer extends Layer {
     this.splitHorizontalIcon.position = cp([0,1],[0,0]);
     this.splitVerticalIcon.position = cp([0,1],[1,0]);
 
-    this.flipHorizontalIcon.position = cp([0,1], [2.5,0]);
-    this.flipVerticalIcon.position = cp([0,1], [3.5,0]);
-    this.fitIcon.position = cp([0,1], [4.5,0]);
+    this.flipHorizontalIcon.position = cp([1,1], [-4.5,0]);
+    this.flipVerticalIcon.position = cp([1,1], [-3.5,0]);
+    this.fitIcon.position = cp([1,1], [-2.5,0]);
 
     this.scaleIcon.position = cp([1,1],[0,0]);
     this.rotateIcon.position = cp([1,1],[-1,0]);
