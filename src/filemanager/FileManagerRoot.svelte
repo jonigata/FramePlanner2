@@ -70,7 +70,7 @@
       currentRevision = {...book.revision};
       const info: CurrentFileInfo = {
         id: book.revision.id as NodeId,
-        fileSystem: $mainBookFileSystem.id === fileSystem.id ? 'local' : 'cloud',
+        fileSystem: $mainBookFileSystem.id === cloudFileSystem?.id ? 'cloud' : 'local',
       }
       await recordCurrentFileInfo(info);
     });

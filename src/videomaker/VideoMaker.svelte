@@ -81,6 +81,7 @@
   }
 
   onMount(() => {
+    initFFmpeg();
     if ($mainBook.video) {
       console.log("video is already set", $mainBook.video);
       $video = {...$mainBook.video};
@@ -89,7 +90,6 @@
   });
 
   onDestroy(() => {
-    initFFmpeg();
     reflectDisplayProgram($mainBook, program);
     console.log(video);
     $mainBook.video = $video;
