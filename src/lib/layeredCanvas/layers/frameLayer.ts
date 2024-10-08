@@ -94,13 +94,18 @@ export class FrameLayer extends Layer {
     this.visibilityIcon.index = 2;
     this.zvalue = new ClickableSelfRenderer(
       (ctx: CanvasRenderingContext2D, csr: ClickableSelfRenderer) => {
+        const rscale = 1 / this.paper.matrix.a;
         const b = csr.boundingRect;
         const l = this.selectedLayout;
-        ctx.fillStyle = "#222222";
+        const c = getRectCenter(b);
+        const fontSize = Math.floor(b[3] * 0.8);
+        // ctx.fillStyle = "#222222";
         // ctx.fillRect(b[0], b[1], b[2], b[3]);
-        ctx.font = '24px serif';
+        ctx.font = `${fontSize}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#86C8FF";
-        ctx.fillText((l.element.z + 3).toString(), b[0] + 8, b[1]+b[3] - 4);
+        ctx.fillText((l.element.z + 3).toString(), c[0] - b[2]*0.05, c[1] + b[3]*0.1);
       },
       unit, [0,0], "z値", isFrameActiveAndVisible, mp);
 
