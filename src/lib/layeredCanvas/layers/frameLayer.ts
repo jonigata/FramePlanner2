@@ -7,7 +7,7 @@ import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
 import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, scale2D, vectorEquals, ensureMinRectSize, getRectCenter, extendRect, rectContains } from '../tools/geometry/geometry';
+import { type Vector, type Rect, box2Rect, add2D, scale2D, lerp2D, vectorEquals, getRectCenter, rectContains, denormalizePositionInRect } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
 import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
@@ -97,7 +97,8 @@ export class FrameLayer extends Layer {
         const rscale = 1 / this.paper.matrix.a;
         const b = csr.boundingRect;
         const l = this.selectedLayout;
-        const c = getRectCenter(b);
+        // const c = getRectCenter(b);
+        const c = denormalizePositionInRect([0.45, 0.6], b)
         const fontSize = Math.floor(b[3] * 0.8);
         // ctx.fillStyle = "#222222";
         // ctx.fillRect(b[0], b[1], b[2], b[3]);
@@ -105,7 +106,7 @@ export class FrameLayer extends Layer {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#86C8FF";
-        ctx.fillText((l.element.z + 3).toString(), c[0] - b[2]*0.05, c[1] + b[3]*0.1);
+        ctx.fillText((l.element.z + 3).toString(), ...c);
       },
       unit, [0,0], "z値", isFrameActiveAndVisible, mp);
 
@@ -126,7 +127,7 @@ export class FrameLayer extends Layer {
     this.insertVerticalIcon = new ClickableIcon(["frameLayer/insert-vertical.png"],unit,[0,0.5],"コマ挿入", () => isBorderActive('v'), mp);
 
     const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
-    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
+    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0],"選択コマと\n中身を入れ替え", isFrameLit, mp);
 
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
@@ -1164,7 +1165,8 @@ export class FrameLayer extends Layer {
   }
 
   relayoutLitIcons(layout: Layout): void {
-    const center = getRectCenter([...layout.origin, ...layout.size]);
+    const center = lerp2D(layout.corners.topLeft, layout.corners.topRight, 0.5);
+    getRectCenter([...layout.origin, ...layout.size]);
     this.swapIcon.position = center;    
   }
 

@@ -465,3 +465,7 @@ export function segmentIntersection(s0: [Vector, Vector], s1: [Vector, Vector]):
   const result = testSegmentIntersection(s0, s1);
   return result ? result[1] : null;
 }
+
+export function denormalizePositionInRect(p: Vector, r: Rect): Vector {
+  return [r[0] + r[2] * p[0], r[1] + r[3] * p[1]];
+}
