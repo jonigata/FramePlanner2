@@ -65,15 +65,5 @@ export class FloorLayer extends Layer {
     this.onViewportChanged();
   }
 
-  pick(point: Vector): Picked[] {
-    return [{
-      selected: false,
-      action: () => {
-        this.focusKeeper.setFocus(null)
-        this.redraw();
-      },
-    }];
-  }
-
 }
 sequentializePointer(FloorLayer);

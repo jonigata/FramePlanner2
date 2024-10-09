@@ -1121,6 +1121,9 @@ export class BubbleLayer extends Layer {
   }    
 
   *translateImage(dragStart: Vector, bubble: Bubble) {
+    // クリック判定と兼用
+    const startingTime = performance.now();
+
     const paperSize = this.getPaperSize();
     const films = bubble.filmStack.getOperationTargetFilms();
     const origins = films.map(film => film.getShiftedTranslation(paperSize));
@@ -1141,6 +1144,11 @@ export class BubbleLayer extends Layer {
       if (e === "cancel") {
         this.onRevert();
       }
+    }
+
+    if (performance.now() - startingTime < 200) {
+      // クリック判定
+      this.pierce();
     }
   }
 

@@ -627,7 +627,7 @@ export class LayeredCanvas {
             const next = picked[index + 1];
             next.action();
           } else {
-            // TODO:このときの挙動が決まってない
+            picked[0].action();
           }
         } else {
           const next = picked[0];
