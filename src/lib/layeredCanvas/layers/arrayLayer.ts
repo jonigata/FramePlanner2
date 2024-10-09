@@ -188,6 +188,13 @@ export class ArrayLayer extends Layer {
   accepts(p: Vector, button: number, depth: number): any { 
     if (keyDownFlags["Space"] || 0 < button) {return null;}
 
+    const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
+    const innerDragging = paper.handleAccepts(position, button, depth);
+    if (innerDragging) {
+      return { paper, index, innerDragging };
+    }
+    if (0 < depth) {return null;}
+
     for (let [i, e] of this.insertIcons.entries()) {
       if (e.contains(p)) {
         if (this.markFlags.some(e => e)) {
@@ -239,9 +246,7 @@ export class ArrayLayer extends Layer {
       }      
     }
 
-    const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
-    const innerDragging = paper.handleAccepts(position, button, depth);
-    return innerDragging ? { paper, index, innerDragging } : null;
+    return null;
   }
 
   pointerDown(p: Vector, payload: any): void {
@@ -275,7 +280,7 @@ export class ArrayLayer extends Layer {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    if (this.interactable) {
+    if (this.interactable && depth === 0) {
       ctx.save();
       ctx.fillStyle = "white";
       ctx.textAlign = "center";
