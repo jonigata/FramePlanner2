@@ -462,30 +462,37 @@ export class FrameLayer extends Layer {
         return q;
       }
 
-      const r = this.calculateSheetRect(this.selectedLayout.corners);
-
-      if (rectContains(r, point)) {
-        if (this.focusedPadding) {
-          return { action: "move-padding", padding: this.focusedPadding };
-        }
-        if (this.selectedLayout.element.filmStack.films.length !== 0) {
-          if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
-            return { action: "scale", layout: this.selectedLayout };
-          } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
-            return { action: "rotate", layout: this.selectedLayout };
-          } else {
-            return { action: "translate", layout: this.selectedLayout };
-          }
-        } else {
+      if (this.selectedLayout.element.visibility === 0) {
+        if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
           return { action: "pierce" };
         }
-      }
+      } else {
+        const r = this.calculateSheetRect(this.selectedLayout.corners);
 
-      if (this.litLayout && this.litLayout.element != this.selectedLayout.element) {
-        if (this.swapIcon.contains(point)) {
-          return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
+        if (rectContains(r, point)) {
+          if (this.focusedPadding) {
+            return { action: "move-padding", padding: this.focusedPadding };
+          }
+          if (this.selectedLayout.element.filmStack.films.length !== 0) {
+            if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+              return { action: "scale", layout: this.selectedLayout };
+            } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+              return { action: "rotate", layout: this.selectedLayout };
+            } else {
+              return { action: "translate", layout: this.selectedLayout };
+            }
+          } else {
+            return { action: "pierce" };
+          }
+        }
+
+        if (this.litLayout && this.litLayout.element != this.selectedLayout.element) {
+          if (this.swapIcon.contains(point)) {
+            return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
+          }
         }
       }
+      return null;
     }
 
     // 選択ボーダー操作
