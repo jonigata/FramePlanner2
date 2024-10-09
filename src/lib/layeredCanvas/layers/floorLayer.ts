@@ -32,7 +32,6 @@ export class FloorLayer extends Layer {
 
   accepts(_point: Vector, button: number, depth: number): any {
     if (0 < depth) return null;
-    this.focusKeeper.setFocus(null);
     return keyDownFlags["Space"] || 0 < button;
   }
 
@@ -64,6 +63,5 @@ export class FloorLayer extends Layer {
     this.viewport.dirty = true;
     this.onViewportChanged();
   }
-
 }
 sequentializePointer(FloorLayer);
