@@ -175,13 +175,13 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  calculateSheetRect(corners: Trapezoid): Rect {
-    return calculateSheetRect(corners, [160, 160], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
+  calculateSheetRect(rect: Rect): Rect {
+    return calculateSheetRect(rect, [160, 160], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
   }
 
   drawSheet(ctx: CanvasRenderingContext2D, rect: Rect) {
     const corners: Trapezoid = rectToTrapezoid(rect);
-    drawSheet(ctx, corners, this.calculateSheetRect(corners), "rgba(64, 128, 64, 0.7)");
+    drawSheet(ctx, corners, this.calculateSheetRect(rect), "rgba(64, 128, 64, 0.7)");
   }
 
   drawLitUI(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
@@ -847,7 +847,7 @@ export class BubbleLayer extends Layer {
     const rscale = 1 / this.paper.matrix.a;
     const unit: Vector = scale2D([...iconUnit], rscale);
     const bubbleRect = this.selected.getPhysicalRegularizedRect(paperSize);
-    const grid = new Grid(this.calculateSheetRect(rectToTrapezoid(bubbleRect)), -10, unit);
+    const grid = new Grid(this.calculateSheetRect(bubbleRect), -10, unit);
     const cp = grid.calcPosition.bind(grid);
 
     this.dragIcon.position = cp([0.5, 0], [0, 0]);

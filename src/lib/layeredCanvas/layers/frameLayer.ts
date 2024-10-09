@@ -256,7 +256,7 @@ export class FrameLayer extends Layer {
   }
 
   calculateSheetRect(corners: Trapezoid): Rect {
-    return calculateSheetRect(corners, [320, 320], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
+    return calculateSheetRect(trapezoidBoundingRect(corners), [320, 320], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
   }
 
   drawSheet(ctx: CanvasRenderingContext2D, corners: Trapezoid) {

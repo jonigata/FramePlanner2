@@ -41,8 +41,8 @@ export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string,
   ctx.restore();
 }
 
-export function calculateSheetRect(corners: Trapezoid, minSize: Vector, ymargin: number, rscale: number): Rect {
-  const r = extendRect(trapezoidBoundingRect(corners), SHEET_MARGIN * rscale);
+export function calculateSheetRect(rect: Rect, minSize: Vector, ymargin: number, rscale: number): Rect {
+  const r = extendRect(rect, SHEET_MARGIN * rscale);
   r[1] -= ymargin * rscale;
   r[3] += ymargin * rscale * 2;
   return ensureMinRectSize(scale2D(minSize, rscale), r);
