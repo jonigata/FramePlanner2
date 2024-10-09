@@ -657,8 +657,10 @@ export class BubbleLayer extends Layer {
       }
 
       // 貫通
-      this.pierce();
-      return { action: "pierce" };
+      if (bubble.contains(paperSize, point)) {
+        this.pierce();
+        return { action: "pierce" };
+      }
     }
     return null;
   } 
