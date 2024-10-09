@@ -6,20 +6,22 @@ import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
 import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/bubbleGeometry";
 import { translate, scale } from "../tools/pictureControl";
-import { type Vector, type Rect, add2D, ensureMinRectSize, computeConstraintedRect, scaleRect, minimumBoundingScale, getRectCenter } from "../tools/geometry/geometry";
+import { type Vector, type Rect, add2D, scale2D, ensureMinRectSize, computeConstraintedRect, scaleRect, minimumBoundingScale, getRectCenter } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
 import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
-import { drawSelectionFrame } from "../tools/draw/selectionFrame";
-import type { Trapezoid } from "../tools/geometry/trapezoid";
+import { type Trapezoid, rectToTrapezoid } from "../tools/geometry/trapezoid";
 import { Film, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
 import { ImageMedia } from "../dataModels/media";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { makePlainImage } from "../../../utils/imageUtil";
+import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
+import { Grid } from "../tools/grid";
 
 const iconUnit: Vector = [26, 26];
+const SHEET_Y_MARGIN = 32;
 
 export class DefaultBubbleSlot {
   bubble: Bubble;
@@ -106,6 +108,17 @@ export class BubbleLayer extends Layer {
     this.optionIcons.circle = new ClickableIcon(["bubbleLayer/circle.png"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
     this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
+    for (let icon of [this.dragIcon, this.offsetIcon, this.zPlusIcon, this.zMinusIcon, this.removeIcon, this.rotateIcon, this.imageScaleLockIcon, this.scaleIcon]) {
+      if (icon instanceof ClickableIcon) {
+        icon.shadowColor = "#242";
+      }
+    }
+    for (let icon of [this.optionIcons.tail, this.optionIcons.curve, this.optionIcons.unite, this.optionIcons.circle, this.optionIcons.radius]) {
+      if (icon instanceof ClickableIcon) {
+        icon.shadowColor = "#842";
+      }
+    }
+
     this.setFold(fold);
 
     focusKeeper.subscribe(this.changeFocus.bind(this));
@@ -113,7 +126,7 @@ export class BubbleLayer extends Layer {
 
   rebuildPageLayouts(matrix: DOMMatrix): void {
     if (this.selected != null) {
-      this.setIconPositions();
+      this.relayoutIcons();
     }
   }
 
@@ -128,16 +141,6 @@ export class BubbleLayer extends Layer {
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (depth !== 1) { return; }
     this.createBubbleIcon.render(ctx);
-    this.dragIcon.render(ctx);
-    this.offsetIcon.render(ctx);
-
-    this.zPlusIcon.render(ctx);
-    this.zMinusIcon.render(ctx);
-    this.removeIcon.render(ctx);
-    this.rotateIcon.render(ctx);
-
-    this.imageScaleLockIcon.render(ctx);
-    this.scaleIcon.render(ctx);
 
     if (this.interactable && this.lit) {
       this.drawLitUI(ctx, this.lit);
@@ -145,9 +148,21 @@ export class BubbleLayer extends Layer {
 
     if (this.interactable && this.selected) {
       try {
+        this.drawSheet(ctx, this.selected.getPhysicalRegularizedRect(this.getPaperSize()));
         this.drawSelectedUI(ctx, this.selected);
         this.drawOptionHandles(ctx, this.selected);
         this.drawOptionUI(ctx, this.selected);
+
+        this.dragIcon.render(ctx);
+        this.offsetIcon.render(ctx);
+    
+        this.zPlusIcon.render(ctx);
+        this.zMinusIcon.render(ctx);
+        this.removeIcon.render(ctx);
+        this.rotateIcon.render(ctx);
+    
+        this.imageScaleLockIcon.render(ctx);
+        this.scaleIcon.render(ctx);
       }
       catch (e) {
         console.log(e, this.optionEditActive, this.selected, this.selected?.optionContext);
@@ -158,6 +173,15 @@ export class BubbleLayer extends Layer {
     if (this.interactable && this.creatingBubble) {
       this.drawSelectedUI(ctx, this.creatingBubble);
     }
+  }
+
+  calculateSheetRect(corners: Trapezoid): Rect {
+    return calculateSheetRect(corners, [160, 160], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
+  }
+
+  drawSheet(ctx: CanvasRenderingContext2D, rect: Rect) {
+    const corners: Trapezoid = rectToTrapezoid(rect);
+    drawSheet(ctx, corners, this.calculateSheetRect(corners), "rgba(64, 128, 64, 0.7)");
   }
 
   drawLitUI(ctx: CanvasRenderingContext2D, bubble: Bubble): void {
@@ -796,7 +820,7 @@ export class BubbleLayer extends Layer {
         const size = bubble.calculateFitSize(paperSize);
         bubble.setPhysicalSize(paperSize, size);
         this.onCommit();
-        this.setIconPositions();
+        this.relayoutIcons();
         return true;
       }
     }
@@ -818,21 +842,20 @@ export class BubbleLayer extends Layer {
     return true;
   }
 
-  setIconPositions(): void {
+  relayoutIcons(): void {
     const paperSize = this.getPaperSize();
     const rscale = 1 / this.paper.matrix.a;
-    const minSize = 160 * rscale;
-    const [x, y, w, h] = ensureMinRectSize(minSize, this.selected.getPhysicalRegularizedRect(paperSize));
-
-    const rect: Rect = [x+10, y+10, w-20, h-20];
-    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, iconUnit, ro, ou);
+    const unit: Vector = scale2D([...iconUnit], rscale);
+    const bubbleRect = this.selected.getPhysicalRegularizedRect(paperSize);
+    const grid = new Grid(this.calculateSheetRect(rectToTrapezoid(bubbleRect)), -10, unit);
+    const cp = grid.calcPosition.bind(grid);
 
     this.dragIcon.position = cp([0.5, 0], [0, 0]);
     this.offsetIcon.position = add2D(cp([0.5, 0.25], [0, 0]), this.selected.getPhysicalOffset(paperSize));
     this.zPlusIcon.position = cp([0,0], [1,0]);
     this.zMinusIcon.position = cp([0,0], [0,0]);
     this.removeIcon.position = cp([1,0], [0, 0]);
-    this.rotateIcon.position = cp([0.5,0], [0,-1]);
+    this.rotateIcon.position = cp([0.5,1], [0, 0]);
 
     this.imageScaleLockIcon.position = cp([1,1],[0,0]);
     this.imageScaleLockIcon.index = this.selected.scaleLock ? 1 : 0;
@@ -891,7 +914,7 @@ export class BubbleLayer extends Layer {
       while ((p = yield)) {
         bubble.setPhysicalRect(paperSize, [p[0] - dx, p[1] - dy, w, h]);
         if (bubble === this.selected) {
-          this.setIconPositions();
+          this.relayoutIcons();
         }
         this.redraw();
       }
@@ -943,7 +966,7 @@ export class BubbleLayer extends Layer {
     let p: Vector;
     try {
       while ((p = yield)) {
-        const op = -(p[0] - s[0]);
+        const op = (p[0] - s[0]);
         bubble.rotation = Math.max(-180, Math.min(180, originalRotation + op * 0.2));
         this.redraw();
       }
@@ -964,7 +987,7 @@ export class BubbleLayer extends Layer {
       while ((p = yield)) {
         bubble.setPhysicalOffset(paperSize, [q[0] + p[0] - dragStart[0], q[1] + p[1] - dragStart[1]]);
         if (bubble === this.selected) {
-          this.setIconPositions();
+          this.relayoutIcons();
         }
         this.redraw();
       }
@@ -1001,7 +1024,7 @@ export class BubbleLayer extends Layer {
           transformer.scale(scale * 0.01);          
         }
   
-        this.setIconPositions();
+        this.relayoutIcons();
         this.redraw();
       }
       bubble.regularize();
@@ -1413,7 +1436,7 @@ export class BubbleLayer extends Layer {
         const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
         transformer.scale(newScale);
       }
-      this.setIconPositions();
+      this.relayoutIcons();
     }
     this.redraw();
   }
@@ -1428,7 +1451,7 @@ export class BubbleLayer extends Layer {
 
     this.unfocus();
     this.selected = bubble;
-    this.setIconPositions();
+    this.relayoutIcons();
     this.onFocus(this.selected);
     this.focusKeeper.setFocus(this);
 

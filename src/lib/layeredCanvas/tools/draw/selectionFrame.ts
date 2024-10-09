@@ -2,7 +2,6 @@ import { type Trapezoid, trapezoidPath, trapezoidBoundingRect } from "../geometr
 import { type Vector, type Rect, extendRect, ensureMinRectSize, scale2D } from '../geometry/geometry';
 import * as paper from 'paper';
 
-const SHEET_Y_MARGIN = 48;
 const SHEET_MARGIN = 16;
 
 export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid, nearLineWidth: number = 7, farLineWidth = 10) {
@@ -42,10 +41,10 @@ export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string,
   ctx.restore();
 }
 
-export function calculateSheetRect(corners: Trapezoid, minSize: Vector, rscale: number): Rect {
+export function calculateSheetRect(corners: Trapezoid, minSize: Vector, ymargin: number, rscale: number): Rect {
   const r = extendRect(trapezoidBoundingRect(corners), SHEET_MARGIN * rscale);
-  r[1] -= SHEET_Y_MARGIN * rscale;
-  r[3] += SHEET_Y_MARGIN * rscale * 2;
+  r[1] -= ymargin * rscale;
+  r[3] += ymargin * rscale * 2;
   return ensureMinRectSize(scale2D(minSize, rscale), r);
 }
 

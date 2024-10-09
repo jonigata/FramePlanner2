@@ -16,6 +16,8 @@ import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { Grid } from "../tools/grid";
 
+const SHEET_Y_MARGIN = 48;
+
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
 const PADDING_HANDLE_INNER_WIDTH = 20;
@@ -135,7 +137,7 @@ export class FrameLayer extends Layer {
 
     for (let icon of this.frameIcons) {
       if (icon instanceof ClickableIcon) {
-        icon.shadowColor = "#222";
+        icon.shadowColor = "#448";
       }
     }
     this.zplusIcon.marginBottom = 16;
@@ -254,7 +256,7 @@ export class FrameLayer extends Layer {
   }
 
   calculateSheetRect(corners: Trapezoid): Rect {
-    return calculateSheetRect(corners, [320, 320], 1 / this.paper.matrix.a);
+    return calculateSheetRect(corners, [320, 320], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
   }
 
   drawSheet(ctx: CanvasRenderingContext2D, corners: Trapezoid) {
