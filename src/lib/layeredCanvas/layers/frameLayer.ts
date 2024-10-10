@@ -81,18 +81,17 @@ export class FrameLayer extends Layer {
     const unit = iconUnit;
     const spinUnit: Vector = [unit[0], unit[1] * 1 / 6];
     const mp = () => this.paper.matrix;
-    const isFrameActive = () => this.interactable && !!this.selectedLayout;
     const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility;
     this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0,1],"横に分割", isFrameActiveAndVisible, mp);
     this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0,1],"縦に分割", isFrameActiveAndVisible, mp);
-    this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActive, mp);
-    this.duplicateIcon = new ClickableIcon(["frameLayer/duplicate.png"],unit,[1,0],"複製", isFrameActive, mp);
-    this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
-    this.unshiftIcon = new ClickableIcon(["frameLayer/unshift.png"],unit,[1,0],"画像のアンシフト", isFrameActive, mp);
-    this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActive, mp);
+    this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActiveAndVisible, mp);
+    this.duplicateIcon = new ClickableIcon(["frameLayer/duplicate.png"],unit,[1,0],"複製", isFrameActiveAndVisible, mp);
+    this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActiveAndVisible, mp);
+    this.unshiftIcon = new ClickableIcon(["frameLayer/unshift.png"],unit,[1,0],"画像のアンシフト", isFrameActiveAndVisible, mp);
+    this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActiveAndVisible, mp);
     this.zplusIcon = new ClickableIcon(["frameLayer/increment.png"],spinUnit,[0,0],"手前に", isFrameActiveAndVisible, mp);
     this.zminusIcon = new ClickableIcon(["frameLayer/decrement.png"],spinUnit,[0,0],"奥に", isFrameActiveAndVisible, mp);
-    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.png","frameLayer/visibility2.png","frameLayer/visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
+    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.png","frameLayer/visibility2.png","frameLayer/visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActiveAndVisible, mp);
     this.visibilityIcon.index = 2;
     this.zvalue = new ClickableSelfRenderer(
       (ctx: CanvasRenderingContext2D, csr: ClickableSelfRenderer) => {
@@ -128,8 +127,8 @@ export class FrameLayer extends Layer {
     this.slantVerticalIcon = new ClickableIcon(["frameLayer/slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
     this.insertVerticalIcon = new ClickableIcon(["frameLayer/insert-vertical.png"],unit,[0,0.5],"コマ挿入", () => isBorderActive('v'), mp);
 
-    const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
-    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0],"選択コマと\n中身を入れ替え", isFrameLit, mp);
+    const isSwapVisible = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler && 0 < this.litLayout.element.visibility;
+    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0],"選択コマと\n中身を入れ替え", isSwapVisible, mp);
 
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
@@ -247,7 +246,11 @@ export class FrameLayer extends Layer {
       }
 
       // 選択枠
-      drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
+      if (this.selectedLayout.element.visibility === 0) {
+        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners, 1, 2, false);
+      } else {
+        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
+      }
     }
 
     this.frameIcons.forEach(icon => icon.render(ctx));
@@ -357,9 +360,11 @@ export class FrameLayer extends Layer {
         return true;
       }
 
-      const r = trapezoidBoundingRect(this.litLayout.corners);
-      this.hint(r, "画像をドロップ");
-      return true;
+      if (0 < this.litLayout.element.visibility) {
+        const r = trapezoidBoundingRect(this.litLayout.corners);
+        this.hint(r, "画像をドロップ");
+        return true;
+      }
     } else if (this.litBorder && this.litBorder.layout.element != this.selectedBorder?.layout.element) {
       if (isPointInTrapezoid(position, this.litBorder.corners)) {
         this.hint([...trapezoidCenter(this.litBorder.corners), 0, 0], "クリックで選択");

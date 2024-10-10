@@ -4,7 +4,7 @@ import * as paper from 'paper';
 
 const SHEET_MARGIN = 16;
 
-export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid, nearLineWidth: number = 7, farLineWidth = 10) {
+export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid, nearLineWidth: number = 7, farLineWidth = 10, drawsCircles = false) {
   ctx.save();
 
   // まず白で枠を描く
@@ -32,11 +32,13 @@ export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string,
   }
 
   // 四隅に円を書く
-  ctx.fillStyle = "rgba(255, 255, 255, 1)";
-  drawCircle(trapezoid.topLeft);
-  drawCircle(trapezoid.topRight);
-  drawCircle(trapezoid.bottomLeft);
-  drawCircle(trapezoid.bottomRight);
+  if (drawsCircles) {
+    ctx.fillStyle = "rgba(255, 255, 255, 1)";
+    drawCircle(trapezoid.topLeft);
+    drawCircle(trapezoid.topRight);
+    drawCircle(trapezoid.bottomLeft);
+    drawCircle(trapezoid.bottomRight);
+  }
 
   ctx.restore();
 }
