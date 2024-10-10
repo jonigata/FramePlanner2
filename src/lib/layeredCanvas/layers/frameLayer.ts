@@ -147,6 +147,10 @@ export class FrameLayer extends Layer {
     focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
+  calculateRootLayout(): Layout {
+    return calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+  }
+
   rebuildPageLayouts(matrix: DOMMatrix): void {
     this.relayoutIcons();
   }
@@ -269,14 +273,21 @@ export class FrameLayer extends Layer {
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) {
     if (!this.interactable) { return; }
 
-    const layout = calculatePhysicalLayout(
-      this.frameTree,
-      this.getPaperSize(),
-      [0, 0]
-    );
-    let layoutlet = findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
+    let layoutlet: Layout = null;
+
+    if (this.selectedLayout) {
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (rectContains(r, position)) {
+        layoutlet = this.selectedLayout;
+      }
+    }
+
     if (!layoutlet) {
-      return false;
+      const layout = this.calculateRootLayout();
+      layoutlet = findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
+      if (!layoutlet) {
+        return false;
+      }
     }
 
     if (media instanceof HTMLCanvasElement) {
@@ -291,7 +302,7 @@ export class FrameLayer extends Layer {
   }
 
   updateLit(point: Vector): void {
-    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+    const layout = this.calculateRootLayout();
 
     this.focusedPadding = null;
     this.litBorder = null;
@@ -431,7 +442,7 @@ export class FrameLayer extends Layer {
   }
 
   pick(point: Vector): Picked[] {
-    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+    const layout = this.calculateRootLayout();
     return listLayoutsAt(layout, point, PADDING_HANDLE_OUTER_WIDTH).map(
       layout => {
         return {
@@ -589,7 +600,7 @@ export class FrameLayer extends Layer {
   }
 
   acceptsBackground(point: Vector, _button: number): any {
-    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+    const layout = this.calculateRootLayout();
 
     const border = findBorderAt(layout, point, BORDER_MARGIN);
     if (border) {
@@ -1076,11 +1087,7 @@ export class FrameLayer extends Layer {
 
   constraintAll(): void {
     const paperSize = this.getPaperSize();
-    const layout = calculatePhysicalLayout(
-      this.frameTree,
-      paperSize,
-      [0, 0]
-    );
+    const layout = this.calculateRootLayout();
     constraintRecursive(paperSize, layout);
   }
 
@@ -1106,7 +1113,7 @@ export class FrameLayer extends Layer {
 
   updateSelectedLayout(): void {
     if (!this.selectedLayout) { return; }
-    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
+    const rootLayout = this.calculateRootLayout();
     this.selectLayout(findLayoutOf(rootLayout, this.selectedLayout.element));
 
     if (this.focusedPadding) {
@@ -1116,7 +1123,7 @@ export class FrameLayer extends Layer {
   }
 
   updateBorder(border: Border): void {
-    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
+    const rootLayout = this.calculateRootLayout();
     const newLayout = findLayoutOf(rootLayout, border.layout.element);
     border.layout = newLayout;
     this.updateBorderTrapezoid(border);
@@ -1293,7 +1300,6 @@ export class FrameLayer extends Layer {
     this.selectLayout(null);
     this.redraw();
   }
-
 
   renderDepths(): number[] { return [0]; }
 
