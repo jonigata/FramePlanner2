@@ -456,10 +456,6 @@
 </div>
 
 <style>
-  .cabinet {
-    margin: 8px;
-    padding: 8px;
-  }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
@@ -467,11 +463,6 @@
     font-family: '源暎エムゴ';
     font-size: 24px;
     margin-top: 16px;
-    margin-left: 8px;
-  }
-  .notice {
-    font-family: '源暎アンチック';
-    font-size: 14px;
     margin-left: 8px;
   }
 </style>
