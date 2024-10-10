@@ -27,6 +27,7 @@
   	(fit) => fit?.frame.visibility,
   	(v, fit) => {
       fit.frame.visibility = v;
+      $bookEditor.commit(null);
       return fit;
     }
   );
