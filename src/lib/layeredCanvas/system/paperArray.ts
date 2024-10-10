@@ -107,9 +107,15 @@ export class PaperArray {
   get redrawRequired(): boolean {
     return this.papers.some(e => e.paper.redrawRequired);
   }
-
   set redrawRequired(value: boolean) {
     this.papers.forEach(e => e.paper.redrawRequired = value);
+  }
+
+  get pierceRequired(): boolean {
+    return this.papers.some(e => e.paper.pierceRequired);
+  }
+  set pierceRequired(value: boolean) {
+    this.papers.forEach(e => e.paper.pierceRequired = value);
   }
 
   set mode(value: any) {

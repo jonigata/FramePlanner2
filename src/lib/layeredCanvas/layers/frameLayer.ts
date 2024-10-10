@@ -1,24 +1,27 @@
-import { Layer, sequentializePointer, type Dragging } from "../system/layeredCanvas";
-import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners } from "../dataModels/frameTree";
+import { Layer, sequentializePointer, type Picked } from "../system/layeredCanvas";
+import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, listLayoutsAt } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
 import { Media, ImageMedia, VideoMedia } from "../dataModels/media";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
-import { ClickableIcon } from "../tools/draw/clickableIcon";
-import { extendTrapezoid, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, vectorEquals, ensureMinRectSize, getRectCenter } from '../tools/geometry/geometry';
+import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
+import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
+import { type Vector, type Rect, box2Rect, add2D, scale2D, lerp2D, vectorEquals, getRectCenter, rectContains, denormalizePositionInRect } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import type { RectHandle } from "../tools/rectHandle";
-import { drawSelectionFrame } from "../tools/draw/selectionFrame";
+import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
+import { Grid } from "../tools/grid";
+
+const SHEET_Y_MARGIN = 48;
 
 const iconUnit: Vector = [32,32];
 const BORDER_MARGIN = 10;
 const PADDING_HANDLE_INNER_WIDTH = 20;
-const PADDING_HANDLE_OUTER_WIDTH = 10;
+const PADDING_HANDLE_OUTER_WIDTH = 20;
 
 export class FrameLayer extends Layer {
   cursorPosition: Vector;
@@ -45,10 +48,11 @@ export class FrameLayer extends Layer {
   slantVerticalIcon: ClickableIcon;
   insertVerticalIcon: ClickableIcon;
   swapIcon: ClickableIcon;
+  zvalue: ClickableSelfRenderer;
 
-  frameIcons: ClickableIcon[];
-  borderIcons: ClickableIcon[];
-  litIcons: ClickableIcon[];
+  frameIcons: ClickableSlate[];
+  borderIcons: ClickableSlate[];
+  litIcons: ClickableSlate[];
 
   litLayout: Layout;
   litBorder: Border;
@@ -75,28 +79,45 @@ export class FrameLayer extends Layer {
     this.cursorPosition = [-1, -1];
 
     const unit = iconUnit;
+    const spinUnit: Vector = [unit[0], unit[1] * 1 / 6];
     const mp = () => this.paper.matrix;
-    const isFrameActive = () => this.interactable && this.selectedLayout && !this.pointerHandler;
-    const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility && !this.pointerHandler;
-    this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0.5,0.5],"横に分割", isFrameActiveAndVisible, mp);
-    this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0.5,0.5],"縦に分割", isFrameActiveAndVisible, mp);
-    this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActive, mp);
-    this.duplicateIcon = new ClickableIcon(["frameLayer/duplicate.png"],unit,[1,0],"複製", isFrameActive, mp);
-    this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActive, mp);
-    this.unshiftIcon = new ClickableIcon(["frameLayer/unshift.png"],unit,[1,0],"画像のアンシフト", isFrameActive, mp);
-    this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActive, mp);
-    this.zplusIcon = new ClickableIcon(["frameLayer/zplus.png"],unit,[0,0],"手前に", isFrameActiveAndVisible, mp);
-    this.zminusIcon = new ClickableIcon(["frameLayer/zminus.png"],unit,[0,0],"奥に", isFrameActiveAndVisible, mp);
-    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.png","frameLayer/visibility2.png","frameLayer/visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActive, mp);
+    const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility;
+    this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0,1],"横に分割", isFrameActiveAndVisible, mp);
+    this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0,1],"縦に分割", isFrameActiveAndVisible, mp);
+    this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActiveAndVisible, mp);
+    this.duplicateIcon = new ClickableIcon(["frameLayer/duplicate.png"],unit,[1,0],"複製", isFrameActiveAndVisible, mp);
+    this.shiftIcon = new ClickableIcon(["frameLayer/shift.png"],unit,[1,0],"画像のシフト", isFrameActiveAndVisible, mp);
+    this.unshiftIcon = new ClickableIcon(["frameLayer/unshift.png"],unit,[1,0],"画像のアンシフト", isFrameActiveAndVisible, mp);
+    this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.png"],unit,[1,0],"パディングのリセット", isFrameActiveAndVisible, mp);
+    this.zplusIcon = new ClickableIcon(["frameLayer/increment.png"],spinUnit,[0,0],"手前に", isFrameActiveAndVisible, mp);
+    this.zminusIcon = new ClickableIcon(["frameLayer/decrement.png"],spinUnit,[0,0],"奥に", isFrameActiveAndVisible, mp);
+    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.png","frameLayer/visibility2.png","frameLayer/visibility3.png"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActiveAndVisible, mp);
     this.visibilityIcon.index = 2;
+    this.zvalue = new ClickableSelfRenderer(
+      (ctx: CanvasRenderingContext2D, csr: ClickableSelfRenderer) => {
+        const rscale = 1 / this.paper.matrix.a;
+        const b = csr.boundingRect;
+        const l = this.selectedLayout;
+        // const c = getRectCenter(b);
+        const c = denormalizePositionInRect([0.45, 0.6], b)
+        const fontSize = Math.floor(b[3] * 0.8);
+        // ctx.fillStyle = "#222222";
+        // ctx.fillRect(b[0], b[1], b[2], b[3]);
+        ctx.font = `${fontSize}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#86C8FF";
+        ctx.fillText((l.element.z + 3).toString(), ...c);
+      },
+      unit, [0,0], "z値", isFrameActiveAndVisible, mp);
 
     const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
     this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
     this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
-    this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[0,1],"左右反転", isImageActive, mp);
-    this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[0,1],"上下反転", isImageActive, mp);
-    this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[0,1],"フィット", isImageActive, mp);
+    this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[1,1],"左右反転", isImageActive, mp);
+    this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[1,1],"上下反転", isImageActive, mp);
+    this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[1,1],"フィット", isImageActive, mp);
 
     const isBorderActive = (dir) => this.interactable && this.selectedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon(["frameLayer/expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
@@ -106,19 +127,31 @@ export class FrameLayer extends Layer {
     this.slantVerticalIcon = new ClickableIcon(["frameLayer/slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
     this.insertVerticalIcon = new ClickableIcon(["frameLayer/insert-vertical.png"],unit,[0,0.5],"コマ挿入", () => isBorderActive('v'), mp);
 
-    const isFrameLit = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler;
-    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0.5],"選択コマと\n中身を入れ替え", isFrameLit, mp);
+    const isSwapVisible = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler && 0 < this.litLayout.element.visibility;
+    this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0],"選択コマと\n中身を入れ替え", isSwapVisible, mp);
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
     this.litIcons = [this.swapIcon];
+
+    for (let icon of this.frameIcons) {
+      if (icon instanceof ClickableIcon) {
+        icon.shadowColor = "#448";
+      }
+    }
+    this.zplusIcon.marginBottom = 16;
+    this.zminusIcon.marginTop = 16;
 
     this.makeCanvasPattern();
 
     focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
-  calculateLayout(matrix: DOMMatrix): void {
+  calculateRootLayout(): Layout {
+    return calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+  }
+
+  rebuildPageLayouts(matrix: DOMMatrix): void {
     this.relayoutIcons();
   }
 
@@ -149,13 +182,6 @@ export class FrameLayer extends Layer {
     if (!this.interactable) { return; }
     if (depth !== 0) { return; }
 
-    if (0 < this.selectedLayout?.element.visibility) {  // z値を表示
-      ctx.font = '24px serif';
-      ctx.fillStyle = "#86C8FF";
-      const l = this.selectedLayout;
-      ctx.fillText(l.element.z.toString(), l.rawOrigin[0]+74, l.rawOrigin[1]+38);
-    }
-
     function fillTrapezoid(corners: Trapezoid, color: string) {
       ctx.fillStyle = color;
       ctx.beginPath();
@@ -166,6 +192,7 @@ export class FrameLayer extends Layer {
     function strokeTrapezoid(corners: Trapezoid, color: string, width: number) {
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
+      ctx.setLineDash([10, 10]);
       ctx.beginPath();
       trapezoidPath(ctx, corners);
       ctx.stroke();
@@ -187,23 +214,28 @@ export class FrameLayer extends Layer {
     }
 
     if (this.litBorder) {
-      fillTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.2)");
-      strokeTrapezoid(this.litBorder.formalCorners, "rgba(0, 200,200, 0.4)", 3);
+      const corners = this.litBorder.corners;
+      const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
+
+      // 線のスタイルを設定して描画
+      ctx.fillStyle = "rgba(0, 200, 200, 0.2)";
+      ctx.fill(canvasPath);
     } else if (this.litLayout) {
       if (this.litLayout.element != this.selectedLayout?.element) {
-        fillTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.2)");
-        strokeTrapezoid(this.litLayout.formalCorners, "rgba(255, 255, 255, 1)", 6);
-        strokeTrapezoid(this.litLayout.corners, "rgba(0, 0, 255, 0.4)", 3);
-        strokeConnectors(this.litLayout.formalCorners, this.litLayout.corners, "rgba(255, 255, 255, 1)", 6);
-        strokeConnectors(this.litLayout.formalCorners, this.litLayout.corners, "rgba(0, 0, 255, 0.4)", 3);
+        fillTrapezoid(this.litLayout.corners, "rgba(0, 0, 255, 0.2)");
+        strokeTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
+        strokeTrapezoid(this.litLayout.corners, "rgba(192, 192, 255, 1)", 3);
+        strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
       }
     }
 
     if (this.selectedBorder) {
+      const corners = this.selectedBorder.corners;
+      const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
+
+      // 線のスタイルを設定して描画
       ctx.fillStyle = this.canvasPattern;
-      ctx.beginPath();
-      trapezoidPath(ctx, this.selectedBorder.corners);
-      ctx.fill();
+      ctx.fill(canvasPath);
     } else if (this.selectedLayout) {
       const paperSize = this.getPaperSize();
       const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
@@ -211,8 +243,18 @@ export class FrameLayer extends Layer {
       ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
       drawFilmStackBorders(ctx, this.selectedLayout.element.filmStack, paperSize);
       ctx.restore();
-  
-      drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
+
+      // シート角丸
+      if (0 < this.selectedLayout.element.visibility) {
+        this.drawSheet(ctx, this.selectedLayout.corners);
+      }
+
+      // 選択枠
+      if (this.selectedLayout.element.visibility === 0) {
+        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners, 1, 2, false);
+      } else {
+        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
+      }
     }
 
     this.frameIcons.forEach(icon => icon.render(ctx));
@@ -220,17 +262,32 @@ export class FrameLayer extends Layer {
     this.litIcons.forEach(icon => icon.render(ctx));
   }
 
+  calculateSheetRect(corners: Trapezoid): Rect {
+    return calculateSheetRect(trapezoidBoundingRect(corners), [320, 320], SHEET_Y_MARGIN, 1 / this.paper.matrix.a);
+  }
+
+  drawSheet(ctx: CanvasRenderingContext2D, corners: Trapezoid) {
+    drawSheet(ctx, corners, this.calculateSheetRect(corners), "rgba(64, 64, 128, 0.7)");
+  }
+
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) {
     if (!this.interactable) { return; }
 
-    const layout = calculatePhysicalLayout(
-      this.frameTree,
-      this.getPaperSize(),
-      [0, 0]
-    );
-    let layoutlet = findLayoutAt(layout, position);
+    let layoutlet: Layout = null;
+
+    if (this.selectedLayout) {
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (rectContains(r, position)) {
+        layoutlet = this.selectedLayout;
+      }
+    }
+
     if (!layoutlet) {
-      return false;
+      const layout = this.calculateRootLayout();
+      layoutlet = findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
+      if (!layoutlet) {
+        return false;
+      }
     }
 
     if (media instanceof HTMLCanvasElement) {
@@ -245,7 +302,7 @@ export class FrameLayer extends Layer {
   }
 
   updateLit(point: Vector): void {
-    const layout = calculatePhysicalLayout(this.frameTree, this.getPaperSize(), [0, 0]);
+    const layout = this.calculateRootLayout();
 
     this.focusedPadding = null;
     this.litBorder = null;
@@ -259,11 +316,15 @@ export class FrameLayer extends Layer {
         }
       }
 
-      const corners = extendTrapezoid(this.selectedLayout.corners, PADDING_HANDLE_OUTER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
-      if (isPointInTrapezoid(point, corners)) {
+      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
         const padding = findPaddingOn(this.selectedLayout, point, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
         this.focusedPadding = padding;
         this.litLayout = this.selectedLayout;
+        return;
+      }
+
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (rectContains(r, point)) {
         return;
       }
     }
@@ -276,11 +337,13 @@ export class FrameLayer extends Layer {
     }
 
     this.litBorder = findBorderAt(layout, point, BORDER_MARGIN);
-    if (!this.litBorder) {
-      this.litLayout = findLayoutAt(layout, point);
-      if (this.litLayout) {
-        this.relayoutLitIcons(this.litLayout);
-      }
+    if (this.litBorder) {
+      return;
+    }
+
+    this.litLayout = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH);
+    if (this.litLayout) {
+      this.relayoutLitIcons(this.litLayout);
     }
   }
 
@@ -291,15 +354,15 @@ export class FrameLayer extends Layer {
       this.litBorder = null;
       return false;
     }
-    if (keyDownFlags["Space"]) { return; }
+    if (keyDownFlags["Space"]) { return false; }
     this.updateLit(position);
     this.redraw();
 
-    this.decideHint(position);
+    return this.decideHint(position);
   }
 
-  decideHint(position: Vector): void {
-    const hintIfContains = (a: ClickableIcon[]): boolean => {
+  decideHint(position: Vector): boolean {
+    const hintIfContains = (a: ClickableSlate[]): boolean => {
       for (let e of a) {
         if (e.hintIfContains(position, this.hint)) {
           return true;
@@ -310,44 +373,40 @@ export class FrameLayer extends Layer {
 
     if (this.litLayout && this.litLayout.element != this.selectedLayout?.element) {
       if (this.swapIcon.hintIfContains(position, this.hint)) {
-        return;
+        return true;
       }
 
-      const origin = this.litLayout.origin;
-      const size = this.litLayout.size;
-      const r: Rect = [...origin, ...size];
-      this.hint(r, "画像をドロップ");
+      if (0 < this.litLayout.element.visibility) {
+        const r = trapezoidBoundingRect(this.litLayout.corners);
+        this.hint(r, "画像をドロップ");
+        return true;
+      }
     } else if (this.litBorder && this.litBorder.layout.element != this.selectedBorder?.layout.element) {
       if (isPointInTrapezoid(position, this.litBorder.corners)) {
         this.hint([...trapezoidCenter(this.litBorder.corners), 0, 0], "クリックで選択");
+        return true;
       }
     } else if (this.selectedBorder) {
       if (hintIfContains(this.borderIcons)) {
-        return;
+        return true;
       }
       if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
         this.hint([...trapezoidCenter(this.selectedBorder.corners), 0, 0], "ドラッグで移動");
+        return true;
       }
-      return;
+      return true;
     } else if (this.selectedLayout) { 
-      const origin = this.selectedLayout.origin;
-      const size = this.selectedLayout.size;
-      const r: Rect = [...origin, ...size];
-      if (this.focusedPadding) {
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (hintIfContains(this.frameIcons)) {
+        return true;
+      } else if (this.focusedPadding) {
         this.hint(r, "ドラッグでパディング変更");
-      } else if (isPointInTrapezoid(position, this.selectedLayout.corners)) {
-        if (hintIfContains(this.frameIcons)) {
-          return;
-        }
-        if (this.selectedLayout.element.filmStack.films.length !== 0) {
-          this.hint(r, "ドラッグで変更");
-        } else if (0 < this.selectedLayout.element.visibility) {
-          this.hint(r, "画像をドロップ");
-        }
-      } else {
-        hintIfContains(this.litIcons);
+        return true;
+      } else if (rectContains(r, position)) {
+        return true;
       }
     }
+    return false;
   }
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
@@ -382,100 +441,110 @@ export class FrameLayer extends Layer {
     return false;
   }
 
-  accepts(point: Vector): any {
+  pick(point: Vector): Picked[] {
+    const layout = this.calculateRootLayout();
+    return listLayoutsAt(layout, point, PADDING_HANDLE_OUTER_WIDTH).map(
+      layout => {
+        return {
+          selected: layout.element === this.selectedLayout?.element,
+          action: () => this.selectLayout(layout),
+        };
+      });
+  }
+
+  acceptDepths(): number[] {
+    return [0,1];
+  }
+
+  accepts(point: Vector, button: number, depth: number): any {
+    console.log("frame accepts", depth);
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
-    this.updateLit(point);
+    if (depth == 1) {
+      const q = this.acceptsForeground(point, button);
+      console.log("q1", q);
+      return q;
+    } else {
+      const q = this.acceptsBackground(point, button);
+      console.log("q2", q);
+      return q;
+    }
+  }
+
+  acceptsForeground(point: Vector, _button: number): any {
+    if (keyDownFlags["KeyT"]) {
+      if (this.litBorder) {
+        return { action: "transpose-border", border: this.litBorder };
+      }
+      return null;
+    }
 
     if (this.selectedLayout) {
       const q = this.acceptsOnSelectedFrameIcons(point);
       if (q) {
-        if (q == "done") {
-          return null;
-        }
         return q;
       }
 
-      if (this.litLayout && this.litLayout.element != this.selectedLayout.element) {
-        if (this.swapIcon.contains(point)) {
-          this.swapContent(this.selectedLayout.element, this.litLayout.element);
-          return null;
+      if (this.selectedLayout.element.visibility === 0) {
+        if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
+          return { action: "pierce" };
+        }
+      } else {
+        const r = this.calculateSheetRect(this.selectedLayout.corners);
+
+        if (rectContains(r, point)) {
+          if (this.focusedPadding) {
+            return { action: "move-padding", padding: this.focusedPadding };
+          }
+          if (this.selectedLayout.element.filmStack.films.length !== 0) {
+            if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+              return { action: "scale", layout: this.selectedLayout };
+            } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"]) {
+              return { action: "rotate", layout: this.selectedLayout };
+            } else {
+              return { action: "translate", layout: this.selectedLayout };
+            }
+          } else {
+            return { action: "pierce" };
+          }
+        }
+
+        if (this.litLayout && this.litLayout.element != this.selectedLayout.element) {
+          if (this.swapIcon.contains(point)) {
+            return { action: "swap", element0: this.selectedLayout.element, element1: this.litLayout.element };
+          }
         }
       }
-    }
-
-    // パディング操作
-    if (this.focusedPadding) {
-      return { padding: this.focusedPadding };
+      return null;
     }
 
     // 選択ボーダー操作
     if (this.selectedBorder) {
-      console.log("A");
       const r = this.acceptsOnSelectedBorder(point);
       if (r) {
-        console.log("B");
-        if (r == 'done') {
-          return null;
-        }
         return r;
       }
-      if (this.litBorder) {
-        if (this.litBorder.layout.element != this.selectedBorder.layout.element ||
-            this.litBorder.index != this.selectedBorder.index) {
-          return { border: this.litBorder };
-        }
-      } else { 
-        this.selectedBorder = null;
-        this.relayoutIcons();
-        this.redraw();
-      } 
-      // return null; このあとフレーム選択処理が入るかもしれないので放棄しない
-    } else {
-      if (this.litBorder) {
-        if (keyDownFlags["KeyT"]) {
-          this.transposeBorder(this.litBorder);
-          return null;
-        } else {
-          return { border: this.litBorder };
-        }
-      }
     }
-
-    const r = this.acceptsOnFrame(point);
-    if (r) {
-      if (r == "done") {
-        return null;
-      }
-      return r;
-    }
-
-    this.selectLayout(null);
-    this.relayoutIcons();
-    this.redraw();
     return null;
   }
 
   acceptsOnSelectedBorder(p: Vector): any {
     if (
       keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] ||
-       this.expandHorizontalIcon.contains(p) ||this.expandVerticalIcon.contains(p)) {
-      return { border: this.selectedBorder, action: "expand" };
+      this.expandHorizontalIcon.contains(p) ||this.expandVerticalIcon.contains(p)) {
+      return { action: "expand-border" , border: this.selectedBorder };
     } else if (
       keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"] ||
       this.slantHorizontalIcon.contains(p) || this.slantVerticalIcon.contains(p)) {
-      return { border: this.selectedBorder, action: "slant" };
+      return { action: "slant-border" , border: this.selectedBorder};
     } else if (keyDownFlags["KeyT"]) {
-      this.transposeBorder(this.selectedBorder);
-      return "done";
+      return { action: "transpose-border", border: this.selectedBorder };
     } else if (
       this.insertHorizontalIcon.contains(p) || this.insertVerticalIcon.contains(p)) {
-      this.onInsert(this.selectedBorder);
-      this.selectedBorder = null;
-      return "done";
-    } else if (isPointInTrapezoid(p, this.selectedBorder.corners)) {
-      return { border: this.selectedBorder, action: "move" };
+      return { action: "insert", border: this.selectedBorder };
+    } else if (pointToQuadrilateralDistance(p, this.selectedBorder.corners, false) < BORDER_MARGIN) {
+      return { action: "move-border" , border: this.selectedBorder };
     }
     return null;
   }
@@ -483,174 +552,97 @@ export class FrameLayer extends Layer {
   acceptsOnSelectedFrameIcons(point: Vector): any {
     const layout = this.selectedLayout;
     if (this.splitHorizontalIcon.contains(point)) {
-      FrameElement.splitElementHorizontal(
-        this.frameTree,
-        layout.element
-      );
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-horizontal", layout: layout };
     }
     if (this.splitVerticalIcon.contains(point)) {
-      FrameElement.splitElementVertical(
-        this.frameTree,
-        layout.element
-      );
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-vertical", layout: layout };
     }
     if (this.deleteIcon.contains(point)) {
-      FrameElement.eraseElement(this.frameTree, layout.element);
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "erase", layout: layout };
     }
     if (this.duplicateIcon.contains(point)) {
-      FrameElement.duplicateElement(this.frameTree, layout.element);
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "duplicate", layout: layout };
     }
     if (this.shiftIcon.contains(point)) {
-      this.onShift(layout.element);
-      this.redraw();
-      return "done";
+      return { action: "shift", layout: layout };
     }
     if (this.unshiftIcon.contains(point)) {
-      this.onUnshift(layout.element);
-      this.redraw();
-      return "done";
+      return { action: "unshift", layout: layout };
     }
     if (this.resetPaddingIcon.contains(point)) {
-      this.resetPadding();
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "reset-padding", layout: layout };
     }
     if (this.zplusIcon.contains(point)) {
-      layout.element.z += 1;
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "zplus", layout: layout };
     }
     if (this.zminusIcon.contains(point)) {
-      layout.element.z -= 1;
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "zminus", layout: layout };
     }
     if (this.visibilityIcon.contains(point)) {
-      this.visibilityIcon.increment();
-      layout.element.visibility = this.visibilityIcon.index;
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "visibility", layout: layout };
     }
     if (this.flipHorizontalIcon.contains(point)) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[0] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-horizontal", layout: layout };
     } 
     if (this.flipVerticalIcon.contains(point)) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[1] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-vertical", layout: layout };
     } 
     if (this.fitIcon.contains(point)) {
-      const paperSize = this.getPaperSize();
-      const transformer = new FilmStackTransformer(paperSize, layout.element.filmStack.films);
-      transformer.scale(0.01);
-      constraintLeaf(paperSize, layout);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "fit", layout: layout };
     } 
-    if (this.scaleIcon.contains(point) || this.rotateIcon.contains(point)) {
-      return { layout: layout };
+    if (this.scaleIcon.contains(point)) {
+      return { action: "scale", layout: layout };
+    }
+    if (this.rotateIcon.contains(point)) {
+      return { action: "rotate", layout: layout };
     }
     return null;
   }
 
-  acceptsOnFrame(point: Vector): any {
-    let layout = this.litLayout;
-    if (!layout) { return null; }
+  acceptsBackground(point: Vector, _button: number): any {
+    const layout = this.calculateRootLayout();
 
-    const paperSize = this.getPaperSize();
+    const border = findBorderAt(layout, point, BORDER_MARGIN);
+    if (border) {
+      return { action: "select-border", border: border };
+    }
+
+    const layoutlet = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH, null);
+    if (layoutlet) {
+      const r = this.acceptsOnFrame(layoutlet);
+      if (r) {
+        return r;
+      }
+    }
+
+    this.selectLayout(null);
+    this.redraw();
+    return null; 
+  }
+
+  acceptsOnFrame(layout: Layout): any {
     if (keyDownFlags["KeyQ"]) {
-      FrameElement.eraseElement(this.frameTree, layout.element);
-      this.litLayout = null;
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "erase", layout: layout };
     }
     if (keyDownFlags["KeyW"]) {
-      this.litLayout = null;
-      FrameElement.splitElementHorizontal(
-        this.frameTree,
-        layout.element
-      );
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-horizontal", layout: layout };
     }
     if (keyDownFlags["KeyS"]) {
-      this.litLayout = null;
-      FrameElement.splitElementVertical(
-        this.frameTree,
-        layout.element
-      );
-      this.selectLayout(null);
-      this.onCommit();
-      this.redraw();
-      return "done";
+      return { action: "split-vertical", layout: layout };
     }
     if (keyDownFlags["KeyD"]) {
-      layout.element.filmStack.films = [];
-      this.redraw();
-      return "done";
+      return { action: "discard-films", layout: layout };
     }
     if (keyDownFlags["KeyT"]) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[0] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-horizontal", layout: layout };
     }
     if (keyDownFlags["KeyY"]) {
-      layout.element.filmStack.films.forEach(film => {
-        film.reverse[1] *= -1;
-      });
-      this.redraw();
-      return "done";
+      return { action: "flip-vertical", layout: layout };
     }
     if (keyDownFlags["KeyE"]) {
-      constraintLeaf(paperSize, layout);
-      this.redraw();
-      return "done";
+      return { action: "fit", layout: layout };
     }
-    if (this.selectedLayout?.element != this.litLayout?.element) {
-      this.selectLayout(this.litLayout);
-      this.relayoutIcons();
-      this.redraw();
-      return { select: layout };
-    } else {
-      return { layout: layout };
-    }
+    return { action: "select", layout: layout };
   }
 
   changeFocus(layer: Layer) {
@@ -663,36 +655,152 @@ export class FrameLayer extends Layer {
   }
 
   async *pointer(p: Vector, payload: any) {
-    if (payload.select) {
-      // changeFocusのためにacceptsに{select:layout}を変えさせたので、ここでは何もしない 
-    } else if (payload.layout) {
-      const layout: Layout = payload.layout;
-      const element: FrameElement = layout.element;
-      if (0< element.filmStack.films.length) {
-        if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"] || 
-            this.scaleIcon.contains(p)) {
-          yield* this.scaleImage(p, layout);
-        } else if (keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] ||
-                  this.rotateIcon.contains(p)) {
-          yield* this.rotateImage(p, layout);
-        } else {
-          yield* this.translateImage(p, layout);
-        }
-      }
-    } else if (payload.padding) {
-      yield* this.expandPadding(p, payload.padding);
-    } else {
-      this.selectLayout(null);
-      this.selectedBorder = payload.border;
-      this.relayoutIcons();
-      this.redraw();
-      if (payload.action === "expand") {
+    switch (payload.action) {
+      case "transpose-border":
+        this.transposeBorder(this.litBorder);
+        break;
+      case "swap":
+        this.swapContent(payload.element0, payload.element1);
+        break;
+  
+      case "move-padding":
+        yield* this.expandPadding(p, payload.padding);
+        break;
+      case "reset-padding":
+        this.resetPadding();
+        this.onCommit();
+        this.redraw();
+        return "done";
+
+      case "select-border":
+        this.selectLayout(null);
+        this.selectedBorder = payload.border;
+        this.relayoutBorderIcons(payload.border);
+        this.redraw();
+        break;
+      case "expand-border":
         yield* this.expandBorder(p, payload.border);
-      } else if(payload.action === "slant") {
+        break;
+      case "slant-border":
         yield* this.slantBorder(p, payload.border);
-      } else {
+        break;
+      case "move-border":
         yield* this.moveBorder(p, payload.border);
-      }
+        break;
+
+      case "select":
+        this.selectedBorder = null;
+        this.selectLayout(payload.layout);
+        this.relayoutIcons();
+        this.redraw();
+        break;
+      case "split-horizontal":
+        FrameElement.splitElementHorizontal(
+          this.frameTree,
+          payload.layout.element
+        );
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "split-vertical":
+        FrameElement.splitElementVertical(
+          this.frameTree,
+          payload.layout.element
+        );
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "erase":
+        FrameElement.eraseElement(this.frameTree, payload.layout.element);
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "duplicate":
+        FrameElement.duplicateElement(this.frameTree, payload.layout.element);
+        this.litLayout = null;
+        this.selectLayout(null);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "shift":
+        this.onShift(payload.layout.element);
+        this.redraw();
+        break;
+      case "unshift":
+        this.onUnshift(payload.layout.element);
+        this.redraw();
+        break;
+      case "insert":
+        this.onInsert(this.selectedBorder);
+        this.selectedBorder = null;
+        break;
+
+      case "zplus":
+        payload.layout.element.z += 1;
+        this.onCommit();
+        this.redraw();
+        break;
+      case "zminus":
+        payload.layout.element.z -= 1;
+        this.onCommit();
+        this.redraw();
+        break;
+      case "visibility":
+        this.visibilityIcon.increment();
+        payload.layout.element.visibility = this.visibilityIcon.index;
+        this.onCommit();
+        this.redraw();
+        break;
+
+      case "flip-horizontal":
+        payload.layout.element.filmStack.films.forEach(film => {
+          film.reverse[0] *= -1;
+        });
+        this.redraw();
+        break;
+      case "flip-vertical":
+        payload.layout.element.filmStack.films.forEach(film => {
+          film.reverse[1] *= -1;
+        });
+        this.redraw();
+        break;
+      case "fit":
+        const paperSize = this.getPaperSize();
+        const transformer = new FilmStackTransformer(paperSize, payload.layout.element.filmStack.films);
+        transformer.scale(0.01);
+        constraintLeaf(paperSize, payload.layout);
+        this.onCommit();
+        this.redraw();
+        break;
+      case "discard-films":
+        payload.layout.element.filmStack.films = [];
+        this.redraw();
+        break;
+
+      case "scale":
+        yield* this.scaleImage(p, payload.layout);
+        break;
+      case "rotate":
+        yield* this.rotateImage(p, payload.layout);
+        break;
+      case "translate":
+        yield* this.translateImage(p, payload.layout);
+        break;
+
+      case "ignore":
+        break;
+      case "pierce":
+        this.pierce();
+        break;
+
+      default:
+        console.error("unknown action", payload.action);
     }
   }
 
@@ -743,6 +851,9 @@ export class FrameLayer extends Layer {
   }
 
   *translateImage(p: Vector, layout: Layout) {
+    // クリック判定と兼用
+    const startingTime = performance.now();
+
     const paperSize = this.getPaperSize();
     const element = layout.element;
     const films = element.filmStack.getOperationTargetFilms();
@@ -767,6 +878,11 @@ export class FrameLayer extends Layer {
       if (e === "cancel") {
         this.onRevert();
       }
+    }
+
+    if (performance.now() - startingTime < 200) {
+      // クリック判定
+      this.pierce();
     }
   }
 
@@ -801,11 +917,6 @@ export class FrameLayer extends Layer {
       }
     }
 
-    function getCenter(): Vector {
-      const r = getRect();
-      return [r[0] + r[2] / 2, r[1] + r[3] / 2];
-    }
-  
     try {
       const s: Vector = p;
       let q = p;
@@ -976,11 +1087,7 @@ export class FrameLayer extends Layer {
 
   constraintAll(): void {
     const paperSize = this.getPaperSize();
-    const layout = calculatePhysicalLayout(
-      this.frameTree,
-      paperSize,
-      [0, 0]
-    );
+    const layout = this.calculateRootLayout();
     constraintRecursive(paperSize, layout);
   }
 
@@ -1006,7 +1113,7 @@ export class FrameLayer extends Layer {
 
   updateSelectedLayout(): void {
     if (!this.selectedLayout) { return; }
-    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
+    const rootLayout = this.calculateRootLayout();
     this.selectLayout(findLayoutOf(rootLayout, this.selectedLayout.element));
 
     if (this.focusedPadding) {
@@ -1016,14 +1123,14 @@ export class FrameLayer extends Layer {
   }
 
   updateBorder(border: Border): void {
-    const rootLayout = calculatePhysicalLayout(this.frameTree,this.getPaperSize(),[0, 0]);
+    const rootLayout = this.calculateRootLayout();
     const newLayout = findLayoutOf(rootLayout, border.layout.element);
     border.layout = newLayout;
     this.updateBorderTrapezoid(border);
   }
 
   updateBorderTrapezoid(border: Border): void {
-    const corners = makeBorderCorners(border.layout, border.index, BORDER_MARGIN);
+    const corners = makeBorderCorners(border.layout, border.index, 0);
     const formalCorners = makeBorderFormalCorners(border.layout, border.index);
     border.corners = corners;
     border.formalCorners = formalCorners;
@@ -1043,49 +1150,52 @@ export class FrameLayer extends Layer {
   }
 
   relayoutFrameIcons(layout: Layout): void {
-    const rscale = 1 / this.paper.matrix.a;
-    const minSize = 240 * rscale;
-    const origin = layout.rawOrigin;
-    const size = layout.rawSize;
-    const [x, y, w, h] = ensureMinRectSize(minSize, [...origin, ...size]);
+    const grid = this.makeGrid(layout);
+    const cp = grid.calcPosition.bind(grid);
 
-    const rect: Rect = [x+10, y+10, w-20, h-20];
-    const unit: Vector = [...iconUnit];
-    unit[0] *= rscale;
-    unit[1] *= rscale;
-    const cp = (ro, ou) => ClickableIcon.calcPosition(rect, unit, ro, ou);
-
-    this.splitHorizontalIcon.position = cp([0.5,0.5],[1,0]);
-    this.splitVerticalIcon.position = cp([0.5,0.5],[0,1]);
-    this.deleteIcon.position = cp([1,0],[0,0]);
-    this.duplicateIcon.position = cp([1,0],[0,1]);
-    this.shiftIcon.position = cp([1,0],[0,2]);
-    this.unshiftIcon.position = cp([1,0],[0,3]);
-    this.resetPaddingIcon.position = cp([1,0],[0,4]);
-    this.zplusIcon.position = cp([0,0],[2.5,0]);
-    this.zminusIcon.position = cp([0,0],[1,0]);
     this.visibilityIcon.position = cp([0,0],[0,0]);
     this.visibilityIcon.index = layout.element.visibility;
+    this.zplusIcon.position = cp([0,0],[1,-0.05]);
+    this.zminusIcon.position = cp([0,0],[1,0.9]);
+    this.zvalue.position = cp([0,0],[1.025,-0.075]);
+
+    this.deleteIcon.position = cp([1,0],[0,0]);
+    this.duplicateIcon.position = cp([1,0],[-1,0]);
+    this.shiftIcon.position = cp([1,0],[-2,0]);
+    this.unshiftIcon.position = cp([1,0],[-3,0]);
+    this.resetPaddingIcon.position = cp([1,0],[-4,0]);
+
+    this.splitHorizontalIcon.position = cp([0,1],[0,0]);
+    this.splitVerticalIcon.position = cp([0,1],[1,0]);
+
+    this.flipHorizontalIcon.position = cp([1,1], [-4.5,0]);
+    this.flipVerticalIcon.position = cp([1,1], [-3.5,0]);
+    this.fitIcon.position = cp([1,1], [-2.5,0]);
 
     this.scaleIcon.position = cp([1,1],[0,0]);
     this.rotateIcon.position = cp([1,1],[-1,0]);
-    this.flipHorizontalIcon.position = cp([0,1], [2,0]);
-    this.flipVerticalIcon.position = cp([0,1], [3,0]);
-    this.fitIcon.position = cp([0,1], [4,0]);
-}
+  }
+
+  makeGrid(layout: Layout) {
+    const rscale = 1 / this.paper.matrix.a;
+    const unit: Vector = scale2D([...iconUnit], rscale);
+    const grid = new Grid(this.calculateSheetRect(layout.corners), -10, unit)
+    return grid;
+  }
 
   relayoutBorderIcons(border: Border): void {
     const bt = border.corners;
     this.slantVerticalIcon.position = [bt.topLeft[0],(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
-    this.expandVerticalIcon.position = [bt.topRight[0],(bt.topRight[1] + bt.bottomRight[1]) * 0.5];
+    this.expandVerticalIcon.position = [(bt.topRight[0] + bt.topRight[0]) * 0.5, (bt.topRight[1] + bt.bottomRight[1]) * 0.5];
     this.insertVerticalIcon.position = [bt.topLeft[0]-40,(bt.topLeft[1] + bt.bottomLeft[1]) * 0.5];
     this.slantHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]];
-    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5,bt.bottomLeft[1]];
+    this.expandHorizontalIcon.position = [(bt.bottomLeft[0] + bt.bottomRight[0]) * 0.5, (bt.bottomLeft[1] + bt.bottomRight[1]) * 0.5];
     this.insertHorizontalIcon.position = [(bt.topLeft[0] + bt.topRight[0]) * 0.5,bt.topLeft[1]-40];
   }
 
   relayoutLitIcons(layout: Layout): void {
-    const center = getRectCenter([...layout.origin, ...layout.size]);
+    const center = lerp2D(layout.corners.topLeft, layout.corners.topRight, 0.5);
+    getRectCenter([...layout.origin, ...layout.size]);
     this.swapIcon.position = center;    
   }
 
@@ -1128,9 +1238,11 @@ export class FrameLayer extends Layer {
     return false;
   }
 
+  // 基本的には直接呼び出さない
+  // changeFocusとselectLayoutからのみ
   videoRedrawInterval: NodeJS.Timer;
   doSelectLayout(layout: Layout): void {
-    if (layout != this.selectedLayout) {
+    if (layout?.element !== this.selectedLayout?.element) {
       clearInterval(this.videoRedrawInterval);
       this.videoRedrawInterval = null;      
       if (this.selectedLayout) {
@@ -1158,6 +1270,7 @@ export class FrameLayer extends Layer {
     }
 
     this.selectedLayout = layout;
+    this.relayoutIcons();
     this.onFocus(layout);
   }
 
@@ -1187,7 +1300,6 @@ export class FrameLayer extends Layer {
     this.selectLayout(null);
     this.redraw();
   }
-
 
   renderDepths(): number[] { return [0]; }
 

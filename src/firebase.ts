@@ -173,6 +173,11 @@ export async function removeBg(dataUrl: string): Promise<any> {
   return r;
 }
 
+export async function notifyShare(url: string): Promise<any> {
+  const r = await callFunc('notifyshare', {url}, 180);
+  return r;
+}
+
 function getAuth2() {
   return getAuth(app);
 }

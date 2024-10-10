@@ -106,7 +106,7 @@ export class PaperRendererLayer extends Layer {
 
     for (let bubble of bubbles) {
       if (bubble.embedded) {
-        const thisLayout = findLayoutAt(layout, bubble.getPhysicalCenter(paperSize));
+        const thisLayout = findLayoutAt(layout, bubble.getPhysicalCenter(paperSize), 0);
         if (thisLayout && 0 < thisLayout.element.visibility && thisLayout.element.isLeaf()) {
           if (!embeddedBubbles.has(thisLayout)) {
             embeddedBubbles.set(thisLayout, []);

@@ -1,13 +1,14 @@
-import { Layer, sequentializePointer } from "../system/layeredCanvas";
+import { Layer, sequentializePointer, type Picked } from "../system/layeredCanvas";
 import { keyDownFlags } from "../system/keyCache";
 import type { Vector } from '../tools/geometry/geometry';
 import type { Viewport } from "../system/layeredCanvas";
+import type { FocusKeeper } from "../tools/focusKeeper";
 
 export class FloorLayer extends Layer {
   viewport: Viewport;
   onViewportChanged: () => void; // ここで責任とれないこと（例えばsvelteUI)
 
-  constructor(viewport: Viewport, onViewportChanged: () => void) {
+  constructor(viewport: Viewport, onViewportChanged: () => void, private focusKeeper: FocusKeeper) {
     super();
     this.viewport = viewport;
     this.onViewportChanged = onViewportChanged;
@@ -29,7 +30,8 @@ export class FloorLayer extends Layer {
     return true;
   }
 
-  accepts(_point: Vector, button: number): boolean {
+  accepts(_point: Vector, button: number, depth: number): any {
+    if (0 < depth) return null;
     return keyDownFlags["Space"] || 0 < button;
   }
 
@@ -61,6 +63,5 @@ export class FloorLayer extends Layer {
     this.viewport.dirty = true;
     this.onViewportChanged();
   }
-
 }
 sequentializePointer(FloorLayer);

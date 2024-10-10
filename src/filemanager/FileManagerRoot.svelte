@@ -12,7 +12,7 @@
   import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { getLayover } from "../firebase";
+  import { getLayover, notifyShare } from "../firebase";
   import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
@@ -271,6 +271,7 @@
     url.search = params.toString();
     const shareUrl = url.toString();
     navigator.clipboard.writeText(shareUrl);
+    await notifyShare(shareUrl);
 
     $loading = false;
     toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、\n一定時間後消去される可能性があります", timeout: 4500});
@@ -455,10 +456,6 @@
 </div>
 
 <style>
-  .cabinet {
-    margin: 8px;
-    padding: 8px;
-  }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
   }
@@ -466,11 +463,6 @@
     font-family: '源暎エムゴ';
     font-size: 24px;
     margin-top: 16px;
-    margin-left: 8px;
-  }
-  .notice {
-    font-family: '源暎アンチック';
-    font-size: 14px;
     margin-left: 8px;
   }
 </style>

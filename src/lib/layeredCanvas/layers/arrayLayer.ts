@@ -1,4 +1,4 @@
-import { Layer, Paper, type Dragging, type Viewport } from '../system/layeredCanvas';
+import { Layer, Paper, type Viewport, type Picked } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
@@ -74,11 +74,11 @@ export class ArrayLayer extends Layer {
     this.calculateIconPositions();
   }
 
-  calculateLayout(matrix: DOMMatrix) {
+  rebuildPageLayouts(matrix: DOMMatrix) {
     this.array.recalculatePaperCenter();
     for (let paper of this.array.papers) {
       let m = matrix.translate(...paper.center);
-      paper.paper.calculateLayout(m);
+      paper.paper.rebuildPageLayouts(m);
     }
 
     this.calculateIconPositions();
@@ -170,6 +170,13 @@ export class ArrayLayer extends Layer {
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
+    this.hint(null, null);
+
+    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    if (paper.handlePointerHover(position)) {
+      return true;
+    }
+
     for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.copyIcons, this.imagingIcons, this.bubblesIcons, this.tweakIcons]) {
       for (let icon of icons) {
         if (icon.hintIfContains(p, this.hint.bind(this))) {
@@ -177,16 +184,18 @@ export class ArrayLayer extends Layer {
         }
       }
     }
-
-    this.hint(null, null);
-
-    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    paper.handlePointerHover(position);    
     return false;
   }
 
-  accepts(p: Vector, button: number): any { 
+  accepts(p: Vector, button: number, depth: number): any { 
     if (keyDownFlags["Space"] || 0 < button) {return null;}
+
+    const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
+    const innerDragging = paper.handleAccepts(position, button, depth);
+    if (innerDragging) {
+      return { paper, index, innerDragging };
+    }
+    if (0 < depth) {return null;}
 
     for (let [i, e] of this.insertIcons.entries()) {
       if (e.contains(p)) {
@@ -239,9 +248,7 @@ export class ArrayLayer extends Layer {
       }      
     }
 
-    const {paper, index, position} = this.array.parentPositionToNearestChildPosition(p);
-    const innerDragging = paper.handleAccepts(position, button);
-    return innerDragging ? { paper, index, innerDragging } : null;
+    return null;
   }
 
   pointerDown(p: Vector, payload: any): void {
@@ -275,7 +282,7 @@ export class ArrayLayer extends Layer {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    if (this.interactable) {
+    if (this.interactable && depth === 0) {
       ctx.save();
       ctx.fillStyle = "white";
       ctx.textAlign = "center";
@@ -358,11 +365,32 @@ export class ArrayLayer extends Layer {
     return [...new Set(depths)].sort((a,b) => a - b);
   }
 
+  acceptDepths(): number[] { 
+    // paper全部から集めてsort/uniq
+    const depths = this.array.papers.flatMap(p => p.paper.acceptDepths());
+    return [...new Set(depths)].sort((a,b) => a - b);
+  }
+
+  pick(p: Vector): Picked[] {
+    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    if (paper.contains(position)) {
+      return paper.pick(position);
+    }
+    return [];
+  }
+
   get redrawRequired(): boolean {
     return this.array.redrawRequired;
   }
   set redrawRequired(value: boolean) {
     this.array.redrawRequired = value;
+  }
+
+  get pierceRequired(): boolean {
+    return this.array.pierceRequired;
+  }
+  set pierceRequired(value: boolean) {
+    this.array.pierceRequired = value;
   }
 
   set mode(mode: any) { 

@@ -61,7 +61,8 @@ export class InlinePainterLayer extends Layer {
     }
   }
 
-  accepts(_point: Vector): any {
+  accepts(_point: Vector, _button: number, depth: number): any {
+    if (0 < depth) { return null; }
     if (!this.canvas) {return null;}
     return {};
   }

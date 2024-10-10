@@ -57,19 +57,36 @@ export interface Dragging {
   payload: any;
 }
 
-export class Layer {
+export interface Picked {
+  selected: boolean;
+  action: () => void;
+}
+
+export interface Layer {
+  // 型チェックしたくなったら足す
+  accepts(position: Vector, button: number, depth: number): any;
+  rebuildPageLayouts(matrix: DOMMatrix): void;
+  pick(p: Vector): Picked[]
+}
+
+// pierce, pick
+// pierceは貫通走査リクエスト
+// pickは貫通されるオブジェクトとそれが選ばれたときのアクションを列挙する
+
+export class Layer implements Layer {
   paper: Paper = null;
   hint: (rect: Rect, message: string) => void; // bind(this)しないと面倒なので
 
   constructor() { this.hint = this.showHint.bind(this); }
 
   getPaperSize() {return this.paper.size;}
-  calculateLayout(matrix: DOMMatrix) {}
+  rebuildPageLayouts(matrix: DOMMatrix) {}
   redraw() { this.redrawRequired = true; }
+  pierce() { this.pierceRequired = true; }
   showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
 
   pointerHover(position: Vector): boolean { return false; }
-  accepts(position: Vector, button: number) { return null; }
+  accepts(position: Vector, button: number, depth: number): any { return null; }
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
   pointerUp(position: Vector, payload: any) {}
@@ -83,10 +100,16 @@ export class Layer {
   wheel(position: Vector, delta: number) { return false; }
   flushHints(viewport: Viewport) {}
   renderDepths(): number[] { return []; }
+  acceptDepths(): number[] { return []; }
+  pick(p: Vector): Picked[] { return []; }
 
   redrawRequired_: boolean = false;
   get redrawRequired(): boolean { return this.redrawRequired_; }
   set redrawRequired(f: boolean) { this.redrawRequired_ = f; }
+
+  pierceRequired_: boolean = false;
+  get pierceRequired(): boolean { return this.pierceRequired_; }
+  set pierceRequired(f: boolean) { this.pierceRequired_ = f; }
 
   mode_: any = null;
   set mode(mode: any) { this.mode_ = mode; }
@@ -106,11 +129,11 @@ export class Paper {
     this.layers = [];
   }
 
-  handleAccepts(p: Vector, button: number): Dragging {
+  handleAccepts(p: Vector, button: number, depth: number): Dragging {
     var result: Dragging = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      const payload = layer.accepts(p, button);
+      const payload = layer.accepts(p, button, depth);
       if (payload) {
         result = {layer, payload};
         break;
@@ -123,7 +146,7 @@ export class Paper {
     dragging.layer.pointerDown(p, dragging.payload);
   }
       
-  handlePointerHover(p: Vector): void {
+  handlePointerHover(p: Vector): boolean {
     let q = p;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
@@ -131,6 +154,7 @@ export class Paper {
         q = null;
       }
     }
+    return q == null;
   }
     
   handlePointerMove(p: Vector, dragging: Dragging): void {
@@ -200,6 +224,15 @@ export class Paper {
     return false;
   }
 
+  pick(p: Vector): Picked[] {
+    let picked = [];
+    for (let i = this.layers.length - 1; i >= 0; i--) {
+      const layer = this.layers[i];
+      picked.push(...layer.pick(p));
+    }
+    return picked;
+  }
+
   prerender(): void {
     for (let layer of this.layers) {
       layer.prerender();
@@ -226,18 +259,22 @@ export class Paper {
   }
 
   get redrawRequired(): boolean {
-    for (let i = 0; i < this.layers.length; i++) {
-      const layer = this.layers[i];
-      if (layer.redrawRequired) {
-        return true;
-      }
-    }
-    return false;
+    return this.layers.some(e => e.redrawRequired);
   }
 
   set redrawRequired(value: boolean) {
     for (let layer of this.layers) {
       layer.redrawRequired = value;
+    }
+  }
+
+  get pierceRequired(): boolean {
+    return this.layers.some(e => e.pierceRequired);
+  }
+
+  set pierceRequired(value: boolean) {
+    for (let layer of this.layers) {
+      layer.pierceRequired = value;
     }
   }
   
@@ -246,11 +283,11 @@ export class Paper {
     this.layers.push(layer);
   }
 
-  calculateLayout(matrix: DOMMatrix): void {
+  rebuildPageLayouts(matrix: DOMMatrix): void {
     const m = matrix.translate(this.size[0] * -0.5, this.size[1] * -0.5);
     this.matrix = m;
     for (let layer of this.layers) {
-      layer.calculateLayout(m);
+      layer.rebuildPageLayouts(m);
     }
   }
 
@@ -300,6 +337,13 @@ export class Paper {
     return uniq;
   }
 
+  acceptDepths(): number[] {
+    const depths = this.layers.flatMap(e => e.acceptDepths());
+    const uniq = [...new Set(depths)];
+    uniq.sort((a, b) => a - b);
+    return uniq;
+  }
+
   mode_: any = null;
   set mode(mode: any) { this.mode_ = mode; this.layers.forEach(e => e.mode = mode); }
   get mode(): any { return this.mode_; }
@@ -322,11 +366,12 @@ export class LayeredCanvas {
     this.rootPaper = new Paper([0,0], true);
 
     const beforeHandler = () => {
-      this.calculateLayout();
+      this.rebuildPageLayouts();
     }
 
     const afterHandler = () => {
-      this.calculateLayout();
+      this.rebuildPageLayouts();
+      this.pierceIfRequired();
       this.redrawIfRequired();
       this.rootPaper.flushHints(this.viewport);
     }
@@ -363,7 +408,7 @@ export class LayeredCanvas {
   takeOver() {
     if (this.listeners.length === 0) { return; }
     if (this.pointerCursor) {
-      this.calculateLayout();
+      this.rebuildPageLayouts();
       this.rootPaper.handlePointerHover(this.pointerCursor);
     }
   }
@@ -403,7 +448,13 @@ export class LayeredCanvas {
     
   handlePointerDown(event: PointerEvent): void {
     const p = this.eventPositionToRootPaperPosition(event);
-    this.dragging = this.rootPaper.handleAccepts(p, event.button);
+
+    console.log("================");
+    const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
+    for (let depth of depths) {
+      this.dragging = this.rootPaper.handleAccepts(p, event.button, depth);
+      if (this.dragging) { break; }
+    }
     if (this.dragging) {
       this.viewport.canvas.setPointerCapture(event.pointerId);
       this.rootPaper.handlePointerDown(p, this.dragging);
@@ -524,7 +575,7 @@ export class LayeredCanvas {
 
   async handleKeyDown(event: KeyboardEvent): Promise<void> {
     // このハンドラだけはdocumentに登録する
-    this.calculateLayout();
+    this.rebuildPageLayouts();
     if (!this.isPointerOnCanvas()) {
       return;
     }
@@ -534,7 +585,7 @@ export class LayeredCanvas {
   }
 
   render(): void {
-    this.calculateLayout();
+    this.rebuildPageLayouts();
 
     const canvas = this.viewport.canvas;
     const ctx = this.viewport.ctx;
@@ -562,6 +613,31 @@ export class LayeredCanvas {
     }
   }
 
+  pierceIfRequired(): void {
+    if (this.rootPaper.pierceRequired) {
+      this.rootPaper.pierceRequired = false;
+      const picked = this.rootPaper.pick(this.pointerCursor);
+      console.log("picked", picked);
+
+      if (0 < picked.length) {
+        // 選択されたものがある場合はその次のactionを実行
+        // 選択されたものがない場合は最初のactionを実行
+        const index = picked.findIndex(e => e.selected);
+        if (0 <= index) {
+          if (index < picked.length - 1) {
+            const next = picked[index + 1];
+            next.action();
+          } else {
+            picked[0].action();
+          }
+        } else {
+          const next = picked[0];
+          next.action();
+        }
+      }
+    }
+  }
+
   isPointerOnCanvas(): boolean {
     const m = this.pointerCursor
     if (m == null) { return false; }
@@ -571,7 +647,7 @@ export class LayeredCanvas {
     return f;
   }
 
-  calculateLayout(): void {
+  rebuildPageLayouts(): void {
     if (!this.viewport.dirty) { return; }
 
     this.viewport.dirty = false;
@@ -584,7 +660,7 @@ export class LayeredCanvas {
     matrix = matrix.translate(...this.viewport.viewTranslate);         // Temporary Pan
     matrix = matrix.scale(this.viewport.scale, this.viewport.scale);
 
-    this.rootPaper.calculateLayout(matrix);
+    this.rootPaper.rebuildPageLayouts(matrix);
   }
 
   set mode(mode: any) {this.rootPaper.mode = mode;}
