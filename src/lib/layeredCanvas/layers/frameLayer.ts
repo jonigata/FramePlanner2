@@ -335,14 +335,14 @@ export class FrameLayer extends Layer {
       this.litBorder = null;
       return false;
     }
-    if (keyDownFlags["Space"]) { return; }
+    if (keyDownFlags["Space"]) { return false; }
     this.updateLit(position);
     this.redraw();
 
-    this.decideHint(position);
+    return this.decideHint(position);
   }
 
-  decideHint(position: Vector): void {
+  decideHint(position: Vector): boolean {
     const hintIfContains = (a: ClickableSlate[]): boolean => {
       for (let e of a) {
         if (e.hintIfContains(position, this.hint)) {
@@ -354,35 +354,38 @@ export class FrameLayer extends Layer {
 
     if (this.litLayout && this.litLayout.element != this.selectedLayout?.element) {
       if (this.swapIcon.hintIfContains(position, this.hint)) {
-        return;
+        return true;
       }
 
       const r = trapezoidBoundingRect(this.litLayout.corners);
       this.hint(r, "画像をドロップ");
+      return true;
     } else if (this.litBorder && this.litBorder.layout.element != this.selectedBorder?.layout.element) {
       if (isPointInTrapezoid(position, this.litBorder.corners)) {
         this.hint([...trapezoidCenter(this.litBorder.corners), 0, 0], "クリックで選択");
+        return true;
       }
     } else if (this.selectedBorder) {
       if (hintIfContains(this.borderIcons)) {
-        return;
+        return true;
       }
       if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
         this.hint([...trapezoidCenter(this.selectedBorder.corners), 0, 0], "ドラッグで移動");
+        return true;
       }
-      return;
+      return true;
     } else if (this.selectedLayout) { 
-      const r = trapezoidBoundingRect(this.selectedLayout.corners);
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
       if (hintIfContains(this.frameIcons)) {
-        return;
+        return true;
       } else if (this.focusedPadding) {
         this.hint(r, "ドラッグでパディング変更");
-      } else if (isPointInTrapezoid(position, this.selectedLayout.corners)) {
-        if (hintIfContains(this.frameIcons)) {
-          return;
-        }
+        return true;
+      } else if (rectContains(r, position)) {
+        return true;
       }
     }
+    return false;
   }
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {

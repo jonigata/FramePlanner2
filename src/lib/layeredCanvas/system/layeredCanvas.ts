@@ -146,7 +146,7 @@ export class Paper {
     dragging.layer.pointerDown(p, dragging.payload);
   }
       
-  handlePointerHover(p: Vector): void {
+  handlePointerHover(p: Vector): boolean {
     let q = p;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
@@ -154,6 +154,7 @@ export class Paper {
         q = null;
       }
     }
+    return q == null;
   }
     
   handlePointerMove(p: Vector, dragging: Dragging): void {

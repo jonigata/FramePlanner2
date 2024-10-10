@@ -170,6 +170,13 @@ export class ArrayLayer extends Layer {
   pointerHover(p: Vector): boolean {
     if (!this.interactable) {return false;}
 
+    this.hint(null, null);
+
+    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    if (paper.handlePointerHover(position)) {
+      return true;
+    }
+
     for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.copyIcons, this.imagingIcons, this.bubblesIcons, this.tweakIcons]) {
       for (let icon of icons) {
         if (icon.hintIfContains(p, this.hint.bind(this))) {
@@ -177,11 +184,6 @@ export class ArrayLayer extends Layer {
         }
       }
     }
-
-    this.hint(null, null);
-
-    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    paper.handlePointerHover(position);    
     return false;
   }
 
