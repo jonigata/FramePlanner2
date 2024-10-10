@@ -89,6 +89,7 @@ export class BubbleLayer extends Layer {
     const unit = iconUnit;
     const mp = () => this.paper.matrix;
     this.createBubbleIcon = new ClickableIcon(["bubbleLayer/bubble.png"],[64,64],[0,1],"ドラッグで作成", () => this.interactable, mp);
+    this.createBubbleIcon.position = [0, -16];
 
     this.dragIcon = new ClickableIcon(["bubbleLayer/drag.png"],unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected != null, mp);
     this.offsetIcon = new ClickableIcon(["bubbleLayer/bubble-offset.png"],unit,[0.5,0],"ドラッグで位置調整", () => this.interactable && this.selected != null, mp);
@@ -794,18 +795,26 @@ export class BubbleLayer extends Layer {
 
     const paperSize = this.getPaperSize();
 
-    for (let bubble of this.bubbles) {
+    const receiveImage = (bubble: Bubble) => {
+      const film = this.newImageFilm(canvas);
+      bubble.filmStack.films.push(film);
+      const bubbleSize = bubble.getPhysicalSize(paperSize);
+      const scale = minimumBoundingScale(film.media.size, bubbleSize);
+      film.setShiftedScale(paperSize, scale);
+      bubble.gallery.push(canvas);
+      this.onFocus(bubble);
+      this.focusKeeper.setFocus(this);
+      this.onCommit();
+    };
+
+    if (this.selected && this.selected.contains(paperSize, position)) {
+      receiveImage(this.selected);
+      return true;
+    }
+
+    for (let bubble of this.bubbles.toReversed()) {
       if (bubble.contains(paperSize, position)) {
-        const film = this.newImageFilm(canvas);
-        const masterBubble = this.getGroupMaster(bubble);
-        masterBubble.filmStack.films.push(film);
-        const bubbleSize = masterBubble.getPhysicalSize(paperSize);
-        const scale = minimumBoundingScale(film.media.size, bubbleSize);
-        film.setShiftedScale(paperSize, scale);
-        bubble.gallery.push(canvas);
-        this.onFocus(bubble);
-        this.focusKeeper.setFocus(this);
-        this.onCommit();
+        receiveImage(bubble);
         return true;
       }
     }
