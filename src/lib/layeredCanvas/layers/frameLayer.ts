@@ -311,6 +311,11 @@ export class FrameLayer extends Layer {
         this.litLayout = this.selectedLayout;
         return;
       }
+
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (rectContains(r, point)) {
+        return;
+      }
     }
 
     if (this.selectedBorder) {

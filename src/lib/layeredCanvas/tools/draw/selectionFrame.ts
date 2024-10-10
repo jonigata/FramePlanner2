@@ -4,7 +4,7 @@ import * as paper from 'paper';
 
 const SHEET_MARGIN = 16;
 
-export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid, nearLineWidth: number = 7, farLineWidth = 10, drawsCircles = false) {
+export function drawSelectionFrame(ctx: CanvasRenderingContext2D, color: string, trapezoid: Trapezoid, nearLineWidth: number = 7, farLineWidth = 10, drawsCircles = true) {
   ctx.save();
 
   // まず白で枠を描く
