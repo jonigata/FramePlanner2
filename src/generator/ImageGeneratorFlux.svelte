@@ -45,7 +45,7 @@
       let pixelRatio = width * height / 1024 / 1024;
       const factorTable = {
         "schnell": 5,
-        "pro": 24,
+        "pro": 12,
         "chibi": 12,
         "manga": 12,
       }
