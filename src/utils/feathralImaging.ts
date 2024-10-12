@@ -175,7 +175,7 @@ export function calculateCost(size: {width:number,height:number}, mode: Mode): n
   const pixels = size.width * size.height;
   const costs: Record<Mode, number> = {
     "schnell": 1,
-    "pro": 10,
+    "pro": 8,
     "chibi": 7,
     "manga": 7,
   };

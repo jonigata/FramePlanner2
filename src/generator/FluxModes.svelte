@@ -33,7 +33,7 @@
     <RadioItem bind:group={internalMode} name={"mode"} value={"pro"}>
       <div class="flex flex-col items-center">
         <span>Pro</span>
-        <FeathralCost cost={10} showsLabel={false}/>
+        <FeathralCost cost={8} showsLabel={false}/>
       </div>
     </RadioItem>
     <RadioItem bind:group={internalMode} name={"mode"} value={"chibi"}>
