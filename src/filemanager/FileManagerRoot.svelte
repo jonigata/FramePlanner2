@@ -6,7 +6,7 @@
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../bookeditor/book';
   import { bookEditor, mainBook } from '../bookeditor/bookStore';
   import type { Revision } from "../bookeditor/book";
-  import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo } from './currentFile';
+  import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
@@ -95,6 +95,9 @@
     if (book == null) {
       try {
         $loading = true;
+        const now = performance.now();
+        console.log("%%%%%%%%%%%%%%%%%% initial book");
+        performance.mark('startPoint');
 
         if (await loadSharedBook()) {
           // shared bookがある場合、内部でリダイレクトする
@@ -113,17 +116,33 @@
             }
             toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
           }
-          console.log($onlineStatus);
-          const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
-          let currentFile = await fs.getNode(currentFileInfo.id);
-          const newBook = await loadBookFrom(fs, currentFile.asFile());
-          refreshFilms(newBook);
-          currentRevision = {...newBook.revision};
-          console.snapshot(newBook.pages[0]);
-          $mainBookFileSystem = fileSystem;
-          $mainBook = newBook;
-          $frameInspectorTarget = null;
-          logEvent(getAnalytics(), 'continue_book');
+          try {
+            console.log($onlineStatus);
+            const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
+            let currentFile = await fs.getNode(currentFileInfo.id);
+            const newBook = await loadBookFrom(fs, currentFile.asFile());
+            refreshFilms(newBook);
+            currentRevision = {...newBook.revision};
+            console.snapshot(newBook.pages[0]);
+            $mainBookFileSystem = fileSystem;
+            $mainBook = newBook;
+            $frameInspectorTarget = null;
+            logEvent(getAnalytics(), 'continue_book');
+            performance.mark('endPoint');
+            performance.measure(
+                'perfResult',
+                'startPoint',
+                'endPoint'
+            );
+            const result = performance.getEntriesByType('measure');
+            // console.log(result);  
+            console.log("%%%%%%%%%%%%%%%%%% initial book created", performance.now() - now);
+          }
+          catch (e) {
+            console.error(e);
+            await clearCurrentFileInfo();
+            location.reload();
+          }
           return;
         }
 
@@ -207,7 +226,7 @@
       await localDesktop.link(getCurrentDateTime(), localFile.id);
       await recordCurrentFileInfo({id: localFile.id as NodeId, fileSystem: 'local'});
     } else if (urlParams.has('reset')) {
-      await recordCurrentFileInfo(undefined);
+      await clearCurrentFileInfo();
     } else {
       return false;
     }
@@ -369,6 +388,8 @@
       for (const file of dumpFiles) {
         const s = await readFileAsText(file);
         await (fileSystem as IndexedDBFileSystem).undump(s);
+        await clearCurrentFileInfo();
+        location.reload();
       }
       console.log("undump done");
       $loading = false;

@@ -199,6 +199,7 @@ async function packFilms(films: Film[], fileSystem: FileSystem, imageFolder: Fol
 
 export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<Book> {
   console.tag("loadBookFrom", "cyan", file.id);
+  performance.mark("loadBookFrom-start");
   const content = await file.read();
   const serializedBook: SerializedBook = JSON.parse(content);
 
@@ -225,6 +226,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     notebook: serializedBook.notebook ?? emptyNotebook(),
   };
 
+  performance.mark("loadBookFrom-images-start");
   for (const serializedPage of serializedBook.pages) {
     const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
     const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
@@ -241,7 +243,12 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     };
     book.pages.push(page);
   }
+  performance.mark("loadBookFrom-images-end");
+  performance.measure("loadBookFrom-images", "loadBookFrom-images-start", "loadBookFrom-images-end");
   commitBook(book, null);
+
+  performance.mark("loadBookFrom-end");
+  performance.measure("loadBookFrom", "loadBookFrom-start", "loadBookFrom-end");
 
   return book;
 }
@@ -296,21 +303,30 @@ export async function newFile(fs: FileSystem, folder: Folder, name: string, book
 async function loadCanvas(fileSystem: FileSystem, canvasId: string): Promise<HTMLCanvasElement> {
   canvasCache[fileSystem.id] ??= {};
 
-  console.log("loadCanvas1");
+  performance.mark("loadCanvas-start");
   if (canvasCache[fileSystem.id][canvasId]) {
     const canvas = canvasCache[fileSystem.id][canvasId];
     canvas["clean"][fileSystem.id] = true; // 途中クラッシュでもないと本来はあり得ないが、念のため
     return canvas;
   } else {
     try {
-      console.log("loadCanvas", canvasId);
+      performance.mark("loadCanvas-read-start");
       const file = (await fileSystem.getNode(canvasId as NodeId)).asFile();
+      performance.mark("loadCanvas-read-end");
+      performance.measure("loadCanvas-read", "loadCanvas-read-start", "loadCanvas-read-end");
+
+      performance.mark("readCanvas-start");
       const canvas = await file.readCanvas();
       canvas["fileId"] ??= {}
       canvas["fileId"][fileSystem.id] = file.id
       canvas["clean"] ??= {}
       canvas["clean"][fileSystem.id] = true;
       canvasCache[fileSystem.id][canvasId] = canvas;
+      performance.mark("readCanvas-end");
+      performance.measure("readCanvas", "readCanvas-start", "readCanvas-end");
+
+      performance.mark("loadCanvas-end");
+      performance.measure("loadCanvas", "loadCanvas-start", "loadCanvas-end");
       return canvas;
     }
     catch (e) {
@@ -494,7 +510,6 @@ async function unpackFrameImagesInternal(paperSize: Vector, markUp: any, fileSys
     if (markUp.films) {
       if (0 < markUp.films.length) {
         console.tag("type C", "#004400");
-        console.log(JSON.stringify(markUp.films));
       }
 
       const films = await unpackFilms(paperSize, markUp.films, fileSystem, loadCanvasFunc);
@@ -574,7 +589,6 @@ async function unpackBubbleImagesInternal(paperSize: Vector, markUps: any[], fil
 async function unpackFilms(paperSize: Vector, markUp: any, fileSystem: FileSystem, loadImageFunc: (fileSystem: FileSystem, imageId: string) => Promise<HTMLCanvasElement>): Promise<Film[]> {
   const films: Film[] = [];
   for (const filmMarkUp of markUp) {
-    console.log("unpackFilms", filmMarkUp);
     const image = await loadImageFunc(fileSystem, filmMarkUp.image);
     if (image) {
       const effects = [];

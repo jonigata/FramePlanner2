@@ -24,3 +24,7 @@ export async function fetchCurrentFileInfo(): Promise<CurrentFileInfo | null> {
     return {id: info as NodeId, fileSystem: 'local'};
   }
 }
+
+export async function clearCurrentFileInfo(): Promise<void> {
+  sessionStorage.removeItem('currentFileId');
+}

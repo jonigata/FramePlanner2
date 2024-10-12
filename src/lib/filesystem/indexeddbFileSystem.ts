@@ -1,9 +1,11 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import type { NodeId, NodeType, BindId, Entry, Watcher } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
-import { createCanvasFromImage } from '../../utils/imageUtil';
+
+// 巨大ファイル対応
+// 'metadata'storeを追加して、ファイルのメタデータを保存する
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;
@@ -13,13 +15,19 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async open() {
-    this.db = await openDB('FileSystemDB', 1, {
+    this.db = await openDB('FileSystemDB', 2, {
       async upgrade(db, oldVersion, newVersion, transaction) {
-        const store = db.createObjectStore('nodes', { keyPath: 'id' });
-        
-        const rootId = "/" as NodeId;
-        await store.add({ id: rootId, type: 'folder', children: [], attributes: {} });
-    
+        if (oldVersion < 1) {
+          const nodesStore = db.createObjectStore('nodes', { keyPath: 'id' });
+          
+          const rootId = "/" as NodeId;
+          await nodesStore.add({ id: rootId, type: 'folder', children: [], attributes: {} });
+        }
+  
+        if (oldVersion < 2) {
+          const metadataStore = db.createObjectStore('metadata', { keyPath: 'key' });
+        }
+  
         await transaction.done;
       }
     });
@@ -30,24 +38,24 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
-    try {
-      const file = new IndexedDBFile(this, id, this.db);
-      const tx = this.db.transaction("nodes", "readwrite");
-      const store = tx.store;
-      await store.add({ id, type: 'file', content: '' });
-      await tx.done;
-      return file;
-    } catch (e) {
-      throw e;
-    }
+    const file = new IndexedDBFile(this, id, this.db);
+    const tx = this.db.transaction(["nodes","metadata"], "readwrite");
+    const store = tx.objectStore('nodes');
+    const metadataStore = tx.objectStore('metadata');
+    await store.add({ id, type: 'file', content: '' });
+    await metadataStore.add({ key: id, type: 'file', filesize: 0 });
+    await tx.done;
+    return file;
   }
 
   async createFolder(): Promise<Folder> {
     const id = ulid() as NodeId;
     const folder = new IndexedDBFolder(this, id, this.db);
-    const tx = this.db.transaction("nodes", "readwrite");
-    const store = tx.store;
+    const tx = this.db.transaction(["nodes","metadata"], "readwrite");
+    const store = tx.objectStore('nodes');
+    const metadataStore = tx.objectStore('metadata');
     await store.add({ id, type: 'folder', children: [], attributes: {} });
+    await metadataStore.add({ key: id, type: 'folder', filesize: 0 });
     await tx.done;
     return folder;
   }
@@ -60,11 +68,26 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async getNode(id: NodeId): Promise<Node> {
-    const tx = this.db.transaction("nodes", "readonly");
-    const store = tx.store;
-    const value = await store.get(id);
-    
+    // NOTE: 
+    // 多分頑張ればそもそもメタデータもとらないようにできると思うが、
+    // どの程度寄与するか不明な上修正範囲が広いのでやらない
+
+    // メタデータがあればそこから
+    const metadata = await this.db.get('metadata', id);
+    if (metadata) {
+      if (metadata.type === 'file') {
+        const file = new IndexedDBFile(this, id, this.db); // Assuming IndexedDBFile class exists
+        return file;
+      } else if (metadata.type === 'folder') {
+        const folder = new IndexedDBFolder(this, id, this.db); // Assuming IndexedDBFolder class exists
+        return folder;
+      }
+    }
+
+    // ファイルが大きいと遅い
+    const value = await this.db.get('nodes', id);
     if (value) {
+      await this.db.put('metadata', { key: id, type: value.type, filesize: value.content?.length });
       if (value.type === 'file') {
         const file = new IndexedDBFile(this, value.id, this.db); // Assuming IndexedDBFile class exists
         return file;
@@ -73,6 +96,7 @@ export class IndexedDBFileSystem extends FileSystem {
         return folder;
       }
     }
+
     return null;
   }
 
@@ -141,11 +165,18 @@ export class IndexedDBFile extends File {
   }
 
   async readCanvas(): Promise<HTMLCanvasElement> {
-    const content = await this.read();
-    const image = new Image();
-    image.src = content;
-    await image.decode();
-    return createCanvasFromImage(image);
+    const canvas = document.createElement("canvas");
+    this.read().then(async (content) => {
+      const image = new Image();
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+      }
+      image.src = content;
+    });
+    return canvas;
   }
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
