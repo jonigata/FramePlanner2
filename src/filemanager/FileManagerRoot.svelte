@@ -465,4 +465,9 @@
     margin-top: 16px;
     margin-left: 8px;
   }
+  .cabinet {
+    margin-left: 12px;
+    margin-right: 12px;
+    margin-bottom: 12px;
+  }
 </style>
