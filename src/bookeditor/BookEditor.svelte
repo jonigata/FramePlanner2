@@ -373,10 +373,10 @@
     $redrawToken = true;
   }
 
-  function focusFrame(page: Page, f: FrameElement, p: Vector) {
+  function focusFrame(page: Page, f: FrameElement | null, p: Vector | null) {
     console.log("focusFrame", f);
     if (f) {
-      const [cx, cy] = p;
+      const [cx, cy] = p!;
       const offset = canvas.height / 2 < cy ? -1 : 1;
 
       $frameInspectorTarget = {
@@ -392,7 +392,7 @@
     }
   }
 
-  function focusBubble(page: Page, b: Bubble) {
+  function focusBubble(page: Page, b: Bubble | null) {
     delayedCommiter.force();
     if (b) {
       console.log("show bubble");

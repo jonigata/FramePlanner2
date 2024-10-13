@@ -13,7 +13,6 @@ import type { FrameElement, Layout, Border } from '../lib/layeredCanvas/dataMode
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import { trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import { FocusKeeper } from '../lib/layeredCanvas/tools/focusKeeper';
-import { insertAt } from 'svelte-jsoneditor';
 
 export function buildBookEditor(
   viewport: Viewport,
@@ -110,7 +109,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     paperRendererLayer,
     focusKeeper,
     page.frameTree,
-    (l: Layout) => { 
+    (l: Layout | null) => { 
       if (l) {
         focusFrame(page, l.element, trapezoidCenter(l.corners));
       } else {
@@ -133,7 +132,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     defaultBubbleSlot,
     page.bubbles,
     2,
-    (bubble: Bubble) => { 
+    (bubble: Bubble | null) => { 
       focusBubble(page, bubble);
     },
     (weak?: boolean) => { commit(weak ? 'bubble' : null); },
@@ -149,7 +148,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
 }
 
 function potentialCrossPage(layeredCanvas: LayeredCanvas, book: Book, page: Page, b: Bubble): void {
-  const arrayLayer = layeredCanvas.rootPaper.findLayer(ArrayLayer);
+  const arrayLayer = layeredCanvas.rootPaper.findLayer(ArrayLayer)!;
   const currentPageIndex = book.pages.findIndex(p => p.id === page.id);
   const paperSize = book.pages[currentPageIndex].paperSize;
   const p = b.getPhysicalCenter(paperSize); // paper coordinate

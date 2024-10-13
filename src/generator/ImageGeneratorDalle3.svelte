@@ -10,10 +10,10 @@
   export let busy: boolean;
   export let prompt: string;
   export let gallery: HTMLCanvasElement[];
-  export let chosen: HTMLCanvasElement;
+  export let chosen: HTMLCanvasElement | null;
 
   let progress = 0;
-  let refered: HTMLImageElement = null;
+  let refered: HTMLCanvasElement | null;
   let apiKey: string = '';
 
   const apiKeyPreference1 = createPreference<string>("imaging", "openAiApiKey");
@@ -62,7 +62,7 @@
     busy = false;
   }
 
-  function onChooseImage({detail}) {
+  function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
     console.log("chooseImage", detail);
     chosen = detail;
   }

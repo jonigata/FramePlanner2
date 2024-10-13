@@ -72,7 +72,7 @@
 
   function onNewEffect() {
     console.log("onNewEffect");
-    $effectChoiceNotifier = (tag: string) => {
+    $effectChoiceNotifier = (tag: string | null) => {
       switch (tag) {
         case "OutlineEffect":
           film!.effects.push(new OutlineEffect("#000000", 0.01, 0.8));

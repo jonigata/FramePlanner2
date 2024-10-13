@@ -13,14 +13,14 @@
   let length = 0;
 
   let pointerDown = false;
-  function onPointerDown(e) {
+  function onPointerDown(e: PointerEvent) {
     e.preventDefault();
     pointerDown = true;
     onPointerMove(e);
     canvas.setPointerCapture(e.pointerId);
   }
 
-  function onPointerMove(e) {
+  function onPointerMove(e: PointerEvent) {
     e.preventDefault();
     if (pointerDown) {
       const rect = canvas.getBoundingClientRect();
@@ -35,7 +35,7 @@
     }
   }
 
-  function onPointerUp(e) {
+  function onPointerUp(e: PointerEvent) {
     e.preventDefault();
     pointerDown = false;
     canvas.releasePointerCapture(e.pointerId);
@@ -50,7 +50,7 @@
 
     const xFactor = containerWidth / length;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
     let x = 0;
     for (const e of program) {
       const duration = standardWait + e.residenceTime;

@@ -22,11 +22,11 @@
   async function execute() {
     console.log('execute');
     $busy = true;
-    await generateAll($batchImagingPage);
+    await generateAll($batchImagingPage!);
     $busy = false;
     console.log('execute done');
 
-    commitBook($mainBook, null);
+    commitBook($mainBook!, null);
     $mainBook = $mainBook;
     $redrawToken = true;
     $batchImagingPage = null;
@@ -38,9 +38,8 @@
     const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
     if (result != null) {
       await result.images[0].decode();
-      const film = new Film();
       const media = new ImageMedia(createCanvasFromImage(result.images[0]));
-      film.media = media;
+      const film = new Film(media);
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
 
@@ -67,7 +66,7 @@
     for (const leaf of leaves) {
       if (0 < leaf.filmStack.films.length) { continue; }
       const leafLayout = findLayoutOf(pageLayout, leaf);
-      promises.push(generate(page.paperSize, leafLayout));
+      promises.push(generate(page.paperSize, leafLayout!));
     }
     imagingContext.total = promises.length;
     imagingContext.succeeded = 0;

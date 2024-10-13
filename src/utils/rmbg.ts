@@ -1,4 +1,4 @@
-import { AutoModel, AutoProcessor, env, RawImage } from '@xenova/transformers';
+import { AutoModel, AutoProcessor, env, RawImage, type PreTrainedModel, type Processor } from '@xenova/transformers';
 
 // Since we will download the model from the Hugging Face Hub, we can skip the local model check
 env.allowLocalModels = false;
@@ -6,8 +6,8 @@ env.allowLocalModels = false;
 // Proxy the WASM backend to prevent the UI from freezing
 env.backends.onnx.wasm.proxy = true;
 
-let model;
-let processor;
+let model: PreTrainedModel;
+let processor: Processor;
 
 export async function loadModel(status: (s: string) => void) {
   status("loading model");
@@ -58,7 +58,7 @@ export async function predict(srcImage: HTMLImageElement): Promise<HTMLCanvasEle
     const canvas = document.createElement('canvas');
     canvas.width = image.width;
     canvas.height = image.height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
 
     // Draw original image output to canvas
     ctx.drawImage(image.toCanvas(), 0, 0);
@@ -78,12 +78,3 @@ export async function predict(srcImage: HTMLImageElement): Promise<HTMLCanvasEle
     return canvas;
 }
 
-async function imageToBlob(imageElement: HTMLImageElement): Promise<Blob> {
-    const canvas = document.createElement('canvas');
-    canvas.width = imageElement.width;
-    canvas.height = imageElement.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(imageElement, 0, 0);
-    const blob: Blob = await new Promise(resolve => canvas.toBlob(resolve));
-    return blob;
-}

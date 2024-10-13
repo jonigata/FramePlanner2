@@ -1,13 +1,8 @@
-// stores.ts
-import { writable } from "svelte/store";
-
-export function hoverKey(node, onKeyDown) {
-  let timeoutId = null;
-
-  const handleMouseEnter = (event) => {
+export function hoverKey(node: HTMLElement, onKeyDown: (event: KeyboardEvent) => void) {
+  const handleMouseEnter = (event: MouseEvent) => {
     document.addEventListener("keydown", onKeyDown);
   }
-  const handleMouseLeave = (event) => {
+  const handleMouseLeave = (event: MouseEvent) => {
     document.removeEventListener("keydown", onKeyDown);
   }
   

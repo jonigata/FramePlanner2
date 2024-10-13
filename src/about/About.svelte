@@ -3,7 +3,6 @@
   import { aboutOpen } from './aboutStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
-  import generateImageIcon from '../assets/generate-image.png'
   import { postContact } from '../firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
 
@@ -36,7 +35,7 @@
     }
     await postContact(contactText);
     toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
-    contactText = null;
+    contactText = "";
   }
 
 </script>

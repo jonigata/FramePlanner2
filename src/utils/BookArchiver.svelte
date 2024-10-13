@@ -17,8 +17,8 @@
   async function onTask(ba: BookArchiveOperation[]) {
     if (ba == null || ba.length === 0) { return; }
     console.log("onTask", ba);
-    const marks: boolean[] = $bookEditor.getMarks();
-    const pages = $mainBook.pages;
+    const marks: boolean[] = $bookEditor!.getMarks();
+    const pages = $mainBook!.pages;
     const filteredPages = pages.filter((_, i) => marks[i]);
     const targetPages = 0 < filteredPages.length ? filteredPages : pages;
 
@@ -43,8 +43,8 @@
             break;
           case 'envelope':
             console.log("envelope");
-            const file = (await $fileSystem.getNode($mainBook.revision.id as NodeId)).asFile();
-            const s = await exportEnvelope($fileSystem, file);
+            const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile();
+            const s = await exportEnvelope($fileSystem!, file);
             const blob = new Blob([s], {type: "text/plain;charset=utf-8"});
             saveAs(blob, "envelope.json");
             break;
@@ -56,7 +56,7 @@
       }
       $bookArchiver = [];      
     }
-    catch(e) {
+    catch(e: any) {
       console.log(e);
       toastStore.trigger({ message: e, timeout: 1500});
     }

@@ -1,7 +1,9 @@
 export type ProtocolChatLog = { role: string, content: string };
 
+export type Role = 'system' | 'assistant' | 'user' | 'error';
+
 export type RichChatLog = {
-  role: 'system' | 'assistant' | 'user' | 'error';
+  role: Role;
   content: RichChatContent;
   hidden?: boolean;
 }
@@ -11,7 +13,8 @@ export type RichChatContent =
   | { type: 'speech'; body: string }
   | { type: 'image'; body: RichChatImage }
   | { type: 'document'; body: RichChatDocument }
-  | { type: 'error'; body: string };
+  | { type: 'error'; body: string }
+  | { type: 'waiting' };
 
 // その他の型定義
 export type RichChatImage = {
@@ -62,9 +65,9 @@ export function richChatLogToProtocolChatLog(log: RichChatLog[]): ProtocolChatLo
 }
 
 export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLog[] {
-  const converted = [];
+  const converted: RichChatLog[] = [];
 
-  function flush(role: string, content: string, documentTag: string) {
+  function flush(role: Role, content: string, documentTag: string | null) {
     content = content.trim();
     console.log(content.length, content)
     if (content.length === 0) return;
@@ -78,13 +81,13 @@ export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLo
   for (const l of log) {
     // contentの中に```で始まる行があれば、そこから次の```までをdocumentとして扱う
     let s = '';
-    let documentTag = null;
+    let documentTag: string | null = null;
     for (const line of l.content.split('\n')) {
       if (!line.startsWith('```')) {
         s += line + '\n';
         continue;
       }
-      flush(l.role, s, documentTag);
+      flush(l.role as Role, s, documentTag);
       s = '';
       if (documentTag == null) {
         documentTag = line.slice(3);
@@ -92,13 +95,13 @@ export function protocolChatLogToRichChatLog(log: ProtocolChatLog[]): RichChatLo
         documentTag = null;
       }
     }
-    flush(l.role, s, documentTag);
+    flush(l.role as Role, s, documentTag);
   }
   return converted;
 }
 
 export function rollback(log: RichChatLog[], role: 'user' | 'assistant'): RichChatLog[] {
-  const spliced = [];
+  const spliced: RichChatLog[] = [];
   for (let i = log.length - 1; i >= 0; i--) {
     const role2 = log[i].role;
     if (role == role2 || role2 === 'system' || role2 === 'error') {

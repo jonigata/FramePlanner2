@@ -35,11 +35,11 @@
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
-  let oldBubble = null;
-  let textarea = null;
+  let oldBubble: Bubble | null = null;
+  let textarea: HTMLTextAreaElement | null = null;
   let imageProvider: ImageProvider;
-  let bubbleSnapshot: string = null;
-  let textSelection: SelectionInfo = null;
+  let bubbleSnapshot: string | null = null;
+  let textSelection: SelectionInfo | null = null;
   let textSelected = false;
   let drawerContent: HTMLDivElement;
   let transformTextMethod = "translateToEnglish";
@@ -47,17 +47,17 @@
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
-    (bit) => bit?.bubble,
+    (bit) => bit!.bubble,
     (b, bit) => {
-      bit.bubble = b;
+      bit!.bubble = b!;
       return bit;
     }
   );
   const fontSizeStore = writableDerived(
   	bubbleInspectorTarget,
-  	(bit) => bit?.bubble.getPhysicalFontSize(bit.page.paperSize),
+  	(bit) => bit?.bubble.getPhysicalFontSize(bit.page.paperSize) ?? 12,
   	(fs, bit) => {
-      bit.bubble.setPhysicalFontSize(bit.page.paperSize, fs);
+      bit!.bubble.setPhysicalFontSize(bit!.page.paperSize, fs!);
       return bit;
     }
   );
@@ -65,7 +65,7 @@
   	bubbleInspectorTarget,
   	(bit) => bit?.bubble.getPhysicalOutlineWidth(bit.page.paperSize),
   	(ow, bit) => {
-      bit.bubble.setPhysicalOutlineWidth(bit.page.paperSize, ow);
+      bit!.bubble.setPhysicalOutlineWidth(bit!.page.paperSize, ow!);
       return bit;
     }
   );
@@ -73,7 +73,15 @@
   	bubbleInspectorTarget,
   	(bit) => bit?.bubble.getPhysicalStrokeWidth(bit.page.paperSize),
   	(sw, bit) => {
-      bit.bubble.setPhysicalStrokeWidth(bit.page.paperSize, sw);
+      bit!.bubble.setPhysicalStrokeWidth(bit!.page.paperSize, sw!);
+      return bit;
+    }
+  );
+  const appearanceDelay = writableDerived(
+  	bubbleInspectorTarget,
+  	(bit) => bit?.bubble.appearanceDelay ?? 0,
+  	(fs, bit) => {
+      bit!.bubble.appearanceDelay = fs!;
       return bit;
     }
   );
@@ -108,8 +116,8 @@
   }
 
   $:onChangeShape($chosenShape);
-  function onChangeShape(s: string) {
-    if ($bubble && $bubble.shape !== s) {
+  function onChangeShape(s: string | null) {
+    if (s != null && $bubble && $bubble.shape !== s) {
       console.log("onChangeShape", s);
       $bubble.shape = s;
       $bubble.initOptions();
@@ -117,7 +125,7 @@
   }
 
   $:onChangeFont($chosenFont);
-  function onChangeFont(f: { fontFamily: string, fontWeight: string }) {
+  function onChangeFont(f: { fontFamily: string, fontWeight: string } | null) {
     if ($bubble && f && ($bubble.fontFamily !== f.fontFamily || $bubble.fontWeight !== f.fontWeight)) {
       $bubble.fontFamily = f.fontFamily;
       $bubble.fontWeight = f.fontWeight;
@@ -126,7 +134,7 @@
   }
 
   $:onChangeBubble($bubble);
-  async function onChangeBubble(b: Bubble) {
+  async function onChangeBubble(b: Bubble | null) {
     if (b === oldBubble) {
       if (bubbleSnapshot && b) {
         const snapshot = makeSnapshot(b);
@@ -134,7 +142,7 @@
           bubbleSnapshot = snapshot;
           $forceFontLoadToken = true;
           $redrawToken = true;
-          $bookEditor.commit("bubble");
+          $bookEditor!.commit("bubble");
         }
       }
     } else {
@@ -142,8 +150,8 @@
       if (b) {
         $chosenShape = b.shape;
         await tick();
-        textarea.focus({preventScroll: true});
-        textarea.select();
+        textarea!.focus({preventScroll: true});
+        textarea!.select();
         bubbleSnapshot = makeSnapshot(b);
       } else {
         bubbleSnapshot = null;
@@ -175,7 +183,7 @@
   }
 
   function split() {
-    $bubbleSplitCursor = textarea.selectionStart;
+    $bubbleSplitCursor = textarea!.selectionStart;
   }
 
   function onKeyPress(event: KeyboardEvent) {
@@ -191,22 +199,22 @@
 
   function onCommit(e: CustomEvent<boolean>) {
     console.log("onCommit", e.detail);
-    $bookEditor.commit(e.detail ? null : "effect");
+    $bookEditor!.commit(e.detail ? null : "effect");
   }
 
   function onScribble(e: CustomEvent<Film>) {
-    $bubbleInspectorTarget.commandTargetFilm = e.detail;
-    $bubbleInspectorTarget.command = "scribble";
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "scribble";
   }
 
   async function onGenerate(e: CustomEvent<Film>) {
-    $bubbleInspectorTarget.commandTargetFilm = e.detail;
-    $bubbleInspectorTarget.command = "generate";
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "generate";
   }
 
   function onPunch(e: CustomEvent<Film>) {
-    $bubbleInspectorTarget.commandTargetFilm = e.detail;
-    $bubbleInspectorTarget.command = "punch";
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "punch";
   }
 
   function onSelectionChanged(info: SelectionInfo) {
@@ -217,27 +225,27 @@
   function wrapRange(range: SelectionInfo, prefix: string, suffix: string) {
     const start = range.start;
     const end = range.end;
-    const text = textarea.value;
+    const text = textarea!.value;
     const before = text.substring(0, start);
     const selected = text.substring(start, end);
     const after = text.substring(end);
     const wrapped = prefix + selected + suffix;
     const newText = before + wrapped + after;
-    textarea.value = newText;
-    textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    textarea!.value = newText;
+    textarea!.setSelectionRange(start + prefix.length, end + prefix.length);
     $bubble.text = newText;
   }
 
   function onWrapColor() {
-    wrapRange(textSelection, "{", "|red}");
+    wrapRange(textSelection!, "{", "|red}");
   }
 
   function onWrapRuby() {
-    wrapRange(textSelection, "[", "](ルビ)");
+    wrapRange(textSelection!, "[", "](ルビ)");
   }
 
   function onWrapRotation() {
-    wrapRange(textSelection, "<<", ">>");
+    wrapRange(textSelection!, "<<", ">>");
   }
 
   async function onTransformText() {
@@ -424,9 +432,9 @@
             <div class="hbox gap-2 grow left" use:toolTip={"ビデオ作成時のディレイ"}>
               <span class="w-24 text-left">出現ディレイ</span>
               <div style="width: 140px;">
-                <RangeSlider name="delay" bind:value={$bubble.appearanceDelay} min={0} max={10} step={0.1}/>
+                <RangeSlider name="delay" bind:value={$appearanceDelay} min={0} max={10} step={0.1}/>
               </div>
-              <div class="number-box"><NumberEdit bind:value={$bubble.appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
+              <div class="number-box"><NumberEdit bind:value={$appearanceDelay} min={0} max={10} allowDecimal={true}/></div>
             </div>
           </div>
         </div>

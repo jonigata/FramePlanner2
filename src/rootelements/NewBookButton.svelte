@@ -39,7 +39,7 @@
   async function onDrop(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    const dt = ev.dataTransfer;
+    const dt = ev.dataTransfer!;
     const files = dt.files;
     if (files && files.length > 0) {
       const file = files[0];

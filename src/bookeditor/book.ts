@@ -195,8 +195,8 @@ export interface BookOperators {
   unshift: (page: Page, frameElement: FrameElement) => void;
   swap: (page: Page, frameElement0: FrameElement, frameElement1: FrameElement) => void;
   insert: (page: Page, border: Border) => void;
-  focusFrame: (page: Page, frame: FrameElement, p: Vector) => void;
-  focusBubble: (page: Page, bubble: Bubble) => void;
+  focusFrame: (page: Page, frame: FrameElement | null, p: Vector | null) => void;
+  focusBubble: (page: Page, bubble: Bubble | null) => void;
   viewportChanged: () => void;
   insertPage: (index: number) => void;
   deletePage: (index: number) => void;

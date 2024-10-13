@@ -56,7 +56,7 @@ export function* kinsokuGenerator<T>(
     }
     return maxOidashiDepth;
   }
-  let lineSize: number = null;
+  let lineSize: number | null = null;
   while (true) {
     const c = peek();
     if (c == null) { break; }
@@ -80,12 +80,12 @@ export function* kinsokuGenerator<T>(
       cursor -= back;
     }
     const buffer2 = buffer.splice(0, cursor);
-    yield { index, buffer: buffer2, size: lineSize, wrap: true };
+    yield { index, buffer: buffer2, size: lineSize!, wrap: true };
     index += buffer2.length;
     cursor = 0;
   }
   if (0 < buffer.length) {
-    yield { index, buffer, size: lineSize, wrap: false }; 
+    yield { index, buffer, size: lineSize!, wrap: false }; 
   }
 }
 

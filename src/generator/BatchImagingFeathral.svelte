@@ -22,8 +22,8 @@
     const result = await generateImage(`${frame.prompt}, ${postfix}`, 1024, 1024, imagingContext);
     if (result != null) {
       await result.images[0].decode();
-      const film = new Film();
       const media = new ImageMedia(createCanvasFromImage(result.images[0]));
+      const film = new Film(media);
       film.media = media;
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
@@ -53,7 +53,7 @@
       const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
       transformer.scale(0.01);
       console.log("scaled");
-      constraintLeaf(page.paperSize, leafLayout);
+      constraintLeaf(page.paperSize, leafLayout!);
     }
     $updateToken = true;
   }

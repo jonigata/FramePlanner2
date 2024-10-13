@@ -6,8 +6,8 @@
 
   const dispatch = createEventDispatcher();
 
-  function onInput(e) {
-    document.text = e.target.innerHTML;
+  function onInput(e: Event & { currentTarget: EventTarget & HTMLDivElement; }) {
+    document.text = e.currentTarget.innerHTML;
     dispatch('input', document);
   }
 </script>

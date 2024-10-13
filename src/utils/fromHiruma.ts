@@ -9,7 +9,7 @@ export function createPage(source: ExPage, imagePromptPrefix: string): InPage {
   console.log("source", source);
   const root = {
     bgColor: source.background_color,
-    column: [],
+    column: [] as any[],
     height: 100,
   }
   const bubbles: Bubble[] = [];
@@ -19,7 +19,7 @@ export function createPage(source: ExPage, imagePromptPrefix: string): InPage {
   // なのでsourceとは一見逆に見える
   for (const sourceRow of source.rows) {
     const row = {
-      row: [],
+      row: [] as any[],
       height: sourceRow.height_ratio * 100, // 別にそのままでも問題ないが、なんとなく
     }
     for (const sourceCol of sourceRow.cols) {
@@ -47,8 +47,8 @@ export function createPage(source: ExPage, imagePromptPrefix: string): InPage {
 
   for (const sourceRow of source.rows) {
     for (const sourceCol of sourceRow.cols) {
-      const element = FrameElement.findElement(target.frameTree, e => e.semantics == sourceCol.panel_index.toString());
-      const layoutlet = findLayoutOf(layout, element);
+      const element = FrameElement.findElement(target.frameTree, e => e.semantics == sourceCol.panel_index.toString())!;
+      const layoutlet = findLayoutOf(layout, element)!;
       const [x, y] = layoutlet.rawOrigin;
       const [w, h] = layoutlet.rawSize;
   

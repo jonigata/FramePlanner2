@@ -10,7 +10,7 @@
   ];
 
   $: onChangeThemeColor(themeColor);
-  function onChangeThemeColor(themeColor) {
+  function onChangeThemeColor(themeColor: string) {
     if (!themeColor) {
       return;
     }

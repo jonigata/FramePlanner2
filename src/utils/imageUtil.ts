@@ -49,3 +49,17 @@ export function copyCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
   ctx.drawImage(canvas, 0, 0);
   return newCanvas;
 }
+
+export function canvasToBase64(canvas: HTMLCanvasElement): string {
+  return canvas.toDataURL();
+}
+
+export function imageToBase64(imgElement: HTMLImageElement) {
+  let canvas = document.createElement("canvas");
+  canvas.width = imgElement.naturalWidth;
+  canvas.height = imgElement.naturalHeight;
+  canvas.getContext("2d")!.drawImage(imgElement, 0, 0);
+
+  let base64Image = canvas.toDataURL("image/png");
+  return base64Image;
+}

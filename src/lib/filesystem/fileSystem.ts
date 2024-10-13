@@ -101,7 +101,7 @@ export interface Folder {
   getEntry(bindId: BindId): Promise<Entry | null>;
   getEntryByName(name: string): Promise<Entry | null>;
   getEntriesByName(name: string): Promise<Entry[]>;
-  getBindId(nodeId: NodeId): Promise<BindId>;
+  getBindId(nodeId: NodeId): Promise<BindId | null>;
 }
 
 export abstract class Folder extends Node {

@@ -3,11 +3,11 @@
   import { tick } from "svelte";
   import FeathralCost from '../utils/FeathralCost.svelte';
 
-  let tooltip = null;
+  let tooltip: HTMLDivElement;
   let upper = true;
 
   $: onRequest($toolTipRequest);
-  async function onRequest(r: {message: string, rect: {left: number, top: number, width: number, height: number}}) {
+  async function onRequest(r: {message: string, rect: {left: number, top: number, width: number, height: number}} | null) {
     if (!r || !tooltip) return;
     
     await tick(); // 多分要素の内容が更新されるまで待っている

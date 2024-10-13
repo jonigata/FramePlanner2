@@ -6,7 +6,7 @@ import { renderPageToBlob } from './renderPage';
 export async function saveAsZip(pages: Page[]) {
   const zip = new JSZip();
   const folderName = 'book';
-  const folder = zip.folder(folderName);
+  const folder = zip.folder(folderName)!;
 
   for (let i = 0; i < pages.length; i++) {
     const png = await renderPageToBlob(pages[i]);

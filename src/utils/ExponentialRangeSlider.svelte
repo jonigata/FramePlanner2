@@ -5,7 +5,7 @@
   export let name: string;
   export let value = 1;
   export let min = 1;
-  export let max = null;
+  export let max: number | null = null;
   export let step = 1;
   export let exponentialMin = 100;
   export let exponentialRegion = 20;

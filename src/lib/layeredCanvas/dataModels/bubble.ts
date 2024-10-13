@@ -10,8 +10,8 @@ const threshold = 10;
 
 export interface BubbleRenderInfo { // serializeしない
   pathJson: string;
-  path: paper.PathItem;
-  unitedPath: paper.PathItem;
+  path: paper.PathItem | null;
+  unitedPath: paper.PathItem | null;
   children: Bubble[];
 
   textJson: string;

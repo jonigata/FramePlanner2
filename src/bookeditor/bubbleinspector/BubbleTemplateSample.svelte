@@ -21,7 +21,7 @@
     opts['tailMid'] = [0.5, 0];
     console.snapshot(opts);
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d")!;
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.translate(size[0] * 0.5, size[1] * 0.5);

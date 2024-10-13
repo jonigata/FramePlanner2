@@ -8,15 +8,20 @@
     bubbleInspectorTarget,
     (bit) => bit?.bubble,
     (b, bit) => {
-      bit.bubble = b;
+      bit!.bubble = b!;
       return bit;
     }
   );
+
+  function getAny(v: unknown) {
+    return v as any;
+  }
 </script>
 
 {#if $bubble != null}
 <div class="container">
-  {#each Object.entries($bubble.optionSet) as [key, value], _ (key)}
+  {#each Object.entries($bubble.optionSet) as [key, v], _ (key)}
+    {@const value = getAny(v)}
     {#if value["type"] === "number"}
       <div class="row">
         <div class="label">{value["label"]}</div>

@@ -5,14 +5,13 @@
   import SliderEdit from '../utils/SliderEdit.svelte';
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { makePlainImage } from "../utils/imageUtil";
-  import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas";
+  import { makePlainImage, canvasToBase64 } from "../utils/imageUtil";
   import { createPreference } from '../preferences';
 
   export let busy: boolean;
   export let prompt: string;
   export let gallery: HTMLCanvasElement[];
-  export let chosen: HTMLCanvasElement;
+  export let chosen: HTMLCanvasElement | null;
 
   let url: string = "http://localhost:7860";
   let imageRequest = {
@@ -25,7 +24,7 @@
      "cfgScale": 7,
   }
   let progress = 0;
-  let refered: HTMLImageElement = null;
+  let refered: HTMLCanvasElement | null = null;
 
   const preference1 = createPreference<string>("imaging", "imageRequest");
   const preference2 = createPreference<string>("imaging", "url");
@@ -34,7 +33,7 @@
     await preference1.set(JSON.stringify(imageRequest));
     await preference2.set(url);
 
-    let f = null;
+    let f: (() => Promise<void>) | null = null;
     f = async () => {
       const data = await getProgression(url);
       if (busy) {
@@ -43,7 +42,7 @@
 
       // getProgression呼び出しが1秒を超えると嫌なので
       // setIntervalは使わない
-      setTimeout(() => {if (busy) {f();}},1000);
+      setTimeout(() => {if (busy) {f!();}},1000);
     };
 
     busy = true;
@@ -61,7 +60,7 @@
     busy = false;
   }
 
-  function onChooseImage({detail}) {
+  function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
     chosen = detail;
   }
 
@@ -70,7 +69,7 @@
     if (data) {
       imageRequest = JSON.parse(data);
     }
-    url = await preference2.get();
+    url = (await preference2.get()) ?? url;
   });
 
   function generateWhiteImage() {
@@ -88,8 +87,8 @@
     await preference1.set(JSON.stringify(imageRequest));
     await preference2.set(url);
 
-    let f = null;
-    f = async () => {
+    let f: (() => Promise<void>) | null = null;
+      f = async () => {
       const data = await getProgression(url);
       if (busy) {
         progress = data.progress;
@@ -97,13 +96,13 @@
 
       // getPorgression呼び出しが1秒を超えると嫌なので
       // setIntervalは使わない
-      setTimeout(() => {if (busy) {f();}},1000);
+      setTimeout(() => {if (busy) {f!();}},1000);
     };
 
     busy = true;
     f();
     try {
-      const encoded_image = imageToBase64(refered);
+      const encoded_image = canvasToBase64(refered!);
 
       const alwaysonScripts = {
         controlNet: {

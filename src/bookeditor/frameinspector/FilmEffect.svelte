@@ -10,7 +10,11 @@
 
   const dispatch = createEventDispatcher();
 
-  const parameterLists = {
+  interface Parameter {
+    name: string;
+  }
+
+  const parameterLists: { [key: string]: (Parameter & any)[] } = {
     "OutlineEffect": [
       { name: "color", label: "色", type: "color" },
       { name: "width", label: "幅", type: "number", min: 0, max: 0.1, step: 0.001 },
@@ -18,10 +22,11 @@
     ],
   }
   
-  const titles = {
+  const titles: { [key: string]: string } = {
     "OutlineEffect": "アウトライン",
   }
   export let effect: Effect;
+  $: effectAny = effect as any;
 
   function onDelete() {
     dispatch("delete", effect);
@@ -38,7 +43,7 @@
     for (const e of parameterLists[effect.tag]) {
       if (e.type !== "number") continue;
       console.log(`${effect.ulid}:${e.name}`);
-      const elem = document.getElementById(`${effect.ulid}:${e.name}`);
+      const elem = document.getElementById(`${effect.ulid}:${e.name}`)!;
       elem.setAttribute("draggable", "true");
       elem.addEventListener("dragstart", (ev) => {
         ev.preventDefault();
@@ -63,12 +68,12 @@
           <RangeSlider 
             id={`${effect.ulid}:${e.name}`}
             name={e.name} 
-            bind:value={effect[e.name]} 
+            bind:value={effectAny[e.name]} 
             min={e.min} 
             max={e.max} 
             step={e.step}/>
           <div class="number-box">
-            <NumberEdit bind:value={effect[e.name]} min={e.min} max={e.max} allowDecimal={true}/>
+            <NumberEdit bind:value={effectAny[e.name]} min={e.min} max={e.max} allowDecimal={true}/>
           </div>
         </div>
       {/if}
@@ -76,7 +81,7 @@
         <div class="row">
             <div class="label">{e.label}</div>
           <div class="color-label">
-            <ColorPickerLabel bind:hex={effect[e.name]}/>
+            <ColorPickerLabel bind:hex={effectAny[e.name]}/>
           </div>
         </div>
       {/if}

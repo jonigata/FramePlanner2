@@ -7,7 +7,7 @@ export type Trapezoid = { topLeft: Vector, topRight: Vector, bottomLeft: Vector,
 export type TrapezoidCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
 export const trapezoidCorners = ["topLeft", "topRight", "bottomLeft", "bottomRight"] as const;
 
-export function trapezoidPath(ctx, corners: Trapezoid): void {
+export function trapezoidPath(ctx: CanvasRenderingContext2D, corners: Trapezoid): void {
   ctx.moveTo(...corners.topLeft);
   ctx.lineTo(...corners.topRight);
   ctx.lineTo(...corners.bottomRight);

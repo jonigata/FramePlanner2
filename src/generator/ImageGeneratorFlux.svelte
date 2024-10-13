@@ -22,7 +22,7 @@
   export let busy: boolean;
   export let prompt: string;
   export let gallery: HTMLCanvasElement[];
-  export let chosen: HTMLCanvasElement;
+  export let chosen: HTMLCanvasElement | null;
 
   let progress = 0;
   let refered: HTMLCanvasElement | null= null;
@@ -32,8 +32,6 @@
   let width = 1024;
   let height = 1024;
   let estimatedCost = 0;
-
-  $: account = $onlineAccount!;
 
   function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
     chosen = detail;

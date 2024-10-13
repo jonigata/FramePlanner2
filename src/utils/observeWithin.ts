@@ -3,7 +3,7 @@ export function fitWithin(node: HTMLElement) {
     for (const entry of entries) {
       if (!entry.isIntersecting) {
         const rect = node.getBoundingClientRect();
-        const parentRect = node.parentElement.getBoundingClientRect();
+        const parentRect = node.parentElement!.getBoundingClientRect();
 
         if (rect.bottom > parentRect.bottom) {
           node.style.top = `${parentRect.bottom - rect.height}px`;

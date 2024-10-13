@@ -7,12 +7,12 @@
   ]
 
   function onClick(name: string) {
-    $effectChoiceNotifier(name);
+    $effectChoiceNotifier!(name);
     $effectChoiceNotifier = null;
   }
 
   function onClickAway() {
-    $effectChoiceNotifier(null);
+    $effectChoiceNotifier!(null);
     $effectChoiceNotifier = null;
   }
 </script>

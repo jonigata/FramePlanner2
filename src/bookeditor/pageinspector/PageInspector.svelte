@@ -14,10 +14,12 @@
       p.frameTree.bgColor = p.paperColor;
       p.frameTree.borderColor = p.frameColor;
       p.frameTree.borderWidth = p.frameWidth;
-      commitBook($mainBook, "page-attribute");
+      commitBook($mainBook!, "page-attribute");
       $redrawToken = true;
     }
   }
+
+  $: target = $pageInspectorTarget!;
 
   function onClickAway() {
     $mainBook = $mainBook;
@@ -33,16 +35,16 @@
         <h1>背景色</h1>
         <div class="flex flex-col items-center">
           <div class="color-label" use:toolTip={"背景色"}>
-            <ColorPickerLabel bind:hex={$pageInspectorTarget.paperColor}/>
+            <ColorPickerLabel bind:hex={target.paperColor}/>
           </div>
         </div>
         <h1>枠色</h1>
         <div class="flex flex-col items-center">
           <div class="color-label" use:toolTip={"枠色"}>
-            <ColorPickerLabel bind:hex={$pageInspectorTarget.frameColor}/>
+            <ColorPickerLabel bind:hex={target.frameColor}/>
           </div>
         </div>
-        <h1>枠の幅</h1><RangeSlider name="line" bind:value={$pageInspectorTarget.frameWidth} max={10} step={1} style="width:100px;"/>
+        <h1>枠の幅</h1><RangeSlider name="line" bind:value={target.frameWidth} max={10} step={1} style="width:100px;"/>
       </div>
     </div>
   </Drawer>

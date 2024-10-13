@@ -3,7 +3,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
 
   export let label;
-  export let value;
+  export let value: number;
   export let min = 0;
   export let max = 10;
   export let step = 0.1;

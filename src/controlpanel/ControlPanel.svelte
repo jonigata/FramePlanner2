@@ -15,10 +15,10 @@
 
   const scale = writableDerived(
   	viewport,
-  	(v) => v?.scale,
+  	(v) => v?.scale!,
   	(s, v) => {
       if (v) {
-        v.scale = s;
+        v.scale = s!;
         v.dirty = true;
         $redrawToken = true;
       }
@@ -29,6 +29,8 @@
   let scalePercent = $scale * 100;
   scale.subscribe((v) => scalePercent = v * 100);
   $: $scale = scalePercent / 100;
+
+  $: book = $mainBook!;
 
   function setDimensions(w: number, h: number) {
     // 入れ物ごと交換するとbindが崩れる模様
@@ -84,16 +86,16 @@
           進行方向
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-              <RadioItem bind:group={$mainBook.direction} name="direction" value={'right-to-left'}><span class="radio-text">◀</span></RadioItem>
-              <RadioItem bind:group={$mainBook.direction} name="direction" value={'left-to-right'}><span class="radio-text">▶</span></RadioItem>
+              <RadioItem bind:group={book.direction} name="direction" value={'right-to-left'}><span class="radio-text">◀</span></RadioItem>
+              <RadioItem bind:group={book.direction} name="direction" value={'left-to-right'}><span class="radio-text">▶</span></RadioItem>
             </RadioGroup>
           </div>
           折返し
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-              <RadioItem bind:group={$mainBook.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">なし</span></RadioItem>
-              <RadioItem bind:group={$mainBook.wrapMode} name="wrap-mode" value={'two-pages'}><span class="radio-text">2p</span></RadioItem>
-              <RadioItem bind:group={$mainBook.wrapMode} name="wrap-omde" value={'one-page'}><span class="radio-text">1p</span></RadioItem>
+              <RadioItem bind:group={book.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">なし</span></RadioItem>
+              <RadioItem bind:group={book.wrapMode} name="wrap-mode" value={'two-pages'}><span class="radio-text">2p</span></RadioItem>
+              <RadioItem bind:group={book.wrapMode} name="wrap-omde" value={'one-page'}><span class="radio-text">1p</span></RadioItem>
             </RadioGroup>
           </div>
         </div>

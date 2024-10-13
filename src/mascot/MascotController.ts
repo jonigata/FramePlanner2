@@ -42,10 +42,11 @@ export class MascotController {
     const log = this.logs;
 
     // waiting
-    log.push({ role: 'assistant', content: null });
+    log.push({ role: 'assistant', content: {type:'waiting'} });
     refresh(log);
 
-    const documents = log.filter(l => l.content != null && l.content.type === 'document').map(l => l.content.body as RichChatDocument);
+    const documents = log.filter(l => l.content.type === 'document').map(
+       l => (l.content as { body: RichChatDocument }).body);
 
     //const r = await aiChat(log.slice(0,-1));
     const r = await executeProcessAndNotify(
@@ -107,7 +108,7 @@ export class MascotController {
     this.logs = [{ role: 'assistant', content: {type: 'speech', body: '何について調べますか～？'}}];
   }
 
-  addDummyLog(n) {
+  addDummyLog(n: number) {
     const dummyLogs: ProtocolChatLog[][] = [
       [ 
         { role: 'user', content: `配達屋の漫画を作ろうと思います。

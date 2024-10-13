@@ -27,11 +27,11 @@
   });
 
   let book: Book;
-  let program: DisplayProgramEntry[] = null;
+  let program: DisplayProgramEntry[] | null = null;
   let chunkedProgram: DisplayProgramEntry[][] = [];
   let progress = 0;
 
-  function onWaitChanged(e) {
+  function onWaitChanged() {
     program = program;
   }
 
@@ -40,7 +40,7 @@
     building = true;
     try {
       progress = 0;
-      const url = await buildMovie(program, $video, book, (n) => progress = n);
+      const url = await buildMovie(program!, $video, book, (n) => progress = n);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');
       download(url);
@@ -68,8 +68,8 @@
 
   $: onChangeSize($video?.width, $video?.height);
   function onChangeSize(w: number, h: number) {
-    book = cloneBook($mainBook); // 中でいじるのでコピーする
-    program = makeDisplayProgram(book, [w, h], program);
+    book = cloneBook($mainBook!); // 中でいじるのでコピーする
+    program = makeDisplayProgram(book, [w, h], program!);
   }
 
   $: if (program) {
@@ -83,17 +83,17 @@
   onMount(() => {
     console.log("initFFmpeg");
     initFFmpeg();
-    if ($mainBook.video) {
-      console.log("video is already set", $mainBook.video);
-      $video = {...$mainBook.video};
-      $video.standardScale = $mainBook.video.standardScale;
+    if ($mainBook!.video) {
+      console.log("video is already set", $mainBook!.video);
+      $video = {...$mainBook!.video};
+      $video.standardScale = $mainBook!.video.standardScale;
     }
   });
 
   onDestroy(() => {
-    reflectDisplayProgram($mainBook, program);
+    reflectDisplayProgram($mainBook!, program!);
     console.log(video);
-    $mainBook.video = $video;
+    $mainBook!.video = $video;
   });
 
 </script>

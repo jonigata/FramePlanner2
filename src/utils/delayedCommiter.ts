@@ -45,7 +45,7 @@ export class DelayedCommiter {
 
 export class DelayedCommiterGroup {
   commiters: { [key: string]: DelayedCommiter };
-  currentTag: string;
+  currentTag: string | null = null;
 
   constructor( commiters: { [key: string]: () => void }) {
     this.commiters = {};

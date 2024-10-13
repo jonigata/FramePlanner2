@@ -4,15 +4,15 @@
   import { onMount, tick } from 'svelte';
 
   export let bubble: Bubble;
-  let text;
-  let textarea;
+  let text: string;
+  let textarea: HTMLTextAreaElement;
 
   function autoResize() {
     textarea.style.height = 'auto'; // 高さを一旦リセット
     textarea.style.height = (textarea.scrollHeight+2) + 'px'; // スクロール高さに基づいて高さを再設定
   }
 
-  function onInput(event) {
+  function onInput(event: any) {
     bubble.text = event.target.value; // textareaのvalueプロパティからテキストを取得
     $redrawToken = true;
     autoResize(); // 自動リサイズ機能を呼び出し

@@ -67,7 +67,7 @@ export function bootstrap() {
     if (isAuthStateUnknown()) { return; } 
     if (isSignedOut()) { return; }
     const n = await getFeathral();
-    onlineAccount.set({ user: get(onlineAccount).user, feathral: n });
+    onlineAccount.set({ user: get(onlineAccount)!.user, feathral: n });
     updateToken.set(false);
   });
 }

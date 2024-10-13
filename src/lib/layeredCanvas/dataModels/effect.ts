@@ -19,12 +19,13 @@ if (!isTestEnvironment) {
 
 export class Effect {
   ulid: string;
-  inputMedia: Media;
-  outputMedia: Media;
+  inputMedia: Media | null;
+  outputMedia: Media | null;
 
   constructor() {
     this.ulid = ulid();
     this.inputMedia = null;
+    this.outputMedia = null;
   }
 
   get tag(): string {
@@ -63,7 +64,7 @@ export class Effect {
 }
 
 export class OutlineEffect extends Effect {
-  rawDistanceField: FloatField;
+  rawDistanceField: FloatField | null = null;
 
   constructor(public color: string, public width: number, public sharp: number) {
     super();
@@ -96,12 +97,12 @@ export class OutlineEffect extends Effect {
     const dull = 1.0 - this.sharp;
     const f = (t: number) => dull <= t ? 1 : t * (1.0 / dull);
     const distanceField = JFACompute.generateDistanceField(
-      this.rawDistanceField, color, width, f);
+      this.rawDistanceField!, color, width, f);
 
     const targetCanvas = document.createElement('canvas');
     targetCanvas.width = inputCanvas.width;
     targetCanvas.height = inputCanvas.height;
-    const ctx = targetCanvas.getContext('2d');
+    const ctx = targetCanvas.getContext('2d')!;
     ctx.drawImage(inputCanvas, 0, 0);
     ctx.globalCompositeOperation = 'destination-over';
     ctx.drawImage(distanceField.toCanvas(), 0, 0);

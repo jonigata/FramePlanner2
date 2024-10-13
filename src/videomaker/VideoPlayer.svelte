@@ -8,14 +8,16 @@
   import pauseIcon from '../assets/videomaker/pause.png';
   import Spreader from '../utils/Spreader.svelte'
   import type { Book, VideoSettings } from '../bookeditor/book';
+  import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
+  import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
 
   export let video: VideoSettings;
   export let book: Book;
   export let program: DisplayProgramEntry[]
 
-  let canvas = null;
-  let layeredCanvas = null;
-  let arrayLayer = null;
+  let canvas: HTMLCanvasElement;
+  let layeredCanvas: LayeredCanvas;
+  let arrayLayer: ArrayLayer;
 
   let timeTable: TimeTableEntry[] = [];
   let totalTime: number = 0;
@@ -23,7 +25,7 @@
 
   $: if (canvas != null && book != null) { onRebuild(); }
   function onRebuild() {
-    ({arrayLayer, layeredCanvas} = buildBookRenderer(canvas, book));
+    ({arrayLayer, layeredCanvas} = buildBookRenderer(canvas!, book));
     layeredCanvas.render();
   }
 
@@ -42,8 +44,8 @@
     rendering = true;
     console.log("render time: ", cursor);
     await renderAtTime(
-      layeredCanvas,
-      arrayLayer,
+      layeredCanvas!,
+      arrayLayer!,
       timeTable,
       cursor,
       video.moveDuration,

@@ -38,7 +38,7 @@ export function makePage(context: Context, storyboard: Storyboard.Storyboard) {
         const leaf = leaves[index];
         leaf.prompt = panel.composition;
 
-        const layout = findLayoutOf(paperLayout, leaf);
+        const layout = findLayoutOf(paperLayout, leaf)!;
         const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
         const n = panel.bubbles.length;
         panel.bubbles.forEach((b: Storyboard.Bubble, i:number) => {

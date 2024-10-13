@@ -36,7 +36,7 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
   for (const storyboardPage of storyboard.pages) {
     console.log(storyboardPage.layout);
 
-    let sample: ConvertedLayout = null;
+    let sample: ConvertedLayout | null = null;
     if (storyboard.format == '4koma') {
       sample = frameExamples[3];
     } else {
@@ -59,7 +59,7 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
         const leaf = leaves[index];
         leaf.prompt = panel.composition;
 
-        const layout = findLayoutOf(paperLayout, leaf);
+        const layout = findLayoutOf(paperLayout, leaf)!;
         const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
         const n = panel.bubbles.length;
         panel.bubbles.forEach((b: Storyboard.Bubble, i:number) => {
@@ -133,7 +133,7 @@ export function makePageTemplateFromLightLayout(layout: Storyboard.LayoutPage): 
   };
 
   // 左右の余白を追加
-  convertedLayout.frameTree.row.push({ visibility: 0, width: 3 });
+  convertedLayout.frameTree.row!.push({ visibility: 0, width: 3 });
 
   // 各行を変換
   const centerColumn: FrameTreeNode = {
@@ -142,7 +142,7 @@ export function makePageTemplateFromLightLayout(layout: Storyboard.LayoutPage): 
   };
 
   // 上下の余白を追加
-  centerColumn.column.push({ visibility: 0, height: 3 });
+  centerColumn.column!.push({ visibility: 0, height: 3 });
 
   layout.rows.forEach((row: Storyboard.LayoutRow, rowIndex: number) => {
     const convertedRow: FrameTreeNode = {
@@ -164,19 +164,19 @@ export function makePageTemplateFromLightLayout(layout: Storyboard.LayoutPage): 
         convertedColumn.divider = { spacing: 2 };
       }      
 
-      convertedRow.row.push(convertedColumn);
+      convertedRow.row!.push(convertedColumn);
     });
 
-    centerColumn.column.push(convertedRow);
+    centerColumn.column!.push(convertedRow);
   });
 
   // 上下の余白を追加
-  centerColumn.column.push({ visibility: 0, height: 3 });
+  centerColumn.column!.push({ visibility: 0, height: 3 });
 
-  convertedLayout.frameTree.row.push(centerColumn);
+  convertedLayout.frameTree.row!.push(centerColumn);
 
   // 左右の余白を追加
-  convertedLayout.frameTree.row.push({ visibility: 0, width: 3 });
+  convertedLayout.frameTree.row!.push({ visibility: 0, width: 3 });
 
   return convertedLayout;
 }

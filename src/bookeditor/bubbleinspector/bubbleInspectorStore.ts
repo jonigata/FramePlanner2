@@ -19,5 +19,5 @@ export type BubbleInspectorTarget = {
 }
 
 export const bubbleInspectorTarget: Writable<BubbleInspectorTarget | null> = writable(null);
-export const bubbleSplitCursor = writable(null);
+export const bubbleSplitCursor: Writable<number | null> = writable(null);
 export const bubbleInspectorRebuildToken: Writable<number> = writable(0);

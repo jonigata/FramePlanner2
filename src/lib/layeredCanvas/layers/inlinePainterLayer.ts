@@ -11,12 +11,12 @@ import { getStroke } from 'perfect-freehand'
 export class InlinePainterLayer extends Layer {
   frameLayer: FrameLayer;
 
-  film: Film;
-  surfaceCorners: Trapezoid;
-  depth: number;
+  film: Film | null = null;
+  surfaceCorners: Trapezoid | null = null;
+  depth: number | null = null;
   translation: Vector;
   scale: Vector;
-  maskPath: paper.PathItem;
+  maskPath: paper.PathItem | null;
   history: HTMLCanvasElement[];
   historyIndex: number;
   onAutoGenerate: () => void;
@@ -24,7 +24,7 @@ export class InlinePainterLayer extends Layer {
 
   drawsBackground: boolean;
   // path: paper.Path;
-  path: Path2D;
+  path: Path2D | null = null;
   strokeOptions: any; // perfect-freehandのオプション
 
   constructor(frameLayer: FrameLayer, onAutoGenerate: () => void) {
@@ -45,7 +45,7 @@ export class InlinePainterLayer extends Layer {
     if (depth !== this.depth) { return; }
 
     this.drawFilmFrame(ctx);
-    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.surfaceCorners);
+    drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.surfaceCorners!);
 
     if (this.maskPath) {
       ctx.beginPath();
@@ -67,7 +67,7 @@ export class InlinePainterLayer extends Layer {
     return {};
   }
 
-  async *pointer(q: Vector, payload: any): AsyncGenerator<Vector, void, Vector> {
+  async *pointer(q: Vector, payload: any): AsyncGenerator<void, void, Vector> {
     const rawStroke: Vector[] = [];
 
     let p: Vector;
@@ -92,19 +92,19 @@ export class InlinePainterLayer extends Layer {
   }
 
   snapshot(): void {
-    const [w, h] = [this.canvas.width, this.canvas.height];
+    const [w, h] = [this.canvas!.width, this.canvas!.height];
     console.log("snapshot", [w,h]);
 
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
     ctx.drawImage(this.history[this.historyIndex-1], 0, 0);
 
     if (this.path) {
       ctx.save();
       ctx.translate(w * 0.5, h * 0.5);
-      ctx.rotate(this.film.rotation * Math.PI / 180);
+      ctx.rotate(this.film!.rotation * Math.PI / 180);
       ctx.scale(1/this.scale[0], 1/this.scale[1]);
       ctx.translate(-this.translation[0], -this.translation[1]);
       this.applyBrush(ctx);
@@ -112,7 +112,7 @@ export class InlinePainterLayer extends Layer {
       ctx.restore();
     }
 
-    const ctx2 = this.canvas.getContext('2d');
+    const ctx2 = this.canvas!.getContext('2d')!;
     ctx2.clearRect(0, 0, w, h);
     ctx2.drawImage(canvas, 0, 0, w, h);
 
@@ -123,7 +123,7 @@ export class InlinePainterLayer extends Layer {
     console.log("snapshot", this.historyIndex, this.history.length);
   }
 
-  setSurface(film: Film, trapezoid: Trapezoid, depth: number): void {
+  setSurface(film: Film | null, trapezoid: Trapezoid | null, depth: number): void {
     this.film = film;
     this.surfaceCorners = trapezoid;
     this.depth = depth;
@@ -135,7 +135,7 @@ export class InlinePainterLayer extends Layer {
 
     const paperSize = this.frameLayer.getPaperSize();
 
-    const [x0, y0, w, h] = trapezoidBoundingRect(trapezoid);
+    const [x0, y0, w, h] = trapezoidBoundingRect(trapezoid!);
     const filmTranslation = film.getShiftedTranslation(paperSize);
     const filmScale = film.getShiftedScale(paperSize);
     const translation: Vector = [
@@ -154,10 +154,10 @@ export class InlinePainterLayer extends Layer {
     console.log("setSurface", translation, scale, [iw, ih]);
 
     const windowPath = new paper.Path();
-    windowPath.moveTo(trapezoid.topLeft);
-    windowPath.lineTo(trapezoid.topRight);
-    windowPath.lineTo(trapezoid.bottomRight);
-    windowPath.lineTo(trapezoid.bottomLeft);
+    windowPath.moveTo(trapezoid!.topLeft);
+    windowPath.lineTo(trapezoid!.topRight);
+    windowPath.lineTo(trapezoid!.bottomRight);
+    windowPath.lineTo(trapezoid!.bottomLeft);
     windowPath.closed = true;
 
     const paperPath = new paper.CompoundPath({children: [new paper.Path.Rectangle([0,0], this.getPaperSize())]});
@@ -168,7 +168,7 @@ export class InlinePainterLayer extends Layer {
     const canvas = document.createElement('canvas');
     canvas.width = iw;
     canvas.height = ih;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
     ctx.drawImage(film.media.drawSource, 0, 0);
 
     this.history=[canvas];
@@ -176,7 +176,7 @@ export class InlinePainterLayer extends Layer {
     this.redraw();
   }
 
-  get canvas(): HTMLCanvasElement {
+  get canvas(): HTMLCanvasElement | null{
     if (!this.film) { return null; }
     const media = this.film.media;
     if (!(media instanceof ImageMedia)) {
@@ -191,8 +191,8 @@ export class InlinePainterLayer extends Layer {
 
     this.historyIndex--;
     const prevCanvas = this.history[this.historyIndex - 1];
-    const ctx = this.canvas.getContext('2d');
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const ctx = this.canvas!.getContext('2d')!;
+    ctx.clearRect(0, 0, this.canvas!.width, this.canvas!.height);
     ctx.drawImage(prevCanvas, 0, 0);
     this.redraw();
   }
@@ -203,20 +203,20 @@ export class InlinePainterLayer extends Layer {
 
     this.historyIndex++;
     const nextCanvas = this.history[this.historyIndex - 1];
-    const ctx = this.canvas.getContext('2d');
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const ctx = this.canvas!.getContext('2d')!;
+    ctx.clearRect(0, 0, this.canvas!.width, this.canvas!.height);
     ctx.drawImage(nextCanvas, 0, 0);
     this.redraw();
   }
 
   // paperRenderLayerからコピペ
   drawFilmFrame(ctx: CanvasRenderingContext2D): void {
-    const [w, h] = [this.canvas.width, this.canvas.height];
+    const [w, h] = [this.canvas!.width, this.canvas!.height];
 
     ctx.save();
     ctx.translate(this.translation[0], this.translation[1]);
     ctx.scale(this.scale[0], this.scale[1]);
-    ctx.rotate(-this.film.rotation * Math.PI / 180);
+    ctx.rotate(-this.film!.rotation * Math.PI / 180);
     ctx.translate(-w * 0.5, -h * 0.5);
     ctx.strokeStyle = "rgba(128, 128, 128, 0.5)";
     ctx.strokeRect(0, 0, w, h);
@@ -232,15 +232,15 @@ export class InlinePainterLayer extends Layer {
   drawPath(ctx: CanvasRenderingContext2D) {
     if (this.strokeOptions.strokeOperation == 'erase') {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.fill(this.path);
+      ctx.fill(this.path!);
     } else {
       ctx.globalCompositeOperation = 'source-over';
       if (0 < this.strokeOptions.strokeWidth) {
         ctx.lineJoin = "round";
-        ctx.stroke(this.path);
+        ctx.stroke(this.path!);
       }
       if (this.strokeOptions.strokeOperation == 'strokeWithFill') {
-        ctx.fill(this.path);
+        ctx.fill(this.path!);
       }
     }
   }

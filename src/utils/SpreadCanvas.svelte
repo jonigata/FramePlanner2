@@ -34,7 +34,7 @@
 
   function drawImage() {
     if (!canvas) {return;}
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
     ctx.drawImage(img, 0, 0);
   }
 

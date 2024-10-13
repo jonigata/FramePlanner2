@@ -1,7 +1,6 @@
-import { imageToBase64 } from "../lib/layeredCanvas/tools/saveCanvas";
-import { createCanvasFromImage } from "../utils/imageUtil";
+import { createCanvasFromImage, imageToBase64 } from "../utils/imageUtil";
 
-export async function generateImages(url: string, imageRequest): Promise<HTMLCanvasElement[]> {
+export async function generateImages(url: string, imageRequest: any): Promise<HTMLCanvasElement[]> {
   url = removeLastSlash(url);
   try {
     const { positive, negative, width, height, samplingSteps, cfgScale, batchSize, batchCount, alwaysonScripts, samplerName } = imageRequest;
@@ -46,7 +45,7 @@ export async function generateImages(url: string, imageRequest): Promise<HTMLCan
   }
 }
 
-export async function getProgression(url) {
+export async function getProgression(url: string) {
   url = removeLastSlash(url);
   try {
     const response = await fetch(`${url}/sdapi/v1/progress`, {
@@ -61,15 +60,15 @@ export async function getProgression(url) {
   }
 }
 
-export async function getControlNetModuleList(url) {
+export async function getControlNetModuleList(url: string) {
 
 }
 
-export async function getControlNetModelList(url) {
+export async function getControlNetModelList(url: string) {
   
 }
 
-function removeLastSlash(url) {
+function removeLastSlash(url: string) {
   if (url.endsWith('/')) {
     return url.slice(0, -1);
   }

@@ -15,8 +15,8 @@
 
   export let layeredCanvas: LayeredCanvas;
   export let arrayLayer: ArrayLayer;
-  let painterPage: Page = null;
-  let painterFilm: Film = null;
+  let painterPage: Page | null = null;
+  let painterFilm: Film | null = null;
   let autoGeneration: boolean = false;
   let onDoneHandler: () => void;
 
@@ -35,7 +35,7 @@
 
       const paperSize = page.paperSize;
       const paperLayout = calculatePhysicalLayout(page.frameTree, paperSize, [0,0]);
-      const layout = findLayoutOf(paperLayout, element);
+      const layout = findLayoutOf(paperLayout, element)!;
       const trapezoid = layout.corners;
 
       layeredCanvas.mode = "scribble";
@@ -100,15 +100,16 @@
   }
 
   function findLayer() {
-    return findPaper().findLayer(InlinePainterLayer);
+    return findPaper().findLayer(InlinePainterLayer)!;
   }
 
   function findPaper() {
     return arrayLayer.array.papers[indexOfPage(painterPage)].paper;
   }
 
-  function indexOfPage(page: Page) {
-    return $mainBook.pages.indexOf(page);
+  function indexOfPage(page: Page | null) {
+    if (page == null) { return -1; }
+    return $mainBook!.pages.indexOf(page);
   }
 
   export function chase() {

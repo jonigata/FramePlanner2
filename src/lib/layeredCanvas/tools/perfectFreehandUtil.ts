@@ -1,6 +1,8 @@
-const average = (a, b) => (a + b) / 2
+import { type Vector } from './geometry/geometry'
 
-export function getSvgPathFromStroke(points, closed = true) {
+const average = (a: number, b: number) => (a + b) / 2
+
+export function getSvgPathFromStroke(points: Vector[], closed = true) {
   const len = points.length
 
   if (len < 4) {

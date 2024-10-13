@@ -51,7 +51,7 @@
   }
 
   function setBook() {
-    const book = $mainBook;
+    const book = $mainBook!;
     const children = [];
     let pageIndex = 0;
     for (const page of book.pages) {

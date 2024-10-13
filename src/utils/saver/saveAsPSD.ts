@@ -32,7 +32,7 @@ export function saveAsPSD(page: Page) {
     children: [
       {
         name: 'コマ',
-        children: []
+        children: [] as any[]
       },
       {
         name: 'フキダシ',

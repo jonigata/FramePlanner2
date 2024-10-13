@@ -62,7 +62,7 @@ export async function getCurrentUserOrSignInAnonymously(): Promise<UserCredentia
   });
 }
 
-export async function postContact(s) {
+export async function postContact(s: string) {
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     const userId = userCredential.user.uid;
@@ -84,8 +84,8 @@ export async function getLayover(key: string): Promise<Storyboard> {
   return snapshot.val();
 }
 
-let ui = null;
-let uiConfig = null;
+let ui: firebaseui.auth.AuthUI | null = null;
+let uiConfig: firebaseui.auth.Config | null = null;
 
 export function prepareAuth() {
   uiConfig = {
@@ -108,12 +108,12 @@ export function prepareAuth() {
 }
 
 export function isPendingRedirect() {
-  return ui.isPendingRedirect();
+  return ui!.isPendingRedirect();
 }
 
 export function startAuth(elementId: string) {
   // The start method will wait until the DOM is loaded.
-  ui.start(elementId, uiConfig);  
+  ui!.start(elementId, uiConfig!);  
 }
 
 export async function getFeathral(): Promise<number> {

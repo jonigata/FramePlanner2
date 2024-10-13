@@ -185,7 +185,7 @@ export function isPointInTriangle(p: Vector, tri: [Vector,Vector,Vector]): boole
     (p1[1] - p0[1]) * (p2[0] - p0[0]);
   if (area2 === 0) {
     // 退化しているため、false を返す
-    return 
+    return false;
   }
 
   const s = (p0[0] - p2[0]) * (p[1] - p2[1]) - (p0[1] - p2[1]) * (p[0] - p2[0]);

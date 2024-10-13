@@ -15,7 +15,7 @@ console.tag = function(tag, color, ...args) {
 
 async function destroyAndUnlink(fileSystem: MockFileSystem, nodeId: NodeId, folder: Folder) {
   await fileSystem.destroyNode(nodeId);
-  await folder.unlink(await folder.getBindId(nodeId));
+  await folder.unlink((await folder.getBindId(nodeId))!);
 }
 
 describe('ガベージコレクション', () => {
@@ -52,7 +52,7 @@ describe('ガベージコレクション', () => {
 
     // ガベコレ
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
-    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder();
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
 
     // 正解と比較
@@ -64,8 +64,8 @@ describe('ガベージコレクション', () => {
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
     fileSystem.undump(source);
-    const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ")).asFolder();
-    const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ"))!.asFolder();
+    const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder();
 
     // 削除
     await destroyAndUnlink(fileSystem, "01HR78PS394VGSBNNH30CZX2HC" as NodeId, desktop);
@@ -85,8 +85,8 @@ describe('ガベージコレクション', () => {
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
     fileSystem.undump(source);
-    const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ")).asFolder();
-    const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ"))!.asFolder();
+    const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder();
 
     // 削除
     await destroyAndUnlink(fileSystem, "01HR7908D2RFB5N0YZ3CGYW4SE" as NodeId, desktop);
@@ -106,8 +106,8 @@ describe('ガベージコレクション', () => {
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
     fileSystem.undump(source);
-    const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ")).asFolder();
-    const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ"))!.asFolder();
+    const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder();
 
     // 削除
     await destroyAndUnlink(fileSystem, "01HR791TBQKG02A1ENSDD5JGFR" as NodeId, desktop);

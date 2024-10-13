@@ -1,11 +1,11 @@
-function getTransformationMatrix(element) {
+function getTransformationMatrix(element: HTMLElement) {
   let transformationMatrix = new DOMMatrix();
   let x = element;
 
   while (x && x !== document.documentElement) {
-    const transform = window.getComputedStyle(x, undefined).transform;
+    const transform = window.getComputedStyle(x).transform;
     transformationMatrix = new DOMMatrix(transform).multiply(transformationMatrix);
-    x = x.parentNode;
+    x = x.parentElement!;
   }
 
   const rect = element.getBoundingClientRect();
@@ -16,12 +16,12 @@ function getTransformationMatrix(element) {
   return transformationMatrix;
 }
 
-export function convertPointFromPageToNode(element, pageX, pageY) {
+export function convertPointFromPageToNode(element: HTMLElement, pageX: number, pageY: number) {
   const point = new DOMPoint(pageX, pageY);
   return point.matrixTransform(getTransformationMatrix(element).inverse());
 };
 
-export function convertPointFromNodeToPage(element, offsetX, offsetY) {
+export function convertPointFromNodeToPage(element: HTMLElement, offsetX: number, offsetY: number) {
   const point = new DOMPoint(offsetX, offsetY);
   return point.matrixTransform(getTransformationMatrix(element));
 };

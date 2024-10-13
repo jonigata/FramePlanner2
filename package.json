@@ -20,6 +20,7 @@
     "@sveltejs/vite-plugin-svelte": "^2.4.6",
     "@tsconfig/svelte": "^5.0.4",
     "@types/file-saver": "^2.0.7",
+    "@types/seedrandom": "^3.0.8",
     "@types/webfontloader": "^1.6.35",
     "autoprefixer": "^10.4.7",
     "jsdom": "^22.1.0",

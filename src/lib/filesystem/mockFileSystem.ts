@@ -3,7 +3,7 @@ import { Node, File, Folder, FileSystem } from './fileSystem';
 import { ulid } from 'ulid';
 
 export class MockFileSystem extends FileSystem {
-  files = {}
+  files: { [key: NodeId]: Node } = {}
   root = new MockFolder(this, '/' as NodeId);
 
   constructor() {
@@ -59,7 +59,7 @@ export class MockFileSystem extends FileSystem {
   }
   
   async undump(json: string): Promise<void> {
-    this.files = [];
+    this.files = {};
     const files = JSON.parse(json); // array of object
     for (const file of files) {
       const id = file.id;
@@ -73,12 +73,12 @@ export class MockFileSystem extends FileSystem {
         this.files[id] = f;
       }
     }
-    this.root = this.files['/'] as MockFolder;
+    this.root = this.files['/' as NodeId] as MockFolder;
   }
 }
 
 export class MockFile extends File {
-  content: string;
+  content: string = '';
 
   constructor(fileSystem: FileSystem, id: NodeId) {
     super(fileSystem, id);
@@ -91,7 +91,7 @@ export class MockFile extends File {
     return this.content
   }
 
-  async write(data) {
+  async write(data: string) {
     this.content = data;
   }
 
@@ -130,14 +130,14 @@ export class MockFolder extends Folder {
     return bindId;
   }
 
-  async getEntry(bindId: BindId): Promise<Entry> {
+  async getEntry(bindId: BindId): Promise<Entry | null> {
     // console.log("get", name, this.children);
-    return this.children.find(([b, _, __]) => b === bindId);
+    return this.children.find(([b, _, __]) => b === bindId) ?? null;
   }
 
-  async getEntryByName(name: string): Promise<Entry> {
+  async getEntryByName(name: string): Promise<Entry | null> {
     // console.log("get", name, this.children);
-    return this.children.find(([_, n, __]) => n === name);
+    return this.children.find(([_, n, __]) => n === name) ?? null;
   }
 
   async getEntriesByName(name: string): Promise<Entry[]> {
@@ -145,7 +145,7 @@ export class MockFolder extends Folder {
     return this.children.filter(([_, n, __]) => n === name);
   }
 
-  async getBindId(nodeId: NodeId): Promise<BindId> { 
+  async getBindId(nodeId: NodeId): Promise<BindId | null> { 
     const entry = this.children.find(([_, __, id]) => id === nodeId);
     if (entry) {
       return entry[0];

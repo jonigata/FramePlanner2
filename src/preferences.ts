@@ -20,7 +20,7 @@ export function getDBPromise() {
 }
 
 export function createPreference<T>(storeName: string, key: string) {
-  let saved: T = undefined;
+  let saved: T | undefined = undefined;
   return {
     get: async () => {
       saved = await (await dbPromise).get(storeName, key);

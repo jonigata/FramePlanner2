@@ -19,7 +19,7 @@ export function drawVerticalText(
   }
 
   let cursorX = r.x + r.width - baselineSkip * 0.5; // center of the text
-  for (const line of m.verticalLines) {
+  for (const line of m.verticalLines!) {
     let lineH = 0;
     let prev = null;
     for (const frag of line) {
@@ -71,10 +71,10 @@ function drawFragment(
   frag: RichFragment,
   charScale: number,
   justify: boolean,
-  prev: string): { lineH: number, prev: string, startH: number, endH: number } {
+  prev: string | null): { lineH: number, prev: string | null, startH: number, endH: number } {
 
-  let startH = null;
-  let endH = null;
+  let startH: number | null = null;
+  let endH: number | null = null;
 
   if (frag.romanHanging) {
     const s = frag.chars.join('');
@@ -187,7 +187,7 @@ function drawFragment(
     prev = c;
   }
 
-  return {lineH, prev, startH, endH};
+  return {lineH, prev, startH: startH!, endH: endH!};
 }
 
 export function measureVerticalText(
@@ -249,7 +249,7 @@ export function measureVerticalText(
   };
 }
 
-function limitedKerning(c0: string, c1: string): number {
+function limitedKerning(c0: string | null, c1: string): number {
   if (!c0) { 
     if (/[「『（【〔“]/.test(c1)) { return -0.3; } 
     return 0;

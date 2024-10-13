@@ -18,7 +18,7 @@ export function drawFilmStack(ctx: CanvasRenderingContext2D, filmStack: FilmStac
     let media = film.media;
     for (let i = film.effects.length - 1; 0 <= i; i--) {
       if (film.effects[i].outputMedia) {
-        media = film.effects[i].outputMedia;
+        media = film.effects[i].outputMedia!;
         break;
       }
     }

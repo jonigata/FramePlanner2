@@ -18,7 +18,7 @@
   function onChooseImage(e: CustomEvent<HTMLCanvasElement>) {
     console.log("onChooseImage");
 
-    const page = $bookEditor.getFocusedPage();
+    const page = $bookEditor!.getFocusedPage();
 
     const canvas = e.detail;
     const bubble = new Bubble();
@@ -31,24 +31,23 @@
     bubble.shape = "none";
     bubble.initOptions();
     bubble.text = "";
-    const film = new Film();
-    film.media = new ImageMedia(canvas);
+    const film = new Film(new ImageMedia(canvas));
     bubble.filmStack.films.push(film);
     page.bubbles.push(bubble);
-    $bookEditor.focusBubble(page, bubble);
+    $bookEditor!.focusBubble(page, bubble);
     $redrawToken = true;
   }
 
-  function onChildDragStart(e: CustomEvent<HTMLImageElement>) {
+  function onChildDragStart(e: CustomEvent<HTMLCanvasElement>) {
     console.log("onDragStart");
     setTimeout(() => {
       $materialBucketOpen = false;
     }, 0);
   }
 
-  function onDelete(e: CustomEvent<HTMLImageElement>) {
+  function onDelete(e: CustomEvent<HTMLCanvasElement>) {
     console.log("onDelete");
-    deleteMaterialCanvas($fileSystem, e.detail["materialBindId"]);
+    deleteMaterialCanvas($fileSystem!, (e.detail as any)["materialBindId"]);
   }
 
   async function onFileDrop(files: FileList) {
@@ -56,8 +55,8 @@
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const canvas = await createCanvasFromBlob(file);
-      const bindId = await saveMaterialCanvas($fileSystem, canvas);
-      canvas["materialBindId"] = bindId;
+      const bindId = await saveMaterialCanvas($fileSystem!, canvas);
+      (canvas as any)["materialBindId"] = bindId;
       gallery.push(canvas);
     }
     gallery = gallery;
@@ -66,14 +65,14 @@
   async function displayMaterialImages() {
     console.log("displayMaterialImages");
     $loading = true;
-    const root = await $fileSystem.getRoot();
+    const root = await $fileSystem!.getRoot();
     const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
     const materials = await materialFolder.listEmbodied();
     const canvases = [];
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
       const canvas = await material.asFile().readCanvas();
-      canvas["materialBindId"] = materials[i][0];
+      (canvas as any)["materialBindId"] = materials[i][0];
       canvases.push(canvas);
     }
     gallery = canvases;

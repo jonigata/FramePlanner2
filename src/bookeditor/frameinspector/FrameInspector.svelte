@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { derived, type Writable } from "svelte/store";
   import writableDerived from "svelte-writable-derived";
-  import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameInspectorStore';
-  import type { FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import { frameInspectorTarget, frameInspectorRebuildToken } from './frameInspectorStore';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";

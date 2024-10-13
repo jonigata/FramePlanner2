@@ -1,6 +1,14 @@
 import type { Vector } from "../tools/geometry/geometry";
 
-export class Media {
+export interface Media {
+  seek(time: number): Promise<void>;
+  readonly naturalWidth: number;
+  readonly naturalHeight: number;
+  readonly drawSource: HTMLCanvasElement | HTMLVideoElement;
+  readonly size: Vector;
+}
+
+export abstract class Media implements Media {
   fileId: { [key: string]: string}; // filesystemId => fileId
   constructor() {
     this.fileId = {};
@@ -12,13 +20,6 @@ export class Media {
   setFileId(fileSystemId: string, fileId: string): void {
     this.fileId[fileSystemId] = fileId;
   }
-
-  async seek(time: number): Promise<void> {}
-
-  get naturalWidth(): number {return 0;}
-  get naturalHeight(): number {return 0;}
-  get drawSource(): HTMLCanvasElement | HTMLVideoElement {return null;}
-  get size(): Vector {return [this.naturalWidth, this.naturalHeight];}
 }
 
 export class ImageMedia extends Media {

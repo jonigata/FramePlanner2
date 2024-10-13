@@ -8,7 +8,7 @@
 
 type Point = [number, number];
 
-var hull = [];
+var hull: Point[] = [];
 
 export function QuickHull(points: Point[]): Point[] {
   hull = [];
@@ -87,7 +87,7 @@ function distalPoints(line: [Point, Point], points: Point[]) {
 
 	}
 
-	return {points: outer_points, max: distal_point};
+	return {points: outer_points, max: distal_point!};
 }
 
 /**

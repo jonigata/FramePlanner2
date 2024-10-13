@@ -4,7 +4,7 @@
   import { getDatabase } from "../firebase";
   import { ref, off, onValue, type DatabaseReference } from "firebase/database";
 
-  const messages = {
+  const messages: {[key: string]: string[]} = {
     "storyboarding": ["ネームを考えてるよ","みなぎってきた","セリフどうしようかな","このコマは……","あれれ？","これはきっと面白い","イケる！","神作","いいねいいね","100万部突破"],
     "designing": ["絵はどうしようかな","カメラも工夫しなきゃ"],
     "theme": ["テーマはどうしようかな","テーマ決めよう","どんなテーマがいいかな","衝撃の問題作","全米が泣いた"],
@@ -17,13 +17,13 @@
     "other": ["むむ？","ふむふむ","ふむ～","あら～"],
   };
   let message: string | null = null;
-  let aiStatusRef: DatabaseReference = null;
-  let q = null;
+  let aiStatusRef: DatabaseReference | null = null;
+  let q: NodeJS.Timer | undefined = undefined;
 
   onMount(() => {
     // firebase realtime databaseの/Users/${$accountUser.uid}/aiStatusを監視する
     const database = getDatabase();
-    aiStatusRef = ref(database, `/Users/${$onlineAccount.user.uid}/aiStatus`);
+    aiStatusRef = ref(database, `/Users/${$onlineAccount!.user!.uid}/aiStatus`);
     onValue(aiStatusRef, (snapshot) => {
       const data = snapshot.val();
       console.log(data);

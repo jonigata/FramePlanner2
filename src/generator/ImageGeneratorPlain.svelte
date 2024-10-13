@@ -3,7 +3,7 @@
   import SliderEdit from '../utils/SliderEdit.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 
-  export let chosen: HTMLCanvasElement = null;
+  export let chosen: HTMLCanvasElement | null = null;
 
   let width: number = 512;
   let height: number = 512;

@@ -1,13 +1,15 @@
-export function *translate(p, f) {
+import type { Vector } from './geometry/geometry';
+
+export function *translate(p: Vector, f: (t: Vector) => void) {
   let dragStart = p;
 
   while (p = yield) {
-    const dragOffset = [p[0] - dragStart[0], p[1] - dragStart[1]];
+    const dragOffset: Vector = [p[0] - dragStart[0], p[1] - dragStart[1]];
     f(dragOffset);
   }
 }
 
-export function *scale([w, h], p, f) {
+export function *scale([w, h]: Vector, p: Vector, f: (s: Vector) => void) {
   let dragStart = p;
 
   while (p = yield) {
@@ -18,7 +20,7 @@ export function *scale([w, h], p, f) {
   }
 }
 
-export function *rotate(p, f) {
+export function *rotate(p: Vector, f: (r: number) => void) {
   let dragStart = p;
 
   while (p = yield) {

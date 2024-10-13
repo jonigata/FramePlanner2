@@ -5,7 +5,7 @@ export type ImageGeneratorTarget = {
   filmStack: FilmStack;
   initialPrompt: string | null;
   gallery: HTMLCanvasElement[];
-  onDone: (r: {canvas: HTMLCanvasElement, prompt: string}) => void,
+  onDone: (r: {canvas: HTMLCanvasElement, prompt: string} | null) => void,
 }
 
 export const imageGeneratorTarget: Writable<ImageGeneratorTarget | null> = writable(null);

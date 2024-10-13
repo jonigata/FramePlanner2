@@ -40,7 +40,7 @@ export function drawHorizontalText(
     m = measureHorizontalText(context, r.width, text, baselineSkip, charSkip, autoNewline);
   }
 
-  for (let [i, line] of m.horizontalLines.entries()) {
+  for (let [i, line] of m.horizontalLines!.entries()) {
     if (method === "fill") {
       context.fillText(line.text, r.x, r.y + baselineSkip * i + baselineSkip * 0.8);
     } else if (method === "stroke") {
@@ -87,7 +87,7 @@ export function measureHorizontalText(
   );
 
   return {
-    width: a.reduce((max, item) => Math.max(max, item.size), 0),
+    width: a.reduce((max, item) => Math.max(max, item.size!), 0),
     height: baselineSkip * a.length,
     horizontalLines: a,
   };

@@ -17,8 +17,8 @@ export function selection(
   callback: SelectionCallback
 ): SelectionActionReturn {
   const handleSelection = () => {
-    const start = node.selectionStart;
-    const end = node.selectionEnd;
+    const start = node.selectionStart ?? 0;
+    const end = node.selectionEnd ?? 0;
     const hasSelection = start !== end;
     
     const info: SelectionInfo = {

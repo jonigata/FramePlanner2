@@ -13,17 +13,17 @@
   let tabSet: number = 0;
   let prompt: string = 'zzz';
   let gallery: HTMLCanvasElement[] = [];
-  let chosen: HTMLCanvasElement = null;
+  let chosen: HTMLCanvasElement | null = null;
 
   $: onTargetChanged($imageGeneratorTarget);
-  function onTargetChanged(igt: ImageGeneratorTarget) {
+  function onTargetChanged(igt: ImageGeneratorTarget | null) {
     if (igt) {
-      prompt = igt.initialPrompt;
+      prompt = igt.initialPrompt ?? '';
     }
   }
 
   $: onChangeGallery($imageGeneratorTarget?.gallery);
-  async function onChangeGallery(g: HTMLCanvasElement[]) {
+  async function onChangeGallery(g: HTMLCanvasElement[] | undefined) {
     if (g) {
       gallery = [];
       await tick(); // HACK: なんかこうしないとHTMLが更新されない
@@ -32,9 +32,9 @@
   }
 
   $: onChosen(chosen);
-  function onChosen(c: HTMLCanvasElement) {
+  function onChosen(c: HTMLCanvasElement | null) {
     if (c != null) {
-      const t = $imageGeneratorTarget;
+      const t = $imageGeneratorTarget!;
       $imageGeneratorTarget = null;
       chosen = null;
       t.onDone({ canvas: c, prompt: prompt });
@@ -43,7 +43,7 @@
 
   function onClickAway() {
     if (busy) { return; }
-    const t = $imageGeneratorTarget;
+    const t = $imageGeneratorTarget!;
     $imageGeneratorTarget = null;
     t.onDone(null);
   }

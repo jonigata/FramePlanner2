@@ -23,7 +23,7 @@
   };
 
   $: updateImageInfo($batchImagingPage);
-  function updateImageInfo(page: Page) {
+  function updateImageInfo(page: Page | null) {
     if (!page) { return; }
 
     const leaves = collectLeaves(page.frameTree);

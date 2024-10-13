@@ -9,12 +9,12 @@
 
   function close() {
     if (JSON.stringify(notebook) !== oldNotebook) {
-      $bookEditor.commit(null);
+      $bookEditor!.commit(null);
     }
     $notebookOpen = false;
   }
 
-  let oldNotebook: string = null;
+  let oldNotebook: string = '';
   onMount(async () => {
     oldNotebook = JSON.stringify(notebook);
   });

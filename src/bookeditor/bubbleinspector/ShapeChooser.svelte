@@ -16,7 +16,7 @@
     bubbleInspectorTarget,
     (bit) => bit?.bubble,
     (b, bit) => {
-      bit.bubble = b;
+      bit!.bubble = b!;
       return bit;
     }
   );
@@ -48,13 +48,13 @@
   function chooseShape(e: CustomEvent<MouseEvent>, s: string) {
     $chosenShape = s;
     if (!e.detail.ctrlKey) {
-      $shapeChooserOpen = null;
+      $shapeChooserOpen = false;
     }
   }
 
   function chooseTemplate(e: CustomEvent<MouseEvent>, b: Bubble) {
     console.log(b);
-    const q = $bubble;
+    const q: Bubble = $bubble!;
     q.rotation = b.rotation;
     q.shape = b.shape;
     q.embedded = b.embedded;
@@ -74,21 +74,21 @@
     $bubble = q;
 
     if (!e.detail.ctrlKey) {
-      $shapeChooserOpen = null;
+      $shapeChooserOpen = false;
     }
   }
 
   async function deleteTemplate(e: CustomEvent<MouseEvent>, bindId: BindId) {
-    const root = await $fileSystem.getRoot();
-    const folder = (await root.getNodeByName("テンプレート")).asFolder();
+    const root = await $fileSystem!.getRoot();
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder();
     const entry = await folder.getEntry(bindId);
     await folder.unlink(bindId);
-    await root.fileSystem.destroyNode(entry[2]);
+    await root.fileSystem.destroyNode(entry![2]);
     await buildTemplateBubbles();
   }
 
   $: onOpen($shapeChooserOpen);
-  async function onOpen(f) {
+  async function onOpen(f: boolean) {
     if (f) {
       await buildTemplateBubbles();
     }
@@ -98,8 +98,8 @@
     templateBubbles = [];
     const paperSize = $bubbleInspectorTarget?.page?.paperSize;
     if (paperSize == null) return;
-    const root = await $fileSystem.getRoot();
-    const folder = (await root.getNodeByName("テンプレート")).asFolder();
+    const root = await $fileSystem!.getRoot();
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder();
     const entries = await folder.listEmbodied();
     for (const entry of entries) {
       const bubble = await loadBubbleFrom([840, 1188], entry[2].asFile()); // セーブされたときのドキュメントサイズがわからないので、デフォルト値

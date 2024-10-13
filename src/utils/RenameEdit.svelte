@@ -14,9 +14,9 @@
     original = value;
   });
 
-  function edit(event: FocusEvent) {
+  function edit(event: Event) {
     console.log(event);
-    selectContentOfElement(event.target);
+    selectContentOfElement(input);
   }
 
   function submit() {
@@ -48,10 +48,10 @@
     key++; // undo防止
   }
 
-  function selectContentOfElement(element) {
+  function selectContentOfElement(element: HTMLElement) {
     const range = document.createRange();
     range.selectNodeContents(element);
-    const selection = window.getSelection();
+    const selection = window.getSelection()!;
     selection.removeAllRanges();
     selection.addRange(range);
   }

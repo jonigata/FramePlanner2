@@ -42,11 +42,15 @@
   let plotInstruction: string = '';
 
   function commit() {
-    commitBook($mainBook, null);
+    commitBook($mainBook!, null);
     $mainBook = $mainBook;
   }
 
   async function onStartFullAuto() {
+    if (!notebook) {
+      return;
+    }
+
     fullAutoRunning = true;
     if (!notebook.theme) {
       await onThemeAdvise();
@@ -70,7 +74,7 @@
   async function onThemeAdvise() {
     try {
       themeWaiting = true;
-      notebook.theme = await callAdvise('theme', notebook);
+      notebook!.theme = await callAdvise('theme', notebook!);
       commit();
     }
     catch(e) {
@@ -85,10 +89,10 @@
   async function onCharactersAdvise() {
     try {
       charactersWaiting = true;
-      notebook.characters = [];
-      const newCharacters = await callAdvise('characters', notebook);
-      newCharacters.forEach(c => c.ulid = ulid());
-      notebook.characters = newCharacters;
+      notebook!.characters = [];
+      const newCharacters = await callAdvise('characters', notebook!);
+      newCharacters.forEach((c: Character) => c.ulid = ulid());
+      notebook!.characters = newCharacters;
       commit();
     }
     catch(e) {
@@ -103,16 +107,16 @@
   async function onAddCharacter() {
     try {
       charactersWaiting = true;
-      const newCharacters = await callAdvise('characters', notebook);
+      const newCharacters = await callAdvise('characters', notebook!);
       for (const c of newCharacters) {
-        const index = notebook.characters.findIndex((v) => v.name === c.name);
+        const index = notebook!.characters.findIndex((v) => v.name === c.name);
         if (index < 0) {
           c.ulid = ulid();
-          notebook.characters.push(c);
+          notebook!.characters.push(c);
         } else {
-          c.portrait = notebook.characters[index].portrait;
-          c.ulid = notebook.characters[index].ulid;
-          notebook.characters[index] = c;
+          c.portrait = notebook!.characters[index].portrait;
+          c.ulid = notebook!.characters[index].ulid;
+          notebook!.characters[index] = c;
         }
       }
       commit();
@@ -129,7 +133,7 @@
   async function onPlotAdvise() {
     try {
       plotWaiting = true;
-      notebook.plot = await callAdvise('plot', notebook, plotInstruction);
+      notebook!.plot = await callAdvise('plot', notebook!, plotInstruction);
       commit();
     }
     catch(e) {
@@ -144,7 +148,7 @@
   async function onScenarioAdvise() {
     try {
       scenarioWaiting = true;
-      notebook.scenario = await callAdvise('scenario', notebook);
+      notebook!.scenario = await callAdvise('scenario', notebook!);
       commit();
     }
     catch(e) {
@@ -157,11 +161,11 @@
   }
 
   function reset() {
-    notebook.theme = '';
-    notebook.characters = [];
-    notebook.plot = '';
-    notebook.scenario = '';
-    notebook.storyboard = null;
+    notebook!.theme = '';
+    notebook!.characters = [];
+    notebook!.plot = '';
+    notebook!.scenario = '';
+    notebook!.storyboard = null;
   }
 
   async function onBuildStoryboard() {
@@ -169,23 +173,23 @@
     try {
       storyboardWaiting = true;
       const result = await advise({action:'storyboard', notebook});
-      notebook.storyboard = result.result;
+      notebook!.storyboard = result.result;
       storyboardWaiting = false;
       console.log(result);
       const receivedPages = makePagesFromStoryboard(result.result);
-      let marks = $bookEditor.getMarks();
-      const newPages = $mainBook.pages.filter((p, i) => !marks[i]);
+      let marks = $bookEditor!.getMarks();
+      const newPages = $mainBook!.pages.filter((p, i) => !marks[i]);
       const oldLength = newPages.length;
       newPages.push(...receivedPages);
-      $mainBook.pages = newPages;
+      $mainBook!.pages = newPages;
       commit();
 
       await tick();
-      marks = $bookEditor.getMarks();
+      marks = $bookEditor!.getMarks();
       newPages.forEach((p, i) => {
         if (oldLength <= i) marks[i] = true;
       });
-      $bookEditor.setMarks(marks);
+      $bookEditor!.setMarks(marks);
       $redrawToken = true;
     } catch (e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
@@ -200,8 +204,8 @@
       const result = await advise({action:'critique', notebook});
       critiqueWaiting = false;
       console.log(result);
-      notebook.critique = result.result.critique;
-      $onlineAccount.feathral = result.feathral;
+      notebook!.critique = result.result.critique;
+      $onlineAccount!.feathral = result.feathral;
     } catch (e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
       console.error(e);
@@ -212,38 +216,38 @@
 
   async function onGeneratePortrait(e: CustomEvent<Character>) {
     const c = e.detail;
-    try {
-      c.portrait = 'loading';
-      notebook.characters = notebook.characters;
-      let imagingContext: ImagingContext = {
-        awakeWarningToken: false,
-        errorToken: false,
-        total: 0,
-        succeeded: 0,
-        failed: 0,
-      };
-      const result = await executeProcessAndNotify(
-        5000, "画像が生成されました",
-        async () => {
-          return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, imagingContext);
-        });
-      await result.images[0].decode();
-      console.log(result);
-      c.portrait = result.images[0]; // HTMLImageElement
-      notebook.characters = notebook.characters;
-    } catch (e) {
-      toastStore.trigger({ message: '画像生成エラー', timeout: 1500});
-      console.error(e);
+
+    c.portrait = 'loading';
+    notebook!.characters = notebook!.characters;
+    let imagingContext: ImagingContext = {
+      awakeWarningToken: false,
+      errorToken: false,
+      total: 0,
+      succeeded: 0,
+      failed: 0,
+    };
+    const result = await executeProcessAndNotify(
+      5000, "画像が生成されました",
+      async () => {
+        return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, imagingContext);
+      });
+    if (result == null) {
       c.portrait = null;
+      return;
     }
+
+    await result.images[0].decode();
+    console.log(result);
+    c.portrait = result.images[0]; // HTMLImageElement
+    notebook!.characters = notebook!.characters;
   }
 
   function onRemoveCharacter(e: CustomEvent<Character>) {
     const c = e.detail;
-    const index = notebook.characters.findIndex((v) => v.ulid === c.ulid);
+    const index = notebook!.characters.findIndex((v) => v.ulid === c.ulid);
     if (index >= 0) {
-      notebook.characters.splice(index, 1);
-      notebook.characters = notebook.characters;
+      notebook!.characters.splice(index, 1);
+      notebook!.characters = notebook!.characters;
     }
   }
 
@@ -284,7 +288,7 @@
     <ProgressBar label="Progress Bar" value={imageProgress} max={1} />
   </div>
 </div>
-{:else}
+{:else if notebook} <!-- 絶対に真だがsvelteで!演算子が使えないため -->
 <div class="drawer-content">
   <h1>カイルちゃんの創作ノート</h1>
   <div class="flex justify-start">

@@ -6,7 +6,7 @@ import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 import { VideoMedia } from '../lib/layeredCanvas/dataModels/media';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
-export async function buildMovie(program: DisplayProgramEntry[], vs: VideoSettings, book: Book, reportProgress: (number) => void) {
+export async function buildMovie(program: DisplayProgramEntry[], vs: VideoSettings, book: Book, reportProgress: (n: number) => void) {
   const {width, height, moveDuration, standardWait, standardScale} = vs;
   const {timeTable} = buildTimeTable(program, moveDuration, standardWait);
 
@@ -44,10 +44,10 @@ export async function buildMovie(program: DisplayProgramEntry[], vs: VideoSettin
   }
 
   function getBubbleProgram(bubbles: Bubble[]): number[] {
-    const program = [];
+    const program: number[] = [];
     for (const bubble of bubbles) {
-      if (0 < bubble.appearanceDelay) {
-        program.push(bubble.appearanceDelay);
+      if (0 < (bubble.appearanceDelay ?? 0)) {
+        program.push(bubble.appearanceDelay ?? 0);
       }
     }
     return program.sort();

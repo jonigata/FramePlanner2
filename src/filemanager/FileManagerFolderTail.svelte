@@ -11,8 +11,8 @@
   let acceptable = false;
 
   $: ondrag($fileManagerDragging);
-  function ondrag(dragging: Dragging) {
-    acceptable = dragging && !path.includes(dragging.bindId);
+  function ondrag(dragging: Dragging | null) {
+    acceptable = dragging != null && !path.includes(dragging.bindId);
   }
 
   function onDrop(ev: CustomEvent<DataTransfer>) {

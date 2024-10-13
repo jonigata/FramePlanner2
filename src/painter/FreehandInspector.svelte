@@ -4,7 +4,7 @@
   import FreehandInspectorEasing from "./FreehandInspectorEasing.svelte";
   import FreehandInspectorTaper from "./FreehandInspectorTaper.svelte";
   import FreehandInspectorPalette from "./FreehandInspectorPalette.svelte";
-  import { EASINGS } from "./easing";
+  import { EASINGS, type Easing } from "./easing";
   import { deepCopyProperties } from "../lib/Misc";
   import Drawer from "../utils/Drawer.svelte";
 
@@ -107,18 +107,18 @@
   let fillTheme = options.fill;
   let strokeTheme = options.stroke;
 
-  function applyPreset(preset) {
+  function applyPreset(preset: any) {
     deepCopyProperties(options, preset);
     options = options;
   }
 
   let strokeOptions;
   $: onChangeStrokeOptions(options);
-  function onChangeStrokeOptions(options) {
+  function onChangeStrokeOptions(options: any) {
     strokeOptions = structuredClone(options);
-    strokeOptions.easing = EASINGS[options.easing];
-    strokeOptions.start.easing = EASINGS[options.start.easing];
-    strokeOptions.end.easing = EASINGS[options.end.easing];
+    strokeOptions.easing = EASINGS[options.easing as Easing];
+    strokeOptions.start.easing = EASINGS[options.start.easing as Easing];
+    strokeOptions.end.easing = EASINGS[options.end.easing as Easing];
     strokeOptions.smoothing = 1.0 - options.smoothing;
     // smoothingの値が点間の距離の最大値の係数なので、0に近いほうが丸くなる
     // これはパラメータに関する直感とは逆なので、ここで変換している

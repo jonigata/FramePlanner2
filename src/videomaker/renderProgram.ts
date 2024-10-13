@@ -92,7 +92,7 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
           if (b.appearanceDelay == 0) {
             b.hidesText = false;
           } else {
-            b.hidesText = seekTime < b.appearanceDelay;
+            b.hidesText = seekTime < (b.appearanceDelay ?? 0);
           }
           console.log(b.appearanceDelay, seekTime, b.hidesText);
         }

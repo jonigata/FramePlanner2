@@ -43,7 +43,7 @@ export function getBubbleName(shape: string) {
 }
 
 
-export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: [number, number], shape: string, opts: any) {
+export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, shape: string, opts: any) {
   seed = opts.randomSeed ?? 0;
 
   switch (shape) {
@@ -300,7 +300,7 @@ function drawSpeedLinesBubble(context: CanvasRenderingContext2D, method: string,
     const angle = Math.atan2(tailTip[1], tailTip[0]);
     context.rotate(angle);
 
-    function calculateNormalizedPosition([fx,fy]) {
+    function calculateNormalizedPosition([fx,fy]: Vector): number {
       const v0: Vector = [length*0.5, 0];
       const [nx, ny] = rotate2D(v0, angle);
       const psf = 0.5 - projectionScalingFactor2D([fx, fy], [nx, ny]) * 0.5;
@@ -343,7 +343,7 @@ function drawSpeedLinesBubble(context: CanvasRenderingContext2D, method: string,
   }
 }
 
-function extendLineSegment(p0, p1, extensionFactor): [Vector, Vector] {
+function extendLineSegment(p0: Vector, p1: Vector, extensionFactor: number): [Vector, Vector] {
     const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
   
     const q0: Vector = [p1[0] - dx * extensionFactor, p1[1] - dy * extensionFactor];
@@ -351,7 +351,7 @@ function extendLineSegment(p0, p1, extensionFactor): [Vector, Vector] {
     return [q0, q1];
 }
   
-function finishTrivialPath(context, method) {
+function finishTrivialPath(context: CanvasRenderingContext2D, method: string) {
   switch(method) {
     case 'fill':
       context.fill();
@@ -369,7 +369,7 @@ function finishTrivialPath(context, method) {
 paper.setup([1,1]); // creates a virtual canvas
 paper.view.autoUpdate = false; // disables drawing any shape automatically
 
-export function getPath(shape, size, opts, seed): paper.PathItem {
+export function getPath(shape: string, size: Vector, opts: any, seed: string): paper.PathItem | null {
   seed = opts.randomSeed ?? 0;
 
   const startTime = performance.now();
@@ -410,25 +410,25 @@ export function getPath(shape, size, opts, seed): paper.PathItem {
   }
 }
 
-function sizeToRect(size: [number, number]): Rect {
+function sizeToRect(size: Vector): Rect {
   return [-size[0]*0.5, -size[1]*0.5, size[0], size[1]];
 }
 
-function halfSize(size: [number, number]): [number, number] {
+function halfSize(size: Vector): Vector {
   return [size[0] * 0.5, size[1] * 0.5];
 }
 
-function getSquarePath(size: [number, number], opts: any, seed: string) {
+function getSquarePath(size: Vector, opts: any, seed: string) {
   const path = new paper.Path.Rectangle(sizeToRect(size));
   return addTrivialTail(path, size, opts);
 }
 
-function getEllipsePath(size: [number, number], opts: any, seed: string) {
+function getEllipsePath(size: Vector, opts: any, seed: string) {
   const path = new paper.Path.Ellipse({center: [0, 0], radius: halfSize(size)});
   return addTrivialTail(path, size, opts);
 }
 
-function getRoundedPath(size: [number, number], opts: any, seed: string) {
+function getRoundedPath(size: Vector, opts: any, seed: string) {
   const [x0, y0, w, h] = sizeToRect(size);
   const [x1, y1] = [0, 0];
   const [x2, y2] = [x0 + w, y0 + h];
@@ -449,7 +449,7 @@ function getRoundedPath(size: [number, number], opts: any, seed: string) {
   return addTrivialTail(path, size, opts);
 }
 
-function getHarshPath(size: [number, number], opts: any, seed: string) {
+function getHarshPath(size: Vector, opts: any, seed: string) {
   const rng = seedrandom(seed);
 
   let angles = generateRandomAngles(rng, opts.bumpCount, opts.angleJitter);
@@ -463,7 +463,7 @@ function getHarshPath(size: [number, number], opts: any, seed: string) {
   return addTrivialTail(path, size, opts);
 }
 
-function getShoutPath(size: [number, number], opts: any, seed: string) {
+function getShoutPath(size: Vector, opts: any, seed: string) {
   const bump = opts.bumpSharp;
   const rng = seedrandom(seed);
   let points;
@@ -485,7 +485,7 @@ function getShoutPath(size: [number, number], opts: any, seed: string) {
   return addTrivialTail(path, size, opts);
 }
 
-function getSoftPath(size: [number, number], opts: any, seed: string) {
+function getSoftPath(size: Vector, opts: any, seed: string) {
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, opts.bumpCount, opts.angleJitter), opts.superEllipse);
   const points = subdividePointsWithBump(size, rawPoints, -opts.bumpDepth);
@@ -515,7 +515,7 @@ function getSoftPath(size: [number, number], opts: any, seed: string) {
   return addTrivialTail(path, size, opts);
 }
 
-function getHeartPath(size: [number, number], opts: any, seed: string) {
+function getHeartPath(size: Vector, opts: any, seed: string) {
   const [w, h] = size;
   const [x, y] = [0, 0];
 
@@ -538,7 +538,7 @@ function getHeartPath(size: [number, number], opts: any, seed: string) {
   return path;
 }
 
-function getDiamondPath(size: [number, number], opts: any, seed: string) {
+function getDiamondPath(size: Vector, opts: any, seed: string) {
   const [x0, y0, w, h] = sizeToRect(size);
 
   const path = new paper.Path();
@@ -552,7 +552,7 @@ function getDiamondPath(size: [number, number], opts: any, seed: string) {
   return path;
 }
 
-function getArrowPath(size: [number, number], opts: any, seed: string) {
+function getArrowPath(size: Vector, opts: any, seed: string) {
   const [x0, y0, w, h] = sizeToRect(size);
 
   const { shaftWidth, headLength } = opts;
@@ -577,7 +577,7 @@ function getArrowPath(size: [number, number], opts: any, seed: string) {
   
 }
 
-function getEllipseMindPath(size: [number, number], opts: any, seed: string) {
+function getEllipseMindPath(size: Vector, opts: any, seed: string) {
   const newOpts = {...opts};
   newOpts.tailTip = [0,0];
   newOpts.tailMid = [0.5,0];
@@ -586,7 +586,7 @@ function getEllipseMindPath(size: [number, number], opts: any, seed: string) {
   return path2;
 }
 
-function getSoftMindPath(size: [number, number], opts: any, seed: string) {
+function getSoftMindPath(size: Vector, opts: any, seed: string) {
   const newOpts = {...opts};
   newOpts.tailTip = [0,0];
   newOpts.tailMid = [0.5,0];
@@ -595,7 +595,7 @@ function getSoftMindPath(size: [number, number], opts: any, seed: string) {
   return path2;
 }
 
-function getRoundedMindPath(size: [number, number], opts: any, seed: string) {
+function getRoundedMindPath(size: Vector, opts: any, seed: string) {
   const newOpts = {...opts};
   newOpts.tailTip = [0,0];
   newOpts.tailMid = [0.5,0];
@@ -604,7 +604,7 @@ function getRoundedMindPath(size: [number, number], opts: any, seed: string) {
   return path2;
 }
 
-function getCloudPath(size: [number, number], opts: any, seed: string, vertexCount: number, superEllipseN: number, bumpFactor: number) {
+function getCloudPath(size: Vector, opts: any, seed: string, vertexCount: number, superEllipseN: number, bumpFactor: number) {
   const rng = seedrandom(seed);
   const rawPoints = generateSuperEllipsePoints(size, generateRandomAngles(rng, vertexCount), superEllipseN);
   const points = subdividePointsWithBump(size, rawPoints, -bumpFactor);
@@ -623,7 +623,7 @@ function getCloudPath(size: [number, number], opts: any, seed: string, vertexCou
   return addTrivialTail(path, size, opts);
 }
 
-function addTrivialTail(path: paper.Path, size: [number, number], opts: any): paper.PathItem {
+function addTrivialTail(path: paper.Path, size: Vector, opts: any): paper.PathItem {
   if (opts?.tailTip) {
     const v = opts.tailTip;
     const m = opts.tailMid;
@@ -641,7 +641,7 @@ function addTrivialTail(path: paper.Path, size: [number, number], opts: any): pa
   return path;
 }
 
-function makeTrivialTailPath(size: [number, number], m: Vector, v: Vector, tailWidth: number) {
+function makeTrivialTailPath(size: Vector, m: Vector, v: Vector, tailWidth: number) {
   if (m == null || (m[0] == 0 && m[1] == 0)) {
     m = [0.5, 0];
   }
@@ -664,7 +664,7 @@ function makeTrivialTailPath(size: [number, number], m: Vector, v: Vector, tailW
   return tail;
 }
 
-function makeExtractTailPath(size: [number, number], m: Vector, p: Vector, w: number) {
+function makeExtractTailPath(size: Vector, m: Vector, p: Vector, w: number) {
   if (m == null || (m[0] == 0 && m[1] == 0)) {
     m = [0.5, 0];
   }
@@ -682,7 +682,7 @@ function makeExtractTailPath(size: [number, number], m: Vector, p: Vector, w: nu
   return tail;
 }
 
-function getPolygonPath(size, opts, seed) {
+function getPolygonPath(size: Vector, opts: any, seed: string) {
   const rng = seedrandom(seed);
   const angles = generateRandomAngles(rng, opts.vertexCount, opts.angleJitter);
   const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
@@ -695,67 +695,67 @@ function getPolygonPath(size, opts, seed) {
   return addTrivialTail(path, size, opts);
 }
 
-function drawEllipseBubble(context, method, seed, size, opts) {
+function drawEllipseBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getEllipsePath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawSquareBubble(context, method, seed, size, opts) {
+function drawSquareBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getSquarePath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawPolygonBubble(context, method, seed, size, opts) {
+function drawPolygonBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getPolygonPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawRoundedBubble(context, method, seed, size, opts) {
+function drawRoundedBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getRoundedPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawHarshBubble(context, method, seed, size, opts) {
+function drawHarshBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getHarshPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawShoutBubble(context, method, seed, size, opts) {
+function drawShoutBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getShoutPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawSoftBubble(context, method, seed, size, opts) {
+function drawSoftBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getSoftPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawHeartBubble(context, method, seed, size, opts) {
+function drawHeartBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getHeartPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawDiamondBubble(context, method, seed, size, opts) {
+function drawDiamondBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getDiamondPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawArrowBubble(context, method, seed, size, opts) {
+function drawArrowBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getArrowPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawEllipseMindBubble(context, method, seed, size, opts) {
+function drawEllipseMindBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getEllipseMindPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawSoftMindBubble(context, method, seed, size, opts) {
+function drawSoftMindBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getSoftMindPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
 
-function drawRoundedMindBubble(context, method, seed, size, opts) {
+function drawRoundedMindBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
   const path = getRoundedMindPath(size, opts, seed);
   drawPath(context, method, path, opts);
 }
@@ -814,7 +814,7 @@ function drawPoints(context, points, color) {
 }
 */
 
-function addMind(path: paper.PathItem, seed: string, size: [number, number], opts: any, newOpts: any) {
+function addMind(path: paper.PathItem, seed: string, size: Vector, opts: any, newOpts: any) {
   const trail = [[0.97, 0.04], [0.8, 0.05], [0.6, 0.08], [0.3, 0.12]];
   const m = tailCoordToWorldCoord([0,0], opts.tailTip, opts.tailMid);
   const s = opts.tailTip;

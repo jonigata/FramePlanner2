@@ -1335,30 +1335,6 @@ export class BubbleLayer extends Layer {
     }
   }
 
-  uniteBubble(bubbles: Bubble[]) {
-    const paperSize = this.getPaperSize();
-    let path: paper.PathItem | null = null;
-    for (let bubble of bubbles) {
-      const [x, y, w, h] = bubble.getPhysicalRegularizedRect(paperSize);
-      const path2 = getPath(bubble.shape, [x, y, w, h], bubble.optionContext, bubble.text);
-      if (path2) {
-        const c = bubble.getPhysicalCenter(paperSize);
-        path2.rotate(-bubble.rotation, c);
-        path = path ? path.unite(path2) : path2;
-      } else {
-        // シェイプ変更などでリンクが解けている
-        for (let b of bubbles) {
-          b.parent = null;
-        }
-        return null;
-      }
-    }
-    const c0 = bubbles[0].getPhysicalCenter(paperSize);
-    path!.rotate(bubbles[0].rotation, c0);
-    path!.translate(new paper.Point(c0).multiply(-1));
-    return path;
-  }
-
   getGroup(bubble: Bubble) {
     const group = [bubble];
 

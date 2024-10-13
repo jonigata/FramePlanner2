@@ -28,7 +28,8 @@ type CreateBubbleArgs = {
   position: Vector;
 }
 
-function createBubble(context: Context, args: CreateBubbleArgs) {
+function createBubble(context: Context, params: Parameters) {
+  const args = params as CreateBubbleArgs;
   console.log("createBubble", args);
   if (args.text == null) {
     throw new AIArgumentError("テキストが空です");

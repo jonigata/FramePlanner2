@@ -4,7 +4,11 @@ import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRenderer
 
 export async function renderPageToBlob(page: Page): Promise<Blob> {
   const canvas = await renderPage(page);
-  const png: Blob = await new Promise((r) => {canvas.toBlob(r, 'image/png')});
+  const png: Blob = await new Promise(
+    (r) => {
+      canvas.toBlob(
+        blob => r(blob ?? new Blob()), 'image/png')
+    });
   return png;
 }
 

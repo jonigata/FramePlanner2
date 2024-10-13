@@ -3,9 +3,9 @@ import { dryLoadBookFrom } from "../filemanager/fileManagerStore";
 
 export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImageFiles: NodeId[], strayImageFiles: NodeId[] }> {
   const root = await fileSystem.getRoot();
-  const desktop = await root.getEmbodiedEntryByName("デスクトップ");
-  const cabinet = await root.getEmbodiedEntryByName("キャビネット");
-  const trash = await root.getEmbodiedEntryByName("ごみ箱");
+  const desktop = (await root.getEmbodiedEntryByName("デスクトップ"))!;
+  const cabinet = (await root.getEmbodiedEntryByName("キャビネット"))!;
+  const trash = (await root.getEmbodiedEntryByName("ごみ箱"))!;
 
   const allFiles: string[] = [];
   const allFolders: string[] = [];
@@ -13,21 +13,21 @@ export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImag
   await listFiles(cabinet[2].asFolder(), allFiles, allFolders);
   await listFiles(trash[2].asFolder(), allFiles, allFolders);
 
-  const usedImageFiles = [];
+  const usedImageFiles: NodeId[] = [];
   for (const file of allFiles) {
     console.log("fileId", file);
-    await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId)).asFile(), usedImageFiles);
+    await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId))!.asFile(), usedImageFiles);
   }
 
-  const materialImageFolder = await root.getNodeByName("素材");
+  const materialImageFolder = (await root.getNodeByName("素材"))!;
   const materialImages = (await materialImageFolder.asFolder().list()).map((entry) => entry[2]);
   usedImageFiles.push(...materialImages);
 
-  const allImageFolder = await root.getNodeByName("画像");
+  const allImageFolder = (await root.getNodeByName("画像"))!;
   const allImageFiles = (await allImageFolder.asFolder().list()).map((entry) => entry[2]);
   allImageFiles.push(...materialImages);
 
-  function difference(setA, setB) {
+  function difference(setA: Set<NodeId>, setB: Set<NodeId>) {
     const _difference = new Set(setA);
     for (const elem of setB) {
       _difference.delete(elem);
@@ -74,7 +74,7 @@ async function drawStrayMark(image: HTMLImageElement) {
   const canvas = document.createElement("canvas");
   canvas.width = image.width;
   canvas.height = image.height;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d")!;
   ctx.drawImage(image, 0, 0, image.width, image.height);
   ctx.strokeStyle = "green";
   ctx.lineWidth = 10;

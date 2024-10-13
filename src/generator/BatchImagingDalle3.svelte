@@ -32,11 +32,11 @@
   async function execute() {
     console.log('execute');
     $busy = true;
-    await generateAll($batchImagingPage);
+    await generateAll($batchImagingPage!);
     $busy = false;
     console.log('execute done');
 
-    commitBook($mainBook, null);
+    commitBook($mainBook!, null);
     $mainBook = $mainBook;
     $redrawToken = true;
     $batchImagingPage = null;
@@ -64,8 +64,8 @@
       img.src = "data:image/png;base64," + imageJson;
       await img.decode();
 
-      const film = new Film();
       const media = new ImageMedia(createCanvasFromImage(img));
+      const film = new Film(media);
       film.media = media;
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);
@@ -93,7 +93,7 @@
     const promises = [];
     for (const leaf of leaves) {
       if (0 < leaf.filmStack.films.length) { continue; }
-      const leafLayout = findLayoutOf(pageLayout, leaf);
+      const leafLayout = findLayoutOf(pageLayout, leaf)!;
       promises.push(generate(page.paperSize, leafLayout));
     }
     imagingContext.total = promises.length;

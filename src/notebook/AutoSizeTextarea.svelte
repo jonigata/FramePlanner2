@@ -8,11 +8,11 @@
   export let minHeight = 24;
   export let placeholder ='';
 
-  let textarea;
+  let textarea: HTMLTextAreaElement;
 
-  let internalValue = null;
+  let internalValue: string | null = null;
   $: onValueChanged(value);
-  async function onValueChanged(value) {
+  async function onValueChanged(value: string) {
     if (value === internalValue) return;
     internalValue = value;
     await tick();

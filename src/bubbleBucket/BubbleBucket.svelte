@@ -8,10 +8,10 @@
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { getRectCenter } from '../lib/layeredCanvas/tools/geometry/geometry';
 
-  let bubbles = [];
+  let bubbles: Bubble[] = [];
 
   function setUpBubbles() {
-    bubbles = $bubbleBucketPage.bubbles;
+    bubbles = $bubbleBucketPage!.bubbles;
   }
   $: if ($bubbleBucketPage != null) {
     setUpBubbles();
@@ -23,8 +23,8 @@
   }
 
   function onAddBubble() {
-    const dir = $mainBook.direction;
-    const page = $bubbleBucketPage;
+    const dir = $mainBook!.direction;
+    const page = $bubbleBucketPage!;
     const frameSeq = collectPageContents(page, 0, dir)
     const contents = frameSeq.contents;
 
@@ -47,8 +47,8 @@
     const size = bubble.calculateFitSize(paperSize);
     bubble.setPhysicalSize(paperSize, size);
 
-    $bubbleBucketPage.bubbles.push(bubble);
-    $bubbleBucketPage = $bubbleBucketPage;
+    page.bubbles.push(bubble);
+    $bubbleBucketPage = page;
     $bubbleBucketDirty = true;
   }
 </script>

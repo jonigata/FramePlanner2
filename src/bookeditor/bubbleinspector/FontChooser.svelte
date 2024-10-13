@@ -9,9 +9,9 @@
 
   let searchOptions: SearchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
   let drawerPage = 0;
-  let fontList: WebFontList = null;
+  let fontList: WebFontList | null = null;
   let localFontName: string;
-  let localFonts = [];
+  let localFonts: string[] = [];
   let historyStorage: HistoryStorage;
 
   function setLocalFont() {

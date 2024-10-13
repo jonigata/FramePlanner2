@@ -26,8 +26,7 @@
       console.log("image file");
       const canvas = await createCanvasFromBlob(file);
 
-      const film = new Film();
-      film.media = new ImageMedia(canvas);
+      const film = new Film(new ImageMedia(canvas));
       film.index = filmStack.films.length;
       return [film];
     }

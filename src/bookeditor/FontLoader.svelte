@@ -3,12 +3,13 @@
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { forceFontLoadToken, mainBook, redrawToken, fontLoadToken } from "./bookStore";
+  import type { Book } from "./book";
   import { onMount } from "svelte";
 
   let googleFonts: GoogleFontDefinition[] = [];
 
   $: onBookChanged($mainBook, $forceFontLoadToken);
-  async function onBookChanged(book, _fflt) {
+  async function onBookChanged(book: Book | null, _fflt: boolean) {
     if (!book) { return; }
     $forceFontLoadToken = false;
 
@@ -27,7 +28,7 @@
   }
 
   $: onFontLoad($fontLoadToken);
-  function onFontLoad(tokens: {family: string, weight: string}[]) {
+  function onFontLoad(tokens: {family: string, weight: string}[] | null) {
     if (tokens) {
       for (let token of tokens) {
         load(token.family, token.weight);
@@ -35,7 +36,7 @@
     }
   }  
 
-  const localFontFiles = {
+  const localFontFiles: { [key: string]: string } = {
     '源暎アンチック': 'GenEiAntiqueNv5-M',
     '源暎エムゴ': 'GenEiMGothic2-Black',
     '源暎ぽっぷる': 'GenEiPOPle-Bk',

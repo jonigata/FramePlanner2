@@ -6,4 +6,4 @@ export type ColorPickerCall = {
   onUpdate: (color: string) => void;
 }
 
-export const colorPickerStore: Writable<ColorPickerCall> = writable(null);
+export const colorPickerStore: Writable<ColorPickerCall | null> = writable(null);

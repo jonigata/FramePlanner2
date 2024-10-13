@@ -43,7 +43,7 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
     ev.stopPropagation();
     if (isDragging) {
       const index = getDropIndex(ev.clientY);
-      const dt = ev.dataTransfer;
+      const dt = ev.dataTransfer!;
       const files = dt.files;
       if (files && files.length > 0) {
         options.onFileDrop(files, index);

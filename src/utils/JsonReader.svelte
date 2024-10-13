@@ -7,7 +7,7 @@
   let json = '';
 
   onMount(async () => {
-    json = JSON.stringify(serializeBook($mainBook), null, 2);
+    json = JSON.stringify(serializeBook($mainBook!), null, 2);
   });
 </script>
 

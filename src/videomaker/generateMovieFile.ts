@@ -8,7 +8,7 @@ export interface Scene {
   canvas: HTMLCanvasElement;
 }
 
-let ffmpeg: FFmpeg<FFmpegConfigurationGPLExtended> = null;
+let ffmpeg: FFmpeg<FFmpegConfigurationGPLExtended> | null = null;
 
 export function initFFmpeg() {
   if (ffmpeg) {
@@ -23,7 +23,7 @@ async function writeCanvasToFile(canvas: HTMLCanvasElement, filename: string): P
   return new Promise((resolve, reject) => {
     canvas.toBlob(async blob => {
       if (blob) {
-        await ffmpeg.writeFile(filename, blob);
+        await ffmpeg!.writeFile(filename, blob);
         resolve();
       } else {
         reject(new Error('Failed to create Blob from canvas'));
@@ -32,7 +32,11 @@ async function writeCanvasToFile(canvas: HTMLCanvasElement, filename: string): P
   });
 }
 
-export async function createVideoWithImages(w: number, h: number, fps: number, d: number, scenes: Scene[], reportProgress: (number) => void): Promise<string> {
+export async function createVideoWithImages(w: number, h: number, fps: number, d: number, scenes: Scene[], reportProgress: (n: number) => void): Promise<string> {
+  if (!ffmpeg) {
+    throw new Error('FFmpeg is not initialized');
+  }
+
   console.log('createVideoWithImages', w, h, fps, d);
   // 各画像をファイルシステムに書き込む
   let progress = 0.5;
