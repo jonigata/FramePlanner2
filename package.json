@@ -18,7 +18,7 @@
   "devDependencies": {
     "@skeletonlabs/skeleton": "^1.12.0",
     "@sveltejs/vite-plugin-svelte": "^2.4.6",
-    "@tsconfig/svelte": "^3.0.0",
+    "@tsconfig/svelte": "^5.0.4",
     "@types/file-saver": "^2.0.7",
     "@types/webfontloader": "^1.6.35",
     "autoprefixer": "^10.4.7",
@@ -31,7 +31,7 @@
     "svelte-preprocess": "^5.0.4",
     "tailwindcss": "^3.1.5",
     "tslib": "^2.5.0",
-    "typescript": "^4.9.3",
+    "typescript": "^5.6.3",
     "vite": "^4.2.0"
   },
   "dependencies": {
@@ -52,10 +52,11 @@
     "file-saver": "^2.0.5",
     "firebase": "^10.12.2",
     "firebaseui": "^6.1.0",
-    "idb": "^7.1.1",
+    "idb": "^8.0.0",
     "io-ts": "^2.2.21",
     "jsonc-parser": "^3.2.0",
     "jszip": "^3.10.1",
+    "ndjson-readablestream": "^1.2.0",
     "openai": "^4.16.1",
     "paper": "^0.12.17",
     "paperjs-offset": "^1.0.8",

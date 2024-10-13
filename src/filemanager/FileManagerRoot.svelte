@@ -366,23 +366,15 @@
     undumpCounter++;
     if (undumpCounter == 5) {
       $loading = true;
+      console.log("undump start");
       for (const file of dumpFiles) {
-        const s = await readFileAsText(file);
-        await (fileSystem as IndexedDBFileSystem).undump(s);
+        console.log("undump", file);
+        await (fileSystem as IndexedDBFileSystem).undump(file);
       }
       console.log("undump done");
       $loading = false;
       dumpFiles = null;
     }
-  }
-
-  function readFileAsText(file: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
-    });
   }
 
   function refreshFilms(book: Book) {
@@ -433,7 +425,7 @@
       <div class="flex flex-row gap-2 items-center justify-center">
         <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
         <div class="hbox gap mx-2" style="margin-top: 8px;">
-          リストア<input accept="application/json" bind:files={dumpFiles} id="dump" name="dump" type="file" />
+          リストア<input accept="application/x-ndjson" bind:files={dumpFiles} id="dump" name="dump" type="file" />
         </div>
         {#if dumpFiles}
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>

@@ -4,6 +4,49 @@ import type { NodeId, NodeType, BindId, Entry, Watcher } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
 import { createCanvasFromImage } from '../../utils/imageUtil';
+// import readNDJSONStream from 'ndjson-readablestream';
+
+async function* readNDJSONStream(
+  stream: ReadableStream<Uint8Array>
+): AsyncGenerator<any, void, unknown> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let lineNumber = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        if (buffer.trim()) {
+          yield JSON.parse(buffer);
+        }
+        break;
+      }
+
+      const chunk = decoder.decode(value, { stream: true });
+      let start = 0;
+      let newlineIndex: number;
+
+      while ((newlineIndex = chunk.indexOf('\n', start)) !== -1) {
+        const line = buffer + chunk.slice(start, newlineIndex).trim();
+        lineNumber++;
+        console.log(`Processing line ${lineNumber}`);
+        yield JSON.parse(line);
+        // 次の検索開始位置を更新
+        start = newlineIndex + 1;
+        // バッファをクリア
+        buffer = '';
+      }
+
+      // 最後の改行以降の部分をバッファに保持
+      buffer += chunk.slice(start);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown>;
@@ -104,46 +147,69 @@ export class IndexedDBFileSystem extends FileSystem {
   
     const stream = new ReadableStream({
       async start(controller) {
-        controller.enqueue(new TextEncoder().encode('['));
-  
-        let first = true;
-
+        const encoder = new TextEncoder();
+        
         while (cursor) {
-          if (!first) {
-            controller.enqueue(new TextEncoder().encode(','));
-          } else {
-            first = false;
-          }
-  
-          const jsonString = JSON.stringify(cursor.value);
-          controller.enqueue(new TextEncoder().encode(jsonString));
+          const jsonString = JSON.stringify(cursor.value) + '\n'; // NDJSON用に改行を追加
+          controller.enqueue(encoder.encode(jsonString));
           cursor = await cursor.continue();
         }
-
-        controller.enqueue(new TextEncoder().encode(']'));
+  
         controller.close();
       }
     });
   
     const response = new Response(stream, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/x-ndjson' }
     });
   
     const blob = await response.blob();
-    saveAs(blob, 'filesystem-dump.json');
+    saveAs(blob, 'filesystem-dump.ndjson'); // 拡張子を.ndjsonに変更
   }
 
-  async undump(json: string): Promise<void> {
-    // ファイルからJSONを読み込む
-    const nodes = JSON.parse(json);
-  
-    // すべてのノードをIndexedDBに保存
-    const tx = this.db.transaction('nodes', 'readwrite');
-    await tx.store.clear();
-    for (const node of nodes) {
-      await tx.store.put(node);
+  async undump(blob: Blob): Promise<void> {
+    const batchSize = 1000;
+    const stream = blob.stream();
+    const nodes = readNDJSONStream(stream);
+    
+    console.log('Start undump');
+    await this.db.transaction('nodes', 'readwrite')
+      .objectStore('nodes')
+      .clear();
+
+    let batch: any[] = [];
+    let count = 0;
+
+    const saveBatch =  async (batch: any[]) => {
+      const tx = this.db.transaction('nodes', 'readwrite');
+      const store = tx.objectStore('nodes');
+
+      for (const node of batch) {
+        await store.put(node);
+      }
+
+      await tx.done;
     }
-    await tx.done;
+
+    console.log('Start processing nodes');
+    for await (const node of nodes) {
+      console.log(node);
+      batch.push(node);
+      count++;
+
+      if (batch.length >= batchSize) {
+        console.log(`Processing ${count} nodes`);
+        await saveBatch.call(this, batch);
+        batch = [];
+        console.log(`Processed`);
+      }
+    }
+
+    // 残りのノードを保存
+    if (batch.length > 0) {
+      await saveBatch.call(this, batch);
+      console.log(`Processed ${count} nodes in total`);
+    }
   }
 }
 
