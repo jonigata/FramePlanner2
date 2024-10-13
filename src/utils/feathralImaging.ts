@@ -24,7 +24,7 @@ export type ImagingResult = {
 
 export type Mode = "schnell" | "pro" | "chibi" | "manga";
 
-export async function generateImage(prompt: string, width: number, height: number, context: ImagingContext): Promise<ImagingResult> {
+export async function generateImage(prompt: string, width: number, height: number, context: ImagingContext): Promise<ImagingResult | null> {
   console.log("running feathral");
   try {
     let q = null;
@@ -61,7 +61,7 @@ export async function generateImage(prompt: string, width: number, height: numbe
   }
 }
 
-export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<ImagingResult> {
+export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<ImagingResult | null> {
   console.log("running feathral");
   try {
     let q = null;
@@ -99,8 +99,8 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
 }
 
 export async function generateMarkedPageImages(imagingContext: ImagingContext, postfix: string, mode: Mode, onProgress: (progress: number) => void) {
-  const marks = get(bookEditor).getMarks();
-  const newPages = get(mainBook).pages.filter((p, i) => marks[i]);
+  const marks = get(bookEditor)!.getMarks();
+  const newPages = get(mainBook)!.pages.filter((p, i) => marks[i]);
 
   let sum = 0;
   for (let i = 0; i < newPages.length; i++) {
@@ -148,7 +148,7 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
     const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
     transformer.scale(0.01);
     console.log("scaled");
-    constraintLeaf(page.paperSize, leafLayout);
+    constraintLeaf(page.paperSize, leafLayout!);
   }
   updateToken.set(true);
 }
@@ -159,9 +159,8 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
   const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
   if (result != null) {
     await result.images[0].decode();
-    const film = new Film();
     const media = new ImageMedia(createCanvasFromImage(result.images[0]));
-    film.media = media;
+    const film = new Film(media);
     frame.filmStack.films.push(film);
     frame.gallery.push(media.canvas);
     imagingContext.succeeded++;

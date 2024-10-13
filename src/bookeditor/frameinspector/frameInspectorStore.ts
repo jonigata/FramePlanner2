@@ -14,9 +14,9 @@ export type FrameInspectorPosition = {
 export type FrameInspectorTarget = {
   frame: FrameElement,
   page: Page,
-  command: FrameInspectorCommand,
-  commandTargetFilm: Film,
+  command: FrameInspectorCommand | null,
+  commandTargetFilm: Film | null,
 }
 
-export const frameInspectorTarget: Writable<FrameInspectorTarget> = writable(null);
+export const frameInspectorTarget: Writable<FrameInspectorTarget | null> = writable(null);
 export const frameInspectorRebuildToken: Writable<number> = writable(0);

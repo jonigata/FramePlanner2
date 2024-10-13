@@ -8,7 +8,7 @@ import { FilmStack } from "./film";
 const minimumBubbleSize = 72;
 const threshold = 10;
 
-export class BubbleRenderInfo { // serializeしない
+export interface BubbleRenderInfo { // serializeしない
   pathJson: string;
   path: paper.PathItem;
   unitedPath: paper.PathItem;
@@ -23,43 +23,43 @@ export class Bubble {
   // n_p0, n_p1, n_offset, n_fontSize, n_strokeWidth, n_outlineWidthはnormalized
   n_p0: Vector;
   n_p1: Vector;
-  n_offset: Vector;
-  rotation: number;
+  n_offset!: Vector;
+  rotation!: number;
   text: string;
-  shape: string;
-  embedded: boolean;
-  fontStyle: string;
-  fontWeight: string;
-  n_fontSize: number;
-  charSkip: number;
-  lineSkip: number;
-  fontFamily: string;
-  direction: string;
-  fontColor: string;
-  fillColor: string;
-  strokeColor: string;
-  n_strokeWidth: number;
-  outlineColor: string;
-  n_outlineWidth: number;
-  autoNewline: boolean;
+  shape!: string;
+  embedded!: boolean;
+  fontStyle!: string;
+  fontWeight!: string;
+  n_fontSize!: number;
+  charSkip!: number;
+  lineSkip!: number;
+  fontFamily!: string;
+  direction!: string;
+  fontColor!: string;
+  fillColor!: string;
+  strokeColor!: string;
+  n_strokeWidth!: number;
+  outlineColor!: string;
+  n_outlineWidth!: number;
+  autoNewline!: boolean;
   uuid: string;
-  parent: string;
+  parent: string | null;
   creationContext: string;
   filmStack: FilmStack;
-  scaleLock: boolean;
-  rubySize: number;
-  rubyDistance: number;
+  scaleLock!: boolean;
+  rubySize!: number;
+  rubyDistance!: number;
   optionContext: any;
 
   // 以下一時的
-  pageNumber: number; // 当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
-  fontRenderVersion: number; // フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
-  appearanceDelay: number; // ムービー生成時に使う出現までの時間(コマ単位)
-  hidesText: boolean; // ムービー生成時に使うテキスト非表示フラグ
-  prompt: string;
-  gallery: HTMLCanvasElement[];
+  pageNumber?: number; // 当該自分が格納したのでない限り正しい値だと仮定してはいけない　また保存されていることを期待してはいけない
+  fontRenderVersion?: number; // フォント読み込み後の数秒後の強制再描画で変更されていないことになることを防ぐ
+  appearanceDelay?: number; // ムービー生成時に使う出現までの時間(コマ単位)
+  hidesText?: boolean; // ムービー生成時に使うテキスト非表示フラグ
+  prompt: string = '';
+  gallery: HTMLCanvasElement[] = [];
 
-  renderInfo: BubbleRenderInfo;
+  renderInfo?: BubbleRenderInfo;
 
   constructor() {
     this.reset();
@@ -103,7 +103,7 @@ export class Bubble {
   }
 
   getStackTrace() {
-    return Error().stack;
+    return Error().stack!;
   }
 
   clone(hard: boolean): Bubble {
@@ -177,7 +177,7 @@ export class Bubble {
     // 古いjsonはn_に一貫性がない 古い"fontsize"はn_fontsize相当
     const defaultUnit = 1 / 840;
     const unit = Bubble.getUnit(paperSize);
-    const normalizedNumber = (v1, v2, v3) => { if (v1 != null) { return v1; } else if (v2 != null) { return v2 * unit; } else { return v3 * defaultUnit; }}
+    const normalizedNumber = (v1: number, v2: number, v3: number) => { if (v1 != null) { return v1; } else if (v2 != null) { return v2 * unit; } else { return v3 * defaultUnit; }}
 
     const b = new Bubble();
     b.n_p0 = json.p0 ?? json.n_p0;
@@ -224,7 +224,7 @@ export class Bubble {
 
   static decompile(b: Bubble): any {
     const unit = 1 / 840;
-    const equalNumber = (v1, v2) => { return Math.abs(v1 - v2) < 0.0001; }
+    const equalNumber = (v1: number, v2: number) => { return Math.abs(v1 - v2) < 0.0001; }
     return {
       n_p0: b.n_p0,
       n_p1: b.n_p1,
@@ -359,14 +359,14 @@ export class Bubble {
     this.setPhysicalSize(paperSize, enoughSize);
   }
 
-  contains(paperSize, p: Vector): boolean {
+  contains(paperSize: Vector, p: Vector): boolean {
     const [x, y] = p;
     const [x0, y0] = Bubble.getPhysicalPoint(paperSize, this.n_p0);
     const [x1, y1] = Bubble.getPhysicalPoint(paperSize, this.n_p1);
     return x0 <= x && x <= x1 && y0 <= y && y <= y1;
   }
 
-  getHandleAt(paperSize: Vector, p: Vector): RectHandle {
+  getHandleAt(paperSize: Vector, p: Vector): RectHandle | null {
     for (let handle of rectHandles) {
       const rect = this.getHandleRect(paperSize, handle);
       if (rectContains(rect, p)) {
@@ -412,7 +412,6 @@ export class Bubble {
           h + threshold * 2,
         ];
     }
-    return null;
   }
 
   regularized(): [Vector, Vector] {
@@ -454,9 +453,9 @@ export class Bubble {
     this.optionContext = Bubble.getInitialOptions(this);
   }
 
-  static getInitialOptions(b, sample=false): any {
+  static getInitialOptions(b: Bubble, sample=false): any {
     const optionSet = bubbleOptionSets[b.shape];
-    const options = {};
+    const options: { [key: string]: any } = {};
     for (const option of Object.keys(optionSet)) {
       if (optionSet[option].init) {
         options[option] = optionSet[option].init(b);
@@ -473,7 +472,7 @@ export class Bubble {
     const baselineSkip = fontSize * 1.5 * (1.0 + this.lineSkip);
     const charSkip = fontSize * (1.0 + this.charSkip);
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d')!;
     let size: Vector =[0,0];
     if (this.direction == 'v') {
       const m = measureVerticalText(ctx, Infinity, this.text, baselineSkip, charSkip, false);
@@ -491,195 +490,195 @@ export class Bubble {
 }
 
 // TODO: tailTip正規化してなかった……
-export const bubbleOptionSets = {
+export const bubbleOptionSets: { [key: string]: any } = {
   "rounded": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端", icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中", icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0.6 },
-    yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0.7 },
-    extract: {label: "食い込み", type:"boolean", init: b => false},
-    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端", icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中", icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: (b: Bubble) => 0.6 },
+    yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: (b: Bubble) => 0.7 },
+    extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "square": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    extract: {label: "食い込み", type:"boolean", init: b => false},
-    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "ellipse": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    extract: {label: "食い込み", type:"boolean", init: b => false},
-    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0.1 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0.1 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "concentration": {
-    lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
-    lineLength: { label: "線の長さ", type: "number", min: 1.05, max: 1.50, step: 0.01, init: b => 1.3 },
+    lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: (b: Bubble) => 200 },
+    lineLength: { label: "線の長さ", type: "number", min: 1.05, max: 1.50, step: 0.01, init: (b: Bubble) => 1.3 },
   },
   "polygon": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 7 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
-    extract: {label: "食い込み", type:"boolean", init: b => false},
-    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
+    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 7 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.4 },
+    extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "strokes": {
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
-    overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: b => 1.2 },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
+    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 10 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.5 },
+    overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: (b: Bubble) => 1.2 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
   },
   "double-strokes": {
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5 },
-    overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: b => 1.25 },
-    interval: { label: "間隔", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.04 },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
+    vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 10 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.5 },
+    overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: (b: Bubble) => 1.25 },
+    interval: { label: "間隔", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.04 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
   },
   "harsh": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.07 },
-    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 15 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.1 },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
+    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.07 },
+    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 15 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.1 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "shout": {
     link: {hint:"結合", icon:"unite"},
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]},
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 6, sampleInit: b => 6 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3, sampleInit: b => 3 },
-    bumpSharp: { label: "でっぱりの鋭さ", type: "number", min: 0.01, max: 0.5, step: 0.01, init: b => 0.16, sampleInit: b => 0.2 },
-    bumpCount: { label: "でっぱりの数", type: "number", min: 4, max: 20, step: 1, init: b => 10 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.5, sampleInit: b => 0.2 },
-    depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 1.5, step: 0.01, init: b => 0.5, sampleInit: b => 0.1  },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]},
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 6, sampleInit: (b: Bubble) => 6 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3, sampleInit: (b: Bubble) => 3 },
+    bumpSharp: { label: "でっぱりの鋭さ", type: "number", min: 0.01, max: 0.5, step: 0.01, init: (b: Bubble) => 0.16, sampleInit: (b: Bubble) => 0.2 },
+    bumpCount: { label: "でっぱりの数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 10 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.5, sampleInit: (b: Bubble) => 0.2 },
+    depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 1.5, step: 0.01, init: (b: Bubble) => 0.5, sampleInit: (b: Bubble) => 0.1  },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "soft": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 36 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.14 },
-    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 5 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
-    extract: {label: "食い込み", type:"boolean", init: b => false},
-    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: b => 0.2},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    smoothing: { label: "スムース", type: "boolean", init: b => true },
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 36 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
+    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.14 },
+    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 5 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.4 },
+    extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
+    extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    smoothing: { label: "スムース", type: "boolean", init: (b: Bubble) => true },
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "heart" : {
     link: {hint:"結合", icon:"unite"},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "diamond": {
     link: {hint:"結合", icon:"unite"},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "arrow": {
     link: {hint:"結合", icon:"unite"},
-    shaftWidth: { label: "軸の太さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
-    headLength: { label: "矢じりの長さ", type: "number", min: 0, max: 1, step: 0.01, init: b => 0.5 },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    shaftWidth: { label: "軸の太さ", type: "number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.5 },
+    headLength: { label: "矢じりの長さ", type: "number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.5 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "motion-lines": {
-    focalPoint: {hint:"内円の中心", icon:"circle", init: (b) => [0, 0] }, 
-    focalRange: {hint: "内円の範囲", icon:"radius", init: (b) => [0, 40] },
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: b => 200 },
-    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 0.1, step: 0.01, init: b => 0.05 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0.05 },
-    startJitter: { label: "起点ジッター", type: "number", min: 0, max: 1.0, step: 0.01, init: b => 0.5 },
+    focalPoint: {hint:"内円の中心", icon:"circle", init: (b: Bubble) => [0, 0] }, 
+    focalRange: {hint: "内円の範囲", icon:"radius", init: (b: Bubble) => [0, 40] },
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
+    lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: (b: Bubble) => 200 },
+    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 0.1, step: 0.01, init: (b: Bubble) => 0.05 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0.05 },
+    startJitter: { label: "起点ジッター", type: "number", min: 0, max: 1.0, step: 0.01, init: (b: Bubble) => 0.5 },
   },
   "speed-lines": {
-    tailTip: {hint: "流線の先端",icon:"tail", init: (b) => [40,0]},
-    tailMid: {hint: "流線の途中",icon:"curve", init: (b) => [0.5,0]},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 0 },
-    lineCount: { label: "線の本数", type: "number", min: 10, max: 200, step: 1, init: b => 70 },
-    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 1.0, step: 0.01, init: b => 0.2 },
-    laneJitter: { label: "間隔ジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0.05 },
-    startJitter: { label: "起点ジッター", type: "number", min: 0, max: 0.5, step: 0.01, init: b => 0.3 },
+    tailTip: {hint: "流線の先端",icon:"tail", init: (b: Bubble) => [40,0]},
+    tailMid: {hint: "流線の途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
+    lineCount: { label: "線の本数", type: "number", min: 10, max: 200, step: 1, init: (b: Bubble) => 70 },
+    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 1.0, step: 0.01, init: (b: Bubble) => 0.2 },
+    laneJitter: { label: "間隔ジッター", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0.05 },
+    startJitter: { label: "起点ジッター", type: "number", min: 0, max: 0.5, step: 0.01, init: (b: Bubble) => 0.3 },
   },
   "ellipse-mind": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "soft-mind": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: b => 36 },
-    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: b => 3 },
-    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: b => 0.15 },
-    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: b => 5 },
-    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: b => 0.4 },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    smoothing: { label: "スムース", type: "boolean", init: b => true },
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 36 },
+    superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
+    bumpDepth: { label: "でこぼこの深さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.15 },
+    bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 5 },
+    angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.4 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    smoothing: { label: "スムース", type: "boolean", init: (b: Bubble) => true },
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "rounded-mind": {
     link: {hint:"結合", icon:"unite"}, 
-    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b) => [0,0]}, 
-    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b) => [0.5,0]},
-    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: b => 1.0},
-    xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0.6 },
-    yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: b => 0.7 },
-    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: b => 0},
-    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: b => 0 },
-    // freehand: {label: "手書き風", type:"boolean", init: b => false},
+    tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
+    tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
+    tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
+    xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: (b: Bubble) => 0.6 },
+    yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: (b: Bubble) => 0.7 },
+    shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
+    // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "none": {},
 };

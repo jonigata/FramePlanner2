@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { derived, type Writable } from "svelte/store";
   import writableDerived from "svelte-writable-derived";
-  import { frameInspectorTarget, frameInspectorRebuildToken } from './frameInspectorStore';
+  import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameInspectorStore';
+  import type { FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree";
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
@@ -11,54 +13,44 @@
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
 
-  const frame = writableDerived(
-    frameInspectorTarget,
-    (fit) => {
-      console.log("FrameInspectorTarget changed");
-      return fit?.frame;
-    },
-    (f, fit) => {
-      fit.frame = f;
-      return fit;
-    }
-  );
   const visibility = writableDerived(
   	frameInspectorTarget,
   	(fit) => fit?.frame.visibility,
   	(v, fit) => {
-      fit.frame.visibility = v;
-      $bookEditor.commit(null);
+      fit!.frame.visibility = v!;
+      $bookEditor!.commit(null);
       return fit;
     }
   );
 
-  $: opened = $dominantMode != "painting" && $frame != null
+  $: opened = $dominantMode != "painting" && $frameInspectorTarget?.frame != null
+  $: filmStack = $frameInspectorTarget?.frame.filmStack!;
 
   function onCommit(e: CustomEvent<boolean>) {
     console.log("FrameInspector", e.detail);
-    $bookEditor.commit(e.detail ? null : "effect");
+    $bookEditor!.commit(e.detail ? null : "effect");
   }
 
   function onScribble(e: CustomEvent<Film>) {
-    $frameInspectorTarget.commandTargetFilm = e.detail;
-    $frameInspectorTarget.command = "scribble";
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "scribble";
   }
 
   function onGenerate(e: CustomEvent<Film>) {
-    $frameInspectorTarget.commandTargetFilm = e.detail;
-    $frameInspectorTarget.command = "generate";
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "generate";
   }
 
   function onPunch(e: CustomEvent<Film>) {
-    $frameInspectorTarget.commandTargetFilm = e.detail;
-    $frameInspectorTarget.command = "punch";
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "punch";
   }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
 
 <div class="drawer-outer">
-  <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
+  <Drawer placement={"left"} open={opened} overlay={false} size={"350px"} on:clickAway={close}>
     <div class="drawer-content">
       <div class="h-full flex items-center justify-center gap-4 mb-4">
         <h2>表示</h2>
@@ -69,7 +61,8 @@
         </RadioGroup>
       </div>
       {#key $frameInspectorRebuildToken}
-        <FilmList filmStack={$frame.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+        <!-- svelteだと!が使えない -->
+        <FilmList filmStack={filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
       {/key}
     </div>
   </Drawer>

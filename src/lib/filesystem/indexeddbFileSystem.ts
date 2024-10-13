@@ -3,7 +3,6 @@ import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
-import { createCanvasFromImage } from '../../utils/imageUtil';
 
 async function* readNDJSONStream(
   stream: ReadableStream<Uint8Array>
@@ -48,7 +47,7 @@ async function* readNDJSONStream(
 }
 
 export class IndexedDBFileSystem extends FileSystem {
-  private db: IDBPDatabase<unknown>;
+  private db: IDBPDatabase<unknown> | null = null;
 
   constructor() {
     super();
@@ -81,8 +80,8 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
-    const file = new IndexedDBFile(this, id, this.db);
-    const tx = this.db.transaction(["nodes","metadata"], "readwrite");
+    const file = new IndexedDBFile(this, id, this.db!);
+    const tx = this.db!.transaction(["nodes","metadata"], "readwrite");
     const store = tx.objectStore('nodes');
     const metadataStore = tx.objectStore('metadata');
     await store.add({ id, type: 'file', content: '' });
@@ -93,8 +92,8 @@ export class IndexedDBFileSystem extends FileSystem {
 
   async createFolder(): Promise<Folder> {
     const id = ulid() as NodeId;
-    const folder = new IndexedDBFolder(this, id, this.db);
-    const tx = this.db.transaction(["nodes","metadata"], "readwrite");
+    const folder = new IndexedDBFolder(this, id, this.db!);
+    const tx = this.db!.transaction(["nodes","metadata"], "readwrite");
     const store = tx.objectStore('nodes');
     const metadataStore = tx.objectStore('metadata');
     await store.add({ id, type: 'folder', children: [], attributes: {} });
@@ -104,38 +103,38 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async destroyNode(id: NodeId): Promise<void> {
-    const tx = this.db.transaction("nodes", "readwrite");
+    const tx = this.db!.transaction("nodes", "readwrite");
     const store = tx.store;
     await store.delete(id);
     await tx.done;
   }
 
-  async getNode(id: NodeId): Promise<Node> {
+  async getNode(id: NodeId): Promise<Node | null> {
     // NOTE: 
     // 多分頑張ればそもそもメタデータもとらないようにできると思うが、
     // どの程度寄与するか不明な上修正範囲が広いのでやらない
 
     // メタデータがあればそこから
-    const metadata = await this.db.get('metadata', id);
+    const metadata = await this.db!.get('metadata', id);
     if (metadata) {
       if (metadata.type === 'file') {
-        const file = new IndexedDBFile(this, id, this.db); // Assuming IndexedDBFile class exists
+        const file = new IndexedDBFile(this, id, this.db!); // Assuming IndexedDBFile class exists
         return file;
       } else if (metadata.type === 'folder') {
-        const folder = new IndexedDBFolder(this, id, this.db); // Assuming IndexedDBFolder class exists
+        const folder = new IndexedDBFolder(this, id, this.db!); // Assuming IndexedDBFolder class exists
         return folder;
       }
     }
 
     // ファイルが大きいと遅い
-    const value = await this.db.get('nodes', id);
+    const value = await this.db!.get('nodes', id);
     if (value) {
-      await this.db.put('metadata', { key: id, type: value.type, filesize: value.content?.length });
+      await this.db!.put('metadata', { key: id, type: value.type, filesize: value.content?.length });
       if (value.type === 'file') {
-        const file = new IndexedDBFile(this, value.id, this.db); // Assuming IndexedDBFile class exists
+        const file = new IndexedDBFile(this, value.id, this.db!); // Assuming IndexedDBFile class exists
         return file;
       } else if (value.type === 'folder') {
-        const folder = new IndexedDBFolder(this,value.id, this.db); // Assuming IndexedDBFolder class exists
+        const folder = new IndexedDBFolder(this,value.id, this.db!); // Assuming IndexedDBFolder class exists
         return folder;
       }
     }
@@ -150,7 +149,7 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async collectTotalSize(): Promise<number> {
-    const tx = this.db.transaction("nodes", "readonly");
+    const tx = this.db!.transaction("nodes", "readonly");
     const store = tx.store;
     let cursor = await store.openCursor();
     let total = 0;
@@ -165,7 +164,7 @@ export class IndexedDBFileSystem extends FileSystem {
   }
   
   async dump(): Promise<void> {
-    const tx = this.db.transaction("nodes", "readonly");
+    const tx = this.db!.transaction("nodes", "readonly");
     const store = tx.store;
     let cursor = await store.openCursor();
   
@@ -197,7 +196,7 @@ export class IndexedDBFileSystem extends FileSystem {
     const nodes = readNDJSONStream(stream);
     
     console.log('Start undump');
-    await this.db.transaction('nodes', 'readwrite')
+    await this.db!.transaction('nodes', 'readwrite')
       .objectStore('nodes')
       .clear();
 
@@ -205,7 +204,7 @@ export class IndexedDBFileSystem extends FileSystem {
     let count = 0;
 
     const saveBatch =  async (batch: any[]) => {
-      const tx = this.db.transaction('nodes', 'readwrite');
+      const tx = this.db!.transaction('nodes', 'readwrite');
       const store = tx.objectStore('nodes');
 
       for (const node of batch) {
@@ -250,7 +249,7 @@ export class IndexedDBFile extends File {
     return data ? data.content : null;
   }
 
-  async write(data) {
+  async write(data: string) {
     await this.db.put('nodes', { id: this.id, type: 'file', content: data });
   }
 
@@ -326,7 +325,7 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    value.children = value.children.filter(([b, _, __]) => b !== bindId);
+    value.children = value.children.filter(([b, _, __]: [BindId, unknown, unknown]) => b !== bindId);
     await store.put(value);
 
     super.notifyDelete(bindId);
@@ -339,7 +338,7 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    value.children = value.children.filter(([b, _, __]) => !bindIds.includes(b));
+    value.children = value.children.filter(([b, _, __]: [BindId, unknown, unknown]) => !bindIds.includes(b));
     await store.put(value);
 
     for (const bindId of bindIds) {
@@ -354,7 +353,7 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    const entry = value.children.find(([b, _, __]) => b === bindId);
+    const entry = value.children.find(([b, _, __]: [BindId, unknown, unknown]) => b === bindId);
     if (entry) {
       entry[1] = newname;
       await store.put(value);
@@ -389,7 +388,7 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    return value ? value.children.find(([b, _, __]) => b === bindId) : null;
+    return value ? value.children.find(([b, _, __]: [BindId, unknown, unknown]) => b === bindId) : null;
   }
 
   async getEntryByName(name: string): Promise<Entry> {
@@ -397,7 +396,7 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    return value ? value.children.find(([_, n, __]) => n === name) : null;
+    return value ? value.children.find(([_, n, __]: [unknown, string, unknown]) => n === name) : null;
   }
 
   async getEntriesByName(name: string): Promise<Entry[]> {
@@ -405,7 +404,7 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
-    return value ? value.children.filter(([_, n, __]) => n === name) : [];
+    return value ? value.children.filter(([_, n, __]: [unknown, string, unknown]) => n === name) : [];
   }
 
 }

@@ -5,11 +5,11 @@ export const toolTipRequest: Writable<
     message: string, 
     rect: {left: number, top: number, width: number, height: number},
     cost?: number
-  }> = writable(null);
+  } | null> = writable(null);
 
 export function toolTip(node: HTMLElement, message: string) {
-  let timeoutId = null;
-  let observer = null;
+  let timeoutId: NodeJS.Timeout | null = null;
+  let observer: MutationObserver | null = null;
 
   // messageに[cost]が含まれている場合、costを取り出す
   const match = message.match(/\[(\d+)\]/);
@@ -21,7 +21,7 @@ export function toolTip(node: HTMLElement, message: string) {
     message = message.replace(match[0], "");
   }
 
-  const handleMouseEnter = (event) => {
+  const handleMouseEnter = (event: MouseEvent) => {
     const topElement = document.elementFromPoint(event.clientX, event.clientY);
     if (topElement !== node && !node.contains(topElement)) {
       console.log("toolTip: blocked by other element");
@@ -74,7 +74,7 @@ export function toolTip(node: HTMLElement, message: string) {
   node.addEventListener("mouseleave", handleMouseLeave);
 
   return {
-    update(newMessage) {
+    update(newMessage: string) {
       message = newMessage;
     },
     destroy() {

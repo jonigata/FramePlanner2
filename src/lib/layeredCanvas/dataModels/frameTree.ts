@@ -14,8 +14,8 @@ export type Layout = {
   rawSize: Vector;
   rawOrigin: Vector;
   children?: Layout[];
-  element?: FrameElement;
-  dir?: 'h' | 'v';
+  element: FrameElement;
+  dir: 'h' | 'v' | null;
   corners: Trapezoid; // offsetted
   formalCorners: Trapezoid; 
 };
@@ -59,6 +59,7 @@ export class FrameElement {
     this.z = 0;
     this.visibility = 2;
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
+    this.pseudo = false;
     this.semantics = null;
 
     // リーフ要素の場合は絵がある可能性がある
@@ -105,7 +106,7 @@ export class FrameElement {
     const children = markUp.column || markUp.row;
     if (children) {
       element.direction = markUp.column ? 'v' : 'h';
-      element.children = children.map(child => this.compile(child));
+      element.children = children.map((child: FrameElement) => this.compile(child));
       element.calculateLengthAndBreadth();
     }
 
@@ -154,7 +155,7 @@ export class FrameElement {
     return this.decompileAux(element, 'v');
   }
 
-  static decompileAux(element, parentDir) {
+  static decompileAux(element: FrameElement, parentDir: 'h' | 'v'): any {
     const markUpElement = this.decompileNode(element, parentDir);
     if (element.direction) {
       const dir = element.direction == 'h' ? 'row' : 'column';
@@ -213,7 +214,7 @@ export class FrameElement {
     return markUpElement;
   }
 
-  static findElement(root: FrameElement, f: (e: FrameElement) => boolean): FrameElement {
+  static findElement(root: FrameElement, f: (e: FrameElement) => boolean): FrameElement | null {
     if (f(root)) {
       return root;
     } else {
@@ -227,7 +228,7 @@ export class FrameElement {
     return null;
   }
 
-  static findParent(root: FrameElement, target: FrameElement): FrameElement {
+  static findParent(root: FrameElement, target: FrameElement): FrameElement | null {
     for (let i = 0; i < root.children.length; i++) {
       const child = root.children[i];
       if (child == target) {
@@ -490,10 +491,10 @@ function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector,
       const leftLine = i === element.children.length - 1 ? leftmostLine : line2(leftCenter, deg2rad(child.divider.slant + 90));
 
       const childCorners: Trapezoid = {
-        topLeft: lineIntersection(topLine, leftLine),
-        topRight: lineIntersection(topLine, rightLine),
-        bottomLeft: lineIntersection(bottomLine, leftLine),
-        bottomRight: lineIntersection(bottomLine, rightLine),
+        topLeft: lineIntersection(topLine, leftLine)!,
+        topRight: lineIntersection(topLine, rightLine)!,
+        bottomLeft: lineIntersection(bottomLine, leftLine)!,
+        bottomRight: lineIntersection(bottomLine, rightLine)!,
       }
       children.push(calculatePhysicalLayoutAux(child, childSize, childOrigin, childCorners));
       x += child.rawSize + child.divider.spacing;
@@ -514,11 +515,11 @@ function calculatePhysicalLayoutElements(element: FrameElement, rawSize: Vector,
       const topLine = i === 0 ? topmostLine : line2(topCenter, deg2rad(-element.children[i-1].divider.slant));
       const bottomLine = i === element.children.length - 1 ? bottommostLine : line2(bottomCenter, deg2rad(-child.divider.slant));
 
-      const childCorners = {
-        topLeft: lineIntersection(topLine, leftLine),
-        topRight: lineIntersection(topLine, rightLine),
-        bottomLeft: lineIntersection(bottomLine, leftLine),
-        bottomRight: lineIntersection(bottomLine, rightLine),
+      const childCorners: Trapezoid = {
+        topLeft: lineIntersection(topLine, leftLine)!,
+        topRight: lineIntersection(topLine, rightLine)!,
+        bottomLeft: lineIntersection(bottomLine, leftLine)!,
+        bottomRight: lineIntersection(bottomLine, rightLine)!,
       }
       children.push(calculatePhysicalLayoutAux(child, childSize, childOrigin, childCorners));
       y += child.rawSize + child.divider.spacing;
@@ -545,10 +546,10 @@ function calculatePhysicalLayoutLeaf(element: FrameElement, rawSize: Vector, raw
     bottomRight: lineIntersection(bottomLine, rightLine) || formalCorners.bottomRight, 
   }
 
-  return { size, origin, rawSize, rawOrigin, element, corners, formalCorners };
+  return { size, origin, rawSize, rawOrigin, element, corners, formalCorners, dir: null };
 }
 
-export function findLayoutAt(layout: Layout, point: Vector, margin: number, current: Layout = null): Layout {
+export function findLayoutAt(layout: Layout, point: Vector, margin: number, current: Layout | null = null): Layout | null {
   const layoutlets = collectLayoutlets(layout);
   layoutlets.sort((a, b) => a.element.z - b.element.z);
   layoutlets.reverse();
@@ -612,7 +613,7 @@ function collectLayoutlets(layout: Layout): Layout[] {
   return layouts;
 }
 
-export function findLayoutOf(layout: Layout, element: FrameElement): Layout {
+export function findLayoutOf(layout: Layout, element: FrameElement): Layout | null {
   if (layout.element === element) {
     return layout;
   }
@@ -625,7 +626,7 @@ export function findLayoutOf(layout: Layout, element: FrameElement): Layout {
   return null;
 }
 
-export function findBorderAt(layout: Layout, point: Vector, margin: number): Border {
+export function findBorderAt(layout: Layout, point: Vector, margin: number): Border | null {
   if (layout.children) {
     for (let i = 1; i < layout.children.length; i++) {
       const corners = makeBorderCorners(layout, i, 0);
@@ -643,7 +644,7 @@ export function findBorderAt(layout: Layout, point: Vector, margin: number): Bor
   return null;
 }
 
-export function findPaddingAt(layout: Layout, position: Vector, innerWidth: number, outerWidth: number): PaddingHandle {
+export function findPaddingAt(layout: Layout, position: Vector, innerWidth: number, outerWidth: number): PaddingHandle | null {
   const [x,y] = position;
 
   if (layout.children) {
@@ -657,7 +658,7 @@ export function findPaddingAt(layout: Layout, position: Vector, innerWidth: numb
   }
 }
 
-export function findPaddingOn(layout: Layout, position: Vector, innerWidth: number, outerWidth: number): PaddingHandle {
+export function findPaddingOn(layout: Layout, position: Vector, innerWidth: number, outerWidth: number): PaddingHandle | null {
   if (layout.element.visibility === 0) { return null; }
   const [x,y] = position;
   for (let handle of rectHandles) {
@@ -724,8 +725,6 @@ export function makePaddingTrapezoid(layout: Layout, handle: RectHandle, innerWi
       return trapezoidAroundSegment(layout.corners.bottomLeft, layout.corners.topLeft, outerWidth, innerWidth);
     case 'right':
       return trapezoidAroundSegment(layout.corners.topRight, layout.corners.bottomRight, outerWidth, innerWidth);
-    default:
-      return null;
   }
 }
 
@@ -758,8 +757,8 @@ export function makeBorderFormalCorners(layout: Layout, index: number): Trapezoi
 }
 
 function makeHorizontalBorderFormalCorners(layout: Layout, index: number): Trapezoid {
-  const prev = layout.children[index - 1];
-  const curr = layout.children[index];
+  const prev = layout.children![index - 1];
+  const curr = layout.children![index];
 
   const corners: Trapezoid = {
     topLeft: [...curr.formalCorners.topRight],
@@ -772,8 +771,8 @@ function makeHorizontalBorderFormalCorners(layout: Layout, index: number): Trape
 }
 
 function makeVerticalBorderFormalCorners(layout: Layout, index: number): Trapezoid {
-  const prev = layout.children[index - 1];
-  const curr = layout.children[index];
+  const prev = layout.children![index - 1];
+  const curr = layout.children![index];
 
   const corners: Trapezoid = {
     topLeft: [...prev.formalCorners.bottomLeft],
@@ -796,8 +795,8 @@ export function makeBorderCorners(layout: Layout, index: number, margin: number)
 }
 
 function makeHorizontalBorderCorners(layout: Layout, index: number, margin: number): Trapezoid {
-  const prev = layout.children[index - 1];
-  const curr = layout.children[index];
+  const prev = layout.children![index - 1];
+  const curr = layout.children![index];
 
   const corners: Trapezoid = {
     topLeft: [...curr.corners.topRight],
@@ -810,8 +809,8 @@ function makeHorizontalBorderCorners(layout: Layout, index: number, margin: numb
 }
 
 function makeVerticalBorderCorners(layout: Layout, index: number, margin: number): Trapezoid {
-  const prev = layout.children[index - 1];
-  const curr = layout.children[index];
+  const prev = layout.children![index - 1];
+  const curr = layout.children![index];
 
   const corners: Trapezoid = {
     topLeft: [...prev.corners.bottomLeft],
@@ -849,7 +848,7 @@ export function dealImages(frameTree: FrameElement, filmStacks: FilmStack[], ins
       frameTree.filmStack = new FilmStack();
       return;
     }
-    const filmStack = filmStacks.shift();
+    const filmStack = filmStacks.shift()!;
     frameTree.filmStack = filmStack;
   } else {
     for (let i = 0; i < frameTree.children.length; i++) {
@@ -905,7 +904,7 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
 
   const constraintRect = trapezoidBoundingRect(layout.corners);
   const constraintCenter = getRectCenter(constraintRect);
-  const mergedRect = calculateMinimumBoundingRect(paperSize, films);
+  const mergedRect = calculateMinimumBoundingRect(paperSize, films)!;
 
   const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
     translateRect(mergedRect, constraintCenter),

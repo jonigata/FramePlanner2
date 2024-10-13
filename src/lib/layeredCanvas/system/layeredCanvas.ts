@@ -2,7 +2,7 @@ import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect } from "../tools/geometry/geometry";
 
-type OnHint = (p: Rect, s: string | null) => void;
+type OnHint = (p: Rect | null, s: string | null) => void;
 
 export class Viewport {
   canvas: HTMLCanvasElement;
@@ -15,7 +15,7 @@ export class Viewport {
 
   constructor(c: HTMLCanvasElement, onHint: OnHint) {
     this.canvas = c;
-    this.ctx = c.getContext('2d');
+    this.ctx = c.getContext('2d')!;
     this.translate = [0, 0];
     this.viewTranslate = [0, 0];
     this.scale = 1;
@@ -74,8 +74,9 @@ export interface Layer {
 // pickは貫通されるオブジェクトとそれが選ばれたときのアクションを列挙する
 
 export class Layer implements Layer {
-  paper: Paper = null;
-  hint: (rect: Rect, message: string) => void; // bind(this)しないと面倒なので
+  paper!: Paper;
+
+  hint: (rect: Rect | null, message: string | null) => void; // bind(this)しないと面倒なので
 
   constructor() { this.hint = this.showHint.bind(this); }
 
@@ -83,9 +84,9 @@ export class Layer implements Layer {
   rebuildPageLayouts(matrix: DOMMatrix) {}
   redraw() { this.redrawRequired = true; }
   pierce() { this.pierceRequired = true; }
-  showHint(rect: Rect, message: string) {this.paper.showHint(rect, message); }
+  showHint(rect: Rect | null, message: string | null) {this.paper.showHint(rect, message); }
 
-  pointerHover(position: Vector): boolean { return false; }
+  pointerHover(position: Vector | null): boolean { return false; }
   accepts(position: Vector, button: number, depth: number): any { return null; }
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
@@ -117,10 +118,10 @@ export class Layer implements Layer {
 }
 
 export class Paper {
-  matrix: DOMMatrix;
+  matrix!: DOMMatrix;
   size: Vector;
   layers: Layer[];
-  hint: { rect: Rect, message: string } = null;
+  hint: { rect: Rect | null, message: string | null } | null = null;
   root: boolean;
 
   constructor(size: Vector, root: boolean) {
@@ -129,8 +130,8 @@ export class Paper {
     this.layers = [];
   }
 
-  handleAccepts(p: Vector, button: number, depth: number): Dragging {
-    var result: Dragging = null;
+  handleAccepts(p: Vector, button: number, depth: number): Dragging | null {
+    var result: Dragging | null = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       const payload = layer.accepts(p, button, depth);
@@ -147,7 +148,7 @@ export class Paper {
   }
       
   handlePointerHover(p: Vector): boolean {
-    let q = p;
+    let q: Vector | null = p;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.pointerHover(q)) {
@@ -291,7 +292,7 @@ export class Paper {
     }
   }
 
-  showHint(rect: Rect, message: string): void {
+  showHint(rect: Rect | null, message: string | null): void {
     this.hint = {rect, message};
   }
 
@@ -320,7 +321,7 @@ export class Paper {
     return f;
   }
 
-  findLayer<T extends Layer>(type: { new(...args:any[]): T }): T {
+  findLayer<T extends Layer>(type: { new(...args:any[]): T }): T | null {
     for (let layer of this.layers) {
       if (layer instanceof type) {
         return layer;
@@ -351,15 +352,15 @@ export class Paper {
 
 
 export class LayeredCanvas {
-  keyDownHandler: (event: KeyboardEvent) => void;
+  keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   viewport: Viewport;
   rootPaper: Paper;
   listeners: [string, ((event: Event) => void)][] = [];
-  dragging: Dragging;
+  dragging: Dragging | null = null;
 
   // layeredCanvasより長い寿命を持つ
-  get pointerCursor(): Vector {return this.viewport.canvas["pointerCursor"];}
-  set pointerCursor(p: Vector) {this.viewport.canvas["pointerCursor"] = p;}
+  get pointerCursor(): Vector | null {return (this.viewport.canvas as any)["pointerCursor"];}
+  set pointerCursor(p: Vector | null) {(this.viewport.canvas as any)["pointerCursor"] = p;}
 
   constructor(viewport: Viewport, editable: boolean) {
     this.viewport = viewport;
@@ -389,15 +390,15 @@ export class LayeredCanvas {
     };
 
     if (editable) {
-      addEventListener('pointerdown', this.handlePointerDown);
-      addEventListener('pointermove', this.handlePointerMove);
-      addEventListener('pointerup', this.handlePointerUp);
-      addEventListener('pointerleave', this.handlePointerLeave);
-      addEventListener('dragover', this.handleDragOver);
-      addEventListener('drop', this.handleDrop);
-      addEventListener('dblclick', this.handleDoubleClick);
-      addEventListener('contextmenu', this.handleContextMenu);
-      addEventListener('wheel', this.handleWheel);
+      addEventListener('pointerdown', this.handlePointerDown as EventListener);
+      addEventListener('pointermove', this.handlePointerMove as EventListener);
+      addEventListener('pointerup', this.handlePointerUp as EventListener);
+      addEventListener('pointerleave', this.handlePointerLeave as EventListener);
+      addEventListener('dragover', this.handleDragOver as EventListener);
+      addEventListener('drop', this.handleDrop as unknown as EventListener);
+      addEventListener('dblclick', this.handleDoubleClick as EventListener);
+      addEventListener('contextmenu', this.handleContextMenu as EventListener);
+      addEventListener('wheel', this.handleWheel as EventListener);
 
       this.keyDownHandler = this.handleKeyDown.bind(this);
       document.addEventListener('keydown', this.keyDownHandler);
@@ -505,7 +506,7 @@ export class LayeredCanvas {
   }
 
   async handleDrop(event: DragEvent): Promise<void> {
-    async function loadVideo(file) {
+    async function loadVideo(file: File) {
       const video = document.createElement('video');
       video.muted = true; // オートプレイポリシーを回避するためミュート
       video.src = URL.createObjectURL(file);
@@ -517,7 +518,7 @@ export class LayeredCanvas {
         
         // キャンバスにビデオの最初のフレームを描画する（オプション）
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d')!;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -536,7 +537,7 @@ export class LayeredCanvas {
     this.pointerCursor = p;
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
-    var file = event.dataTransfer.files[0];
+    var file = event.dataTransfer!.files[0];
     if (!file) return; // 選択テキストのドロップなど
     if (file.type.startsWith('image/svg')) { return; } // 念の為
     if (file.type.startsWith('image/')) {
@@ -548,7 +549,7 @@ export class LayeredCanvas {
       const canvas = document.createElement('canvas');
       canvas.width = image.width;
       canvas.height = image.height;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d')!;
       ctx.drawImage(image, 0, 0);
 
       this.rootPaper.handleDrop(p, canvas);
@@ -580,7 +581,7 @@ export class LayeredCanvas {
       return;
     }
 
-    await this.rootPaper.handleKeyDown(this.pointerCursor, event);
+    await this.rootPaper.handleKeyDown(this.pointerCursor!, event);
     this.redrawIfRequired();
   }
 
@@ -616,7 +617,7 @@ export class LayeredCanvas {
   pierceIfRequired(): void {
     if (this.rootPaper.pierceRequired) {
       this.rootPaper.pierceRequired = false;
-      const picked = this.rootPaper.pick(this.pointerCursor);
+      const picked = this.rootPaper.pick(this.pointerCursor!);
       console.log("picked", picked);
 
       if (0 < picked.length) {
@@ -668,52 +669,45 @@ export class LayeredCanvas {
 }
 
 interface LayerPointerMethods {
-  pointerDown: (p: Vector, payload: any) => void;
-  pointerMove: (p: Vector, payload: any) => void;
-  pointerUp: (p: Vector, payload: any) => void;
-  pointerCancel: (p: Vector, payload: any) => void;
+  pointerDown(p: Vector, payload: any): void;
+  pointerMove(p: Vector, payload: any): void;
+  pointerUp(p: Vector, payload: any): void;
+  pointerCancel(): void;
 }
 
-interface SequentializableLayer {
-  prototype: LayerPointerMethods;  
+type AnyGenerator = Generator<any, any, any> | AsyncGenerator<any, any, any> | null;
+
+interface SequentializableLayerBase {
+  pointer(p: Vector, payload: any): AnyGenerator;
 }
 
-let pointerSequence: LayerPointerMethods = { // mixin
-  pointerDown(p: Vector, payload: any) {
+const pointerSequence: LayerPointerMethods = {
+  pointerDown(this: SequentializableLayerBase & { pointerHandler?: AnyGenerator }, p: Vector, payload: any) {
     this.pointerHandler = this.pointer(p, payload);
-    this.pointerHandler.next(null);
+    this.pointerHandler!.next(null);
   },
-  pointerMove(p: Vector, _payload: any) {
+
+  pointerMove(this: { pointerHandler?: AnyGenerator }, p: Vector, _payload: any) {
     if (this.pointerHandler) {
       this.pointerHandler.next(p);
     }
   },
-  pointerUp(_p: Vector, _payload: any) {
+
+  pointerUp(this: { pointerHandler?: AnyGenerator }, _p: Vector, _payload: any) {
     if (this.pointerHandler) {
       this.pointerHandler.next(null);
       this.pointerHandler = null;
     }
   },
-  pointerCancel() {
+
+  pointerCancel(this: { pointerHandler?: AnyGenerator }) {
     if (this.pointerHandler) {
       this.pointerHandler.throw('cancel');
       this.pointerHandler = null;
     }
   },
-
-/*
-    sample pointer handler
-    *pointer(p) {
-        while (p = yield) {
-            console.log("pointer", p);
-        }
-    }
-*/
 };
 
-export function sequentializePointer(layerClass: SequentializableLayer) {
-  layerClass.prototype.pointerDown = pointerSequence.pointerDown;
-  layerClass.prototype.pointerMove = pointerSequence.pointerMove;
-  layerClass.prototype.pointerUp = pointerSequence.pointerUp;
-  layerClass.prototype.pointerCancel = pointerSequence.pointerCancel;
+export function sequentializePointer(layerClass: new (...args: any[]) => any) {
+  Object.assign(layerClass.prototype, pointerSequence);
 }

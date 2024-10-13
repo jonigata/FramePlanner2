@@ -15,12 +15,12 @@ export class Film  {
   effects: Effect[];
   
   selected: boolean; // 揮発性
-  matrix: DOMMatrix; // 揮発性
-  index: number; // 揮発性
+  matrix: DOMMatrix | undefined; // 揮発性
+  index: number | undefined; // 揮発性
 
-  constructor() {
+  constructor(media: Media) {
     this.ulid = ulid();
-    this.media = null;
+    this.media = media;
     this.n_scale = 1;
     this.n_translation = [0, 0];
     this.rotation = 0;
@@ -32,8 +32,7 @@ export class Film  {
   }
 
   clone() {
-    const f = new Film();
-    f.media = this.media;
+    const f = new Film(this.media);
     f.n_translation = [...this.n_translation];
     f.n_scale = this.n_scale;
     f.rotation = this.rotation;
@@ -144,6 +143,7 @@ export class FilmStackTransformer {
       film.matrix = film.makeMatrix(paperSize);
     });
 
+    this.pivot = [paperSize[0] / 2, paperSize[1] / 2];
     const r = calculateMinimumBoundingRect(paperSize, films);
     if (r != null) {
       this.pivot = getRectCenter(r);
@@ -176,7 +176,7 @@ export class FilmStackTransformer {
   }
 }
 
-export function calculateMinimumBoundingRect(paperSize: Vector, films: Film[]): Rect {
+export function calculateMinimumBoundingRect(paperSize: Vector, films: Film[]): Rect | null {
   if (films.length === 0) { return null; }
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

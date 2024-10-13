@@ -5,8 +5,8 @@
   export let canvases: HTMLCanvasElement[] = [];
   export let columnWidth = 220;
 
-  export let chosen = null;
-  export let refered = null;
+  export let chosen: HTMLCanvasElement | null = null;
+  export let refered: HTMLCanvasElement | null = null;
 
   const dispatch = createEventDispatcher();
 

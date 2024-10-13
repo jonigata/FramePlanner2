@@ -34,15 +34,15 @@
 
   export let fileSystem: FileSystem;
 
-  let root: Folder = null;
-  let desktop: EmbodiedEntry = null;
-  let cabinet: EmbodiedEntry = null;
-  let trash: EmbodiedEntry = null;
+  let root: Folder;
+  let desktop: EmbodiedEntry;
+  let cabinet: EmbodiedEntry;
+  let trash: EmbodiedEntry;
 
-  let cloudFileSystem: FileSystem = null;
-  let cloudRoot: Folder = null;
-  let cloudCabinet: EmbodiedEntry = null;
-  let cloudTrash: EmbodiedEntry = null;
+  let cloudFileSystem: FileSystem;
+  let cloudRoot: Folder;
+  let cloudCabinet: EmbodiedEntry;
+  let cloudTrash: EmbodiedEntry;
   const cloudReady = writable(false);
 
   let usedSize: string;
@@ -53,24 +53,25 @@
     cloudFileSystem = await buildCloudFileSystem();
 
     cloudRoot = await cloudFileSystem.getRoot();
-    cloudCabinet = await cloudRoot.getEmbodiedEntryByName("キャビネット");
-    cloudTrash = await cloudRoot.getEmbodiedEntryByName("ごみ箱");
+    cloudCabinet = (await cloudRoot.getEmbodiedEntryByName("キャビネット"))!;
+    cloudTrash = (await cloudRoot.getEmbodiedEntryByName("ごみ箱"))!;
     $cloudReady = true;
   }
 
   // let templates: [BindId, string, Node] = null;
-  let currentRevision: Revision = null;
+  let currentRevision: Revision;
   let delayedCommiter = new DelayedCommiter(
     async () => {
-      const book = $mainBook;
+      const book = $mainBook!;
+      const fs = $mainBookFileSystem!;
       if (!$saveProhibitFlag) {
-        const file = await $mainBookFileSystem.getNode(book.revision.id as NodeId);
-        await saveBookTo(book, $mainBookFileSystem, file.asFile());
+        const file = (await fs.getNode(book.revision.id as NodeId))!.asFile();
+        await saveBookTo(book, fs, file);
       }
       currentRevision = {...book.revision};
       const info: CurrentFileInfo = {
         id: book.revision.id as NodeId,
-        fileSystem: $mainBookFileSystem.id === cloudFileSystem?.id ? 'cloud' : 'local',
+        fileSystem: fs.id === cloudFileSystem?.id ? 'cloud' : 'local',
       }
       await recordCurrentFileInfo(info);
     });
@@ -79,19 +80,21 @@
   $: onOpen($fileManagerOpen);
   async function onOpen(open: boolean) {
     if (open) {
-      $fileManagerMarkedFlag = $bookEditor.getMarks().some((m) => m);
+      $fileManagerMarkedFlag = $bookEditor!.getMarks().some((m) => m);
       $fileManagerUsedSizeToken = fileSystem;
       console.log("used size updated");
     }
   }
 
   $: onUsedSizeUpdate($fileManagerUsedSizeToken);
-  async function onUsedSizeUpdate(fs: FileSystem) {
-    usedSize = formatMillions(await fileSystem.collectTotalSize());
+  async function onUsedSizeUpdate(fs: FileSystem | null) {
+    if (fs) {
+      usedSize = formatMillions(await fs.collectTotalSize());
+    }
   }
 
   $:onUpdateBook($mainBook);
-  async function onUpdateBook(book: Book) {
+  async function onUpdateBook(book: Book | null) {
     if (book == null) {
       try {
         $loading = true;
@@ -119,8 +122,8 @@
           try {
             console.log($onlineStatus);
             const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
-            let currentFile = await fs.getNode(currentFileInfo.id);
-            const newBook = await loadBookFrom(fs, currentFile.asFile());
+            let currentFile = (await fs.getNode(currentFileInfo.id))!.asFile();
+            const newBook = await loadBookFrom(fs, currentFile);
             refreshFilms(newBook);
             currentRevision = {...newBook.revision};
             console.snapshot(newBook.pages[0]);
@@ -148,9 +151,9 @@
 
         // 初起動またはクラウドストレージ接続失敗の場合デスクトップにセーブ
         const root = await fileSystem.getRoot();
-        const desktop = await root.getNodeByName("デスクトップ");
+        const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder();
         book = newBook('not visited', "initial-", 0);
-        await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
+        await newFile(fileSystem, desktop, getCurrentDateTime(), book);
         await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local' });
 
         currentRevision = {...book.revision};
@@ -180,22 +183,22 @@
     console.log("loadSharedBook");
     const localFileSystem = fileSystem; // ややこしいのでalias
     const localRoot = await localFileSystem.getRoot();
-    const localDesktop = (await localRoot.getNodeByName("デスクトップ")).asFolder();
+    const localDesktop = (await localRoot.getNodeByName("デスクトップ"))!.asFolder();
 
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
     if (urlParams.has('box') && urlParams.get('file')) {
       logEvent(getAnalytics(), 'shared');
-      const box = urlParams.get('box');
-      const file = urlParams.get('file');
+      const box = urlParams.get('box')!;
+      const file = urlParams.get('file')!;
       console.log("box:file = ", box, file);
 
       if (await localFileSystem.getNode(file as NodeId) == null) {
         // 読んだことがなければ読み込んでローカルに保存
         console.log("shared page load from server", window.location.href);
         const remoteFileSystem = await buildShareFileSystem(box);
-        const remoteFile = await remoteFileSystem.getNode(file as NodeId);
-        const book = await loadBookFrom(remoteFileSystem, remoteFile.asFile());
+        const remoteFile = (await remoteFileSystem.getNode(file as NodeId))!.asFile();
+        const book = await loadBookFrom(remoteFileSystem, remoteFile);
 
         const localFile = await localFileSystem.createFileWithId(file as NodeId);
         await saveBookTo(book, localFileSystem, localFile);
@@ -206,6 +209,7 @@
       console.log("loadSharedBook: build");
       logEvent(getAnalytics(), 'layover');
       const build = urlParams.get('build');
+      if (!build) { return false; }
       const storyboard = await getLayover(build);
       console.log(storyboard);
 
@@ -235,19 +239,19 @@
     let currentUrl = new URL(window.location.href);
     let urlWithoutQuery = currentUrl.origin + currentUrl.pathname;      
 
-    window.history.replaceState(null, null, urlWithoutQuery);
+    window.history.replaceState(null, '', urlWithoutQuery);
     window.location.href = urlWithoutQuery;
     return true;
   }
 
   $:onNewBookRequest($newBookToken);
-  async function onNewBookRequest(book: Book) {
+  async function onNewBookRequest(book: Book | null) {
     if (book) {
       console.tag("new book request", "green");
       $mascotVisible = false;
       $newBookToken = null;
       const root = await fileSystem.getRoot();
-      const desktop = await root.getNodeByName("デスクトップ");
+      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder();
       const { file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
       await recordCurrentFileInfo({id: file.id as NodeId, fileSystem: 'local'});
       currentRevision = {...book.revision};
@@ -259,19 +263,19 @@
   }
 
   $:onNewBubbleRequest($saveBubbleToken);
-  async function onNewBubbleRequest(bubble: Bubble) {
+  async function onNewBubbleRequest(bubble: Bubble | null) {
     if (!bubble) { return; }
     console.log("onNewBalloonRequest");
     $saveBubbleToken = null;
     const root = await fileSystem.getRoot();
-    const folder = await root.getNodeByName("テンプレート");
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder();
     const file = await fileSystem.createFile();
     await saveBubbleTo(bubble, file);
     await folder.asFolder().link(getCurrentDateTime(), file.id);
   }
 
   $:onSharePageRequest($shareBookToken);
-  async function onSharePageRequest(book: Book) {
+  async function onSharePageRequest(book: Book | null) {
     if (!book) { return; }
     $loading = true;
 
@@ -285,7 +289,7 @@
     // URL作成
     const url = new URL(window.location.href);
     const params = url.searchParams;
-    params.set('box', fileSystem.boxId);
+    params.set('box', fileSystem.boxId!);
     params.set('file', file.id);
     url.search = params.toString();
     const shareUrl = url.toString();
@@ -297,7 +301,7 @@
   }
 
   $:onLoadRequest($loadToken);
-  async function onLoadRequest(lt: LoadToken) {
+  async function onLoadRequest(lt: LoadToken | null) {
     if (!lt) { return; }
     $loadToken = null;
     $mascotVisible = false;
@@ -307,7 +311,7 @@
     if (isCloud) {
       toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
     }
-    const file = (await lt.fileSystem.getNode(lt.nodeId)).asFile();
+    const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile();
     const book = await loadBookFrom(lt.fileSystem, file);
     refreshFilms(book);
     currentRevision = {...book.revision};
@@ -324,8 +328,8 @@
 
     const usedImages = [];
     for (const imageFile of usedImageFiles) {
-      const file = await fileSystem.getNode(imageFile as NodeId);
-      const canvas = await file.asFile().readCanvas();
+      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile();
+      const canvas = await file.readCanvas();
       const image = await createImageFromCanvas(canvas);
       console.log("loaded used image", imageFile);
       usedImages.push(image);
@@ -333,7 +337,7 @@
 
     const strayImages = [];
     for (const imageFile of strayImageFiles) {
-      const file = await fileSystem.getNode(imageFile as NodeId);
+      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile();
       const canvas = await file.asFile().readCanvas();
       const image = await createImageFromCanvas(canvas);
       console.log("loaded stray image", imageFile);
@@ -351,8 +355,8 @@
     modalStore.trigger(d);    
   }
 
-  function formatMillions(number) {
-    return (number / 1000000).toFixed(2) + 'M';
+  function formatMillions(n: number) {
+    return (n / 1000000).toFixed(2) + 'M';
   }
 
   async function dumpFileSystem() {
@@ -361,20 +365,20 @@
     $loading = false;
   }
 
-  let dumpFiles;
+  let dumpFiles: FileList | null;
   $: onUndumpFileSystem(dumpFiles);
-  async function onUndumpFileSystem(dumpFiles) {
+  async function onUndumpFileSystem(dumpFiles: FileList | null) {
     if (dumpFiles) {
       undumpCounter = 0;
     }
   }
 
-  let importFiles;
+  let importFiles: FileList | null;
   $: onImportFile(importFiles);
-  async function onImportFile(importFiles) {
+  async function onImportFile(importFiles: FileList | null) {
     if (importFiles) {
       const root = await fileSystem.getRoot();
-      const desktop = (await root.getNodeByName("デスクトップ")).asFolder();
+      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder();
       const file = await fileSystem.createFile();
       file.write(await importFiles[0].text());
       await desktop.link("imported file", file.id)
@@ -386,7 +390,7 @@
     if (undumpCounter == 5) {
       $loading = true;
       console.log("undump start");
-      for (const file of dumpFiles) {
+      for (const file of dumpFiles!) {
         console.log("undump", file);
         await (fileSystem as IndexedDBFileSystem).undump(file);
         await clearCurrentFileInfo();
@@ -408,9 +412,9 @@
 
   onMount(async () => {
     root = await fileSystem.getRoot();
-    desktop = await root.getEmbodiedEntryByName("デスクトップ");
-    cabinet = await root.getEmbodiedEntryByName("キャビネット");
-    trash = await root.getEmbodiedEntryByName("ごみ箱");
+    desktop = (await root.getEmbodiedEntryByName("デスクトップ"))!;
+    cabinet = (await root.getEmbodiedEntryByName("キャビネット"))!;
+    trash = (await root.getEmbodiedEntryByName("ごみ箱"))!;
     // const templates = await root.getEmbodiedEntryByName("テンプレート");
   });
 </script>
@@ -446,7 +450,7 @@
       <div class="flex flex-row gap-2 items-center justify-center">
         <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
         <div class="hbox gap mx-2" style="margin-top: 8px;">
-          リストア<input accept="application/x-ndjson" bind:files={dumpFiles} id="dump" name="dump" type="file" />
+          リストア<input accept=".ndjson" bind:files={dumpFiles} id="dump" name="dump" type="file" />
         </div>
         {#if dumpFiles}
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>

@@ -165,8 +165,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
 
 export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Prefix): Book {
   const frameTree = FrameElement.compile(frameExamples[2].frameTree);
-  const film = new Film();
-  film.media = new ImageMedia(canvas);
+  const film = new Film(new ImageMedia(canvas));
   frameTree.children[0].filmStack.films = [film];
 
   const page = newPage(frameTree, []);
@@ -185,7 +184,7 @@ export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Pref
 }
 
 export interface BookOperators {
-  hint: (r: [number, number, number, number], s: String) => void;
+  hint: (r: [number, number, number, number], s: string | null) => void;
   commit: (tag: HistoryTag) => void;
   forceDelayedCommit(): void;
   cancelDelayedCommit(): void;
@@ -280,7 +279,7 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
   const contents: FrameContent[] = [];
   if (frameTree.isLeaf()) {
     if (frameTree.isAuthentic()) {
-      const layout = findLayoutOf(pageLayout, frameTree);
+      const layout = findLayoutOf(pageLayout, frameTree)!;
 
       // centerがtrapezoidに含まれるbubbleを抽出
       const selected: Bubble[] = [];
@@ -316,19 +315,19 @@ function collectFrameContents(page: Page, pageNumber: number, frameTree: FrameEl
   return { slots, contents };
 }
 
-export function dealBookContents(seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement): void {
+export function dealBookContents(seq: FrameSequence, insertElement: FrameElement | null, spliceElement: FrameElement | null): void {
   dealPageContents(seq, insertElement, spliceElement);
 }
 
-function dealPageContents(seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement): void {
+function dealPageContents(seq: FrameSequence, insertElement: FrameElement | null, spliceElement: FrameElement | null): void {
   dealFrameContents(seq, insertElement, spliceElement, false);
 } 
 
-function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spliceElement: FrameElement, tailMode: boolean) {
+function dealFrameContents(seq: FrameSequence, insertElement: FrameElement | null, spliceElement: FrameElement | null, tailMode: boolean) {
   const { slots, contents } = seq;
 
   if (slots.length === 0) return;
-  const slot = slots.shift();
+  const slot = slots.shift()!;
   const layout = slot.layout;
   const frameTree = layout.element;
 
@@ -338,13 +337,13 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
   } 
   if (frameTree === insertElement || contents.length === 0) {
     tailMode = true;
-    frameTree.filmStack = new FilmStack();
-    frameTree.prompt = "";
+    frameTree!.filmStack = new FilmStack();
+    frameTree!.prompt = "";
   } else {
     const [sx, sy, sw, sh] = contents[0].sourceRect;
     const [tx, ty, tw, th] = trapezoidBoundingRect(layout.corners);
 
-    const content = contents.shift();
+    const content = contents.shift()!;
     frameTree.filmStack = new FilmStack();
     frameTree.filmStack.films = [...content.filmStack.films];
     frameTree.prompt = content.prompt;
@@ -376,10 +375,10 @@ function dealFrameContents(seq: FrameSequence, insertElement: FrameElement, spli
 export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement, frameElement1: FrameElement): void {
   const { slots, contents } = seq;
 
-  let slot0: FrameSlot = null;
-  let content0: FrameContent = null;
-  let slot1: FrameSlot = null;
-  let content1: FrameContent = null;
+  let slot0: FrameSlot | null = null;
+  let content0: FrameContent | null = null;
+  let slot1: FrameSlot | null = null;
+  let content1: FrameContent | null = null;
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const layout = slot.layout;
@@ -437,8 +436,8 @@ export function swapBookContents(seq: FrameSequence, frameElement0: FrameElement
       b.setPhysicalCenter(targetSlot.page.paperSize, cc);
     }
   }
-  alignBubbles(slot0, content1);
-  alignBubbles(slot1, content0);
+  alignBubbles(slot0, content1!);
+  alignBubbles(slot1, content0!);
 }
 
 export function collectAllFilms(book: Book): Film[] {

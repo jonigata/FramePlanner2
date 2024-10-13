@@ -1,13 +1,13 @@
 import type { Layer } from "../system/layeredCanvas";
 
 export class FocusKeeper {
-  subscribers: ((layer: Layer) => void)[] = [];
+  subscribers: ((layer: Layer | null) => void)[] = [];
 
   constructor() {
 
   }
 
-  subscribe(f: (layer: Layer) => void) {
+  subscribe(f: (layer: Layer | null) => void) {
     this.subscribers.push(f);
   }
 
@@ -15,7 +15,7 @@ export class FocusKeeper {
     this.subscribers = this.subscribers.filter((s) => s !== f);
   }
 
-  setFocus(layer: Layer) {
+  setFocus(layer: Layer | null) {
     this.subscribers.forEach((s) => s(layer));
   }
 }

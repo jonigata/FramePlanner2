@@ -18,7 +18,7 @@
   import effectIcon from '../../assets/filmlist/effect.png';
   import { toolTip } from '../../utils/passiveToolTipStore';
 
-  export let film: Film;
+  export let film: Film | null;
 
   let canvas: HTMLCanvasElement;
   let effectVisible = false;
@@ -38,7 +38,7 @@
   function onToggleVisible(ev: MouseEvent) {
     ev.stopPropagation();
     ev.preventDefault();
-    film.visible = !film.visible;
+    film!.visible = !film!.visible;
     $redrawToken = true;
   }
 
@@ -75,39 +75,39 @@
     $effectChoiceNotifier = (tag: string) => {
       switch (tag) {
         case "OutlineEffect":
-          film.effects.push(new OutlineEffect("#000000", 0.01, 0.8));
+          film!.effects.push(new OutlineEffect("#000000", 0.01, 0.8));
           break;
       }
-      film.effects = film.effects;
-      effectProcessorQueue.publish(film);
+      film!.effects = film!.effects;
+      effectProcessorQueue.publish(film!);
     };
   }
 
-  function onUpdateEffectList(e: {oldIndex: number, newIndex:number}) {
+  function onUpdateEffectList(e: {oldIndex: number | undefined, newIndex:number | undefined}) {
     console.log("onUpdate", e.oldIndex, e.newIndex);
-    moveInArray(film.effects, e.oldIndex, e.newIndex);
+    moveInArray(film!.effects, e.oldIndex!, e.newIndex!);
     console.log("--- onUpdateEffect ---");
     dispatch('commit', true);
   }
 
   function onDeleteEffect(index: number) {
     console.log("onDeleteEffect", index);
-    film.effects.splice(index, 1);
-    film.effects = film.effects;
-    effectProcessorQueue.publish(film);
+    film!.effects.splice(index, 1);
+    film!.effects = film!.effects;
+    effectProcessorQueue.publish(film!);
     console.log("--- onDeleteEffect ---");
     dispatch('commit', true);
   }
 
   function onUpdateEffect(e: CustomEvent<Effect>) {
     let flag = false;
-    for (const effect of film.effects) {
+    for (const effect of film!.effects) {
       if (effect.ulid === e.detail.ulid) {
         flag = true;
       }
       if (flag) {
         effect.setOutputDirty();
-        effectProcessorQueue.publish(film);
+        effectProcessorQueue.publish(film!);
       }
     }
     dispatch('commit', false);
@@ -116,8 +116,8 @@
   $: onCanvas(canvas);
   function onCanvas(c: HTMLCanvasElement) {
     if (!c) return;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(film.media.drawSource, 0, 0);
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(film!.media.drawSource, 0, 0);
   }
 
 </script>
@@ -134,7 +134,7 @@
         ＋
       </div>
     </div>
-  {:else}
+  {:else if film.media} <!-- ほぼ確定だけど!が使えずエラーになるため -->
     <div 
       class="image-panel" 
       class:variant-filled-primary={film?.selected}

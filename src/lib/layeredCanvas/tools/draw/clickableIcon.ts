@@ -9,14 +9,14 @@ export abstract class ClickableSlate implements ClickableSlate {
   size: Vector;
   pivot: Vector;
   hint: string;
-  visibleConditionProvider: () => boolean;
+  visibleConditionProvider: (() => boolean) | null;
   matrixProvider: () => DOMMatrix;
   marginLeft = 0;
   marginTop = 0;
   marginRight = 0;
   marginBottom = 0;
   
-  constructor(size: Vector, pivot: Vector, hint: string, visibleConditionProvider: () => boolean, matrixProvider: () => DOMMatrix) {
+  constructor(size: Vector, pivot: Vector, hint: string, visibleConditionProvider: (() => boolean) | null, matrixProvider: () => DOMMatrix) {
     this.position = [0,0];
     this.size = size;
     this.pivot = pivot;
@@ -26,7 +26,7 @@ export abstract class ClickableSlate implements ClickableSlate {
   }
 
   isVisible(): boolean {
-    return !this.visibleConditionProvider || this.visibleConditionProvider();
+    return this.visibleConditionProvider == null || this.visibleConditionProvider();
   }
 
   contains(p: Vector): boolean {
@@ -90,7 +90,7 @@ export class ClickableIcon extends ClickableSlate {
   index: number;
   shadowColor: string;
   
-  constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: () => boolean, matrixProvider: () => DOMMatrix) {
+  constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: (() => boolean) | null, matrixProvider: () => DOMMatrix) {
     super(size, pivot, hint, visibleConditionProvider, matrixProvider);
     this.images = srcs.map(src => {
       const image = new Image();
@@ -118,7 +118,7 @@ export class ClickableIcon extends ClickableSlate {
     if (image.width === 0 || image.height === 0) return;
     if (!ClickableIcon.tmpCanvas) {
       ClickableIcon.tmpCanvas = document.createElement("canvas");
-      ClickableIcon.tmpCtx = ClickableIcon.tmpCanvas.getContext("2d");
+      ClickableIcon.tmpCtx = ClickableIcon.tmpCanvas.getContext("2d")!!;
     }
     ClickableIcon.tmpCanvas.width = image.width;
     ClickableIcon.tmpCanvas.height = image.height;

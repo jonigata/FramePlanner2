@@ -1,8 +1,8 @@
-export const keyDownFlags = {};
+export const keyDownFlags: { [key: string]: boolean } = {};
 
 export function initializeKeyCache(canvas: HTMLCanvasElement, consume: (code: string) => boolean) {
-  if (canvas["keyCacheInitialized"]) { return; }
-  canvas["keyCacheInitialized"] = true;
+  if ((canvas as any)["keyCacheInitialized"]) { return; }
+  (canvas as any)["keyCacheInitialized"] = true;
 
   function getCanvasPosition(event: MouseEvent) {
     const rect = canvas.getBoundingClientRect();

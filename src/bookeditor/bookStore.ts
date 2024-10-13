@@ -5,14 +5,14 @@ import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 
-export const mainBook = writable<Book>(null);
+export const mainBook = writable<Book | null>(null);
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
-export const viewport: Writable<Viewport> = writable(null);
-export const bookEditor: Writable<BookOperators> = writable(null);
+export const viewport: Writable<Viewport | null> = writable(null);
+export const bookEditor: Writable<BookOperators | null> = writable(null);
 export const redrawToken = writable(false);
-export const undoToken: Writable<'undo' | 'redo'> = writable(null);
+export const undoToken: Writable<'undo' | 'redo' | null> = writable(null);
 export const forceFontLoadToken = writable(false);
-export const fontLoadToken: Writable<{family: string, weight: string}[]> = writable(null);
+export const fontLoadToken: Writable<{family: string, weight: string}[] | null> = writable(null);
 
 export type NewPageProperty = {
   paperSize: [number, number],

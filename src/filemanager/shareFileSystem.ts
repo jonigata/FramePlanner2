@@ -1,7 +1,7 @@
 import { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
 import { makeFolders } from '../lib/filesystem/fileSystem';
 
-export async function buildShareFileSystem(referenceUserId: string): Promise<FirebaseFileSystem> {
+export async function buildShareFileSystem(referenceUserId: string | null): Promise<FirebaseFileSystem> {
   const fs = new FirebaseFileSystem();
   await fs.openShared(referenceUserId);
 

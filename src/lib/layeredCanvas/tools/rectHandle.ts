@@ -1,20 +1,32 @@
-export type RectHandle = 
+export type RectCornerHandle = 
   "topLeft"|
   "topRight"|
   "bottomLeft"|
-  "bottomRight"|
+  "bottomRight";
+
+export type RectSideHandle =
   "top"|
   "bottom"|
   "left"|
   "right";
 
-export const rectHandles: RectHandle[] = [
+export type RectHandle = RectCornerHandle | RectSideHandle;
+
+export const rectCornerHandles: RectCornerHandle[] = [
   "topLeft",
   "topRight",
   "bottomLeft",
-  "bottomRight",
+  "bottomRight"
+];
+
+export const rectSideHandles: RectSideHandle[] = [
   "top",
   "bottom",
   "left",
   "right"
+];
+
+export const rectHandles: RectHandle[] = [
+  ...rectCornerHandles,
+  ...rectSideHandles
 ];

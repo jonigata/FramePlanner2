@@ -9,7 +9,7 @@ import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/d
 import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
 import { type Vector, type Rect, box2Rect, add2D, scale2D, lerp2D, vectorEquals, getRectCenter, rectContains, denormalizePositionInRect } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
-import type { RectHandle } from "../tools/rectHandle";
+import { type RectHandle, type RectCornerHandle, type RectSideHandle, rectCornerHandles, rectHandles, rectSideHandles } from "../tools/rectHandle";
 import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
@@ -54,19 +54,19 @@ export class FrameLayer extends Layer {
   borderIcons: ClickableSlate[];
   litIcons: ClickableSlate[];
 
-  litLayout: Layout;
-  litBorder: Border;
-  selectedLayout: Layout;
-  selectedBorder: Border;
-  focusedPadding: PaddingHandle;
-  pointerHandler: any;
-  canvasPattern: CanvasPattern;
+  litLayout: Layout | null = null;
+  litBorder: Border | null = null;
+  selectedLayout: Layout | null = null;
+  selectedBorder: Border | null = null;
+  focusedPadding: PaddingHandle | null = null;
+  pointerHandler: any = null;
+  canvasPattern!: CanvasPattern;
 
   constructor(
     private renderLayer: PaperRendererLayer,
     private focusKeeper: FocusKeeper,
     private frameTree: FrameElement, 
-    private onFocus: (layout: Layout) => void,
+    private onFocus: (layout: Layout | null) => void,
     private onCommit: () => void, 
     private onRevert: () => void, 
     private onShift: (element: FrameElement) => void, 
@@ -81,7 +81,7 @@ export class FrameLayer extends Layer {
     const unit = iconUnit;
     const spinUnit: Vector = [unit[0], unit[1] * 1 / 6];
     const mp = () => this.paper.matrix;
-    const isFrameActiveAndVisible = () => this.interactable && 0 < this.selectedLayout?.element.visibility;
+    const isFrameActiveAndVisible = () => this.interactable && 0 < (this.selectedLayout?.element.visibility ?? 0);
     this.splitHorizontalIcon = new ClickableIcon(["frameLayer/split-horizontal.png"],unit,[0,1],"横に分割", isFrameActiveAndVisible, mp);
     this.splitVerticalIcon = new ClickableIcon(["frameLayer/split-vertical.png"],unit,[0,1],"縦に分割", isFrameActiveAndVisible, mp);
     this.deleteIcon = new ClickableIcon(["frameLayer/delete.png"],unit,[1,0],"削除", isFrameActiveAndVisible, mp);
@@ -107,7 +107,7 @@ export class FrameLayer extends Layer {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#86C8FF";
-        ctx.fillText((l.element.z + 3).toString(), ...c);
+        ctx.fillText((l!.element.z + 3).toString(), ...c);
       },
       unit, [0,0], "z値", isFrameActiveAndVisible, mp);
 
@@ -119,7 +119,7 @@ export class FrameLayer extends Layer {
     this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[1,1],"上下反転", isImageActive, mp);
     this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[1,1],"フィット", isImageActive, mp);
 
-    const isBorderActive = (dir) => this.interactable && this.selectedBorder?.layout.dir === dir;
+    const isBorderActive = (dir: 'h' | 'v') => this.interactable && this.selectedBorder?.layout.dir === dir;
     this.expandHorizontalIcon = new ClickableIcon(["frameLayer/expand-horizontal.png"],unit,[0.5,1],"幅を変更", () => isBorderActive('h'), mp);
     this.slantHorizontalIcon = new ClickableIcon(["frameLayer/slant-horizontal.png"], unit,[0.5,0],"傾き", () => isBorderActive('h'), mp);
     this.insertHorizontalIcon = new ClickableIcon(["frameLayer/insert-horizontal.png"],unit,[0.5,0],"コマ挿入", () => isBorderActive('h'), mp);
@@ -127,7 +127,7 @@ export class FrameLayer extends Layer {
     this.slantVerticalIcon = new ClickableIcon(["frameLayer/slant-vertical.png"], unit,[0,0.5],"傾き", () => isBorderActive('v'), mp);
     this.insertVerticalIcon = new ClickableIcon(["frameLayer/insert-vertical.png"],unit,[0,0.5],"コマ挿入", () => isBorderActive('v'), mp);
 
-    const isSwapVisible = () => this.interactable && this.litLayout && this.selectedLayout && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler && 0 < this.litLayout.element.visibility;
+    const isSwapVisible = () => this.interactable && this.litLayout != null && this.selectedLayout != null && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler && 0 < this.litLayout.element.visibility;
     this.swapIcon = new ClickableIcon(["frameLayer/swap.png"],unit,[0.5,0],"選択コマと\n中身を入れ替え", isSwapVisible, mp);
 
     this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
@@ -160,7 +160,7 @@ export class FrameLayer extends Layer {
     const pcanvas = document.createElement("canvas");
     pcanvas.width = 16;
     pcanvas.height = 16;
-    const pctx = pcanvas.getContext("2d");
+    const pctx = pcanvas.getContext("2d")!;
     pctx.strokeStyle = "rgba(0, 200, 200, 0.4)";
     pctx.lineWidth = 6;
     pctx.beginPath();
@@ -171,7 +171,7 @@ export class FrameLayer extends Layer {
       pctx.lineTo(72, y + 80 * slope);
     }
     pctx.stroke();
-    this.canvasPattern = pctx.createPattern(pcanvas, 'repeat');
+    this.canvasPattern = pctx.createPattern(pcanvas, 'repeat')!;
   }
 
   prerender(): void {
@@ -270,10 +270,10 @@ export class FrameLayer extends Layer {
     drawSheet(ctx, corners, this.calculateSheetRect(corners), "rgba(64, 64, 128, 0.7)");
   }
 
-  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) {
-    if (!this.interactable) { return; }
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
+    if (!this.interactable) { return false; }
 
-    let layoutlet: Layout = null;
+    let layoutlet: Layout | null = null;
 
     if (this.selectedLayout) {
       const r = this.calculateSheetRect(this.selectedLayout.corners);
@@ -426,7 +426,7 @@ export class FrameLayer extends Layer {
               const canvas = document.createElement("canvas");
               canvas.width = image.width;
               canvas.height = image.height;
-              const ctx = canvas.getContext("2d");
+              const ctx = canvas.getContext("2d")!;
               ctx.drawImage(image, 0, 0);
               this.dropped(this.cursorPosition, canvas);
               return true;
@@ -543,7 +543,7 @@ export class FrameLayer extends Layer {
     } else if (
       this.insertHorizontalIcon.contains(p) || this.insertVerticalIcon.contains(p)) {
       return { action: "insert", border: this.selectedBorder };
-    } else if (pointToQuadrilateralDistance(p, this.selectedBorder.corners, false) < BORDER_MARGIN) {
+    } else if (pointToQuadrilateralDistance(p, this.selectedBorder!.corners, false) < BORDER_MARGIN) {
       return { action: "move-border" , border: this.selectedBorder };
     }
     return null;
@@ -645,7 +645,7 @@ export class FrameLayer extends Layer {
     return { action: "select", layout: layout };
   }
 
-  changeFocus(layer: Layer) {
+  changeFocus(layer: Layer | null) {
     if (layer != this) {
       if (this.selectedLayout || this.selectedBorder) {
         this.selectedBorder = null;
@@ -657,7 +657,7 @@ export class FrameLayer extends Layer {
   async *pointer(p: Vector, payload: any) {
     switch (payload.action) {
       case "transpose-border":
-        this.transposeBorder(this.litBorder);
+        this.transposeBorder(this.litBorder!);
         break;
       case "swap":
         this.swapContent(payload.element0, payload.element1);
@@ -737,7 +737,7 @@ export class FrameLayer extends Layer {
         this.redraw();
         break;
       case "insert":
-        this.onInsert(this.selectedBorder);
+        this.onInsert(this.selectedBorder!);
         this.selectedBorder = null;
         break;
 
@@ -759,13 +759,13 @@ export class FrameLayer extends Layer {
         break;
 
       case "flip-horizontal":
-        payload.layout.element.filmStack.films.forEach(film => {
+        payload.layout.element.filmStack.films.forEach((film: Film) => {
           film.reverse[0] *= -1;
         });
         this.redraw();
         break;
       case "flip-vertical":
-        payload.layout.element.filmStack.films.forEach(film => {
+        payload.layout.element.filmStack.films.forEach((film: Film) => {
           film.reverse[1] *= -1;
         });
         this.redraw();
@@ -812,7 +812,7 @@ export class FrameLayer extends Layer {
     try {
       const transformer = new FilmStackTransformer(paperSize, films);
 
-      yield* scale(this.getPaperSize(), p, (q) => {
+      yield* scale(this.getPaperSize(), p, (q: Vector) => {
         transformer.scale(Math.max(q[0], q[1]))
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
@@ -835,7 +835,7 @@ export class FrameLayer extends Layer {
     try {
       const transformer = new FilmStackTransformer(paperSize, films);
 
-      yield* rotate(p, (q) => {
+      yield* rotate(p, (q: number) => {
         transformer.rotate(q*-0.2);
         if (keyDownFlags["ShiftLeft"] || keyDownFlags["ShiftRight"]) {
           constraintLeaf(paperSize, layout);
@@ -861,7 +861,7 @@ export class FrameLayer extends Layer {
 
     try {
       let lastq = null;
-      yield* translate(p, (q) => {
+      yield* translate(p, (q: Vector) => {
         lastq = [...q];
         films.forEach((film, i) => {
           film.setShiftedTranslation(paperSize, [origins[i][0] + q[0], origins[i][1] + q[1]]);
@@ -871,7 +871,7 @@ export class FrameLayer extends Layer {
         }
         this.redraw();
       });
-      if (lastq[0] !== 0 || lastq[1] !== 0) {
+      if (lastq![0] !== 0 || lastq![1] !== 0) {
         this.onCommit();
       }
     } catch (e) {
@@ -894,12 +894,12 @@ export class FrameLayer extends Layer {
     let i1 = index;
     if (layout.dir === "h") {[i0, i1] = [i1, i0];}
 
-    const child0 = layout.children[i0];
-    const child1 = layout.children[i1];
+    const child0 = layout.children![i0];
+    const child1 = layout.children![i1];
 
     const c0 = child0.element;
     const c1 = child1.element;
-    const rawSpacing = layout.children[index-1].element.divider.spacing; // dont use i0
+    const rawSpacing = layout.children![index-1].element.divider.spacing; // dont use i0
     const rawSum = c0.rawSize + rawSpacing + c1.rawSize;
 
     function getRect(): Rect {
@@ -944,8 +944,8 @@ export class FrameLayer extends Layer {
   *expandBorder(p: Vector, border: Border) {
     const element = border.layout.element;
     const dir = border.layout.dir == "h" ? 0 : 1;
-    const prev = border.layout.children[border.index-1].element;
-    const curr = border.layout.children[border.index].element;
+    const prev = border.layout.children![border.index-1].element;
+    const curr = border.layout.children![border.index].element;
     const startSpacing = prev.divider.spacing;
     const s = p;
     const startPrevRawSize = prev.rawSize;
@@ -976,7 +976,7 @@ export class FrameLayer extends Layer {
 
   *slantBorder(p: Vector, border: Border) {
     const dir = border.layout.dir == "h" ? 0 : 1;
-    const prev = border.layout.children[border.index-1].element;
+    const prev = border.layout.children![border.index-1].element;
     const rawSlant = prev.divider.slant;
 
     const s = p;
@@ -1006,22 +1006,21 @@ export class FrameLayer extends Layer {
     const corners = padding.layout.corners;
     const handle = padding.handle;
 
-    const cornerHandles: RectHandle[] = ["topLeft", "topRight", "bottomLeft", "bottomRight"];
-
     try {
-      if (cornerHandles.indexOf(handle) !== -1) {
+      if ((rectCornerHandles as string[]).indexOf(handle) !== -1) {
         // padding.handleが角の場合
-        const q = element.cornerOffsets[handle];
+        const cornerHandle = handle as RectCornerHandle;
+        const q = element.cornerOffsets[cornerHandle];
         const s = p;
         while ((p = yield)) {
           const delta = [p[0] - s[0], p[1] - s[1]];
-          element.cornerOffsets[handle] = [q[0] + delta[0] / rawSize[0], q[1] + delta[1] / rawSize[1]];
+          (element.cornerOffsets as any)[handle] = [q[0] + delta[0] / rawSize[0], q[1] + delta[1] / rawSize[1]];
           this.updateSelectedLayout();
           this.redraw();
         }
       } else {
         // padding.handleが辺の場合
-        let c0: string, c1: string;
+        let c0: RectCornerHandle, c1: RectCornerHandle;
         let direction: string;
         switch (handle) {
           case "top":
@@ -1095,8 +1094,7 @@ export class FrameLayer extends Layer {
     const paperSize = this.getPaperSize();
     // calc expansion to longer size
 
-    const film = new Film();
-    film.media = media;
+    const film = new Film(media);
     film.n_scale = 1;
     film.rotation = 0;
     film.reverse = [1, 1];
@@ -1124,7 +1122,7 @@ export class FrameLayer extends Layer {
 
   updateBorder(border: Border): void {
     const rootLayout = this.calculateRootLayout();
-    const newLayout = findLayoutOf(rootLayout, border.layout.element);
+    const newLayout = findLayoutOf(rootLayout, border.layout.element)!;
     border.layout = newLayout;
     this.updateBorderTrapezoid(border);
   }
@@ -1240,11 +1238,11 @@ export class FrameLayer extends Layer {
 
   // 基本的には直接呼び出さない
   // changeFocusとselectLayoutからのみ
-  videoRedrawInterval: NodeJS.Timer;
-  doSelectLayout(layout: Layout): void {
+  videoRedrawInterval: NodeJS.Timer | undefined;
+  doSelectLayout(layout: Layout | null): void {
     if (layout?.element !== this.selectedLayout?.element) {
       clearInterval(this.videoRedrawInterval);
-      this.videoRedrawInterval = null;      
+      this.videoRedrawInterval = undefined;      
       if (this.selectedLayout) {
         for (const film of this.selectedLayout.element.filmStack.films) {
           if (film.media instanceof VideoMedia) {
@@ -1274,7 +1272,7 @@ export class FrameLayer extends Layer {
     this.onFocus(layout);
   }
 
-  selectLayout(layout: Layout): void {
+  selectLayout(layout: Layout | null): void {
     this.doSelectLayout(layout);
     this.focusKeeper.setFocus(layout == null ? null : this);
   }

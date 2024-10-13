@@ -22,7 +22,7 @@
   export let filename: string;
   export let bindId: BindId;
   export let parent: Folder;
-  export let trash: Folder; // 捨てるときの対象、ごみ箱自身はnull
+  export let trash: Folder | null; // 捨てるときの対象、ごみ箱自身はnull
   export let removability: "removable" | "unremovable" = "removable";
   export let spawnability: "file-spawnable" | "folder-spawnable" | "unspawnable" = "unspawnable";
   export let index: number;
@@ -32,7 +32,7 @@
   let acceptable: boolean;
   let isDraggingOver: boolean;
   let isDiscardable = false;
-  let renameEdit = null;
+  let renameEdit: RenameEdit;
   let renaming = false;
   let isRootTrash = false;
   let embodiedEntries: EmbodiedEntry[] = [];
@@ -47,8 +47,8 @@
   }
 
   $: ondrag($fileManagerDragging);
-  function ondrag(dragging: Dragging) {
-    acceptable = dragging && !path.includes(dragging.bindId);
+  function ondrag(dragging: Dragging | null) {
+    acceptable = dragging != null && !path.includes(dragging.bindId);
   }
 
   async function onDragOver(ev: DragEvent) {
@@ -69,7 +69,7 @@
       await moveToHere(0);
     } else {
       // jsonだったら、jsonの中身を見て、適切な処理をする
-      if (ev.dataTransfer.files.length === 1) {
+      if (ev.dataTransfer?.files.length === 1) {
         const file = ev.dataTransfer.files[0];
         if (file.type === "application/json") {
           const json = await file.text();
@@ -106,7 +106,7 @@
   async function removeChild(e: CustomEvent<BindId>) {
     console.log("remove child", e.detail, trash);
     const childBindId = e.detail as BindId;
-    const childEntry = await node.getEntry(childBindId);
+    const childEntry = (await node.getEntry(childBindId))!;
     if (trash) {
       console.log("trash link", trash.id);
       await trash.link(childEntry[1], childEntry[2]);
@@ -131,8 +131,8 @@
       ev.preventDefault();
       return;
     }
-    ev.dataTransfer.setData("bindId", bindId);
-    ev.dataTransfer.setData("parent", parent.id);
+    ev.dataTransfer!.setData("bindId", bindId);
+    ev.dataTransfer!.setData("parent", parent.id);
     ev.stopPropagation();
     setTimeout(() => {
       // こうしないとなぜかdragendが即時発火してしまう
@@ -146,12 +146,12 @@
   }
 
   async function moveToHere(index: number) {
-    const dragging = $fileManagerDragging;
+    const dragging = $fileManagerDragging!;
     console.log("++++++++++++ moveToHere", dragging, index);
 
     if (fileSystem.id === dragging.fileSystem.id) {
       const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
-      const mover = await sourceParent.getEntry(dragging.bindId);
+      const mover = (await sourceParent.getEntry(dragging.bindId))!;
 
       if (index === null) {
         index = (await node.list()).length;      
@@ -165,7 +165,7 @@
     } else {
       $loading = true;
       const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
-      const entry = await sourceParent.getEntry(dragging.bindId);
+      const entry = (await sourceParent.getEntry(dragging.bindId))!;
       const sourceNodeId = entry[2];
       const targetFileId = await copyBookFolderInterFileSystem(dragging.fileSystem, fileSystem, sourceNodeId);
       await node.insert(entry[1], targetFileId, index);
@@ -174,13 +174,13 @@
   }
 
   async function recycle() {
-    const editingId = $mainBook.revision.id as NodeId;
+    const editingId = $mainBook!.revision.id as NodeId;
     await recycleNode(node, editingId);
     $loading = true;
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
     console.log("usedImageFiles", usedImageFiles);
     console.log("strayImageFiles", strayImageFiles);
-    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像")).asFolder();
+    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder();
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
     $loading = false;
     $fileManagerUsedSizeToken = fileSystem;
@@ -237,12 +237,11 @@
     }
   }
 
-  let entry: [BindId, string, Node];
   onMount(async () => {
     const root = await fileSystem.getRoot();
     isRootTrash = trash == null && parent.id === root.id;
 
-    entry = await parent.getEmbodiedEntry(bindId)
+    const entry: [BindId, string, Node] = (await parent.getEmbodiedEntry(bindId))!
     node = entry[2] as Folder;
     isDiscardable = removability === "removable" && trash != null;
     node.watch(watcher);

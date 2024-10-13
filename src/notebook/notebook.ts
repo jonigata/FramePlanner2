@@ -16,7 +16,7 @@ export const Notebook = t.type({
   characters: t.array(Character),
   plot: t.string,
   scenario: t.string,
-  storyboard: Storyboard,
+  storyboard: t.union([Storyboard, t.null]),
   critique: t.string,
 });
 

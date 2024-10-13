@@ -8,17 +8,17 @@ import { createCanvasFromBlob } from '../../utils/imageUtil';
 import { getCurrentUserOrSignInAnonymously, getShareStorage, getCloudStorage } from '../../firebase';
 
 export class FirebaseFileSystem extends FileSystem {
-  database: Database;
-  boxRef: DatabaseReference;
-  nodesRef: DatabaseReference;
-  storage: FirebaseStorage;
-  boxId: string;
+  database: Database | null = null;
+  boxRef: DatabaseReference | null = null;
+  nodesRef: DatabaseReference | null = null;
+  storage: FirebaseStorage | null = null;
+  boxId: string | null = null;
 
   constructor() {
     super();
   }
 
-  async openShared(key: string) {
+  async openShared(key: string | null) {
     this.database = getDatabase();
     this.storage = getShareStorage();
     const userCredential = await getCurrentUserOrSignInAnonymously();
@@ -46,30 +46,30 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async createFile(_type: string): Promise<File> {
-    return this.createFileWithId(push(this.nodesRef).key as NodeId, _type);
+    return this.createFileWithId(push(this.nodesRef!).key as NodeId, _type);
   }
 
   async createFileWithId(id: NodeId, _type: string): Promise<File> {
-    const fileRef = child(this.nodesRef, id);
+    const fileRef = child(this.nodesRef!, id);
     await set(child(fileRef, 'type'), 'file');
     const file = new FirebaseFile(this, id);
     return file;
   }
 
   async createFolder(): Promise<Folder> {
-    const id = push(this.nodesRef).key as NodeId;
-    const folderRef = child(this.nodesRef, id);
+    const id = push(this.nodesRef!).key as NodeId;
+    const folderRef = child(this.nodesRef!, id);
     await set(child(folderRef, 'type'), 'folder');
     const file = new FirebaseFolder(this, id);
     return file;
   }
 
   async destroyNode(id: NodeId): Promise<void> {
-    await remove(child(this.nodesRef, id));
+    await remove(child(this.nodesRef!, id));
   }
 
-  async getNode(id: NodeId): Promise<Node> {
-    const snapshot = await get(child(this.nodesRef, id));
+  async getNode(id: NodeId): Promise<Node | null> {
+    const snapshot = await get(child(this.nodesRef!, id));
     if (snapshot.exists()) {
       if (snapshot.val().type === 'file') {
         const file = new FirebaseFile(this, id);
@@ -86,14 +86,14 @@ export class FirebaseFileSystem extends FileSystem {
     const rootId = "root" as NodeId;
     const node = await this.getNode(rootId) as Folder;
     if (node) { return node; }
-    await set(child(this.nodesRef, rootId), { type: 'folder' });
+    await set(child(this.nodesRef!, rootId), { type: 'folder' });
     return await this.getNode(rootId) as Folder;
   }
 }
 
 export class FirebaseFile extends File {
   get nodeRef(): DatabaseReference {
-    return child((this.fileSystem as FirebaseFileSystem).nodesRef, this.id);
+    return child((this.fileSystem as FirebaseFileSystem).nodesRef!, this.id);
   }
 
   constructor(fileSystem: FileSystem, id: NodeId) {
@@ -113,7 +113,7 @@ export class FirebaseFile extends File {
     const snapshot = await get(child(this.nodeRef, 'link'));
     const id = snapshot.val();
 
-    const storage = (this.fileSystem as FirebaseFileSystem).storage;
+    const storage = (this.fileSystem as FirebaseFileSystem).storage!;
     const storageFileRef = sref(storage, id);
     const blob = await getBlob(storageFileRef);
 
@@ -126,7 +126,7 @@ export class FirebaseFile extends File {
     const base64Image = canvas.toDataURL('image/png');
     const id = await sha1(base64Image);
 
-    const storage = (this.fileSystem as FirebaseFileSystem).storage;
+    const storage = (this.fileSystem as FirebaseFileSystem).storage!;
     const storageFileRef = sref(storage, id);
 
     try {
@@ -152,7 +152,7 @@ export class FirebaseFile extends File {
 
 export class FirebaseFolder extends Folder {
   get nodeRef(): DatabaseReference {
-    return child((this.fileSystem as FirebaseFileSystem).nodesRef, this.id);
+    return child((this.fileSystem as FirebaseFileSystem).nodesRef!, this.id);
   }
 
   constructor(fileSystem: FileSystem, id: NodeId) {
@@ -178,7 +178,7 @@ export class FirebaseFolder extends Folder {
 
   async rename(bindId: BindId, newName: string): Promise<void> {
     const entries = await this.list();
-    const entry = entries.find((entry) => entry[0] === bindId);
+    const entry = entries.find((entry) => entry[0] === bindId)!;
     entry[1] = newName;
     await set(child(this.nodeRef, 'content'), JSON.stringify(entries));
     super.notifyRename(bindId, newName);
@@ -197,14 +197,14 @@ export class FirebaseFolder extends Folder {
     return bindId;
   }
 
-  async getEntry(bindId: BindId): Promise<Entry> {
+  async getEntry(bindId: BindId): Promise<Entry | null> {
     const entries = await this.list();
-    return entries.find((entry) => entry[0] === bindId);
+    return entries.find((entry) => entry[0] === bindId) ?? null;
   }
 
-  async getEntryByName(name: string): Promise<Entry> {
+  async getEntryByName(name: string): Promise<Entry | null> {
     const entries = await this.list();
-    return entries.find((entry) => entry[1] === name);
+    return entries.find((entry) => entry[1] === name) ?? null;
   }
 
   async getEntriesByName(name: string): Promise<Entry[]> {

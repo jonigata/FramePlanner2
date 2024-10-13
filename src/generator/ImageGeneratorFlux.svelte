@@ -4,7 +4,6 @@
   import { onlineAccount, onlineStatus } from "../utils/accountStore";
   import { onMount } from 'svelte';
   import { getFeathral } from '../firebase';
-  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
@@ -26,7 +25,7 @@
   export let chosen: HTMLCanvasElement;
 
   let progress = 0;
-  let refered: HTMLImageElement = null;
+  let refered: HTMLCanvasElement | null= null;
   let postfix: string = "";
   let batchCount = 1;
   let mode: Mode = "schnell";
@@ -34,12 +33,15 @@
   let height = 1024;
   let estimatedCost = 0;
 
-  function onChooseImage({detail}) {
+  $: account = $onlineAccount!;
+
+  function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
     chosen = detail;
   }
 
   async function generate() {
     busy = true;
+    let q: NodeJS.Timer | undefined = undefined;
     try {
       progress = 0;
       let pixelRatio = width * height / 1024 / 1024;
@@ -50,7 +52,7 @@
         "manga": 12,
       }
       const delta = 1 / factorTable[mode] / pixelRatio;
-      const q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
+      q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
       let imagingContext: ImagingContext = {
         awakeWarningToken: false,
         errorToken: false,
@@ -63,9 +65,11 @@
         5000, "画像が生成されました",
         async () => {
           return await generateFluxImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, imagingContext);
-          // return await generateImageFromTextWithFeathral(imageRequest);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
+      if (result == null) {
+        return;
+      }
 
       const promises = [];
       for (let i = 0; i < result.images.length; i++) {
@@ -83,13 +87,11 @@
       progress = 1;
 
       logEvent(getAnalytics(), 'generate_flux');
-      clearInterval(q);
 
-      $onlineAccount.feathral = result.feathral;
+      $onlineAccount!.feathral = result.feathral;
     }
-    catch(error) {
-      console.log(error);
-      toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
+    finally {
+      clearInterval(q);
     }
     busy = false;
   }
@@ -102,8 +104,8 @@
   $: estimatedCost = batchCount * calculateCost({width,height}, mode);
 
   onMount(async () => {
-    $onlineAccount.feathral = await getFeathral();
-    console.log($onlineAccount.feathral);
+    $onlineAccount!.feathral = await getFeathral();
+    console.log($onlineAccount!.feathral);
   });
 
 </script>
@@ -153,6 +155,7 @@
     </div>
   </div>
 
+  {#if $onlineAccount != null}   <!-- onMountの時点で明らかだがsvelteでは!が使えない -->
   <div class="flex flex-row gap-5 w-full items-center my-4 ">
     <button disabled={busy || $onlineAccount.feathral < 1} class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 generate-button" on:click={generate}>
       <div class="flex justify-center items-center h-6">
@@ -170,6 +173,7 @@
 
     <ProgressBar label="Progress Bar" value={progress} max={1} />
   </div>
+  {/if}
   <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
   {:else}
     <p>サインインしてください</p>

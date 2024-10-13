@@ -1,6 +1,6 @@
 
 <script lang="ts">
-  import writableDerived from "svelte-writable-derived";
+  import { derived } from 'svelte/store';
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, type Border } from '../lib/layeredCanvas/dataModels/frameTree';
@@ -42,7 +42,7 @@
   let arrayLayer: ArrayLayer;
   let focusKeeper: FocusKeeper;
   let marks: boolean[];
-  let editingBookId: string = null;
+  let editingBookId: string | null = null;
   let defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
   let painter: Painter;
   let imageProvider: ImageProvider;
@@ -52,26 +52,23 @@
   let readingDirection: ReadingDirection;
   let wrapMode: WrapMode;
 
-  const bubble = writableDerived(
+  const bubble = derived(
     bubbleInspectorTarget,
-    (bit) => bit?.bubble,
-    (b, bit) => {
-      bit.bubble = b;
-      return bit;
-    }
+    (bit: BubbleInspectorTarget | null) => bit?.bubble,
   );
 
   $: onUndoCommand($undoToken);
-  function onUndoCommand(t: 'undo' | 'redo') {
+  function onUndoCommand(t: 'undo' | 'redo' | null) {
     $undoToken = null;
     if (t == 'undo') { undo(); }
     if (t == 'redo') { redo(); }
   }
 
-  function hint(r: [number, number, number, number], s: string) {
+  function hint(r: [number, number, number, number] | null, s: string | null) {
     if (s) {
-      const q0 = convertPointFromNodeToPage(canvas, r[0], r[1]);
-      toolTipRequest.set({ message: s, rect: { left: q0.x, top: q0.y, width: r[2], height: r[3] } });
+      const q0 = convertPointFromNodeToPage(canvas, r![0], r![1]);
+      // TODO: w, hの計算がおかしい
+      toolTipRequest.set({ message: s, rect: { left: q0.x, top: q0.y, width: r![2], height: r![3] } });
     } else {
       toolTipRequest.set(null);
     }
@@ -94,8 +91,8 @@
     });
 
   function commitInternal(tag: HistoryTag) {
-    commitBook($mainBook, tag);
-    console.tag("commit", "cyan", $mainBook.revision, $mainBook.history.entries[$mainBook.history.cursor-1])
+    commitBook($mainBook!, tag);
+    console.tag("commit", "cyan", $mainBook!.revision, $mainBook!.history.entries[$mainBook!.history.cursor-1])
     $mainBook = $mainBook;
     layeredCanvas.redraw();
   }
@@ -104,17 +101,17 @@
     $frameInspectorRebuildToken++;
     delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
     if (tag === 'bubble') {
-      $bubble = $bubble;
+      $bubbleInspectorTarget = $bubbleInspectorTarget;
     }
   }
 
   function revert() {
     delayedCommiter.cancel();
-    revertBook($mainBook);
+    revertBook($mainBook!);
     resetBubbleCache();
     $mainBook = $mainBook;
     if ($frameInspectorTarget) {
-      $frameInspectorTarget.frame = null;
+      $frameInspectorTarget = null;
     }
   }
 
@@ -122,7 +119,7 @@
     if (painter.isPainting()) {
       painter.undo();
     } else {
-      undoBookHistory($mainBook);
+      undoBookHistory($mainBook!);
       revert();
       focusKeeper.setFocus(null);
     }
@@ -132,7 +129,7 @@
     if (painter.isPainting()) {
       painter.redo();
     } else {
-      redoBookHistory($mainBook);
+      redoBookHistory($mainBook!);
       revert();
       focusKeeper.setFocus(null);
     }
@@ -148,26 +145,26 @@
     triggerTemplateChoice.trigger().then(result => {
       if (result != null) {
         $newPageProperty.templateIndex = result;
-        insertNewPageToBook($mainBook, $newPageProperty, pageIndex);
+        insertNewPageToBook($mainBook!, $newPageProperty, pageIndex);
         commit(null);
       }
     });
   }
 
   function deletePage(index: number) {
-    $mainBook.pages.splice(index, 1);
+    $mainBook!.pages.splice(index, 1);
     commit(null);
   }
 
   function movePages(from: number[], to: number) {
-    const restPages = $mainBook.pages.filter((_, i) => !from.includes(i));
-    const movedPages = from.map(i => $mainBook.pages[i]);
-    $mainBook.pages = [...restPages.slice(0, to), ...movedPages, ...restPages.slice(to)];
+    const restPages = $mainBook!.pages.filter((_, i) => !from.includes(i));
+    const movedPages = from.map(i => $mainBook!.pages[i]);
+    $mainBook!.pages = [...restPages.slice(0, to), ...movedPages, ...restPages.slice(to)];
     commit(null);
   }
 
   function copyPageToClipboard(index: number) {
-    const page = $mainBook.pages[index];
+    const page = $mainBook!.pages[index];
     logEvent(getAnalytics(), 'copy_page_to_clipboard');
     copyToClipboard(page);
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
@@ -177,18 +174,18 @@
     console.log("batchImaging", index);
     $frameInspectorTarget = null;
     $bubbleInspectorTarget = null;
-    $batchImagingPage = $mainBook.pages[index];
+    $batchImagingPage = $mainBook!.pages[index];
   }
 
   function editBubbles(index: number) {
     console.log("editBubbles", index);
     delayedCommiter.force();
-    $bubbleBucketPage = $mainBook.pages[index];
+    $bubbleBucketPage = $mainBook!.pages[index];
   }
 
   function tweak(index: number) {
     console.log("tweak", index);
-    $pageInspectorTarget = $mainBook.pages[index];
+    $pageInspectorTarget = $mainBook!.pages[index];
   }
 
   $: if ($bubbleBucketDirty) {
@@ -197,19 +194,19 @@
   }
 
   function shift(_page: Page, element: FrameElement) {
-    const frameSeq = collectBookContents($mainBook);
+    const frameSeq = collectBookContents($mainBook!);
     dealBookContents(frameSeq, element, null);
     commit(null);
   }
 
   function unshift(_page: Page, element: FrameElement) {
-    const frameSeq = collectBookContents($mainBook);
+    const frameSeq = collectBookContents($mainBook!);
     dealBookContents(frameSeq, null, element);
     commit(null);
   }
 
   function swap(_page: Page, element0: FrameElement, element1: FrameElement) {
-    const frameSeq = collectBookContents($mainBook);
+    const frameSeq = collectBookContents($mainBook!);
     swapBookContents(frameSeq, element0, element1);
     commit(null);
   }
@@ -233,16 +230,16 @@
     commit(null);
   }
 
-  $: onChangeBook(canvas, $mainBook);
+  $: onChangeBook(canvas, $mainBook!);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }
 
     if (arrayLayer && 
-        (readingDirection != $mainBook.direction ||
-         wrapMode != $mainBook.wrapMode)) {
+        (readingDirection != book.direction ||
+         wrapMode != book.wrapMode)) {
 
-      readingDirection = $mainBook.direction;
-      wrapMode = $mainBook.wrapMode;
+      readingDirection = book.direction;
+      wrapMode = book.wrapMode;
 
       const direction = getDirectionFromReadingDirection(book.direction);
       const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(wrapMode);
@@ -251,10 +248,10 @@
       arrayLayer.array.gapX = gapX;
       arrayLayer.array.gapY = gapY;
       for (const paper of arrayLayer.array.papers) {
-        paper.paper.findLayer(BubbleLayer).setFold(fold);
+        paper.paper.findLayer(BubbleLayer)!.setFold(fold);
       } 
 
-      $viewport.dirty = true;
+      $viewport!.dirty = true;
       layeredCanvas.redraw();
     }
 
@@ -337,10 +334,10 @@
   function onSplitCursor(cursor: number | null) {
     if (cursor == null || layeredCanvas == null) { return; }
     $bubbleSplitCursor = null;
-    const page = $bubbleInspectorTarget.page;
-    const oldBubble = $bubble;
+    const page = $bubbleInspectorTarget!.page;
+    const oldBubble = $bubble!;
 
-    const text = $bubble.text;
+    const text = oldBubble.text;
 
     const paperSize = page.paperSize;
     const bubbleSize = oldBubble.getPhysicalSize(paperSize)
@@ -371,7 +368,7 @@
     const newSize = newBubble.calculateFitSize(paperSize);
     newBubble.setPhysicalSize(paperSize, newSize);
 
-    $bubbleInspectorTarget.bubble = newBubble;
+    $bubbleInspectorTarget!.bubble = newBubble;
     commit(null);
     $redrawToken = true;
   }
@@ -400,7 +397,7 @@
     if (b) {
       console.log("show bubble");
       const bp = b.getPhysicalCenter(page.paperSize);
-      const pageIndex = $mainBook.pages.findIndex(p => p.id === page.id);
+      const pageIndex = $mainBook!.pages.findIndex(p => p.id === page.id);
       const rp = arrayLayer.array.childPositionToParentPosition(pageIndex, bp);
       const cp = layeredCanvas.rootPaperPositionToCanvasPosition(rp);
 
@@ -424,7 +421,7 @@
   }
 
   $: onFrameCommand($frameInspectorTarget);
-  async function onFrameCommand(fit: FrameInspectorTarget) {
+  async function onFrameCommand(fit: FrameInspectorTarget | null) {
     console.log("onFrameCommand", fit);
     delayedCommiter.force();
     if (fit && fit.command != null) {
@@ -443,7 +440,7 @@
   }
 
   $: onBubbleCommand($bubbleInspectorTarget);
-  async function onBubbleCommand(bit: BubbleInspectorTarget) {
+  async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
     delayedCommiter.force();
     if (bit && bit.command != null) {
       $bubbleInspectorTarget = { ...bit, command: null };
@@ -483,11 +480,11 @@
   async function modalFrameScribble(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
-    await painter.runWithFrame(fit.page, fit.frame, fit.commandTargetFilm);
-    const media = fit.commandTargetFilm.media;
+    await painter.runWithFrame(fit.page, fit.frame, fit.commandTargetFilm!);
+    const media = fit.commandTargetFilm!.media;
     if (media instanceof ImageMedia) {
       const canvas = media.canvas;
-      canvas["clean"] = {};
+      (canvas as any)["clean"] = {};
     }
     commit(null);
   }
@@ -495,7 +492,7 @@
   async function modalBubbleScribble(bit: BubbleInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
-    await painter.runWithBubble(bit.page, bit.bubble, bit.commandTargetFilm);
+    await painter.runWithBubble(bit.page, bit.bubble, bit.commandTargetFilm!);
     commit(null);
   }
 
@@ -505,17 +502,16 @@
     const page = fit.page;
     const leaf = fit.frame;
     const r = await imageProvider.run(leaf.prompt, leaf.filmStack, leaf.gallery);
+    if (!r) { return; }
 
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leafLayout = findLayoutOf(pageLayout, leaf);
-    if (!r) { return; }
 
     const { canvas, prompt } = r;
-    const film = new Film();
-    film.media = new ImageMedia(canvas);
+    const film = new Film(new ImageMedia(canvas));
     film.prompt = prompt;
 
-    const frameRect = trapezoidBoundingRect(leafLayout.corners);
+    const frameRect = trapezoidBoundingRect(leafLayout!.corners);
     const scale = minimumBoundingScale(film.media.size, [frameRect[2], frameRect[3]]);
     film.setShiftedScale(page.paperSize, scale);
 
@@ -530,8 +526,7 @@
     const bubble = bit.bubble;
     const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
     if (r == null) { return; }
-    const film = new Film();
-    film.media = new ImageMedia(r.canvas);
+    const film = new Film(new ImageMedia(r.canvas));
     const paperSize = bit.page.paperSize;
     const bubbleSize = bubble.getPhysicalSize(paperSize);
     const scale = minimumBoundingScale(film.media.size, bubbleSize);
@@ -547,9 +542,8 @@
       return;
     }
 
-    const film = fit.commandTargetFilm;
-    const imageMedia = film.media as ImageMedia;
-    if (!(imageMedia instanceof ImageMedia)) { return; }
+    const film = fit.commandTargetFilm!;
+    if (!(film.media instanceof ImageMedia)) { return; }
 
     $loading = true;
     await punchFilm(film)
@@ -563,9 +557,8 @@
       return;
     }
 
-    const film = bit.commandTargetFilm;
-    const imageMedia = film.media as ImageMedia;
-    if (!(imageMedia instanceof ImageMedia)) { return; }
+    const film = bit.commandTargetFilm!;
+    if (!(film.media instanceof ImageMedia)) { return; }
 
     $loading = true;
     await punchFilm(film)
@@ -588,10 +581,10 @@
   }
 
   function getFocusedPage(): Page {
-    const v = $viewport;
+    const v = $viewport!;
     const p = v.canvasPositionToViewportPosition(v.getCanvasCenter());
     const index = arrayLayer.array.findNearestPaperIndex(p);
-    return $mainBook.pages[index];
+    return $mainBook!.pages[index];
   }
 
   function getMarks() {
@@ -614,7 +607,7 @@
 
   function resetBubbleCache() {
     let i = 0;
-    const pages = $mainBook.pages;
+    const pages = $mainBook!.pages;
     for (const paper of arrayLayer.array.papers) {
       const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
       rendererLayer.setBubbles(pages[i++].bubbles);

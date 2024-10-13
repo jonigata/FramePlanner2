@@ -23,7 +23,7 @@
   export let bindId: BindId;
   export let filename: string;
   export let parent: Folder;
-  export let trash: Folder; // 捨てるときの対象、ごみ箱の中身の場合はnull
+  export let trash: Folder | null; // 捨てるときの対象、ごみ箱の中身の場合はnull
   export let removability = "removeable"; // "removable" | "unremovable-shallow" | "unremovable-deep"
   export let index: number;
   export let path: string[];
@@ -31,7 +31,7 @@
   let acceptable = false;
   let isDiscardable = false;
   let selected = false;
-  let renameEdit = null;
+  let renameEdit: RenameEdit | null = null;
   let renaming = false;
 
   $: if ($mainBook) {
@@ -39,8 +39,8 @@
   }
 
   $: ondrag($fileManagerDragging);
-  function ondrag(dragging: Dragging) {
-    acceptable = dragging && !path.includes(dragging.bindId);
+  function ondrag(dragging: Dragging | null) {
+    acceptable = dragging != null && !path.includes(dragging.bindId);
   }
 
   async function onDoubleClick() {
@@ -53,8 +53,8 @@
       ev.preventDefault();
       return;
     }
-		ev.dataTransfer.setData("bindId", bindId);
-		ev.dataTransfer.setData("parent", parent.id);
+		ev.dataTransfer!.setData("bindId", bindId);
+		ev.dataTransfer!.setData("parent", parent.id);
     ev.stopPropagation();
     setTimeout(() => {
       // こうしないとなぜかdragendが即時発火してしまう
@@ -74,7 +74,7 @@
 
   function startRename() {
     console.log("renameFile");
-    renameEdit.setFocus();
+    renameEdit!.setFocus();
   }
 
   function submitRename(e: CustomEvent<string>) {
@@ -94,7 +94,7 @@
   async function onClick(e: MouseEvent) {
     if (e.ctrlKey) {
       if (!nodeId) { return; }
-      const file = (await fileSystem.getNode(nodeId)).asFile();
+      const file = (await fileSystem.getNode(nodeId))!.asFile();
       const s = await file.read();
       const blob = new Blob([s], {type: "application/json"});
       saveAs(blob, "file.json");
@@ -102,11 +102,11 @@
   }
 
   async function copyMarkedPages() {
-    const marked = $bookEditor.getMarks();
-    const pages = $mainBook.pages;
+    const marked = $bookEditor!.getMarks();
+    const pages = $mainBook!.pages;
     const markedPages = pages.filter((_, i) => marked[i]);
 
-    const file = (await fileSystem.getNode(nodeId)).asFile();
+    const file = (await fileSystem.getNode(nodeId))!.asFile();
     const targetBook = await loadBookFrom(fileSystem, file);
     targetBook.pages.push(...markedPages);
     await saveBookTo(targetBook, fileSystem, file);
@@ -114,7 +114,7 @@
   }
 
   async function makePackage() {
-    const file = (await fileSystem.getNode(nodeId)).asFile();
+    const file = (await fileSystem.getNode(nodeId))!.asFile();
     const s = await exportEnvelope(fileSystem, file);
     const blob = new Blob([s], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "envelope.json");

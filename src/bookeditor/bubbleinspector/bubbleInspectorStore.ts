@@ -14,10 +14,10 @@ export type BubbleInspectorPosition = {
 export type BubbleInspectorTarget = {
   bubble: Bubble,
   page: Page,
-  command: BubbleInspectorCommand,
-  commandTargetFilm: Film,
+  command: BubbleInspectorCommand | null,
+  commandTargetFilm: Film | null,
 }
 
-export const bubbleInspectorTarget: Writable<BubbleInspectorTarget> = writable(null);
+export const bubbleInspectorTarget: Writable<BubbleInspectorTarget | null> = writable(null);
 export const bubbleSplitCursor = writable(null);
 export const bubbleInspectorRebuildToken: Writable<number> = writable(0);

@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte";
 
   export let open = false;
   export let duration = 0.2;
   export let placement = "left";
-  export let size = null;
+  export let size: string | null = null;
   export let overlay = true;
 
   const dispatch = createEventDispatcher();

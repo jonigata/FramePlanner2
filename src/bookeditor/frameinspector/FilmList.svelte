@@ -86,10 +86,10 @@
     dispatch('punch', e.detail);
   }
 
-  function onSortableUpdate(e: {oldIndex: number, newIndex:number}) {
+  function onSortableUpdate(e: {oldIndex: number | undefined, newIndex:number | undefined}) {
     // reversed order
-    const oldIndex = filmStack.films.length - 1 - e.oldIndex;
-    const newIndex = filmStack.films.length - 1 - e.newIndex;
+    const oldIndex = filmStack.films.length - 1 - e.oldIndex!;
+    const newIndex = filmStack.films.length - 1 - e.newIndex!;
     //const oldIndex = e.oldIndex;
     // const newIndex = e.newIndex;
     moveInArray(filmStack.films, oldIndex, newIndex);

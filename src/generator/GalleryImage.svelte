@@ -10,10 +10,10 @@
   import referenceSelected from '../assets/reference-selected.png';
   import telescope from '../assets/telescope.png';
 
-  export let canvas: HTMLCanvasElement = null;
+  export let canvas: HTMLCanvasElement;
   export let width = 160;
-  export let chosen: HTMLCanvasElement = null;
-  export let refered: HTMLCanvasElement = null;
+  export let chosen: HTMLCanvasElement | null = null;
+  export let refered: HTMLCanvasElement | null = null;
 
   let container: HTMLDivElement;
   let height: number = 160;
@@ -85,9 +85,10 @@
     image = new Image();
     canvas.toBlob(function(blob) {
       const image = new Image();
-      const url = URL.createObjectURL(blob);
-      image.src = url;
-
+      if (blob !== null) {
+        const url = URL.createObjectURL(blob);
+        image.src = url;
+      }
       image.style.width = `${w}px`;
       image.style.height = `${h}px`;
       image.style.position = 'absolute';
