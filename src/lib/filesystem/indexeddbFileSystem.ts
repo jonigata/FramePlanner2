@@ -98,17 +98,41 @@ export class IndexedDBFileSystem extends FileSystem {
   }
   
   async dump(): Promise<void> {
-    // すべてのノードを取得
-    const allNodes = await this.db.getAll('nodes');
+    const tx = this.db.transaction("nodes", "readonly");
+    const store = tx.store;
+    let cursor = await store.openCursor();
   
-    // ノードをJSON形式に変換
-    const json = JSON.stringify(allNodes, null, 2);
+    const stream = new ReadableStream({
+      async start(controller) {
+        controller.enqueue(new TextEncoder().encode('['));
   
-    // ファイルに保存 (file-saverを使用)
-    const blob = new Blob([json], { type: 'application/json' });
+        let first = true;
+
+        while (cursor) {
+          if (!first) {
+            controller.enqueue(new TextEncoder().encode(','));
+          } else {
+            first = false;
+          }
+  
+          const jsonString = JSON.stringify(cursor.value);
+          controller.enqueue(new TextEncoder().encode(jsonString));
+          cursor = await cursor.continue();
+        }
+
+        controller.enqueue(new TextEncoder().encode(']'));
+        controller.close();
+      }
+    });
+  
+    const response = new Response(stream, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  
+    const blob = await response.blob();
     saveAs(blob, 'filesystem-dump.json');
   }
-  
+
   async undump(json: string): Promise<void> {
     // ファイルからJSONを読み込む
     const nodes = JSON.parse(json);
