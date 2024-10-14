@@ -21,9 +21,7 @@ export class InlinePainterLayer extends LayerBase {
   historyIndex: number;
   onAutoGenerate: () => void;
 
-
   drawsBackground: boolean;
-  // path: paper.Path;
   path: Path2D | null = null;
   strokeOptions: any; // perfect-freehandのオプション
 

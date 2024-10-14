@@ -14,7 +14,7 @@ import { Film, FilmStackTransformer, calculateMinimumBoundingRect } from "../dat
 import { ImageMedia } from "../dataModels/media";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
-import { makePlainImage } from "../../../utils/imageUtil";
+import { createCanvasFromBlob, makePlainImage } from "../../../utils/imageUtil";
 import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import { Grid } from "../tools/grid";
 
@@ -381,7 +381,7 @@ export class BubbleLayer extends LayerBase {
     return false;
   }
 
-  async keyDown(position_: Vector, event: KeyboardEvent): Promise<boolean> {
+  async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (!this.interactable) {return false;}
 
     if (event.code === "KeyX" && event.ctrlKey) {
@@ -399,7 +399,7 @@ export class BubbleLayer extends LayerBase {
     }
     if (event.code === "KeyV" && event.ctrlKey) {
       console.log("paste");
-      return await this.pasteBubble();
+      return await this.pasteBubble(position);
     }
     // カーソルキー
     if (this.selected) {
@@ -438,9 +438,11 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
-  async pasteBubble(): Promise<boolean> {
+  async pasteBubble(position: Vector): Promise<boolean> {
+    console.log("pasteBubble");
     try {
       const items = await navigator.clipboard.read();
+      console.log(items);
 
       for (let item of items) {
         for (let type of item.types) {
@@ -450,7 +452,17 @@ export class BubbleLayer extends LayerBase {
             this.createTextBubble(text);
             return true;
           } else if (type.startsWith("image/")) {
+            const paperSize = this.getPaperSize();
+            for (let bubble of this.bubbles) {
+              if (bubble.contains(paperSize, position)) {
+                const canvas = await createCanvasFromBlob(await item.getType(type));
+                this.receiveImage(bubble, canvas);
+                return true;
+              }
+            }
             return false;
+            
+            return true;
           }
         }
       }
@@ -784,6 +796,19 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
+  async receiveImage(bubble: Bubble, canvas: HTMLCanvasElement): Promise<void> {
+    const paperSize = this.getPaperSize();
+    const film = this.newImageFilm(canvas);
+    bubble.filmStack.films.push(film);
+    const bubbleSize = bubble.getPhysicalSize(paperSize);
+    const scale = minimumBoundingScale(film.media.size, bubbleSize);
+    film.setShiftedScale(paperSize, scale);
+    bubble.gallery.push(canvas);
+    this.onFocus(bubble);
+    this.focusKeeper.setFocus(this);
+    this.onCommit();
+  };
+
   dropped(position: Vector, canvas: HTMLCanvasElement): boolean {
     if (!this.interactable) { return false; }
 
@@ -795,29 +820,14 @@ export class BubbleLayer extends LayerBase {
 
     const paperSize = this.getPaperSize();
 
-    const receiveImage = (bubble: Bubble) => {
-      const film = this.newImageFilm(canvas);
-      bubble.filmStack.films.push(film);
-      const bubbleSize = bubble.getPhysicalSize(paperSize);
-      console.log(film);
-      console.log(film.media);
-      console.log(film.media.size);
-      const scale = minimumBoundingScale(film.media.size, bubbleSize);
-      film.setShiftedScale(paperSize, scale);
-      bubble.gallery.push(canvas);
-      this.onFocus(bubble);
-      this.focusKeeper.setFocus(this);
-      this.onCommit();
-    };
-
     if (this.selected && this.selected.contains(paperSize, position)) {
-      receiveImage(this.selected);
+      this.receiveImage(this.selected, canvas);
       return true;
     }
 
     for (let bubble of this.bubbles.toReversed()) {
       if (bubble.contains(paperSize, position)) {
-        receiveImage(bubble);
+        this.receiveImage(bubble, canvas);
         return true;
       }
     }

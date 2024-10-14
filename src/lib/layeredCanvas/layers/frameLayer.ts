@@ -416,9 +416,11 @@ export class FrameLayer extends LayerBase {
       try {
         console.log('クリップボードから画像を貼り付け');
         const items = await navigator.clipboard.read();
-  
+        console.log(items);
+        
         for (let item of items) {
           for (let type of item.types) {
+            console.log(type);
             if (type.startsWith("image/")) {
               const blob = await item.getType(type);
               const url = URL.createObjectURL(blob);
@@ -430,7 +432,7 @@ export class FrameLayer extends LayerBase {
               canvas.height = image.height;
               const ctx = canvas.getContext("2d")!;
               ctx.drawImage(image, 0, 0);
-              this.dropped(this.cursorPosition, canvas);
+              this.dropped(position, canvas);
               return true;
             }
           }
