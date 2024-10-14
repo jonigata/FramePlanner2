@@ -38,6 +38,11 @@
   }
 
   async function generate() {
+    if (mode == 'pro' && 1 < batchCount ) {
+      toastStore.trigger({ message: 'Proモードでは現在複数枚指定できません', timeout: 2000 });
+      batchCount = 1;
+    }
+
     busy = true;
     let q: NodeJS.Timer | undefined = undefined;
     try {

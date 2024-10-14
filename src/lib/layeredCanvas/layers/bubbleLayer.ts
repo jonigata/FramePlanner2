@@ -442,7 +442,6 @@ export class BubbleLayer extends LayerBase {
     console.log("pasteBubble");
     try {
       const items = await navigator.clipboard.read();
-      console.log(items);
 
       for (let item of items) {
         for (let type of item.types) {
