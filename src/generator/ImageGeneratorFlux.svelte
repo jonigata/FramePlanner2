@@ -90,8 +90,8 @@
     }
     finally {
       clearInterval(q);
+      busy = false;
     }
-    busy = false;
   }
 
   function copyToClipboard() {
