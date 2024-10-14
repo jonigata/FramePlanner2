@@ -103,9 +103,11 @@ export class IndexedDBFileSystem extends FileSystem {
   }
 
   async destroyNode(id: NodeId): Promise<void> {
-    const tx = this.db!.transaction("nodes", "readwrite");
-    const store = tx.store;
+    const tx = this.db!.transaction(["nodes","metadata"], "readwrite");
+    const store = tx.objectStore('nodes');
+    const metadataStore = tx.objectStore('metadata');
     await store.delete(id);
+    await metadataStore.delete(id);
     await tx.done;
   }
 
