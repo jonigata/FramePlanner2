@@ -6,33 +6,57 @@ export interface Media {
   readonly naturalHeight: number;
   readonly drawSource: HTMLCanvasElement | HTMLVideoElement;
   readonly size: Vector;
+  readonly fileId: { [key: string]: string };
 }
 
-export abstract class Media implements Media {
-  fileId: { [key: string]: string}; // filesystemId => fileId
+export abstract class MediaBase implements Media {
+  fileId: { [key: string]: string }; // filesystemId => fileId
+
   constructor() {
     this.fileId = {};
   }
 
+  async seek(time: number): Promise<void> {}
+
+  get size(): Vector {
+    return [this.naturalWidth, this.naturalHeight];
+  }
+
+  abstract get naturalWidth(): number;
+  abstract get naturalHeight(): number;
+  abstract get drawSource(): HTMLCanvasElement | HTMLVideoElement;
+
   getFileId(fileSystemId: string): string {
     return this.fileId[fileSystemId];
   }
+
   setFileId(fileSystemId: string, fileId: string): void {
     this.fileId[fileSystemId] = fileId;
   }
 }
 
-export class ImageMedia extends Media {
+// ImageMedia クラスは MediaBase を継承して、Media インターフェースに基づく型を持つ
+export class ImageMedia extends MediaBase {
   constructor(public canvas: HTMLCanvasElement) {
     super();
   }
 
-  get naturalWidth(): number { return this.canvas.width; }
-  get naturalHeight(): number { return this.canvas.height; }
-  get drawSource(): HTMLCanvasElement { return this.canvas; }
+  // 抽象プロパティの具体的な実装
+  get naturalWidth(): number {
+    return this.canvas.width;
+  }
+
+  get naturalHeight(): number {
+    return this.canvas.height;
+  }
+
+  get drawSource(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
 }
 
-export class VideoMedia extends Media {
+export class VideoMedia extends MediaBase {
   video: HTMLVideoElement;
   constructor(video: HTMLVideoElement) {
     super();

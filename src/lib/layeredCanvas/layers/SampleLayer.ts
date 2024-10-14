@@ -1,8 +1,8 @@
-import { Layer } from "../system/layeredCanvas";
+import { LayerBase } from "../system/layeredCanvas";
 
 // 動作確認用
 
-export class SampleLayer extends Layer {
+export class SampleLayer extends LayerBase {
   constructor() {
     super();
   }

@@ -1,5 +1,5 @@
 import { ulid } from 'ulid';
-import { Media, ImageMedia } from './media';
+import { type Media, ImageMedia } from './media';
 import { Computron, JFACompute, FloatField } from 'fastsdf';
 import parseColor from 'color-parse';
 

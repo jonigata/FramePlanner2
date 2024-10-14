@@ -1,3 +1,4 @@
+import { LayerBase } from "../system/layeredCanvas";
 import { type Vector, reverse2D } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath, type DrawMethod } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
@@ -5,7 +6,6 @@ import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataMode
 import { drawFilmStack } from "../tools/draw/drawFilmStack";
 import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText, type Direction } from "../tools/draw/drawText";
-import { Layer } from "../system/layeredCanvas";
 import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
 
 type InheritanceContext = {
@@ -28,7 +28,7 @@ type RenderData = {
   floatingBubbles: Bubble[]
 };
 
-export class PaperRendererLayer extends Layer {
+export class PaperRendererLayer extends LayerBase {
   frameTree: FrameElement | null = null;
   rawBubbles: Bubble[] | null = null;
   thisFrameRenderData: RenderData | null = null;

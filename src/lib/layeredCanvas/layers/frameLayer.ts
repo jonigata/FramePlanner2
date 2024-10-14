@@ -1,7 +1,7 @@
-import { Layer, sequentializePointer, type Picked } from "../system/layeredCanvas";
+import { type Layer, LayerBase, sequentializePointer, type Picked } from "../system/layeredCanvas";
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, listLayoutsAt } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
-import { Media, ImageMedia, VideoMedia } from "../dataModels/media";
+import { type Media, ImageMedia, VideoMedia } from "../dataModels/media";
 import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
@@ -25,7 +25,7 @@ const BORDER_MARGIN = 10;
 const PADDING_HANDLE_INNER_WIDTH = 20;
 const PADDING_HANDLE_OUTER_WIDTH = 20;
 
-export class FrameLayer extends Layer {
+export class FrameLayer extends LayerBase {
   cursorPosition: Vector;
 
   splitHorizontalIcon: ClickableIcon;

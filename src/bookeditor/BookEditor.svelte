@@ -457,26 +457,6 @@
     }
   }
 
-
-  function makeSnapshot(b: Bubble) {
-    let films = [];
-    for (let film of b.filmStack.films) {
-      const f = {
-        media: film.media.fileId,
-        n_scale: film.n_scale,
-        n_translation: film.n_translation,
-        rotation: film.rotation,
-        reverse: film.reverse,
-        visible: film.visible,
-        prompt: film.prompt,
-      }
-      films.push(f);
-    }
-    const jsonObject = Bubble.decompile(b);
-    jsonObject.films = films;
-    return JSON.stringify(jsonObject);
-  }
-
   async function modalFrameScribble(fit: FrameInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);

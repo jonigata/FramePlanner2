@@ -1,6 +1,5 @@
-import { Layer, sequentializePointer, type Viewport, type Picked } from "../system/layeredCanvas";
+import { type Layer, LayerBase, sequentializePointer, type Viewport, type Picked } from "../system/layeredCanvas";
 import { keyDownFlags } from "../system/keyCache";
-import { getPath } from "../tools/draw/bubbleGraphic";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { Bubble, bubbleOptionSets } from "../dataModels/bubble";
 import type { RectHandle } from "../tools/rectHandle";
@@ -8,7 +7,6 @@ import { tailCoordToWorldCoord, worldCoordToTailCoord } from "../tools/geometry/
 import { translate, scale } from "../tools/pictureControl";
 import { type Vector, type Rect, add2D, scale2D, computeConstraintedRect, scaleRect, minimumBoundingScale, getRectCenter } from "../tools/geometry/geometry";
 import { getHaiku } from '../tools/haiku';
-import * as paper from 'paper';
 import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { type Trapezoid, rectToTrapezoid } from "../tools/geometry/trapezoid";
@@ -30,7 +28,7 @@ export class DefaultBubbleSlot {
   }
 }
 
-export class BubbleLayer extends Layer {
+export class BubbleLayer extends LayerBase {
   viewport: Viewport;
   focusKeeper: FocusKeeper;
   renderLayer: PaperRendererLayer;
@@ -801,6 +799,9 @@ export class BubbleLayer extends Layer {
       const film = this.newImageFilm(canvas);
       bubble.filmStack.films.push(film);
       const bubbleSize = bubble.getPhysicalSize(paperSize);
+      console.log(film);
+      console.log(film.media);
+      console.log(film.media.size);
       const scale = minimumBoundingScale(film.media.size, bubbleSize);
       film.setShiftedScale(paperSize, scale);
       bubble.gallery.push(canvas);

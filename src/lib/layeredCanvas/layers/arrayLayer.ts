@@ -1,4 +1,4 @@
-import { Layer, Paper, type Viewport, type Picked } from '../system/layeredCanvas';
+import { LayerBase, Paper, type Viewport, type Picked } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
@@ -6,7 +6,7 @@ import { keyDownFlags } from "../system/keyCache";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import { rectToTrapezoid } from '../tools/geometry/trapezoid';
 
-export class ArrayLayer extends Layer {
+export class ArrayLayer extends LayerBase {
   array: PaperArray;
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;

@@ -1,10 +1,10 @@
-import { Layer, sequentializePointer, type Picked } from "../system/layeredCanvas";
+import { LayerBase, sequentializePointer, type Picked } from "../system/layeredCanvas";
 import { keyDownFlags } from "../system/keyCache";
 import type { Vector } from '../tools/geometry/geometry';
 import type { Viewport } from "../system/layeredCanvas";
 import type { FocusKeeper } from "../tools/focusKeeper";
 
-export class FloorLayer extends Layer {
+export class FloorLayer extends LayerBase {
   viewport: Viewport;
   onViewportChanged: () => void; // ここで責任とれないこと（例えばsvelteUI)
 

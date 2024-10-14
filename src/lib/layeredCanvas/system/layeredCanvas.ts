@@ -63,17 +63,41 @@ export interface Picked {
 }
 
 export interface Layer {
-  // 型チェックしたくなったら足す
-  accepts(position: Vector, button: number, depth: number): any;
+  getPaperSize(): void;
   rebuildPageLayouts(matrix: DOMMatrix): void;
-  pick(p: Vector): Picked[]
+  redraw(): void;
+  pierce(): void;
+  showHint(rect: Rect | null, message: string | null): void;
+
+  pointerHover(position: Vector | null): boolean;
+  accepts(position: Vector, button: number, depth: number): any;
+  pointerDown(position: Vector, payload: any): void;
+  pointerMove(position: Vector, payload: any): void;
+  pointerUp(position: Vector, payload: any): void;
+  pointerCancel(position: Vector, payload: any): void;
+  prerender(): void;
+  render(ctx: CanvasRenderingContext2D, depth: number): void;
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean;
+  beforeDoubleClick(position: Vector): boolean;
+  doubleClicked(position: Vector): boolean;
+  keyDown(position: Vector, event: KeyboardEvent): Promise<boolean>;
+  wheel(position: Vector, delta: number): boolean;
+  flushHints(viewport: Viewport): void;
+  renderDepths(): number[];
+  acceptDepths(): number[];
+  pick(p: Vector): Picked[];
+
+  paper: Paper;
+  redrawRequired: boolean;
+  pierceRequired: boolean;
+  mode: any;
 }
 
 // pierce, pick
 // pierceは貫通走査リクエスト
 // pickは貫通されるオブジェクトとそれが選ばれたときのアクションを列挙する
 
-export class Layer implements Layer {
+export class LayerBase implements Layer {
   paper!: Paper;
 
   hint: (rect: Rect | null, message: string | null) => void; // bind(this)しないと面倒なので

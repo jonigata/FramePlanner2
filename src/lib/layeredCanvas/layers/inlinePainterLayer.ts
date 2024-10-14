@@ -1,4 +1,4 @@
-import { Layer, sequentializePointer } from "../system/layeredCanvas";
+import { LayerBase, sequentializePointer } from "../system/layeredCanvas";
 import type { Film } from '../dataModels/film';
 import { ImageMedia } from '../dataModels/media';
 import type { Vector } from "../tools/geometry/geometry";
@@ -8,7 +8,7 @@ import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import * as paper from 'paper';
 import { getStroke } from 'perfect-freehand'
 
-export class InlinePainterLayer extends Layer {
+export class InlinePainterLayer extends LayerBase {
   frameLayer: FrameLayer;
 
   film: Film | null = null;

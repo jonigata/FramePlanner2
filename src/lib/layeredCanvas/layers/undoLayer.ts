@@ -1,7 +1,7 @@
-import { Layer } from "../system/layeredCanvas";
+import { LayerBase } from "../system/layeredCanvas";
 import type { Vector } from "../tools/geometry/geometry";
 
-export class UndoLayer extends Layer {
+export class UndoLayer extends LayerBase {
   onUndo: () => void;
   onRedo: () => void;
 
