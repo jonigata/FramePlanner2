@@ -59,7 +59,7 @@
     "jszip": "^3.10.1",
     "ndjson-readablestream": "^1.2.0",
     "openai": "^4.16.1",
-    "paper": "^0.12.17",
+    "paper": "^0.12.18",
     "paperjs-offset": "^1.0.8",
     "parse-css-font": "^4.0.0",
     "perfect-freehand": "^1.2.2",

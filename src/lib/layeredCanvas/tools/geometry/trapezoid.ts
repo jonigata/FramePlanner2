@@ -1,7 +1,5 @@
 import { isPointInTriangle, segmentIntersection, pointToTriangleDistance, subtract2D, cross2D, isTriangleClockwise, distance2D } from "./geometry";
 import type { Vector, Rect } from "./geometry";
-import * as paper from 'paper';
-import { PaperOffset } from "paperjs-offset";
 
 export type Trapezoid = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
 export type TrapezoidCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
@@ -133,83 +131,4 @@ export function isQuadrilateralConvex(t: Trapezoid): boolean {
 
   // すべての外積が正または0であれば凸
   return true;
-}
-
-export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: boolean): Path2D {
-  const [A, B, C, D] = [[...t.topLeft] as Vector, [...t.topRight] as Vector, [...t.bottomRight] as Vector, [...t.bottomLeft] as Vector];
-
-  // PaperOffset.offsetが縮退ポリゴンを正しく扱えていないため、小細工
-  let flag = true;
-  while (flag) {
-    flag = false;
-    if (distance2D(A, B) < 0.05) {
-      B[0] += 0.1;
-      flag = true;
-    }
-    if (distance2D(B, C) < 0.05) {
-      C[1] += 0.1;
-      flag = true;
-    }
-    if (distance2D(C, D) < 0.05) {
-      D[0] -= 0.1;
-      flag = true;
-    }
-    if (distance2D(D, A) < 0.05) {
-      A[1] -= 0.1;
-      flag = true;
-    }
-  }
-
-  const path = new paper.Path();
-  const join = "round";
-
-  function addTriangle(a: Vector, b: Vector, c: Vector) {
-    if (!ignoresInverted || isTriangleClockwise([a, b, c])) {
-      path.add(a, b, c);
-      path.closed = true;
-      return 1;
-    }
-    return 0;
-  }
-
-  // A C
-  // |X|
-  // D B
-  const q = segmentIntersection([A, B], [C, D]);
-  if (q) {
-    let n = 0;
-    n += addTriangle(A, q, D);
-    n += addTriangle(C, q, B);
-    if (n == 0) { return new Path2D(); }
-    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
-  }
-
-  // A-B
-  //  X
-  // C-D
-  const q2 = segmentIntersection([A, D], [B, C]);
-  if (q2) {
-    let n = 0;
-    n += addTriangle(A, B, q2);
-    n += addTriangle(q2, C, D);
-    if (n == 0) { return new Path2D(); }
-    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
-  }
-
-  // A-B
-  // | |
-  // D-C
-  if (ignoresInverted || isTriangleClockwise([A, B, C])) {
-    path.add(A, B, C, D);
-    path.closed = true;
-    try {
-      return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
-    }
-    catch (e) {
-      console.error(e);
-      console.log(A, B, C, D, margin, ignoresInverted);
-    }
-  }
-
-  return new Path2D();
 }

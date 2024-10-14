@@ -6,15 +6,17 @@ import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
-import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter, getTrapezoidPath } from "../tools/geometry/trapezoid";
-import { type Vector, type Rect, box2Rect, add2D, scale2D, lerp2D, vectorEquals, getRectCenter, rectContains, denormalizePositionInRect } from '../tools/geometry/geometry';
+import { pointToQuadrilateralDistance, isPointInTrapezoid, trapezoidCorners, trapezoidPath, trapezoidBoundingRect, trapezoidCenter } from "../tools/geometry/trapezoid";
+import { type Vector, type Rect, box2Rect, add2D, scale2D, lerp2D, distance2D, segmentIntersection, isTriangleClockwise, vectorEquals, getRectCenter, rectContains, denormalizePositionInRect } from '../tools/geometry/geometry';
 import type { PaperRendererLayer } from "./paperRendererLayer";
-import { type RectHandle, type RectCornerHandle, type RectSideHandle, rectCornerHandles, rectHandles, rectSideHandles } from "../tools/rectHandle";
+import { type RectCornerHandle, rectCornerHandles } from "../tools/rectHandle";
 import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { Grid } from "../tools/grid";
+import * as paper from 'paper';
+import { PaperOffset } from "paperjs-offset";
 
 const SHEET_Y_MARGIN = 48;
 
@@ -1304,3 +1306,85 @@ export class FrameLayer extends Layer {
   get interactable(): boolean { return this.mode == null; }
 }
 sequentializePointer(FrameLayer);
+
+// paper.jsをvitest環境で読み込むとエラーが出るようなので
+// trapezoid.tsに置けない
+// https://github.com/paperjs/paper.js/issues/1805
+export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: boolean): Path2D {
+  const [A, B, C, D] = [[...t.topLeft] as Vector, [...t.topRight] as Vector, [...t.bottomRight] as Vector, [...t.bottomLeft] as Vector];
+
+  // PaperOffset.offsetが縮退ポリゴンを正しく扱えていないため、小細工
+  let flag = true;
+  while (flag) {
+    flag = false;
+    if (distance2D(A, B) < 0.05) {
+      B[0] += 0.1;
+      flag = true;
+    }
+    if (distance2D(B, C) < 0.05) {
+      C[1] += 0.1;
+      flag = true;
+    }
+    if (distance2D(C, D) < 0.05) {
+      D[0] -= 0.1;
+      flag = true;
+    }
+    if (distance2D(D, A) < 0.05) {
+      A[1] -= 0.1;
+      flag = true;
+    }
+  }
+
+  const path = new paper.Path();
+  const join = "round";
+
+  function addTriangle(a: Vector, b: Vector, c: Vector) {
+    if (!ignoresInverted || isTriangleClockwise([a, b, c])) {
+      path.add(a, b, c);
+      path.closed = true;
+      return 1;
+    }
+    return 0;
+  }
+
+  // A C
+  // |X|
+  // D B
+  const q = segmentIntersection([A, B], [C, D]);
+  if (q) {
+    let n = 0;
+    n += addTriangle(A, q, D);
+    n += addTriangle(C, q, B);
+    if (n == 0) { return new Path2D(); }
+    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+  }
+
+  // A-B
+  //  X
+  // C-D
+  const q2 = segmentIntersection([A, D], [B, C]);
+  if (q2) {
+    let n = 0;
+    n += addTriangle(A, B, q2);
+    n += addTriangle(q2, C, D);
+    if (n == 0) { return new Path2D(); }
+    return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+  }
+
+  // A-B
+  // | |
+  // D-C
+  if (ignoresInverted || isTriangleClockwise([A, B, C])) {
+    path.add(A, B, C, D);
+    path.closed = true;
+    try {
+      return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+    }
+    catch (e) {
+      console.error(e);
+      console.log(A, B, C, D, margin, ignoresInverted);
+    }
+  }
+
+  return new Path2D();
+}
