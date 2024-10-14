@@ -1017,9 +1017,11 @@ export class BubbleLayer extends Layer {
     try {
       const paperSize = this.getPaperSize();
       const [q0, q1] = bubble.regularized();
-      let ir = calculateMinimumBoundingRect(paperSize, bubble.filmStack.films)!;
+      let ir = calculateMinimumBoundingRect(paperSize, bubble.filmStack.films);
       // computeConstraintedRectは十分に大きいときには反応しないので、小さくしておく
-      ir = scaleRect(ir, 0.01);
+      if (ir) {
+        ir = scaleRect(ir, 0.01);
+      }
 
       const transformer = new FilmStackTransformer(paperSize, bubble.filmStack.films);
 
@@ -1028,7 +1030,7 @@ export class BubbleLayer extends Layer {
         const pp = Bubble.normalizedPosition(paperSize, p);
         this.resizeBubbleAux(bubble, handle, q0, q1, pp);
 
-        if (bubble.scaleLock) {
+        if (ir && bubble.scaleLock) {
           // イメージの位置を中央に固定し、フキダシの大きさにイメージを合わせる
           const bubbleRect = bubble.getPhysicalRect(paperSize);
           const { scale } = computeConstraintedRect(ir, bubbleRect);
