@@ -47,7 +47,7 @@
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
-    (bit) => bit!.bubble,
+    (bit) => bit?.bubble ?? null,
     (b, bit) => {
       bit!.bubble = b!;
       return bit;
@@ -233,7 +233,7 @@
     const newText = before + wrapped + after;
     textarea!.value = newText;
     textarea!.setSelectionRange(start + prefix.length, end + prefix.length);
-    $bubble.text = newText;
+    $bubble!.text = newText;
   }
 
   function onWrapColor() {
@@ -253,14 +253,14 @@
       toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
       return;
     }
-    console.log("onTransformText", transformTextMethod, $bubble.text);
+    console.log("onTransformText", transformTextMethod, $bubble!.text);
     transforming = true;
-    const r = await transformText(transformTextMethod, $bubble.text);
+    const r = await transformText(transformTextMethod, $bubble!.text);
     console.log(r);
     transforming = false;
-    $bubble.text = r.result.text;
+    $bubble!.text = r.result.text;
     if (transformTextMethod == "translateToEnglish") {
-      $bubble.direction = "h";
+      $bubble!.direction = "h";
     }
   }
 </script>
@@ -269,6 +269,7 @@
 
 <div class="drawer-outer">
   <Drawer placement={"left"} open={opened} overlay={false} size="350px" on:clickAway={close}>
+    {#if $bubble}
     <div class="drawer-content" bind:this={drawerContent}>
       <details open>
         <summary>全体</summary>
@@ -447,6 +448,7 @@
         {/key}
       </div>
     </div>
+    {/if}
   </Drawer>
 </div>
 
