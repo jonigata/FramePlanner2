@@ -10,6 +10,7 @@
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { shareBookToken } from '../filemanager/fileManagerStore';
   import { mainBook } from '../bookeditor/bookStore';
+  import { getPresignedUrl } from '../firebase';
 
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download},
@@ -19,6 +20,7 @@
     {label: "シェア", onClick: shareBook},
     {label: "パッケージ", onClick: downloadEnvelop},
     {label: "プロンプトをクリップボードにコピー", onClick: exportPrompts},
+    {label: "テスト", onClick: doTest},
   ];  
 
   function archive(op: BookArchiveOperation) {
@@ -61,6 +63,11 @@
     logEvent(getAnalytics(), 'export_prompts');
     archive('export-prompts');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+  }
+
+  async function doTest() {
+    const r = await getPresignedUrl("bar.png", "image/png");
+    console.log(r);
   }
 
 </script>

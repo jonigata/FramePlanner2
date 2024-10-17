@@ -178,6 +178,12 @@ export async function notifyShare(url: string): Promise<any> {
   return r;
 }
 
+export async function getPresignedUrl(filename: string, contentType: string, method: 'PUT' | 'GET'): Promise<any> {
+  const r = await callFunc('getpresignedurl', {filename, contentType, method}, 180);
+  console.log(r);
+  return r.url;
+}
+
 function getAuth2() {
   return getAuth(app);
 }

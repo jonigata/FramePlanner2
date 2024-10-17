@@ -3,24 +3,24 @@ import type { NodeId, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
-import { ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
-import { createCanvasFromBlob } from '../../utils/imageUtil';
 import { getCurrentUserOrSignInAnonymously, getShareStorage, getCloudStorage } from '../../firebase';
+import type { ImageStorage } from './imageStorage/imageStorage';
+import { FirebaseImageStorage } from './imageStorage/firebaseImageStorage';
 
 export class FirebaseFileSystem extends FileSystem {
   database: Database | null = null;
   boxRef: DatabaseReference | null = null;
   nodesRef: DatabaseReference | null = null;
-  storage: FirebaseStorage | null = null;
+  storage: ImageStorage | null = null;
   boxId: string | null = null;
 
-  constructor() {
+  constructor(storage: ImageStorage) {
     super();
   }
 
   async openShared(key: string | null) {
     this.database = getDatabase();
-    this.storage = getShareStorage();
+    this.storage = new FirebaseImageStorage(getShareStorage());
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     if (key) {
@@ -37,7 +37,7 @@ export class FirebaseFileSystem extends FileSystem {
 
   async openCloud() {
     this.database = getDatabase();
-    this.storage = getCloudStorage();
+    this.storage = new FirebaseImageStorage(getCloudStorage());
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     this.boxRef = ref(this.database, `cloud/${userCredential.user.uid}`);
@@ -113,39 +113,11 @@ export class FirebaseFile extends File {
     const snapshot = await get(child(this.nodeRef, 'link'));
     const id = snapshot.val();
 
-    const storage = (this.fileSystem as FirebaseFileSystem).storage!;
-    const storageFileRef = sref(storage, id);
-    const blob = await getBlob(storageFileRef);
-
-    const canvas = createCanvasFromBlob(blob);
-    return canvas;
+    return await (this.fileSystem as FirebaseFileSystem).storage!.readCanvas(id);
   }
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
-    console.log("*********** writeCanvas");
-    const base64Image = canvas.toDataURL('image/png');
-    const id = await sha1(base64Image);
-
-    const storage = (this.fileSystem as FirebaseFileSystem).storage!;
-    const storageFileRef = sref(storage, id);
-
-    try {
-      // Try to get the metadata of the file
-      await getMetadata(storageFileRef);
-      console.log('File already exists, skipping...');
-    } catch (error) {
-      // If error occurs (e.g., file doesn't exist), upload the file
-      const data = base64Image.split(',')[1];
-      const blob = new Blob(
-          [Uint8Array.from(atob(data), c => c.charCodeAt(0))],
-          { type: 'image/png' }
-      );
-
-      const metadata = {
-          contentType: 'image/png',
-      };
-      await uploadBytes(storageFileRef, blob, metadata);
-    }
+    const id = await (this.fileSystem as FirebaseFileSystem).storage!.writeCanvas(canvas);
     await set(child(this.nodeRef, 'link'), id);
   }
 }
