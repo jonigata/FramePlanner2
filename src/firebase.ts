@@ -178,10 +178,16 @@ export async function notifyShare(url: string): Promise<any> {
   return r;
 }
 
-export async function getPresignedUrl(filename: string, contentType: string, method: 'PUT' | 'GET'): Promise<any> {
-  const r = await callFunc('getpresignedurl', {filename, contentType, method}, 180);
+export async function getUploadUrl(filename: string): Promise<{url: string, token: string, filename: string}> {
+  const r = await callFunc('getuploadurl', {filename}, 180);
   console.log(r);
-  return r.url;
+  return r;
+}
+
+export async function getDownloadUrl(filename: string): Promise<{url: string}> {
+  const r = await callFunc('getdownloadurl', {filename}, 180);
+  console.log(r);
+  return r;
 }
 
 function getAuth2() {

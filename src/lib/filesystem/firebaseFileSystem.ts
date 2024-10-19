@@ -6,6 +6,7 @@ import { getDatabase, ref, push, set, get, child, remove } from "firebase/databa
 import { getCurrentUserOrSignInAnonymously, getShareStorage, getCloudStorage } from '../../firebase';
 import type { ImageStorage } from './imageStorage/imageStorage';
 import { FirebaseImageStorage } from './imageStorage/firebaseImageStorage';
+import { BackblazeImageStorage } from './imageStorage/backblazeImageStorage';
 
 export class FirebaseFileSystem extends FileSystem {
   database: Database | null = null;
@@ -14,13 +15,14 @@ export class FirebaseFileSystem extends FileSystem {
   storage: ImageStorage | null = null;
   boxId: string | null = null;
 
-  constructor(storage: ImageStorage) {
+  constructor() {
     super();
   }
 
   async openShared(key: string | null) {
     this.database = getDatabase();
-    this.storage = new FirebaseImageStorage(getShareStorage());
+    // this.storage = new FirebaseImageStorage(getShareStorage());
+    this.storage = new BackblazeImageStorage();
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     if (key) {
