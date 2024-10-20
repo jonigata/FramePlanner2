@@ -65,7 +65,7 @@
       const book = $mainBook!;
       const fs = $mainBookFileSystem!;
       if (!$saveProhibitFlag) {
-        const file = (await fs.getNode(book.revision.id as NodeId))!.asFile();
+        const file = (await fs.getNode(book.revision.id as NodeId))!.asFile()!;
         await saveBookTo(book, fs, file);
       }
       currentRevision = {...book.revision};
@@ -122,7 +122,7 @@
           try {
             console.log($onlineStatus);
             const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
-            let currentFile = (await fs.getNode(currentFileInfo.id))!.asFile();
+            let currentFile = (await fs.getNode(currentFileInfo.id))!.asFile()!;
             const newBook = await loadBookFrom(fs, currentFile);
             refreshFilms(newBook);
             currentRevision = {...newBook.revision};
@@ -151,7 +151,7 @@
 
         // 初起動またはクラウドストレージ接続失敗の場合デスクトップにセーブ
         const root = await fileSystem.getRoot();
-        const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder();
+        const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
         book = newBook('not visited', "initial-", 0);
         await newFile(fileSystem, desktop, getCurrentDateTime(), book);
         await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local' });
@@ -183,7 +183,7 @@
     console.log("loadSharedBook");
     const localFileSystem = fileSystem; // ややこしいのでalias
     const localRoot = await localFileSystem.getRoot();
-    const localDesktop = (await localRoot.getNodeByName("デスクトップ"))!.asFolder();
+    const localDesktop = (await localRoot.getNodeByName("デスクトップ"))!.asFolder()!;
 
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
@@ -197,7 +197,7 @@
         // 読んだことがなければ読み込んでローカルに保存
         console.log("shared page load from server", window.location.href);
         const remoteFileSystem = await buildShareFileSystem(box);
-        const remoteFile = (await remoteFileSystem.getNode(file as NodeId))!.asFile();
+        const remoteFile = (await remoteFileSystem.getNode(file as NodeId))!.asFile()!;
         const book = await loadBookFrom(remoteFileSystem, remoteFile);
 
         const localFile = await localFileSystem.createFileWithId(file as NodeId);
@@ -251,7 +251,7 @@
       $mascotVisible = false;
       $newBookToken = null;
       const root = await fileSystem.getRoot();
-      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder();
+      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
       const { file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
       await recordCurrentFileInfo({id: file.id as NodeId, fileSystem: 'local'});
       currentRevision = {...book.revision};
@@ -268,7 +268,7 @@
     console.log("onNewBalloonRequest");
     $saveBubbleToken = null;
     const root = await fileSystem.getRoot();
-    const folder = (await root.getNodeByName("テンプレート"))!.asFolder();
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const file = await fileSystem.createFile();
     await saveBubbleTo(bubble, file);
     await folder.asFolder().link(getCurrentDateTime(), file.id);
@@ -311,7 +311,7 @@
     if (isCloud) {
       toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
     }
-    const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile();
+    const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile()!;
     const book = await loadBookFrom(lt.fileSystem, file);
     refreshFilms(book);
     currentRevision = {...book.revision};
@@ -328,7 +328,7 @@
 
     const usedImages = [];
     for (const imageFile of usedImageFiles) {
-      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile();
+      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
       const canvas = await file.readCanvas();
       const image = await createImageFromCanvas(canvas);
       console.log("loaded used image", imageFile);
@@ -337,7 +337,7 @@
 
     const strayImages = [];
     for (const imageFile of strayImageFiles) {
-      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile();
+      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
       const canvas = await file.asFile().readCanvas();
       const image = await createImageFromCanvas(canvas);
       console.log("loaded stray image", imageFile);
@@ -378,7 +378,7 @@
   async function onImportFile(importFiles: FileList | null) {
     if (importFiles) {
       const root = await fileSystem.getRoot();
-      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder();
+      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
       const file = await fileSystem.createFile();
       file.write(await importFiles[0].text());
       await desktop.link("imported file", file.id)
@@ -456,7 +456,6 @@
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
         {/if}
       </div>
-<!--
       {#if cloudCabinet && cloudTrash}
         <h2>クラウド</h2>
         <div class="notice">この機能はβ版です。断りなくサービス停止する可能性があります。</div>
@@ -467,7 +466,6 @@
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドごみ箱"} bindId={cloudTrash[0]} parent={cloudRoot} index={1} path={[cloudTrash[0]]} trash={null}/>
         </div>
       {/if}
--->            
     </div>
   </Drawer>
 </div>

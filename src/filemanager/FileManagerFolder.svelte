@@ -2,7 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, importEnvelope, copyBookFolderInterFileSystem } from "./fileManagerStore";
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, importEnvelope, copyBookOrFolderInterFileSystem } from "./fileManagerStore";
   import { newBook } from "../bookeditor/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
@@ -145,30 +145,30 @@
     await moveToHere(e.detail.index);
   }
 
-  async function moveToHere(index: number) {
+  async function moveToHere(index: number | null) {
     const dragging = $fileManagerDragging!;
     console.log("++++++++++++ moveToHere", dragging, index);
 
+    const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
+    const mover = (await sourceParent.getEntry(dragging.bindId))!;
+
+    if (index === null) {
+      index = (await node.list()).length;      
+    }
+
     if (fileSystem.id === dragging.fileSystem.id) {
-      const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
-      const mover = (await sourceParent.getEntry(dragging.bindId))!;
-
-      if (index === null) {
-        index = (await node.list()).length;      
-      }
-
-      console.log("insert", node.id, "index =", index);
+      console.log("same filesystem move", node.id, "target index =", index);
 
       await sourceParent.unlink(dragging.bindId);
       await node.insert(mover[1], mover[2], index);
       console.log("insert done");
     } else {
+      console.log("different filesystem move (is copy)", node.id, "target index =", index);
+
       $loading = true;
-      const sourceParent = (await dragging.fileSystem.getNode(dragging.parent)) as Folder;
-      const entry = (await sourceParent.getEntry(dragging.bindId))!;
-      const sourceNodeId = entry[2];
-      const targetFileId = await copyBookFolderInterFileSystem(dragging.fileSystem, fileSystem, sourceNodeId);
-      await node.insert(entry[1], targetFileId, index);
+      const sourceNodeId = mover[2];
+      const targetFileId = await copyBookOrFolderInterFileSystem(dragging.fileSystem, fileSystem, sourceNodeId);
+      await node.insert(mover[1], targetFileId, index);
       $loading = false;
     }
   }
@@ -180,7 +180,7 @@
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
     console.log("usedImageFiles", usedImageFiles);
     console.log("strayImageFiles", strayImageFiles);
-    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder();
+    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
     $loading = false;
     $fileManagerUsedSizeToken = fileSystem;
@@ -189,7 +189,7 @@
 
   async function recycleNode(curr: Node, editingId: NodeId) {
     if (curr.getType() === "folder") {
-      const folder = curr.asFolder();
+      const folder = curr.asFolder()!;
       const entries = await folder.listEmbodied();
       for (const entry of entries) {
         if (entry[2].id === editingId) { continue; } // 編集中のファイルは消さない

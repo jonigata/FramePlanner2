@@ -312,7 +312,7 @@ async function loadCanvas(fs: FileSystem | null, canvasId: string): Promise<HTML
   } else {
     try {
       performance.mark("loadCanvas-read-start");
-      const file = (await fileSystem.getNode(canvasId as NodeId))!.asFile();
+      const file = (await fileSystem.getNode(canvasId as NodeId))!.asFile()!;
       performance.mark("loadCanvas-read-end");
       performance.measure("loadCanvas-read", "loadCanvas-read-start", "loadCanvas-read-end");
 
@@ -346,7 +346,7 @@ async function saveCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement, ima
   if (fileId != null) {
     if (!(canvas as any)["clean"][fileSystem.id]) {
       console.log("************** DIRTY CANVAS");
-      const file = (await fileSystem.getNode(fileId))!.asFile();
+      const file = (await fileSystem.getNode(fileId))!.asFile()!;
       await file.writeCanvas(canvas);    
       return;
     }
@@ -728,7 +728,7 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
   async function loadImage(fileSystem: FileSystem | null, sourceFileId: string): Promise<HTMLCanvasElement | null> {
     const targetFileId = newImages[sourceFileId];
     try {
-      const file = (await fileSystem!.getNode(targetFileId as NodeId))!.asFile();
+      const file = (await fileSystem!.getNode(targetFileId as NodeId))!.asFile()!;
       const canvas = await file.readCanvas();
       return canvas;
     }
@@ -758,11 +758,11 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
   await saveBookTo(book, fileSystem, file);
 }
 
-export async function copyBookFolderInterFileSystem(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId): Promise<NodeId> {
-  return copyBookFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceNodeId, {});
+export async function copyBookOrFolderInterFileSystem(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId): Promise<NodeId> {
+  return copyBookOrFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceNodeId, {});
 }
 
-async function copyBookFolderInterFileSystemInternal(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId, copied: { [NodeId: string]: NodeId }): Promise<NodeId> {
+async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId, copied: { [NodeId: string]: NodeId }): Promise<NodeId> {
   if (copied[sourceNodeId]) {
     return copied[sourceNodeId];
   }
@@ -776,13 +776,13 @@ async function copyBookFolderInterFileSystemInternal(sourceFileSystem: FileSyste
     const entries = await sourceFolder.list();
     for (const entry of entries) {
       const sourceChildNodeId = entry[2];
-      const targetChildNodeId = await copyBookFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceChildNodeId, copied);
+      const targetChildNodeId = await copyBookOrFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceChildNodeId, copied);
       await targetFolder.link(entry[1], targetChildNodeId);
     }
     return targetFolder.id;
   } else {
     // file is book
-    const sourceFile = sourceNode.asFile();
+    const sourceFile = sourceNode.asFile()!;
     const book = await loadBookFrom(sourceFileSystem, sourceFile);
 
     const targetFile = await targetFileSystem.createFile('text');

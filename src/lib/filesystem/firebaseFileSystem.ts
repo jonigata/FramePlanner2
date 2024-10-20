@@ -21,8 +21,7 @@ export class FirebaseFileSystem extends FileSystem {
 
   async openShared(key: string | null) {
     this.database = getDatabase();
-    // this.storage = new FirebaseImageStorage(getShareStorage());
-    this.storage = new BackblazeImageStorage();
+    this.storage = new FirebaseImageStorage(getShareStorage());
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     if (key) {
@@ -39,7 +38,7 @@ export class FirebaseFileSystem extends FileSystem {
 
   async openCloud() {
     this.database = getDatabase();
-    this.storage = new FirebaseImageStorage(getCloudStorage());
+    this.storage = new BackblazeImageStorage();
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     this.boxRef = ref(this.database, `cloud/${userCredential.user.uid}`);

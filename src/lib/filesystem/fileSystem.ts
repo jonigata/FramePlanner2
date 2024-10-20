@@ -48,8 +48,8 @@ export abstract class FileSystem {
 
 export interface Node {
   getType(): NodeType;
-  asFile(): File;
-  asFolder(): Folder;
+  asFile(): File | null;
+  asFolder(): Folder | null;
 }
 
 export abstract class Node implements Node {
@@ -69,7 +69,7 @@ export abstract class Node implements Node {
       fullpath = path;
     }
     const [name, ...rest] = path.split('/');
-    const folder = await this.asFolder().getNodeByName(name);
+    const folder = await this.asFolder()!.getNodeByName(name);
     if (!folder) {
       throw new Error(`Node not found: ${fullpath}`);
     }
@@ -87,6 +87,7 @@ export interface File {
 export abstract class File extends Node implements File {
   getType(): NodeType { return 'file'; }
   asFile() { return this; }
+  asFolder() { return null; }
 }
 
 export interface Folder {
@@ -106,6 +107,7 @@ export interface Folder {
 
 export abstract class Folder extends Node {
   getType(): NodeType { return 'folder'; }
+  asFile() { return null; }
   asFolder() { return this; }
 
   async unlinkv(bindIds: BindId[]): Promise<void> {
