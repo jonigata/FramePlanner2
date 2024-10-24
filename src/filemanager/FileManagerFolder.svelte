@@ -3,7 +3,8 @@
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem } from "./fileManagerStore";
-  import { importEnvelope } from "./envelope";
+  import { importEnvelope as importEnvelopeOld } from "./envelope";
+  import { importEnvelope } from "./envelopeCbor";
   import { newBook } from "../bookeditor/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
@@ -72,15 +73,24 @@
       // jsonだったら、jsonの中身を見て、適切な処理をする
       if (ev.dataTransfer?.files.length === 1) {
         const file = ev.dataTransfer.files[0];
+        const fileName = file.name;
         if (file.type === "application/json") {
           const json = await file.text();
           console.log(json);
           const newFile = await fileSystem.createFile();
-          await importEnvelope(json, fileSystem, newFile);
+          await importEnvelopeOld(json, fileSystem, newFile);
           await node.link("パッケージ", newFile.id);
           node = node;
           return;
         }
+        console.log(fileName);
+        if (fileName.endsWith(".envelope")) {
+          const newFile = await fileSystem.createFile();
+          await importEnvelope(file, fileSystem, newFile); // JSONと同様の処理
+          await node.link("パッケージ", newFile.id);
+          node = node;
+          return;
+        }        
       }
       console.log("not acceptable");
     }
