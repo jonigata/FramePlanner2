@@ -8,7 +8,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { saveAs } from 'file-saver';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { exportEnvelope } from "../filemanager/fileManagerStore";
+  import { exportEnvelope } from "../filemanager/envelope";
 
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
@@ -94,7 +94,7 @@
   async function onClick(e: MouseEvent) {
     if (e.ctrlKey) {
       if (!nodeId) { return; }
-      const file = (await fileSystem.getNode(nodeId))!.asFile();
+      const file = (await fileSystem.getNode(nodeId))!.asFile()!;
       const s = await file.read();
       const blob = new Blob([s], {type: "application/json"});
       saveAs(blob, "file.json");
@@ -106,7 +106,7 @@
     const pages = $mainBook!.pages;
     const markedPages = pages.filter((_, i) => marked[i]);
 
-    const file = (await fileSystem.getNode(nodeId))!.asFile();
+    const file = (await fileSystem.getNode(nodeId))!.asFile()!;
     const targetBook = await loadBookFrom(fileSystem, file);
     targetBook.pages.push(...markedPages);
     await saveBookTo(targetBook, fileSystem, file);
@@ -114,7 +114,7 @@
   }
 
   async function makePackage() {
-    const file = (await fileSystem.getNode(nodeId))!.asFile();
+    const file = (await fileSystem.getNode(nodeId))!.asFile()!;
     const s = await exportEnvelope(fileSystem, file);
     const blob = new Blob([s], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "envelope.json");

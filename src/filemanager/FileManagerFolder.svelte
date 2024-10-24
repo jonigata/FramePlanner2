@@ -2,7 +2,8 @@
   import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, importEnvelope, copyBookOrFolderInterFileSystem } from "./fileManagerStore";
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem } from "./fileManagerStore";
+  import { importEnvelope } from "./envelope";
   import { newBook } from "../bookeditor/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
