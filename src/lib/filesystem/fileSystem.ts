@@ -29,6 +29,7 @@ export interface FileSystem {
 export abstract class FileSystem {
   id: FileSystemId;
   watchers: { [key: NodeId]: Watcher[] } = {};
+  isVault: boolean = false; // envelopeを直接保管するタイプのファイルシステムかどうか
 
   constructor() {
     this.id = ulid() as FileSystemId;
@@ -79,9 +80,11 @@ export abstract class Node implements Node {
 
 export interface File {
   read(): Promise<string>;
-  write(data: string): Promise<void>;
+  write(data: any): Promise<void>;
   readCanvas(): Promise<HTMLCanvasElement>;
   writeCanvas(canvas: HTMLCanvasElement): Promise<void>;
+  readBlob(): Promise<Blob>;
+  writeBlob(blob: Blob): Promise<void>;
 }
 
 export abstract class File extends Node implements File {

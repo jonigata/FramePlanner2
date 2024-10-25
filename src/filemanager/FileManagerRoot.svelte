@@ -88,7 +88,7 @@
 
   $: onUsedSizeUpdate($fileManagerUsedSizeToken);
   async function onUsedSizeUpdate(fs: FileSystem | null) {
-    if (fs) {
+    if (fs && fs === fileSystem) {
       usedSize = formatMillions(await fs.collectTotalSize());
     }
   }
@@ -460,7 +460,7 @@
         <h2>クラウド</h2>
         <div class="notice">この機能はβ版です。断りなくサービス停止する可能性があります。</div>
         <div class="cabinet variant-ghost-primary rounded-container-token">
-          <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
+          <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
         </div>
         <div class="cabinet variant-ghost-primary rounded-container-token">
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドごみ箱"} bindId={cloudTrash[0]} parent={cloudRoot} index={1} path={[cloudTrash[0]]} trash={null}/>

@@ -4,15 +4,15 @@ import { Node, File, Folder, FileSystem } from './fileSystem';
 import type { Database, DatabaseReference } from "firebase/database";
 import { getDatabase, ref, push, set, get, child, remove } from "firebase/database";
 import { getCurrentUserOrSignInAnonymously, getShareStorage, getCloudStorage } from '../../firebase';
-import type { ImageStorage } from './imageStorage/imageStorage';
-import { FirebaseImageStorage } from './imageStorage/firebaseImageStorage';
-import { BackblazeImageStorage } from './imageStorage/backblazeImageStorage';
+import type { ContentStorage } from './contentStorage/contentStorage';
+import { FirebaseContentStorage } from './contentStorage/firebaseImageStorage';
+import { BackblazeContentStorage } from './contentStorage/backblazeImageStorage';
 
 export class FirebaseFileSystem extends FileSystem {
   database: Database | null = null;
   boxRef: DatabaseReference | null = null;
   nodesRef: DatabaseReference | null = null;
-  storage: ImageStorage | null = null;
+  storage: ContentStorage | null = null;
   boxId: string | null = null;
 
   constructor() {
@@ -21,7 +21,7 @@ export class FirebaseFileSystem extends FileSystem {
 
   async openShared(key: string | null) {
     this.database = getDatabase();
-    this.storage = new FirebaseImageStorage(getShareStorage());
+    this.storage = new FirebaseContentStorage(getShareStorage());
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     if (key) {
@@ -38,7 +38,8 @@ export class FirebaseFileSystem extends FileSystem {
 
   async openCloud() {
     this.database = getDatabase();
-    this.storage = new BackblazeImageStorage();
+    this.storage = new BackblazeContentStorage();
+    this.isVault = true;
     const userCredential = await getCurrentUserOrSignInAnonymously();
 
     this.boxRef = ref(this.database, `cloud/${userCredential.user.uid}`);
@@ -101,19 +102,29 @@ export class FirebaseFile extends File {
     super(fileSystem, id);
   }
 
-  async read(): Promise<string> {
+  async read(): Promise<any> {
     const snapshot = await get(child(this.nodeRef, 'content'));
     return snapshot.val() ?? '';
   }
 
-  async write(data: string): Promise<void> {
+  async write(data: any): Promise<void> {
     await set(child(this.nodeRef, 'content'), data);
+  }
+
+  async readBlob(): Promise<Blob> {
+    const snapshot = await get(child(this.nodeRef, 'link'));
+    const id = snapshot.val();
+    return await (this.fileSystem as FirebaseFileSystem).storage!.readBlob(id);
+  }
+
+  async writeBlob(blob: Blob): Promise<void> {
+    const id = await (this.fileSystem as FirebaseFileSystem).storage!.writeBlob(blob);
+    await set(child(this.nodeRef, 'link'), id);
   }
 
   async readCanvas(): Promise<HTMLCanvasElement> {
     const snapshot = await get(child(this.nodeRef, 'link'));
     const id = snapshot.val();
-
     return await (this.fileSystem as FirebaseFileSystem).storage!.readCanvas(id);
   }
 

@@ -246,12 +246,12 @@ export class IndexedDBFile extends File {
     this.db = db;
   }
 
-  async read() {
+  async read(): Promise<any> {
     const data = await this.db.get('nodes', this.id);
     return data ? data.content : null;
   }
 
-  async write(data: string) {
+  async write(data: any) {
     await this.db.put('nodes', { id: this.id, type: 'file', content: data });
   }
 
@@ -272,6 +272,15 @@ export class IndexedDBFile extends File {
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
     await this.write(canvas.toDataURL("image/png"));
+  }
+
+  async readBlob(): Promise<Blob> {
+    // 現状envelope格納専用のため
+    throw new Error('Not implemented');
+  }
+
+  async writeBlob(blob: Blob): Promise<void> {
+    // 現状envelope格納専用のため
   }
 }
 

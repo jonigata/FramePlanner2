@@ -75,6 +75,7 @@
         const file = ev.dataTransfer.files[0];
         const fileName = file.name;
         if (file.type === "application/json") {
+          // 旧タイプのenvelope
           const json = await file.text();
           console.log(json);
           const newFile = await fileSystem.createFile();
@@ -85,6 +86,7 @@
         }
         console.log(fileName);
         if (fileName.endsWith(".envelope")) {
+          // 新タイプのenvelope
           const newFile = await fileSystem.createFile();
           await importEnvelope(file, fileSystem, newFile); // JSONと同様の処理
           await node.link("パッケージ", newFile.id);

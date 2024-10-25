@@ -10,6 +10,7 @@ import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
 import { type Notebook, emptyNotebook } from "../notebook/notebook";
 import { packFrameImages, packBubbleImages, unpackFrameImages, unpackBubbleImages, dryUnpackBubbleImages, dryUnpackFrameImages } from "./fileImages.js";
+import { exportEnvelope, importEnvelope } from "../filemanager/envelopeCbor";
 
 export type Dragging = {
   fileSystem: FileSystem;
@@ -288,12 +289,45 @@ async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSys
     return targetFolder.id;
   } else {
     // file is book
-    const sourceFile = sourceNode.asFile()!;
-    const book = await loadBookFrom(sourceFileSystem, sourceFile);
+    async function justCopy() {
+      const sourceFile = sourceNode.asFile()!;
+      const book = await loadBookFrom(sourceFileSystem, sourceFile);
+  
+      const targetFile = await targetFileSystem.createFile('text');
+      book.revision.id = targetFile.id;
+      await saveBookTo(book, targetFileSystem, targetFile);
+      return targetFile.id;
+    }
 
-    const targetFile = await targetFileSystem.createFile('text');
-    book.revision.id = targetFile.id;
-    await saveBookTo(book, targetFileSystem, targetFile);
-    return targetFile.id;
+    if (sourceFileSystem.isVault) {
+      if (targetFileSystem.isVault) {
+        // Vault -> Vault
+        console.log("================ Vault -> Vault");
+        return await justCopy();
+      } else {
+        // Vault -> Local
+        console.log("================ Vault -> Local");
+        const sourceFile = sourceNode.asFile()!;
+        const blob = await sourceFile.readBlob();
+        const targetFile = await targetFileSystem.createFile();
+        await importEnvelope(blob, targetFileSystem, targetFile);
+        return targetFile.id;
+      }
+    } else {
+      if (targetFileSystem.isVault) {
+        // Local -> Vault
+        console.log("================ Local -> Vault");
+        const sourceFile = sourceNode.asFile()!;
+        const buffer = await exportEnvelope(sourceFileSystem, sourceFile);
+        const blob = new Blob([buffer], {type: "application/cbor"});
+        const targetFile = await targetFileSystem.createFile();
+        await targetFile.writeBlob(blob);
+        return targetFile.id;
+      } else {
+        // Local -> Local        
+        console.log("================ Local -> Local");
+        return await justCopy();
+      }
+    }
   }
 }

@@ -1,9 +1,9 @@
 import { ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
 import { createCanvasFromBlob } from '../../../utils/imageUtil';
-import { sha1 } from '../../../lib/Misc';
-import { ImageStorageBase, type ImageId } from './imageStorage';
+import { sha1, blobToSha1 } from '../../Misc';
+import { ContentStorageBase, type ContentId } from './contentStorage';
 
-export class FirebaseImageStorage extends ImageStorageBase {
+export class FirebaseContentStorage extends ContentStorageBase {
   private readonly storage: FirebaseStorage;
 
   constructor(storage: FirebaseStorage) {
@@ -11,14 +11,39 @@ export class FirebaseImageStorage extends ImageStorageBase {
     this.storage = storage;
   }
 
-  async readCanvas(id: ImageId): Promise<HTMLCanvasElement> {
+  async readBlob(id: ContentId): Promise<Blob> {
+    console.log("*********** FirebaseImageStorage.readBlob");
+    const storageFileRef = sref(this.storage, id);
+    return await getBlob(storageFileRef);
+  }
+
+  async writeBlob(blob: Blob): Promise<ContentId> {
+    console.log("*********** FirebaseImageStorage.writeBlob");
+    const id = await blobToSha1(blob);
+    const storageFileRef = sref(this.storage, id);
+
+    try {
+      // Try to get the metadata of the file
+      await getMetadata(storageFileRef);
+      console.log('File already exists, skipping...');
+    } catch (error) {
+      // If error occurs (e.g., file doesn't exist), upload the file
+      const metadata = {
+          contentType: blob.type,
+      };
+      await uploadBytes(storageFileRef, blob, metadata);
+    }
+    return id as ContentId;
+  }
+
+  async readCanvas(id: ContentId): Promise<HTMLCanvasElement> {
     console.log("*********** FirebaseImageStorage.readCanvas");
     const storageFileRef = sref(this.storage, id);
     const blob = await getBlob(storageFileRef);
     return createCanvasFromBlob(blob);
   }
 
-  async writeCanvas(canvas: HTMLCanvasElement): Promise<ImageId> {
+  async writeCanvas(canvas: HTMLCanvasElement): Promise<ContentId> {
     console.log("*********** FirebaseImageStorage.writeCanvas");
     const base64Image = canvas.toDataURL('image/png');
     const id = await sha1(base64Image);
@@ -42,6 +67,6 @@ export class FirebaseImageStorage extends ImageStorageBase {
       };
       await uploadBytes(storageFileRef, blob, metadata);
     }
-    return id as ImageId;
+    return id as ContentId;
   }
 }
