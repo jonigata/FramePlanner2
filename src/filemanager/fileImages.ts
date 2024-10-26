@@ -327,7 +327,7 @@ async function loadCanvas(fs: FileSystem | null, canvasId: string): Promise<HTML
       performance.measure("loadCanvas-read", "loadCanvas-read-start", "loadCanvas-read-end");
 
       performance.mark("readCanvas-start");
-      const canvas = (await file.readCanvas()) as any;
+      const canvas = (await file.readCanvas(false)) as any;
       canvas["fileId"] ??= {}
       canvas["fileId"][fileSystem.id] = file.id
       canvas["clean"] ??= {}

@@ -255,19 +255,30 @@ export class IndexedDBFile extends File {
     await this.db.put('nodes', { id: this.id, type: 'file', content: data });
   }
 
-  async readCanvas(): Promise<HTMLCanvasElement> {
+  async readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement> {
     const canvas = document.createElement("canvas");
-    this.read().then(async (content) => {
+    if (waitsComplete) {
+      const content = await this.read();
       const image = new Image();
-      image.onload = () => {
+      image.src = content;
+      await image.decode();
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+      return canvas;
+    } else {
+      this.read().then(async (content) => {
+        const image = new Image();
+        image.src = content;
+        await image.decode();
         canvas.width = image.width;
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
-      }
-      image.src = content;
-    });
-    return canvas;
+      });
+      return canvas;
+    }
   }
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {

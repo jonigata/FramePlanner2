@@ -80,7 +80,7 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async getNode(id: NodeId): Promise<Node | null> {
-    const snapshot = await get(child(this.nodesRef!, id));
+    const snapshot = await get(child(this.nodesRef!, id));  
     if (snapshot.exists()) {
       if (snapshot.val().type === 'file') {
         const file = new FirebaseFile(this, id);
@@ -131,7 +131,7 @@ export class FirebaseFile extends File {
     await set(child(this.nodeRef, 'link'), id);
   }
 
-  async readCanvas(): Promise<HTMLCanvasElement> {
+  async readCanvas(_waitsComplete: boolean): Promise<HTMLCanvasElement> {
     const snapshot = await get(child(this.nodeRef, 'link'));
     const id = snapshot.val();
     return await (this.fileSystem as FirebaseFileSystem).storage!.readCanvas(id);

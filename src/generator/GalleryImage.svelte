@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { imageGeneratorTarget } from "./imageGeneratorStore";
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { imageViewerTarget } from '../utils/imageViewerStore';
   import { toolTip } from '../utils/passiveToolTipStore';
@@ -26,6 +25,7 @@
   function onCanvasChanged(c: HTMLCanvasElement) {
     if (c) {
       height = getHeight();
+      console.log("onCanvasChanged", c.width, c.height, width, height);
     }
   }
 
@@ -74,21 +74,21 @@
 
   // fix aspect ratio
   function getHeight() {
-    console.log(canvas.width, canvas.height);
     return (canvas.height / canvas.width) * width;
   }
 
   onMount(() => {
-    console.log("change image size", canvas.width, canvas.height, $imageGeneratorTarget);
+    console.log("change image size", canvas.width, canvas.height);
     const w = Math.min(width, canvas.width);
     const h = Math.min(height, canvas.height);
 
     image = new Image();
-    canvas.toBlob(function(blob) {
+    canvas.toBlob(async function(blob) {
       const image = new Image();
       if (blob !== null) {
         const url = URL.createObjectURL(blob);
         image.src = url;
+        await image.decode();
       }
       image.style.width = `${w}px`;
       image.style.height = `${h}px`;

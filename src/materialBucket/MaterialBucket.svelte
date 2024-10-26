@@ -11,9 +11,9 @@
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-  import { createCanvasFromBlob, createCanvasFromImage } from '../utils/imageUtil';
+  import { createCanvasFromBlob } from '../utils/imageUtil';
 
-  let gallery: HTMLCanvasElement[];
+  let gallery: HTMLCanvasElement[] | null = null;
 
   function onChooseImage(e: CustomEvent<HTMLCanvasElement>) {
     console.log("onChooseImage");
@@ -51,6 +51,7 @@
   }
 
   async function onFileDrop(files: FileList) {
+    if (gallery == null) { return; }
     console.log("onFileDrop", files);
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -66,16 +67,19 @@
     console.log("displayMaterialImages");
     $loading = true;
     const root = await $fileSystem!.getRoot();
-    const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
+    const materialFolder = (await root.getNodesByName('素材'))[0].asFolder()!;
     const materials = await materialFolder.listEmbodied();
     const canvases = [];
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
-      const canvas = await material.asFile().readCanvas();
+      const canvas = await material.asFile()!.readCanvas(true);
+      console.log("material", canvas.width, canvas.height);
       (canvas as any)["materialBindId"] = materials[i][0];
       canvases.push(canvas);
     }
+    console.log("displayMaterialImages gallery update");
     gallery = canvases;
+    console.log("displayMaterialImages done", canvases.length);
     $loading = false;
   }
 
@@ -90,7 +94,9 @@
   <Drawer open={$materialBucketOpen} size="720px" on:clickAway={() => $materialBucketOpen = false}>
     <div class="dropzone" use:dropzone={onFileDrop}>
       <div class="drawer-content" use:dropzone={onFileDrop}>
-        <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+        {#if gallery != null}
+          <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+        {/if}
       </div>
     </div>  
   </Drawer>
@@ -103,11 +109,7 @@
   }
   .drawer-content {
     width: 100%;
-    font-family: 'Yu Gothic', sans-serif;
-    font-weight: 500;
-    text-align: left;
-    padding-top: 16px;
-    padding-left: 16px;
+    display: flex;
   }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));

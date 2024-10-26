@@ -2,7 +2,7 @@
   import { createEventDispatcher, tick } from "svelte";
   import GalleryImage from "./GalleryImage.svelte";
 
-  export let canvases: HTMLCanvasElement[] = [];
+  export let canvases: HTMLCanvasElement[];
   export let columnWidth = 220;
   export let accessable = true;
 

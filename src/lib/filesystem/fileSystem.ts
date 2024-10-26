@@ -81,7 +81,7 @@ export abstract class Node implements Node {
 export interface File {
   read(): Promise<string>;
   write(data: any): Promise<void>;
-  readCanvas(): Promise<HTMLCanvasElement>;
+  readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement>;
   writeCanvas(canvas: HTMLCanvasElement): Promise<void>;
   readBlob(): Promise<Blob>;
   writeBlob(blob: Blob): Promise<void>;
