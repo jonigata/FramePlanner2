@@ -190,6 +190,11 @@ export async function getDownloadUrl(filename: string): Promise<{url: string}> {
   return r;
 }
 
+export async function eraseFile(filename: string): Promise<any> {
+  const r = await callFunc('erasefile', {filename}, 180);
+  return r;
+}
+
 function getAuth2() {
   return getAuth(app);
 }

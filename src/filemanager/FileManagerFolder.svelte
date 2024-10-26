@@ -200,6 +200,7 @@
     node = node;
   }
 
+  // TODO: だいぶ遅い
   async function recycleNode(curr: Node, editingId: NodeId) {
     if (curr.getType() === "folder") {
       const folder = curr.asFolder()!;

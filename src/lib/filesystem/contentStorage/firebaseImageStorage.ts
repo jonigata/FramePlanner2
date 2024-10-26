@@ -1,4 +1,4 @@
-import { ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata } from "firebase/storage";
+import { ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata, deleteObject } from "firebase/storage";
 import { createCanvasFromBlob } from '../../../utils/imageUtil';
 import { sha1, blobToSha1 } from '../../Misc';
 import { ContentStorageBase, type ContentId } from './contentStorage';
@@ -68,5 +68,11 @@ export class FirebaseContentStorage extends ContentStorageBase {
       await uploadBytes(storageFileRef, blob, metadata);
     }
     return id as ContentId;
+  }
+
+  async erase(id: ContentId): Promise<void> {
+    console.log("*********** FirebaseImageStorage.erase");
+    const storageFileRef = sref(this.storage, id);
+    await deleteObject(storageFileRef);
   }
 }

@@ -67,6 +67,15 @@ export class FirebaseFileSystem extends FileSystem {
   }
 
   async destroyNode(id: NodeId): Promise<void> {
+    const snapshot = await get(child(this.nodesRef!, id));
+    const node = snapshot.val();
+    if (node?.type === 'file') {
+      const linkId = node.link;
+      if (linkId) {
+        await this.storage!.erase(linkId);
+      }
+    }
+    console.log("destroyNode", id);
     await remove(child(this.nodesRef!, id));
   }
 

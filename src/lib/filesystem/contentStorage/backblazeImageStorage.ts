@@ -1,7 +1,7 @@
 import { createCanvasFromImage } from '../../../utils/imageUtil';
 import { blobToSha1 } from '../../Misc';
 import { ContentStorageBase, type ContentId } from './contentStorage';
-import { getUploadUrl, getDownloadUrl } from '../../../firebase';
+import { getUploadUrl, getDownloadUrl, eraseFile } from '../../../firebase';
 
 // 復号キーは公開しても問題ない（主に検閲させないためのものなので）
 async function fetchImageWithHeaders(url: string) {
@@ -27,8 +27,8 @@ export class BackblazeContentStorage extends ContentStorageBase {
     super();
   }
 
-  async readBlob(id: string): Promise<Blob> {
-    const {url} = await getDownloadUrl(`${id}.blob`);
+  async readBlob(id: ContentId): Promise<Blob> {
+    const {url} = await getDownloadUrl(id);
     return await fetch(url, {
       method: 'GET',
       headers: {
@@ -40,14 +40,15 @@ export class BackblazeContentStorage extends ContentStorageBase {
   }
 
   async writeBlob(blob: Blob): Promise<ContentId> {
-    const id = await blobToSha1(blob);
+    const sha1 = await blobToSha1(blob);
+    const id = `${sha1}.blob` as ContentId;
 
     try {
-      const {url, token, filename} = await getUploadUrl(`${id}.blob`);
+      const {url, token, filename} = await getUploadUrl(id);
       if (url == "") {
         // すでにある
         console.log("File already exists, skipping...");
-        return id as ContentId;
+        return id;
       }
 
       const response = await fetch(url,{
@@ -58,7 +59,7 @@ export class BackblazeContentStorage extends ContentStorageBase {
           "Content-Type": "b2/x-auto",
           "Authorization": token,
           "X-Bz-File-Name": filename,
-          "X-Bz-Content-Sha1": id,
+          "X-Bz-Content-Sha1": sha1,
           "X-Bz-Server-Side-Encryption-Customer-Algorithm": "AES256",
           "X-Bz-Server-Side-Encryption-Customer-Key": "oXT+BeSiADWQlDFSsmJ7bkoH+wpdSnacsUbg2291pdU=",
           "X-Bz-Server-Side-Encryption-Customer-Key-Md5": "Q/JFlAIOhwbQwW9OS+YGcw==",
@@ -68,7 +69,7 @@ export class BackblazeContentStorage extends ContentStorageBase {
     } catch (error) {
       console.error("Fetch threw an error:", error)
     }
-    return id as ContentId;
+    return id;
   }
 
   async readCanvas(id: string): Promise<HTMLCanvasElement> {
@@ -94,15 +95,16 @@ export class BackblazeContentStorage extends ContentStorageBase {
     });
     console.log(canvas.width, canvas.height);
     console.log("blob.length: ", blob.size);
-    const id = await blobToSha1(blob);
+    const sha1 = await blobToSha1(blob);
+    const id = `${sha1}.blob` as ContentId;
 
     try {
-      const {url, token, filename} = await getUploadUrl(`${id}.png`);
+      const {url, token, filename} = await getUploadUrl(id);
       console.log(url, token, filename);
       if (url == "") {
         // すでにある
         console.log("File already exists, skipping...");
-        return id as ContentId;
+        return id;
       }
 
       const response = await fetch(url,{
@@ -113,7 +115,7 @@ export class BackblazeContentStorage extends ContentStorageBase {
           "Content-Type": "b2/x-auto",
           "Authorization": token,
           "X-Bz-File-Name": filename,
-          "X-Bz-Content-Sha1": id,
+          "X-Bz-Content-Sha1": sha1,
           "X-Bz-Server-Side-Encryption-Customer-Algorithm": "AES256",
           "X-Bz-Server-Side-Encryption-Customer-Key": "oXT+BeSiADWQlDFSsmJ7bkoH+wpdSnacsUbg2291pdU=",
           "X-Bz-Server-Side-Encryption-Customer-Key-Md5": "Q/JFlAIOhwbQwW9OS+YGcw==",
@@ -123,6 +125,10 @@ export class BackblazeContentStorage extends ContentStorageBase {
     } catch (error) {
       console.error("Fetch threw an error:", error)
     }
-    return id as ContentId;
+    return id;
+  }
+
+  async erase(id: string): Promise<void> {
+    await eraseFile(id)  
   }
 }

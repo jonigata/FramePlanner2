@@ -5,6 +5,7 @@ export interface ContentStorage {
   writeBlob(blob: Blob): Promise<ContentId>;
   readCanvas(id: ContentId): Promise<HTMLCanvasElement>;
   writeCanvas(canvas: HTMLCanvasElement): Promise<ContentId>;
+  erase(id: ContentId): Promise<void>;
 };
 
 export abstract class ContentStorageBase implements ContentStorage {
@@ -12,4 +13,5 @@ export abstract class ContentStorageBase implements ContentStorage {
   abstract writeBlob(blob: Blob): Promise<ContentId>;
   abstract readCanvas(id: ContentId): Promise<HTMLCanvasElement>;
   abstract writeCanvas(canvas: HTMLCanvasElement): Promise<ContentId>;
+  abstract erase(id: ContentId): Promise<void>;
 }
