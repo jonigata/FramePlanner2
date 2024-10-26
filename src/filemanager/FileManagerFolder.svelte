@@ -250,6 +250,7 @@
       node = node;
     }
   }
+  let watching = false;
 
   onMount(async () => {
     const root = await fileSystem.getRoot();
@@ -259,10 +260,13 @@
     node = entry[2] as Folder;
     isDiscardable = removability === "removable" && trash != null;
     node.watch(watcher);
+    watching = true;
   });
 
   onDestroy(() => {
-    node.unwatch(watcher);
+    if (watching) {
+      node.unwatch(watcher);
+    }
   });
 
 </script>
