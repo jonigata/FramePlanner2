@@ -2,8 +2,15 @@
   import bellIcon from '../assets/bell.png';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { notebookOpen } from '../notebook/notebookStore';  
+  import { onlineStatus } from '../utils/accountStore';
+  import { toastStore } from '@skeletonlabs/skeleton';
   
   function callFairy() {
+    if ($onlineStatus !== "signed-in") {
+      toastStore.trigger({ message: `AI機能の利用にはサインインが必要です`, timeout: 3000});
+      return;
+    }
+
     $notebookOpen = !$notebookOpen;
   }
 </script>

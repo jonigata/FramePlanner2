@@ -148,9 +148,7 @@
 <MaterialBucketButton />
 <NewBookButton  />
 <CabinetButton />
-{#if $onlineStatus === 'signed-in'}
-  <BellButton />
-{/if}
+<BellButton />
 <RulerButton/>
 <AboutButton/>
 <DownloadButton />
