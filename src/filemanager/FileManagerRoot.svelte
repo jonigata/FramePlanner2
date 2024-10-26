@@ -110,14 +110,14 @@
         const currentFileInfo = await fetchCurrentFileInfo();
         if (currentFileInfo) {
           if (currentFileInfo.fileSystem === 'cloud') {
-            toastStore.trigger({ message: "最終アクセスファイルがクラウドファイルのため、\nクラウドストレージの接続を待っています", timeout: 3000});
+            toastStore.trigger({ message: "最終アクセスファイルがクラウドファイルのため、<br/>クラウドストレージの接続を待っています", timeout: 3000});
             await waitForChange(onlineStatus, s => s != 'unknown');
             if ($onlineStatus === 'signed-out') {
               toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
             } else {
               await waitForChange(cloudReady, x => x);
             }
-            toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
+            toastStore.trigger({ message: "クラウドファイルの読み込みには<br/>時間がかかることがあります", timeout: 3000});
           }
           try {
             console.log($onlineStatus);
@@ -297,7 +297,7 @@
     await notifyShare(shareUrl);
 
     $loading = false;
-    toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、\n一定時間後消去される可能性があります", timeout: 4500});
+    toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});
   }
 
   $:onLoadRequest($loadToken);
@@ -309,7 +309,7 @@
     $loading = true;
     const isCloud = lt.fileSystem.id !== fileSystem.id;
     if (isCloud) {
-      toastStore.trigger({ message: "クラウドファイルの読み込みには\n時間がかかることがあります", timeout: 3000});
+      toastStore.trigger({ message: "クラウドファイルの読み込みには<br/>時間がかかることがあります", timeout: 3000});
     }
     const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile()!;
     const book = await loadBookFrom(lt.fileSystem, file);

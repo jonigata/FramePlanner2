@@ -44,6 +44,10 @@
   }
 
   async function onDoubleClick() {
+    if (fileSystem.isVault) {
+      toastStore.trigger({ message: `クラウドファイルを直接開くことはできません<br/>ローカルにコピーしてから開いてください`, timeout: 3000});
+      return;
+    }
     $loadToken = { fileSystem, nodeId };
   }
 
@@ -110,7 +114,7 @@
     const targetBook = await loadBookFrom(fileSystem, file);
     targetBook.pages.push(...markedPages);
     await saveBookTo(targetBook, fileSystem, file);
-    toastStore.trigger({ message: 'マークされたページを\nコピーしました', timeout: 1500});
+    toastStore.trigger({ message: 'マークされたページを<br/>コピーしました', timeout: 1500});
   }
 
   async function makePackage() {
