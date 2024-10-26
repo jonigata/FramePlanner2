@@ -330,18 +330,16 @@
     for (const imageFile of usedImageFiles) {
       const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
       const canvas = await file.readCanvas();
-      const image = await createImageFromCanvas(canvas);
-      console.log("loaded used image", imageFile);
-      usedImages.push(image);
+      console.log("loaded used image", canvas);
+      usedImages.push(canvas);
     }
 
     const strayImages = [];
     for (const imageFile of strayImageFiles) {
       const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
       const canvas = await file.asFile().readCanvas();
-      const image = await createImageFromCanvas(canvas);
-      console.log("loaded stray image", imageFile);
-      strayImages.push(image);
+      console.log("loaded stray image", canvas);
+      strayImages.push(canvas);
     }
 
     $browserUsedImages = usedImages;

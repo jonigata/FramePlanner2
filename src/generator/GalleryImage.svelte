@@ -14,6 +14,7 @@
   export let width = 160;
   export let chosen: HTMLCanvasElement | null = null;
   export let refered: HTMLCanvasElement | null = null;
+  export let accessable: boolean = true;
 
   let container: HTMLDivElement;
   let height: number = 160;
@@ -104,19 +105,21 @@
 <div class="frame" class:selected={chosen === canvas} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
   <div class="container w-full h-full" bind:this={container} >
   </div>
-  <div class="delete-button" on:click={e => onDelete(e, canvas)} use:toolTip={"削除"}>
-    <img src={drop} alt="delete"/>
-  </div>
-  <div class="telescope-button" on:click={e => onView(e, canvas)} use:toolTip={"見る"}>
-    <img src={telescope} alt="view" />
-  </div>
-  <div class="reference-button" on:click={e => onRefer(e, canvas)} use:toolTip={"i2i参照"}>
-    {#if refered === canvas}
-      <img src={referenceSelected} alt="reference"/>
-    {:else}
-      <img src={reference} alt="reference" />
-    {/if}
-  </div>
+  {#if accessable}
+    <div class="delete-button" on:click={e => onDelete(e, canvas)} use:toolTip={"削除"}>
+      <img src={drop} alt="delete"/>
+    </div>
+    <div class="telescope-button" on:click={e => onView(e, canvas)} use:toolTip={"見る"}>
+      <img src={telescope} alt="view" />
+    </div>
+    <div class="reference-button" on:click={e => onRefer(e, canvas)} use:toolTip={"i2i参照"}>
+      {#if refered === canvas}
+        <img src={referenceSelected} alt="reference"/>
+      {:else}
+        <img src={reference} alt="reference" />
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>

@@ -1,22 +1,15 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import { browserStrayImages, browserUsedImages } from './fileBrowserStore';
+	import Gallery from '../generator/Gallery.svelte';
 </script>
 
 <div class="page-container">
   <div class="box">
     <h2>使用中</h2>
-    <div class="images">
-      {#each $browserUsedImages as image}
-        <img width="128" height="128" src={image.src} alt={""}/>
-      {/each}
-    </div>  
+    <Gallery columnWidth={220} bind:canvases={$browserUsedImages} accessable={false}/>
     <h2>リンク切れ</h2>
-    <div class="images">
-      {#each $browserStrayImages as image}
-        <img width="128" height="128" src={image.src} alt={""}/>
-      {/each}
-    </div>  
+    <Gallery columnWidth={220} bind:canvases={$browserStrayImages} accessable={false}/>
   </div>
 
   <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -25,8 +18,8 @@
 
 <style>
   .page-container {
-    width: 100%;
-    height: 100%;
+    width: 95svw;
+    height: 95svh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -36,12 +29,6 @@
     width: 800px;
     height: 95%;
     overflow-y: auto;
-  }
-  .images {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: flex-start;
   }
   .back-button {
     margin-top: 16px;

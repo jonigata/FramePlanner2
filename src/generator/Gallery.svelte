@@ -4,6 +4,7 @@
 
   export let canvases: HTMLCanvasElement[] = [];
   export let columnWidth = 220;
+  export let accessable = true;
 
   export let chosen: HTMLCanvasElement | null = null;
   export let refered: HTMLCanvasElement | null = null;
@@ -31,7 +32,7 @@
 
 <div class="gallery">
   {#each canvases as canvas}
-    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} canvas={canvas} on:commit={onCommit} on:delete={onDelete} on:dragstart={onDragStart}/>
+    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} canvas={canvas} accessable={accessable} on:commit={onCommit} on:delete={onDelete} on:dragstart={onDragStart}/>
   {/each}
 </div>
 
