@@ -1,7 +1,7 @@
 <script lang="ts">
   import newBookIcon from '../assets/new-book.png';
   import { newBookToken } from "../filemanager/fileManagerStore";
-  import { newBook, newImageBook } from "../bookeditor/book";
+  import { newBook, newImageBook } from "../lib/book/book";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { hoverKey } from '../utils/hoverKeyStore';
   import { mainBook } from '../bookeditor/bookStore';

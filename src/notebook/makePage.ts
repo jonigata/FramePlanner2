@@ -1,8 +1,8 @@
 import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
-import { newPage } from "../bookeditor/book";
-import type * as Storyboard from './storyboard';
+import { newPage } from "../lib/book/book";
+import type * as Storyboard from '../lib/book/storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import { newPageProperty } from '../bookeditor/bookStore';
 import { get } from "svelte/store";

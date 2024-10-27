@@ -1,17 +1,17 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page, Book, WrapMode, ReadingDirection, Prefix } from "../bookeditor/book.js";
-import { commitBook } from "../bookeditor/book.js";
+import type { Page, Book, WrapMode, ReadingDirection, Prefix } from "../lib/book/book.js";
+import { commitBook } from "../lib/book/book.js";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
-import type { ProtocolChatLog } from "../utils/richChat";
-import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
-import { type Notebook, emptyNotebook } from "../notebook/notebook";
+import type { ProtocolChatLog } from "../lib/book/richChat.js";
+import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../lib/book/richChat.js";
+import { type Notebook, emptyNotebook } from "../lib/book/notebook.js";
 import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages.js";
 import { exportEnvelope, importEnvelope } from "../filemanager/envelopeCbor";
-import { dryUnpackBubbleImages, dryUnpackFrameImages } from "./imagePacking";
+import { dryUnpackBubbleImages, dryUnpackFrameImages } from "../lib/book/imagePacking";
 
 export type Dragging = {
   fileSystem: FileSystem;

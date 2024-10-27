@@ -1,7 +1,7 @@
 import { type Writable, writable } from "svelte/store";
 import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-import type { Page } from '../book';
+import type { Page } from '../../lib/book/book';
 
 type BubbleInspectorCommand = "generate" | "scribble" | "punch";
 

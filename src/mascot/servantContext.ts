@@ -1,4 +1,4 @@
-import type { Book } from "../bookeditor/book"
+import type { Book } from "../lib/book/book"
 
 export type Context = {
   book: Book;

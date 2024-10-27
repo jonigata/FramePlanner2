@@ -7,7 +7,7 @@
   import playIcon from '../assets/videomaker/play.png';
   import pauseIcon from '../assets/videomaker/pause.png';
   import Spreader from '../utils/Spreader.svelte'
-  import type { Book, VideoSettings } from '../bookeditor/book';
+  import type { Book, VideoSettings } from '../lib/book/book';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
 

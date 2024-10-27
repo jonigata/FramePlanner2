@@ -1,4 +1,4 @@
-import { Notebook } from './notebook';
+import { Notebook } from '../lib/book/notebook';
 import { advise } from '../firebase';
 import { onlineAccount, type OnlineAccount } from '../utils/accountStore';
 

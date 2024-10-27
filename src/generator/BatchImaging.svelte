@@ -5,7 +5,7 @@
   import Drawer from '../utils/Drawer.svelte'
   import BatchImagingDalle3 from './BatchImagingDalle3.svelte';
   import BatchImagingFlux from './BatchImagingFlux.svelte';
-  import type { Page } from "../bookeditor/book";
+  import type { Page } from "../lib/book/book";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import type { ImagingContext } from '../utils/feathralImaging';
   import ImagingProgressBar from './ImagingProgressBar.svelte';

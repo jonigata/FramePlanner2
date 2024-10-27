@@ -2,10 +2,10 @@
   import { onMount } from 'svelte';
   import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
-  import type { Book } from '../bookeditor/book';
-  import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../bookeditor/book';
+  import type { Book } from '../lib/book/book';
+  import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
   import { bookEditor, mainBook } from '../bookeditor/bookStore';
-  import type { Revision } from "../bookeditor/book";
+  import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
@@ -26,8 +26,7 @@
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { mascotVisible } from '../mascot/mascotStore';
   import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
-  import { createImageFromCanvas } from '../utils/imageUtil';
-  import { emptyNotebook } from '../notebook/notebook';
+  import { emptyNotebook } from '../lib/book/notebook';
   import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
@@ -329,7 +328,7 @@
     const usedImages = [];
     for (const imageFile of usedImageFiles) {
       const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
-      const canvas = await file.readCanvas();
+      const canvas = await file.readCanvas(true);
       console.log("loaded used image", canvas);
       usedImages.push(canvas);
     }
@@ -337,7 +336,7 @@
     const strayImages = [];
     for (const imageFile of strayImageFiles) {
       const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
-      const canvas = await file.asFile().readCanvas();
+      const canvas = await file.asFile().readCanvas(true);
       console.log("loaded stray image", canvas);
       strayImages.push(canvas);
     }

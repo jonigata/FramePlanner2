@@ -102,7 +102,7 @@ async function listFiles(folder: Folder, files: string[], folders: string[]) {
     }
     if (entry[2].getType() === 'folder') {
       folders.push(entry[2].id);
-      await listFiles(entry[2].asFolder()!, files, folders);
+        await listFiles(entry[2].asFolder()!, files, folders);
     } else {
       files.push(entry[2].id);
     }

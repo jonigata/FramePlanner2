@@ -1,4 +1,4 @@
-import type { Page } from '../../bookeditor/book';
+import type { Page } from '../../lib/book/book';
 import { LayeredCanvas, Viewport } from '../../lib/layeredCanvas/system/layeredCanvas'
 import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
 

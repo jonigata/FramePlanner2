@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import type { Character } from './notebook';
+  import type { Character } from '../lib/book/notebook';
   import { toolTip } from '../utils/passiveToolTipStore';
   import NotebookCharacter from './NotebookCharacter.svelte';
 

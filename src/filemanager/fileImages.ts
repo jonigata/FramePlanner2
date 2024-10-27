@@ -2,7 +2,7 @@ import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import type { FileSystem, Folder, NodeId } from "../lib/filesystem/fileSystem";
-import { unpackFrameImages, unpackBubbleImages, packFilms } from "./imagePacking";
+import { unpackFrameImages, unpackBubbleImages, packFilms } from "../lib/book/imagePacking";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには

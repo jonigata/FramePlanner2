@@ -2,7 +2,7 @@
   import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
   import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import type { Film } from '../lib/layeredCanvas/dataModels/film';
-  import type { Page } from '../bookeditor/book';
+  import type { Page } from '../lib/book/book';
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';

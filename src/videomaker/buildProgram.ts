@@ -1,6 +1,6 @@
 import { LayeredCanvas, Paper, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
 import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
-import { type Book, type Page, type WrapMode, type ReadingDirection, collectBookContents } from '../bookeditor/book';
+import { type Book, type Page, type WrapMode, type ReadingDirection, collectBookContents } from '../lib/book/book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import { trapezoidBoundingRect, trapezoidCenter } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import type { Layout } from '../lib/layeredCanvas/dataModels/frameTree';

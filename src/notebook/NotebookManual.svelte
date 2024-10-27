@@ -1,7 +1,7 @@
 <script lang="ts">
   import { advise } from '../firebase';
-  import { Character } from './notebook';
-  import { commitBook } from '../bookeditor/book';
+  import { Character } from '../lib/book/notebook';
+  import { commitBook } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';

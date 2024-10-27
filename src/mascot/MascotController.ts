@@ -3,8 +3,8 @@ import { AIArgumentError, callServant, type FunctionCalling } from "./servant";
 import type { Context } from "./servantContext";
 import { makePage } from "./storyboardServant";
 import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
-import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog, rollback } from "../utils/richChat";
-import type { RichChatLog, ProtocolChatLog, RichChatDocument } from "../utils/richChat";
+import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog, rollback } from "../lib/book/richChat";
+import type { RichChatLog, ProtocolChatLog, RichChatDocument } from "../lib/book/richChat";
 
 export type { Context };
 

@@ -1,5 +1,5 @@
 import { collectLeaves } from '../../lib/layeredCanvas/dataModels/frameTree';
-import type { Page } from '../../bookeditor/book';
+import type { Page } from '../../lib/book/book';
 
 export async function exportPrompts(pages: Page[]) {
   const prompts = [];

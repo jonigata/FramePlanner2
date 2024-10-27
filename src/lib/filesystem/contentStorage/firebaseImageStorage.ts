@@ -1,6 +1,6 @@
 import { ref as sref, uploadBytes, type FirebaseStorage, getBlob, getMetadata, deleteObject } from "firebase/storage";
 import { createCanvasFromBlob } from '../../../utils/imageUtil';
-import { sha1, blobToSha1 } from '../../Misc';
+import { sha1, blobToSha1 } from '../../layeredCanvas/tools/misc';
 import { ContentStorageBase, type ContentId } from './contentStorage';
 
 export class FirebaseContentStorage extends ContentStorageBase {

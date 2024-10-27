@@ -4,7 +4,7 @@
 	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import { redrawToken, mainBook } from '../bookStore';
-  import { commitBook } from '../book';
+  import { commitBook } from '../../lib/book/book';
   import { toolTip } from '../../utils/passiveToolTipStore';
 
 

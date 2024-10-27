@@ -7,7 +7,7 @@ import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubb
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
 import { initializeKeyCache } from '../lib/layeredCanvas/system/keyCache';
-import type { Book, Page, BookOperators, WrapMode, ReadingDirection } from './book';
+import type { Book, Page, BookOperators, WrapMode, ReadingDirection } from '../lib/book/book';
 import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement, Layout, Border } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';

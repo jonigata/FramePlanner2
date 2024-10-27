@@ -12,8 +12,8 @@
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
-  import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from './book';
-  import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from './book';
+  import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from './AutoSizeCanvas.svelte';

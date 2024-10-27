@@ -2,7 +2,7 @@
   import { collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type Layout } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-  import type { Page } from '../bookeditor/book';
+  import type { Page } from '../lib/book/book';
   import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
@@ -10,7 +10,7 @@
   import { createCanvasFromImage } from '../utils/imageUtil';
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
-  import { commitBook } from '../bookeditor/book';
+  import { commitBook } from '../lib/book/book';
   import FluxModes from './FluxModes.svelte';
   import "../box.css"  
 

@@ -1,9 +1,9 @@
-import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
-import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
-import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-import { Film } from "../lib/layeredCanvas/dataModels/film";
-import { ImageMedia } from "../lib/layeredCanvas/dataModels/media";
-import { Effect } from "../lib/layeredCanvas/dataModels/effect";
+import type { Vector } from "../layeredCanvas/tools/geometry/geometry";
+import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
+import { Bubble } from "../layeredCanvas/dataModels/bubble";
+import { Film } from "../layeredCanvas/dataModels/film";
+import { ImageMedia } from "../layeredCanvas/dataModels/media";
+import { Effect } from "../layeredCanvas/dataModels/effect";
 
 export async function dryUnpackFrameImages(paperSize: Vector, markUp: any, images: string[]): Promise<void> {
   const dryLoadImage = async (imageId: string): Promise<HTMLCanvasElement | null> => {

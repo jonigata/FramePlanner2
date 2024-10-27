@@ -4,11 +4,11 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import "../box.css";
   import { type Context, MascotController } from "./MascotController";
-  import { commitBook } from '../bookeditor/book';
+  import { commitBook } from '../lib/book/book';
   import Feathral from '../utils/Feathral.svelte';
   import { onlineAccount } from "../utils/accountStore";
   import DebugOnly from "../utils/DebugOnly.svelte";
-  import type { RichChatLog, RichChatDocument } from "../utils/richChat";
+  import type { RichChatLog, RichChatDocument } from "../lib/book/richChat";
   import InlineDocument from "./InlineDocument.svelte";
   import { makePage } from "./storyboardServant";
 

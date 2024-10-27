@@ -3,7 +3,7 @@
   import { getFontStyle } from "@svelte-web-fonts/google";
   import type { GoogleFontVariant, GoogleFontDefinition, GoogleFontFamily } from "@svelte-web-fonts/google";
   import { forceFontLoadToken, mainBook, redrawToken, fontLoadToken } from "./bookStore";
-  import type { Book } from "./book";
+  import type { Book } from "../lib/book/book";
   import { onMount } from "svelte";
 
   let googleFonts: GoogleFontDefinition[] = [];

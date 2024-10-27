@@ -3,7 +3,7 @@ import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import type { Context } from "./servantContext";
 import { frameExamples, aiTemplates } from '../lib/layeredCanvas/tools/frameExamples'
-import { newPage } from "../bookeditor/book";
+import { newPage } from "../lib/book/book";
 import type * as Storyboard from './storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import { newPageProperty } from '../bookeditor/bookStore';

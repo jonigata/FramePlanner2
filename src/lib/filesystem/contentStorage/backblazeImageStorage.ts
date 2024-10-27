@@ -1,5 +1,5 @@
 import { createCanvasFromImage } from '../../../utils/imageUtil';
-import { blobToSha1 } from '../../Misc';
+import { blobToSha1 } from '../../layeredCanvas/tools/misc';
 import { ContentStorageBase, type ContentId } from './contentStorage';
 import { getUploadUrl, getDownloadUrl, eraseFile } from '../../../firebase';
 

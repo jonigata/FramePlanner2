@@ -1,13 +1,13 @@
-import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import { FrameElement, type Layout, type Border, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
-import { Film, FilmStack, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
-import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-import type { Rect, Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
-import { isPointInTrapezoid, trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { ulid } from 'ulid';
-import type { RichChatLog } from '../utils/richChat';
-import { emptyNotebook, type Notebook } from "../notebook/notebook";
+import type { Bubble } from '../layeredCanvas/dataModels/bubble';
+import { FrameElement, type Layout, type Border, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../layeredCanvas/dataModels/frameTree';
+import { Film, FilmStack, FilmStackTransformer } from '../layeredCanvas/dataModels/film';
+import { ImageMedia } from '../layeredCanvas/dataModels/media';
+import { frameExamples } from '../layeredCanvas/tools/frameExamples';
+import type { Rect, Vector } from "../layeredCanvas/tools/geometry/geometry";
+import { isPointInTrapezoid, trapezoidBoundingRect } from "../layeredCanvas/tools/geometry/trapezoid";
+import type { RichChatLog } from './richChat';
+import { emptyNotebook, type Notebook } from "./notebook";
 
 // history処理では基本的にすべてdeep copyを使う
 

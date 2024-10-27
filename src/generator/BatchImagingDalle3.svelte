@@ -5,12 +5,12 @@
   import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import type { Page } from '../bookeditor/book';
+  import type { Page } from '../lib/book/book';
   import { createCanvasFromImage } from "../utils/imageUtil";
   import type { ImagingContext } from '../utils/feathralImaging';
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
-  import { commitBook } from '../bookeditor/book';
+  import { commitBook } from '../lib/book/book';
   import { persistentText } from '../utils/persistentText';
   import { createPreference } from '../preferences';
   import "../box.css"  

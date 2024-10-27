@@ -12,7 +12,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { type Book, type VideoSettings, cloneBook } from '../bookeditor/book';
+  import { type Book, type VideoSettings, cloneBook } from '../lib/book/book';
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import { onDestroy, onMount } from 'svelte';
   import { writable, type Writable } from 'svelte/store';

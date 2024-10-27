@@ -1,7 +1,7 @@
 import { renderAtTime, buildTimeTable } from './renderProgram';
 import { buildBookRenderer, type DisplayProgramEntry } from './buildProgram';
 import { createVideoWithImages, type Scene } from './generateMovieFile';
-import type { Book, VideoSettings } from '../bookeditor/book';
+import type { Book, VideoSettings } from '../lib/book/book';
 import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 import { VideoMedia } from '../lib/layeredCanvas/dataModels/media';
 import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';

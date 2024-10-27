@@ -5,7 +5,7 @@
   import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem } from "./fileManagerStore";
   import { importEnvelope as importEnvelopeOld } from "./envelope";
   import { importEnvelope } from "./envelopeCbor";
-  import { newBook } from "../bookeditor/book";
+  import { newBook } from "../lib/book/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";

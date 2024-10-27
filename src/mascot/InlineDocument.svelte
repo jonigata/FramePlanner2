@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { RichChatDocument } from "../utils/richChat";
+  import type { RichChatDocument } from "../lib/book/richChat";
 
   export let document: RichChatDocument;
 

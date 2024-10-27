@@ -1,9 +1,9 @@
 import { ulid } from 'ulid';
-import type { WrapMode, ReadingDirection } from "../bookeditor/book";
+import type { WrapMode, ReadingDirection } from "../lib/book/book";
 import { ImageMedia } from "../lib/layeredCanvas/dataModels/media";
 import { createCanvasFromImage } from "../utils/imageUtil";
 import { type SerializedBook, type SerializedPage } from "./fileManagerStore";
-import { type Notebook, emptyNotebook } from "../notebook/notebook";
+import { type Notebook, emptyNotebook } from "../lib/book/notebook";
 import type { FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";

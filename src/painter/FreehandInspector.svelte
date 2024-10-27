@@ -5,7 +5,7 @@
   import FreehandInspectorTaper from "./FreehandInspectorTaper.svelte";
   import FreehandInspectorPalette from "./FreehandInspectorPalette.svelte";
   import { EASINGS, type Easing } from "./easing";
-  import { deepCopyProperties } from "../lib/Misc";
+  import { deepCopyProperties } from "../lib/layeredCanvas/tools/misc";
   import Drawer from "../utils/Drawer.svelte";
 
   export let opened = false;

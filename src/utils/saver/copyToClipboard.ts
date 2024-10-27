@@ -1,4 +1,4 @@
-import type { Page } from '../../bookeditor/book';
+import type { Page } from '../../lib/book/book';
 import { renderPageToBlob } from './renderPage';
 
 export async function copyToClipboard(page: Page) {

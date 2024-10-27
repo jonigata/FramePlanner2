@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { generateImageFromTextWithFeathral, generateImageFromTextWithFlux } from '../firebase';
 import { toastStore } from '@skeletonlabs/skeleton';
-import type { Page } from '../bookeditor/book';
+import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { createCanvasFromImage } from '../utils/imageUtil';
 import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';

@@ -2,7 +2,7 @@ import type { Page as ExPage } from "./hiruma";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { calculatePhysicalLayout, findLayoutOf } from "../lib/layeredCanvas/dataModels/frameTree";
 import { ulid } from 'ulid';
-import type { Page as InPage } from "../bookeditor/book";
+import type { Page as InPage } from "../lib/book/book";
 import { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
 export function createPage(source: ExPage, imagePromptPrefix: string): InPage {
