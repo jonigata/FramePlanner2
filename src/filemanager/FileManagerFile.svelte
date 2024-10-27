@@ -8,7 +8,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { saveAs } from 'file-saver';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { exportEnvelope } from "../filemanager/envelopeCbor";
+  import { writeEnvelope } from "../lib/book/envelope";
 
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
@@ -119,8 +119,8 @@
 
   async function makePackage() {
     const file = (await fileSystem.getNode(nodeId))!.asFile()!;
-    const buffer = await exportEnvelope(fileSystem, file);
-    const blob = new Blob([buffer], {type: "application/cbor"});
+    const book = await loadBookFrom(fileSystem, file);
+    const blob = await writeEnvelope(book);
     saveAs(blob, "manga.envelope");
   }
 

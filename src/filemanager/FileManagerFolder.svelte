@@ -2,9 +2,8 @@
   import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem } from "./fileManagerStore";
-  import { importEnvelope as importEnvelopeOld } from "./envelope";
-  import { importEnvelope } from "./envelopeCbor";
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo } from "./fileManagerStore";
+  import { readEnvelope, readOldEnvelope } from "../lib/book/envelope";
   import { newBook } from "../lib/book/book";
   import { mainBook } from '../bookeditor/bookStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
@@ -77,18 +76,18 @@
         if (file.type === "application/json") {
           // 旧タイプのenvelope
           const json = await file.text();
-          console.log(json);
+          const book = await readOldEnvelope(json);
           const newFile = await fileSystem.createFile();
-          await importEnvelopeOld(json, fileSystem, newFile);
+          saveBookTo(book, fileSystem, newFile);
           await node.link("パッケージ", newFile.id);
           node = node;
           return;
         }
-        console.log(fileName);
         if (fileName.endsWith(".envelope")) {
           // 新タイプのenvelope
+          const book = await readEnvelope(file);
           const newFile = await fileSystem.createFile();
-          await importEnvelope(file, fileSystem, newFile); // JSONと同様の処理
+          saveBookTo(book, fileSystem, newFile);
           await node.link("パッケージ", newFile.id);
           node = node;
           return;

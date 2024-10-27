@@ -7,8 +7,8 @@
   import { saveAsPSD } from "./saver/saveAsPSD";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { postToAiPictors } from "./saver/postToAiPictors";
-  import { exportEnvelope } from "../filemanager/envelopeCbor";
-  import { fileSystem } from '../filemanager/fileManagerStore';
+  import { writeEnvelope } from "../lib/book/envelope";
+  import { fileSystem, loadBookFrom } from '../filemanager/fileManagerStore';
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
@@ -44,8 +44,8 @@
           case 'envelope':
             console.log("envelope");
             const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
-            const buffer = await exportEnvelope($fileSystem!, file);
-            const blob = new Blob([buffer], {type: "application/cbor"});
+            const book = await loadBookFrom($fileSystem!, file);
+            const blob = await writeEnvelope(book);
             saveAs(blob, "manga.envelope");
             break;
           case 'export-prompts':

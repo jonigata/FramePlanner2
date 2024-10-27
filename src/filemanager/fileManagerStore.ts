@@ -9,7 +9,7 @@ import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../lib/book/richChat";
 import { emptyNotebook } from "../lib/book/notebook";
 import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages";
-import { exportEnvelope, importEnvelope } from "../filemanager/envelopeCbor";
+import { writeEnvelope, readEnvelope } from "../lib/book/envelope";
 import { dryUnpackBubbleImages, dryUnpackFrameImages } from "../lib/book/imagePacking";
 
 export type Dragging = {
@@ -290,7 +290,8 @@ async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSys
         const sourceFile = sourceNode.asFile()!;
         const blob = await sourceFile.readBlob();
         const targetFile = await targetFileSystem.createFile();
-        await importEnvelope(blob, targetFileSystem, targetFile);
+        const importedBook = await readEnvelope(blob);
+        saveBookTo(importedBook, targetFileSystem, targetFile);
         return targetFile.id;
       }
     } else {
@@ -298,8 +299,8 @@ async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSys
         // Local -> Vault
         console.log("================ Local -> Vault");
         const sourceFile = sourceNode.asFile()!;
-        const buffer = await exportEnvelope(sourceFileSystem, sourceFile);
-        const blob = new Blob([buffer], {type: "application/cbor"});
+        const book = await loadBookFrom(sourceFileSystem, sourceFile);
+        const blob = await writeEnvelope(book);
         const targetFile = await targetFileSystem.createFile();
         await targetFile.writeBlob(blob);
         return targetFile.id;

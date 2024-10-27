@@ -29,21 +29,11 @@ export async function fetchBubbleImages(paperSize: Vector, markUps: any[], fileS
   return await unpackBubbleImages(paperSize, markUps, f);
 }
 
-export async function fetchEnvelopedFrameImages(paperSize: Vector, markUp: any, images: { [fileId: string]: HTMLCanvasElement }): Promise<FrameElement> {
-  const f = async (imageId: string) => images[imageId];
-  return await unpackFrameImages(paperSize, markUp, f);
-}
-
-export async function fetchEnvelopedBubbleImages(paperSize: Vector, markUps: any[], images: { [fileId: string]: HTMLCanvasElement }): Promise<Bubble[]> {
-  const f = async (imageId: string) => images[imageId];
-  return await unpackBubbleImages(paperSize, markUps, f);
-}
-
 export async function storeFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
   // 画像を別ファイルとして保存して
   // 画像をIDに置き換えたマークアップを返す
   const f = async (canvas: HTMLCanvasElement) => {
-    return await saveCanvas(fileSystem, canvas, imageFolder);
+    return await saveCanvas(fileSystem, imageFolder, canvas);
   };
 
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
@@ -65,7 +55,7 @@ export async function storeFrameImages(frameTree: FrameElement, fileSystem: File
 
 export async function storeBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, paperSize: [number, number]): Promise<any[]> {
   const f = async (canvas: HTMLCanvasElement) => {
-    return await saveCanvas(fileSystem, canvas, imageFolder);
+    return await saveCanvas(fileSystem, imageFolder, canvas);
   };
 
   const packedBubbles = [];
@@ -114,7 +104,7 @@ async function loadCanvas(fs: FileSystem | null, canvasId: string): Promise<HTML
   }
 }
 
-async function saveCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement, imageFolder: Folder): Promise<NodeId> {
+export async function saveCanvas(fileSystem: FileSystem, imageFolder: Folder, canvas: HTMLCanvasElement): Promise<NodeId> {
   canvasCache[fileSystem.id] ??= {};
   (canvas as any)["fileId"] ??= {};
   (canvas as any)["clean"] ??= {};
