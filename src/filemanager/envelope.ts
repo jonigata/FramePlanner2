@@ -7,7 +7,7 @@ import { type Notebook, emptyNotebook } from "../notebook/notebook";
 import type { FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-import { unpackFrameImages, unpackBubbleImages, packBubbleImages, packFrameImages, unpackEnvelopedBubbleImages, unpackEnvelopedFrameImages } from "./fileImages";
+import { fetchFrameImages, fetchBubbleImages, storeBubbleImages, storeFrameImages, fetchEnvelopedBubbleImages, fetchEnvelopedFrameImages } from "./fileImages";
 
 export type EnvelopedBook = {
   pages: SerializedPage[],
@@ -43,10 +43,10 @@ export async function importEnvelope(json: string, fileSystem: FileSystem, file:
   };
 
   for (const envelopedPage of envelopedBook.pages) {
-    const frameTree = await unpackEnvelopedFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, newImages);
-    const bubbles = await unpackEnvelopedBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, newImages);
-    const frameTreeMarkup = await packFrameImages(frameTree, fileSystem, imageFolder, 'v');
-    const bubbleMarkups = await packBubbleImages(bubbles, fileSystem, imageFolder, envelopedPage.paperSize, );
+    const frameTree = await fetchEnvelopedFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, newImages);
+    const bubbles = await fetchEnvelopedBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, newImages);
+    const frameTreeMarkup = await storeFrameImages(frameTree, fileSystem, imageFolder, 'v');
+    const bubbleMarkups = await storeBubbleImages(bubbles, fileSystem, imageFolder, envelopedPage.paperSize, );
 
     const serializedPage: SerializedPage = {
       id: envelopedPage.id ?? ulid(),
@@ -115,8 +115,8 @@ export async function exportEnvelope(fileSystem: FileSystem, file: File): Promis
 
   envelopedBook.images = {};
   for (const envelopedPage of envelopedBook.pages) {
-    const frameTree = await unpackFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, fileSystem);
+    const frameTree = await fetchFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, fileSystem);
+    const bubbles = await fetchBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, fileSystem);
 
     collectFrameImages(frameTree, envelopedBook.images);
     collectBubbleImages(bubbles, envelopedBook.images);

@@ -9,22 +9,22 @@ export async function collectGarbage(fileSystem: FileSystem): Promise<{ usedImag
 
   const allFiles: string[] = [];
   const allFolders: string[] = [];
-  await listFiles(desktop[2].asFolder(), allFiles, allFolders);
-  await listFiles(cabinet[2].asFolder(), allFiles, allFolders);
-  await listFiles(trash[2].asFolder(), allFiles, allFolders);
+  await listFiles(desktop[2].asFolder()!, allFiles, allFolders);
+  await listFiles(cabinet[2].asFolder()!, allFiles, allFolders);
+  await listFiles(trash[2].asFolder()!, allFiles, allFolders);
 
   const usedImageFiles: NodeId[] = [];
   for (const file of allFiles) {
     console.log("fileId", file);
-    await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId))!.asFile(), usedImageFiles);
+    await dryLoadBookFrom(fileSystem, (await fileSystem.getNode(file as NodeId))!.asFile()!, usedImageFiles);
   }
 
   const materialImageFolder = (await root.getNodeByName("素材"))!;
-  const materialImages = (await materialImageFolder.asFolder().list()).map((entry) => entry[2]);
+  const materialImages = (await materialImageFolder.asFolder()!.list()).map((entry) => entry[2]);
   usedImageFiles.push(...materialImages);
 
   const allImageFolder = (await root.getNodeByName("画像"))!;
-  const allImageFiles = (await allImageFolder.asFolder().list()).map((entry) => entry[2]);
+  const allImageFiles = (await allImageFolder.asFolder()!.list()).map((entry) => entry[2]);
   allImageFiles.push(...materialImages);
 
   function difference(setA: Set<NodeId>, setB: Set<NodeId>) {
@@ -102,7 +102,7 @@ async function listFiles(folder: Folder, files: string[], folders: string[]) {
     }
     if (entry[2].getType() === 'folder') {
       folders.push(entry[2].id);
-      await listFiles(entry[2].asFolder(), files, folders);
+      await listFiles(entry[2].asFolder()!, files, folders);
     } else {
       files.push(entry[2].id);
     }

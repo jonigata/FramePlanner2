@@ -9,8 +9,9 @@ import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import type { ProtocolChatLog } from "../utils/richChat";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../utils/richChat";
 import { type Notebook, emptyNotebook } from "../notebook/notebook";
-import { packFrameImages, packBubbleImages, unpackFrameImages, unpackBubbleImages, dryUnpackBubbleImages, dryUnpackFrameImages } from "./fileImages.js";
+import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages.js";
 import { exportEnvelope, importEnvelope } from "../filemanager/envelopeCbor";
+import { dryUnpackBubbleImages, dryUnpackFrameImages } from "./imagePacking";
 
 export type Dragging = {
   fileSystem: FileSystem;
@@ -69,8 +70,8 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     notebook: book.notebook,
   };
   for (const page of book.pages) {
-    const markUp = await packFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
-    const bubbles = await packBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
+    const markUp = await storeFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
+    const bubbles = await storeBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
     
     const serializedPage: SerializedPage = {
       id: page.id,
@@ -120,8 +121,8 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
   if (!serializedBook.pages) {
     const serializedPage = serializedBook as any as SerializedPage;
-    const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
+    const frameTree = await fetchFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
+    const bubbles = await fetchBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
     return await wrapPageAsBook(serializedBook, frameTree, bubbles);
   }
 
@@ -142,8 +143,8 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
 
   performance.mark("loadBookFrom-images-start");
   for (const serializedPage of serializedBook.pages) {
-    const frameTree = await unpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
-    const bubbles = await unpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
+    const frameTree = await fetchFrameImages(serializedPage.paperSize, serializedPage.frameTree, fileSystem);
+    const bubbles = await fetchBubbleImages(serializedPage.paperSize, serializedPage.bubbles, fileSystem);
 
     const page: Page = {
       id: serializedPage.id ?? ulid(),
