@@ -6,7 +6,7 @@ import { ImageMedia } from '../layeredCanvas/dataModels/media';
 import { frameExamples } from '../layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../layeredCanvas/tools/geometry/trapezoid";
-import type { RichChatLog } from './richChat';
+import type { RichChatLog, ProtocolChatLog } from './richChat';
 import { emptyNotebook, type Notebook } from "./notebook";
 
 // history処理では基本的にすべてdeep copyを使う
@@ -67,6 +67,27 @@ export type Book = {
   // 以下揮発性
   video?: VideoSettings;
 }
+
+export type SerializedPage = {
+  id: string,
+  frameTree: any,
+  bubbles: any[],
+  paperSize: [number, number],
+  paperColor: string,
+  frameColor: string,
+  frameWidth: number,
+}
+
+
+export type SerializedBook = {
+  revision: {id: string, revision: number, prefix: Prefix},
+  pages: SerializedPage[],
+  direction: ReadingDirection,
+  wrapMode: WrapMode,
+  chatLogs: ProtocolChatLog[],
+  notebook: Notebook,
+}
+
 
 export function incrementRevision(revision: Revision): void {
   revision.revision++;

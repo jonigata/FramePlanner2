@@ -1,15 +1,14 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page, Book, WrapMode, ReadingDirection, Prefix } from "../lib/book/book.js";
-import { commitBook } from "../lib/book/book.js";
+import type { Page, Book, SerializedBook, SerializedPage } from "../lib/book/book";
+import { commitBook } from "../lib/book/book";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
-import type { ProtocolChatLog } from "../lib/book/richChat.js";
-import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../lib/book/richChat.js";
-import { type Notebook, emptyNotebook } from "../lib/book/notebook.js";
-import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages.js";
+import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../lib/book/richChat";
+import { emptyNotebook } from "../lib/book/notebook";
+import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages";
 import { exportEnvelope, importEnvelope } from "../filemanager/envelopeCbor";
 import { dryUnpackBubbleImages, dryUnpackFrameImages } from "../lib/book/imagePacking";
 
@@ -34,26 +33,6 @@ export const fileManagerUsedSizeToken: Writable<FileSystem | null> = writable(nu
 export const loadToken: Writable<LoadToken | null> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
 export const mainBookFileSystem: Writable<FileSystem | null> = writable(null);
-
-export type SerializedPage = {
-  id: string,
-  frameTree: any,
-  bubbles: any[],
-  paperSize: [number, number],
-  paperColor: string,
-  frameColor: string,
-  frameWidth: number,
-}
-
-
-export type SerializedBook = {
-  revision: {id: string, revision: number, prefix: Prefix},
-  pages: SerializedPage[],
-  direction: ReadingDirection,
-  wrapMode: WrapMode,
-  chatLogs: ProtocolChatLog[],
-  notebook: Notebook,
-}
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
   console.tag("saveBookTo", "cyan", file.id);

@@ -1,9 +1,8 @@
 import { encode, decode } from 'cbor-x'
 import { ulid } from 'ulid';
-import type { WrapMode, ReadingDirection } from "../lib/book/book";
+import type { WrapMode, ReadingDirection, SerializedPage, SerializedBook } from "../lib/book/book";
 import { ImageMedia } from "../lib/layeredCanvas/dataModels/media";
 import { createCanvasFromImage } from "../utils/imageUtil";
-import { type SerializedBook, type SerializedPage } from "./fileManagerStore";
 import { type Notebook, emptyNotebook } from "../lib/book/notebook";
 import type { FileSystem, Folder, File } from "../lib/filesystem/fileSystem";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
