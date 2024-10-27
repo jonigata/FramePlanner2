@@ -1,11 +1,10 @@
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-import type { FileSystem, Folder, NodeId } from "../lib/filesystem/fileSystem.js";
+import type { FileSystem, Folder, NodeId } from "../lib/filesystem/fileSystem";
 import { Film } from "../lib/layeredCanvas/dataModels/film";
 import { ImageMedia } from "../lib/layeredCanvas/dataModels/media";
 import { Effect } from "../lib/layeredCanvas/dataModels/effect";
-import { createCanvasFromImage } from "../utils/imageUtil";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvasオブジェクトには
