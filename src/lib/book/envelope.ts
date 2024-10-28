@@ -1,6 +1,5 @@
 import { decode, encode } from 'cbor-x'
 import { ulid } from 'ulid';
-import { createCanvasFromImage } from "../../utils/imageUtil";
 import { unpackFrameImages, unpackBubbleImages, packFilms } from "./imagePacking";
 import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./book";
 import { type Notebook, emptyNotebook } from "./notebook";
@@ -198,3 +197,14 @@ export async function readOldEnvelope(json: string): Promise<Book> {
 
   return book;
 }
+
+// 諸事情により../../utils/imageUtilからコピー
+function createCanvasFromImage(image: HTMLImageElement): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(image, 0, 0);
+  return canvas;
+}
+
