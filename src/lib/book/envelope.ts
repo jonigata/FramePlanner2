@@ -1,9 +1,9 @@
 import { decode, encode } from 'cbor-x'
 import { ulid } from 'ulid';
 import { createCanvasFromImage } from "../../utils/imageUtil";
-import { unpackFrameImages, unpackBubbleImages, packFilms } from "../book/imagePacking";
-import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "../book/book";
-import { type Notebook, emptyNotebook } from "../book/notebook";
+import { unpackFrameImages, unpackBubbleImages, packFilms } from "./imagePacking";
+import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./book";
+import { type Notebook, emptyNotebook } from "./notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 
@@ -37,7 +37,7 @@ export async function readEnvelope(blob: Blob): Promise<Book> {
   }
 
   const book: Book = {
-    revision: { id: '', revision: 1, prefix: 'envelope-' },
+    revision: { id: 'not visited', revision: 1, prefix: 'envelope-' },
     pages: [],
     history: { entries: [], cursor: 0 },
     direction: envelopedBook.direction,
@@ -168,7 +168,7 @@ export async function readOldEnvelope(json: string): Promise<Book> {
   }
 
   const book: Book = {
-    revision: { id: '', revision: 1, prefix: 'envelope-' },
+    revision: { id: 'not visited', revision: 1, prefix: 'envelope-' },
     pages: [],
     history: { entries: [], cursor: 0 },
     direction: envelopedBook.direction,

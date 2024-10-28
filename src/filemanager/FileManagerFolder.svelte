@@ -87,6 +87,7 @@
           // 新タイプのenvelope
           const book = await readEnvelope(file);
           const newFile = await fileSystem.createFile();
+          book.revision.id = newFile.id;
           saveBookTo(book, fileSystem, newFile);
           await node.link("パッケージ", newFile.id);
           node = node;
