@@ -14,7 +14,7 @@ import { Film, FilmStackTransformer, calculateMinimumBoundingRect } from "../dat
 import { ImageMedia } from "../dataModels/media";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
-import { createCanvasFromBlob, makePlainImage } from "../../../utils/imageUtil";
+import { createCanvasFromBlob, makePlainImage } from "../tools/imageUtil";
 import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import { Grid } from "../tools/grid";
 

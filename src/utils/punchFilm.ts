@@ -1,7 +1,7 @@
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { removeBg } from "../firebase";
-import { createCanvasFromImage } from "../utils/imageUtil";
+import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
 import { getAnalytics, logEvent } from "firebase/analytics";
 
 export async function punchFilm(film: Film) {

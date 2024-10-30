@@ -51,7 +51,6 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
 
       // 初期バージョン処理
       if (markUp.image) {
-        console.tag("type A.1", "#004400");
         const canvas = await loadCanvasFunc(markUp.image);
         if (canvas) {
           const film = newFilm(canvas);
@@ -60,7 +59,6 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
         }
       }
       if (markUp.scribble) {
-        console.tag("type A.2", "#004400");
         const scribble = await loadCanvasFunc(markUp.scribble);
         if (scribble) {
           const film = newFilm(scribble);
@@ -81,7 +79,6 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
       }
 
       if (markUp.image.image) {
-        console.tag("type B.1", "#004400");
         const image = await loadCanvasFunc(markUp.image.image);
         if (image) {
           const film = newFilm(image);
@@ -90,7 +87,6 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
         }
       }
       if (markUp.image.scribble) {
-        console.tag("type B.2", "#004400");
         const scribble = await loadCanvasFunc(markUp.image.scribble);
         if (scribble) {
           const film = newFilm(scribble);
@@ -102,10 +98,6 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
   } else {
     // Film版処理
     if (markUp.films) {
-      if (0 < markUp.films.length) {
-        console.tag("type C", "#004400");
-      }
-
       const films = await unpackFilms(markUp.films, loadCanvasFunc);
       frameTree.filmStack.films.push(...films);
     }

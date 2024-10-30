@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { makePlainImage } from "../utils/imageUtil";
+  import { makePlainImage } from "../lib/layeredCanvas/tools/imageUtil";
   import SliderEdit from '../utils/SliderEdit.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 

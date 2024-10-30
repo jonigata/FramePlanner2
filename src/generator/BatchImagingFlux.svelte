@@ -7,7 +7,7 @@
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
   import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
-  import { createCanvasFromImage } from '../utils/imageUtil';
+  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';
   import { commitBook } from '../lib/book/book';

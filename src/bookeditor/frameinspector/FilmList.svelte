@@ -6,7 +6,7 @@
   import { fileDroppableList, FileDroppableContainer } from '../../utils/fileDroppableList'
   import { moveInArray } from '../../utils/moveInArray';
   import FilmListItem from "./FilmListItem.svelte";
-  import { createCanvasFromBlob } from '../../utils/imageUtil';
+  import { createCanvasFromBlob } from '../../lib/layeredCanvas/tools/imageUtil';
   
   export let filmStack: FilmStack;
 

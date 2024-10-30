@@ -118,13 +118,11 @@ export function addBookHistory(book: Book, tag: HistoryTag): void {
   } else {
     h.entries.push(newEntry);
   }
-  console.tag("addBookHistory", "purple", h.cursor, h.entries.length);
   h.cursor = h.entries.length;
 }
 
 export function undoBookHistory(book: Book): void {
   const h = book.history;
-  console.tag("undoBookHistory", "green", h.cursor, h.entries.length);
   if (h.cursor <= 1) { console.log("history head, skip undo"); return; }
   h.cursor--;
   // revertしないと実効はない
@@ -132,20 +130,17 @@ export function undoBookHistory(book: Book): void {
 
 export function redoBookHistory(book: Book): void {
   const h = book.history;
-  console.tag("redoBookHistory", "green", h.cursor, h.entries.length);
   if (h.entries.length <= h.cursor) { console.log("history tail, skip redo"); return; }
   h.cursor++;
   // revertしないと実効はない
 }
 
 export function commitBook(book: Book, tag: HistoryTag): void {
-  console.tag("commitBook", "orange", tag);
   addBookHistory(book, tag);
   incrementRevision(book.revision);
 }
 
 export function revertBook(book: Book): void {
-  console.tag("revertBook", "orange");
   const h = book.history;
   const i = h.cursor-1;
   const entry = h.entries[i];

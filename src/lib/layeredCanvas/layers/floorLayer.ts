@@ -15,7 +15,6 @@ export class FloorLayer extends LayerBase {
   }
 
   wheel(_position: Vector, delta: number) {
-    console.log("FloorLayer wheel", delta);
     let scale = this.viewport.scale;
     scale -= delta * 0.0001;
     if (scale < 0.1) scale = 0.1;

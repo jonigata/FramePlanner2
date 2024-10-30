@@ -1,4 +1,4 @@
-import { createCanvasFromImage, imageToBase64 } from "../utils/imageUtil";
+import { createCanvasFromImage, imageToBase64 } from "../lib/layeredCanvas/tools/imageUtil";
 
 export async function generateImages(url: string, imageRequest: any): Promise<HTMLCanvasElement[]> {
   url = removeLastSlash(url);

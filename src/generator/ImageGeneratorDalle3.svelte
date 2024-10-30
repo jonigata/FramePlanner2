@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
   import OpenAI from 'openai';
-  import { createCanvasFromImage } from '../utils/imageUtil';
+  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { createPreference } from '../preferences';
 
   export let busy: boolean;

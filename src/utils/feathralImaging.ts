@@ -3,7 +3,7 @@ import { generateImageFromTextWithFeathral, generateImageFromTextWithFlux } from
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-import { createCanvasFromImage } from '../utils/imageUtil';
+import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
 import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'

@@ -10,7 +10,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { createCanvasFromImage } from '../utils/imageUtil';
+  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { type ImagingContext, type Mode, calculateCost, generateFluxImage } from '../utils/feathralImaging';
   import { toolTip } from '../utils/passiveToolTipStore';
   import SliderEdit from '../utils/SliderEdit.svelte';

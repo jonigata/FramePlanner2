@@ -60,6 +60,22 @@ export function normalize2D(v: Vector, n: number = 1): Vector {
   return [n * x / l, n * y / l];
 }
 
+export function floor2D(v: Vector): Vector {
+  return [Math.floor(v[0]), Math.floor(v[1])];
+}
+
+export function ceil2D(v: Vector): Vector {
+  return [Math.ceil(v[0]), Math.ceil(v[1])];
+}
+
+export function round2D(v: Vector): Vector {
+  return [Math.round(v[0]), Math.round(v[1])];
+}
+
+export function reciprocal2D(v: Vector): Vector {
+  return [1 / v[0], 1 / v[1]];
+}
+
 export function projectionScalingFactor2D(a: Vector, b: Vector): number {
   return dot2D(a, b) / dot2D(b, b);
 }

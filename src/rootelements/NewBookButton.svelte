@@ -5,7 +5,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { hoverKey } from '../utils/hoverKeyStore';
   import { mainBook } from '../bookeditor/bookStore';
-  import { createCanvasFromBlob } from '../utils/imageUtil';
+  import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
 
   async function createNewFile(e: MouseEvent) {
     if (e.ctrlKey) {

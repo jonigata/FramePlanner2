@@ -1,5 +1,5 @@
 import { LayerBase } from "../system/layeredCanvas";
-import { type Vector, reverse2D } from "../tools/geometry/geometry";
+import { type Vector, reverse2D, multiply2D, ceil2D, scale2D, reciprocal2D } from "../tools/geometry/geometry";
 import { drawBubble, getPath, drawPath, type DrawMethod } from "../tools/draw/bubbleGraphic";
 import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
 import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
@@ -296,7 +296,7 @@ export class PaperRendererLayer extends LayerBase {
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
     ctx.save();
-    this.drawBubble(ctx, size, 'clip', bubble);
+    // this.drawBubble(ctx, size, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text && !bubble.hidesText) {
@@ -337,13 +337,16 @@ export class PaperRendererLayer extends LayerBase {
   }
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
+    const transform = targetCtx.getTransform();
+    const viewScale: Vector = [transform.a, transform.d];
+
     const paperSize = this.getPaperSize();
     const size = bubble.getPhysicalSize(paperSize);
     const fontSize = bubble.getPhysicalFontSize(paperSize);
     const offset = bubble.getPhysicalOffset(paperSize);
     const outlineWidth = bubble.getPhysicalOutlineWidth(paperSize);
 
-    const [w, h] = size;
+    const [w, h] = ceil2D(multiply2D(size, viewScale));
     if (w < 1 || h < 1) { return; }
 
     const ri = bubble.renderInfo!;
@@ -352,6 +355,7 @@ export class PaperRendererLayer extends LayerBase {
     // let startTime = performance.now();
 
     const c = {
+      viewScale: ceil2D(scale2D(viewScale, 1000)),
       size: size,
       offset: offset,
       fontStyle: bubble.fontStyle,
@@ -387,10 +391,16 @@ export class PaperRendererLayer extends LayerBase {
   
       canvas.width = w;
       canvas.height = h;
+
+      // 青で塗りつぶす
+      // ctx.fillStyle = 'blue';
+      // ctx.fillRect(0, 0, w, h);
   
       ctx.translate(w * 0.5, h * 0.5);
-      ctx.translate(...offset);
   
+      ctx.scale(...viewScale);
+      ctx.translate(...offset);
+
       ctx.font = ss; // horizontal measureより先にないとだめ
       //const text = `${bubble.text}:${bubble.pageNumber}`;
       let text = bubble.text;
@@ -403,7 +413,7 @@ export class PaperRendererLayer extends LayerBase {
       const charSkip = fontSize * (1.0 + bubble.charSkip);
       const rubySize = bubble.rubySize;
       const rubyDistance = bubble.rubyDistance;
-      const m = measureText(bubble.direction as Direction, ctx, w * 0.85, h * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
+      const m = measureText(bubble.direction as Direction, ctx, size[0] * 0.85, size[1] * 0.85, text, baselineSkip, charSkip, bubble.autoNewline);
       const [tw, th] = [m.width, m.height];
       const r = { x: - tw * 0.5, y: - th * 0.5, width: tw, height: th };
   
@@ -433,8 +443,9 @@ export class PaperRendererLayer extends LayerBase {
       targetCtx.save();
       if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
         targetCtx.imageSmoothingEnabled = false;
-      } 
-      targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5, ...size);
+      }
+      targetCtx.scale(...reciprocal2D(viewScale));
+      targetCtx.drawImage(canvas, 0 - w * 0.5, 0 - h * 0.5);
       targetCtx.restore();
     }
     catch (e) {

@@ -10,7 +10,7 @@
   import { persistentText } from '../utils/persistentText';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { createCanvasFromImage } from '../utils/imageUtil';
+  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { type ImagingContext, generateImage } from '../utils/feathralImaging';
 
   export let busy: boolean;

@@ -6,7 +6,7 @@
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { toastStore } from '@skeletonlabs/skeleton';
   import type { Page } from '../lib/book/book';
-  import { createCanvasFromImage } from "../utils/imageUtil";
+  import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
   import type { ImagingContext } from '../utils/feathralImaging';
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/bookStore';

@@ -1,6 +1,9 @@
 import "./app.postcss";
 import App from "./App.svelte";
 import { initializeApp } from "./firebase";
+import { initPaperJs } from "manga-renderer";
+
+initPaperJs();
 
 function getDomainFromCurrentUrl(): string {
   const currentUrl = window.location.href;

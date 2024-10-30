@@ -11,7 +11,7 @@
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-  import { createCanvasFromBlob } from '../utils/imageUtil';
+  import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
 
   let gallery: HTMLCanvasElement[] | null = null;
 

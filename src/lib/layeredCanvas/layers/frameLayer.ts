@@ -1242,7 +1242,7 @@ export class FrameLayer extends LayerBase {
 
   // 基本的には直接呼び出さない
   // changeFocusとselectLayoutからのみ
-  videoRedrawInterval: NodeJS.Timer | undefined;
+  videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
   doSelectLayout(layout: Layout | null): void {
     if (layout?.element !== this.selectedLayout?.element) {
       clearInterval(this.videoRedrawInterval);

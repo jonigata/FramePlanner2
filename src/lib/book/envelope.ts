@@ -5,6 +5,7 @@ import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./b
 import { type Notebook, emptyNotebook } from "./notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
+import { createCanvasFromImage } from "../layeredCanvas/tools/imageUtil";
 
 export type EnvelopedBook = {
   pages: SerializedPage[],
@@ -18,7 +19,6 @@ export type CanvasBag = { [fileId: string]: HTMLCanvasElement };
 
 // TODO: revision.idは受けた側で設定する
 export async function readEnvelope(blob: Blob): Promise<Book> {
-  console.tag("importEnvelope", "cyan");
   const uint8Array = new Uint8Array(await blob.arrayBuffer());
   const envelopedBook: EnvelopedBook = decode(uint8Array);
 
@@ -155,7 +155,6 @@ export type OldEnvelopedBook = {
 
 export async function readOldEnvelope(json: string): Promise<Book> {
   // この中で作られたimage等はセーブ後捨てられるので、キャッシュなどは一切無視する
-  console.tag("importEnvelope", "cyan");
   const envelopedBook: OldEnvelopedBook = JSON.parse(json);
 
   const bag: CanvasBag = {};
@@ -197,14 +196,3 @@ export async function readOldEnvelope(json: string): Promise<Book> {
 
   return book;
 }
-
-// 諸事情により../../utils/imageUtilからコピー
-function createCanvasFromImage(image: HTMLImageElement): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(image, 0, 0);
-  return canvas;
-}
-

@@ -8,7 +8,7 @@
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
   import { type ImagingContext, generateImage } from '../utils/feathralImaging';
-  import { createCanvasFromImage } from '../utils/imageUtil';
+  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
 
   export let imagingContext: ImagingContext;
 

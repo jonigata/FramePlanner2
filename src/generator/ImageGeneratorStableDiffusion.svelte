@@ -5,7 +5,7 @@
   import SliderEdit from '../utils/SliderEdit.svelte';
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { makePlainImage, canvasToBase64 } from "../utils/imageUtil";
+  import { makePlainImage, canvasToBase64 } from "../lib/layeredCanvas/tools/imageUtil";
   import { createPreference } from '../preferences';
 
   export let busy: boolean;

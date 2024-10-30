@@ -1,6 +1,6 @@
 import seedrandom from "seedrandom";
 import { QuickHull } from "../geometry/quickHull"
-import * as paper from 'paper';
+import paper from 'paper';
 import { tailCoordToWorldCoord, jitterDistances } from "../geometry/bubbleGeometry";
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump } from "../geometry/bubbleGeometry";
 import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D } from "../geometry/geometry";
@@ -13,6 +13,12 @@ import rough from 'roughjs';
 // type PressuredPoint = [number, number, number];
 
 export type DrawMethod = "fill" | "stroke" | "clip";
+
+export function initPaperJs() {
+  // https://github.com/paperjs/paper.js/issues/1889
+  paper.setup([1,1]); // creates a virtual canvas
+  paper.view.autoUpdate = false; // disables drawing any shape automatically
+}
 
 export function getBubbleName(shape: string) {
   switch (shape) {
@@ -364,10 +370,6 @@ function finishTrivialPath(context: CanvasRenderingContext2D, method: string) {
       break;
   }
 }
-
-// https://github.com/paperjs/paper.js/issues/1889
-paper.setup([1,1]); // creates a virtual canvas
-paper.view.autoUpdate = false; // disables drawing any shape automatically
 
 export function getPath(shape: string, size: Vector, opts: any, seed: string): paper.PathItem | null {
   seed = opts.randomSeed ?? 0;

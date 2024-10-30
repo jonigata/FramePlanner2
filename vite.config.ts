@@ -24,6 +24,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['paper'],
   },
+  server: {
+    port: 5173,
+  },
 	test: {
 		globals: true,
 		environment: 'jsdom',
