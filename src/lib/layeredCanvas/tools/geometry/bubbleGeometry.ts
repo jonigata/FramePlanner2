@@ -1,5 +1,6 @@
 import { add2D, lerp2D, multiply2D, projectionScalingFactor2D, center2D, subtract2D, perpendicular2D, angleDifference, superEllipsePoint2D, normalize2D } from "./geometry";
 import type { Vector } from "./geometry";
+import rgba from 'color-rgba'
 
 export function tailCoordToWorldCoord(center: Vector, tailTip: Vector, tailMid: Vector): Vector {
   const [cx, cy] = center;
@@ -123,7 +124,6 @@ export function debumpPointsAroundIndex(points: Vector[], bumpFactor: number, in
   return newPoints;
 }
 
-export function color2string(c: { red: number, green: number, blue: number, alpha: number }): string {
-  function f(x: number): number { return Math.floor(x * 255); }
-  return `rgba(${f(c.red)}, ${f(c.green)}, ${f(c.blue)}, ${c.alpha})`;
+export function color2string(c: number[]): string {
+  return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})`;
 }

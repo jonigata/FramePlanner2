@@ -7,6 +7,7 @@ import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionS
 import { PaperOffset } from 'paperjs-offset'
 import type { Vector, Rect } from "../geometry/geometry";
 import rough from 'roughjs';
+import rgba from 'color-rgba'
 // import { getStroke, type StrokeOptions } from 'perfect-freehand'
 // import { Paper } from "../../system/layeredCanvas";
 
@@ -130,9 +131,9 @@ function drawConcentrationBubble(context: CanvasRenderingContext2D, method: stri
     context.save();
     const gradient = context.createRadialGradient(0, 0, 1, 0, 0, opts.lineLength);
     const color = context.strokeStyle;
-    const color0 = new paper.Color(color as string); // わざとstrokeStyleを使う
-    const color1 = new paper.Color(color as string);
-    color0.alpha = 0;
+    const color0 = rgba(color as string); // わざとstrokeStyleを使う
+    const color1 = rgba(color as string);
+    color0[3] = 0;
     gradient.addColorStop(0.0, color2string(color1));
     gradient.addColorStop(1.0, color2string(color0));
     context.strokeStyle = gradient;
@@ -197,9 +198,9 @@ function drawStrokesBubbleAux(context: CanvasRenderingContext2D, method: string,
       const [q0, q1] = extendLineSegment(p0, p1, opts.overRun);
 
       const gradient = context.createLinearGradient(...q0, ...q1);
-      const color0 = new paper.Color(color as string); // わざとstrokeStyleを使う
-      const color1 = new paper.Color(color as string);
-      color0.alpha = 0;
+      const color0 = rgba(color as string); // わざとstrokeStyleを使う
+      const color1 = rgba(color as string);
+      color0[3] = 0;
       gradient.addColorStop(0, color2string(color0));
       gradient.addColorStop(0.15, color2string(color1));
       gradient.addColorStop(0.85, color2string(color1));
@@ -252,9 +253,9 @@ function drawMotionLinesBubble(context: CanvasRenderingContext2D, method: string
 
     // グラデーション
     const gradient = context.createRadialGradient(ix, iy, id, ox, oy, od);
-    const color0 = new paper.Color(context.strokeStyle as string); // わざとstrokeStyleを使う
-    const color1 = new paper.Color(context.strokeStyle as string);
-    color0.alpha = 0;
+    const color0 = rgba(context.strokeStyle as string); // わざとstrokeStyleを使う
+    const color1 = rgba(context.strokeStyle as string);
+    color0[3] = 0;
     gradient.addColorStop(0.0, color2string(color0));
     gradient.addColorStop(0.2, color2string(color1));
     gradient.addColorStop(1.0, color2string(color1));
@@ -327,9 +328,9 @@ function drawSpeedLinesBubble(context: CanvasRenderingContext2D, method: string,
 
       // グラデーション
       const gradient = context.createLinearGradient(lx+length, y, lx, y);
-      const color0 = new paper.Color(context.strokeStyle as string); // わざとstrokeStyleを使う
-      const color1 = new paper.Color(context.strokeStyle as string);
-      color0.alpha = 0;
+      const color0 = rgba(context.strokeStyle as string); // わざとstrokeStyleを使う
+      const color1 = rgba(context.strokeStyle as string);
+      color0[3] = 0;
       gradient.addColorStop(psf0, color2string(color0));
       gradient.addColorStop(psf1, color2string(color1));
       gradient.addColorStop(1.0, color2string(color1));
