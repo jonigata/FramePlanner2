@@ -5,7 +5,7 @@ import type { Vector } from "../tools/geometry/geometry";
 import { type Trapezoid, trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import type { FrameLayer } from "./frameLayer";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
-import * as paper from 'paper';
+import paper from 'paper';
 import { getStroke } from 'perfect-freehand'
 
 export class InlinePainterLayer extends LayerBase {

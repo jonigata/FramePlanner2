@@ -15,7 +15,7 @@ import type { Trapezoid } from "../tools/geometry/trapezoid";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { Grid } from "../tools/grid";
-import * as paper from 'paper';
+import paper from 'paper';
 import { PaperOffset } from "paperjs-offset";
 
 const SHEET_Y_MARGIN = 48;

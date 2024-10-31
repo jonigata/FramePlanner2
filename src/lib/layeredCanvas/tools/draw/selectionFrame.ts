@@ -1,6 +1,6 @@
 import { type Trapezoid, trapezoidPath, trapezoidBoundingRect } from "../geometry/trapezoid";
 import { type Vector, type Rect, extendRect, ensureMinRectSize, scale2D } from '../geometry/geometry';
-import * as paper from 'paper';
+import paper from 'paper';
 
 const SHEET_MARGIN = 16;
 
