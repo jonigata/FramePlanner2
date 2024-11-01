@@ -1,7 +1,7 @@
 import "./app.postcss";
 import App from "./App.svelte";
 import { initializeApp } from "./firebase";
-import { initPaperJs } from "manga-renderer";
+import { initPaperJs } from "./lib/layeredCanvas/tools/draw/bubbleGraphic"
 
 initPaperJs();
 
