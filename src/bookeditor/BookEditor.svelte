@@ -36,6 +36,7 @@
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
   import { punchFilm } from '../utils/punchFilm'
   import { onlineStatus } from "../utils/accountStore";
+  import { tryOutToken } from '../utils/tryOutStore';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -594,7 +595,25 @@
       rendererLayer.resetCache();
     } 
   }
-
+/*
+  // 特定のページにフォーカスする
+  $: if ($tryOutToken) {
+    $tryOutToken = false;
+    focusToPage()
+  }
+  function focusToPage() {
+    const [cw, ch] = $viewport!.getCanvasSize();
+    const index = 2;
+    const paper = arrayLayer.array.papers[index];
+    const [pw, ph] = paper.paper.size;
+    const scale = Math.min(cw / pw, ch / ph) * 0.98;
+    const p = paper.center;
+    $viewport!.scale = scale;
+    $viewport!.translate = [-p[0] * scale, -p[1] * scale];
+    $viewport!.dirty = true;
+    layeredCanvas.redraw();
+  }
+*/
 </script>
 
 <div class="main-paper-container">

@@ -1,6 +1,6 @@
 import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
-import { rectIntersectsRect } from "../tools/geometry/geometry";
+import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
 
 type OnHint = (p: Rect | null, s: string | null) => void;
 
@@ -46,8 +46,12 @@ export class Viewport {
     return [sx, sy];
   }
 
+  getCanvasSize(): Vector {
+    return [this.canvas.width, this.canvas.height];
+  }
+
   getCanvasCenter(): Vector {
-    return [this.canvas.width * 0.5, this.canvas.height * 0.5];
+    return scale2D(this.getCanvasSize(), 0.5);
   }
 };
 

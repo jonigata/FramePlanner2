@@ -189,13 +189,15 @@
   async function recycle() {
     const editingId = $mainBook!.revision.id as NodeId;
     await recycleNode(node, editingId);
-    $loading = true;
-    const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
-    console.log("usedImageFiles", usedImageFiles);
-    console.log("strayImageFiles", strayImageFiles);
-    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
-    await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
-    $loading = false;
+    if (!fileSystem.isVault) {
+      $loading = true;
+      const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
+      console.log("usedImageFiles", usedImageFiles);
+      console.log("strayImageFiles", strayImageFiles);
+      const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
+      await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
+      $loading = false;
+    }
     $fileManagerUsedSizeToken = fileSystem;
     node = node;
   }
