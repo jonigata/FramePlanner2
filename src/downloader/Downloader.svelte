@@ -19,6 +19,7 @@
     {label: "シェア", onClick: shareBook},
     {label: "パッケージ", onClick: downloadEnvelop},
     {label: "プロンプトをクリップボードにコピー", onClick: exportPrompts},
+    {label: "ウェブに公開！", onClick: publishEnvelope},
   ];  
 
   function archive(op: BookArchiveOperation) {
@@ -61,6 +62,11 @@
     logEvent(getAnalytics(), 'export_prompts');
     archive('export-prompts');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+  }
+
+  async function publishEnvelope() {
+    logEvent(getAnalytics(), 'publish_envelop');
+    archive('publish');
   }
 
 </script>

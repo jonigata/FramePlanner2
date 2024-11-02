@@ -12,6 +12,9 @@
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
+  import { getPublishUrl } from "../firebase";
+  import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
+  import { loading } from '../utils/loadingStore';
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -43,15 +46,15 @@
             break;
           case 'envelope':
             console.log("envelope", $mainBook!.revision);
-            const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
-            const book = await loadBookFrom($fileSystem!, file);
-            const blob = await writeEnvelope(book);
+            const {blob} = await makeEnvelope();
             saveAs(blob, "manga.envelope");
             break;
           case 'export-prompts':
             await exportPrompts(targetPages);
-
+          case 'publish':
+            await publishEnvelope();
             break;
+
         }
       }
       $bookArchiver = [];      
@@ -59,6 +62,47 @@
     catch(e: any) {
       console.log(e);
       toastStore.trigger({ message: e, timeout: 1500});
+    }
+  }
+
+  async function makeEnvelope() {
+    const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
+    const book = await loadBookFrom($fileSystem!, file);
+    const blob = await writeEnvelope(book);
+    return {file, blob};
+  }
+
+  async function publishEnvelope() {
+    $loading = true;
+    try {
+      const {file, blob} = await makeEnvelope();
+      const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}.envelope`);
+      if (url != '') {
+        const sha1 = await blobToSha1(blob);
+        const response = await fetch(url,{
+          method: "POST",
+          mode: "cors",
+          body: blob,
+          headers: {
+            "Content-Type": "b2/x-auto",
+            "Authorization": token,
+            "X-Bz-File-Name": filename,
+            "X-Bz-Content-Sha1": sha1,
+          },
+        });
+        console.log(response);
+      }
+      const downloadUrl = `${apiUrl}/file/FramePlannerPublished/${filename}`;
+      console.log("downloadUrl", downloadUrl);
+      // navigator.clipboard.writeText(downloadUrl);
+      toastStore.trigger({ message: "公開されました", timeout: 1500});
+    }
+    catch(e: any) {
+      console.log(e);
+      toastStore.trigger({ message: e, timeout: 1500});
+    }
+    finally {
+      $loading = false;
     }
   }
 </script>

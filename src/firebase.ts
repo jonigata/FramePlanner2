@@ -195,6 +195,12 @@ export async function eraseFile(filename: string): Promise<any> {
   return r;
 }
 
+export async function getPublishUrl(filename: string): Promise<{apiUrl: string, url: string, token: string, filename: string}> {
+  const r = await callFunc('getpublishurl', {filename}, 180);
+  console.log(r);
+  return r;
+}
+
 function getAuth2() {
   return getAuth(app);
 }
