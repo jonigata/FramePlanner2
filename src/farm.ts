@@ -1,10 +1,10 @@
 import './app.postcss'
-import FarmApp from './FarmApp.svelte'
+import ViewerApp from './ViewerApp.svelte'
 import { initPaperJs } from "manga-renderer";
 
 initPaperJs();
 
-const app = new FarmApp({
+const app = new ViewerApp({
   target: document.getElementById("app")!,
 });
 
