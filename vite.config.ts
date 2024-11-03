@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        farm: resolve(__dirname, 'farm.html'),
         ...Object.fromEntries(
           glob.sync('ads/**/index.html').map(file => [
             file.slice(0, -11), // remove '/index.html'

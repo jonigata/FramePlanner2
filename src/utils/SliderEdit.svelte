@@ -9,7 +9,7 @@
   export let step: number = 1;
 </script>
 
-<div class="hbox gap-0.5 expand">
+<div class="flex flex-row gap-0.5 expand">
   <div class="font-bold slider-label">{label}</div>
   <div class="grow">
     <RangeSlider name="batch-count" bind:value={value} min={min} max={max} step={step}/>

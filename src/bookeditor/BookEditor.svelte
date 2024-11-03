@@ -16,7 +16,7 @@
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
-  import AutoSizeCanvas from './AutoSizeCanvas.svelte';
+  import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
@@ -36,7 +36,7 @@
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
   import { punchFilm } from '../utils/punchFilm'
   import { onlineStatus } from "../utils/accountStore";
-  import { tryOutToken } from '../utils/tryOutStore';
+  // import { tryOutToken } from '../utils/tryOutStore';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
