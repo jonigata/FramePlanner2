@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, shareBookToken, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
+  import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import type { Book } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
@@ -271,32 +271,6 @@
     const file = await fileSystem.createFile();
     await saveBubbleTo(bubble, file);
     await folder.asFolder().link(getCurrentDateTime(), file.id);
-  }
-
-  $:onSharePageRequest($shareBookToken);
-  async function onSharePageRequest(book: Book | null) {
-    if (!book) { return; }
-    $loading = true;
-
-    console.log("onSharePageRequest");
-    $shareBookToken = null;
-    const fileSystem = await buildShareFileSystem(null);
-    const file = await fileSystem.createFile('text');
-    await saveBookTo(book, fileSystem, file);
-    console.log(file.id);
-
-    // URL作成
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
-    params.set('box', fileSystem.boxId!);
-    params.set('file', file.id);
-    url.search = params.toString();
-    const shareUrl = url.toString();
-    navigator.clipboard.writeText(shareUrl);
-    await notifyShare(shareUrl);
-
-    $loading = false;
-    toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});
   }
 
   $:onLoadRequest($loadToken);

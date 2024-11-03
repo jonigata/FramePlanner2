@@ -8,13 +8,15 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { postToAiPictors } from "./saver/postToAiPictors";
   import { writeEnvelope } from "../lib/book/envelope";
-  import { fileSystem, loadBookFrom } from '../filemanager/fileManagerStore';
+  import { fileSystem, loadBookFrom, saveBookTo } from '../filemanager/fileManagerStore';
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
-  import { getPublishUrl } from "../firebase";
+  import { getPublishUrl, notifyShare } from "../firebase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
   import { loading } from '../utils/loadingStore';
+  import type { Book } from '../lib/book/book';
+  import { buildShareFileSystem } from '../filemanager/shareFileSystem';
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -54,7 +56,9 @@
           case 'publish':
             await publishEnvelope();
             break;
-
+          case 'share-book':
+            await shareBook($mainBook!);
+            break;
         }
       }
       $bookArchiver = [];      
@@ -105,4 +109,28 @@
       $loading = false;
     }
   }
+
+  async function shareBook(book: Book) {
+    $loading = true;
+
+    console.log("shareBook");
+    const fileSystem = await buildShareFileSystem(null);
+    const file = await fileSystem.createFile('text');
+    await saveBookTo(book, fileSystem, file);
+    console.log(file.id);
+
+    // URL作成
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    params.set('box', fileSystem.boxId!);
+    params.set('file', file.id);
+    url.search = params.toString();
+    const shareUrl = url.toString();
+    navigator.clipboard.writeText(shareUrl);
+    await notifyShare(shareUrl);
+
+    $loading = false;
+    toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});
+  }
+
 </script>

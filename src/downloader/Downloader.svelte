@@ -5,11 +5,8 @@
   import clipboardIcon from '../assets/clipboard.png';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { commitIfDirtyToken } from '../undoStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
-  import { shareBookToken } from '../filemanager/fileManagerStore';
-  import { mainBook } from '../bookeditor/bookStore';
 
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download},
@@ -49,8 +46,8 @@
   }
 
   async function shareBook() {
-    $commitIfDirtyToken = true;
-    $shareBookToken = $mainBook;
+    logEvent(getAnalytics(), 'share_book');
+    archive('share-book');
   }
 
   async function downloadEnvelop() {
