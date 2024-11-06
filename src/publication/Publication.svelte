@@ -1,0 +1,82 @@
+<script lang="ts">
+  import { modalStore } from '@skeletonlabs/skeleton';
+  import { createEventDispatcher } from 'svelte';
+
+  export let title = '';
+  export let description = '';
+
+  const dispatch = createEventDispatcher();
+
+  function handleSubmit() {
+    $modalStore[0].response!({ title, description });
+    modalStore.close();
+  }
+
+  function handleCancel() {
+    modalStore.close();
+  }
+</script>
+
+<div class="card p-4 w-full max-w-lg">
+  <h2 class="h2 mb-4">ドキュメントの公開</h2>
+  
+  <form on:submit|preventDefault={handleSubmit}>
+    <label class="label">
+      <span>タイトル*</span>
+      <input
+        class="input p-2 pl-4 w-full"
+        type="text"
+        bind:value={title}
+        required
+        maxlength="100"
+      />
+    </label>
+
+    <label class="label">
+      <span>説明</span>
+      <textarea
+        class="textarea p-2 pl-4 w-full"
+        bind:value={description}
+        maxlength="500"
+        rows="4"
+      />
+    </label>
+
+    <span>※ページ1が表紙になります</span>
+
+    <div class="flex justify-end gap-2 mt-4">
+      <button type="button" class="btn variant-ghost" on:click={handleCancel}>
+        キャンセル
+      </button>
+      <button 
+        type="submit" 
+        class="btn variant-filled-primary"
+        disabled={!title}
+      >
+        公開
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .label {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .label span {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  h2 {
+    font-family: '源暎エムゴ';
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .border {
+    border: 1px solid #ccc;
+  }
+</style>

@@ -57,6 +57,7 @@
   import Notebook from './notebook/Notebook.svelte';
   import ImageViewer from './utils/ImageViewer.svelte';
   import UserProfile from './toolbar/UserProfile.svelte';
+  import Publication from './publication/Publication.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -83,6 +84,9 @@
     },
     userProfile: {
       ref: UserProfile,
+    },
+    publication: {
+      ref: Publication,
     }
   };
 

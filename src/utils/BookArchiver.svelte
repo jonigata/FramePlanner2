@@ -12,11 +12,13 @@
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
-  import { getPublishUrl, notifyShare } from "../firebase";
+  import { getPublishUrl, notifyShare, recordPublication } from "../firebase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
   import { loading } from '../utils/loadingStore';
   import type { Book } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -77,12 +79,29 @@
   }
 
   async function publishEnvelope() {
+    const {title, description} = await new Promise<{title:string, description: string}>((resolve) => {
+      const d: ModalSettings = {
+        type: 'component',
+        component: 'publication',
+        response: resolve,
+      };
+      modalStore.trigger(d);
+    });    
+    console.log(title, description);
+    
     $loading = true;
     try {
       const {file, blob} = await makeEnvelope();
-      const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}.envelope`);
-      if (url != '') {
-        const sha1 = await blobToSha1(blob);
+      const sha1 = await blobToSha1(blob);
+      const cloudFileId = file.id
+
+      let content_url, cover_url, thumbnail_url;
+
+      // 本体
+      {
+        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}.envelope`);
+        console.log("本体", apiUrl, url, token, filename);
+
         const response = await fetch(url,{
           method: "POST",
           mode: "cors",
@@ -95,9 +114,76 @@
           },
         });
         console.log(response);
+        if (!response.ok) {
+          throw new Error("ドキュメントのアップロードに失敗しました");
+        }
+
+        content_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
+        console.log("content_url", content_url);
       }
-      const downloadUrl = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-      console.log("downloadUrl", downloadUrl);
+
+      {
+        // 表紙
+        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}_cover.png`);
+        console.log("表紙", url, token, filename);
+
+        const png = await renderPageToBlob($mainBook!.pages[0]);
+        const sha1 = await blobToSha1(png);
+        const response = await fetch(url,{
+          method: "POST",
+          mode: "cors",
+          body: png,
+          headers: {
+            "Content-Type": "b2/x-auto",
+            "Authorization": token,
+            "X-Bz-File-Name": filename,
+            "X-Bz-Content-Sha1": sha1,
+          },
+        });
+        console.log(response);
+        if (!response.ok) {
+          throw new Error("表紙のアップロードに失敗しました");
+        }
+
+        cover_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
+        console.log("cover_url", cover_url);
+      }
+
+      {
+        // サムネイル
+        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}_thumbnail.png`);
+        console.log("サムネイル", url, token, filename);
+
+        const png = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
+        const sha1 = await blobToSha1(png);
+        const response = await fetch(url,{
+          method: "POST",
+          mode: "cors",
+          body: png,
+          headers: {
+            "Content-Type": "b2/x-auto",
+            "Authorization": token,
+            "X-Bz-File-Name": filename,
+            "X-Bz-Content-Sha1": sha1,
+          },
+        });
+        console.log(response);
+        if (!response.ok) {
+          throw new Error("サムネイルのアップロードに失敗しました");
+        }
+
+        thumbnail_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
+        console.log("thumbnail_url", thumbnail_url);
+      }
+
+      await recordPublication({
+        title,
+        description,
+        content_url,
+        cover_url,
+        thumbnail_url,
+      });
+
       // navigator.clipboard.writeText(downloadUrl);
       toastStore.trigger({ message: "公開されました", timeout: 1500});
     }

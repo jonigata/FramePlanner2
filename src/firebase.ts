@@ -201,7 +201,7 @@ export async function getPublishUrl(filename: string): Promise<{apiUrl: string, 
   return r;
 }
 
-export type UserProfile = {
+export interface UserProfile {
   username: string;
   display_name: string;
   email: string;
@@ -220,6 +220,18 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
 
 export async function updateMyProfile(profile: UserProfile): Promise<void> {
   await callFunc('updatemyprofile', {profile}, 180);
+}
+
+export interface PublicationContent {
+  title: string;
+  description: string;
+  cover_url: string;
+  content_url: string;
+  thumbnail_url: string;
+}
+
+export async function recordPublication(publication: PublicationContent) {
+  await callFunc('recordpublication', {publication}, 180);
 }
 
 function getAuth2() {
