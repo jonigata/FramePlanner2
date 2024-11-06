@@ -201,6 +201,27 @@ export async function getPublishUrl(filename: string): Promise<{apiUrl: string, 
   return r;
 }
 
+export type UserProfile = {
+  username: string;
+  display_name: string;
+  email: string;
+  bio: string;
+};
+
+export async function getMyProfile(): Promise<UserProfile | null> {
+  const r = await callFunc('getmyprofile', {}, 180);
+  return r.userProfile;
+}
+
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  const r = await callFunc('checkusernameavailable', {username}, 180);
+  return r.available;
+}
+
+export async function updateMyProfile(profile: UserProfile): Promise<void> {
+  await callFunc('updatemyprofile', {profile}, 180);
+}
+
 function getAuth2() {
   return getAuth(app);
 }

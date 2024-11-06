@@ -8,11 +8,19 @@ export type OnlineAccount = {
   feathral: number;
 }
 
+export type OnlineProfile = {
+  username: string;
+  display_name: string;
+  email?: string;
+  bio?: string;
+}
+
 export type OnlineStatus = "unknown" | "signed-in" | "signed-out";
 
 export const updateToken: Writable<boolean> = writable(false);
 export const onlineStatus: Writable<OnlineStatus> = writable("unknown");
 export const onlineAccount: Writable<OnlineAccount | null> = writable(null);
+export const onlineProfile: Writable<OnlineProfile | null> = writable(null);
 
 export function isAuthStateUnknown(): boolean {
   return get(onlineAccount) === null;

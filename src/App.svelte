@@ -56,6 +56,7 @@
   import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
   import Notebook from './notebook/Notebook.svelte';
   import ImageViewer from './utils/ImageViewer.svelte';
+  import UserProfile from './toolbar/UserProfile.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -80,6 +81,9 @@
     imageViewer: {
       ref: ImageViewer,
     },
+    userProfile: {
+      ref: UserProfile,
+    }
   };
 
   onMount(async () => {
