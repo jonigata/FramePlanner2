@@ -184,8 +184,20 @@
         thumbnail_url,
       });
 
-      // navigator.clipboard.writeText(downloadUrl);
-      toastStore.trigger({ message: "公開されました", timeout: 1500});
+      // http://localhost:5173/viewer.html?envelope=01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
+      // window.location.hrefにviewer.htmlは含まれてない
+      const currentUrl = new URL(window.location.href);
+  
+      // viewer.htmlのパスを作成し、クエリパラメータを追加
+      currentUrl.pathname = '/viewer.html';
+      currentUrl.searchParams.set('envelope', cloudFileId);
+      
+      // URLをコピー
+      const downloadUrl = currentUrl.toString();
+      console.log(downloadUrl);
+      navigator.clipboard.writeText(downloadUrl);
+
+      toastStore.trigger({ message: "公開URLがクリップボードにコピーされました", timeout: 5000});
     }
     catch(e: any) {
       console.log(e);
