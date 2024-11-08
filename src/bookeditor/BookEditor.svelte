@@ -99,7 +99,6 @@
   }
 
   function commit(tag: HistoryTag) {
-    $frameInspectorRebuildToken++;
     delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
     if (tag === 'bubble') {
       $bubbleInspectorTarget = $bubbleInspectorTarget;

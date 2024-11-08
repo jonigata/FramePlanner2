@@ -299,6 +299,7 @@ export class FrameLayer extends LayerBase {
     if (media instanceof HTMLVideoElement) {
       this.importMedia(layoutlet, new VideoMedia(media));
     }
+    this.onFocus(layoutlet);
     this.onCommit();
     return true;
   }
