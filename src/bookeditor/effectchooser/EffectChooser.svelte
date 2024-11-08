@@ -1,9 +1,10 @@
 <script lang="ts">
   import Drawer from '../../utils/Drawer.svelte'
   import { effectChoiceNotifier } from './effectChooserStore';
+  import { toolTip } from '../../utils/passiveToolTipStore';
 
   const effects = [
-    { name: "OutlineEffect", label: "アウトライン" }
+    { name: "OutlineEffect", label: "アウトライン", hint: "部分透明画像レイヤーにアウトラインをつける" }
   ]
 
   function onClick(name: string) {
@@ -21,10 +22,11 @@
   <Drawer placement="right" open={$effectChoiceNotifier != null} size="300px" on:clickAway={onClickAway}>
     <div class="drawer-content">
       <div class="flex flex-col gap-2 m-2">
-        {#each effects as { name, label }}
+        {#each effects as { name, label, hint }}
           <button
             class="bg-primary-500 text-white hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 w-fill h-12 flex items-center justify-center gap-2"
             on:click={() => onClick(name)}
+            use:toolTip={hint}
           >
             {label}
           </button>

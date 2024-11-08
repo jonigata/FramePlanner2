@@ -36,12 +36,6 @@
       return;
     }
     chosen = canvas;
-
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'imageViewer',
-    };
-    modalStore.trigger(d);    
   }
 
   function onDelete(e: MouseEvent, canvas: HTMLCanvasElement) {
