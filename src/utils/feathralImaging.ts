@@ -101,6 +101,11 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
 export async function generateMarkedPageImages(imagingContext: ImagingContext, postfix: string, mode: Mode, onProgress: (progress: number) => void) {
   const marks = get(bookEditor)!.getMarks();
   const newPages = get(mainBook)!.pages.filter((p, i) => marks[i]);
+  if (newPages.length == 0) {
+    console.log("no marks");
+    toastStore.trigger({ message: `マークされたページが存在しません`, timeout: 3000});
+    return;
+  }
 
   let sum = 0;
   for (let i = 0; i < newPages.length; i++) {
