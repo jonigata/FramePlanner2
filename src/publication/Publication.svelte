@@ -1,25 +1,40 @@
 <script lang="ts">
-  import { modalStore } from '@skeletonlabs/skeleton';
-  import { createEventDispatcher } from 'svelte';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { onlineProfile } from '../utils/accountStore';
 
   export let title = '';
   export let description = '';
 
-  const dispatch = createEventDispatcher();
+  $: beforeRegistration = $onlineProfile == null;
 
   function handleSubmit() {
-    $modalStore[0].response!({ title, description });
+    $modalStore[0].response!({ result: "ok", title, description });
     modalStore.close();
   }
 
   function handleCancel() {
     modalStore.close();
   }
+
+  function goToRegistration() {
+    $modalStore[0].response!({ result: "registerUser" });
+    modalStore.close();
+  }
 </script>
 
 <div class="card p-4 w-full max-w-lg">
+  {#if beforeRegistration}
+    <p class="text-sm text-gray-500 mb-4">
+      まんがファームへ作品を投稿するには、ユーザー登録が必要です。
+    </p>
+    <button 
+      class="btn variant-filled-primary"
+      on:click={goToRegistration}
+    >
+      ユーザー登録へ
+    </button>
+{:else}
   <h2 class="h2 mb-4">ドキュメントの公開</h2>
-  
   <form on:submit|preventDefault={handleSubmit}>
     <label class="label">
       <span>タイトル*</span>
@@ -57,6 +72,7 @@
       </button>
     </div>
   </form>
+  {/if}
 </div>
 
 <style>

@@ -57,10 +57,14 @@
   onMount(async () => {
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
-    const envelope = urlParams.get('envelope');
+    let envelope = urlParams.get('envelope');
     if (envelope === null) {
-      console.error("envelope not found");
-      return;
+      const envelope2 = window.location.pathname.split('/').pop();
+      if (!envelope2) {
+        console.error("envelope not found");
+        return;
+      }
+      envelope = envelope2;
     }
 
     $loading = true;

@@ -8,8 +8,8 @@
     ],
     "rewrites": [
       {
-        "source": "/foo",
-        "destination": "/foo.html"
+        "source": "/viewer/:envelope",
+        "destination": "/viewer.html"
       },
       {
         "source": "**",

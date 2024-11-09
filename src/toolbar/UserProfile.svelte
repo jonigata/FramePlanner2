@@ -4,7 +4,7 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { loading } from '../utils/loadingStore';
-  import { onMount } from 'svelte';
+  import { onlineProfile, type OnlineProfile } from '../utils/accountStore';
   
   export let username = '';
   export let display_name = '';
@@ -27,16 +27,15 @@
     }
   })
 
-  // 表示名が有効かチェック
-  $: isDisplayNameValid = display_name.length >= 1;
-
   async function handleSubmit() {
     if (isAvailable && isDisplayNameValid) {
       try {
         $loading = true;
         await updateMyProfile({ username, display_name, email, bio });
+        $modalStore[0].response!(true);
         modalStore.close();
       } catch (error) {
+        console.log(error);
         toastStore.trigger({ message: 'プロフィールの更新に失敗しました', timeout: 3000 });
       } finally {
         $loading = false;
@@ -58,21 +57,20 @@
     handleUsernameInput();
   }
 
-  onMount(async () => {
-    $loading = true;
-    try {
-      const myProfile = await getMyProfile();
-      if (myProfile != null) {
-        username = myProfile.username;
-        display_name = myProfile.display_name;
-        email = myProfile.email;
-        bio = myProfile.bio;
-      }
+  $: onOnlineProfileChanged($onlineProfile);
+  function onOnlineProfileChanged(profile: OnlineProfile | null) {
+    if (profile) {
+      username = profile.username;
+      display_name = profile.display_name;
+      email = profile.email;
+      bio = profile.bio;
+      isAvailable = true;
     }
-    finally {
-      $loading = false;
-    }
-  });
+  }
+
+  // 表示名が有効かチェック
+  $: isDisplayNameValid = display_name.length >= 1;
+
 </script>
 
 <div class="card p-4 w-full max-w-lg">

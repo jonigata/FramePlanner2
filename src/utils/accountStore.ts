@@ -1,7 +1,7 @@
 import { type Writable, writable, get } from "svelte/store";
 import { type User } from "firebase/auth";
 import { modalStore } from '@skeletonlabs/skeleton';
-import { isPendingRedirect, prepareAuth, getAuth, getFeathral } from '../firebase';
+import { isPendingRedirect, prepareAuth, getAuth, getFeathral, getMyProfile } from '../firebase';
 
 export type OnlineAccount = {
   user: User | null;
@@ -11,8 +11,8 @@ export type OnlineAccount = {
 export type OnlineProfile = {
   username: string;
   display_name: string;
-  email?: string;
-  bio?: string;
+  email: string;
+  bio: string;
 }
 
 export type OnlineStatus = "unknown" | "signed-in" | "signed-out";
@@ -63,6 +63,8 @@ export function bootstrap() {
       onlineAccount.set({ user, feathral });
       onlineStatus.set("signed-in");
       console.log("signed-in");
+
+      onlineProfile.set(await getMyProfile());
     } else {
       onlineAccount.set({ user: null, feathral: 0 });
       onlineStatus.set("signed-out");

@@ -79,14 +79,38 @@
   }
 
   async function publishEnvelope() {
-    const {title, description} = await new Promise<{title:string, description: string}>((resolve) => {
-      const d: ModalSettings = {
-        type: 'component',
-        component: 'publication',
-        response: resolve,
-      };
-      modalStore.trigger(d);
-    });    
+    let title, description;
+    while (true) {
+      const r = await new Promise<{result: String, title:string, description: string}>((resolve) => {
+        const d: ModalSettings = {
+          type: 'component',
+          component: 'publication',
+          response: resolve,
+        };
+        modalStore.trigger(d);
+      });    
+      if (!r) {
+        return;
+      }
+      console.log(r);
+      if (r.result === 'registerUser') {
+        const r = await new Promise<boolean>((resolve) => {
+          const d: ModalSettings = {
+            type: 'component',
+            component: 'userProfile',
+            response: resolve,
+          };
+          modalStore.trigger(d);
+        });
+        if (!r) {
+          return;
+        }
+      } else {
+        title = r.title;
+        description = r.description;
+        break;
+      }
+    }
     console.log(title, description);
     
     $loading = true;
@@ -197,7 +221,7 @@
       console.log(downloadUrl);
       navigator.clipboard.writeText(downloadUrl);
 
-      toastStore.trigger({ message: "公開URLがクリップボードにコピーされました", timeout: 5000});
+      toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
     }
     catch(e: any) {
       console.log(e);
