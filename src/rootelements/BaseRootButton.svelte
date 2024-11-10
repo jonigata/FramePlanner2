@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { createEventDispatcher } from 'svelte';
 
@@ -11,16 +11,18 @@
   export let origin: string;
   export let location: [number, number];
 
-  const unit = 120;
-  const gap = 20;
+  const baseUnit = 120;
+  const baseGap = 20;
+  let unit = baseUnit;
+  let gap = baseGap;
 
   let style = "";
 
-  function onClick() {
-    dispatch("click");
+  function onClick(e: MouseEvent) {
+    dispatch("click", e);
   }
 
-  onMount(() => {
+  function updatePosition() {
     const [x, y] = location;
     const u = unit + gap;
     let positionStyle = "";
@@ -39,14 +41,35 @@
         break;
     }
     style = positionStyle;
-    console.log("style", style);
+  }
+
+  function handleResize() {
+    if (window.innerWidth <= 640 || window.innerHeight <= 800) {
+      unit = 80;
+      gap = 10;
+    } else {
+      unit = baseUnit;
+      gap = baseGap;
+    }
+    updatePosition();
+  }
+
+  onMount(() => {
+    updatePosition();
+    window.addEventListener("resize", handleResize);
   });
 
+  onDestroy(() => {
+    window.removeEventListener("resize", handleResize);
+  });
 </script>
 
-<button style={style} class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={onClick}
+<button style={style} class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox relative" on:click={onClick}
   use:toolTip={hint}>
   <img src={icon} alt={alt}/>
+  <div class="absolute w-full h-full">
+    <slot/>
+  </div>
 </button>
 
 <style>
@@ -55,6 +78,11 @@
     position: absolute;
     width: 120px;
     height: 120px;
+
+    @media (max-width: 640px), (max-height: 800px) {
+      width: 80px;
+      height: 80px;
+    }
   }
   img {
     width: 80%;

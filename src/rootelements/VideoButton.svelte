@@ -1,6 +1,5 @@
 <script lang="ts">
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
-  import { toolTip } from '../utils/passiveToolTipStore';
   import BaseRootButton from './BaseRootButton.svelte';
   import videoIcon from '../assets/video.png';
 
