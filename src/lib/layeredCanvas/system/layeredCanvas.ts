@@ -53,6 +53,13 @@ export class Viewport {
   getCanvasCenter(): Vector {
     return scale2D(this.getCanvasSize(), 0.5);
   }
+
+  getDpr() {
+    // canvasの拡大率（ブラウザの拡大率(Retinaを含む)が反映されていることを期待している）
+    const styleWidth = parseFloat(window.getComputedStyle(this.canvas).width);
+    const dpr = this.canvas.width / styleWidth;
+    return dpr;
+  }
 };
 
 
@@ -332,7 +339,8 @@ export class Paper {
       } else {
         const q = [r[0], r[1]];
         const qq = this.matrix.transformPoint({x:q[0], y:q[1]});
-        viewport.onHint([qq.x, qq.y, r[2], r[3]], this.hint.message);
+        const dpr = viewport.getDpr();
+        viewport.onHint([qq.x / dpr, qq.y / dpr, r[2] / dpr, r[3] / dpr], this.hint.message);
       }
       this.hint = null;
     }
@@ -453,11 +461,7 @@ export class LayeredCanvas {
 
   eventPositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
     const p = convertPointFromPageToNode(this.viewport.canvas, event.pageX, event.pageY);
-
-    // canvasの拡大率（ブラウザの拡大率(Retinaを含む)が反映されていることを期待している）
-    const styleWidth = parseFloat(window.getComputedStyle(this.viewport.canvas).width);
-    const dpr = this.viewport.canvas.width / styleWidth;
-
+    const dpr = this.viewport.getDpr();
     return [Math.floor(p.x * dpr), Math.floor(p.y * dpr)];
   }
 
