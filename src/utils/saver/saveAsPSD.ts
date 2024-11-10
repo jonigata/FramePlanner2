@@ -18,7 +18,7 @@ export function saveAsPSD(page: Page) {
   const layeredCanvas = new LayeredCanvas(viewport, true);
   layeredCanvas.rootPaper.size = page.paperSize;
 
-  const paperRendererLayer = new PaperRendererLayer();
+  const paperRendererLayer = new PaperRendererLayer(false);
   layeredCanvas.rootPaper.addLayer(paperRendererLayer);
 
   paperRendererLayer.setFrameTree(page.frameTree);

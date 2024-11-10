@@ -96,7 +96,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
   paper.addLayer(undoLayer);
 
   // renderer
-  const paperRendererLayer = new PaperRendererLayer();
+  const paperRendererLayer = new PaperRendererLayer(true);
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);
   paper.addLayer(paperRendererLayer);

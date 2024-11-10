@@ -51,7 +51,7 @@ async function renderPage(page: Page): Promise<HTMLCanvasElement> {
   layeredCanvas.rootPaper.size = page.paperSize;
 
   // renderer
-  const paperRendererLayer = new PaperRendererLayer();
+  const paperRendererLayer = new PaperRendererLayer(false);
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);
   layeredCanvas.rootPaper.addLayer(paperRendererLayer);

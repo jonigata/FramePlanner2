@@ -33,7 +33,7 @@ export class PaperRendererLayer extends LayerBase {
   rawBubbles: Bubble[] | null = null;
   thisFrameRenderData: RenderData | null = null;
 
-  constructor() {
+  constructor(private supportsDpr: boolean) {
     super();
   }
 
@@ -338,7 +338,7 @@ export class PaperRendererLayer extends LayerBase {
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
     const transform = targetCtx.getTransform();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = this.supportsDpr ? (window.devicePixelRatio ?? 1) : 1;
     const viewScale: Vector = [transform.a * dpr, transform.d * dpr];
 
     const paperSize = this.getPaperSize();

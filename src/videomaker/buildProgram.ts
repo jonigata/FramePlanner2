@@ -59,7 +59,7 @@ function buildPaper(page: Page) {
   const paper = new Paper(page.paperSize, false);
 
   // renderer
-  const paperRendererLayer = new PaperRendererLayer();
+  const paperRendererLayer = new PaperRendererLayer(false);
   paperRendererLayer.setFrameTree(page.frameTree);
   paperRendererLayer.setBubbles(page.bubbles);
   paper.addLayer(paperRendererLayer);

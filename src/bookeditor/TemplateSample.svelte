@@ -21,7 +21,7 @@
       viewport, 
       false);
 
-    const paperRendererLayer = new PaperRendererLayer();
+    const paperRendererLayer = new PaperRendererLayer(false);
     layeredCanvas.rootPaper.size = [140, 198];
     layeredCanvas.rootPaper.addLayer(paperRendererLayer);
 
