@@ -47,6 +47,8 @@ export class FloorLayer extends LayerBase {
     const dragStart = p;
     const scale = this.viewport.scale;
 
+    this.focusKeeper.setFocus(null);
+
     try {
       while (p = yield) {
         const dragOffset: Vector = [
