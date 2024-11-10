@@ -1,8 +1,8 @@
 <script type="ts">
-  import barricadeIcon from '../assets/barricade.png';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { onMount } from 'svelte';
+  import barricadeIcon from '../assets/barricade.png';
   
   function toggle() {
     $saveProhibitFlag = !$saveProhibitFlag;

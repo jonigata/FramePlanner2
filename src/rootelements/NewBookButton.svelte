@@ -1,11 +1,11 @@
 <script lang="ts">
-  import newBookIcon from '../assets/new-book.png';
   import { newBookToken } from "../filemanager/fileManagerStore";
   import { newBook, newImageBook } from "../lib/book/book";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { hoverKey } from '../utils/hoverKeyStore';
   import { mainBook } from '../bookeditor/bookStore';
   import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
+  import newBookIcon from '../assets/new-book.png';
 
   async function createNewFile(e: MouseEvent) {
     if (e.ctrlKey) {
@@ -60,6 +60,7 @@
 
 </script>
 
+<!-- ドロップ対応がめんどいのでとりあえずBaseRootButton使わない -->
 {#if $mainBook}
 <button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 new-document-button hbox" 
   on:click={createNewFile}

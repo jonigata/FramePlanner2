@@ -1,29 +1,11 @@
 <script type="ts">
-  import stampIcon from '../assets/stamp.png';
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
-  import { toolTip } from '../utils/passiveToolTipStore';
+  import BaseRootButton from './BaseRootButton.svelte';
+  import stampIcon from '../assets/stamp.png';
   
-  function openFileManager() {
+  function openMaterialBucket() {
     $materialBucketOpen = !$materialBucketOpen;
   }
 </script>
 
-<button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={openFileManager}
-  use:toolTip={`素材集`}>
-  <img src={stampIcon} alt="material bucket"/>
-</button>
-
-<style>
-  .open-button {
-    pointer-events: auto;
-    position: absolute;
-    width: 120px;
-    height: 120px;
-    bottom: 300px;
-    left: 20px;
-  }
-  img {
-    width: 80%;
-    height: 80%;
-  }
-</style>
+<BaseRootButton icon={stampIcon} alt={"stamps"} hint={"素材集"} origin={"bottomleft"} location={[0,2]} on:click={openMaterialBucket}/>

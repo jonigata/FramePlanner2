@@ -132,7 +132,19 @@
 
 <div class="flex flex-col w-screen h-screen">
   <ToolBar/>
-  <BookEditor />
+  <div class="flex-grow relative">
+    <BookEditor />
+
+    <!-- root items -->
+    <MaterialBucketButton />
+    <NewBookButton  />
+    <CabinetButton />
+    <BellButton />
+    <RulerButton/>
+    <AboutButton/>
+    <DownloadButton />
+    <VideoButton />
+  </div>
 </div>
 
 <!-- dialogs -->
@@ -151,16 +163,6 @@
 <BubbleBucket/>
 <Downloader/>
 <ColorPickerDialog/>
-
-<!-- root items -->
-<MaterialBucketButton />
-<NewBookButton  />
-<CabinetButton />
-<BellButton />
-<RulerButton/>
-<AboutButton/>
-<DownloadButton />
-<VideoButton />
 
 <!-- drawers -->
 <FontChooser/>

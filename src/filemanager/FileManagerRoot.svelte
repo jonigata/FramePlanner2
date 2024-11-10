@@ -258,6 +258,7 @@
       $mainBook = book;
       $frameInspectorTarget = null;
       logEvent(getAnalytics(), 'new_book');
+      toastStore.trigger({ message: "新規ファイルを作成しました", timeout: 1500});
     }
   }
 

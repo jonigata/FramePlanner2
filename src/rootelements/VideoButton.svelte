@@ -1,7 +1,8 @@
 <script lang="ts">
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
-  import videoIcon from '../assets/video.png';
   import { toolTip } from '../utils/passiveToolTipStore';
+  import BaseRootButton from './BaseRootButton.svelte';
+  import videoIcon from '../assets/video.png';
 
   function openVideoMaker() {
     const d: ModalSettings = {
@@ -12,22 +13,4 @@
   }
 </script>
 
-<button class="variant-ghost-tertiary text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={openVideoMaker}
-  use:toolTip={`ビデオ撮影`}>
-  <img src={videoIcon} alt="video"/>
-</button>
-
-<style>
-  .open-button {
-    pointer-events: auto;
-    position: absolute;
-    width: 120px;
-    height: 120px;
-    top: 184px;
-    right: 20px;
-  }
-  img {
-    width: 80%;
-    height: 80%;
-  }
-</style>
+<BaseRootButton icon={videoIcon} alt={"video"} hint={"ビデオ撮影"} origin={"topright"} location={[0,1]} on:click={openVideoMaker}/>
