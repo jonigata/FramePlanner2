@@ -338,7 +338,8 @@ export class PaperRendererLayer extends LayerBase {
 
   drawText(targetCtx: CanvasRenderingContext2D, bubble: Bubble) {
     const transform = targetCtx.getTransform();
-    const viewScale: Vector = [transform.a, transform.d];
+    const dpr = window.devicePixelRatio || 1;
+    const viewScale: Vector = [transform.a * dpr, transform.d * dpr];
 
     const paperSize = this.getPaperSize();
     const size = bubble.getPhysicalSize(paperSize);

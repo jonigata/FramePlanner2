@@ -13,14 +13,16 @@
   $:onChangeContainerSize(containerWidth, containerHeight);
   function onChangeContainerSize(w: number, h: number) {
     if (!w || !h) return;
-    canvasWidth = w;
-    canvasHeight = h;
+    const dpr = window.devicePixelRatio || 1;
+    canvasWidth = Math.ceil(w * dpr);
+    canvasHeight = Math.ceil(h * dpr);
+    console.log("onChangeContainerSize", w, h, canvasWidth, canvasHeight);
     dispatch('resize', { width: w, height: h });
   }
 </script>
 
 <div class="canvas-container" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
-  <canvas width={canvasWidth} height={canvasHeight} bind:this={canvas}/>
+  <canvas width={canvasWidth} height={canvasHeight} style="width: {containerWidth}px; height: {containerHeight}px;" bind:this={canvas}/>
   <slot/>
 </div>    
 
