@@ -44,6 +44,7 @@
   }
 
   function handleResize() {
+    console.log(window.innerWidth, window.innerHeight);
     if (window.innerWidth <= 640 || window.innerHeight <= 800) {
       unit = 80;
       gap = 10;
@@ -55,6 +56,7 @@
   }
 
   onMount(() => {
+    handleResize();
     updatePosition();
     window.addEventListener("resize", handleResize);
   });
@@ -78,7 +80,6 @@
     position: absolute;
     width: 120px;
     height: 120px;
-
     @media (max-width: 640px), (max-height: 800px) {
       width: 80px;
       height: 80px;
