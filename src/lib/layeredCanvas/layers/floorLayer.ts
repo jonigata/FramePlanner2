@@ -29,6 +29,15 @@ export class FloorLayer extends LayerBase {
     return true;
   }
 
+  async keyDown(position_: Vector, event: KeyboardEvent): Promise<boolean> {
+    //  if ESC
+    if (event.code === "Escape") {
+      this.focusKeeper.setFocus(null);
+      return true;
+    }
+    return false;
+  }
+
   accepts(_point: Vector, button: number, depth: number): any {
     if (0 < depth) return null;
     return keyDownFlags["Space"] || 0 < button;
