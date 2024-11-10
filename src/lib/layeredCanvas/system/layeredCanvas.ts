@@ -453,7 +453,12 @@ export class LayeredCanvas {
 
   eventPositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
     const p = convertPointFromPageToNode(this.viewport.canvas, event.pageX, event.pageY);
-    return [Math.floor(p.x), Math.floor(p.y)];
+
+    // canvasの拡大率（ブラウザの拡大率(Retinaを含む)が反映されていることを期待している）
+    const styleWidth = parseFloat(window.getComputedStyle(this.viewport.canvas).width);
+    const dpr = this.viewport.canvas.width / styleWidth;
+
+    return [Math.floor(p.x * dpr), Math.floor(p.y * dpr)];
   }
 
   viewportPositionToRootPaperPosition(p: Vector): Vector {
