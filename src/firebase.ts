@@ -223,15 +223,34 @@ export async function updateMyProfile(profile: UserProfile): Promise<void> {
 }
 
 export interface PublicationContent {
+  id: string;
   title: string;
   description: string;
   cover_url: string;
   content_url: string;
   thumbnail_url: string;
+  created_at: string;
+  updated_at: string;
+  author_display_name: string;
 }
 
-export async function recordPublication(publication: PublicationContent) {
-  await callFunc('recordpublication', {publication}, 180);
+export type WritePublicationContent = Pick<
+  PublicationContent, 
+  'title' | 'description' | 'content_url' | 'cover_url' | 'thumbnail_url'>;
+
+export async function recordPublication(publication: WritePublicationContent): Promise<string> {
+  const r = await callFunc('recordpublication', {publication}, 180);
+  return r.id;
+}
+
+export async function getPublication(id: string): Promise<PublicationContent> {
+  const r = await callFunc('getpublication', {id}, 180);
+  return r.publication;
+}
+
+export async function getNewReleases(): Promise<PublicationContent[]> {
+  const r = await callFunc('getnewreleases', {}, 180);
+  return r.newReleases;
 }
 
 function getAuth2() {

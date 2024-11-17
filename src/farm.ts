@@ -1,9 +1,6 @@
 import './app.postcss'
-import ViewerApp from './ViewerApp.svelte'
+import FarmApp from './FarmApp.svelte'
 import { initializeApp } from "./firebase";
-import { initPaperJs } from "manga-renderer";
-
-initPaperJs();
 
 function getDomainFromCurrentUrl(): string {
   const currentUrl = window.location.href;
@@ -12,11 +9,14 @@ function getDomainFromCurrentUrl(): string {
 }
 initializeApp(getDomainFromCurrentUrl())
 
-const app = new ViewerApp({
+const app = new FarmApp({
   target: document.getElementById("app")!,
 });
 
 export default app
+
+import { register } from 'swiper/element/bundle';
+register();
 
 function loadFont(family: string, filename: string, weight: string) { 
   const url = new URL(`./assets/fonts/${filename}.woff2`, import.meta.url).href;

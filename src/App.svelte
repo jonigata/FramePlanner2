@@ -10,7 +10,6 @@
   import { Modals } from 'svelte-modals'
   import { mascotVisible } from './mascot/mascotStore';
   import { bootstrap, onlineStatus } from './utils/accountStore';
-  import { developmentFlag } from "./utils/developmentFlagStore";
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -109,11 +108,6 @@
       a.click();
       URL.revokeObjectURL(url);
     }
-
-    // localhostか127.0.0.1だったら
-    $developmentFlag = 
-      location.hostname === "localhost" || location.hostname === "127.0.0.1";
-    console.log("================ developmentFlag", $developmentFlag);
 
     /*
     // Initialize the Sentry SDK here

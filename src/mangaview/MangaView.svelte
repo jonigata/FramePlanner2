@@ -7,6 +7,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import { loading } from '../utils/loadingStore';
+  import { getPublication } from '../firebase';
 
   let canvas: HTMLCanvasElement;
   let renderer: Renderer;
@@ -40,9 +41,9 @@
     }
   }
 
-  async function loadEnvelope(envelope: string) {
+  async function loadEnvelope(contentUrl: string) {
     try {
-      const response = await fetch(`https://api004.backblazeb2.com/file/FramePlannerPublished/published/${envelope}.envelope`);
+      const response = await fetch(contentUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch manga.envelope');
       }
@@ -67,8 +68,10 @@
       envelope = envelope2;
     }
 
+    const r = await getPublication(envelope);
+
     $loading = true;
-    book = (await loadEnvelope(envelope))!;
+    book = (await loadEnvelope(r.content_url))!;
     max = book.pages.length;
 
     const fonts = listFonts(book);

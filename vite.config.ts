@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        farm: resolve(__dirname, 'farm.html'),
         viewer: resolve(__dirname, 'viewer.html'),
         ...Object.fromEntries(
           glob.sync('ads/**/index.html').map(file => [
@@ -27,10 +28,24 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      '^/farm/?$': {
+        target: 'http://localhost:5173',
+        rewrite: (path) => '/farm.html',
+      },
+      '^/farm/mypage/?$': {
+        target: 'http://localhost:5173',
+        rewrite: (path) => '/farm.html',
+      },
+      '^/viewer/(.*)': {
+        target: 'http://localhost:5173',
+        rewrite: (path) => `/viewer.html?envelope=${path.split('/').pop()}`,
+      }
+    }    
   },
-	test: {
-		globals: true,
-		environment: 'jsdom',
-		include: ['src/**/*.{test,spec,vitest}.{js,ts}']
-	},
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec,vitest}.{js,ts}']
+  },
 })

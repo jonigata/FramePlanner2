@@ -117,13 +117,12 @@
     try {
       const {file, blob} = await makeEnvelope();
       const sha1 = await blobToSha1(blob);
-      const cloudFileId = file.id
 
       let content_url, cover_url, thumbnail_url;
 
       // 本体
       {
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}.envelope`);
+        const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}.envelope`);
         console.log("本体", apiUrl, url, token, filename);
 
         const response = await fetch(url,{
@@ -148,7 +147,7 @@
 
       {
         // 表紙
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}_cover.png`);
+        const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}_cover.png`);
         console.log("表紙", url, token, filename);
 
         const png = await renderPageToBlob($mainBook!.pages[0]);
@@ -175,7 +174,7 @@
 
       {
         // サムネイル
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}_thumbnail.png`);
+        const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}_thumbnail.png`);
         console.log("サムネイル", url, token, filename);
 
         const png = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
@@ -200,7 +199,7 @@
         console.log("thumbnail_url", thumbnail_url);
       }
 
-      await recordPublication({
+      const workId = await recordPublication({
         title,
         description,
         content_url,
@@ -214,7 +213,7 @@
   
       // viewer.htmlのパスを作成し、クエリパラメータを追加
       currentUrl.pathname = '/viewer.html';
-      currentUrl.searchParams.set('envelope', cloudFileId);
+      currentUrl.searchParams.set('envelope', workId);
       
       // URLをコピー
       const downloadUrl = currentUrl.toString();
