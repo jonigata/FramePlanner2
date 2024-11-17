@@ -1,8 +1,8 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
   import { frameInspectorTarget, frameInspectorRebuildToken } from './frameInspectorStore';
-  import { calculatePhysicalLayout, findLayoutOf, constraintFilms } from '../../lib/layeredCanvas/dataModels/frameTree';
-  import { type Film, FilmStackTransformer } from "../../lib/layeredCanvas/dataModels/film";
+  import { insertFilms } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import { type Film } from "../../lib/layeredCanvas/dataModels/film";
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
   import Drawer from "../../utils/Drawer.svelte";
@@ -46,19 +46,12 @@
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
-    const page = $frameInspectorTarget!.page;
-    const paperSize = page.paperSize;
-    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-    const layout = findLayoutOf(pageLayout, $frameInspectorTarget!.frame)!;
-
     const {index, films} = e.detail;
+    const page = $frameInspectorTarget!.page;
+    const element = $frameInspectorTarget!.frame;
+    const paperSize = page.paperSize;
+    insertFilms(page.frameTree, paperSize, element, index, films);
 
-    const tmpFilms = films;
-    const transformer = new FilmStackTransformer(paperSize, tmpFilms);
-    transformer.scale(0.01);
-    constraintFilms(paperSize, layout, tmpFilms);
-
-    filmStack.films.splice(index, 0, ...films);
     filmStack = filmStack;
     $bookEditor!.commit(null);
   }

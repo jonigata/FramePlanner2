@@ -1,7 +1,8 @@
 import { type Vector, lineIntersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid, pointToQuadrilateralDistance } from "../tools/geometry/trapezoid";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
-import { type Film, FilmStack, calculateMinimumBoundingRect } from "./film";
+import { type Film, FilmStack, calculateMinimumBoundingRect, FilmStackTransformer } from "./film";
+import { ImageMedia } from "./media";
 
 // formal～はoffsetが含まれない値
 export type CornerOffsets = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
@@ -920,4 +921,22 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
     film.setShiftedScale(paperSize, scale);
     film.setShiftedTranslation(paperSize, [m.e, m.f]);
   });
+}
+
+export function insertFilms(root: FrameElement, paperSize: Vector, element: FrameElement, index: number, films: Film[]): void {
+  const pageLayout = calculatePhysicalLayout(root, paperSize, [0,0]);
+  const layout = findLayoutOf(pageLayout, element)!;
+
+  const transformer = new FilmStackTransformer(paperSize, films);
+  transformer.scale(0.01);
+  constraintFilms(paperSize, layout, films);
+
+  element.filmStack.films.splice(index, 0, ...films);
+
+  for (const film of films) {     
+    const media = film.media;
+    if (media instanceof ImageMedia) {
+      element.gallery.push(media.drawSource);
+    }
+  }
 }

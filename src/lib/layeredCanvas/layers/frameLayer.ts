@@ -2,7 +2,7 @@ import { type Layer, LayerBase, sequentializePointer, type Picked } from "../sys
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, listLayoutsAt } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
 import { type Media, ImageMedia, VideoMedia } from "../dataModels/media";
-import { constraintRecursive, constraintLeaf, constraintFilms } from "../dataModels/frameTree";
+import { constraintRecursive, constraintLeaf, insertFilms } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
@@ -293,11 +293,10 @@ export class FrameLayer extends LayerBase {
     }
 
     if (media instanceof HTMLCanvasElement) {
-      this.importMedia(layoutlet, new ImageMedia(media));
-      layoutlet.element.gallery.push(media)
+      this.importMedia(layoutlet.element, new ImageMedia(media));
     }
     if (media instanceof HTMLVideoElement) {
-      this.importMedia(layoutlet, new VideoMedia(media));
+      this.importMedia(layoutlet.element, new VideoMedia(media));
     }
     this.onFocus(layoutlet);
     this.onCommit();
@@ -1095,22 +1094,10 @@ export class FrameLayer extends LayerBase {
     constraintRecursive(paperSize, layout);
   }
 
-  importMedia(layoutlet: Layout, media: Media): void {
+  importMedia(element: FrameElement, media: Media): void {
     const paperSize = this.getPaperSize();
-    // calc expansion to longer size
-
     const film = new Film(media);
-    film.n_scale = 1;
-    film.rotation = 0;
-    film.reverse = [1, 1];
-    film.n_translation = [0, 0];
-
-    const tmpFilms = [film];
-    const transformer = new FilmStackTransformer(paperSize, tmpFilms);
-    transformer.scale(0.01);
-    constraintFilms(paperSize, layoutlet, tmpFilms);
-
-    layoutlet.element.filmStack.films.push(film);
+    insertFilms(this.frameTree, paperSize, element, element.filmStack.films.length, [film]);
 
     this.onCommit();
     this.redraw();
