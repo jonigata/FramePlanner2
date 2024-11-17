@@ -2,7 +2,7 @@ import { type Layer, LayerBase, sequentializePointer, type Picked } from "../sys
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, listLayoutsAt } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
 import { type Media, ImageMedia, VideoMedia } from "../dataModels/media";
-import { constraintRecursive, constraintLeaf } from "../dataModels/frameTree";
+import { constraintRecursive, constraintLeaf, constraintFilms } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
@@ -1105,11 +1105,13 @@ export class FrameLayer extends LayerBase {
     film.reverse = [1, 1];
     film.n_translation = [0, 0];
 
-    layoutlet.element.filmStack.films.push(film);
-      
-    const transformer = new FilmStackTransformer(paperSize, layoutlet.element.filmStack.films);
+    const tmpFilms = [film];
+    const transformer = new FilmStackTransformer(paperSize, tmpFilms);
     transformer.scale(0.01);
-    constraintLeaf(paperSize, layoutlet);
+    constraintFilms(paperSize, layoutlet, tmpFilms);
+
+    layoutlet.element.filmStack.films.push(film);
+
     this.onCommit();
     this.redraw();
   }
