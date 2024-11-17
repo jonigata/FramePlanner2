@@ -296,7 +296,7 @@ export class PaperRendererLayer extends LayerBase {
     ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
     ctx.save();
-    // this.drawBubble(ctx, size, 'clip', bubble);
+    this.drawBubble(ctx, size, 'clip', bubble);
 
     // テキスト描画
     if (bubble.text && !bubble.hidesText) {
