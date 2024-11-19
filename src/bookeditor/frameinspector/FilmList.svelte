@@ -105,7 +105,7 @@
 <div class="film-list-container">
   <FilmListItem film={null} on:select={onGenerate}/>
   <div 
-    class="flex flex-col gap-2 mt-2" 
+    class="flex flex-col gap-2 mt-2 min-h-[20px]" 
     use:sortableList={{animation: 100, onUpdate: onSortableUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >
