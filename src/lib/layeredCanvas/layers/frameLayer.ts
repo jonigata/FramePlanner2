@@ -2,7 +2,7 @@ import { type Layer, LayerBase, sequentializePointer, type Picked } from "../sys
 import { FrameElement, type Layout,type Border, type PaddingHandle, calculatePhysicalLayout, findLayoutAt, findLayoutOf, findBorderAt, findPaddingOn, findPaddingOf, makeBorderCorners, makeBorderFormalCorners, calculateOffsettedCorners, listLayoutsAt } from "../dataModels/frameTree";
 import { Film, FilmStackTransformer } from "../dataModels/film";
 import { type Media, ImageMedia, VideoMedia } from "../dataModels/media";
-import { constraintRecursive, constraintLeaf, insertFilms } from "../dataModels/frameTree";
+import { constraintRecursive, constraintLeaf, insertFrameLayers } from "../dataModels/frameTree";
 import { translate, scale, rotate } from "../tools/pictureControl";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableSlate, ClickableIcon, ClickableSelfRenderer } from "../tools/draw/clickableIcon";
@@ -1097,7 +1097,7 @@ export class FrameLayer extends LayerBase {
   importMedia(element: FrameElement, media: Media): void {
     const paperSize = this.getPaperSize();
     const film = new Film(media);
-    insertFilms(this.frameTree, paperSize, element, element.filmStack.films.length, [film]);
+    insertFrameLayers(this.frameTree, paperSize, element, element.filmStack.films.length, [film]);
 
     this.onCommit();
     this.redraw();

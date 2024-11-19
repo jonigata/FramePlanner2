@@ -1,7 +1,7 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
   import { frameInspectorTarget, frameInspectorRebuildToken } from './frameInspectorStore';
-  import { insertFilms } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import { insertFrameLayers } from "../../lib/layeredCanvas/dataModels/frameTree";
   import { type Film } from "../../lib/layeredCanvas/dataModels/film";
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
@@ -50,7 +50,7 @@
     const page = $frameInspectorTarget!.page;
     const element = $frameInspectorTarget!.frame;
     const paperSize = page.paperSize;
-    insertFilms(page.frameTree, paperSize, element, index, films);
+    insertFrameLayers(page.frameTree, paperSize, element, index, films);
 
     filmStack = filmStack;
     $bookEditor!.commit(null);

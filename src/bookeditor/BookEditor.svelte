@@ -99,6 +99,7 @@
   }
 
   function commit(tag: HistoryTag) {
+    $redrawToken = true;
     delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
     if (tag === 'bubble') {
       $bubbleInspectorTarget = $bubbleInspectorTarget;

@@ -1,7 +1,8 @@
-import { type Vector, type Rect, getRectCenter, rectToCorners, reverse2D } from "../tools/geometry/geometry";
+import { type Vector, type Rect, getRectCenter, rectToCorners, reverse2D, translateRect, computeConstraintedRect } from "../tools/geometry/geometry";
 import type { Media } from './media';
 import type { Effect } from './effect';
 import { ulid } from 'ulid';
+import { ImageMedia } from "./media";
 
 export class Film  {
   ulid: string;
@@ -201,4 +202,39 @@ function transformFilm(paperSize: Vector, film: Film): Vector[] {
 
   const matrix = film.makeMatrix(paperSize);
   return corners.map(corner => matrix.transformPoint({x: corner[0], y: corner[1]})).map(p => [p.x, p.y]);
+}
+
+export function fitFilms(paperSize: Vector, constraintRect: Rect, films: Film[]): void {
+  const constraintCenter = getRectCenter(constraintRect);
+  const mergedRect = calculateMinimumBoundingRect(paperSize, films)!;
+
+  const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
+    translateRect(mergedRect, constraintCenter),
+    constraintRect);
+
+  const rootMatrix = new DOMMatrix();
+  rootMatrix.scaleSelf(targetScale, targetScale);
+  rootMatrix.translateSelf(...targetTranslation);
+
+  films.forEach(film => {
+    const m = rootMatrix.multiply(film.makeMatrix(paperSize));
+    const scale = Math.sqrt(m.a * m.a + m.b * m.b);
+    film.setShiftedScale(paperSize, scale);
+    film.setShiftedTranslation(paperSize, [m.e, m.f]);
+  });
+}
+
+export function insertFilms(paperSize: Vector, constraintRect: Rect, index: number, films: Film[], targetFilms: Film[], gallery: HTMLCanvasElement[]): void {
+  const transformer = new FilmStackTransformer(paperSize, films);
+  transformer.scale(0.01);
+  fitFilms(paperSize, constraintRect, films);
+
+  targetFilms.splice(index, 0, ...films);
+
+  for (const film of films) {     
+    const media = film.media;
+    if (media instanceof ImageMedia) {
+      gallery.push(media.drawSource);
+    }
+  }
 }
