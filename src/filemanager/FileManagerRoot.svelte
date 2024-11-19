@@ -400,6 +400,7 @@
   >
     <div class="drawer-content">
       <h2>ローカル</h2>
+      <p>※https://frameplanner-e5569.web.app と https://frameplanner.online ではファイルは別管理になります。もし作ったはずのファイルが見当たらないときは、いつもと違うURLになっていないかどうかを確認してください。近日中に統合予定です。ご迷惑をおかけします。</p>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
           <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
@@ -445,6 +446,13 @@
 <style>
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
+  }
+  p {
+    font-family: '源暎アンチック';
+    font-size: 14px;
+    margin-left: 32px;
+    margin-right: 16px;
+    margin-bottom: 8px;
   }
   h2 {
     font-family: '源暎エムゴ';
