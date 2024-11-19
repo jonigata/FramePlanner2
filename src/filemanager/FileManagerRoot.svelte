@@ -400,7 +400,7 @@
   >
     <div class="drawer-content">
       <h2>ローカル</h2>
-      <p>※https://frameplanner-e5569.web.app と https://frameplanner.online ではファイルは別管理になります。もし作ったはずのファイルが見当たらないときは、いつもと違うURLになっていないかどうかを確認してください。近日中に統合予定です。ご迷惑をおかけします。</p>
+      <p>※https://frameplanner-e5569.web.app と https://frameplanner.online ではファイルは別管理になります。もし作ったはずのファイルが見当たらないときは、いつもと違うURLになっていないかどうかを確認してください。近日中に統合予定です。</p>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
           <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
@@ -429,9 +429,9 @@
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
         {/if}
       </div>
+      <h2>クラウド</h2>
+      <p>この機能はβ版です。断りなくサービス停止する可能性があります。ログインすると使えます。</p>
       {#if cloudCabinet && cloudTrash}
-        <h2>クラウド</h2>
-        <div class="notice">この機能はβ版です。断りなくサービス停止する可能性があります。</div>
         <div class="cabinet variant-ghost-primary rounded-container-token">
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
         </div>
