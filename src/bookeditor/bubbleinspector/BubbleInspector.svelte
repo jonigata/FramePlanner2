@@ -12,7 +12,7 @@
   import { fontChooserOpen, chosenFont } from './fontStore';
   import { shapeChooserOpen, chosenShape } from './shapeStore';
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
-  import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
+  import { Bubble, insertBubbleLayers } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { bubbleInspectorRebuildToken, bubbleInspectorTarget, bubbleSplitCursor } from './bubbleInspectorStore';
   import { saveBubbleToken } from '../../filemanager/fileManagerStore';
@@ -215,6 +215,17 @@
   function onPunch(e: CustomEvent<Film>) {
     $bubbleInspectorTarget!.commandTargetFilm = e.detail;
     $bubbleInspectorTarget!.command = "punch";
+  }
+
+  function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
+    const {index, films} = e.detail;
+    const page = $bubbleInspectorTarget!.page;
+    const bubble = $bubbleInspectorTarget!.bubble;
+    const paperSize = page.paperSize;
+    insertBubbleLayers(paperSize, bubble, index, films);
+
+    $bubble = $bubble;
+    $bookEditor!.commit(null);
   }
 
   function onSelectionChanged(info: SelectionInfo) {
@@ -444,7 +455,7 @@
       <h1>レイヤー</h1>
       <div class="w-full text-left">
         {#key $bubbleInspectorRebuildToken}
-          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept}/>
         {/key}
       </div>
     </div>
