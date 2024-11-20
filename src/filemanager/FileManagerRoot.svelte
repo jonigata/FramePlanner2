@@ -12,7 +12,7 @@
   import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { getLayover, notifyShare } from "../firebase";
+  import { getLayover } from "../firebase";
   import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
@@ -65,7 +65,15 @@
       const fs = $mainBookFileSystem!;
       if (!$saveProhibitFlag) {
         const file = (await fs.getNode(book.revision.id as NodeId))!.asFile()!;
-        await saveBookTo(book, fs, file);
+        try {
+          await saveBookTo(book, fs, file);
+        }
+        catch (e) {
+          console.error(e);
+          if (e instanceof DOMException && e.name === "QuotaExceededError") {
+            toastStore.trigger({ message: "記憶領域が不足しています。早めに領域を空けたのち、ダンプを取るなどの対応を行ってください。放置した場合、FramePlannerのデータがすべて消滅することがあります。", autohide: false });
+          }
+        }
       }
       currentRevision = {...book.revision};
       const info: CurrentFileInfo = {
