@@ -99,7 +99,6 @@
   }
 
   function commit(tag: HistoryTag) {
-    // $redrawToken = true; // これを入れるとresetBubbleCacheでエラーになる
     delayedCommiter.schedule(tag ?? "standard", tag ? 2000 : 0); 
     if (tag === 'bubble') {
       $bubbleInspectorTarget = $bubbleInspectorTarget;

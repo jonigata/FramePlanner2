@@ -4,7 +4,7 @@
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import type { Book } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
-  import { bookEditor, mainBook } from '../bookeditor/bookStore';
+  import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -302,6 +302,11 @@
     recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: isCloud ? 'cloud' : 'local'});
     $frameInspectorTarget = null;
     $loading = false;
+    // NOTICE:
+    // このredrawは若干まじない気味 原因を特定できていない
+    // なぜかロードがすぐ終わったとき画像が描画されない
+    // 一定以上時間がかかるときは不要なようなので、短いときだけケア
+    setTimeout(() => {$redrawToken = true;}, 200);
   }
 
   async function displayStoredImages() {
