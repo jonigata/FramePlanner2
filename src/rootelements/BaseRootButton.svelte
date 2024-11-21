@@ -44,7 +44,6 @@
   }
 
   function handleResize() {
-    console.log(window.innerWidth, window.innerHeight);
     if (window.innerWidth <= 640 || window.innerHeight <= 800) {
       unit = 80;
       gap = 10;

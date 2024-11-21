@@ -263,7 +263,6 @@ export class IndexedDBFile extends File {
 
     async function makeCanvasFromData(data: any): Promise<void> {
       if (data.blob) {
-        console.log("@@@@ loading blob");
         const image = new Image();
         image.src = URL.createObjectURL(data.blob);
         await image.decode();
@@ -271,9 +270,7 @@ export class IndexedDBFile extends File {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
-        console.log("@@@@ loading blob done");
       } else {
-        console.log("@@@@ loading text");
         const image = new Image();
         image.src = data.content;
         await image.decode();
@@ -281,7 +278,6 @@ export class IndexedDBFile extends File {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
-        console.log("@@@@ loading text done");
       }
     }
 
