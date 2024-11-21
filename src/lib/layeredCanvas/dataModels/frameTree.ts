@@ -1,7 +1,7 @@
-import { type Vector, lineIntersection, line, line2, deg2rad, isVectorZero, add2D, computeConstraintedRect, getRectCenter, translateRect } from "../tools/geometry/geometry";
+import { type Vector, lineIntersection, line, line2, deg2rad, isVectorZero, add2D } from "../tools/geometry/geometry";
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid, pointToQuadrilateralDistance } from "../tools/geometry/trapezoid";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
-import { type Film, FilmStack, calculateMinimumBoundingRect } from "./film";
+import { type Film, FilmStack, fitFilms, insertFilms } from "./film";
 
 // formal～はoffsetが含まれない値
 export type CornerOffsets = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
@@ -903,21 +903,12 @@ export function constraintFilms(paperSize: Vector, layout: Layout, films: Film[]
   if (!layout.corners) {return; }
 
   const constraintRect = trapezoidBoundingRect(layout.corners);
-  const constraintCenter = getRectCenter(constraintRect);
-  const mergedRect = calculateMinimumBoundingRect(paperSize, films)!;
+  fitFilms(paperSize, constraintRect, films);
+}
 
-  const { scale: targetScale, translation: targetTranslation } = computeConstraintedRect(
-    translateRect(mergedRect, constraintCenter),
-    constraintRect);
-
-  const rootMatrix = new DOMMatrix();
-  rootMatrix.scaleSelf(targetScale, targetScale);
-  rootMatrix.translateSelf(...targetTranslation);
-
-  films.forEach(film => {
-    const m = rootMatrix.multiply(film.makeMatrix(paperSize));
-    const scale = Math.sqrt(m.a * m.a + m.b * m.b);
-    film.setShiftedScale(paperSize, scale);
-    film.setShiftedTranslation(paperSize, [m.e, m.f]);
-  });
+export function insertFrameLayers(root: FrameElement, paperSize: Vector, element: FrameElement, index: number, films: Film[]): void {
+  const pageLayout = calculatePhysicalLayout(root, paperSize, [0,0]);
+  const layout = findLayoutOf(pageLayout, element)!;
+  const constraintRect = trapezoidBoundingRect(layout.corners);
+  insertFilms(paperSize, constraintRect, index, films, layout.element.filmStack.films, layout.element.gallery);
 }

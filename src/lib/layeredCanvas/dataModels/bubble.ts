@@ -3,7 +3,7 @@ import type { Vector, Rect } from '../tools/geometry/geometry';
 import { rectContains } from '../tools/geometry/geometry';
 import { type RectHandle, rectHandles } from '../tools/rectHandle';
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
-import { FilmStack } from "./film";
+import { type Film, FilmStack, insertFilms } from "./film";
 
 const minimumBubbleSize = 72;
 const threshold = 10;
@@ -487,6 +487,11 @@ export class Bubble {
     return Bubble.enoughSize(size);
   }
 
+}
+
+export function insertBubbleLayers(paperSize: Vector, bubble: Bubble, index: number, films: Film[]): void {
+  const constraintRect = bubble.getPhysicalRegularizedRect(paperSize);
+  insertFilms(paperSize, constraintRect, index, films, bubble.filmStack.films, bubble.gallery);
 }
 
 // TODO: tailTip正規化してなかった……

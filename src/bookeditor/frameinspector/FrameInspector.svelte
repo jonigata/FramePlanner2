@@ -1,7 +1,8 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
   import { frameInspectorTarget, frameInspectorRebuildToken } from './frameInspectorStore';
-  import type { Film } from "../../lib/layeredCanvas/dataModels/film";
+  import { insertFrameLayers } from "../../lib/layeredCanvas/dataModels/frameTree";
+  import { type Film } from "../../lib/layeredCanvas/dataModels/film";
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
   import Drawer from "../../utils/Drawer.svelte";
@@ -43,6 +44,17 @@
     $frameInspectorTarget!.commandTargetFilm = e.detail;
     $frameInspectorTarget!.command = "punch";
   }
+
+  function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
+    const {index, films} = e.detail;
+    const page = $frameInspectorTarget!.page;
+    const element = $frameInspectorTarget!.frame;
+    const paperSize = page.paperSize;
+    insertFrameLayers(page.frameTree, paperSize, element, index, films);
+
+    filmStack = filmStack;
+    $bookEditor!.commit(null);
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -59,8 +71,12 @@
         </RadioGroup>
       </div>
       {#key $frameInspectorRebuildToken}
-        <!-- svelteだと!が使えない -->
-        <FilmList filmStack={filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch}/>
+        <FilmList filmStack={filmStack} 
+          on:commit={onCommit}
+          on:scribble={onScribble} 
+          on:generate={onGenerate} 
+          on:punch={onPunch} 
+          on:accept={onAccept}/>
       {/key}
     </div>
   </Drawer>

@@ -131,7 +131,8 @@ export class IndexedDBFileSystem extends FileSystem {
     // ファイルが大きいと遅い
     const value = await this.db!.get('nodes', id);
     if (value) {
-      await this.db!.put('metadata', { key: id, type: value.type, filesize: value.content?.length });
+      const filesize = value.content ? value.content.length : value.blob ? value.blob.size : 0;
+      await this.db!.put('metadata', { key: id, type: value.type, filesize });
       if (value.type === 'file') {
         const file = new IndexedDBFile(this, value.id, this.db!); // Assuming IndexedDBFile class exists
         return file;
@@ -156,8 +157,10 @@ export class IndexedDBFileSystem extends FileSystem {
     let cursor = await store.openCursor();
     let total = 0;
     while (cursor) {
-      if (cursor.value.type === 'file') {
-        total += cursor.value.content.length;
+      const value = cursor.value;
+      if (value.type === 'file') {
+        const filesize = value.content ? value.content.length : value.blob ? value.blob.size : 0;
+        total += filesize;
       }
       cursor = await cursor.continue();
     }
@@ -257,32 +260,49 @@ export class IndexedDBFile extends File {
 
   async readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement> {
     const canvas = document.createElement("canvas");
-    if (waitsComplete) {
-      const content = await this.read();
-      const image = new Image();
-      image.src = content;
-      await image.decode();
-      canvas.width = image.width;
-      canvas.height = image.height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(image, 0, 0);
-      return canvas;
-    } else {
-      this.read().then(async (content) => {
+
+    async function makeCanvasFromData(data: any): Promise<void> {
+      if (data.blob) {
         const image = new Image();
-        image.src = content;
+        image.src = URL.createObjectURL(data.blob);
         await image.decode();
         canvas.width = image.width;
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
-      });
-      return canvas;
+      } else {
+        const image = new Image();
+        image.src = data.content;
+        await image.decode();
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+      }
     }
+
+    if (waitsComplete) {
+      const data = await this.db.get('nodes', this.id)!;
+      await makeCanvasFromData(data);
+    } else {
+      this.db.get('nodes', this.id).then(async (data) => {
+        await makeCanvasFromData(data);
+      });
+    }
+    return canvas;
   }
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
-    await this.write(canvas.toDataURL("image/png"));
+    const blob: Blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+          if (blob) {
+              resolve(blob);
+          } else {
+              reject(new Error('Failed to convert canvas to Blob.'));
+          }
+      }, 'image/png');
+    });
+    await this.db.put('nodes', { id: this.id, type: 'file', blob: blob });
   }
 
   async readBlob(): Promise<Blob> {

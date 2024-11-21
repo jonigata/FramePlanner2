@@ -4,7 +4,7 @@
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import type { Book } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
-  import { bookEditor, mainBook } from '../bookeditor/bookStore';
+  import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -12,7 +12,7 @@
   import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
-  import { getLayover, notifyShare } from "../firebase";
+  import { getLayover } from "../firebase";
   import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
@@ -65,7 +65,15 @@
       const fs = $mainBookFileSystem!;
       if (!$saveProhibitFlag) {
         const file = (await fs.getNode(book.revision.id as NodeId))!.asFile()!;
-        await saveBookTo(book, fs, file);
+        try {
+          await saveBookTo(book, fs, file);
+        }
+        catch (e) {
+          console.error(e);
+          if (e instanceof DOMException && e.name === "QuotaExceededError") {
+            toastStore.trigger({ message: "記憶領域が不足しています。早めに領域を空けたのち、ダンプを取るなどの対応を行ってください。放置した場合、FramePlannerのデータがすべて消滅することがあります。", autohide: false });
+          }
+        }
       }
       currentRevision = {...book.revision};
       const info: CurrentFileInfo = {
@@ -294,6 +302,11 @@
     recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: isCloud ? 'cloud' : 'local'});
     $frameInspectorTarget = null;
     $loading = false;
+    // NOTICE:
+    // このredrawは若干まじない気味 原因を特定できていない
+    // なぜかロードがすぐ終わったとき画像が描画されない
+    // 一定以上時間がかかるときは不要なようなので、短いときだけケア
+    setTimeout(() => {$redrawToken = true;}, 200);
   }
 
   async function displayStoredImages() {
@@ -400,6 +413,7 @@
   >
     <div class="drawer-content">
       <h2>ローカル</h2>
+      <p>※https://frameplanner-e5569.web.app と https://frameplanner.online ではファイルは別管理になります。もし作ったはずのファイルが見当たらないときは、いつもと違うURLになっていないかどうかを確認してください。近日中に統合予定です。</p>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
           <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
@@ -428,9 +442,9 @@
           <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
         {/if}
       </div>
+      <h2>クラウド</h2>
+      <p>この機能はβ版です。断りなくサービス停止する可能性があります。ログインすると使えます。</p>
       {#if cloudCabinet && cloudTrash}
-        <h2>クラウド</h2>
-        <div class="notice">この機能はβ版です。断りなくサービス停止する可能性があります。</div>
         <div class="cabinet variant-ghost-primary rounded-container-token">
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
         </div>
@@ -445,6 +459,13 @@
 <style>
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
+  }
+  p {
+    font-family: '源暎アンチック';
+    font-size: 14px;
+    margin-left: 32px;
+    margin-right: 16px;
+    margin-bottom: 8px;
   }
   h2 {
     font-family: '源暎エムゴ';

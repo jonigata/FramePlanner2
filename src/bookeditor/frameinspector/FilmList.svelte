@@ -35,9 +35,7 @@
 
   function onAcceptDrop(newIndex: number, films: Film[]) {
     const index = filmStack.films.length - newIndex;
-    filmStack.films.splice(index, 0, ...films);
-    dispatch('commit', true);
-    filmStack = filmStack;
+    dispatch('accept', {index, films});
   }
 
   function onGhost(newIsDragging: boolean, newGhostIndex: number) {
@@ -107,7 +105,7 @@
 <div class="film-list-container">
   <FilmListItem film={null} on:select={onGenerate}/>
   <div 
-    class="flex flex-col gap-2 mt-2" 
+    class="flex flex-col gap-2 mt-2 min-h-[20px]" 
     use:sortableList={{animation: 100, onUpdate: onSortableUpdate}} 
     use:fileDroppableList={fileDroppableContainer.getDropZoneProps()}
   >

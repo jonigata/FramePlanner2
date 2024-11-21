@@ -1,3 +1,7 @@
+// TODO: FileDroppableContainerの権限を強くする
+//   現状だと、fileDrappableListを複数のelementでuseすると正しく動作しないため
+//   受付ゾーンを今より広げるために必要
+
 type DropZoneOptions = {
   onFileDrop: (files: FileList, index: number) => Promise<void>;
   onDragUpdate: (index: number) => void;
