@@ -28,7 +28,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
-  import { minimumBoundingScale, add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
+  import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoice } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";

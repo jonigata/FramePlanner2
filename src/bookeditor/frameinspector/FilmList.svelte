@@ -9,7 +9,7 @@
   import { createCanvasFromBlob } from '../../lib/layeredCanvas/tools/imageUtil';
   
   export let filmStack: FilmStack;
-  export let allowsOutPainting: boolean = false;
+  export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
 
   const dispatch = createEventDispatcher();
 
@@ -119,7 +119,7 @@
       {#if isDragging && ghostIndex === index}
         <div data-ghost class="ghost-element"/>
       {/if}
-      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:commit={onCommit} on:outpainting={onOutPainting} allowsOutPainting={allowsOutPainting}/>
+      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:commit={onCommit} on:outpainting={onOutPainting} calculateOutPaintingCost={calculateOutPaintingCost}/>
     {/each}
     {#if isDragging && ghostIndex === filmStack.films.length}
       <div data-ghost class="ghost-element"/>

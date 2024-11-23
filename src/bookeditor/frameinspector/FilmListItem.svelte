@@ -9,7 +9,6 @@
   import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
-  // import { calculateFramePadding } from '../../utils/outPaintFilm'
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -21,11 +20,11 @@
   import { toolTip } from '../../utils/passiveToolTipStore';
 
   export let film: Film | null;
-  export let allowsOutPainting: boolean = false;
+  export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
 
   let canvas: HTMLCanvasElement;
   let effectVisible = false;
-  let outpaintingCost = 0;
+  let outPaintingCost = 0;
 
   const dispatch = createEventDispatcher();
 
@@ -133,16 +132,11 @@
   }
 
   function onHover(e: MouseEvent) {
-    if (!allowsOutPainting) return;
+    if (!calculateOutPaintingCost) return;
 
     const source = film?.media.drawSource;
     if (source) {
-      // const padding = calculateFramePadding(fit.page, fit.frame, film);
-
-      // outpainting costの算出
-      // $0.05 per mega pixel (1feathral ≒ $0.01)
-      const pixels = source.width * source.height;
-      outpaintingCost = Math.ceil(pixels / (1024 * 1024) * 8);
+      outPaintingCost = calculateOutPaintingCost(film!);
     }
   }
 
@@ -179,9 +173,9 @@
       -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
-      {#if allowsOutPainting}
+      {#if calculateOutPaintingCost != null}
         <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <img draggable={false} class="outpainting-icon" src={outPaintingIcon} alt="アウトペインティング" use:toolTip={"アウトペインティング(コスト " + outpaintingCost + ")"} on:click={onOutPainting}/>
+        <img draggable={false} class="outpainting-icon" src={outPaintingIcon} alt="アウトペインティング" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(不可)" : "アウトペインティング(コスト " + outPaintingCost + ")"} on:click={onOutPainting}/>
       {/if}
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>

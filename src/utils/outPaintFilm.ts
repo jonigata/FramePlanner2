@@ -4,6 +4,10 @@ import { outPaint } from "../firebase";
 import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import type { Rect, Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
+import type { Page } from 'manga-renderer';
+import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
+import { add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
 
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
@@ -44,4 +48,17 @@ export function calculatePadding(outer: Rect, size: Vector, scale: number, trans
   const bottom = Math.max(0, Math.ceil((outerBottom - inner.bottom) / scale / 64) * 64);
 
   return {left, top, right, bottom};
+}
+
+export function calculateFramePadding(page: Page, frame: FrameElement, film: Film): {left: number, top: number, right: number, bottom: number} {
+  const paperSize = page.paperSize;
+  const pageLayout = calculatePhysicalLayout(page.frameTree, paperSize, [0,0]);
+  const leafLayout = findLayoutOf(pageLayout, frame);
+  const outerRect = trapezoidBoundingRect(leafLayout!.corners);
+  const center = getRectCenter(outerRect);
+  const scale = film.getShiftedScale(paperSize);
+  const translation = add2D(film.getShiftedTranslation(paperSize), center);
+  const padding = calculatePadding(outerRect, film.media.size, scale, translation);
+  console.log("padding", padding);
+  return padding;
 }

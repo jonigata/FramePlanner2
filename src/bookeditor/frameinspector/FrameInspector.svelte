@@ -8,6 +8,7 @@
   import Drawer from "../../utils/Drawer.svelte";
   import { bookEditor } from "../bookStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { calculateFramePadding } from '../../utils/outPaintFilm'
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -60,6 +61,22 @@
     $frameInspectorTarget!.commandTargetFilm = e.detail;
     $frameInspectorTarget!.command = "outpainting";
   }
+
+  function calculateOutPaintingCost(film: Film) {
+    const fit = $frameInspectorTarget!;
+    const padding = calculateFramePadding(fit.page, fit.frame, film);
+    if (padding.left === 0 && padding.right === 0 && padding.top === 0 && padding.bottom === 0) {
+      return 0;
+    }
+
+    const w = film.media.naturalWidth + padding.left + padding.right;
+    const h = film.media.naturalHeight + padding.top + padding.bottom;
+
+    // outpainting costの算出
+    // $0.05 per mega pixel (1feathral ≒ $0.01)
+    const pixels = w * h;
+    return Math.ceil(pixels / (1024 * 1024) * 8);
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -83,7 +100,7 @@
           on:punch={onPunch} 
           on:accept={onAccept}
           on:outpainting={onOutPainting}
-          allowsOutPainting={true}/>
+          calculateOutPaintingCost={calculateOutPaintingCost}/>
       {/key}
     </div>
   </Drawer>
