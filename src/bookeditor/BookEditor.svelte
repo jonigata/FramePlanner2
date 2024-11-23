@@ -562,9 +562,18 @@
     $loading = true;
     const padding = calculateFramePadding(fit.page, fit.frame, film);
     console.log("padding", padding);
-    await outPaintFilm(film, padding);
-    commit(null);
-    $loading = false;
+    try {
+      const newFilm = await outPaintFilm(film, padding);
+      console.log("newFilm", newFilm);
+      const index = fit.frame.filmStack.films.indexOf(film);
+      fit.frame.filmStack.films.splice(index + 1, 0, newFilm!);
+      commit(null);
+    } catch (e) {
+      console.error(e);
+      toastStore.trigger({ message: `アウトペインティングに失敗しました`, timeout: 3000});
+    } finally {
+      $loading = false;
+    }
   }
 
   onDestroy(() => {

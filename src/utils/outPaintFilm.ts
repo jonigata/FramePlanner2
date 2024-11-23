@@ -12,7 +12,10 @@ import { onlineAccount, type OnlineAccount } from './accountStore';
 
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
-  if (!(imageMedia instanceof ImageMedia)) { return; }
+  if (!(imageMedia instanceof ImageMedia)) { 
+    console.log("A");
+    return; 
+  }
 
   const size = { width: imageMedia.canvas.width, height: imageMedia.canvas.height };
   const imageUrl = imageMedia.canvas.toDataURL("image/png");
@@ -24,7 +27,13 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   await resultImage.decode();
 
   const canvas = createCanvasFromImage(resultImage);
-  film.media = new ImageMedia(canvas);
+  const newFilm = film.clone();
+  newFilm.media = new ImageMedia(canvas);
+
+  const oldImageSize = Math.min(film.media.naturalWidth, film.media.naturalHeight) ;
+  const newImageSize = Math.min(canvas.width, canvas.height);
+  const newScale = film.n_scale / oldImageSize * newImageSize;
+  newFilm.n_scale = newScale;
 
   onlineAccount.update((oa: OnlineAccount | null) => {
     if (!oa) { return oa; }
@@ -33,6 +42,9 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   });
 
   logEvent(getAnalytics(), 'outpaint');
+
+  console.log("B", newFilm);
+  return newFilm;
 }
 
 // 外側の矩形と内側の矩形が与えられ、内側の矩形が外側の矩形を内包する最小の余白（ただし64px単位）を計算する
@@ -46,9 +58,6 @@ export function calculatePadding(outer: Rect, size: Vector, scale: number, trans
     right: translate[0] + size[0] * scale / 2,
     bottom: translate[1] + size[1] * scale / 2,
   };
-
-  console.log("outer", outer);
-  console.log("inner", inner);
 
   const left = Math.max(0, Math.ceil((inner.left - outerLeft) / scale / 64) * 64);
   const top = Math.max(0, Math.ceil((inner.top - outerTop) / scale / 64) * 64);
@@ -67,6 +76,5 @@ export function calculateFramePadding(page: Page, frame: FrameElement, film: Fil
   const scale = film.getShiftedScale(paperSize);
   const translation = add2D(film.getShiftedTranslation(paperSize), center);
   const padding = calculatePadding(outerRect, film.media.size, scale, translation);
-  console.log("padding", padding);
   return padding;
 }

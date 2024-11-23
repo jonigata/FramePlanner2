@@ -30,6 +30,7 @@
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
+    console.log("film scale", film?.n_scale, "film size", film?.media.drawSource.width, film?.media.drawSource.height);
     dispatch('select', { film, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
   }
 
