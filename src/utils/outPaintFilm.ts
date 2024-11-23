@@ -30,10 +30,13 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const newFilm = film.clone();
   newFilm.media = new ImageMedia(canvas);
 
+  // 画像スケール
+  // 元画像が大きすぎる場合、fal.aiがアスペクト比を維持したまま縮小するケースがあるので対応する
   const oldImageSize = Math.min(film.media.naturalWidth, film.media.naturalHeight) ;
-  const newImageSize = Math.min(canvas.width, canvas.height);
-  const newScale = film.n_scale / oldImageSize * newImageSize;
-  newFilm.n_scale = newScale;
+  const newActualImageSize = Math.min(canvas.width, canvas.height);
+  const newIdealImageSize = Math.min(size.width + padding.left + padding.right, size.height + padding.top + padding.bottom);
+  const newScale = film.n_scale / oldImageSize * newActualImageSize;
+  newFilm.n_scale = newScale * (newIdealImageSize / newActualImageSize);
 
   onlineAccount.update((oa: OnlineAccount | null) => {
     if (!oa) { return oa; }
