@@ -173,8 +173,8 @@ export async function removeBg(dataUrl: string): Promise<any> {
   return r;
 }
 
-export async function outPaint(dataUrl: string, padding: {left:number,right:number,top:number,bottom:number}): Promise<any> {
-  const r = await callFunc('outpaint', {dataUrl,padding}, 180);
+export async function outPaint(dataUrl: string, size: {width: number, height: number}, padding: {left:number,right:number,top:number,bottom:number}): Promise<any> {
+  const r = await callFunc('outpaint', {dataUrl,size,padding}, 180);
   return r;
 }
 

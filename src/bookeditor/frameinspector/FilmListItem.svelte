@@ -9,6 +9,7 @@
   import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -71,6 +72,11 @@
     console.log("onOutPainting");
     ev.stopPropagation();
     ev.preventDefault();
+
+    if (outPaintingCost === 0) {
+      toastStore.trigger({ message: "アウトペインティング余地がありません", timeout: 3000 });
+      return;
+    }
     dispatch('outpainting', film)
   }
 
@@ -175,7 +181,7 @@
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
       {#if calculateOutPaintingCost != null}
         <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <img draggable={false} class="outpainting-icon" src={outPaintingIcon} alt="アウトペインティング" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(不可)" : "アウトペインティング(コスト " + outPaintingCost + ")"} on:click={onOutPainting}/>
+        <img draggable={false} class="outpainting-icon" src={outPaintingIcon} alt="アウトペインティング" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング(コスト " + outPaintingCost + ")"} on:click={onOutPainting}/>
       {/if}
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>

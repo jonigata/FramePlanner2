@@ -8,14 +8,16 @@ import type { Page } from 'manga-renderer';
 import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
+import { onlineAccount, type OnlineAccount } from './accountStore';
 
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
   if (!(imageMedia instanceof ImageMedia)) { return; }
 
+  const size = { width: imageMedia.canvas.width, height: imageMedia.canvas.height };
   const imageUrl = imageMedia.canvas.toDataURL("image/png");
-  const r = await outPaint(imageUrl, padding);
-  console.log(r);
+  const r = await outPaint(imageUrl, size, padding);
+  console.log("outpainting result", r);
 
   const resultImage = document.createElement('img');
   resultImage.src = "data:image/png;base64," + r.result.images[0];
@@ -23,6 +25,12 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
 
   const canvas = createCanvasFromImage(resultImage);
   film.media = new ImageMedia(canvas);
+
+  onlineAccount.update((oa: OnlineAccount | null) => {
+    if (!oa) { return oa; }
+    oa.feathral = r.feathral;
+    return oa;
+  });
 
   logEvent(getAnalytics(), 'outpaint');
 }
