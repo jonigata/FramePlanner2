@@ -55,6 +55,11 @@
     filmStack = filmStack;
     $bookEditor!.commit(null);
   }
+
+  function onOutPainting(e: CustomEvent<Film>) {
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "outpainting";
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight/>
@@ -76,7 +81,9 @@
           on:scribble={onScribble} 
           on:generate={onGenerate} 
           on:punch={onPunch} 
-          on:accept={onAccept}/>
+          on:accept={onAccept}
+          on:outpainting={onOutPainting}
+          allowsOutPainting={true}/>
       {/key}
     </div>
   </Drawer>

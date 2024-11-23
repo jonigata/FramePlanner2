@@ -28,13 +28,14 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
-  import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
+  import { minimumBoundingScale, add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoice } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
   import { punchFilm } from '../utils/punchFilm'
+  import { outPaintFilm, calculateFramePadding } from '../utils/outPaintFilm'
   import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
 
@@ -434,6 +435,8 @@
         await modalFrameGenerate(fit);
       } else if (command === "punch") {
         await punchFrameFilm(fit);
+      } else if (command === "outpainting") {
+        await outPaintFrameFilm(fit);
       }
       $frameInspectorRebuildToken++;
     }
@@ -542,6 +545,24 @@
 
     $loading = true;
     await punchFilm(film)
+    commit(null);
+    $loading = false;
+  }
+
+  async function outPaintFrameFilm(fit: FrameInspectorTarget) {
+    console.log($onlineStatus);
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      return;
+    }
+
+    const film = fit.commandTargetFilm!;
+    if (!(film.media instanceof ImageMedia)) { return; }
+
+    $loading = true;
+    const padding = calculateFramePadding(fit.page, fit.frame, film);
+    console.log("padding", padding);
+    await outPaintFilm(film, padding);
     commit(null);
     $loading = false;
   }
