@@ -37,7 +37,7 @@
           /> -->
           <!-- <Search class="absolute right-3 top-2.5 text-gray-400" size={20} /> -->
         </div>
-        <button class="btn variant-filled-primary px-4 py-2" on:click={openFramePlanner}>FramePlanner</button>
+        <button class="btn variant-filled-secondary px-4 py-2" on:click={openFramePlanner}>FramePlanner</button>
       </div>
     </div>
   </div>

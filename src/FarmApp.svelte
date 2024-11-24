@@ -17,9 +17,10 @@
 </script>
 
 <Router>
-  <main class="flex flex-col min-h-screen bg-gray-100">
+  <main class="flex flex-col min-h-screen h-screen bg-gray-100">
     <Header />
-    <Route paht="/farm"><Home/></Route>    
+    <Route path="/farm"><Home/></Route>    
     <Route path="/farm/mypage"><MyPage/></Route>
+    <div class="h-24"></div>
   </main>
 </Router>
