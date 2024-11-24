@@ -3,7 +3,7 @@ import type { FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree"
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
 import type { Page } from '../../lib/book/book';
 
-type FrameInspectorCommand = "generate" | "scribble" | "punch";
+type FrameInspectorCommand = "generate" | "scribble" | "punch" | "outpainting";
 
 export type FrameInspectorPosition = {
   center: {x: number, y: number},

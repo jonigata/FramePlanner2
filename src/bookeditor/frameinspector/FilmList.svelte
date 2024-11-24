@@ -9,6 +9,7 @@
   import { createCanvasFromBlob } from '../../lib/layeredCanvas/tools/imageUtil';
   
   export let filmStack: FilmStack;
+  export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
 
   const dispatch = createEventDispatcher();
 
@@ -83,6 +84,11 @@
     dispatch('punch', e.detail);
   }
 
+  function onOutPainting(e: CustomEvent<Film>) {
+    console.log("onOutPainting", e.detail);
+    dispatch('outpainting', e.detail);
+  }
+
   function onSortableUpdate(e: {oldIndex: number | undefined, newIndex:number | undefined}) {
     // reversed order
     const oldIndex = filmStack.films.length - 1 - e.oldIndex!;
@@ -113,7 +119,7 @@
       {#if isDragging && ghostIndex === index}
         <div data-ghost class="ghost-element"/>
       {/if}
-      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:commit={onCommit}/>
+      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:commit={onCommit} on:outpainting={onOutPainting} calculateOutPaintingCost={calculateOutPaintingCost}/>
     {/each}
     {#if isDragging && ghostIndex === filmStack.films.length}
       <div data-ghost class="ghost-element"/>

@@ -9,6 +9,7 @@
   import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -16,16 +17,20 @@
   import trashIcon from '../../assets/filmlist/trash.png';
   import punchIcon from '../../assets/filmlist/punch.png';
   import effectIcon from '../../assets/filmlist/effect.png';
+  import outPaintingIcon from '../../assets/filmlist/outpainting.png';
   import { toolTip } from '../../utils/passiveToolTipStore';
 
   export let film: Film | null;
+  export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
 
   let canvas: HTMLCanvasElement;
   let effectVisible = false;
+  let outPaintingCost = 0;
 
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
+    console.log("film scale", film?.n_scale, "film size", film?.media.drawSource.width, film?.media.drawSource.height);
     dispatch('select', { film, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
   }
 
@@ -62,6 +67,18 @@
     ev.stopPropagation();
     ev.preventDefault();
     dispatch('punch', film)
+  }
+
+  function onOutPainting(ev: MouseEvent) {
+    console.log("onOutPainting");
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    if (outPaintingCost === 0) {
+      toastStore.trigger({ message: "アウトペインティング余地がありません", timeout: 3000 });
+      return;
+    }
+    dispatch('outpainting', film)
   }
 
   function onToggleeffectVisible(ev: MouseEvent) {
@@ -116,8 +133,18 @@
   $: onCanvas(canvas);
   function onCanvas(c: HTMLCanvasElement) {
     if (!c) return;
+    const source = film?.media.drawSource!;
     const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(film!.media.drawSource, 0, 0);
+    ctx.drawImage(source, 0, 0);
+  }
+
+  function onHover(e: MouseEvent) {
+    if (!calculateOutPaintingCost) return;
+
+    const source = film?.media.drawSource;
+    if (source) {
+      outPaintingCost = calculateOutPaintingCost(film!);
+    }
   }
 
 </script>
@@ -139,6 +166,7 @@
       class="image-panel" 
       class:variant-filled-primary={film?.selected}
       class:variant-soft-tertiary={!film?.selected}
+      on:pointerover={onHover}
       on:click={onClick}
     >
       <SpreadCanvas width={film.media.drawSource.width} height={film.media.drawSource.height} bind:canvas={canvas}/>
@@ -152,6 +180,10 @@
       -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
+      {#if calculateOutPaintingCost != null}
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <img draggable={false} class="outpainting-icon" src={outPaintingIcon} alt="アウトペインティング" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング(コスト " + outPaintingCost + ")"} on:click={onOutPainting}/>
+      {/if}
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -244,6 +276,13 @@
   }
   .effect-icon.active {
     filter: opacity(100%);
+  }
+  .outpainting-icon {
+    position: absolute;
+    right: 72px;
+    bottom: 4px;
+    width: 32px;
+    height: 32px;
   }
   .scribble-icon {
     position: absolute;
