@@ -230,6 +230,7 @@ export async function updateMyProfile(profile: UserProfile): Promise<void> {
 export interface PublicationContent {
   id: string;
   title: string;
+  is_public: boolean;
   description: string;
   cover_url: string;
   content_url: string;
@@ -237,6 +238,7 @@ export interface PublicationContent {
   created_at: string;
   updated_at: string;
   author_display_name: string;
+  fav_count: number;
 }
 
 export type WritePublicationContent = Pick<
@@ -248,6 +250,11 @@ export async function recordPublication(publication: WritePublicationContent): P
   return r.id;
 }
 
+export async function updatePublication(id: string, title: string, description: string, is_public: boolean): Promise<string> {
+  const r = await callFunc('updatepublication', {publication: {id,title,description,is_public}}, 180);
+  return r.id;
+}
+
 export async function getPublication(id: string): Promise<PublicationContent> {
   const r = await callFunc('getpublication', {id}, 180);
   return r.publication;
@@ -256,6 +263,13 @@ export async function getPublication(id: string): Promise<PublicationContent> {
 export async function getNewReleases(): Promise<PublicationContent[]> {
   const r = await callFunc('getnewreleases', {}, 180);
   return r.newReleases;
+}
+
+export async function getWorks(author_id: string | null): Promise<PublicationContent[]> {
+  // author_idがnullの場合は自分の作品を取得
+  const r = await callFunc('getworks', {author_id}, 180);
+  console.log(r);
+  return r.works;
 }
 
 function getAuth2() {

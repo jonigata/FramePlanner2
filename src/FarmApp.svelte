@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { getNewReleases, type PublicationContent } from "./firebase";
   import { Router, Route } from "svelte-routing";
+  import { bootstrap } from './utils/accountStore';
   
   import Header from './farm/Header.svelte';
   import Home from './farm/Home.svelte';
@@ -12,6 +13,7 @@
   let manga: PublicationContent[] = [];
 
   onMount(async () => {
+    bootstrap();
     manga = await getNewReleases();
   });
 </script>

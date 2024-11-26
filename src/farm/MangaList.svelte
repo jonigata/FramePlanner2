@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PublicationContent } from "../firebase";
+  import privateIcon from '../assets/farm/private.png';
 
   export let manga: PublicationContent[] = [];
 
@@ -35,32 +36,42 @@
     [year: number]: { [month: number]: PublicationContent[] };
   } = {};
 
-  $: manga.forEach((item) => {
-    const date = new Date(item.created_at);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    if (!groupedManga[year]) {
-      groupedManga[year] = {};
-    }
-    if (!groupedManga[year][month]) {
-      groupedManga[year][month] = [];
-    }
-    groupedManga[year][month].push(item);
-  });
-  groupedManga = groupedManga;
-  console.log(groupedManga);
+  $: onMangaChanged(manga);
+  function onMangaChanged(manga: PublicationContent[]) {
+    const g: Record<number, Record<number, PublicationContent[]>> = {};
+    manga.forEach((item) => {
+      const date = new Date(item.created_at);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      if (!g[year]) {
+        g[year] = {};
+      }
+      if (!g[year][month]) {
+        g[year][month] = [];
+      }
+      g[year][month].push(item);
+    });
+
+    Object.keys(g).forEach((yearStr) => {
+      const year = Number(yearStr);
+      Object.keys(g[year]).forEach((monthStr) => {
+        const month = Number(monthStr);
+        g[year][month].sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+    });
+
+    groupedManga = g;
+  }
 </script>
 
 <div class="flex flex-col gap-4">
-  {#each Object.keys(groupedManga)
-    .map(Number)
-    .sort((a, b) => b - a) as year}
+  {#each Object.keys(groupedManga).toReversed() as year}
     <h2 class="text-lg font-bold">{year}年</h2>
-    {#each Object.keys(groupedManga[year])
-      .map(Number)
-      .sort((a, b) => b - a) as month}
+    {#each Object.keys(groupedManga[Number(year)]).toReversed() as month}
       <h3 class="text-md font-semibold ml-4">{month}月</h3>
-      {#each groupedManga[year][month] as item (item.id)}
+      {#each groupedManga[Number(year)][Number(month)] as item}
         <div class="flex items-start gap-4 ml-8">
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -76,17 +87,21 @@
                 <h4 class="text-xs text-gray-600">{item.title}</h4>
                 <h5 class="text-xs text-gray-600 ml-2">
                   {formatDate(item.created_at)}
+                  ⭐️<span class="fav">{item.fav_count}</span>
+                  {#if !item.is_public}
+                    <img src={privateIcon} alt="Private" class="w-6 h-6 inline-block ml-1" />
+                  {/if}
                 </h5>
               </div>
-              <p class="text-xs text-gray-800 mt-2 line-clamp-3">
+              <p class="text-xs text-gray-800 mt-2 mb-2 line-clamp-3">
                 {item.description}
               </p>
-            </div>
-            <button
+              <button
               type="button"
               class="btn btn-sm w-12 h-6 variant-filled-secondary"
               on:click={() => onEdit(item)}>編集</button
             >
+            </div>
           </div>
         </div>
       {/each}
@@ -116,5 +131,18 @@
     font-family: "源暎エムゴ";
     font-size: 0.9rem;
     margin-top: 0;
+  }
+  p {
+    font-family: '源暎アンチック';
+    font-size: 0.7rem;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0;
+  }
+  .fav {
+    font-family: '源暎エムゴ';
+    font-size: 0.7rem;
+    color: #666;
   }
 </style>

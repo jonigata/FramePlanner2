@@ -48,6 +48,7 @@
   </button>
   
   <div class="flex-grow"></div>
+  
   {#if $onlineStatus === "signed-in"}
     <Feathral/>
     <AvatarIcon on:click={editUserProfile}/>

@@ -1,13 +1,29 @@
 <script lang="ts">
-  import { Link } from "svelte-routing";
+  import { onlineStatus, signIn, signOut } from '../utils/accountStore';
+  import Feathral from '../utils/Feathral.svelte';
+  import AvatarIcon from '../toolbar/AvatarIcon.svelte';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
-  function openFramePlanner() {
+  function openHome() {
     window.open('/farm/');
   }
 
   function openMyPage() {
     window.open('/farm/mypage/');
   }
+
+  function openFramePlanner() {
+    window.open('/');
+  }
+
+  function editUserProfile() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'userProfile',
+    };
+    modalStore.trigger(d);    
+  }
+
 </script>
 
 <header class="shadow">
@@ -19,8 +35,9 @@
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <ul class="flex space-x-6">
-            <li class="hover:text-yellow-500 cursor-pointer" on:click={openFramePlanner}>ホーム</li>
+            <li class="hover:text-yellow-500 cursor-pointer" on:click={openHome}>ホーム</li>
             <li class="hover:text-yellow-500 cursor-pointer" on:click={openMyPage}>マイページ</li>
+            <li class="hover:text-yellow-500 cursor-pointer" on:click={openFramePlanner}>FramePlanner</li>
             <!-- <li class="hover:text-yellow-500 cursor-pointer">ストア</li>
             <li class="hover:text-yellow-500 cursor-pointer">フォロー</li>
             <li class="hover:text-yellow-500 cursor-pointer">本棚</li> -->
@@ -37,7 +54,20 @@
           /> -->
           <!-- <Search class="absolute right-3 top-2.5 text-gray-400" size={20} /> -->
         </div>
-        <button class="btn variant-filled-secondary px-4 py-2" on:click={openFramePlanner}>FramePlanner</button>
+        {#if $onlineStatus === "signed-in"}
+          <Feathral/>
+          <AvatarIcon on:click={editUserProfile}/>
+        {/if}
+        {#if $onlineStatus === "signed-out"}
+          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
+            Sign in
+          </button>
+        {/if}
+        {#if $onlineStatus === "signed-in"}
+          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signOut}>
+            Sign out
+          </button>
+        {/if}
       </div>
     </div>
   </div>

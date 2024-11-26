@@ -2,8 +2,9 @@
   import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
   import '@skeletonlabs/skeleton/styles/all.css';
   import { onMount } from "svelte";
-  import { getNewReleases, type PublicationContent } from "../firebase";
+  import { getWorks, updatePublication, type PublicationContent } from "../firebase";
   import MangaList from './MangaList.svelte';
+  import EditManga from './EditManga.svelte';
 
   let manga: PublicationContent[] = [];
   let selectedManga: PublicationContent | null = null;
@@ -12,13 +13,17 @@
     selectedManga = e.detail;
   }
 
-  function onCommit() {
+  async function onCommit() {
     console.log("Commit", selectedManga);
+    const p = selectedManga!;
+    await updatePublication(p.id, p.title, p.description, p.is_public);
     selectedManga = null;
+    manga = manga;
   }
 
   onMount(async () => {
-    manga = await getNewReleases();
+    manga = await getWorks(null);
+    console.log("Manga", manga);
   });
 </script>
 
@@ -39,23 +44,7 @@
     <!-- Right Pane -->
     <div class="flex flex-col gap-4 w-1/2 p-4 overflow-y-auto">
       {#if selectedManga}
-        <h2 class="text-lg font-bold">編集: {selectedManga.title}</h2>
-        <img
-          src={selectedManga.thumbnail_url}
-          alt={selectedManga.title}
-          class="w-48 h-64 object-cover rounded-lg shadow-md"
-        />
-        <div class="flex flex-col">
-          <!-- svelte-ignore a11y-label-has-associated-control -->
-          <label class="text-xs text-gray-600">タイトル</label>
-          <input type="text" class="input" bind:value={selectedManga.title} />
-        </div>
-        <div class="flex flex-col">
-          <!-- svelte-ignore a11y-label-has-associated-control -->
-          <label class="text-xs text-gray-600">説明</label>
-          <textarea class="textarea" bind:value={selectedManga.description}></textarea>
-        </div>
-        <button type="button" class="btn btn-primary mt-4" on:click={onCommit}>保存</button>
+        <EditManga {selectedManga} {onCommit} />
       {/if}
     </div>
   </div>
@@ -76,9 +65,5 @@
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     cursor: pointer;
-  }
-  .btn-primary {
-    background-color: #007bff;
-    color: white;
   }
 </style>
