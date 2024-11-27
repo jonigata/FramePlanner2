@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { saveAsZip } from "./saver/saveAsZip";
+  import { saveAsZip, makeZip } from "./saver/saveAsZip";
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
   import { mainBook, bookEditor } from "../bookeditor/bookStore";
@@ -12,10 +12,10 @@
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
-  import { getPublishUrl, notifyShare, recordPublication } from "../firebase";
+  import { getPublishUrl, getTransportUrl, notifyShare, recordPublication } from "../firebase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
   import { loading } from '../utils/loadingStore';
-  import type { Book } from '../lib/book/book';
+  import type { Book, Page } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
@@ -46,7 +46,8 @@
             saveAsPSD(targetPages[0]);
             break;
           case 'aipictors':
-            postToAiPictors(targetPages[0]);
+            // postToAiPictors(targetPages[0]);
+            await transport(targetPages);
             break;
           case 'envelope':
             console.log("envelope", $mainBook!.revision);
@@ -231,6 +232,52 @@
       $loading = false;
     }
   }
+
+  async function transport(pages: Page[]) {
+    let title, description;
+    
+    $loading = true;
+    try {
+      const zipFile = await makeZip(pages);
+      const sha1 = await blobToSha1(zipFile);
+        
+      let content_url;
+
+      const {apiUrl, url, token, filename} = await getTransportUrl(`${sha1}.zip`);
+      console.log("本体", apiUrl, url, token, filename);
+
+      const response = await fetch(url,{
+        method: "POST",
+        mode: "cors",
+        body: zipFile,
+        headers: {
+          "Content-Type": "b2/x-auto",
+          "Authorization": token,
+          "X-Bz-File-Name": filename,
+          "X-Bz-Content-Sha1": sha1,
+        },
+      });
+      console.log(response);
+      if (!response.ok) {
+        throw new Error("ドキュメントのアップロードに失敗しました");
+      }
+
+      content_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
+      console.log("content_url", content_url);
+
+      // URLをコピー
+      navigator.clipboard.writeText(content_url);
+      toastStore.trigger({ message: `クリップボードにコピーされました`, timeout: 10000});
+    }
+    catch(e: any) {
+      console.log(e);
+      toastStore.trigger({ message: e, timeout: 1500});
+    }
+    finally {
+      $loading = false;
+    }
+  }
+
 
   async function shareBook(book: Book) {
     $loading = true;

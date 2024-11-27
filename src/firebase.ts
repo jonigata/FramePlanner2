@@ -206,6 +206,12 @@ export async function getPublishUrl(filename: string): Promise<{apiUrl: string, 
   return r;
 }
 
+export async function getTransportUrl(filename: string): Promise<{apiUrl: string, url: string, token: string, filename: string}> {
+  const r = await callFunc('gettransporturl', {filename}, 180);
+  console.log(r);
+  return r;
+}
+
 export interface UserProfile {
   username: string;
   display_name: string;

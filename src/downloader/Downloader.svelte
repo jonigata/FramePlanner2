@@ -12,7 +12,7 @@
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download, hint: "画像としてダウンロードします\n対象ページが複数の場合はzipファイルになります"},
     {icon: clipboardIcon, label: "クリップボードにコピー", onClick: copyToClipboard, hint: "クリップボードにコピーします\n対象ページが複数の場合は最初のページのみ"},
-    {icon: aiPictorsIcon, label: "に投稿", onClick: postAIPictors, hint: "aiPictorsに投稿します"},
+    // {icon: aiPictorsIcon, label: "に投稿", onClick: postAIPictors, hint: "aiPictorsに投稿します"},
     {label: "PSDでエクスポート", onClick: downloadPSD, hint: "PSDファイルとしてダウンロードします\n対象ページが複数の場合は最初のページのみ"},
     {label: "シェア", onClick: shareBook, hint: "ドキュメントのコピーを\n編集できる形でアップロードします"},
     {label: "パッケージ", onClick: downloadEnvelop, hint: "ドキュメントを1つのファイルとして\nダウンロードします"},

@@ -3,10 +3,9 @@ import JSZip from 'jszip';
 import type { Page } from '../../lib/book/book';
 import { renderPageToBlob } from './renderPage';
 
-export async function saveAsZip(pages: Page[]) {
+export async function makeZip(pages: Page[]): Promise<Blob> {
   const zip = new JSZip();
-  const folderName = 'book';
-  const folder = zip.folder(folderName)!;
+  const folder = zip.folder('book')!;
 
   for (let i = 0; i < pages.length; i++) {
     const png = await renderPageToBlob(pages[i]);
@@ -14,5 +13,10 @@ export async function saveAsZip(pages: Page[]) {
   }
 
   const zipFile = await zip.generateAsync({type: 'blob'});
-  saveAs(zipFile, `${folderName}.zip`);
+  return zipFile;
+}
+
+export async function saveAsZip(pages: Page[]) {
+  const zipFile = await makeZip(pages);
+  saveAs(zipFile, `book.zip`);
 }
