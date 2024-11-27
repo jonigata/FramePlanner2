@@ -17,6 +17,19 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
     return; 
   }
 
+  if (film.reverse[0] < 0) {
+    // 左右反転の場合、左右を入れ替える
+    const tmp = padding.left;
+    padding.left = padding.right;
+    padding.right = tmp;
+  }
+  if (film.reverse[1] < 0) {
+    // 上下反転の場合、上下を入れ替える
+    const tmp = padding.top;
+    padding.top = padding.bottom;
+    padding.bottom = tmp;
+  }
+
   const size = { width: imageMedia.canvas.width, height: imageMedia.canvas.height };
   const imageUrl = imageMedia.canvas.toDataURL("image/png");
   const r = await outPaint(imageUrl, size, padding);
@@ -37,6 +50,7 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const newIdealImageSize = Math.min(size.width + padding.left + padding.right, size.height + padding.top + padding.bottom);
   const newScale = film.n_scale / oldImageSize * newActualImageSize;
   newFilm.n_scale = newScale * (newIdealImageSize / newActualImageSize);
+  newFilm.n_translation = [0, 0]; // 微妙にずれるケースがあるが諦める
 
   onlineAccount.update((oa: OnlineAccount | null) => {
     if (!oa) { return oa; }
