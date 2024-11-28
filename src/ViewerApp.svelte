@@ -4,6 +4,7 @@
 
   import { onMount } from "svelte";
   import { getPublication, type PublicationContent } from './firebase';
+  import { bootstrap } from './utils/accountStore';
 
   import MangaView from "./mangaview/MangaView.svelte";
   import { Modals } from 'svelte-modals'
@@ -13,6 +14,7 @@
   let publication: PublicationContent;
 
   onMount(async () => {
+    bootstrap();
     const urlParams = new URLSearchParams(window.location.search);
     console.log("URLParams", urlParams);
     let envelope = urlParams.get('envelope');

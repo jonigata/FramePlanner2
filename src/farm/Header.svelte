@@ -59,12 +59,12 @@
           <AvatarIcon on:click={editUserProfile}/>
         {/if}
         {#if $onlineStatus === "signed-out"}
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
+          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 w-24 h-8" on:click={signIn}>
             Sign in
           </button>
         {/if}
         {#if $onlineStatus === "signed-in"}
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signOut}>
+          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 w-24 h-8" on:click={signOut}>
             Sign out
           </button>
         {/if}

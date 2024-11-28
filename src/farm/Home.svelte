@@ -9,6 +9,7 @@
 
   onMount(async () => {
     manga = await getNewReleases();
+    console.log(manga);
   });
 </script>
 

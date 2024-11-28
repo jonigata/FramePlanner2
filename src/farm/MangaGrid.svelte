@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PublicationContent } from "../firebase";
+  import { setFav } from "../firebase";
 
   export let manga: PublicationContent[] = [];
 
@@ -8,19 +9,31 @@
     const url = item.content_url;
     window.open(`/viewer/${item.id}`, '_blank');
   }
+
+  async function onFav(item: PublicationContent) {
+    console.log('fav');
+    item.is_faved = !item.is_faved;
+    item.fav_count += item.is_faved ? 1 : -1;
+    await setFav(item.id, item.is_faved);
+    manga = manga;
+  }
 </script>
 
 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
   {#each manga as item (item.id)}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="relative group" on:click={() => onClick(item)}>
+    <div class="relative group">
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img
-      src={item.thumbnail_url}
-      alt={item.title}
-      class="w-full aspect-[3/4] object-cover rounded-lg shadow-md group-hover:shadow-xl transition-shadow"
+        src={item.thumbnail_url}
+        alt={item.title}
+        class="thumbnail w-full aspect-[3/4] object-cover rounded-lg shadow-md group-hover:shadow-xl transition-shadow"
+        on:click={() => onClick(item)}
       />
-      <div>⭐️<span class="fav">{item.fav_count}</span></div>
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <span class="fav" class:favable={item.is_favable} class:faved={item.is_faved} on:click={() => onFav(item)}>⭐️{item.fav_count}</span>
+      <span class="comment">💬{item.comment_count}</span>
       <h5 class="mt-2 text-sm font-medium line-clamp-2">{item.author_display_name}</h5>
       <h4 class="mt-2 text-sm font-medium line-clamp-2">{item.title}</h4>
       <p class="mt-2 text-sm line-clamp-3">{item.description}</p>
@@ -50,9 +63,26 @@
     margin-top: 0;
     height: 4rem;
   }
+  .thumbnail {
+    cursor: pointer;
+  }
   .fav {
     font-family: '源暎エムゴ';
     font-size: 0.7rem;
     color: #666;
+    cursor: not-allowed;
+  }
+  .favable {
+    color: #00f;
+    cursor: pointer;
+  }
+  .faved {
+    color: #f00;
+  }
+  .comment {
+    font-family: '源暎エムゴ';
+    font-size: 0.7rem;
+    color: #666;
+    cursor: not-allowed;
   }
 </style>

@@ -96,7 +96,7 @@
     renderer = buildRenderer(canvas, book, 0, 1);
     console.log(renderer);
     $loading = false;
-    
+
     renderer.focusToPage(0, 0.98);
   });
 

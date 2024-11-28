@@ -207,6 +207,7 @@ export async function getPublishUrl(filename: string): Promise<{apiUrl: string, 
 }
 
 export interface UserProfile {
+
   username: string;
   display_name: string;
   email: string;
@@ -239,6 +240,9 @@ export interface PublicationContent {
   updated_at: string;
   author_display_name: string;
   fav_count: number;
+  comment_count: number;
+  is_faved: boolean;
+  is_favable: boolean;
 }
 
 export type WritePublicationContent = Pick<
@@ -270,6 +274,32 @@ export async function getWorks(author_id: string | null): Promise<PublicationCon
   const r = await callFunc('getworks', {author_id}, 180);
   console.log(r);
   return r.works;
+}
+
+export async function getFav(work_id: string): Promise<number> {
+  const r = await callFunc('getfav', {work_id}, 180);
+  return r.fav;
+}
+
+export async function setFav(work_id: string, fav: boolean): Promise<void> {
+  await callFunc('setfav', {work_id, fav}, 180);
+}
+
+export async function comment(work_id: string, content: string): Promise<void> {
+  await callFunc('comment', {work_id, content}, 180);
+}
+
+export interface Comment {
+  id: string;
+  user_display_name: string;
+  content: string;
+  created_at: string;
+}
+
+export async function getComments(work_id: string): Promise<Comment[]> {
+  const r = await callFunc('getcomments', {work_id}, 180);
+  console.log(r);
+  return r.comments;
 }
 
 function getAuth2() {
