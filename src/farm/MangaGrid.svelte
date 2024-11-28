@@ -9,7 +9,7 @@
     const url = item.content_url;
     window.open(`/viewer/${item.id}`, 'frameplanner-viewer');
   }
-
+/*
   async function onFav(item: PublicationContent) {
     console.log('fav');
     item.is_faved = !item.is_faved;
@@ -17,6 +17,7 @@
     await setFav(item.id, item.is_faved);
     manga = manga;
   }
+*/
 </script>
 
 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -32,7 +33,7 @@
       />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <span class="fav" class:favable={item.is_favable} class:faved={item.is_faved} on:click={() => onFav(item)}>⭐️{item.fav_count}</span>
+      <span class="fav" class:favable={item.is_favable} class:faved={item.is_faved}>⭐️{item.fav_count}</span>
       <span class="comment">💬{item.comment_count}</span>
       <h5 class="mt-2 text-sm font-medium line-clamp-2">{item.author_display_name}</h5>
       <h4 class="mt-2 text-sm font-medium line-clamp-2">{item.title}</h4>
@@ -70,19 +71,10 @@
     font-family: '源暎エムゴ';
     font-size: 0.7rem;
     color: #666;
-    cursor: not-allowed;
-  }
-  .favable {
-    color: #00f;
-    cursor: pointer;
-  }
-  .faved {
-    color: #f00;
   }
   .comment {
     font-family: '源暎エムゴ';
     font-size: 0.7rem;
     color: #666;
-    cursor: not-allowed;
   }
 </style>

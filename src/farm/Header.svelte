@@ -6,7 +6,7 @@
   }
 
   function openMyPage() {
-    window.open('/farm/mypage/', '_self');
+    window.open('/farm/user/', '_self');
   }
 
   function openFramePlanner() {
