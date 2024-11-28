@@ -7,7 +7,7 @@
   function onClick(item: PublicationContent) {
     console.log("clicked");
     const url = item.content_url;
-    window.open(`/viewer/${item.id}`, "_blank");
+    window.open(`/viewer/${item.id}`, "frameplanner-viewer");
   }
 
   import { createEventDispatcher } from "svelte";

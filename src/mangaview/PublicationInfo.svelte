@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { comment, getComments, setFav, type Comment, type PublicationContent } from '../firebase';
 
+  
   export let publication: PublicationContent;
 
   let formattedDate: string;
@@ -65,10 +66,11 @@
     {/each}
   {/if}
 {/if}
-  <div class="comment">
-    <textarea class="textarea" rows="4" cols="50" bind:value={myComment} placeholder="コメントを入力してください"></textarea>
-    <button class="btn btn-sm variant-filled h-6" on:click={doComment}>コメント</button>
-  </div>
+<div class="comment">
+  <textarea class="textarea" rows="4" cols="50" bind:value={myComment} placeholder="コメントを入力してください"></textarea>
+  <button class="btn btn-sm variant-filled h-6" on:click={doComment}>コメント</button>
+</div>
+
 <style>
   p {
     font-family: '源暎アンチック';
@@ -101,7 +103,9 @@
   .comment {
     font-family: '源暎アンチック';
     font-size: 0.9rem;
+    word-wrap: break-word;
     color: #333;
+    white-space: pre-wrap;
     margin-left: 16px;
     margin-bottom: 16px;
   }

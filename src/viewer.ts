@@ -25,3 +25,17 @@ function loadFont(family: string, filename: string, weight: string) {
 }
 loadFont('源暎アンチック', 'GenEiAntiqueNv5-M', '400');
 loadFont('源暎エムゴ', 'GenEiMGothic2-Black', '700');
+
+
+declare global {
+  export interface Console {
+    tag(tag: string, ...args: any[]): void;
+    snapshot(obj: any): void;
+  }
+}
+
+console.tag = function(tag, color, ...args) {
+  console.log(`%c${tag}`, `color:white; background-color:${color}; padding:2px 4px; border-radius:4px;`, ...args);
+  // console.trace();
+}
+

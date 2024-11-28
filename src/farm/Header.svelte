@@ -1,27 +1,16 @@
 <script lang="ts">
-  import { onlineStatus, signIn, signOut } from '../utils/accountStore';
-  import Feathral from '../utils/Feathral.svelte';
-  import AvatarIcon from '../toolbar/AvatarIcon.svelte';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import AccountPanel from './AccountPanel.svelte';
 
   function openHome() {
-    window.open('/farm/');
+    window.open('/farm/', '_self');
   }
 
   function openMyPage() {
-    window.open('/farm/mypage/');
+    window.open('/farm/mypage/', '_self');
   }
 
   function openFramePlanner() {
-    window.open('/');
-  }
-
-  function editUserProfile() {
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'userProfile',
-    };
-    modalStore.trigger(d);    
+    window.open('/', 'frameplanner');
   }
 
 </script>
@@ -38,37 +27,11 @@
             <li class="hover:text-yellow-500 cursor-pointer" on:click={openHome}>ホーム</li>
             <li class="hover:text-yellow-500 cursor-pointer" on:click={openMyPage}>マイページ</li>
             <li class="hover:text-yellow-500 cursor-pointer" on:click={openFramePlanner}>FramePlanner</li>
-            <!-- <li class="hover:text-yellow-500 cursor-pointer">ストア</li>
-            <li class="hover:text-yellow-500 cursor-pointer">フォロー</li>
-            <li class="hover:text-yellow-500 cursor-pointer">本棚</li> -->
           </ul>
         </nav>
       </div>
-      
-      <div class="flex items-center space-x-4">
-        <div class="relative">
-          <!-- <input
-            type="text"
-            placeholder="作品名・作者名・カテゴリで検索"
-            class="w-64 px-4 py-2 border rounded-lg"
-          /> -->
-          <!-- <Search class="absolute right-3 top-2.5 text-gray-400" size={20} /> -->
-        </div>
-        {#if $onlineStatus === "signed-in"}
-          <Feathral/>
-          <AvatarIcon on:click={editUserProfile}/>
-        {/if}
-        {#if $onlineStatus === "signed-out"}
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 w-24 h-8" on:click={signIn}>
-            Sign in
-          </button>
-        {/if}
-        {#if $onlineStatus === "signed-in"}
-          <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 w-24 h-8" on:click={signOut}>
-            Sign out
-          </button>
-        {/if}
-      </div>
+
+      <AccountPanel />
     </div>
   </div>
 </header>
@@ -87,6 +50,5 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     color: #ececec;
   }
-
 </style>
 

@@ -10,6 +10,7 @@
   import { Modals } from 'svelte-modals'
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
   import PublicationInfo from './mangaview/PublicationInfo.svelte';
+  import AccountPanel from './farm/AccountPanel.svelte';
 
   let publication: PublicationContent;
 
@@ -33,10 +34,14 @@
 
 <!-- 左右 -->
 <div class="flex w-full h-full">
-<aside class="w-1/4 h-full">
+<aside class="w-1/4 h-full flex flex-col overflow-y-auto overflow-x-hidden min-w-[380px] max-w-[380px]">
   {#if publication}
     <PublicationInfo publication={publication}/>
   {/if}
+  <div class="flex-grow"/>
+  <div class="account-panel">
+    <AccountPanel/>
+  </div>
 </aside>
 <main class="w-full h-full">
   <MangaView/>
@@ -61,5 +66,9 @@
   aside {
     padding: 16px;
     border-right: 1px solid #ddd;
+  }
+  .account-panel {
+    background-color: #b9cdf0;
+    padding: 8px;
   }
 </style>
