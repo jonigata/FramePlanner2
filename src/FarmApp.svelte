@@ -8,7 +8,7 @@
   
   import Header from './farm/Header.svelte';
   import Home from './farm/Home.svelte';
-  import MyPage from './farm/MyPage.svelte';
+  import UserPage from './farm/UserPage.svelte';
 
   let manga: PublicationContent[] = [];
 
@@ -22,7 +22,8 @@
   <main class="flex flex-col min-h-screen h-screen bg-gray-100">
     <Header />
     <Route path="/farm"><Home/></Route>    
-    <Route path="/farm/mypage"><MyPage/></Route>
+    <Route path="/farm/user"><UserPage/></Route>
+    <Route path="/farm/user/:username" let:params><UserPage username={params.username}/></Route>
     <div class="h-24"></div>
   </main>
 </Router>

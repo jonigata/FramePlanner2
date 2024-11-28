@@ -33,7 +33,7 @@ export default defineConfig({
         target: 'http://localhost:5173',
         rewrite: (path) => '/farm.html',
       },
-      '^/farm/mypage/?$': {
+      '^/farm/user/(.*)': {
         target: 'http://localhost:5173',
         rewrite: (path) => '/farm.html',
       },

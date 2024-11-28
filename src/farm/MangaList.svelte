@@ -3,6 +3,7 @@
   import privateIcon from '../assets/farm/private.png';
 
   export let manga: PublicationContent[] = [];
+  export let isMine = false;
 
   function onClick(item: PublicationContent) {
     console.log("clicked");
@@ -96,11 +97,13 @@
               <p class="text-xs text-gray-800 mt-2 mb-2 line-clamp-3">
                 {item.description}
               </p>
-              <button
-                type="button"
-                class="btn btn-sm w-12 h-6 variant-filled-secondary"
-                on:click={() => onEdit(item)}>編集</button
-              >
+              {#if isMine}
+                <button
+                  type="button"
+                  class="btn btn-sm w-12 h-6 variant-filled-secondary"
+                  on:click={() => onEdit(item)}>編集</button
+                >
+              {/if}
               {#if item.is_suspended}
                 <span class="chip variant-filled-error">公開停止</span>
               {/if}

@@ -272,11 +272,15 @@ export async function getNewReleases(): Promise<PublicationContent[]> {
   return r.newReleases;
 }
 
-export async function getWorks(author_id: string | null): Promise<PublicationContent[]> {
+export interface Works {
+  isMine: boolean;
+  works: PublicationContent[];
+}
+export async function getWorks(username: string | null): Promise<Works> {
   // author_idがnullの場合は自分の作品を取得
-  const r = await callFunc('getworks', {author_id}, 180);
+  const r = await callFunc('getworks', {username}, 180);
   console.log(r);
-  return r.works;
+  return r as Works;
 }
 
 export async function getFav(work_id: string): Promise<number> {
