@@ -22,6 +22,10 @@
     $tryOutToken = true;
   }
 
+  function openFarm() {
+    window.open('/farm/', 'frameplanner-farm');
+  }
+
   function editUserProfile() {
     const d: ModalSettings = {
       type: 'component',
@@ -49,6 +53,12 @@
   
   <div class="flex-grow"></div>
   
+  <ul class="flex space-x-6">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <li class="hover:text-yellow-500 cursor-pointer" on:click={openFarm}>まんがファーム！へ</li>
+  </ul>
+
   {#if $onlineStatus === "signed-in"}
     <Feathral/>
     <AvatarIcon on:click={editUserProfile}/>
@@ -77,5 +87,10 @@
     display: flex;
     align-items: center;
     margin-left: 8px;
+  }
+  li {
+    font-family: '源暎エムゴ';
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    color: #ececec;
   }
 </style>

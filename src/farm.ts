@@ -2,6 +2,8 @@ import './app.postcss'
 import FarmApp from './FarmApp.svelte'
 import { initializeApp } from "./firebase";
 
+window.name = "frameplanner-farm";
+
 function getDomainFromCurrentUrl(): string {
   const currentUrl = window.location.href;
   const urlObj = new URL(currentUrl);

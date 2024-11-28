@@ -32,12 +32,17 @@
     await setFav(publication.id, publication.is_faved);
   }
 
+  async function goHome() {
+    window.open(`/farm`, 'frameplanner-farm');
+  }
+
   onMount(async () => {
     comments = await getComments(publication.id);
   });
   
 </script>
 
+<button class="btn btn-sm variant-filled w-24 h-8 pl-1" on:click={goHome}>&lt;&lt; ホームへ</button>
 <h2>タイトル</h2>
 <p>{publication.title}</p>
 <h2>作者</h2>
