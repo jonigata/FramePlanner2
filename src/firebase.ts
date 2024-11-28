@@ -232,7 +232,9 @@ export interface PublicationContent {
   id: string;
   title: string;
   is_public: boolean;
+  is_suspended: boolean;
   description: string;
+  related_url: string;
   cover_url: string;
   content_url: string;
   thumbnail_url: string;
@@ -243,19 +245,20 @@ export interface PublicationContent {
   comment_count: number;
   is_faved: boolean;
   is_favable: boolean;
+
 }
 
 export type WritePublicationContent = Pick<
   PublicationContent, 
-  'title' | 'description' | 'content_url' | 'cover_url' | 'thumbnail_url'>;
+  'title' | 'description' | 'related_url' | 'content_url' | 'cover_url' | 'thumbnail_url'>;
 
 export async function recordPublication(publication: WritePublicationContent): Promise<string> {
   const r = await callFunc('recordpublication', {publication}, 180);
   return r.id;
 }
 
-export async function updatePublication(id: string, title: string, description: string, is_public: boolean): Promise<string> {
-  const r = await callFunc('updatepublication', {publication: {id,title,description,is_public}}, 180);
+export async function updatePublication(id: string, title: string, description: string, related_url: string, is_public: boolean): Promise<string> {
+  const r = await callFunc('updatepublication', {publication: {id,title,description,is_public,related_url}}, 180);
   return r.id;
 }
 

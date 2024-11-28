@@ -19,7 +19,7 @@
   <div class="container mx-auto px-4 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-8">
-        <h1 class="text-2xl font-bold">まんがファーム！</h1>
+        <h1 class="text-2xl font-bold">まんがファーム！(β)</h1>
         <nav>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->

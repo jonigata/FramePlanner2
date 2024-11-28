@@ -16,7 +16,7 @@
   async function onCommit() {
     console.log("Commit", selectedManga);
     const p = selectedManga!;
-    await updatePublication(p.id, p.title, p.description, p.is_public);
+    await updatePublication(p.id, p.title, p.description, p.related_url, p.is_public);
     selectedManga = null;
     manga = manga;
   }

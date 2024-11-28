@@ -97,10 +97,13 @@
                 {item.description}
               </p>
               <button
-              type="button"
-              class="btn btn-sm w-12 h-6 variant-filled-secondary"
-              on:click={() => onEdit(item)}>編集</button
-            >
+                type="button"
+                class="btn btn-sm w-12 h-6 variant-filled-secondary"
+                on:click={() => onEdit(item)}>編集</button
+              >
+              {#if item.is_suspended}
+                <span class="chip variant-filled-error">公開停止</span>
+              {/if}
             </div>
           </div>
         </div>

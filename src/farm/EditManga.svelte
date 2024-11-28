@@ -19,6 +19,11 @@
   <label class="text-xs text-gray-600">説明</label>
   <textarea class="textarea" bind:value={selectedManga.description}></textarea>
 </div>
+<div class="flex flex-col">
+  <!-- svelte-ignore a11y-label-has-associated-control -->
+  <label class="text-xs text-gray-600">関連URL</label>
+  <input type="text" class="input" bind:value={selectedManga.related_url} />
+</div>
 <div class="flex items-center">
   <input type="checkbox" id="is_public" bind:checked={selectedManga.is_public} class="mr-2" />
   <label for="is_public" class="text text-gray-600">公開する</label>

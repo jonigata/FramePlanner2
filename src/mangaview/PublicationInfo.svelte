@@ -53,6 +53,8 @@
 </p>
 <h2>作成日</h2>
 <p>{formattedDate}</p>
+<h2>関連URL</h2>
+<p><a href={publication.related_url} target="_blank">{publication.related_url}</a></p>
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="fav" on:click={onFav}>

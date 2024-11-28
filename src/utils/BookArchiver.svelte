@@ -79,9 +79,9 @@
   }
 
   async function publishEnvelope() {
-    let title, description;
+    let title, description, related_url;
     while (true) {
-      const r = await new Promise<{result: String, title:string, description: string}>((resolve) => {
+      const r = await new Promise<{result: String, title:string, description: string, related_url: string}>((resolve) => {
         const d: ModalSettings = {
           type: 'component',
           component: 'publication',
@@ -108,6 +108,7 @@
       } else {
         title = r.title;
         description = r.description;
+        related_url = r.related_url;
         break;
       }
     }
@@ -116,92 +117,19 @@
     $loading = true;
     try {
       const {file, blob} = await makeEnvelope();
-      const sha1 = await blobToSha1(blob);
 
-      let content_url, cover_url, thumbnail_url;
+      const cover = await renderPageToBlob($mainBook!.pages[0]);
+      const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
 
       // 本体
-      {
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}.envelope`);
-        console.log("本体", apiUrl, url, token, filename);
-
-        const response = await fetch(url,{
-          method: "POST",
-          mode: "cors",
-          body: blob,
-          headers: {
-            "Content-Type": "b2/x-auto",
-            "Authorization": token,
-            "X-Bz-File-Name": filename,
-            "X-Bz-Content-Sha1": sha1,
-          },
-        });
-        console.log(response);
-        if (!response.ok) {
-          throw new Error("ドキュメントのアップロードに失敗しました");
-        }
-
-        content_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-        console.log("content_url", content_url);
-      }
-
-      {
-        // 表紙
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}_cover.png`);
-        console.log("表紙", url, token, filename);
-
-        const png = await renderPageToBlob($mainBook!.pages[0]);
-        const sha1 = await blobToSha1(png);
-        const response = await fetch(url,{
-          method: "POST",
-          mode: "cors",
-          body: png,
-          headers: {
-            "Content-Type": "b2/x-auto",
-            "Authorization": token,
-            "X-Bz-File-Name": filename,
-            "X-Bz-Content-Sha1": sha1,
-          },
-        });
-        console.log(response);
-        if (!response.ok) {
-          throw new Error("表紙のアップロードに失敗しました");
-        }
-
-        cover_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-        console.log("cover_url", cover_url);
-      }
-
-      {
-        // サムネイル
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${file.id}_thumbnail.png`);
-        console.log("サムネイル", url, token, filename);
-
-        const png = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
-        const sha1 = await blobToSha1(png);
-        const response = await fetch(url,{
-          method: "POST",
-          mode: "cors",
-          body: png,
-          headers: {
-            "Content-Type": "b2/x-auto",
-            "Authorization": token,
-            "X-Bz-File-Name": filename,
-            "X-Bz-Content-Sha1": sha1,
-          },
-        });
-        console.log(response);
-        if (!response.ok) {
-          throw new Error("サムネイルのアップロードに失敗しました");
-        }
-
-        thumbnail_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-        console.log("thumbnail_url", thumbnail_url);
-      }
+      const content_url = await postFile(`${file.id}.envelope`, blob);      
+      const cover_url = await postFile(`${file.id}_cover.png`, cover);
+      const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
 
       const workId = await recordPublication({
         title,
         description,
+        related_url,
         content_url,
         cover_url,
         thumbnail_url,
@@ -252,6 +180,31 @@
 
     $loading = false;
     toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});
+  }
+
+  async function postFile(sourceFilename: string, blob: Blob) {
+    const {apiUrl, url, token, filename} = await getPublishUrl(sourceFilename);
+    console.log("本体", apiUrl, url, token, filename);
+
+    const sha1 = await blobToSha1(blob);
+
+    const response = await fetch(url,{
+      method: "POST",
+      mode: "cors",
+      body: blob,
+      headers: {
+        "Content-Type": "b2/x-auto",
+        "Authorization": token,
+        "X-Bz-File-Name": filename,
+        "X-Bz-Content-Sha1": sha1,
+      },
+    });
+    console.log(response);
+    if (!response.ok) {
+      throw new Error("ドキュメントのアップロードに失敗しました");
+    }
+
+    return `${apiUrl}/file/FramePlannerPublished/${filename}`;
   }
 
 </script>
