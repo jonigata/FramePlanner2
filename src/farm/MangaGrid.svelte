@@ -20,7 +20,7 @@
 */
 </script>
 
-<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+<div class="grid grid-cols-[repeat(auto-fill,_128px)] gap-4">
   {#each manga as item (item.id)}
     <div class="relative group">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -33,10 +33,10 @@
       />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <h4 class="mt-2 text-sm font-medium line-clamp-2">{item.title}</h4>
+      <h5 class="mt-2 text-sm font-medium line-clamp-2">{item.author_display_name}</h5>
       <span class="fav" class:favable={item.is_favable} class:faved={item.is_faved}>⭐️{item.fav_count}</span>
       <span class="comment">💬{item.comment_count}</span>
-      <h5 class="mt-2 text-sm font-medium line-clamp-2">{item.author_display_name}</h5>
-      <h4 class="mt-2 text-sm font-medium line-clamp-2">{item.title}</h4>
       <p class="mt-2 text-sm line-clamp-3">{item.description}</p>
     </div>
   {/each}

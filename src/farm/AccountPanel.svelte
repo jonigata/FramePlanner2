@@ -1,8 +1,11 @@
 <script lang="ts">
   import { onlineStatus, signIn, signOut } from '../utils/accountStore';
-  import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from '../toolbar/AvatarIcon.svelte';
+  import feathralIcon from '../assets/feathral.png';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { onlineAccount } from '../utils/accountStore';
+
+  $: feathral = $onlineAccount?.feathral;
 
   function editUserProfile() {
     const d: ModalSettings = {
@@ -15,7 +18,13 @@
 
 <div class="flex items-center space-x-4">
   {#if $onlineStatus === "signed-in"}
-    <Feathral/>
+    <div class="flex flex-row">
+      <img src={feathralIcon} alt="feathral" width=24 height=24/>
+      {#if feathral}
+        <span class="caption">Feathral: {feathral}</span>
+      {/if}
+    </div>
+
     <AvatarIcon on:click={editUserProfile}/>
   {/if}
   {#if $onlineStatus === "signed-out"}

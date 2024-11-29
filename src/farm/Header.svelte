@@ -19,14 +19,14 @@
   <div class="container mx-auto px-4 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-8">
-        <h1 class="text-2xl font-bold">まんがファーム！(β)</h1>
+        <h1 class="font-bold">まんが<br/>ファーム！</h1>
         <nav>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <ul class="flex space-x-6">
             <li class="hover:text-yellow-500 cursor-pointer" on:click={openHome}>ホーム</li>
             <li class="hover:text-yellow-500 cursor-pointer" on:click={openMyPage}>マイページ</li>
-            <li class="hover:text-yellow-500 cursor-pointer" on:click={openFramePlanner}>FramePlanner</li>
+            <li class="hover:text-yellow-500 cursor-pointer" on:click={openFramePlanner}>Frame<br/>Planner</li>
           </ul>
         </nav>
       </div>
@@ -44,11 +44,18 @@
     font-family: '源暎エムゴ';
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     color: #ececec;
+    white-space: nowrap;
+    font-size: 1.7rem;
   }
   li {
     font-family: '源暎エムゴ';
+    font-size: 0.9rem;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     color: #ececec;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    white-space: nowrap;
   }
 </style>
 
