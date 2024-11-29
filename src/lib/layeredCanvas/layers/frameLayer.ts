@@ -115,8 +115,8 @@ export class FrameLayer extends LayerBase {
 
     const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
-    this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
-    this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
+    this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"ドラッグでスケール", isImageActiveDraggable, mp);
+    this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"ドラッグで回転", isImageActiveDraggable, mp);
     this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[1,1],"左右反転", isImageActive, mp);
     this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[1,1],"上下反転", isImageActive, mp);
     this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[1,1],"フィット", isImageActive, mp);

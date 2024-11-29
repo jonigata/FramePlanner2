@@ -13,6 +13,7 @@ export type OnlineProfile = {
   display_name: string;
   email: string;
   bio: string;
+  is_admin: boolean;
 }
 
 export type OnlineStatus = "unknown" | "signed-in" | "signed-out";

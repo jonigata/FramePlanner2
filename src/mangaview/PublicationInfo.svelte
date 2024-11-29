@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { comment, getComments, setFav, type Comment, type PublicationContent } from '../firebase';
-
+  import { adminSuspend, comment, getComments, setFav, type Comment, type PublicationContent } from '../firebase';
+  import { onlineProfile } from '../utils/accountStore';
   
   export let publication: PublicationContent;
 
@@ -36,7 +36,14 @@
     window.open(`/farm`, 'frameplanner-farm');
   }
 
+  async function onSuspend(f: boolean) {
+    console.log('suspend', f);
+    await adminSuspend(publication.id, f);
+    publication.is_suspended = f;
+  }
+
   onMount(async () => {
+    console.log("PUBLICATION", publication);
     comments = await getComments(publication.id);
   });
   
@@ -54,7 +61,22 @@
 <h2>作成日</h2>
 <p>{formattedDate}</p>
 <h2>関連URL</h2>
-<p><a href={publication.related_url} target="_blank">{publication.related_url}</a></p>
+{#if publication.related_url}
+  <p><a href={publication.related_url} target="_blank">{publication.related_url}</a></p>
+{:else}
+  <p>なし</p>
+{/if}
+{#if $onlineProfile && $onlineProfile.is_admin}
+  {#if publication.is_suspended}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <span class="chip variant-filled-error" on:click={() => onSuspend(false)}>admin: 公開差止めを解除</span>
+  {:else}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <span class="chip variant-filled-surface" on:click={() => onSuspend(true)}>admin: 公開を差止める</span>
+  {/if}
+{/if}
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="fav" on:click={onFav}>

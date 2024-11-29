@@ -212,6 +212,7 @@ export interface UserProfile {
   display_name: string;
   email: string;
   bio: string;
+  is_admin: boolean;
 };
 
 export async function getMyProfile(): Promise<UserProfile | null> {
@@ -294,6 +295,28 @@ export async function setFav(work_id: string, fav: boolean): Promise<void> {
 
 export async function comment(work_id: string, content: string): Promise<void> {
   await callFunc('comment', {work_id, content}, 180);
+}
+
+export async function adminSuspend(work_id: string, is_suspended: boolean): Promise<void> {
+  await callFunc('adminsuspend', {work_id, is_suspended}, 180);
+}
+
+export interface Mail {
+  id: string;
+  created_at: string;
+  sender_display_name: string;
+  title: string;
+  content: string;
+  read_at: string | null;
+}
+
+export async function getMails(): Promise<Mail[]> {
+  const r = await callFunc('getmails', {}, 180);
+  return r.mails;
+}
+
+export async function adminSendMail(username: string, title: string, content: string): Promise<void> {
+  await callFunc('adminsendmail', {username, title, content}, 180);
 }
 
 export interface Comment {
