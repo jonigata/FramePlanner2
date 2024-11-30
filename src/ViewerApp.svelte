@@ -37,7 +37,6 @@
 
     bookLoading = true;
     const urlParams = new URLSearchParams(window.location.search);
-    console.log("URLParams", urlParams);
     let envelope = urlParams.get('envelope');
     if (envelope === null) {
       const envelope2 = window.location.pathname.split('/').pop();
@@ -48,15 +47,18 @@
       envelope = envelope2;
     }
 
+    // ブラウザのURLを/viewer/{envelope}に変更
+    const url = new URL(window.location.href);
+    url.pathname = `/viewer/${envelope}`;
+    url.search = '';
+    window.history.replaceState({}, '', url.toString());
+
     publication = await getPublication(envelope);
-    console.log("Publication", publication);
     book = (await loadEnvelope(publication.content_url))!;
 
     const fonts = listFonts(book);
-    console.log(fonts);
     try {
       for (const font of fonts) {
-        console.log(font);
         const {family, weight} = font
 
         if (isLocalFont(family)) {
@@ -66,7 +68,6 @@
           document.fonts.add(font);
           await font.load();
         } else {
-          console.log("loading google font", family, weight);
           await loadGoogleFontForCanvas(family, [weight]);
         }
       }

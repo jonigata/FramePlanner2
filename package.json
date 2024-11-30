@@ -9,6 +9,7 @@
     "devbuild": "vite build --mode development",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.svelte-check.json",
+    "staging": "npm run stamp && firebase hosting:channel:deploy staging",
     "deploy": "npm run stamp && firebase deploy --only hosting",
     "vitest": "vitest",
     "deploy:preview": "firebase hosting:channel:deploy preview",
