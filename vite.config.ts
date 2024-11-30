@@ -38,8 +38,8 @@ export default defineConfig({
         rewrite: (path) => '/farm.html',
       },
       '^/viewer/(.*)': {
-        target: 'http://localhost:5173',
-        rewrite: (path) => `/viewer.html?envelope=${path.split('/').pop()}`,
+        target: 'http://localhost:5001',
+        rewrite: (path) => `/frameplanner-e5569/us-central1/socialcard/${path.split('/').pop()}`,
       }
     }    
   },

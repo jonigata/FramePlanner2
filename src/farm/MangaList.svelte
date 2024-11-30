@@ -127,16 +127,16 @@
     font-size: 1.2rem;
     margin-bottom: -8px;
   }
+  h4 {
+    font-family: "源暎エムゴ";
+    font-size: 0.9rem;
+    margin-top: 0;
+  }
   h5 {
     font-family: "源暎エムゴ";
     font-size: 0.7rem;
     color: #666;
     margin-bottom: -8px;
-  }
-  h4 {
-    font-family: "源暎エムゴ";
-    font-size: 0.9rem;
-    margin-top: 0;
   }
   p {
     font-family: '源暎アンチック';
