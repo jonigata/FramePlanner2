@@ -65,9 +65,10 @@
     dispatch(
       "canvasChanged", 
       { 
-        page: book!.pages[pageIndex-1], 
+        pageIndex: pageIndex-1, 
         realScale: renderer.getScale(), 
-        pageRect: [p0[0], p0[1], p1[0] - p0[0], p1[1] - p0[1]]
+        pageRect: [p0[0], p0[1], p1[0] - p0[0], p1[1] - p0[1]],
+        renderer,
       });
   }
 </script>

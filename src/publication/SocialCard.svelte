@@ -2,9 +2,9 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import MangaView from "../mangaview/MangaView.svelte";
   import { mainBook } from "../bookeditor/bookStore";
-  import type { Page } from "manga-renderer";
   import { draggable } from '@neodrag/svelte';
   import type { DragEventData } from '@neodrag/svelte';
+  import { buildRenderer, Renderer, type Book, type Page } from "manga-renderer";
 
   $: book = $mainBook!;
 
@@ -17,21 +17,28 @@
   let realScale = 1.0;
   let cursorWidth = 0; // デフォルト値
   let initialCursorWidth = cursorWidth;
-  $: cursorHeight = cursorWidth / 1.91; // アスペクト比1.91:1を維持
   let clippingBox: HTMLDivElement;
+  let cursor: HTMLDivElement;
+  let previewCanvas: HTMLCanvasElement;
+  let previewRenderer: Renderer;
+  let clippingBoxRenderer: Renderer;
 
-  function onCanvasChanged(e: CustomEvent<{ page: Page, realScale: number, pageRect: [number,number,number,number] }>) {
-    console.log("onCanvasChanged", e.detail);
-    console.log("clippingWidth", cursorWidth);
-    const pageRect = e.detail.pageRect;
+  function onCanvasChanged(e: CustomEvent<{ pageIndex: number, realScale: number, pageRect: [number,number,number,number], renderer: Renderer }>) {
+    const {pageIndex, realScale, pageRect, renderer } = e.detail;
+    clippingBoxRenderer = renderer;
+
     clippingBox.style.left = `${pageRect[0]}px`;
     clippingBox.style.top = `${pageRect[1]}px`;
     clippingBox.style.width = `${pageRect[2]}px`;
     clippingBox.style.height = `${pageRect[3]}px`;
-    realScale = e.detail.realScale;
-    if (cursorWidth === 0) {
-      cursorWidth = e.detail.page.paperSize[0] * realScale * clipScale;
+    console.log("clippingBox", pageRect);
+    if (cursorWidth === 0 || pageRect[2] < cursorWidth) {
+      console.log("onCanvasChanged: setting cursorWidth", pageRect[2]);
+      cursorWidth = pageRect[2];
     }
+
+    previewRenderer = buildRenderer(previewCanvas, book, e.detail.pageIndex, 1);
+    drawPreview();
   }
 
   let isResizing = false;
@@ -57,21 +64,63 @@
     }
     
     if (newWidth <= clippingBox.clientWidth) {
-        cursorWidth = newWidth;
-        // 型アサーションを使用
-        (event.target as HTMLElement).style.transform = 'translate(0, 0)';
+      console.log("handleResize: setting cursorWidth");
+      cursorWidth = newWidth;
+      // 型アサーションを使用
+      (event.target as HTMLElement).style.transform = 'translate(0, 0)';
     }
 
     resizePosition = { x: 0, y: 0 };
+
+    drawPreview();
   }
 
+  function handleMove(event: CustomEvent<DragEventData>) {
+    drawPreview();
+  }
+
+  function drawPreview() {
+    // get cursor center(clippingBox座標系)
+    const cursorRect = cursor.getBoundingClientRect();
+    const boxRect = (clippingBox.parentNode as HTMLElement).getBoundingClientRect();
+    const cursorCenter = {
+      x: cursorRect.left + cursorRect.width / 2 - boxRect.left,
+      y: cursorRect.top + cursorRect.height / 2 - boxRect.top
+    };
+    const cursorPosition = clippingBoxRenderer.layeredCanvas.viewport.canvasPositionToViewportPosition([cursorCenter.x, cursorCenter.y]);
+    console.log("cursorPosition", cursorPosition);
+
+    previewRenderer.layeredCanvas.viewport.translate = [-cursorPosition[0], -cursorPosition[1]];
+    previewRenderer.layeredCanvas.viewport.dirty = true;
+    previewRenderer.layeredCanvas.redraw();
+
+    const clippingBoxScale = clippingBoxRenderer.getScale();
+    const cursorRealWidth = cursorRect.width / clippingBoxScale;
+
+    const paper = clippingBoxRenderer.arrayLayer.array.papers[0];
+    const paperCenter = paper.center;
+
+    const previewWidth = previewCanvas.width;
+    const previewHeight = previewCanvas.height;
+    const previewScale = previewWidth / cursorRealWidth;
+    const viewport = previewRenderer.layeredCanvas.viewport;
+    viewport.scale = previewScale;
+    viewport.dirty = true;
+    viewport.translate = [
+      (-paperCenter[0] - cursorPosition[0]) * previewScale,
+      (-paperCenter[1] - cursorPosition[1]) * previewScale
+    ];
+    previewRenderer.layeredCanvas.redraw();
+  }
+
+  $: cursorHeight = cursorWidth / 1.91; // アスペクト比1.91:1を維持
 </script>
 
 <div class="card p-4 w-full max-w-lg flex flex-col items-center">
   <h2>ソーシャルカード編集</h2>
   <p>X(Twitter)に投稿したときに表示されます</p>
-  <div class="card m-2 bg-gray-200 flex items-center justify-center">
-    <canvas width="392" height="200"></canvas>
+  <div class="card m-3 p-3 bg-surface-300 flex items-center justify-center">
+    <canvas width="392" height="200" bind:this={previewCanvas}></canvas>
   </div>
   <div class="social-card-view relative">
     <MangaView book={book} pageScale={1} on:canvasChanged={onCanvasChanged} showsPageButtons={false}/>
@@ -86,6 +135,8 @@
             disabled: isResizing,
           }
         }
+        on:neodrag={handleMove}
+        bind:this={cursor}
       >
         <div 
           class="resize-handle"
