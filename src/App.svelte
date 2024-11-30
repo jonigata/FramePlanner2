@@ -88,7 +88,7 @@
     publication: {
       ref: Publication,
     },
-    socialcard: {
+    socialCard: {
       ref: SocialCard,
     }
   };

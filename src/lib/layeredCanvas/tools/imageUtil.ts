@@ -63,3 +63,15 @@ export function imageToBase64(imgElement: HTMLImageElement) {
   let base64Image = canvas.toDataURL("image/png");
   return base64Image;
 }
+
+export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        throw new Error("Failed to convert canvas to blob");
+      }
+    }, "image/png");
+  });
+}

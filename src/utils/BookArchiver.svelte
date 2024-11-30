@@ -14,11 +14,13 @@
   import { exportPrompts } from "./saver/exportPrompts";
   import { getPublishUrl, notifyShare, recordPublication } from "../firebase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
-  import { loading } from '../utils/loadingStore';
+  import { loading } from './loadingStore';
   import type { Book } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
+  import { onlineProfile } from './accountStore';
+  import { waitDialog } from "./waitDialog";
+  import { tick } from "svelte";
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -79,40 +81,33 @@
   }
 
   async function publishEnvelope() {
-    let title, description, related_url;
-    while (true) {
-      const r = await new Promise<{result: String, title:string, description: string, related_url: string}>((resolve) => {
-        const d: ModalSettings = {
-          type: 'component',
-          component: 'socialcard',
-          response: resolve,
-        };
-        modalStore.trigger(d);
-      });    
+    if ($onlineProfile === null) {
+      toastStore.trigger({ message: "公開するにはユーザー情報の登録が必要です", timeout: 1500});
+      const r = await waitDialog<boolean>('userProfile');
       if (!r) {
+        toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
         return;
       }
-      console.log(r);
-      if (r.result === 'registerUser') {
-        const r = await new Promise<boolean>((resolve) => {
-          const d: ModalSettings = {
-            type: 'component',
-            component: 'userProfile',
-            response: resolve,
-          };
-          modalStore.trigger(d);
-        });
-        if (!r) {
-          return;
-        }
-      } else {
-        title = r.title;
-        description = r.description;
-        related_url = r.related_url;
-        break;
-      }
     }
-    console.log(title, description);
+
+    const r = 
+      await waitDialog<{title:string, description: string, related_url: string}>('publication');
+    if (!r) {
+      toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
+      return;
+    }
+    const { title, description, related_url } = r;
+
+    // const { title, description, related_url } = { title: "", description: "", related_url: "" };
+    // 直ちに実行すると自動的に閉じてしまうようなので待つ(多分svelte skeletonのアニメーション処理のバグ)
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const r2 = await waitDialog<{socialCard: Blob}>('socialCard');
+    if (!r2) {
+      toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
+      return;
+    }
+    const { socialCard } = r2;
     
     $loading = true;
     try {
@@ -125,6 +120,7 @@
       const content_url = await postFile(`${file.id}.envelope`, blob);      
       const cover_url = await postFile(`${file.id}_cover.png`, cover);
       const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
+      const socialcard_url = await postFile(`${file.id}_socialcard.png`, socialCard);
 
       const workId = await recordPublication({
         title,
@@ -133,15 +129,12 @@
         content_url,
         cover_url,
         thumbnail_url,
+        socialcard_url,
       });
 
-      // http://localhost:5173/viewer.html?envelope=01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
-      // window.location.hrefにviewer.htmlは含まれてない
+      // http://localhost:5173/viewer/01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
       const currentUrl = new URL(window.location.href);
-  
-      // viewer.htmlのパスを作成し、クエリパラメータを追加
-      currentUrl.pathname = '/viewer.html';
-      currentUrl.searchParams.set('envelope', workId);
+      currentUrl.pathname = '/viewer/' + workId;
       
       // URLをコピー
       const downloadUrl = currentUrl.toString();

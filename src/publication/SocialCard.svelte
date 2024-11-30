@@ -4,12 +4,14 @@
   import { mainBook } from "../bookeditor/bookStore";
   import { draggable } from '@neodrag/svelte';
   import type { DragEventData } from '@neodrag/svelte';
-  import { buildRenderer, Renderer, type Book, type Page } from "manga-renderer";
+  import { buildRenderer, Renderer } from "manga-renderer";
+  import { canvasToBlob } from "../lib/layeredCanvas/tools/imageUtil";
 
   $: book = $mainBook!;
 
-  function handleSubmit() {
-    $modalStore[0].response!({ result: "ok" });
+  async function handleSubmit() {
+    const socialCard = await canvasToBlob(previewCanvas);
+    $modalStore[0].response!({ socialCard });
     modalStore.close();
   }
 
@@ -24,7 +26,7 @@
   let clippingBoxRenderer: Renderer;
 
   function onCanvasChanged(e: CustomEvent<{ pageIndex: number, realScale: number, pageRect: [number,number,number,number], renderer: Renderer }>) {
-    const {pageIndex, realScale, pageRect, renderer } = e.detail;
+    const {pageRect, renderer} = e.detail;
     clippingBoxRenderer = renderer;
 
     clippingBox.style.left = `${pageRect[0]}px`;
@@ -119,9 +121,6 @@
 <div class="card p-4 w-full max-w-lg flex flex-col items-center">
   <h2>ソーシャルカード編集</h2>
   <p>X(Twitter)に投稿したときに表示されます</p>
-  <div class="card m-3 p-3 bg-surface-300 flex items-center justify-center">
-    <canvas width="392" height="200" bind:this={previewCanvas}></canvas>
-  </div>
   <div class="social-card-view relative">
     <MangaView book={book} pageScale={1} on:canvasChanged={onCanvasChanged} showsPageButtons={false}/>
     <div class="clipping-box" bind:this={clippingBox}>
@@ -157,8 +156,11 @@
       </div>
     </div>
   </div>
+  <div class="card m-3 p-3 bg-surface-300 flex items-center justify-center">
+    <canvas width="392" height="200" bind:this={previewCanvas}></canvas>
+  </div>
   <button class="btn variant-filled-primary" on:click={handleSubmit}>
-    保存
+    OK
   </button>
 </div>
 

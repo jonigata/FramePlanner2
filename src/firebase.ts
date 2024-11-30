@@ -207,12 +207,11 @@ export async function getPublishUrl(filename: string): Promise<{apiUrl: string, 
 }
 
 export interface UserProfile {
-
   username: string;
   display_name: string;
   email: string;
   bio: string;
-  is_admin: boolean;
+  is_admin: boolean; //updateMyProfileでは見てない
 };
 
 export async function getMyProfile(): Promise<UserProfile | null> {
@@ -225,7 +224,7 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
   return r.available;
 }
 
-export async function updateMyProfile(profile: UserProfile): Promise<void> {
+export async function updateMyProfile(profile: Omit<UserProfile,'is_admin'>): Promise<void> {
   await callFunc('updatemyprofile', {profile}, 180);
 }
 
@@ -246,12 +245,12 @@ export interface PublicationContent {
   comment_count: number;
   is_faved: boolean;
   is_favable: boolean;
-
+  socialcard_url: string;
 }
 
 export type WritePublicationContent = Pick<
   PublicationContent, 
-  'title' | 'description' | 'related_url' | 'content_url' | 'cover_url' | 'thumbnail_url'>;
+  'title' | 'description' | 'related_url' | 'content_url' | 'cover_url' | 'thumbnail_url' | 'socialcard_url'>;
 
 export async function recordPublication(publication: WritePublicationContent): Promise<string> {
   const r = await callFunc('recordpublication', {publication}, 180);
