@@ -57,6 +57,7 @@
   import ImageViewer from './utils/ImageViewer.svelte';
   import UserProfile from './toolbar/UserProfile.svelte';
   import Publication from './publication/Publication.svelte';
+  import SocialCard from './publication/SocialCard.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -86,6 +87,9 @@
     },
     publication: {
       ref: Publication,
+    },
+    socialcard: {
+      ref: SocialCard,
     }
   };
 

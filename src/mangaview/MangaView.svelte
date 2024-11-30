@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   import { buildRenderer, Renderer, type Book } from "manga-renderer";
   import AutoSizeCanvas from "../utils/AutoSizeCanvas.svelte";
   import leftIcon from "../assets/viewer/left.png";
@@ -7,7 +7,11 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
 
+  const dispatch = createEventDispatcher();
+
   export let book: Book;
+  export let pageScale = 0.98;
+  export let showsPageButtons = true;
 
   let canvas: HTMLCanvasElement;
   let renderer: Renderer;
@@ -51,7 +55,20 @@
     if (!canvas) return;
     console.log("onCanvasUpdate:B");
     renderer = buildRenderer(canvas, book, pageIndex-1, 1);
-    renderer.focusToPage(0, 0.98);
+    renderer.focusToPage(0, pageScale);
+
+    const pageRect = renderer.arrayLayer.array.getPaperRect(0);
+    const viewport = renderer.layeredCanvas.viewport;
+    const p0 = viewport.viewportPositionToCanvasPosition([pageRect[0], pageRect[1]]);
+    const p1 = viewport.viewportPositionToCanvasPosition([pageRect[0] + pageRect[2], pageRect[1] + pageRect[3]]);
+
+    dispatch(
+      "canvasChanged", 
+      { 
+        page: book!.pages[pageIndex-1], 
+        realScale: renderer.getScale(), 
+        pageRect: [p0[0], p0[1], p1[0] - p0[0], p1[1] - p0[1]]
+      });
   }
 </script>
 
@@ -64,23 +81,25 @@
         {/if}
       -->
     </AutoSizeCanvas>
-    <div class="absolute inset-0 flex">
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="w-1/2 h-full" on:click={handleLeftClick}></div>
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="w-1/2 h-full" on:click={handleRightClick}></div>
-    </div>
-    {#if pageIndex < max}
-    <button class="absolute left-1 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-lg" on:click={next}>
-      <img src={leftIcon} alt="left"/>
-    </button>
-    {/if}
-    {#if pageIndex > min}
-    <button class="absolute right-1 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-lg" on:click={prev}>
-      <img src={rightIcon} alt="right"/>
-    </button>
+    {#if showsPageButtons}
+      <div class="absolute inset-0 flex">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="w-1/2 h-full" on:click={handleLeftClick}></div>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="w-1/2 h-full" on:click={handleRightClick}></div>
+      </div>
+      {#if pageIndex < max}
+      <button class="absolute left-1 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-lg" on:click={next}>
+        <img src={leftIcon} alt="left"/>
+      </button>
+      {/if}
+      {#if pageIndex > min}
+      <button class="absolute right-1 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-lg" on:click={prev}>
+        <img src={rightIcon} alt="right"/>
+      </button>
+      {/if}
     {/if}
   </div>
   <div class="pager w-full p-4 flex flex-row gap-2">

@@ -84,7 +84,7 @@
       const r = await new Promise<{result: String, title:string, description: string, related_url: string}>((resolve) => {
         const d: ModalSettings = {
           type: 'component',
-          component: 'publication',
+          component: 'socialcard',
           response: resolve,
         };
         modalStore.trigger(d);
