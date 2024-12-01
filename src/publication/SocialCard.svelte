@@ -15,6 +15,11 @@
     modalStore.close();
   }
 
+  function handleSkip() {
+    $modalStore[0].response!({ socialCard: null });
+    modalStore.close();
+  }
+
   let clipScale = 1.0; // 1 = ページの横幅
   let realScale = 1.0;
   let cursorWidth = 0; // デフォルト値
@@ -159,9 +164,15 @@
   <div class="card m-3 p-3 bg-surface-300 flex items-center justify-center">
     <canvas width="392" height="200" bind:this={previewCanvas}></canvas>
   </div>
-  <button class="btn variant-filled-primary" on:click={handleSubmit}>
-    OK
-  </button>
+  <div class="flex gap-2 mt-4 w-full">
+    <button class="btn variant-ghost" on:click={handleSkip}>
+      スキップ
+    </button>
+    <div class="flex-grow"></div>
+    <button class="btn variant-filled-primary" on:click={handleSubmit}>
+      OK
+    </button>
+  </div>
 </div>
 
 <style>

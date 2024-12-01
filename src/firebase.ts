@@ -235,7 +235,6 @@ export interface PublicationContent {
   is_public: boolean;
   is_suspended: boolean;
   description: string;
-  related_url: string;
   cover_url: string;
   content_url: string;
   thumbnail_url: string;
@@ -246,7 +245,8 @@ export interface PublicationContent {
   comment_count: number;
   is_faved: boolean;
   is_favable: boolean;
-  socialcard_url: string;
+  socialcard_url: string | null;
+  related_url: string;
 }
 
 export type WritePublicationContent = Pick<
@@ -258,7 +258,7 @@ export async function recordPublication(publication: WritePublicationContent): P
   return r.id;
 }
 
-export async function updatePublication(id: string, title: string, description: string, related_url: string, is_public: boolean): Promise<string> {
+export async function updatePublication(id: string, title: string, description: string, related_url: string | null, is_public: boolean): Promise<string> {
   const r = await callFunc('updatepublication', {publication: {id,title,description,is_public,related_url}}, 180);
   return r.id;
 }

@@ -108,6 +108,9 @@
       return;
     }
     const { socialCard } = r2;
+    if (socialCard === null) {
+      console.log("skipping social card");
+    }
     
     $loading = true;
     try {
@@ -120,7 +123,7 @@
       const content_url = await postFile(`${file.id}.envelope`, blob);      
       const cover_url = await postFile(`${file.id}_cover.png`, cover);
       const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
-      const socialcard_url = await postFile(`${file.id}_socialcard.png`, socialCard);
+      const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.png`, socialCard) : null;
 
       const workId = await recordPublication({
         title,
@@ -139,9 +142,15 @@
       // URLをコピー
       const downloadUrl = currentUrl.toString();
       console.log(downloadUrl);
-      navigator.clipboard.writeText(downloadUrl);
+      try {
+        navigator.clipboard.writeText(downloadUrl);
+        toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
+      }
+      catch(e) {
+        console.log(e);
+        toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>をクリップボードにコピーできませんでした。タブがアクティブでなかったためかもしれません。`});
+      }
 
-      toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
     }
     catch(e: any) {
       console.log(e);
