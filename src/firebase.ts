@@ -211,11 +211,12 @@ export interface UserProfile {
   display_name: string;
   email: string;
   bio: string;
+  related_url: string;
   is_admin: boolean; //updateMyProfileでは見てない
 };
 
-export async function getMyProfile(): Promise<UserProfile | null> {
-  const r = await callFunc('getmyprofile', {}, 180);
+export async function getProfile(username: string | null): Promise<UserProfile | null> {
+  const r = await callFunc('getprofile', {username}, 180);
   return r.userProfile;
 }
 
