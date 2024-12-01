@@ -2,14 +2,15 @@
   import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
   import '@skeletonlabs/skeleton/styles/all.css';
   import { onMount } from "svelte";
-  import { updatePublication, getMails, adminSendMail, type PublicationContent, type Mail } from "../firebase";
+  import { updatePublication, getMails, type PublicationContent, type Mail } from "../firebase";
   import { onlineProfile } from '../utils/accountStore';
   import MangaList from './MangaList.svelte';
   import EditManga from './EditManga.svelte';
+  import { toastStore } from '@skeletonlabs/skeleton';
 
-  export let username: string;
   export let manga: PublicationContent[] = [];
 
+  $: username = $onlineProfile?.username;
   let selectedManga: PublicationContent | null = null;
   let mails: Mail[] = [];
 
@@ -20,13 +21,18 @@
   async function onCommit() {
     console.log("Commit", selectedManga);
     const p = selectedManga!;
-    await updatePublication(p.id, p.title, p.description, p.related_url, p.is_public);
-    selectedManga = null;
-    manga = manga;
+    try {
+      await updatePublication(p.id, p.title, p.description, p.related_url, p.is_public);
+      selectedManga = null;
+      manga = manga;
+      toastStore.trigger({ message: "更新しました", timeout: 1500});
+    } catch (e) {
+      console.error(e);
+    }
+
   }
 
   onMount(async () => {
-    console.log("username", username);
     mails = await getMails();
   });
 </script>

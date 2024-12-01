@@ -6,7 +6,7 @@
   import MyPage from './MyPage.svelte';
   import OthersPage from './OthersPage.svelte';
 
-  export let username: string;
+  export let username: string | null;
 
   let isMine = false;
   let manga: PublicationContent[] = [];
@@ -22,8 +22,9 @@
 
 <div class="container mx-auto px-4 py-6 w-[800px] flex-grow flex flex-col overflow-hidden">
   {#if isMine}
-    <MyPage username={username} manga={manga}/>
+    <MyPage manga={manga}/>
   {:else}
-    <OthersPage username={username} manga={manga}/>
+    <!-- jsだとusername!が使えないのでやむなく -->
+    <OthersPage username={username ?? ''} manga={manga}/>
   {/if}
 </div>

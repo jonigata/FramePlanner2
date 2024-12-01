@@ -5,6 +5,7 @@
   import { getNewReleases, type PublicationContent } from "./firebase";
   import { Router, Route } from "svelte-routing";
   import { bootstrap } from './utils/accountStore';
+  import { Toast } from '@skeletonlabs/skeleton';
   
   import Header from './farm/Header.svelte';
   import Home from './farm/Home.svelte';
@@ -25,5 +26,7 @@
     <Route path="/farm/user"><UserPage/></Route>
     <Route path="/farm/user/:username" let:params><UserPage username={params.username}/></Route>
     <div class="h-24"></div>
+    <Toast zIndex={"z-[1001]"}/>
   </main>
 </Router>
+

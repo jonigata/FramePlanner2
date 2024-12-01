@@ -1,12 +1,13 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
 
-  export let title = '';
-  export let description = '';
-  export let related_url = '';
+  let title = '';
+  let description = '';
+  let related_url = '';
+  let is_public = true;
 
   function handleSubmit() {
-    $modalStore[0].response!({ title, description, related_url });
+    $modalStore[0].response!({ title, description, related_url, is_public });
     modalStore.close();
   }
 
@@ -32,6 +33,11 @@
         required
         maxlength="100"
       />
+    </label>
+
+    <label class="label">
+      <span>公開</span>
+      <input type="checkbox" id="is_public" bind:checked={is_public} class="mr-2" />
     </label>
 
     <label class="label">

@@ -90,12 +90,12 @@
     }
 
     const r = 
-      await waitDialog<{title:string, description: string, related_url: string}>('publication');
+      await waitDialog<{title:string, description: string, related_url: string, is_public: boolean}>('publication');
     if (!r) {
       toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
       return;
     }
-    const { title, description, related_url } = r;
+    const { title, description, related_url, is_public } = r;
 
     // const { title, description, related_url } = { title: "", description: "", related_url: "" };
     // 直ちに実行すると自動的に閉じてしまうようなので待つ(多分svelte skeletonのアニメーション処理のバグ)
@@ -136,6 +136,7 @@
         thumbnail_url,
         socialcard_url,
         related_url,
+        is_public,
       });
       const workId = await recordPublication({
         title,
@@ -145,6 +146,7 @@
         thumbnail_url,
         socialcard_url,
         related_url,
+        is_public,
       });
       $progress = 1.0;
 

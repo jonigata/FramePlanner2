@@ -251,7 +251,7 @@ export interface PublicationContent {
 
 export type WritePublicationContent = Pick<
   PublicationContent, 
-  'title' | 'description' | 'related_url' | 'content_url' | 'cover_url' | 'thumbnail_url' | 'socialcard_url'>;
+  'title' | 'description' | 'related_url' | 'content_url' | 'cover_url' | 'thumbnail_url' | 'socialcard_url' | 'is_public'>;
 
 export async function recordPublication(publication: WritePublicationContent): Promise<string> {
   const r = await callFunc('recordpublication', {publication}, 180);
