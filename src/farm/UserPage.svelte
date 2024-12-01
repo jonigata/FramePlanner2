@@ -6,7 +6,7 @@
   import MyPage from './MyPage.svelte';
   import OthersPage from './OthersPage.svelte';
 
-  export let username: string | null = null;
+  export let username: string;
 
   let isMine = false;
   let manga: PublicationContent[] = [];

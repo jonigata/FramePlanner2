@@ -14,6 +14,10 @@
     modalStore.close();
   }
 
+  function showGuideline() {
+    window.open('/postingGuideline.html', '_blank');
+  }
+
 </script>
 
 <div class="card p-4 w-full max-w-lg">
@@ -52,7 +56,11 @@
 
     <span>※ページ1が表紙になります</span>
 
-    <div class="flex justify-end gap-2 mt-4">
+    <div class="flex gap-2 mt-4">
+      <button type="button" class="btn variant-filled-secondary" on:click={showGuideline}>
+        投稿ガイドライン
+      </button>
+      <div class="flex-grow"></div>
       <button type="button" class="btn variant-ghost" on:click={handleCancel}>
         キャンセル
       </button>
