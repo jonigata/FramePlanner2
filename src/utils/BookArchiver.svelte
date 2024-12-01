@@ -14,13 +14,12 @@
   import { exportPrompts } from "./saver/exportPrompts";
   import { getPublishUrl, notifyShare, recordPublication } from "../firebase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
-  import { loading } from './loadingStore';
+  import { loading, progress } from './loadingStore';
   import type { Book } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
   import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
   import { onlineProfile } from './accountStore';
   import { waitDialog } from "./waitDialog";
-  import { tick } from "svelte";
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -112,7 +111,7 @@
       console.log("skipping social card");
     }
     
-    $loading = true;
+    $progress = 0;
     try {
       const {file, blob} = await makeEnvelope();
 
@@ -121,19 +120,33 @@
 
       // 本体
       const content_url = await postFile(`${file.id}.envelope`, blob);      
+      $progress = 0.2;
       const cover_url = await postFile(`${file.id}_cover.png`, cover);
+      $progress = 0.4;
       const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
+      $progress = 0.6;
       const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.png`, socialCard) : null;
+      $progress = 0.8;
 
-      const workId = await recordPublication({
+      console.log("recordPublication", {
         title,
         description,
-        related_url,
         content_url,
         cover_url,
         thumbnail_url,
         socialcard_url,
+        related_url,
       });
+      const workId = await recordPublication({
+        title,
+        description,
+        content_url,
+        cover_url,
+        thumbnail_url,
+        socialcard_url,
+        related_url,
+      });
+      $progress = 1.0;
 
       // http://localhost:5173/viewer/01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
       const currentUrl = new URL(window.location.href);
@@ -150,14 +163,15 @@
         console.log(e);
         toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>をクリップボードにコピーできませんでした。タブがアクティブでなかったためかもしれません。`});
       }
-
     }
     catch(e: any) {
       console.log(e);
       toastStore.trigger({ message: e, timeout: 1500});
     }
     finally {
-      $loading = false;
+      // 0.5秒待つ
+      await new Promise(resolve => setTimeout(resolve, 500));
+      $progress = null;
     }
   }
 

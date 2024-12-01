@@ -37,6 +37,7 @@
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
+  import FullScreenProgress from './utils/FullScreenProgress.svelte';
   import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
   import Mascot from './mascot/Mascot.svelte'
@@ -187,6 +188,7 @@
   <div slot="backdrop" class="backdrop"/>
 </Modals>
 <FullScreenLoading/>
+<FullScreenProgress/>
 
   <!-- ads -->
 {#if advertiser != null}
