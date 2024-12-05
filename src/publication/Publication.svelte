@@ -92,7 +92,4 @@
     align-items: center;
     gap: 8px;
   }
-  .border {
-    border: 1px solid #ccc;
-  }
 </style>

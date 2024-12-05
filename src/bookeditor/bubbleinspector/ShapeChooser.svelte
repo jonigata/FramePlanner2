@@ -80,7 +80,7 @@
 
   async function deleteTemplate(e: CustomEvent<MouseEvent>, bindId: BindId) {
     const root = await $fileSystem!.getRoot();
-    const folder = (await root.getNodeByName("テンプレート"))!.asFolder();
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const entry = await folder.getEntry(bindId);
     await folder.unlink(bindId);
     await root.fileSystem.destroyNode(entry![2]);
@@ -99,10 +99,10 @@
     const paperSize = $bubbleInspectorTarget?.page?.paperSize;
     if (paperSize == null) return;
     const root = await $fileSystem!.getRoot();
-    const folder = (await root.getNodeByName("テンプレート"))!.asFolder();
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const entries = await folder.listEmbodied();
     for (const entry of entries) {
-      const bubble = await loadBubbleFrom([840, 1188], entry[2].asFile()); // セーブされたときのドキュメントサイズがわからないので、デフォルト値
+      const bubble = await loadBubbleFrom([840, 1188], entry[2].asFile()!); // セーブされたときのドキュメントサイズがわからないので、デフォルト値
       templateBubbles.push([bubble, entry[0]]);
     }
     templateBubbles = templateBubbles;

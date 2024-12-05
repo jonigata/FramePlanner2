@@ -112,7 +112,7 @@
     $bubble.reset();
     $bubble.initOptions();
     $chosenShape = $bubble.shape;
-    $bubble = $bubble;
+    bubble.update(b => b);
   }
 
   $:onChangeShape($chosenShape);
@@ -220,11 +220,11 @@
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
     const {index, films} = e.detail;
     const page = $bubbleInspectorTarget!.page;
-    const bubble = $bubbleInspectorTarget!.bubble;
+    const b = $bubbleInspectorTarget!.bubble;
     const paperSize = page.paperSize;
-    insertBubbleLayers(paperSize, bubble, index, films);
+    insertBubbleLayers(paperSize, b, index, films);
 
-    $bubble = $bubble;
+    bubble.update(b => b);
     $bookEditor!.commit(null);
   }
 

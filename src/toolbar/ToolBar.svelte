@@ -72,9 +72,4 @@
     width: 50px;
     height: 24px;
   }
-  .avatar {
-    display: flex;
-    align-items: center;
-    margin-left: 8px;
-  }
 </style>
