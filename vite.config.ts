@@ -26,6 +26,7 @@ export default defineConfig({
     include: ['paper'],
   },
   server: {
+    host: 'frameplanner.example.local',
     port: 5173,
   },
 	test: {

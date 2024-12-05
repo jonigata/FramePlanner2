@@ -35,10 +35,10 @@
   async function generate(paperSize: [number, number], leafLayout: Layout) {
     console.log("postfix", postfix);
     const frame = leafLayout.element;
-    const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
-    if (result != null) {
-      await result.images[0].decode();
-      const media = new ImageMedia(createCanvasFromImage(result.images[0]));
+    const images = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
+    if (images != null) {
+      await images[0].decode();
+      const media = new ImageMedia(createCanvasFromImage(images[0]));
       const film = new Film(media);
       frame.filmStack.films.push(film);
       frame.gallery.push(media.canvas);

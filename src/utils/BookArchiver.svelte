@@ -12,7 +12,7 @@
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
-  import { getPublishUrl, getTransportUrl, notifyShare, recordPublication } from "../firebase";
+  import { getPublishUrl, getTransportUrl, notifyShare, recordPublication } from "../supabase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
   import { loading } from '../utils/loadingStore';
   import type { Book, Page } from '../lib/book/book';
@@ -80,9 +80,9 @@
   }
 
   async function publishEnvelope() {
-    let title, description;
+    let title, description, related_url;
     while (true) {
-      const r = await new Promise<{result: String, title:string, description: string}>((resolve) => {
+      const r = await new Promise<{result: String, title:string, description: string, related_url: string}>((resolve) => {
         const d: ModalSettings = {
           type: 'component',
           component: 'publication',
@@ -109,6 +109,7 @@
       } else {
         title = r.title;
         description = r.description;
+        related_url = r.related_url;
         break;
       }
     }
@@ -207,6 +208,9 @@
         content_url,
         cover_url,
         thumbnail_url,
+        is_public: true,
+        socialcard_url: thumbnail_url,
+        related_url,
       });
 
       // http://localhost:5173/viewer.html?envelope=01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
@@ -291,7 +295,7 @@
     // URL作成
     const url = new URL(window.location.href);
     const params = url.searchParams;
-    params.set('box', fileSystem.boxId!);
+    params.set('box', fileSystem.userId!);
     params.set('file', file.id);
     url.search = params.toString();
     const shareUrl = url.toString();

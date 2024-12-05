@@ -1,6 +1,6 @@
 <script lang="ts">
   import { DelayedCommiter } from '../utils/delayedCommiter';
-  import { checkUsernameAvailable, updateMyProfile, getMyProfile } from '../firebase'
+  import { checkUsernameAvailable, updateProfile } from '../supabase'
   import { modalStore } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { loading } from '../utils/loadingStore';
@@ -10,6 +10,7 @@
   export let display_name = '';
   export let email = '';
   export let bio = '';
+  export let related_url = '';
   
   let isChecking = false;
   let isAvailable = false;
@@ -18,7 +19,7 @@
   let uniqueChecker = new DelayedCommiter(async () => {
     isChecking = true;
     try {
-      isAvailable = await checkUsernameAvailable(username);
+      isAvailable = (await checkUsernameAvailable(username)).is_available;
     } catch (error) {
       console.error('Username check failed:', error);
     } finally {
@@ -31,7 +32,7 @@
     if (isAvailable && isDisplayNameValid) {
       try {
         $loading = true;
-        await updateMyProfile({ username, display_name, email, bio });
+        await updateProfile({ username, display_name, email, bio, related_url });
         $modalStore[0].response!(true);
         modalStore.close();
       } catch (error) {
@@ -64,6 +65,7 @@
       display_name = profile.display_name;
       email = profile.email;
       bio = profile.bio;
+      related_url = profile.related_url;
       isAvailable = true;
     }
   }
@@ -132,6 +134,15 @@
         bind:value={bio}
         maxlength="500"
         rows="4"
+      />
+    </label>
+
+    <label class="label">
+      <span>関連URL</span>  
+      <input
+        class="input p-2 pl-4"
+        type="text"
+        bind:value={related_url}
       />
     </label>
 

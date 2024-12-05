@@ -1,6 +1,6 @@
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
-import { outPaint } from "../firebase";
+import { outPaint } from "../supabase";
 import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import type { Rect, Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
@@ -32,11 +32,11 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
 
   const size = { width: imageMedia.canvas.width, height: imageMedia.canvas.height };
   const imageUrl = imageMedia.canvas.toDataURL("image/png");
-  const r = await outPaint(imageUrl, size, padding);
+  const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
 
   const resultImage = document.createElement('img');
-  resultImage.src = "data:image/png;base64," + r.result.images[0];
+  resultImage.src = "data:image/png;base64," + r.images[0];
   await resultImage.decode();
 
   const canvas = createCanvasFromImage(resultImage);
@@ -51,12 +51,6 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const newScale = film.n_scale / oldImageSize * newActualImageSize;
   newFilm.n_scale = newScale * (newIdealImageSize / newActualImageSize);
   newFilm.n_translation = [0, 0]; // 微妙にずれるケースがあるが諦める
-
-  onlineAccount.update((oa: OnlineAccount | null) => {
-    if (!oa) { return oa; }
-    oa.feathral = r.feathral;
-    return oa;
-  });
 
   logEvent(getAnalytics(), 'outpaint');
 

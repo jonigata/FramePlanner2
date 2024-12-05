@@ -1,7 +1,16 @@
 import "./app.postcss";
 import App from "./App.svelte";
+import { developmentFlag } from "./utils/developmentFlagStore";
+import { get as storeGet } from "svelte/store";
 import { initializeApp } from "./firebase";
+import { initializeSupabase } from "./supabase";
 import { initPaperJs } from "./lib/layeredCanvas/tools/draw/bubbleGraphic"
+
+// localhostか127.0.0.1だったら
+developmentFlag.set(
+  location.hostname === "localhost" || location.hostname === "127.0.0.1" || 
+  location.hostname === "frameplanner.example.local" || location.hostname === "example.local");
+console.log("================ developmentFlag", storeGet(developmentFlag));
 
 initPaperJs();
 
@@ -11,6 +20,8 @@ function getDomainFromCurrentUrl(): string {
   return urlObj.host;
 }
 initializeApp(getDomainFromCurrentUrl())
+
+initializeSupabase();
 
 const app = new App({
   target: document.getElementById("app")!,

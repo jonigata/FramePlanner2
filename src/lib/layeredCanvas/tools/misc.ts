@@ -1,3 +1,5 @@
+import { createHash } from 'sha1-uint8array'
+
 export function arrayVectorToObjectVector(v: [number, number]) {
     return {x:v[0], y:v[1]};
 }
@@ -35,7 +37,7 @@ export function deepCopyProperties(target: any, source: any) {
 export async function sha1(message: string) {
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+  const hashBuffer = createHash().update(new Uint8Array(data)).digest();
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
   return hashHex;
@@ -43,7 +45,7 @@ export async function sha1(message: string) {
 
 export async function blobToSha1(blob: Blob) {
   const buffer = await blob.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest('SHA-1', buffer);
+  const hashBuffer = createHash().update(new Uint8Array(buffer)).digest();
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
   return hashHex;
