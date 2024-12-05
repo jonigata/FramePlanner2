@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toolTip } from '../utils/passiveToolTipStore';
   import { undoToken } from '../bookeditor/bookStore';
-  import { onlineStatus, signIn, signOut } from '../utils/accountStore';
+  import { onlineStatus, authStore } from '../utils/accountStore';
   import { tryOutToken } from '../utils/tryOutStore';
   import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from './AvatarIcon.svelte';
@@ -20,6 +20,29 @@
 
   function tryOut() {
     $tryOutToken = true;
+  }
+
+  function showLicense() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'license',
+    };
+    modalStore.trigger(d);    
+  }
+  
+
+
+  function signIn() {
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'auth',
+    };
+    modalStore.trigger(d);    
+    // authStore.signIn('google'); どうせ帰ってこないのでコンポーネントの方でやる
+  }
+
+  function signOut() {
+    authStore.signOut();
   }
 
   function editUserProfile() {

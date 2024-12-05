@@ -1,16 +1,16 @@
 import { createCanvasFromImage } from '../../layeredCanvas/tools/imageUtil';
 import { blobToSha1 } from '../../layeredCanvas/tools/misc';
 import { ContentStorageBase, type ContentId } from './contentStorage';
-import { getUploadUrl, getDownloadUrl, eraseFile } from '../../../firebase';
+import { getUploadUrl, getDownloadUrl, eraseFile } from '../../../supabase';
 
 // 復号キーは公開しても問題ない（主に検閲させないためのものなので）
 async function fetchImageWithHeaders(url: string) {
   const response = await fetch(url, {
       method: 'GET',
       headers: {
-          "X-Bz-Server-Side-Encryption-Customer-Algorithm": "AES256",
-          "X-Bz-Server-Side-Encryption-Customer-Key": "oXT+BeSiADWQlDFSsmJ7bkoH+wpdSnacsUbg2291pdU=",
-          "X-Bz-Server-Side-Encryption-Customer-Key-Md5": "Q/JFlAIOhwbQwW9OS+YGcw==",
+        "X-Bz-Server-Side-Encryption-Customer-Algorithm": "AES256",
+        "X-Bz-Server-Side-Encryption-Customer-Key": "oXT+BeSiADWQlDFSsmJ7bkoH+wpdSnacsUbg2291pdU=",
+        "X-Bz-Server-Side-Encryption-Customer-Key-Md5": "Q/JFlAIOhwbQwW9OS+YGcw==",
       }
   });
 
@@ -32,9 +32,9 @@ export class BackblazeContentStorage extends ContentStorageBase {
     return await fetch(url, {
       method: 'GET',
       headers: {
-          "X-Bz-Server-Side-Encryption-Customer-Algorithm": "AES256",
-          "X-Bz-Server-Side-Encryption-Customer-Key": "oXT+BeSiADWQlDFSsmJ7bkoH+wpdSnacsUbg2291pdU=",
-          "X-Bz-Server-Side-Encryption-Customer-Key-Md5": "Q/JFlAIOhwbQwW9OS+YGcw==",
+        "X-Bz-Server-Side-Encryption-Customer-Algorithm": "AES256",
+        "X-Bz-Server-Side-Encryption-Customer-Key": "oXT+BeSiADWQlDFSsmJ7bkoH+wpdSnacsUbg2291pdU=",
+        "X-Bz-Server-Side-Encryption-Customer-Key-Md5": "Q/JFlAIOhwbQwW9OS+YGcw==",
       }
     }).then(response => response.blob());
   }

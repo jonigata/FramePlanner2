@@ -1,8 +1,8 @@
-import { FirebaseFileSystem } from '../lib/filesystem/firebaseFileSystem';
+import { SupabaseFileSystem } from '../lib/filesystem/supabaseFileSystem';
 import { makeFolders } from '../lib/filesystem/fileSystem';
 
-export async function buildShareFileSystem(referenceUserId: string | null): Promise<FirebaseFileSystem> {
-  const fs = new FirebaseFileSystem();
+export async function buildShareFileSystem(referenceUserId: string | null): Promise<SupabaseFileSystem> {
+  const fs = new SupabaseFileSystem();
   await fs.openShared(referenceUserId);
 
   const specialFolders = ['画像'];
@@ -11,8 +11,8 @@ export async function buildShareFileSystem(referenceUserId: string | null): Prom
   return fs;
 }
 
-export async function buildCloudFileSystem(): Promise<FirebaseFileSystem> {
-  const fs = new FirebaseFileSystem();
+export async function buildCloudFileSystem(): Promise<SupabaseFileSystem> {
+  const fs = new SupabaseFileSystem();
   await fs.openCloud();
 
   // garbageCollectionがデスクトップ前提になっているので

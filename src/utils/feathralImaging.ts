@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { generateImageFromTextWithFeathral, generateImageFromTextWithFlux } from '../firebase';
+import { text2Image } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
@@ -8,6 +8,7 @@ import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, con
 import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
 import { updateToken } from "../utils/accountStore";
+import type { TextToImageRequest } from './edgeFunctions/types/imagingTypes';
 
 export type ImagingContext = {
   awakeWarningToken: boolean;
@@ -17,14 +18,9 @@ export type ImagingContext = {
   failed: number;
 }
 
-export type ImagingResult = {
-  images: HTMLImageElement[];
-  feathral: number;
-};
-
 export type Mode = "schnell" | "pro" | "chibi" | "manga";
 
-export async function generateImage(prompt: string, width: number, height: number, context: ImagingContext): Promise<ImagingResult | null> {
+export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<HTMLImageElement[]> {
   console.log("running feathral");
   try {
     let q = null;
@@ -35,66 +31,35 @@ export async function generateImage(prompt: string, width: number, height: numbe
       }, 10000);
       context.awakeWarningToken = false;
     }
-    let imageRequest = {
-      "style": "anime",
-      "prompt": prompt,
-      "width": width,
-      "height": height,
-      "output_format": "png"
+    let imageRequest: TextToImageRequest = {
+      prompt, 
+      image_size,
+      num_images,
+      mode, 
     };
     console.log(imageRequest);
 
-    const data = await generateImageFromTextWithFeathral(imageRequest);
-    if (q != null) {
-      clearTimeout(q);
-    }
-    console.log(data);
-    const image = document.createElement('img');
-    image.src = "data:image/png;base64," + data.result.image;
-
-    return { images: [image], feathral: data.feathral };
-  }
-  catch(error) {
-    console.log(error);
-    toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
-    return null;
-  }
-}
-
-export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<ImagingResult | null> {
-  console.log("running feathral");
-  try {
-    let q = null;
-    if (context.awakeWarningToken) {
-      q = setTimeout(() => {
-        toastStore.trigger({ message: `サーバがスリープ状態だと、生成の初動が遅れたり\n失敗したりすることがあります`, timeout: 3000});
-        q = null;
-      }, 10000);
-      context.awakeWarningToken = false;
-    }
-    let imageRequest = {prompt, image_size, mode, num_images};
-    console.log(imageRequest);
-
     const perf = performance.now();
-    const data = await generateImageFromTextWithFlux(imageRequest);
+    const r = await text2Image(imageRequest);
+    console.log("RESULT", r);
+    const { images } = r;
     if (q != null) {
       clearTimeout(q);
     }
     console.log("generateImageFromTextWithFlux", performance.now() - perf);
 
-    const images = [];
-    for (let i = 0; i < data.result.images.length; i++) {
+    const imageElements: HTMLImageElement[] = images.map(imageData => {
       const image = document.createElement('img');
-      image.src = "data:image/png;base64," + data.result.images[i];
-      images.push(image);
-    }
+      image.src = "data:image/png;base64," + imageData;
+      return image;
+    });
 
-    return { images, feathral: data.feathral };
+    return imageElements;
   }
   catch(error) {
     console.log(error);
     toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
-    return null;
+    return [];
   }
 }
 
@@ -161,10 +126,10 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
 
 async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: Mode, frame: FrameElement) {
   console.log("postfix", postfix);
-  const result = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
-  if (result != null) {
-    await result.images[0].decode();
-    const media = new ImageMedia(createCanvasFromImage(result.images[0]));
+  const images = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
+  if (0 < images.length) {
+    await images[0].decode();
+    const media = new ImageMedia(createCanvasFromImage(images[0]));
     const film = new Film(media);
     frame.filmStack.films.push(film);
     frame.gallery.push(media.canvas);

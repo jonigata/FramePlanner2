@@ -1,6 +1,6 @@
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
-import { removeBg } from "../firebase";
+import { removeBg } from "../supabase";
 import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
 import { getAnalytics, logEvent } from "firebase/analytics";
 
@@ -9,10 +9,10 @@ export async function punchFilm(film: Film) {
   if (!(imageMedia instanceof ImageMedia)) { return; }
 
   const dataUrl = imageMedia.canvas.toDataURL("image/png");
-  const r = await removeBg(dataUrl);
+  const r = await removeBg({dataUrl});
 
   const image = document.createElement('img');
-  image.src = "data:image/png;base64," + r.result.image;
+  image.src = "data:image/png;base64," + r.dataUrl;
   await image.decode();
 
   const canvas = createCanvasFromImage(image);

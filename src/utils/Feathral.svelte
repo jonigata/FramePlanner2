@@ -2,7 +2,7 @@
   import { onlineAccount } from "../utils/accountStore";
   import feathralIcon from '../assets/feathral.png';
 
-  $: feathral = $onlineAccount!.feathral;
+  $: feathral = $onlineAccount?.feathral;
 </script>
 
 <div class="flex flex-row">

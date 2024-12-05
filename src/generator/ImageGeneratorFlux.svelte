@@ -3,7 +3,6 @@
 	import Gallery from './Gallery.svelte';
   import { onlineAccount, onlineStatus } from "../utils/accountStore";
   import { onMount } from 'svelte';
-  import { getFeathral } from '../firebase';
   import { getAnalytics, logEvent } from "firebase/analytics";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
@@ -64,25 +63,25 @@
         failed: 0,
       };
 
-      const result = await executeProcessAndNotify(
+      const images = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
           return await generateFluxImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, imagingContext);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      if (result == null) {
+      if (images.length === 0) {
         return;
       }
 
       const promises = [];
-      for (let i = 0; i < result.images.length; i++) {
-        promises.push(result.images[i].decode());
+      for (let i = 0; i < images.length; i++) {
+        promises.push(images[i].decode());
       }
       await Promise.all(promises);
       
       const canvases = [];
-      for (let i = 0; i < result.images.length; i++) {
-        canvases.push(createCanvasFromImage(result.images[i]));
+      for (let i = 0; i < images.length; i++) {
+        canvases.push(createCanvasFromImage(images[i]));
       }
 
       gallery.push(...canvases);
@@ -90,8 +89,6 @@
       progress = 1;
 
       logEvent(getAnalytics(), 'generate_flux');
-
-      $onlineAccount!.feathral = result.feathral;
     }
     finally {
       clearInterval(q);
@@ -107,7 +104,6 @@
   $: estimatedCost = batchCount * calculateCost({width,height}, mode);
 
   onMount(async () => {
-    $onlineAccount!.feathral = await getFeathral();
     console.log($onlineAccount!.feathral);
   });
 

@@ -23,7 +23,7 @@
   import Drawer from "../../utils/Drawer.svelte";
   import { bookEditor } from "../bookStore";
   import { selection, type SelectionInfo } from '../../utils/selection';
-  import { transformText } from '../../firebase';
+  import { transformText } from '../../supabase';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { onlineStatus } from "../../utils/accountStore";
@@ -266,10 +266,10 @@
     }
     console.log("onTransformText", transformTextMethod, $bubble!.text);
     transforming = true;
-    const r = await transformText(transformTextMethod, $bubble!.text);
+    const r = await transformText({method:transformTextMethod, text:$bubble!.text});
     console.log(r);
     transforming = false;
-    $bubble!.text = r.result.text;
+    $bubble!.text = r.text;
     if (transformTextMethod == "translateToEnglish") {
       $bubble!.direction = "h";
     }

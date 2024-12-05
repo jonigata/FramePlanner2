@@ -4,11 +4,12 @@
 
   export let title = '';
   export let description = '';
+  export let related_url = '';
 
   $: beforeRegistration = $onlineProfile == null;
 
   function handleSubmit() {
-    $modalStore[0].response!({ result: "ok", title, description });
+    $modalStore[0].response!({ result: "ok", title, description, related_url });
     modalStore.close();
   }
 
@@ -54,6 +55,16 @@
         bind:value={description}
         maxlength="500"
         rows="4"
+      />
+    </label>
+
+    <label class="label">
+      <span>関連URL</span>
+      <input
+        class="input p-2 pl-4 w-full"
+        type="text"
+        bind:value={related_url}
+        maxlength="100"
       />
     </label>
 

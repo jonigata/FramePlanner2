@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { advise } from '../firebase';
   import { Character } from '../lib/book/notebook';
+  import { Storyboard } from '../lib/book/storyboard';
   import { commitBook } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
@@ -12,13 +12,14 @@
   import { tick } from 'svelte';
   import {makePagesFromStoryboard} from './makePage';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { callAdvise } from './callAdvise';
   import { toolTip } from '../utils/passiveToolTipStore';
   import NotebookTextarea from './NotebookTextarea.svelte';
   import NotebookCharacterList from './NotebookCharacterList.svelte';
   import Feathral from '../utils/Feathral.svelte';
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import FluxModes from '../generator/FluxModes.svelte';
+  import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
+  import { Notebook as NotebookProtocol } from '../utils/edgeFunctions/types/notebook';
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 
@@ -74,7 +75,7 @@
   async function onThemeAdvise() {
     try {
       themeWaiting = true;
-      notebook!.theme = await callAdvise('theme', notebook!);
+      notebook!.theme = await adviseTheme(notebook as NotebookProtocol);
       commit();
     }
     catch(e) {
@@ -90,7 +91,7 @@
     try {
       charactersWaiting = true;
       notebook!.characters = [];
-      const newCharacters = await callAdvise('characters', notebook!);
+      const newCharacters: Character[] = await adviseCharacters(notebook as NotebookProtocol) as Character[];
       newCharacters.forEach((c: Character) => c.ulid = ulid());
       notebook!.characters = newCharacters;
       commit();
@@ -107,7 +108,7 @@
   async function onAddCharacter() {
     try {
       charactersWaiting = true;
-      const newCharacters = await callAdvise('characters', notebook!);
+      const newCharacters = await adviseCharacters(notebook as NotebookProtocol) as Character[];
       for (const c of newCharacters) {
         const index = notebook!.characters.findIndex((v) => v.name === c.name);
         if (index < 0) {
@@ -133,7 +134,7 @@
   async function onPlotAdvise() {
     try {
       plotWaiting = true;
-      notebook!.plot = await callAdvise('plot', notebook!, plotInstruction);
+      notebook!.plot = await advisePlot(notebook as NotebookProtocol, plotInstruction);
       commit();
     }
     catch(e) {
@@ -148,7 +149,7 @@
   async function onScenarioAdvise() {
     try {
       scenarioWaiting = true;
-      notebook!.scenario = await callAdvise('scenario', notebook!);
+      notebook!.scenario = await adviseScenario(notebook as NotebookProtocol);
       commit();
     }
     catch(e) {
@@ -172,11 +173,11 @@
     console.log('build storyboard');
     try {
       storyboardWaiting = true;
-      const result = await advise({action:'storyboard', notebook});
-      notebook!.storyboard = result.result;
+      const result = await adviseStoryboard(notebook as NotebookProtocol);
+      notebook!.storyboard = result as Storyboard;
       storyboardWaiting = false;
       console.log(result);
-      const receivedPages = makePagesFromStoryboard(result.result);
+      const receivedPages = makePagesFromStoryboard(result as Storyboard);
       let marks = $bookEditor!.getMarks();
       const newPages = $mainBook!.pages.filter((p, i) => !marks[i]);
       const oldLength = newPages.length;
@@ -201,11 +202,10 @@
   async function onCritiqueAdvise() {
     try {
       critiqueWaiting = true;
-      const result = await advise({action:'critique', notebook});
+      const result = await adviseCritique(notebook as NotebookProtocol);
       critiqueWaiting = false;
       console.log(result);
-      notebook!.critique = result.result.critique;
-      $onlineAccount!.feathral = result.feathral;
+      notebook!.critique = result;
     } catch (e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});
       console.error(e);
@@ -226,19 +226,19 @@
       succeeded: 0,
       failed: 0,
     };
-    const result = await executeProcessAndNotify(
+    const images = await executeProcessAndNotify(
       5000, "画像が生成されました",
       async () => {
         return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, imagingContext);
       });
-    if (result == null) {
+    if (images == null) {
       c.portrait = null;
       return;
     }
 
-    await result.images[0].decode();
-    console.log(result);
-    c.portrait = result.images[0]; // HTMLImageElement
+    await images[0].decode();
+    console.log(images);
+    c.portrait = images[0]; // HTMLImageElement
     notebook!.characters = notebook!.characters;
   }
 
