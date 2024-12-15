@@ -1,5 +1,4 @@
 <script lang="ts">
-  import mascot from '../assets/mascot.png';
   import { draggable } from '@neodrag/svelte';
   import MascotTimeline from './MascotTimeline.svelte';
   import { mascotVisible, mascotWindowRect } from './mascotStore';
@@ -29,7 +28,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="absolute-positioned" on:contextmenu={onClick}>
-    <img class="mascot handle" draggable={false} src={mascot} alt="mascot"/>
+    <!-- <img class="mascot handle" draggable={false} src={mascot} alt="mascot"/> -->
     <MascotStatus/>
   </div>
 </div>

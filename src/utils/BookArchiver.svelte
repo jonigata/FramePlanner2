@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { saveAsZip, makeZip } from "./saver/saveAsZip";
+  import { saveAsPngZip, saveAsPsdZip, makeZip } from "./saver/saveAsZip";
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
   import { mainBook, bookEditor } from "../bookeditor/bookStore";
   import { saveAsPng } from "./saver/saveAsPng";
-  import { saveAsPSD } from "./saver/saveAsPSD";
+  import { saveAsPsd } from "./saver/saveAsPsd";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { postToAiPictors } from "./saver/postToAiPictors";
   import { writeEnvelope } from "../lib/book/envelope";
@@ -36,14 +36,18 @@
             if (targetPages.length === 1) {
               await saveAsPng(targetPages[0]);
             } else {
-              await saveAsZip(targetPages);
+              await saveAsPngZip(targetPages);
             }
             break;
           case 'copy':
             await copyToClipboard(targetPages[0])
             break;
           case 'export-psd':
-            saveAsPSD(targetPages[0]);
+            if (targetPages.length === 1) {
+              saveAsPsd(targetPages[0]);
+            } else {
+              saveAsPsdZip(targetPages);
+            }
             break;
           case 'aipictors':
             // postToAiPictors(targetPages[0]);
@@ -242,7 +246,7 @@
     
     $loading = true;
     try {
-      const zipFile = await makeZip(pages);
+      const zipFile = await makeZip(pages, renderPageToBlob, 'png');
       const sha1 = await blobToSha1(zipFile);
         
       let content_url;
@@ -300,7 +304,7 @@
     url.search = params.toString();
     const shareUrl = url.toString();
     navigator.clipboard.writeText(shareUrl);
-    await notifyShare(shareUrl);
+    // await notifyShare(shareUrl);
 
     $loading = false;
     toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});

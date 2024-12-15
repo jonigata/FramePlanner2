@@ -54,7 +54,8 @@ console.snapshot = function(obj) {
 }
 
 function loadFont(family: string, filename: string, weight: string) { 
-  const url = new URL(`./assets/fonts/${filename}.woff2`, import.meta.url).href;
+  const url = `/fonts/${filename}.woff2`;
+  console.log(`loading font: ${family} ${weight} ${url}`);
   const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
   document.fonts.add(font);
 }
