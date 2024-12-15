@@ -296,7 +296,7 @@
     url.search = params.toString();
     const shareUrl = url.toString();
     navigator.clipboard.writeText(shareUrl);
-    await notifyShare(shareUrl);
+    // await notifyShare(shareUrl);
 
     $loading = false;
     toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});

@@ -16,7 +16,8 @@
     "stamp": "git rev-parse HEAD > public/stamp.txt",
     "branches": "git for-each-ref --sort=-committerdate refs/heads/ --format='%(committerdate:short) %(refname:short)'",
     "merged": "git branch --merged",
-    "merged:delete": "git branch --merged | grep -v '^\\*' | xargs -n 1 git branch -d"
+    "merged:delete": "git branch --merged | grep -v '^\\*' | xargs -n 1 git branch -d",
+    "released-version": "curl https://frameplanner.online/stamp.txt"
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "^1.12.0",
