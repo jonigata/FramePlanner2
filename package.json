@@ -13,7 +13,7 @@
     "vitest": "vitest",
     "deploy:preview": "firebase hosting:channel:deploy preview",
     "list-preview": "firebase hosting:channel:list",
-    "stamp": "git rev-parse HEAD > public/stamp.txt",
+    "stamp": "git rev-parse HEAD | tee public/stamp.txt",
     "branches": "git for-each-ref --sort=-committerdate refs/heads/ --format='%(committerdate:short) %(refname:short)'",
     "merged": "git branch --merged",
     "merged:delete": "git branch --merged | grep -v '^\\*' | xargs -n 1 git branch -d",
