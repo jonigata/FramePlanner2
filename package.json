@@ -9,7 +9,7 @@
     "devbuild": "vite build --mode development",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.svelte-check.json",
-    "deploy": "npm run stamp && firebase deploy --only hosting",
+    "deploy": "git branch --show-current | grep -q '^main$' && npm run stamp && firebase deploy --only hosting || echo 'Deployment failed: not on main branch'",
     "vitest": "vitest",
     "deploy:preview": "firebase hosting:channel:deploy preview",
     "list-preview": "firebase hosting:channel:list",
