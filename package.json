@@ -68,7 +68,7 @@
     "io-ts": "^2.2.21",
     "jsonc-parser": "^3.2.0",
     "jszip": "^3.10.1",
-    "manga-renderer": "^1.0.4",
+    "manga-renderer": "^1.0.9",
     "md5": "^2.3.0",
     "ndjson-readablestream": "^1.2.0",
     "openai": "^4.16.1",
