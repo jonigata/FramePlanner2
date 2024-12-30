@@ -17,7 +17,7 @@
     {label: "シェア", onClick: shareBook, hint: "ドキュメントのコピーを\n編集できる形でアップロードします"},
     {label: "パッケージ", onClick: downloadEnvelop, hint: "ドキュメントを1つのファイルとして\nダウンロードします"},
     {label: "プロンプトをクリップボードにコピー", onClick: exportPrompts, hint: "各コマのプロンプトを集めてクリップボードにコピーします"},
-    {label: "まんがファームに投稿！", onClick: publishEnvelope, hint: "ドキュメントをまんがファームに公開し、\n誰でも閲覧できるようにします"},
+    // {label: "まんがファームに投稿！", onClick: publishEnvelope, hint: "ドキュメントをまんがファームに公開し、\n誰でも閲覧できるようにします"},
     // {label: "test", onClick: testIt }
   ];  
 

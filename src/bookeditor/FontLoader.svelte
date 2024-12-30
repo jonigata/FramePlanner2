@@ -57,7 +57,7 @@
     const localFile = localFontFiles[family];
     console.log("load font", family, weight, localFile)
     if (localFile) {
-      const url = new URL(`../assets/fonts/${localFile}.woff2`, import.meta.url).href;
+      const url = `/fonts/${localFile}.woff2`;
       const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
 
       document.fonts.add(font);
