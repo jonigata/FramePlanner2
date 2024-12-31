@@ -83,11 +83,14 @@ function getCompleteEmojiSequence(text: string, index: number): string | null {
     if (text[index + 1] === '\u3099' || text[index + 1] === '\u309A') {
       return text.slice(index, index + 2);
     }
+/*
+    横書きと一貫性がないので一旦保留
     if (text[index + 1] === "゛") {
       return text.slice(index, index + 1) + '\u3099';
     } else if (text[index + 1] === "゜") {
       return text.slice(index, index + 1) + '\u309A';
     }
+*/
   }
   return null;
 }
