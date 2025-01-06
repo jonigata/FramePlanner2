@@ -427,6 +427,7 @@ export class FrameLayer extends LayerBase {
               const image = new Image();
               image.src = url;
               await image.decode();
+              URL.revokeObjectURL(url);
               const canvas = document.createElement("canvas");
               canvas.width = image.width;
               canvas.height = image.height;
@@ -1249,6 +1250,7 @@ export class FrameLayer extends LayerBase {
         let playFlag = false;
         for (const film of layout.element.filmStack.films) {
           if (film.media instanceof VideoMedia) {
+            console.log(film.media);
             playFlag = true;
             film.media.video.play();
           }

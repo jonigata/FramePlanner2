@@ -75,3 +75,15 @@ export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
     }, "image/png");
   });
 }
+
+export async function getFirstFrameOfVideo(video: HTMLVideoElement): Promise<HTMLCanvasElement> {
+  video.muted = true;
+  await video.play();
+  video.pause();
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(video, 0, 0);
+  return canvas;
+}

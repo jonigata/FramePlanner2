@@ -2,33 +2,59 @@ import type { Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { Film } from "../layeredCanvas/dataModels/film";
-import { ImageMedia } from "../layeredCanvas/dataModels/media";
+import { ImageMedia, VideoMedia } from "../layeredCanvas/dataModels/media";
 import { Effect } from "../layeredCanvas/dataModels/effect";
 
-export async function dryUnpackFrameImages(paperSize: Vector, markUp: any, images: string[]): Promise<void> {
-  const dryLoadImage = async (imageId: string): Promise<HTMLCanvasElement | null> => {
-    images.push(imageId as string);
+export type MediaType = 'image' | 'video';
+
+interface FilmMarkUp {
+  ulid: string;
+  mediaType?: MediaType;
+  image: string;
+  n_scale: number;
+  n_translation: Vector;
+  rotation: number;
+  reverse: Vector;
+  visible: boolean;
+  prompt: string | null;
+  effects: any[];
+}
+
+export type MediaResource = HTMLCanvasElement | HTMLVideoElement | null;
+export type LoadMediaFunc = (imageId: string, mediaType: MediaType) => Promise<MediaResource>;
+export type SaveMediaFunc = (mediaResource: MediaResource, mediaType: MediaType) => Promise<string>;
+  
+export async function dryUnpackFrameMedias(paperSize: Vector, markUp: any, loadedImageList: string[]): Promise<void> {
+  const dryLoadMediaResource: LoadMediaFunc = async (imageId: string): Promise<MediaResource> => {
+    loadedImageList.push(imageId);
     return null;
   };
 
-  await unpackFrameImages(paperSize, markUp, dryLoadImage);
+  await unpackFrameMedias(paperSize, markUp, dryLoadMediaResource);
 }
 
-export async function dryUnpackBubbleImages(paperSize: Vector, markUps: any[], images: string[]): Promise<void> {
-  const dryLoadImage = async (imageId: string): Promise<HTMLCanvasElement | null> => {
-    images.push(imageId as string);
+export async function dryUnpackBubbleMedias(paperSize: Vector, markUps: any[], loadedImageList: string[]): Promise<void> {
+  const dryLoadMediaResource: LoadMediaFunc = async (imageId: string): Promise<MediaResource> => {
+    loadedImageList.push(imageId);
     return null;
   };
 
-  await unpackBubbleImages(paperSize, markUps, dryLoadImage);
+  await unpackBubbleMedias(paperSize, markUps, dryLoadMediaResource);
 }
 
-export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanvasFunc: (imageId: string) => Promise<HTMLCanvasElement | null>): Promise<FrameElement> {
+export async function packFrameMedias(frameTree: FrameElement, parentDirection: 'h' | 'v', saveMediaFunc: SaveMediaFunc): Promise<any> {
+  const markUp = FrameElement.decompileNode(frameTree, parentDirection);
+  markUp.films = await packFilms(frameTree.filmStack.films, saveMediaFunc);
+  return markUp;
+}
+
+export async function unpackFrameMedias(paperSize: Vector, markUp: any, loadMediaFunc: LoadMediaFunc): Promise<FrameElement> {
   const frameTree = FrameElement.compileNode(markUp);
 
   frameTree.gallery = [];
   if (markUp.image || markUp.scribble) {
     if (typeof markUp.image === 'string' || typeof markUp.scribble === 'string') {
+      // 旧バージョンはvideoに対応していない
       function newFilm(anyCanvas: HTMLCanvasElement): Film {
         const s_imageSize = Math.min(anyCanvas.width, anyCanvas.height) ;
         const s_pageSize = Math.min(paperSize[0], paperSize[1]);
@@ -51,23 +77,21 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
 
       // 初期バージョン処理
       if (markUp.image) {
-        const canvas = await loadCanvasFunc(markUp.image);
+        const canvas = await loadMediaFunc(markUp.image, 'image');
         if (canvas) {
-          const film = newFilm(canvas);
-          frameTree.gallery.push(canvas);
+          const film = newFilm(canvas as HTMLCanvasElement);
           frameTree.filmStack.films.push(film);
         }
       }
       if (markUp.scribble) {
-        const scribble = await loadCanvasFunc(markUp.scribble);
+        const scribble = await loadMediaFunc(markUp.scribble, 'image');
         if (scribble) {
-          const film = newFilm(scribble);
-          frameTree.gallery.push(scribble);
+          const film = newFilm(scribble as HTMLCanvasElement);
           frameTree.filmStack.films.push(film);
         }
       } 
     } else {
-      // 前期バージョン処理
+      // 前期バージョン処理(このときVideoMediaはない)
       function newFilm(anyCanvas: HTMLCanvasElement): Film {
         const film = new Film(new ImageMedia(anyCanvas));
         film.n_scale = markUp.image.n_scale;
@@ -79,18 +103,16 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
       }
 
       if (markUp.image.image) {
-        const image = await loadCanvasFunc(markUp.image.image);
+        const image = await loadMediaFunc(markUp.image.image, 'image');
         if (image) {
-          const film = newFilm(image);
-          frameTree.gallery.push(image);
+          const film = newFilm(image as HTMLCanvasElement);
           frameTree.filmStack.films.push(film);
         }
       }
       if (markUp.image.scribble) {
-        const scribble = await loadCanvasFunc(markUp.image.scribble);
+        const scribble = await loadMediaFunc(markUp.image.scribble, 'image');
         if (scribble) {
-          const film = newFilm(scribble);
-          frameTree.gallery.push(scribble);
+          const film = newFilm(scribble as HTMLCanvasElement);
           frameTree.filmStack.films.push(film);
         }
       } 
@@ -98,7 +120,7 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
   } else {
     // Film版処理
     if (markUp.films) {
-      const films = await unpackFilms(markUp.films, loadCanvasFunc);
+      const films = await unpackFilms(markUp.films, loadMediaFunc);
       frameTree.filmStack.films.push(...films);
     }
   }
@@ -108,7 +130,7 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
     frameTree.direction = markUp.column ? 'v' : 'h';
     frameTree.children = [];
     for (let child of children) {
-      frameTree.children.push(await unpackFrameImages(paperSize, child, loadCanvasFunc));
+      frameTree.children.push(await unpackFrameMedias(paperSize, child, loadMediaFunc));
     }
     frameTree.calculateLengthAndBreadth();
   }
@@ -123,15 +145,27 @@ export async function unpackFrameImages(paperSize: Vector, markUp: any, loadCanv
   return frameTree;
 }
 
-export async function unpackBubbleImages(paperSize: Vector, markUps: any[], loadImageFunc: (imageId: string) => Promise<HTMLCanvasElement | null>): Promise<Bubble[]> {
+export async function packBubbleMedias(bubbles: Bubble[], saveMediaFunc: SaveMediaFunc): Promise<any[]> {
+  const packedBubbles = [];
+  for (const bubble of bubbles) {
+    const markUp = Bubble.decompile(bubble);
+    markUp.films = await packFilms(bubble.filmStack.films, saveMediaFunc);
+    packedBubbles.push(markUp);
+  }
+  return packedBubbles;
+}
+
+
+export async function unpackBubbleMedias(paperSize: Vector, markUps: any[], LoadMediaFunc: LoadMediaFunc): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
   for (const markUp of markUps) {
     const bubble: Bubble = Bubble.compile(paperSize, markUp);
     const imageMarkUp = markUp.image;
     if (imageMarkUp) {
-      const image = await loadImageFunc(imageMarkUp.image);
-      if (image) {
-        const s_imageSize = Math.min(image.width, image.height) ;
+      // 旧バージョンはvideoに対応していない
+      const mediaResource = await LoadMediaFunc(imageMarkUp.image, 'image');
+      if (mediaResource) {
+        const s_imageSize = Math.min(mediaResource.width, mediaResource.height) ;
         const s_pageSize = Math.min(paperSize[0], paperSize[1]);
 
         let n_scale = imageMarkUp.n_scale;
@@ -146,14 +180,14 @@ export async function unpackBubbleImages(paperSize: Vector, markUps: any[], load
           const scale = s_imageSize / s_pageSize;
           n_translation = [markUpTranslationVector[0] * scale, markUpTranslationVector[1] * scale];
         }
-        const film = new Film(new ImageMedia(image));
+        const film = new Film(new ImageMedia(mediaResource　as HTMLCanvasElement));
         film.n_scale = n_scale;
         film.n_translation = n_translation;
         bubble.filmStack.films.push(film);
         bubble.scaleLock = imageMarkUp.scaleLock;
       }
     } else if (markUp.films) {
-      const films = await unpackFilms(markUp.films, loadImageFunc);
+      const films = await unpackFilms(markUp.films, LoadMediaFunc);
       bubble.filmStack.films = films;
     }
     unpackedBubbles.push(bubble);
@@ -171,22 +205,20 @@ export async function unpackBubbleImages(paperSize: Vector, markUps: any[], load
   return unpackedBubbles;
 }
 
-export async function packFilms(films: Film[], saveCanvasFunc: (canvas: HTMLCanvasElement) => Promise<string>): Promise<any[]> {
+export async function packFilms(films: Film[], saveMediaFunc: SaveMediaFunc): Promise<any[]> {
   const packedFilms = [];
   for (const film of films) {
-    if (!(film.media instanceof ImageMedia)) { continue; }
-
     const effects = [];
     for (const effect of film.effects) {
       const markUp = effect.decompile();
       effects.push({ tag: effect.tag, properties: markUp });
     }
 
-    const canvas = film.media.canvas;
-    const fileId = await saveCanvasFunc(canvas);
+    const fileId = await saveMediaFunc(film.media.drawSource, film.media.type);
 
     const filmMarkUp = {
       ulid: film.ulid,
+      mediaType: film.media.type,
       image: fileId,
       n_scale: film.n_scale,
       n_translation: [...film.n_translation],
@@ -201,31 +233,37 @@ export async function packFilms(films: Film[], saveCanvasFunc: (canvas: HTMLCanv
   return packedFilms;
 }
 
-export async function unpackFilms(markUp: any, loadImageFunc: (imageId: string) => Promise<HTMLCanvasElement | null>): Promise<Film[]> {
+export async function unpackFilms(markUp: any, loadMediaFunc: LoadMediaFunc): Promise<Film[]> {
   const films: Film[] = [];
   for (const filmMarkUp of markUp) {
-    const image = await loadImageFunc(filmMarkUp.image);
-    if (image) {
-      const effects = [];
-      if (filmMarkUp.effects) {
-        for (const effectMarkUp of filmMarkUp.effects) {
-          console.log("===============", effectMarkUp);
-          const effect = Effect.compile(effectMarkUp);
-          effects.push(effect);
-        }
-      }
+    const mediaResource = await loadMediaFunc(filmMarkUp.image, filmMarkUp.mediaType ?? 'image');
+    if (!mediaResource) { continue; }
 
-      const film = new Film(new ImageMedia(image));
-      if (filmMarkUp.ulid) film.ulid = filmMarkUp.ulid;
-      film.n_scale = filmMarkUp.n_scale;
-      film.n_translation = filmMarkUp.n_translation;
-      film.rotation = filmMarkUp.rotation;
-      film.reverse = filmMarkUp.reverse;
-      film.visible = filmMarkUp.visible;
-      film.prompt = filmMarkUp.prompt;
-      film.effects = effects;
-      films.push(film);
+    const effects = [];
+    if (filmMarkUp.effects) {
+      for (const effectMarkUp of filmMarkUp.effects) {
+        const effect = Effect.compile(effectMarkUp);
+        effects.push(effect);
+      }
     }
+
+    console.log("MediaType", filmMarkUp.mediaType);
+
+    const media = 
+      filmMarkUp.mediaType === 'video' ? // 古いデータはundefined
+      new VideoMedia(mediaResource as HTMLVideoElement) : 
+      new ImageMedia(mediaResource as HTMLCanvasElement);
+
+    const film = new Film(media);
+    if (filmMarkUp.ulid) film.ulid = filmMarkUp.ulid;
+    film.n_scale = filmMarkUp.n_scale;
+    film.n_translation = filmMarkUp.n_translation;
+    film.rotation = filmMarkUp.rotation;
+    film.reverse = filmMarkUp.reverse;
+    film.visible = filmMarkUp.visible;
+    film.prompt = filmMarkUp.prompt;
+    film.effects = effects;
+    films.push(film);
   }
   return films;
 }

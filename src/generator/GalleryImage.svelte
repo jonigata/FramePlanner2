@@ -83,6 +83,7 @@
         const url = URL.createObjectURL(blob);
         image.src = url;
         await image.decode();
+        URL.revokeObjectURL(url);
       }
       image.style.width = `${w}px`;
       image.style.height = `${h}px`;

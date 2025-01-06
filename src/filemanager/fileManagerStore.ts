@@ -10,7 +10,7 @@ import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "../l
 import { emptyNotebook } from "../lib/book/notebook";
 import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages";
 import { writeEnvelope, readEnvelope } from "../lib/book/envelope";
-import { dryUnpackBubbleImages, dryUnpackFrameImages } from "../lib/book/imagePacking";
+import { dryUnpackBubbleMedias, dryUnpackFrameMedias } from "../lib/book/imagePacking";
 
 export type Dragging = {
   fileSystem: FileSystem;
@@ -223,8 +223,8 @@ export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images
   }
 
   for (const serializedPage of serializedBook.pages) {
-    await dryUnpackFrameImages(serializedPage.paperSize, serializedPage.frameTree, images);
-    await dryUnpackBubbleImages(serializedPage.paperSize, serializedPage.bubbles, images);
+    await dryUnpackFrameMedias(serializedPage.paperSize, serializedPage.frameTree, images);
+    await dryUnpackBubbleMedias(serializedPage.paperSize, serializedPage.bubbles, images);
   }
 }
 
