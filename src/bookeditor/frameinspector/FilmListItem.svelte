@@ -30,7 +30,7 @@
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
-    console.log("film scale", film?.n_scale, "film size", film?.media.drawSource.width, film?.media.drawSource.height);
+    console.log("film scale", film?.n_scale, "film size", film?.media.naturalWidth, film?.media.naturalHeight);
     dispatch('select', { film, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
   }
 
@@ -169,7 +169,7 @@
       on:pointerover={onHover}
       on:click={onClick}
     >
-      <SpreadCanvas width={film.media.drawSource.width} height={film.media.drawSource.height} bind:canvas={canvas}/>
+      <SpreadCanvas width={film.media.naturalWidth} height={film.media.naturalHeight} bind:canvas={canvas}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
