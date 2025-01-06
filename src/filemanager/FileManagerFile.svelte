@@ -121,7 +121,7 @@
     const file = (await fileSystem.getNode(nodeId))!.asFile()!;
     const book = await loadBookFrom(fileSystem, file);
     const blob = await writeEnvelope(book);
-    saveAs(blob, "manga.envelope");
+    saveAs(blob, `${filename}.envelope`);
   }
 
   onMount(async () => {

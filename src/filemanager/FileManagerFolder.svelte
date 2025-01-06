@@ -89,7 +89,8 @@
           const newFile = await fileSystem.createFile();
           book.revision.id = newFile.id;
           saveBookTo(book, fileSystem, newFile);
-          await node.link("パッケージ", newFile.id);
+          const basename = fileName.replace(/\.envelope$/, "");
+          await node.link(basename, newFile.id);
           node = node;
           return;
         }        
