@@ -297,6 +297,9 @@ export class FrameLayer extends LayerBase {
     }
     if (media instanceof HTMLVideoElement) {
       this.importMedia(layoutlet.element, new VideoMedia(media));
+      if (this.selectedLayout?.element === layoutlet.element) {
+        this.startVideo(layoutlet);
+      }
     }
     this.onFocus(layoutlet);
     this.onCommit();
@@ -653,6 +656,7 @@ export class FrameLayer extends LayerBase {
   changeFocus(layer: Layer | null) {
     if (layer != this) {
       if (this.selectedLayout || this.selectedBorder) {
+        this.stopVideo(this.selectedLayout);
         this.selectedBorder = null;
         this.doSelectLayout(null);
       }
@@ -1236,36 +1240,42 @@ export class FrameLayer extends LayerBase {
   videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
   doSelectLayout(layout: Layout | null): void {
     if (layout?.element !== this.selectedLayout?.element) {
-      clearInterval(this.videoRedrawInterval);
-      this.videoRedrawInterval = undefined;      
-      if (this.selectedLayout) {
-        for (const film of this.selectedLayout.element.filmStack.films) {
-          if (film.media instanceof VideoMedia) {
-            film.media.video.pause();
-          }
-        }
-      }
-
-      if (layout) {
-        let playFlag = false;
-        for (const film of layout.element.filmStack.films) {
-          if (film.media instanceof VideoMedia) {
-            console.log(film.media);
-            playFlag = true;
-            film.media.video.play();
-          }
-        }
-        if (playFlag) {
-          this.videoRedrawInterval = setInterval(() => {
-            this.redraw();
-          }, 1000/24);
-        }
-      }
+      this.stopVideo(this.selectedLayout);
+      this.startVideo(layout);
     }
 
     this.selectedLayout = layout;
     this.relayoutIcons();
     this.onFocus(layout);
+  }
+
+  stopVideo(layout: Layout | null) {
+    clearInterval(this.videoRedrawInterval);
+    this.videoRedrawInterval = undefined;      
+    if (layout) {
+      for (const film of layout.element.filmStack.films) {
+        if (film.media instanceof VideoMedia) {
+          film.media.video.pause();
+        }
+      }
+    }
+  }
+
+  startVideo(layout: Layout | null) {
+    if (!layout) { return; }
+
+    let playFlag = false;
+    for (const film of layout.element.filmStack.films) {
+      if (film.media instanceof VideoMedia) {
+        playFlag = true;
+        film.media.video.play();
+      }
+    }
+    if (playFlag) {
+      this.videoRedrawInterval = setInterval(() => {
+        this.redraw();
+      }, 1000/24);
+    }
   }
 
   selectLayout(layout: Layout | null): void {

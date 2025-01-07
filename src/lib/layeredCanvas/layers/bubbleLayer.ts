@@ -706,6 +706,7 @@ export class BubbleLayer extends LayerBase {
     if (layer != this) {
       // unfocus呼ぶと再帰呼び出しになるので注意
       if (this.selected) {
+        this.stopVideo(this.selected);
         this.selected = null;
         this.onFocus(null);
       }
@@ -1443,9 +1444,8 @@ export class BubbleLayer extends LayerBase {
     this.redraw();
   }
 
-  videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
   selectBubble(bubble: Bubble | null) {
-    console.log("A");
+    this.stopVideo(this.selected);
     this.unfocus();
     for (let a of Object.keys(this.optionEditActive)) {
       if (this.optionEditActive[a]) {
@@ -1454,40 +1454,7 @@ export class BubbleLayer extends LayerBase {
       }
     }
 
-    console.log("B");
-    if (bubble !== this.selected) {
-      console.log("C");
-      clearInterval(this.videoRedrawInterval);
-      this.videoRedrawInterval = undefined;      
-      if (this.selected) {
-        for (const film of this.selected.filmStack.films) {
-          if (film.media instanceof VideoMedia) {
-            film.media.video.pause();
-          }
-        }
-      }
-    }
-
-    console.log("D");
-    if (bubble) {
-      console.log("E");
-      let playFlag = false;
-      for (const film of bubble.filmStack.films) {
-        if (film.media instanceof VideoMedia) {
-          console.log(film.media);
-          playFlag = true;
-          film.media.video.play();
-        }
-      }
-      console.log("F");
-      if (playFlag) {
-        console.log("G");
-        this.videoRedrawInterval = setInterval(() => {
-          this.redraw();
-        }, 1000/24);
-      }
-    }
-    console.log("H");
+    this.startVideo(bubble);
 
     this.selected = bubble;
     this.relayoutIcons();
@@ -1496,6 +1463,38 @@ export class BubbleLayer extends LayerBase {
 
     this.redraw();
   }
+
+  videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
+  stopVideo(bubble: Bubble | null) {
+    clearInterval(this.videoRedrawInterval);
+    this.videoRedrawInterval = undefined;      
+    if (bubble) {
+      for (const film of bubble.filmStack.films) {
+        if (film.media instanceof VideoMedia) {
+          film.media.video.pause();
+        }
+      }
+    }
+  }
+
+  startVideo(bubble: Bubble | null) {
+    if (!bubble) { return; }
+
+    let playFlag = false;
+    for (const film of bubble.filmStack.films) {
+      if (film.media instanceof VideoMedia) {
+        playFlag = true;
+        film.media.video.play();
+      }
+    }
+    if (playFlag) {
+      this.videoRedrawInterval = setInterval(() => {
+        this.redraw();
+      }, 1000/24);
+    }
+  }
+
+
 
   renderDepths(): number[] { return [1]; }
 
