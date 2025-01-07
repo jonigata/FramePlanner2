@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { makePlainImage } from "../lib/layeredCanvas/tools/imageUtil";
+  import { makePlainCanvas } from "../lib/layeredCanvas/tools/imageUtil";
   import SliderEdit from '../utils/SliderEdit.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 
@@ -10,7 +10,7 @@
   let color: string = "#ffffff00";
 
   async function generate() {
-    chosen = makePlainImage(width, height, color);
+    chosen = makePlainCanvas(width, height, color);
   }
 </script>
 

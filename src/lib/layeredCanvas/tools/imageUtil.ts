@@ -1,4 +1,4 @@
-export function makePlainImage(w: number, h: number, color: string): HTMLCanvasElement {
+export function makePlainCanvas(w: number, h: number, color: string): HTMLCanvasElement {
   console.log("makeWhiteImage", w, h);
   const canvas = document.createElement("canvas");
   canvas.width = w;
