@@ -38,6 +38,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
 
   const root = await fileSystem.getRoot();
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
+  const videoFolder = (await root.getNodesByName('動画'))[0] as Folder;
 
   const serializedBook: SerializedBook = {
     revision: book.revision,
@@ -48,8 +49,8 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     notebook: book.notebook,
   };
   for (const page of book.pages) {
-    const markUp = await storeFrameImages(page.frameTree, fileSystem, imageFolder, 'v');
-    const bubbles = await storeBubbleImages(page.bubbles, fileSystem, imageFolder, page.paperSize);
+    const markUp = await storeFrameImages(page.frameTree, fileSystem, imageFolder, videoFolder, 'v');
+    const bubbles = await storeBubbleImages(page.bubbles, fileSystem, imageFolder, videoFolder, page.paperSize);
     
     const serializedPage: SerializedPage = {
       id: page.id,

@@ -28,15 +28,15 @@ export async function fetchBubbleImages(paperSize: Vector, markUps: any[], fileS
   return await unpackBubbleMedias(paperSize, markUps, f);
 }
 
-export async function storeFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
+export async function storeFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, videoFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
   const f: SaveMediaFunc = async (mediaResource) => {
-    return await saveMediaResource(fileSystem, imageFolder, mediaResource);
+    return await saveMediaResource(fileSystem, imageFolder, videoFolder, mediaResource);
   };
   const markUp = await packFrameMedias(frameTree, parentDirection, f);
 
   const children = [];
   for (const child of frameTree.children) {
-    children.push(await storeFrameImages(child, fileSystem, imageFolder, frameTree.direction!));
+    children.push(await storeFrameImages(child, fileSystem, imageFolder, videoFolder, frameTree.direction!));
   }
   if (0 < children.length) {
     if (frameTree.direction === 'h') { 
@@ -48,9 +48,9 @@ export async function storeFrameImages(frameTree: FrameElement, fileSystem: File
   return markUp;
 }
 
-export async function storeBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, paperSize: [number, number]): Promise<any[]> {
+export async function storeBubbleImages(bubbles: Bubble[], fileSystem: FileSystem, imageFolder: Folder, videoFolder: Folder, paperSize: [number, number]): Promise<any[]> {
   const f: SaveMediaFunc = async (mediaResource) => {
-    return await saveMediaResource(fileSystem, imageFolder, mediaResource);
+    return await saveMediaResource(fileSystem, imageFolder, videoFolder, mediaResource);
   };
   return await packBubbleMedias(bubbles, f);
 }
@@ -92,7 +92,7 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
   }
 }
 
-async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, mediaResource: MediaResource): Promise<NodeId> {
+async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, videoFolder: Folder, mediaResource: MediaResource): Promise<NodeId> {
   if (mediaResource == null) {
     throw new Error("saveCanvas: mediaResource is null (unexpected error)");
   }
@@ -129,7 +129,11 @@ async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, me
   mrany["fileId"][fileSystem.id] = file.id;
   mrany["clean"][fileSystem.id] = true;
   mediaResourceCache[fileSystem.id][file.id] = mediaResource;
-  await imageFolder.link(file.id, file.id);
+  if (mediaResource instanceof HTMLCanvasElement) {
+    await imageFolder.link(file.id, file.id);
+  } else {
+    await videoFolder.link(file.id, file.id);
+  }
 
   return file.id;
 }
