@@ -70,29 +70,37 @@
       await moveToHere(0);
     } else {
       // jsonだったら、jsonの中身を見て、適切な処理をする
-      if (ev.dataTransfer?.files.length === 1) {
-        const file = ev.dataTransfer.files[0];
-        const fileName = file.name;
-        if (file.type === "application/json") {
-          // 旧タイプのenvelope
-          const json = await file.text();
-          const book = await readOldEnvelope(json);
-          const newFile = await fileSystem.createFile();
-          saveBookTo(book, fileSystem, newFile);
-          await node.link("パッケージ", newFile.id);
-          node = node;
-          return;
-        }
-        if (fileName.endsWith(".envelope")) {
-          // 新タイプのenvelope
-          const book = await readEnvelope(file);
-          const newFile = await fileSystem.createFile();
-          book.revision.id = newFile.id;
-          saveBookTo(book, fileSystem, newFile);
-          await node.link("パッケージ", newFile.id);
-          node = node;
-          return;
-        }        
+      try {
+        $loading = true;
+        if (ev.dataTransfer?.files.length === 1) {
+          const file = ev.dataTransfer.files[0];
+          const fileName = file.name;
+          $loading = true;
+          if (file.type === "application/json") {
+            // 旧タイプのenvelope
+            const json = await file.text();
+            const book = await readOldEnvelope(json);
+            const newFile = await fileSystem.createFile();
+            await saveBookTo(book, fileSystem, newFile);
+            await node.link("パッケージ", newFile.id);
+            node = node;
+            return;
+          }
+          if (fileName.endsWith(".envelope")) {
+            // 新タイプのenvelope
+            const book = await readEnvelope(file);
+            const newFile = await fileSystem.createFile();
+            book.revision.id = newFile.id;
+            await saveBookTo(book, fileSystem, newFile);
+            const basename = fileName.replace(/\.envelope$/, "");
+            await node.link(basename, newFile.id);
+            node = node;
+            return;
+          }        
+        } 
+      }
+      finally {
+          $loading = false;
       }
       console.log("not acceptable");
     }

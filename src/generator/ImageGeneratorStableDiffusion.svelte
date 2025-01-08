@@ -5,7 +5,7 @@
   import SliderEdit from '../utils/SliderEdit.svelte';
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { makePlainImage, canvasToBase64 } from "../lib/layeredCanvas/tools/imageUtil";
+  import { makePlainCanvas, canvasToBase64 } from "../lib/layeredCanvas/tools/imageUtil";
   import { createPreference } from '../preferences';
 
   export let busy: boolean;
@@ -73,7 +73,7 @@
   });
 
   function generateWhiteImage() {
-    const img = makePlainImage(imageRequest.width, imageRequest.height, "#ffffff");
+    const img = makePlainCanvas(imageRequest.width, imageRequest.height, "#ffffff");
     gallery.push(img);
     gallery = gallery;
   }

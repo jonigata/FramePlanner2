@@ -61,7 +61,8 @@
 
     <h3>ギャラリー</h3>
     <p class="inline-elements">
-      <a href="https://www.aipictors.com/search/?tag=frameplanner" target="_blank" rel="noopener noreferrer">
+      <a href="https://www.aipictors.com/tags/frameplanner?orderBy=LIKES_COUNT&sort=DESC&page=0&prompt=0
+      https://www.aipictors.com/search/?tag=frameplanner" target="_blank" rel="noopener noreferrer">
         <img width=110 src={aiPictorsIcon} alt="aipictors"/>
       </a>
       <a href="https://www.chichi-pui.com/posts/tags/FramePlanner/" target="_blank" rel="noopener noreferrer">ちちぷい</a>

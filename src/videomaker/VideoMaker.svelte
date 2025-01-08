@@ -44,6 +44,7 @@
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
       logEvent(getAnalytics(), 'build_movie');
       download(url);
+      URL.revokeObjectURL(url);
     }
     catch (e) {
       console.error(e);

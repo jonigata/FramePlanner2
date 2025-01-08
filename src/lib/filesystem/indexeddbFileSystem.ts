@@ -3,6 +3,7 @@ import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
+import { getFirstFrameOfVideo } from '../layeredCanvas/tools/imageUtil';
 
 async function* readNDJSONStream(
   stream: ReadableStream<Uint8Array>
@@ -266,6 +267,7 @@ export class IndexedDBFile extends File {
         const image = new Image();
         image.src = URL.createObjectURL(data.blob);
         await image.decode();
+        URL.revokeObjectURL(image.src);
         canvas.width = image.width;
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
@@ -287,9 +289,38 @@ export class IndexedDBFile extends File {
     } else {
       this.db.get('nodes', this.id).then(async (data) => {
         await makeCanvasFromData(data);
+      }).catch((e) => {
+        console.log(e);
       });
     }
     return canvas;
+  }
+
+  async readVideo(waitsComplete: boolean): Promise<HTMLVideoElement> {
+    console.log("READING VIDEO");
+
+    const video = document.createElement("video");
+
+    async function makeVideoFromData(data: any): Promise<void> {
+      const url = URL.createObjectURL(data.blob);
+      console.log(url);
+      video.src = url;
+      (video as any).file = data.blob;
+      await getFirstFrameOfVideo(video);
+      URL.revokeObjectURL(url);
+    }
+
+    if (waitsComplete) {
+      const data = await this.db.get('nodes', this.id)!;
+      await makeVideoFromData(data);
+    } else {
+      this.db.get('nodes', this.id).then(async (data) => {
+        await makeVideoFromData(data);
+      }).catch((e) => {
+        console.log(e);
+      });
+    }
+    return video;
   }
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
@@ -304,6 +335,16 @@ export class IndexedDBFile extends File {
     });
     await this.db.put('nodes', { id: this.id, type: 'file', blob: blob });
   }
+
+  async writeVideo(video: HTMLVideoElement): Promise<void> {
+    const file = (video as any).file;
+    if (!file) {
+      console.trace();
+      throw new Error('Video file not associated with the video element.');
+    }
+    await this.db.put('nodes', { id: this.id, type: 'file', blob: file });
+  }
+
 
   async readBlob(): Promise<Blob> {
     // 現状envelope格納専用のため

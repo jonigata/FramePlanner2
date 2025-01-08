@@ -10,7 +10,6 @@
   import { Modals } from 'svelte-modals'
   import { mascotVisible } from './mascot/mascotStore';
   import { bootstrap, onlineStatus } from './utils/accountStore';
-  import { developmentFlag } from "./utils/developmentFlagStore";
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -38,6 +37,7 @@
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
+  import FullScreenProgress from './utils/FullScreenProgress.svelte';
   import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
   import Mascot from './mascot/Mascot.svelte'
@@ -58,6 +58,7 @@
   import ImageViewer from './utils/ImageViewer.svelte';
   import UserProfile from './toolbar/UserProfile.svelte';
   import Publication from './publication/Publication.svelte';
+  import SocialCard from './publication/SocialCard.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -87,6 +88,9 @@
     },
     publication: {
       ref: Publication,
+    },
+    socialCard: {
+      ref: SocialCard,
     }
   };
 
@@ -109,11 +113,6 @@
       a.click();
       URL.revokeObjectURL(url);
     }
-
-    // localhostか127.0.0.1だったら
-    $developmentFlag = 
-      location.hostname === "localhost" || location.hostname === "127.0.0.1";
-    console.log("================ developmentFlag", $developmentFlag);
 
     /*
     // Initialize the Sentry SDK here
@@ -189,6 +188,7 @@
   <div slot="backdrop" class="backdrop"/>
 </Modals>
 <FullScreenLoading/>
+<FullScreenProgress/>
 
   <!-- ads -->
 {#if advertiser != null}

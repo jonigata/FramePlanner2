@@ -217,10 +217,12 @@ export interface UserProfile {
   display_name: string;
   email: string;
   bio: string;
+  related_url: string;
+  is_admin: boolean; //updateMyProfileでは見てない
 };
 
-export async function getMyProfile(): Promise<UserProfile | null> {
-  const r = await callFunc('getmyprofile', {}, 180);
+export async function getProfile(username: string | null): Promise<UserProfile | null> {
+  const r = await callFunc('getprofile', {username}, 180);
   return r.userProfile;
 }
 
@@ -229,20 +231,111 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
   return r.available;
 }
 
-export async function updateMyProfile(profile: UserProfile): Promise<void> {
+export async function updateMyProfile(profile: Omit<UserProfile,'is_admin'>): Promise<void> {
   await callFunc('updatemyprofile', {profile}, 180);
 }
 
 export interface PublicationContent {
+  id: string;
   title: string;
+  is_public: boolean;
+  is_suspended: boolean;
   description: string;
   cover_url: string;
   content_url: string;
   thumbnail_url: string;
+  created_at: string;
+  updated_at: string;
+  author_display_name: string;
+  fav_count: number;
+  comment_count: number;
+  is_faved: boolean;
+  is_favable: boolean;
+  socialcard_url: string | null;
+  related_url: string;
 }
 
-export async function recordPublication(publication: PublicationContent) {
-  await callFunc('recordpublication', {publication}, 180);
+export type WritePublicationContent = Pick<
+  PublicationContent, 
+  'title' | 'description' | 'related_url' | 'content_url' | 'cover_url' | 'thumbnail_url' | 'socialcard_url' | 'is_public'>;
+
+export async function recordPublication(publication: WritePublicationContent): Promise<string> {
+  const r = await callFunc('recordpublication', {publication}, 180);
+  return r.id;
+}
+
+export async function updatePublication(id: string, title: string, description: string, related_url: string | null, is_public: boolean): Promise<string> {
+  const r = await callFunc('updatepublication', {publication: {id,title,description,is_public,related_url}}, 180);
+  return r.id;
+}
+
+export async function getPublication(id: string): Promise<PublicationContent> {
+  const r = await callFunc('getpublication', {id}, 180);
+  return r.publication;
+}
+
+export async function getNewReleases(): Promise<PublicationContent[]> {
+  const r = await callFunc('getnewreleases', {}, 180);
+  return r.newReleases;
+}
+
+export interface Works {
+  isMine: boolean;
+  works: PublicationContent[];
+}
+export async function getWorks(username: string | null): Promise<Works> {
+  // author_idがnullの場合は自分の作品を取得
+  const r = await callFunc('getworks', {username}, 180);
+  console.log(r);
+  return r as Works;
+}
+
+export async function getFav(work_id: string): Promise<number> {
+  const r = await callFunc('getfav', {work_id}, 180);
+  return r.fav;
+}
+
+export async function setFav(work_id: string, fav: boolean): Promise<void> {
+  await callFunc('setfav', {work_id, fav}, 180);
+}
+
+export async function comment(work_id: string, content: string): Promise<void> {
+  await callFunc('comment', {work_id, content}, 180);
+}
+
+export async function adminSuspend(work_id: string, is_suspended: boolean): Promise<void> {
+  await callFunc('adminsuspend', {work_id, is_suspended}, 180);
+}
+
+export interface Mail {
+  id: string;
+  created_at: string;
+  sender_display_name: string;
+  title: string;
+  content: string;
+  read_at: string | null;
+}
+
+export async function getMails(): Promise<Mail[]> {
+  const r = await callFunc('getmails', {}, 180);
+  return r.mails;
+}
+
+export async function adminSendMail(username: string, title: string, content: string): Promise<void> {
+  await callFunc('adminsendmail', {username, title, content}, 180);
+}
+
+export interface Comment {
+  id: string;
+  user_display_name: string;
+  content: string;
+  created_at: string;
+}
+
+export async function getComments(work_id: string): Promise<Comment[]> {
+  const r = await callFunc('getcomments', {work_id}, 180);
+  console.log(r);
+  return r.comments;
 }
 
 function getAuth2() {

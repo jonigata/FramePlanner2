@@ -11,10 +11,10 @@ import type { PaperRendererLayer } from "./paperRendererLayer";
 import { ulid } from 'ulid';
 import { type Trapezoid, rectToTrapezoid } from "../tools/geometry/trapezoid";
 import { Film, FilmStackTransformer, calculateMinimumBoundingRect } from "../dataModels/film";
-import { ImageMedia } from "../dataModels/media";
+import { ImageMedia, VideoMedia } from "../dataModels/media";
 import { drawFilmStackBorders } from "../tools/draw/drawFilmStack";
 import type { FocusKeeper } from "../tools/focusKeeper";
-import { createCanvasFromBlob, makePlainImage } from "../tools/imageUtil";
+import { createCanvasFromBlob, makePlainCanvas } from "../tools/imageUtil";
 import { drawSelectionFrame, calculateSheetRect, drawSheet } from "../tools/draw/selectionFrame";
 import { Grid } from "../tools/grid";
 
@@ -455,7 +455,7 @@ export class BubbleLayer extends LayerBase {
             for (let bubble of this.bubbles) {
               if (bubble.contains(paperSize, position)) {
                 const canvas = await createCanvasFromBlob(await item.getType(type));
-                this.receiveImage(bubble, canvas);
+                this.receiveMedia(bubble, canvas);
                 return true;
               }
             }
@@ -521,10 +521,12 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
-  createImageBubble(canvas: HTMLCanvasElement): void {
+  createMediaBubble(media: HTMLCanvasElement | HTMLVideoElement): void {
+    const film = this.newMediaFilm(media);
+
     const bubble = new Bubble();
     const paperSize = this.getPaperSize();
-    const imageSize = [canvas.width, canvas.height];
+    const imageSize = film.media.size;
     const x = Math.random() * (paperSize[0] - imageSize[0]);
     const y = Math.random() * (paperSize[1] - imageSize[1]);
     bubble.setPhysicalRect(paperSize, [x, y, ...imageSize] as Rect);
@@ -537,7 +539,6 @@ export class BubbleLayer extends LayerBase {
     const minPageDimension = Math.min(paperSize[0], paperSize[1]);
     const n_scale = 1 / (minPageDimension / minImageDimension);
 
-    const film = this.newImageFilm(canvas);
     film.n_scale = n_scale;
     bubble.filmStack.films.push(film);
     this.bubbles.push(bubble);
@@ -705,6 +706,7 @@ export class BubbleLayer extends LayerBase {
     if (layer != this) {
       // unfocus呼ぶと再帰呼び出しになるので注意
       if (this.selected) {
+        this.stopVideo(this.selected);
         this.selected = null;
         this.onFocus(null);
       }
@@ -795,24 +797,26 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
-  async receiveImage(bubble: Bubble, canvas: HTMLCanvasElement): Promise<void> {
+  async receiveMedia(bubble: Bubble, media: HTMLCanvasElement | HTMLVideoElement): Promise<void> {
     const paperSize = this.getPaperSize();
-    const film = this.newImageFilm(canvas);
+    const film = this.newMediaFilm(media);
     bubble.filmStack.films.push(film);
     const bubbleSize = bubble.getPhysicalSize(paperSize);
     const scale = minimumBoundingScale(film.media.size, bubbleSize);
     film.setShiftedScale(paperSize, scale);
-    bubble.gallery.push(canvas);
+    if (media instanceof HTMLCanvasElement) {
+      bubble.gallery.push(media);
+    }
     this.onFocus(bubble);
     this.focusKeeper.setFocus(this);
     this.onCommit();
   };
 
-  dropped(position: Vector, canvas: HTMLCanvasElement): boolean {
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
     if (!this.interactable) { return false; }
 
     if (this.createBubbleIcon.contains(position)) {
-      this.createImageBubble(canvas);
+      this.createMediaBubble(media);
       this.onCommit();
       return true;
     }
@@ -820,13 +824,13 @@ export class BubbleLayer extends LayerBase {
     const paperSize = this.getPaperSize();
 
     if (this.selected && this.selected.contains(paperSize, position)) {
-      this.receiveImage(this.selected, canvas);
+      this.receiveMedia(this.selected, media);
       return true;
     }
 
     for (let bubble of this.bubbles.toReversed()) {
       if (bubble.contains(paperSize, position)) {
-        this.receiveImage(bubble, canvas);
+        this.receiveMedia(bubble, media);
         return true;
       }
     }
@@ -1441,6 +1445,8 @@ export class BubbleLayer extends LayerBase {
   }
 
   selectBubble(bubble: Bubble | null) {
+    this.stopVideo(this.selected);
+    this.unfocus();
     for (let a of Object.keys(this.optionEditActive)) {
       if (this.optionEditActive[a]) {
         this.redraw();
@@ -1448,7 +1454,8 @@ export class BubbleLayer extends LayerBase {
       }
     }
 
-    this.unfocus();
+    this.startVideo(bubble);
+
     this.selected = bubble;
     this.relayoutIcons();
     this.onFocus(this.selected);
@@ -1456,6 +1463,38 @@ export class BubbleLayer extends LayerBase {
 
     this.redraw();
   }
+
+  videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
+  stopVideo(bubble: Bubble | null) {
+    clearInterval(this.videoRedrawInterval);
+    this.videoRedrawInterval = undefined;      
+    if (bubble) {
+      for (const film of bubble.filmStack.films) {
+        if (film.media instanceof VideoMedia) {
+          film.media.video.pause();
+        }
+      }
+    }
+  }
+
+  startVideo(bubble: Bubble | null) {
+    if (!bubble) { return; }
+
+    let playFlag = false;
+    for (const film of bubble.filmStack.films) {
+      if (film.media instanceof VideoMedia) {
+        playFlag = true;
+        film.media.video.play();
+      }
+    }
+    if (playFlag) {
+      this.videoRedrawInterval = setInterval(() => {
+        this.redraw();
+      }, 1000/24);
+    }
+  }
+
+
 
   renderDepths(): number[] { return [1]; }
 
@@ -1470,9 +1509,12 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
-  newImageFilm(canvas: HTMLCanvasElement): Film {
-    const film = new Film(new ImageMedia(canvas));
-    return film;
+  newMediaFilm(media: HTMLCanvasElement | HTMLVideoElement): Film {
+    if (media instanceof HTMLCanvasElement) {
+      return new Film(new ImageMedia(media));
+    } else {
+      return new Film(new VideoMedia(media));
+    }
   }
 
   newMinmumBoundingFilm([w,h]: Vector): Film {
@@ -1480,8 +1522,8 @@ export class BubbleLayer extends LayerBase {
     const unit = 16;
     const [w2,h2] = [Math.ceil(w / unit) * unit, Math.ceil(h / unit) * unit];
     console.log(w, h, w2, h2);
-    const image = makePlainImage(w2, h2, "#ffffff00");
-    const film = this.newImageFilm(image);
+    const canvas = makePlainCanvas(w2, h2, "#ffffff00");
+    const film = this.newMediaFilm(canvas);
     film.setShiftedScale(this.getPaperSize(), 1);
     console.log("n_scale", film.n_scale);
     return film;

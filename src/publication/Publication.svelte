@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
-  import { onlineProfile } from '../utils/accountStore';
+  import { modalStore } from '@skeletonlabs/skeleton';
 
-  export let title = '';
-  export let description = '';
-
-  $: beforeRegistration = $onlineProfile == null;
+  let title = '';
+  let description = '';
+  let related_url = '';
+  let is_public = true;
 
   function handleSubmit() {
-    $modalStore[0].response!({ result: "ok", title, description });
+    $modalStore[0].response!({ title, description, related_url, is_public });
     modalStore.close();
   }
 
@@ -16,24 +15,13 @@
     modalStore.close();
   }
 
-  function goToRegistration() {
-    $modalStore[0].response!({ result: "registerUser" });
-    modalStore.close();
+  function showGuideline() {
+    window.open('/postingGuideline.html', '_blank');
   }
+
 </script>
 
 <div class="card p-4 w-full max-w-lg">
-  {#if beforeRegistration}
-    <p class="text-sm text-gray-500 mb-4">
-      まんがファームへ作品を投稿するには、ユーザー登録が必要です。
-    </p>
-    <button 
-      class="btn variant-filled-primary"
-      on:click={goToRegistration}
-    >
-      ユーザー登録へ
-    </button>
-{:else}
   <h2 class="h2 mb-4">ドキュメントの公開</h2>
   <form on:submit|preventDefault={handleSubmit}>
     <label class="label">
@@ -48,6 +36,11 @@
     </label>
 
     <label class="label">
+      <span>公開</span>
+      <input type="checkbox" id="is_public" bind:checked={is_public} class="mr-2" />
+    </label>
+
+    <label class="label">
       <span>説明</span>
       <textarea
         class="textarea p-2 pl-4 w-full"
@@ -57,9 +50,23 @@
       />
     </label>
 
+    <label class="label">
+      <span>関連URL</span>
+      <input
+        class="input p-2 pl-4 w-full"
+        type="text"
+        bind:value={related_url}
+        maxlength="100"
+      />
+    </label>
+
     <span>※ページ1が表紙になります</span>
 
-    <div class="flex justify-end gap-2 mt-4">
+    <div class="flex gap-2 mt-4">
+      <button type="button" class="btn variant-filled-secondary" on:click={showGuideline}>
+        投稿ガイドライン
+      </button>
+      <div class="flex-grow"></div>
       <button type="button" class="btn variant-ghost" on:click={handleCancel}>
         キャンセル
       </button>
@@ -72,7 +79,6 @@
       </button>
     </div>
   </form>
-  {/if}
 </div>
 
 <style>

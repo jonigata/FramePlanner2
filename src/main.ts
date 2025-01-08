@@ -3,6 +3,8 @@ import App from "./App.svelte";
 import { initializeApp } from "./firebase";
 import { initPaperJs } from "./lib/layeredCanvas/tools/draw/bubbleGraphic"
 
+window.name = "frameplanner";
+
 initPaperJs();
 
 function getDomainFromCurrentUrl(): string {

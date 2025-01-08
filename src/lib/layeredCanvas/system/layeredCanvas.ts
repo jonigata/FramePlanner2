@@ -1,6 +1,7 @@
 import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
+import { getFirstFrameOfVideo } from "../tools/imageUtil";
 
 type OnHint = (p: Rect | null, s: string | null) => void;
 
@@ -547,22 +548,12 @@ export class LayeredCanvas {
       const video = document.createElement('video');
       video.muted = true; // オートプレイポリシーを回避するためミュート
       video.src = URL.createObjectURL(file);
-    
+      (video as any).file = file; // HACK: セーブ時に必要
+      
+      // 以下消すと画面に表示されなくなる
       try {
-        await video.play(); // ミュート状態での再生を試みる
-        video.pause(); // 最初のフレームで即座に一時停止
-        console.log('First frame loaded');
-        
-        // キャンバスにビデオの最初のフレームを描画する（オプション）
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-        // ここで canvas を使用して何か処理を行う
-        // 例えば、画像として保存するなど
-    
+        await getFirstFrameOfVideo(video);
+        URL.revokeObjectURL(video.src);
       } catch (error) {
         console.error('Error loading video', error);
       }
@@ -581,6 +572,7 @@ export class LayeredCanvas {
       const image = new Image();
       image.src = URL.createObjectURL(file);
       await image.decode();
+      URL.revokeObjectURL(image.src);
       console.log("image loaded", image.width, image.height);
 
       const canvas = document.createElement('canvas');

@@ -29,7 +29,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="avatar {size} rounded-full flex items-center justify-center" style="background-color: {backgroundColor};" on:click>
   {#if src || gravatarUrl}
-    <img src={src || gravatarUrl} {alt} class="rounded-full object-cover w-full h-full" />
+    <img src={src || gravatarUrl} {alt} class="rounded-full object-cover w-full h-full shadow-md group-hover:shadow-xl transition-shadow" />
   {:else}
     <span class="text-white text-sm font-medium">
       {initials}
