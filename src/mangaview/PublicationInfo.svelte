@@ -112,12 +112,6 @@
     color: #666;
     margin-bottom: -8px;
   }
-  h5 {
-    font-family: '源暎エムゴ';
-    font-size: 0.7rem;
-    color: #666;
-    margin-bottom: -8px;
-  }
   .fav {
     font-family: '源暎エムゴ';
     font-size: 0.9rem;

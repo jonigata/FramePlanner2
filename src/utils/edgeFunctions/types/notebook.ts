@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Storyboard } from './storyboard.ts';
+import { Storyboard } from './storyboard';
 
 export const Character = z.object({
   name: z.string(),

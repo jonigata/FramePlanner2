@@ -55,26 +55,6 @@
 </div>
 
 <style>
-  .table {
-    margin-top: 8px;
-    margin-bottom: 8px;
-    margin-left: 24px;
-  }
-  .table thead th {
-    padding: 2px;
-    padding-left: 8px;
-    font-family: '源暎エムゴ';
-  }
-  .table tbody td {
-    padding: 2px;
-    padding-left: 8px;
-    font-family: '源暎アンチック';
-    text-overflow: ellipsis;
-  }
-  h1 {
-    font-family: '源暎エムゴ';
-    font-size: 1.7rem;
-  }
   h2 {
     font-family: "源暎エムゴ";
     font-size: 1.4rem;

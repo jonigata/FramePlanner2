@@ -53,17 +53,4 @@
     width: 0px;
     height: 0px;
   }
-  .mascot {
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
-    width: 256px;
-    height: 256px;
-    max-width: 256px;
-  }
-  img {
-    position: absolute;
-    transform: scale(-1, 1);
-    filter: drop-shadow(0 0 24px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(0, 224, 224, 0.7));
-  }
 </style>
