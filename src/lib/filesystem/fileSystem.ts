@@ -83,6 +83,8 @@ export interface File {
   write(data: any): Promise<void>;
   readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement>;
   writeCanvas(canvas: HTMLCanvasElement): Promise<void>;
+  readVideo(waitsComplete: boolean): Promise<HTMLVideoElement>;
+  writeVideo(video: HTMLVideoElement): Promise<void>;
   readBlob(): Promise<Blob>;
   writeBlob(blob: Blob): Promise<void>;
 }

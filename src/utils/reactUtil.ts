@@ -1,4 +1,4 @@
-import { writable, type Writable } from 'svelte/store';
+import { type Writable } from 'svelte/store';
 
 export function waitForChange<T>(store: Writable<T>, condition: (value: T) => boolean): Promise<T> {
   return new Promise((resolve) => {

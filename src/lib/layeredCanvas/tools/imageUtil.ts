@@ -1,4 +1,4 @@
-export function makePlainImage(w: number, h: number, color: string): HTMLCanvasElement {
+export function makePlainCanvas(w: number, h: number, color: string): HTMLCanvasElement {
   console.log("makeWhiteImage", w, h);
   const canvas = document.createElement("canvas");
   canvas.width = w;
@@ -62,4 +62,28 @@ export function imageToBase64(imgElement: HTMLImageElement) {
 
   let base64Image = canvas.toDataURL("image/png");
   return base64Image;
+}
+
+export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        throw new Error("Failed to convert canvas to blob");
+      }
+    }, "image/png");
+  });
+}
+
+export async function getFirstFrameOfVideo(video: HTMLVideoElement): Promise<HTMLCanvasElement> {
+  video.muted = true;
+  await video.play();
+  video.pause();
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(video, 0, 0);
+  return canvas;
 }

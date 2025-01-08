@@ -6,11 +6,11 @@
   import { loading } from '../utils/loadingStore';
   import { onlineProfile, type OnlineProfile } from '../utils/accountStore';
   
-  export let username = '';
-  export let display_name = '';
-  export let email = '';
-  export let bio = '';
-  export let related_url = '';
+  let username = '';
+  let display_name = '';
+  let email = '';
+  let bio = '';
+  let related_url = '';
   
   let isChecking = false;
   let isAvailable = false;
@@ -128,7 +128,16 @@
     </label>
 
     <label class="label">
-      <span>自己紹介</span>
+      <span>関連URL（他のユーザに表示されます）</span>
+      <input
+        class="input p-2 pl-4"
+        type="text"
+        bind:value={related_url}
+      />
+    </label>
+
+    <label class="label">
+      <span>プロフィール</span>
       <textarea
         class="textarea p-2 pl-4"
         bind:value={bio}

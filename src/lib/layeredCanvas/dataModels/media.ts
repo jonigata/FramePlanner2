@@ -1,10 +1,13 @@
 import type { Vector } from "../tools/geometry/geometry";
 
+export type MediaType = 'image' | 'video';
+
 export interface Media {
   seek(time: number): Promise<void>;
   readonly naturalWidth: number;
   readonly naturalHeight: number;
   readonly drawSource: HTMLCanvasElement | HTMLVideoElement;
+  readonly type: MediaType;
   readonly size: Vector;
   readonly fileId: { [key: string]: string };
 }
@@ -25,6 +28,7 @@ export abstract class MediaBase implements Media {
   abstract get naturalWidth(): number;
   abstract get naturalHeight(): number;
   abstract get drawSource(): HTMLCanvasElement | HTMLVideoElement;
+  abstract get type(): MediaType;
 
   getFileId(fileSystemId: string): string {
     return this.fileId[fileSystemId];
@@ -42,18 +46,10 @@ export class ImageMedia extends MediaBase {
   }
 
   // 抽象プロパティの具体的な実装
-  get naturalWidth(): number {
-    return this.canvas.width;
-  }
-
-  get naturalHeight(): number {
-    return this.canvas.height;
-  }
-
-  get drawSource(): HTMLCanvasElement {
-    return this.canvas;
-  }
-
+  get naturalWidth(): number { return this.canvas.width; }
+  get naturalHeight(): number { return this.canvas.height; }
+  get drawSource(): HTMLCanvasElement { return this.canvas; }
+  get type(): MediaType { return 'image'; }
 }
 
 export class VideoMedia extends MediaBase {
@@ -89,8 +85,7 @@ export class VideoMedia extends MediaBase {
 
   get naturalWidth(): number { return this.video.videoWidth; }
   get naturalHeight(): number { return this.video.videoHeight; }
-  get drawSource(): HTMLVideoElement {
-    return this.video; 
-  }
+  get drawSource(): HTMLVideoElement { return this.video; }
+  get type(): MediaType { return 'video'; }
 }
 

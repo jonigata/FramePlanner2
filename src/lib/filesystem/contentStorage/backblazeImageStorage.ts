@@ -80,6 +80,7 @@ export class BackblazeContentStorage extends ContentStorageBase {
     image.crossOrigin = 'anonymous'; 
     image.src = await fetchImageWithHeaders(url);
     await image.decode();
+    URL.revokeObjectURL(image.src);
     return createCanvasFromImage(image);
   }
 

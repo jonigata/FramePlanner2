@@ -37,6 +37,7 @@
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
+  import FullScreenProgress from './utils/FullScreenProgress.svelte';
   import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
   import Mascot from './mascot/Mascot.svelte'
@@ -58,6 +59,7 @@
   import UserProfile from './toolbar/UserProfile.svelte';
   import Publication from './publication/Publication.svelte';
   import AuthForm from './utils/AuthForm.svelte';
+  import SocialCard from './publication/SocialCard.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -90,6 +92,9 @@
     },
     auth: {
       ref: AuthForm,
+    },
+    socialCard: {
+      ref: SocialCard,
     }
   };
 
@@ -187,6 +192,7 @@
   <div slot="backdrop" class="backdrop"/>
 </Modals>
 <FullScreenLoading/>
+<FullScreenProgress/>
 
   <!-- ads -->
 {#if advertiser != null}

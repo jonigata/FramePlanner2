@@ -10,6 +10,9 @@ export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
 export const viewport: Writable<Viewport | null> = writable(null);
 export const bookEditor: Writable<BookOperators | null> = writable(null);
 export const redrawToken = writable(false);
+// redrawToken.subscribe(value => {
+//   console.trace('redrawToken changed:', value);
+// });
 export const undoToken: Writable<'undo' | 'redo' | null> = writable(null);
 export const forceFontLoadToken = writable(false);
 export const fontLoadToken: Writable<{family: string, weight: string}[] | null> = writable(null);

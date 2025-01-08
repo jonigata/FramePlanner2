@@ -1,38 +1,68 @@
 import { decode, encode } from 'cbor-x'
 import { ulid } from 'ulid';
-import { unpackFrameImages, unpackBubbleImages, packFilms } from "./imagePacking";
+import { unpackFrameMedias, unpackBubbleMedias, packFrameMedias, packBubbleMedias } from "./imagePacking";
+import type { SaveMediaFunc, LoadMediaFunc, MediaResource, MediaType } from "./imagePacking";
 import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./book";
 import { type Notebook, emptyNotebook } from "./notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
-import { createCanvasFromImage } from "../layeredCanvas/tools/imageUtil";
+import { createCanvasFromImage, getFirstFrameOfVideo } from "../layeredCanvas/tools/imageUtil";
+import { env } from '@xenova/transformers';
+
+// 互換性維持のため、imagesは残してmediasを追加する
 
 export type EnvelopedBook = {
   pages: SerializedPage[],
   direction: ReadingDirection,
   wrapMode: WrapMode,
-  images: { [fileId: string]: Uint8Array }
+  images?: { [fileId: string]: Uint8Array },
+  medias?: { [fileId: string]: { type: MediaType, data: Uint8Array } },
   notebook: Notebook | null,
 };
 
-export type CanvasBag = { [fileId: string]: HTMLCanvasElement };
+export type CanvasBag = { [fileId: string]: { type: MediaType, data: HTMLCanvasElement | HTMLVideoElement } };
 
-// TODO: revision.idは受けた側で設定する
 export async function readEnvelope(blob: Blob): Promise<Book> {
   const uint8Array = new Uint8Array(await blob.arrayBuffer());
   const envelopedBook: EnvelopedBook = decode(uint8Array);
 
   const bag: CanvasBag = {};
-  for (const imageId in envelopedBook.images) {
-    const blob = new Blob([envelopedBook.images[imageId]], { type: 'image/png' });
-    const url = URL.createObjectURL(blob);
-    const image = new Image();
-    image.src = url;
-    await image.decode();
-    URL.revokeObjectURL(url);
-    const canvas = createCanvasFromImage(image);
-    (canvas as any)["envelopeFileId"] = imageId;
-    bag[imageId] = canvas;
+  if (envelopedBook.images) {
+    for (const imageId in envelopedBook.images) {
+      // TODO: Video対応
+      const blob = new Blob([envelopedBook.images[imageId]], { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      URL.revokeObjectURL(url);
+      const canvas = createCanvasFromImage(image);
+      (canvas as any)["envelopeFileId"] = imageId;
+      bag[imageId] = { type: 'image', data: canvas };
+    }
+  }
+  if (envelopedBook.medias) {
+    for (const imageId in envelopedBook.medias) {
+      const media = envelopedBook.medias[imageId];
+      const blob = new Blob([media.data], { type: media.type === 'image' ? 'image/png' : 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      if (media.type === 'image') {
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        URL.revokeObjectURL(url);
+        const canvas = createCanvasFromImage(image);
+        (canvas as any)["envelopeFileId"] = imageId;
+        bag[imageId] = { type: 'image', data: canvas };
+      } else {
+        const video = document.createElement('video');
+        (video as any).file = blob;
+        video.src = url;
+        await getFirstFrameOfVideo(video);
+        URL.revokeObjectURL(url);
+        bag[imageId] = { type: 'video', data: video };
+      }
+    }
   }
 
   const book: Book = {
@@ -45,11 +75,11 @@ export async function readEnvelope(blob: Blob): Promise<Book> {
     notebook: envelopedBook.notebook ?? emptyNotebook(),
   };
 
-  const getCanvas = async (imageId: string) => bag[imageId];
+  const getCanvas = async (imageId: string) => bag[imageId].data;
 
   for (const envelopedPage of envelopedBook.pages) {
-    const frameTree = await unpackFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, getCanvas);
-    const bubbles = await unpackBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, getCanvas);
+    const frameTree = await unpackFrameMedias(envelopedPage.paperSize, envelopedPage.frameTree, getCanvas);
+    const bubbles = await unpackBubbleMedias(envelopedPage.paperSize, envelopedPage.bubbles, getCanvas);
   
     const page: Page = {
       id: envelopedPage.id ?? ulid(),
@@ -73,11 +103,11 @@ export async function writeEnvelope(book: Book): Promise<Blob> {
     direction: book.direction,
     wrapMode: book.wrapMode,
     notebook: book.notebook,
-    images: {},
+    medias: {},
   };
   for (const page of book.pages) {
-    const markUp = await putFrameImages(page.frameTree, envelopedBook.images, 'v');
-    const bubbles = await putBubbleImages(page.bubbles, envelopedBook.images);
+    const markUp = await putFrameMedias(page.frameTree, envelopedBook.medias!, 'v');
+    const bubbles = await putBubbleMedias(page.bubbles, envelopedBook.medias!);
     
     const serializedPage: SerializedPage = {
       id: page.id,
@@ -96,20 +126,19 @@ export async function writeEnvelope(book: Book): Promise<Blob> {
 }
 
 
-async function putFrameImages(frameTree: FrameElement, images: { [fileId: string]: Uint8Array }, parentDirection: 'h' | 'v'): Promise<any> {
-  const f = async (canvas: HTMLCanvasElement) => {
-    const array = await canvasToUint8Array(canvas);
+async function putFrameMedias(frameTree: FrameElement, medias: { [fileId: string]: { type: MediaType, data: Uint8Array } }, parentDirection: 'h' | 'v'): Promise<any> {
+  const f: SaveMediaFunc = async (mediaResource, mediaType) => {
+    const array = await mediaResourceToUint8Array(mediaResource, mediaType);
     const fileId = ulid();
-    images[fileId] = array;
+    medias[fileId] = { type: mediaType, data: array };
     return fileId;
   };
 
-  const markUp = FrameElement.decompileNode(frameTree, parentDirection);
-  markUp.films = await packFilms(frameTree.filmStack.films, f);
+  const markUp = await packFrameMedias(frameTree, parentDirection, f);
 
   const children = [];
   for (const child of frameTree.children) {
-    children.push(await putFrameImages(child, images, frameTree.direction!));
+    children.push(await putFrameMedias(child, medias, frameTree.direction!));
   }
   if (0 < children.length) {
     if (frameTree.direction === 'h') { 
@@ -121,28 +150,27 @@ async function putFrameImages(frameTree: FrameElement, images: { [fileId: string
   return markUp;
 }
 
-async function putBubbleImages(bubbles: Bubble[], images: { [fileId: string]: Uint8Array }): Promise<any[]> {
-  const f = async (canvas: HTMLCanvasElement) => {
-    const array = await canvasToUint8Array(canvas);
+async function putBubbleMedias(bubbles: Bubble[], images: { [fileId: string]: { type: MediaType, data: Uint8Array } }): Promise<any[]> {
+  const f: SaveMediaFunc = async (mediaResource, mediaType) => {
+    const array = await mediaResourceToUint8Array(mediaResource, mediaType);
     const fileId = ulid();
-    images[fileId] = array;
+    images[fileId] = { type: mediaType, data: array };
     return fileId;
   };
-
-  const packedBubbles = [];
-  for (const bubble of bubbles) {
-    const markUp = Bubble.decompile(bubble);
-    markUp.films = await packFilms(bubble.filmStack.films, f);
-    packedBubbles.push(markUp);
-  }
-  return packedBubbles;
+  return await packBubbleMedias(bubbles, f);
 }
 
-async function canvasToUint8Array(canvas: HTMLCanvasElement): Promise<Uint8Array> {
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-  if (!blob) throw new Error("Canvas toBlob failed");
-  const arrayBuffer = await blob.arrayBuffer();
-  return new Uint8Array(arrayBuffer);
+async function mediaResourceToUint8Array(mediaResource: MediaResource, mediaType: MediaType): Promise<Uint8Array> {
+  if (mediaType === 'image') {
+    const canvas = mediaResource as HTMLCanvasElement;
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("Canvas toBlob failed");
+    const arrayBuffer = await blob.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
+  } else {
+    const blob = (mediaResource as any).file;
+    return new Uint8Array(await blob.arrayBuffer());
+  }
 }
 
 export type OldEnvelopedBook = {
@@ -162,7 +190,7 @@ export async function readOldEnvelope(json: string): Promise<Book> {
     const image = new Image();
     image.src = envelopedBook.images[imageId];
     await image.decode();
-    bag[imageId] = createCanvasFromImage(image);
+    bag[imageId] = { type: 'image', data: createCanvasFromImage(image) }
   }
 
   const book: Book = {
@@ -175,11 +203,11 @@ export async function readOldEnvelope(json: string): Promise<Book> {
     notebook: envelopedBook.notebook ?? emptyNotebook(),
   };
 
-  const getCanvas = async (imageId: string) => bag[imageId];
+  const getCanvas = async (imageId: string) => bag[imageId].data;
 
   for (const envelopedPage of envelopedBook.pages) {
-    const frameTree = await unpackFrameImages(envelopedPage.paperSize, envelopedPage.frameTree, getCanvas);
-    const bubbles = await unpackBubbleImages(envelopedPage.paperSize, envelopedPage.bubbles, getCanvas);
+    const frameTree = await unpackFrameMedias(envelopedPage.paperSize, envelopedPage.frameTree, getCanvas);
+    const bubbles = await unpackBubbleMedias(envelopedPage.paperSize, envelopedPage.bubbles, getCanvas);
   
     const page: Page = {
       id: envelopedPage.id ?? ulid(),

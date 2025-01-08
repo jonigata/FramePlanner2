@@ -73,6 +73,13 @@
   </button>
   
   <div class="flex-grow"></div>
+  
+  <ul class="flex space-x-6">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <li class="hover:text-yellow-500 cursor-pointer"><a href="/home">まんがファーム(β)！へ</a></li>
+  </ul>
+
   {#if $onlineStatus === "signed-in"}
     <Feathral/>
     <AvatarIcon on:click={editUserProfile}/>

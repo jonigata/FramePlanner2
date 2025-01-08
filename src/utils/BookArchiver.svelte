@@ -14,11 +14,12 @@
   import { exportPrompts } from "./saver/exportPrompts";
   import { getPublishUrl, getTransportUrl, notifyShare, recordPublication } from "../supabase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
-  import { loading } from '../utils/loadingStore';
+  import { loading, progress } from './loadingStore';
   import type { Book, Page } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
+  import { onlineProfile } from './accountStore';
+  import { waitDialog } from "./waitDialog";
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -84,160 +85,100 @@
   }
 
   async function publishEnvelope() {
-    let title, description, related_url;
-    while (true) {
-      const r = await new Promise<{result: String, title:string, description: string, related_url: string}>((resolve) => {
-        const d: ModalSettings = {
-          type: 'component',
-          component: 'publication',
-          response: resolve,
-        };
-        modalStore.trigger(d);
-      });    
+    if ($onlineProfile === null) {
+      toastStore.trigger({ message: "公開するにはユーザー情報の登録が必要です", timeout: 1500});
+      const r = await waitDialog<boolean>('userProfile');
       if (!r) {
+        toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
         return;
       }
-      console.log(r);
-      if (r.result === 'registerUser') {
-        const r = await new Promise<boolean>((resolve) => {
-          const d: ModalSettings = {
-            type: 'component',
-            component: 'userProfile',
-            response: resolve,
-          };
-          modalStore.trigger(d);
-        });
-        if (!r) {
-          return;
-        }
-      } else {
-        title = r.title;
-        description = r.description;
-        related_url = r.related_url;
-        break;
-      }
     }
-    console.log(title, description);
+
+    const r = 
+      await waitDialog<{title:string, description: string, related_url: string, is_public: boolean}>('publication');
+    if (!r) {
+      toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
+      return;
+    }
+    const { title, description, related_url, is_public } = r;
+
+    // const { title, description, related_url } = { title: "", description: "", related_url: "" };
+    // 直ちに実行すると自動的に閉じてしまうようなので待つ(多分svelte skeletonのアニメーション処理のバグ)
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const r2 = await waitDialog<{socialCard: Blob}>('socialCard');
+    if (!r2) {
+      toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
+      return;
+    }
+    const { socialCard } = r2;
+    if (socialCard === null) {
+      console.log("skipping social card");
+    }
     
-    $loading = true;
+    $progress = 0;
     try {
       const {file, blob} = await makeEnvelope();
-      const sha1 = await blobToSha1(blob);
-      const cloudFileId = file.id
 
-      let content_url, cover_url, thumbnail_url;
+      const cover = await renderPageToBlob($mainBook!.pages[0]);
+      const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
 
       // 本体
-      {
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}.envelope`);
-        console.log("本体", apiUrl, url, token, filename);
+      const content_url = await postFile(`${file.id}.envelope`, blob);      
+      $progress = 0.2;
+      const cover_url = await postFile(`${file.id}_cover.png`, cover);
+      $progress = 0.4;
+      const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
+      $progress = 0.6;
+      const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.png`, socialCard) : null;
+      $progress = 0.8;
 
-        const response = await fetch(url,{
-          method: "POST",
-          mode: "cors",
-          body: blob,
-          headers: {
-            "Content-Type": "b2/x-auto",
-            "Authorization": token,
-            "X-Bz-File-Name": filename,
-            "X-Bz-Content-Sha1": sha1,
-          },
-        });
-        console.log(response);
-        if (!response.ok) {
-          throw new Error("ドキュメントのアップロードに失敗しました");
-        }
-
-        content_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-        console.log("content_url", content_url);
-      }
-
-      {
-        // 表紙
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}_cover.png`);
-        console.log("表紙", url, token, filename);
-
-        const png = await renderPageToBlob($mainBook!.pages[0]);
-        const sha1 = await blobToSha1(png);
-        const response = await fetch(url,{
-          method: "POST",
-          mode: "cors",
-          body: png,
-          headers: {
-            "Content-Type": "b2/x-auto",
-            "Authorization": token,
-            "X-Bz-File-Name": filename,
-            "X-Bz-Content-Sha1": sha1,
-          },
-        });
-        console.log(response);
-        if (!response.ok) {
-          throw new Error("表紙のアップロードに失敗しました");
-        }
-
-        cover_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-        console.log("cover_url", cover_url);
-      }
-
-      {
-        // サムネイル
-        const {apiUrl, url, token, filename} = await getPublishUrl(`${cloudFileId}_thumbnail.png`);
-        console.log("サムネイル", url, token, filename);
-
-        const png = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
-        const sha1 = await blobToSha1(png);
-        const response = await fetch(url,{
-          method: "POST",
-          mode: "cors",
-          body: png,
-          headers: {
-            "Content-Type": "b2/x-auto",
-            "Authorization": token,
-            "X-Bz-File-Name": filename,
-            "X-Bz-Content-Sha1": sha1,
-          },
-        });
-        console.log(response);
-        if (!response.ok) {
-          throw new Error("サムネイルのアップロードに失敗しました");
-        }
-
-        thumbnail_url = `${apiUrl}/file/FramePlannerPublished/${filename}`;
-        console.log("thumbnail_url", thumbnail_url);
-      }
-
-      await recordPublication({
+      console.log("recordPublication", {
         title,
         description,
         content_url,
         cover_url,
         thumbnail_url,
-        is_public: true,
-        socialcard_url: thumbnail_url,
+        socialcard_url,
         related_url,
+        is_public,
       });
+      const workId = await recordPublication({
+        title,
+        description,
+        content_url,
+        cover_url,
+        thumbnail_url,
+        socialcard_url,
+        related_url,
+        is_public,
+      });
+      $progress = 1.0;
 
-      // http://localhost:5173/viewer.html?envelope=01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
-      // window.location.hrefにviewer.htmlは含まれてない
+      // http://localhost:5173/viewer/01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
       const currentUrl = new URL(window.location.href);
-  
-      // viewer.htmlのパスを作成し、クエリパラメータを追加
-      currentUrl.pathname = '/viewer.html';
-      currentUrl.searchParams.set('envelope', cloudFileId);
+      currentUrl.pathname = '/viewer/' + workId;
       
       // URLをコピー
       const downloadUrl = currentUrl.toString();
       console.log(downloadUrl);
-      navigator.clipboard.writeText(downloadUrl);
-
-      toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
+      try {
+        navigator.clipboard.writeText(downloadUrl);
+        toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
+      }
+      catch(e) {
+        console.log(e);
+        toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>をクリップボードにコピーできませんでした。タブがアクティブでなかったためかもしれません。`});
+      }
     }
     catch(e: any) {
       console.log(e);
       toastStore.trigger({ message: e, timeout: 1500});
     }
     finally {
-      $loading = false;
+      // 0.5秒待つ
+      await new Promise(resolve => setTimeout(resolve, 500));
+      $progress = null;
     }
   }
 
@@ -308,6 +249,31 @@
 
     $loading = false;
     toastStore.trigger({ message: "クリップボードにシェアURLをコピーしました<br/>この機能は共有を目的としたもので、<br/>一定時間後消去される可能性があります", timeout: 4500});
+  }
+
+  async function postFile(sourceFilename: string, blob: Blob) {
+    const {apiUrl, url, token, filename} = await getPublishUrl(sourceFilename);
+    console.log("本体", apiUrl, url, token, filename);
+
+    const sha1 = await blobToSha1(blob);
+
+    const response = await fetch(url,{
+      method: "POST",
+      mode: "cors",
+      body: blob,
+      headers: {
+        "Content-Type": "b2/x-auto",
+        "Authorization": token,
+        "X-Bz-File-Name": filename,
+        "X-Bz-Content-Sha1": sha1,
+      },
+    });
+    console.log(response);
+    if (!response.ok) {
+      throw new Error("ドキュメントのアップロードに失敗しました");
+    }
+
+    return `${apiUrl}/file/FramePlannerPublished/${filename}`;
   }
 
 </script>

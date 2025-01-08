@@ -11,6 +11,7 @@ developmentFlag.set(
   location.hostname === "localhost" || location.hostname === "127.0.0.1" || 
   location.hostname === "frameplanner.example.local" || location.hostname === "example.local");
 console.log("================ developmentFlag", storeGet(developmentFlag));
+window.name = "frameplanner";
 
 initPaperJs();
 

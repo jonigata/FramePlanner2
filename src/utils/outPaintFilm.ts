@@ -13,7 +13,6 @@ import { onlineAccount, type OnlineAccount } from './accountStore';
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
   if (!(imageMedia instanceof ImageMedia)) { 
-    console.log("A");
     return; 
   }
 

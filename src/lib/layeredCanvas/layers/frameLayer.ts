@@ -115,8 +115,8 @@ export class FrameLayer extends LayerBase {
 
     const isImageActiveDraggable = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0);
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
-    this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"スケール", isImageActiveDraggable, mp);
-    this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"回転", isImageActiveDraggable, mp);
+    this.scaleIcon = new ClickableIcon(["frameLayer/scale.png"],unit,[1,1],"ドラッグでスケール", isImageActiveDraggable, mp);
+    this.rotateIcon = new ClickableIcon(["frameLayer/rotate.png"],unit,[1,1],"ドラッグで回転", isImageActiveDraggable, mp);
     this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.png"],unit,[1,1],"左右反転", isImageActive, mp);
     this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.png"],unit,[1,1],"上下反転", isImageActive, mp);
     this.fitIcon = new ClickableIcon(["frameLayer/fit.png"],unit,[1,1],"フィット", isImageActive, mp);
@@ -297,6 +297,9 @@ export class FrameLayer extends LayerBase {
     }
     if (media instanceof HTMLVideoElement) {
       this.importMedia(layoutlet.element, new VideoMedia(media));
+      if (this.selectedLayout?.element === layoutlet.element) {
+        this.startVideo(layoutlet);
+      }
     }
     this.onFocus(layoutlet);
     this.onCommit();
@@ -427,6 +430,7 @@ export class FrameLayer extends LayerBase {
               const image = new Image();
               image.src = url;
               await image.decode();
+              URL.revokeObjectURL(url);
               const canvas = document.createElement("canvas");
               canvas.width = image.width;
               canvas.height = image.height;
@@ -652,6 +656,7 @@ export class FrameLayer extends LayerBase {
   changeFocus(layer: Layer | null) {
     if (layer != this) {
       if (this.selectedLayout || this.selectedBorder) {
+        this.stopVideo(this.selectedLayout);
         this.selectedBorder = null;
         this.doSelectLayout(null);
       }
@@ -1235,35 +1240,42 @@ export class FrameLayer extends LayerBase {
   videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
   doSelectLayout(layout: Layout | null): void {
     if (layout?.element !== this.selectedLayout?.element) {
-      clearInterval(this.videoRedrawInterval);
-      this.videoRedrawInterval = undefined;      
-      if (this.selectedLayout) {
-        for (const film of this.selectedLayout.element.filmStack.films) {
-          if (film.media instanceof VideoMedia) {
-            film.media.video.pause();
-          }
-        }
-      }
-
-      if (layout) {
-        let playFlag = false;
-        for (const film of layout.element.filmStack.films) {
-          if (film.media instanceof VideoMedia) {
-            playFlag = true;
-            film.media.video.play();
-          }
-        }
-        if (playFlag) {
-          this.videoRedrawInterval = setInterval(() => {
-            this.redraw();
-          }, 1000/24);
-        }
-      }
+      this.stopVideo(this.selectedLayout);
+      this.startVideo(layout);
     }
 
     this.selectedLayout = layout;
     this.relayoutIcons();
     this.onFocus(layout);
+  }
+
+  stopVideo(layout: Layout | null) {
+    clearInterval(this.videoRedrawInterval);
+    this.videoRedrawInterval = undefined;      
+    if (layout) {
+      for (const film of layout.element.filmStack.films) {
+        if (film.media instanceof VideoMedia) {
+          film.media.video.pause();
+        }
+      }
+    }
+  }
+
+  startVideo(layout: Layout | null) {
+    if (!layout) { return; }
+
+    let playFlag = false;
+    for (const film of layout.element.filmStack.films) {
+      if (film.media instanceof VideoMedia) {
+        playFlag = true;
+        film.media.video.play();
+      }
+    }
+    if (playFlag) {
+      this.videoRedrawInterval = setInterval(() => {
+        this.redraw();
+      }, 1000/24);
+    }
   }
 
   selectLayout(layout: Layout | null): void {
