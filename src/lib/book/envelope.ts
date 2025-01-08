@@ -7,7 +7,6 @@ import { type Notebook, emptyNotebook } from "./notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { createCanvasFromImage, getFirstFrameOfVideo } from "../layeredCanvas/tools/imageUtil";
-import { env } from '@xenova/transformers';
 
 // 互換性維持のため、imagesは残してmediasを追加する
 

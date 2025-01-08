@@ -8,7 +8,6 @@
   import { copyIndexedDB } from './utils/backUpIndexedDB';
   import * as Sentry from "@sentry/svelte";
   import { Modals } from 'svelte-modals'
-  import { mascotVisible } from './mascot/mascotStore';
   import { bootstrap, onlineStatus } from './utils/accountStore';
 
   //import '../app.postcss';  
@@ -40,7 +39,6 @@
   import FullScreenProgress from './utils/FullScreenProgress.svelte';
   import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
-  import Mascot from './mascot/Mascot.svelte'
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
   import StructureTree from './about/StructureTree.svelte';
@@ -155,9 +153,6 @@
 <PageInspector/>
 <FrameInspector/>
 <BubbleInspector/>
-{#if $mascotVisible && $onlineStatus === 'signed-in'}
-  <Mascot/>
-{/if}
 <DebugOnly>
   <SaveOffButton/>
 </DebugOnly>

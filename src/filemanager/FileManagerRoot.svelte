@@ -350,7 +350,7 @@
     $loading = false;
   }
 
-  let dumpFiles: FileList | null;
+  let dumpFiles: FileList | null = null;
   $: onUndumpFileSystem(dumpFiles);
   async function onUndumpFileSystem(dumpFiles: FileList | null) {
     if (dumpFiles) {
@@ -358,7 +358,7 @@
     }
   }
 
-  let importFiles: FileList | null;
+  let importFiles: FileList | null = null;
   $: onImportFile(importFiles);
   async function onImportFile(importFiles: FileList | null) {
     if (importFiles) {

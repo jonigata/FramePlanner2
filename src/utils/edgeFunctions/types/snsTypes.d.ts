@@ -47,6 +47,7 @@ export const GetProfileResponseSchema = z.object({
   email: z.string(),
   bio: z.string(),
   related_url: z.string(),
+  is_admin: z.boolean(),
 }).nullable();
 export type GetProfileResponse = z.infer<typeof GetProfileResponseSchema>;
 
@@ -57,8 +58,8 @@ export const RecordPublicationRequestSchema = z.object({
   cover_url: z.string(),
   content_url: z.string(),
   thumbnail_url: z.string(),
-  socialcard_url: z.string().optional(),
-  related_url: z.string().optional(),
+  socialcard_url: z.string().nullable(),
+  related_url: z.string().nullable(),
   is_public: z.boolean(),
 });
 export type RecordPublicationRequest = z.infer<typeof RecordPublicationRequestSchema>;
