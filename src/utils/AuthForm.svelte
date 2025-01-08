@@ -43,14 +43,14 @@
   }
 </script>
 
-<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-md shadow-md">
   {#if isSignupComplete}
     <div class="text-center space-y-4">
       <h2 class="text-2xl font-bold">Check your email</h2>
       <p>We've sent a confirmation link to:</p>
       <p class="font-semibold">{email}</p>
       <p>Please click the link to complete your registration.</p>
-      <button class="btn variant-filled-primary w-full" on:click={handleClose}>
+      <button class="btn variant-filled-primary w-full !rounded" on:click={handleClose}>
         Close
       </button>
     </div>
@@ -61,7 +61,7 @@
       <form on:submit={handleEmailSignin} class="space-y-4">
         <input 
           name="email" 
-          class="input w-full p-2" 
+          class="input w-full p-2 !rounded" 
           placeholder="Email" 
           type="email" 
           bind:value={email}
@@ -69,7 +69,7 @@
         />
         <input 
           name="password" 
-          class="input w-full p-2" 
+          class="input w-full p-2 !rounded" 
           placeholder="Password" 
           type="password"
           bind:value={password}
@@ -77,8 +77,8 @@
           minlength="8"
         />
         <div class="flex space-x-4">
-          <button type="submit" class="btn variant-filled-primary w-full">Login</button>
-          <button type="submit" on:click|preventDefault={handleEmailSignup} class="btn variant-filled-secondary w-full">Signup</button>
+          <button type="submit" class="btn variant-filled-primary w-full !rounded">Login</button>
+          <button type="submit" on:click|preventDefault={handleEmailSignup} class="btn variant-filled-secondary w-full !rounded">Signup</button>
         </div>
       </form>
       <h3 class="text-xl font-semibold text-center mt-6">Or login with</h3>
@@ -88,14 +88,14 @@
       <div class="space-y-4 mt-4">
         <button 
           on:click={() => handleOAuth('github')} 
-          class="btn variant-filled w-full flex items-center justify-center"
+          class="btn variant-filled w-full flex items-center justify-center !rounded"
         >
           <img src={githubIcon} alt="Github" class="w-5 h-5 mr-2" />
           Login with Github
         </button>
         <button 
           on:click={() => handleOAuth('google')} 
-          class="btn variant-filled w-full flex items-center justify-center"
+          class="btn variant-filled w-full flex items-center justify-center !rounded"
         >
           <img src={googleIcon} alt="Google" class="w-5 h-5 mr-2" />
           Login with Google
