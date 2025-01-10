@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { Character } from '../lib/book/notebook';
+  import type { Character } from '$bookTypes/notebook';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';

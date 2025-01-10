@@ -2,7 +2,7 @@ import { FrameElement, calculatePhysicalLayout, collectLeaves, findLayoutOf } fr
 import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import { newPage } from "../lib/book/book";
-import type * as Storyboard from '../lib/book/storyboard';
+import type * as Storyboard from '$bookTypes/storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
 import { newPageProperty } from '../bookeditor/bookStore';
 import { get } from "svelte/store";
@@ -40,7 +40,7 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
     if (storyboard.format == '4koma') {
       sample = frameExamples[3];
     } else {
-      sample = makePageTemplateFromLightLayout(storyboardPage.layout);
+      sample = makePageTemplateFromLightLayout(storyboardPage.layout!);
     }
     console.log(sample);
     const frameTree = FrameElement.compile(sample.frameTree);

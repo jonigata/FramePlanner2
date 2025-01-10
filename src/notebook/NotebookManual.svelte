@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Character } from '../lib/book/notebook';
-  import { Storyboard } from '../lib/book/storyboard';
+  import { Character } from '$bookTypes/notebook';
+  import { Storyboard } from '$bookTypes/storyboard';
   import { commitBook } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
@@ -18,7 +18,7 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import FluxModes from '../generator/FluxModes.svelte';
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
-  import { Notebook as NotebookProtocol } from '../utils/edgeFunctions/types/notebook';
+  import { Notebook as NotebookProtocol } from '$bookTypes/notebook';
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { type Folder, type File, ls } from '../lib/filesystem/fileSystem';
   import { rosterOpen, rosterSelectedCharacter } from './rosterStore';

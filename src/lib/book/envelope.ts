@@ -3,7 +3,7 @@ import { ulid } from 'ulid';
 import { unpackFrameMedias, unpackBubbleMedias, packFrameMedias, packBubbleMedias } from "./imagePacking";
 import type { SaveMediaFunc, LoadMediaFunc, MediaResource, MediaType } from "./imagePacking";
 import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./book";
-import { type Notebook, emptyNotebook } from "./notebook";
+import { type Notebook, emptyNotebook } from "./types/notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { createCanvasFromImage, getFirstFrameOfVideo } from "../layeredCanvas/tools/imageUtil";

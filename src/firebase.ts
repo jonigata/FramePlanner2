@@ -9,7 +9,7 @@ import * as firebaseui from 'firebaseui'
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
-import type { ProtocolChatLog, RichChatDocument } from "./lib/book/richChat";
+import type { ProtocolChatLog, RichChatDocument } from "$bookTypes/richChat";
 import { getStorage } from "firebase/storage";
 
 function useEmulatorIfDevelopment() {

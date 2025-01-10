@@ -6,8 +6,8 @@ import { ImageMedia } from '../layeredCanvas/dataModels/media';
 import { frameExamples } from '../layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../layeredCanvas/tools/geometry/trapezoid";
-import type { RichChatLog, ProtocolChatLog } from './richChat';
-import { emptyNotebook, type Notebook } from "./notebook";
+import type { RichChatLog, ProtocolChatLog } from './types/richChat.ts';
+import { emptyNotebook, type Notebook } from "./types/notebook.ts";
 
 // history処理では基本的にすべてdeep copyを使う
 

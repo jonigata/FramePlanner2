@@ -7,9 +7,8 @@ import { type RemoveBgRequest, RemoveBgResponseSchema } from "./utils/edgeFuncti
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "./utils/edgeFunctions/types/cloudFileTypes.d"
 import { CheckUsernameAvailableResponseSchema, GetProfileResponseSchema, RecordPublicationResponseSchema, type RecordPublicationRequest } from "./utils/edgeFunctions/types/snsTypes.d"
 import { UpdateProfileResponseSchema, type UpdateProfileRequest } from "./utils/edgeFunctions/types/snsTypes.d";
-import { Characters } from "./utils/edgeFunctions/types/notebook"
-import { Notebook } from "./utils/edgeFunctions/types/notebook"
-import { Storyboard } from "./utils/edgeFunctions/types/storyboard"
+import { Notebook, Characters } from "$bookTypes/notebook"
+import { Storyboard } from "$bookTypes/storyboard"
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";

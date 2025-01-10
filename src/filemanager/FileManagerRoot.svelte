@@ -24,9 +24,8 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
-  import { mascotVisible } from '../mascot/mascotStore';
   import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
-  import { emptyNotebook } from '../lib/book/notebook';
+  import { emptyNotebook } from '$bookTypes/notebook';
   import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
@@ -255,7 +254,6 @@
   async function onNewBookRequest(book: Book | null) {
     if (book) {
       console.tag("new book request", "green");
-      $mascotVisible = false;
       $newBookToken = null;
       const root = await fileSystem.getRoot();
       const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
@@ -286,7 +284,6 @@
   async function onLoadRequest(lt: LoadToken | null) {
     if (!lt) { return; }
     $loadToken = null;
-    $mascotVisible = false;
 
     $loading = true;
     const isCloud = lt.fileSystem.id !== fileSystem.id;

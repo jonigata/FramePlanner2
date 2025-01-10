@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { resolve } from 'path'
 import glob from 'glob'
+import * as path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -23,6 +24,11 @@ export default defineConfig({
     outDir: 'dist'
   },
   plugins: [svelte()],
+  resolve: {
+    alias: {
+      $bookTypes: path.resolve(__dirname, 'src/lib/book/types'),
+    }    
+  },
   optimizeDeps: {
     include: ['paper'],
   },
