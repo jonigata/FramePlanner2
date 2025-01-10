@@ -6,10 +6,9 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
   import { persistentText } from '../utils/persistentText';
-  import { onlineAccount } from '../utils/accountStore';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { ulid } from 'ulid';
-  import { tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import {makePagesFromStoryboard} from './makePage';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { toolTip } from '../utils/passiveToolTipStore';
@@ -20,6 +19,11 @@
   import FluxModes from '../generator/FluxModes.svelte';
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
   import { Notebook as NotebookProtocol } from '../utils/edgeFunctions/types/notebook';
+  import { fileSystem } from '../filemanager/fileManagerStore';
+  import { type Folder, type File, ls } from '../lib/filesystem/fileSystem';
+  import { rosterOpen, rosterSelectedCharacter } from './rosterStore';
+  import { imageToBlob } from '../lib/layeredCanvas/tools/imageUtil';
+  import { waitForChange } from '../utils/reactUtil';
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 
@@ -41,6 +45,10 @@
   };
   let imagingMode: Mode = "schnell";
   let plotInstruction: string = '';
+
+  let rootFolder: Folder;
+  let aiFolder: Folder;
+  let rosterFolder: Folder;
 
   function commit() {
     commitBook($mainBook!, null);
@@ -128,6 +136,36 @@
     }
     finally {
       charactersWaiting = false;
+    }
+  }
+
+  async function onHireCharacter() {
+    console.log('hire character');
+    $rosterSelectedCharacter = null;
+    let unsubscribe;
+    try {
+      unsubscribe = rosterSelectedCharacter.subscribe((c) => {
+        if (c) {
+          // 重複してたら
+          if (notebook!.characters.find((v) => v.ulid === c.ulid)) {
+            toastStore.trigger({ message: '既に登録されています', timeout: 1500});
+          } else {
+            c.ulid = ulid();
+            notebook!.characters.push(c);
+            notebook!.characters = notebook!.characters;
+          }
+        }
+      });
+      $rosterOpen = true;
+      await waitForChange(rosterOpen, (v) => !v);
+    }
+    catch(e) {
+      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      console.error(e);
+    }
+    finally {
+      $rosterOpen = false;
+      unsubscribe!();
     }
   }
 
@@ -251,6 +289,28 @@
     }
   }
 
+  async function onRegisterCharacter(e: CustomEvent<Character>) {
+    const ulid = e.detail.ulid!;
+    const entry = await rosterFolder.getEmbodiedEntryByName(ulid);
+    let file: File;
+    if (entry) {
+      file = entry[2].asFile()!;
+    } else {
+      file = await $fileSystem!.createFile();
+      await rosterFolder.link(ulid, file.id);
+    }
+
+    const c = {...e.detail};
+    if (c.portrait === 'loading') {
+      c.portrait = null;
+    } else if (c.portrait instanceof HTMLImageElement) {
+      c.portrait = await imageToBlob(c.portrait);
+    }
+    console.log(c);
+    await file.write(c);
+    toastStore.trigger({ message: 'キャラクターを登録しました', timeout: 1500});
+  }
+
   async function onGenerateImages() {
     imageProgress = 0.001;
     imagingContext = {
@@ -270,6 +330,12 @@
       });
     imageProgress = 1;
   }
+
+  onMount(async () => {
+    rootFolder = await $fileSystem!.getRoot();
+    aiFolder = (await rootFolder.getEmbodiedEntryByName('AI'))![2].asFolder()!;
+    rosterFolder = (await aiFolder.getEmbodiedEntryByName('キャラクター'))![2].asFolder()!;
+  });
 
 </script>
 
@@ -314,7 +380,7 @@
       {/if}
     </h2>
     <div class="w-full">
-      <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter}/>
+      <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
     </div>
     <div class="flex flex-row mt-2 items-center">
       <span class="w-16">スタイル</span>

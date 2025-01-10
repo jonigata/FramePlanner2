@@ -58,6 +58,7 @@
   import Publication from './publication/Publication.svelte';
   import AuthForm from './utils/AuthForm.svelte';
   import SocialCard from './publication/SocialCard.svelte';
+  import Roster from './notebook/Roster.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -163,6 +164,10 @@
 <ColorPickerDialog/>
 
 <!-- drawers -->
+<!-- 
+  順序に意味があるので注意(後ろほど上に来る)
+  例えばRosterはNotebookの上にないといけない
+-->
 <FontChooser/>
 <ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
@@ -172,6 +177,7 @@
 <TemplateChooser/>
 <EffectChooser/>
 <Notebook/>
+<Roster/>
 
 <!-- tools -->
 <PassiveToolTip />

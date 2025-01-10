@@ -87,3 +87,8 @@ export async function getFirstFrameOfVideo(video: HTMLVideoElement): Promise<HTM
   ctx.drawImage(video, 0, 0);
   return canvas;
 }
+
+export async function imageToBlob(image: HTMLImageElement): Promise<Blob> {
+  const canvas = createCanvasFromImage(image);
+  return await canvasToBlob(canvas);
+}

@@ -408,7 +408,14 @@ export class IndexedDBFolder extends Folder {
     const store = tx.store;
     const value = await store.get(this.id);
 
+    const oldLength = value.children.length;
     value.children = value.children.filter(([b, _, __]: [BindId, unknown, unknown]) => b !== bindId);
+    const newLength = value.children.length;
+    if (oldLength !== newLength) {
+      console.log(`Unlinked ${bindId}`);
+    } else {
+      console.log(`Failed to unlink ${bindId}`);
+    }
     await store.put(value);
 
     super.notifyDelete(bindId);

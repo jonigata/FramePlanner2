@@ -20,6 +20,10 @@
   function remove() {
     dispatch('remove', character);
   }
+
+  function register() {
+    dispatch('register', character);
+  }
 </script>
 
 <div class="character">
@@ -34,21 +38,24 @@
       </div>
     </div>
     <div class="flex flex-row gap-1">
-      <div class="portrait flex justify-center items-center">
-        {#if character.portrait === 'loading'}
-          <div class="waiting">
-            <ProgressRadial stroke={100} width="w-4"/>
-          </div>
-        {:else if character.portrait}
-          <img src={character.portrait.src} alt="見た目"/>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={portrait}/>
-        {:else}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="no-portrait" src={bellIcon} alt="見た目" on:click={portrait}/>
-        {/if}
+      <div class="flex flex-col gap-2">
+        <div class="portrait flex justify-center items-center">
+          {#if character.portrait === 'loading'}
+            <div class="waiting">
+              <ProgressRadial stroke={100} width="w-4"/>
+            </div>
+          {:else if character.portrait}
+            <img src={character.portrait.src} alt="見た目"/>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+            <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={portrait}/>
+          {:else}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+            <img class="no-portrait" src={bellIcon} alt="見た目" on:click={portrait}/>
+          {/if}
+        </div>
+        <button class="btn btn-sm bg-secondary-400" on:click={register}>キャラ名簿に登録</button>
       </div>
       <div class="flex flex-col flex-grow gap-1">
         <AutoSizeTextarea bind:value={character.personality} minHeight={24}/>

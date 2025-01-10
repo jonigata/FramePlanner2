@@ -79,7 +79,7 @@ export abstract class Node implements Node {
 }
 
 export interface File {
-  read(): Promise<string>;
+  read(): Promise<any>;
   write(data: any): Promise<void>;
   readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement>;
   writeCanvas(canvas: HTMLCanvasElement): Promise<void>;
@@ -172,13 +172,69 @@ export abstract class Folder extends Node {
 
 export async function makeFolders(fs: FileSystem, folders: string[]): Promise<void> {
   const root = await fs.getRoot();
-  const children = await root.list();
   for (const f of folders) {
-    const found = children.find((c) => c[1] === f);
-    if (!found) {
-      console.log("not found", f);
-      const folder = await fs.createFolder();
-      await root.link(f, folder.id);
+    // fが'/'を含む場合は、そのパスにフォルダを作成する
+    const path = f.split('/');      
+    let current = root;
+    for (const p of path) {
+      const children = await current.list();
+      // console.log(`Checking folder: ${p}, ${children}`);
+      const found = children.find((c) => c[1] === p);
+      if (!found) {
+        // console.log(`Creating folder: ${p}`);
+        const folder = await fs.createFolder();
+        await current.link(p, folder.id);
+        current = folder;
+      } else {
+        // console.log(`Folder already exists: ${p}`);
+        current = (await fs.getNode(found[2]))?.asFolder()!;
+      }
     }
+  }
+}
+
+export async function folderTree(fs: FileSystem): Promise<string[]> {
+  const root = await fs.getRoot();
+  const s: string[] = [];
+  await folderTreeSub(root, '/', s);
+  return s;
+}
+
+async function folderTreeSub(folder: Folder, prefix: string, result: string[]) {
+  const children = await folder.listEmbodied();
+  for (const c of children) {
+    const node = c[2];
+    if (node?.getType() === 'folder') {
+      const cprefix = `${prefix}${c[1]}/`;
+      result.push(cprefix);
+      await folderTreeSub(node.asFolder()!, cprefix, result);
+    }
+  }
+}
+
+export async function ls(fs: FileSystem, path: string): Promise<string[]> {
+  const root = await fs.getRoot();
+  const node = await root.getNodeByPath(path);
+  if (node.getType() === 'folder') {
+    return (await node.asFolder()!.list()).map(e => e[1]);
+  } else {
+    return [];
+  }
+}
+
+export async function getNodeByPath(fs: FileSystem, path: string): Promise<Node> {
+  const root = await fs.getRoot();
+  return root.getNodeByPath(path);
+}
+
+export async function rm(fs: FileSystem, path: string): Promise<void> {
+  const passArray = path.split('/');
+  const parentPath = passArray.slice(0, passArray.length - 1).join('/');
+  const root = await fs.getRoot();
+  const parent = await root.getNodeByPath(parentPath);
+  const name = passArray[passArray.length - 1];
+  const entry = await parent.asFolder()!.getEntryByName(name);
+  if (entry) {
+    await parent.asFolder()!.unlink(entry[0]);
   }
 }
