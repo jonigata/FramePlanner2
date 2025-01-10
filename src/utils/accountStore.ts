@@ -38,10 +38,15 @@ function createAuthStore(): AuthStore {
     
     if (accessTokenCookie && refreshTokenCookie) {
       console.log("COOKIES", accessTokenCookie, refreshTokenCookie);
-      await supabase.auth.setSession({
-        access_token: accessTokenCookie[1],
-        refresh_token: refreshTokenCookie[1],
-      })
+      try {
+        await supabase.auth.setSession({
+          access_token: accessTokenCookie[1],
+          refresh_token: refreshTokenCookie[1],
+        })
+      }
+      catch (error) {
+        console.error("setSession error");
+      }
     } else {
       console.log("NO COOKIES");
     }
@@ -85,11 +90,13 @@ function createAuthStore(): AuthStore {
   }
 
   async function signIn(provider: Provider): Promise<void> {
+    const url = new URL(window.location.href);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         queryParams: {
           access_type: "offline",
+          redirectTo: `${url.origin}/auth/callback?next=/home`,
           prompt: "consent",
         },
       },
