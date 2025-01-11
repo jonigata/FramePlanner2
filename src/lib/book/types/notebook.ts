@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Storyboard } from "./storyboard";
+import { Storyboard } from "./storyboard"; // @deno-ts
 
 export const Character = z.object({
   ulid: z.string(),

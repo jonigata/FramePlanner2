@@ -54,8 +54,8 @@ export class IndexedDBFileSystem extends FileSystem {
     super();
   }
 
-  async open() {
-    this.db = await openDB('FileSystemDB', 2, {
+  async open(dbname: string = 'FileSystemDB'): Promise<void> {
+    this.db = await openDB(dbname, 2, {
       async upgrade(db, oldVersion, newVersion, transaction) {
         if (oldVersion < 1) {
           const nodesStore = db.createObjectStore('nodes', { keyPath: 'id' });

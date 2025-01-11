@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LayoutPage, LayoutColumn, LayoutRow } from "./layout";
+import { LayoutPage, LayoutColumn, LayoutRow } from "./layout"; // @deno-ts
 
 const Format = z.enum(["4koma", "standard"])
   .describe("基本フォーマット。作風から適切な方を選べ");

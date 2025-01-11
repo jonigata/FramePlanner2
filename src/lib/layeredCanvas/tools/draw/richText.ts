@@ -77,9 +77,8 @@ function getCompleteEmojiSequence(text: string, index: number): string | null {
     return match[0];
   }
   // 2文字目が合字半濁点・濁点の場合は合成文字として扱う
-  console.log()
   if (text.length > index + 1) {
-    console.log(`\\u${text.charCodeAt(index + 1).toString(16).padStart(4, '0')}`)
+    // console.log(`\\u${text.charCodeAt(index + 1).toString(16).padStart(4, '0')}`)
     if (text[index + 1] === '\u3099' || text[index + 1] === '\u309A') {
       return text.slice(index, index + 2);
     }
