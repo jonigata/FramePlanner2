@@ -54,8 +54,8 @@ export class IndexedDBFileSystem extends FileSystem {
     super();
   }
 
-  async open() {
-    this.db = await openDB('FileSystemDB', 2, {
+  async open(dbname: string = 'FileSystemDB'): Promise<void> {
+    this.db = await openDB(dbname, 2, {
       async upgrade(db, oldVersion, newVersion, transaction) {
         if (oldVersion < 1) {
           const nodesStore = db.createObjectStore('nodes', { keyPath: 'id' });
@@ -222,7 +222,6 @@ export class IndexedDBFileSystem extends FileSystem {
 
     console.log('Start processing nodes');
     for await (const node of nodes) {
-      console.log(node);
       batch.push(node);
       count++;
 
@@ -272,7 +271,7 @@ export class IndexedDBFile extends File {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
-      } else {
+      } else if (data.content){
         const image = new Image();
         image.src = data.content;
         await image.decode();
@@ -280,6 +279,8 @@ export class IndexedDBFile extends File {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
+      } else {
+        throw new Error('No content or blob in the file.');
       }
     }
 
