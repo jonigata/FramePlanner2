@@ -53,11 +53,11 @@
   
   <div class="flex-grow"></div>
   
+  <!--
   <ul class="flex space-x-6">
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <li class="hover:text-yellow-500 cursor-pointer" on:click={openFarm}>まんがファーム(β)！へ</li>
   </ul>
+  -->
 
   {#if $onlineStatus === "signed-in"}
     <Feathral/>
