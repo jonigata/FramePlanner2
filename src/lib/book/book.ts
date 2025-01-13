@@ -13,6 +13,11 @@ import { emptyNotebook, type Notebook } from "./types/notebook";
 
 export type Prefix = 'shortcut-' | 'paste-' | 'drop-' | 'add-in-folder-' | 'shared-' | 'initial-' | 'hiruma-' | 'weaved-' | 'envelope-';
 
+// revision.idは以下の3つのうちどれか
+// 1. "/" (ファイルシステムによっては異なる)
+// 2. ulid
+// 3. firebaseのpushId (シェアファイルの場合)
+
 export type Revision = {
   id: string;
   revision: number;

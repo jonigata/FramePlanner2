@@ -247,8 +247,6 @@ export async function unpackFilms(markUp: any, loadMediaFunc: LoadMediaFunc): Pr
       }
     }
 
-    console.log("MediaType", filmMarkUp.mediaType);
-
     const media = 
       filmMarkUp.mediaType === 'video' ? // 古いデータはundefined
       new VideoMedia(mediaResource as HTMLVideoElement) : 

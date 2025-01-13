@@ -205,6 +205,7 @@
         const remoteFileSystem = await buildShareFileSystem(box);
         const remoteFile = (await remoteFileSystem.getNode(file as NodeId))!.asFile()!;
         const book = await loadBookFrom(remoteFileSystem, remoteFile);
+        book.revision.id = file as NodeId;
 
         const localFile = await localFileSystem.createFileWithId(file as NodeId);
         await saveBookTo(book, localFileSystem, localFile);
