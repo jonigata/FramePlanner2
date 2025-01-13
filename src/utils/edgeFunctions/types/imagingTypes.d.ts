@@ -13,7 +13,7 @@ export const TextToImageRequestSchema = z.object({
 export type TextToImageRequest = z.infer<typeof TextToImageRequestSchema>;
 
 export const TextToImageResponseSchema = z.object({
-  images: z.array(z.string().describe("base64 encoded image")),
+  images: z.array(z.string()).describe("image urls"),
 });
 export type TextToImageResponse = z.infer<typeof TextToImageResponseSchema>;
 
@@ -36,7 +36,7 @@ export const OutPaintRequestSchema = z.object({
 export type OutPaintRequest = z.infer<typeof OutPaintRequestSchema>;
 
 export const OutPaintResponseSchema = z.object({
-  images: z.array(z.string().describe("base64 encoded image")),
+  images: z.array(z.string()).describe("image urls"),
 });
 export type OutPaintResponse = z.infer<typeof OutPaintResponseSchema>;
 
@@ -46,7 +46,7 @@ export const RemoveBgRequestSchema = z.object({
 export type RemoveBgRequest = z.infer<typeof RemoveBgRequestSchema>;
 
 export const RemoveBgResponseSchema = z.object({
-  dataUrl: z.string(),
+  url: z.string().describe("image url"),
 });
 export type RemoveBgResponse = z.infer<typeof RemoveBgResponseSchema>;
 

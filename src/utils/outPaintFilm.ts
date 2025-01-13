@@ -1,14 +1,13 @@
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { outPaint } from "../supabase";
-import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
+import { createCanvasFromBlob } from "../lib/layeredCanvas/tools/imageUtil";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import type { Rect, Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import type { Page } from 'manga-renderer';
 import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
-import { onlineAccount, type OnlineAccount } from './accountStore';
 
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
@@ -34,11 +33,9 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
 
-  const resultImage = document.createElement('img');
-  resultImage.src = "data:image/png;base64," + r.images[0];
-  await resultImage.decode();
+  const response = await fetch(r.images[0]);
+  const canvas = await createCanvasFromBlob(await response.blob());
 
-  const canvas = createCanvasFromImage(resultImage);
   const newFilm = film.clone();
   newFilm.media = new ImageMedia(canvas);
 

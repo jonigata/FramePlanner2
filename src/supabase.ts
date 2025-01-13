@@ -1,14 +1,14 @@
 import { z } from "zod";
-import { invoke } from "./utils/edgeFunctions/edgeFunctions"
+import { invoke } from "./utils/edgeFunctions/edgeFunctions";
 import { type TransformTextRequest, TransformTextResponseSchema } from "./utils/edgeFunctions/types/transformTextTypes.d"
-import { type TextToImageRequest, TextToImageResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d"
-import { type OutPaintRequest, OutPaintResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d"
-import { type RemoveBgRequest, RemoveBgResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d"
-import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "./utils/edgeFunctions/types/cloudFileTypes.d"
-import { CheckUsernameAvailableResponseSchema, GetProfileResponseSchema, RecordPublicationResponseSchema, type RecordPublicationRequest } from "./utils/edgeFunctions/types/snsTypes.d"
+import { type TextToImageRequest, TextToImageResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
+import { type OutPaintRequest, OutPaintResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
+import { type RemoveBgRequest, RemoveBgResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
+import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
+import { CheckUsernameAvailableResponseSchema, GetProfileResponseSchema, RecordPublicationResponseSchema, type RecordPublicationRequest } from "./utils/edgeFunctions/types/snsTypes.d";
 import { UpdateProfileResponseSchema, type UpdateProfileRequest } from "./utils/edgeFunctions/types/snsTypes.d";
-import { Notebook, Characters } from "$bookTypes/notebook"
-import { Storyboard } from "$bookTypes/storyboard"
+import { Notebook, Characters } from "$bookTypes/notebook";
+import { Storyboard } from "$bookTypes/storyboard";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";

@@ -3,7 +3,7 @@ import { text2Image } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
+import { createCanvasFromImage, createImageFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
 import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
@@ -48,11 +48,12 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
     }
     console.log("generateImageFromTextWithFlux", performance.now() - perf);
 
-    const imageElements: HTMLImageElement[] = images.map(imageData => {
-      const image = document.createElement('img');
-      image.src = "data:image/png;base64," + imageData;
+    const imageElements: HTMLImageElement[] = await Promise.all(images.map(async imageUrl => {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const image = await createImageFromBlob(blob);
       return image;
-    });
+    }));
 
     return imageElements;
   }
