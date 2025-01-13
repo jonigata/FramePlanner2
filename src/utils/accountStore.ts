@@ -65,12 +65,17 @@ export function bootstrap() {
         onlineAccount.set({ user, feathral });
         onlineStatus.set("signed-in");
         console.log("signed-in");
-        onlineProfile.set(await getProfile(null));
       }
       catch (e) {
         console.error(e);
         onlineAccount.set(null);
         onlineStatus.set("signed-out");
+      }
+      try {
+        console.log("getprofileは普通に失敗することがあります")
+        onlineProfile.set(await getProfile(null));
+      }
+      catch (e) {
       }
     } else {
       onlineAccount.set({ user: null, feathral: 0 });
