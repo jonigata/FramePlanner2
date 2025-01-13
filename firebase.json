@@ -9,17 +9,7 @@
     "rewrites": [
       {
         "source": "/viewer/:envelope",
-        "function": "socialcard",
-        "region": "us-central1",
-        "pinTag": true
-      },
-      {
-        "source": "/farm/user/:user",
-        "destination": "/farm.html"
-      },
-      {
-        "source": "/farm",
-        "destination": "/farm.html"
+        "destination": "/viewer.html"
       },
       {
         "source": "**",
