@@ -72,7 +72,7 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
 
       performance.mark("readCanvas-start");
       const mediaResource: any = 
-        mediaType === "image" ? await file.readCanvas(false) : await file.readVideo(false);
+        mediaType === "image" ? await file.readCanvas(true) : await file.readVideo(true);
       mediaResource["fileId"] ??= {}
       mediaResource["fileId"][fileSystem.id] = file.id
       mediaResource["clean"] ??= {}
