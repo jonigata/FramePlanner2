@@ -60,12 +60,18 @@ export function bootstrap() {
   auth.onAuthStateChanged(async (user) => {
     console.log("onAuthStateChanged", user);
     if (user) {
-      const feathral = await getFeathral();
-      onlineAccount.set({ user, feathral });
-      onlineStatus.set("signed-in");
-      console.log("signed-in");
-
-      onlineProfile.set(await getProfile(null));
+      try {
+        const feathral = await getFeathral();
+        onlineAccount.set({ user, feathral });
+        onlineStatus.set("signed-in");
+        console.log("signed-in");
+        onlineProfile.set(await getProfile(null));
+      }
+      catch (e) {
+        console.error(e);
+        onlineAccount.set(null);
+        onlineStatus.set("signed-out");
+      }
     } else {
       onlineAccount.set({ user: null, feathral: 0 });
       onlineStatus.set("signed-out");

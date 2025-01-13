@@ -54,8 +54,8 @@ export class IndexedDBFileSystem extends FileSystem {
     super();
   }
 
-  async open() {
-    this.db = await openDB('FileSystemDB', 2, {
+  async open(dbname: string = 'FileSystemDB'): Promise<void> {
+    this.db = await openDB(dbname, 2, {
       async upgrade(db, oldVersion, newVersion, transaction) {
         if (oldVersion < 1) {
           const nodesStore = db.createObjectStore('nodes', { keyPath: 'id' });
@@ -174,14 +174,31 @@ export class IndexedDBFileSystem extends FileSystem {
     const store = tx.store;
     let cursor = await store.openCursor();
   
+    const items: any[] = [];
+    while (cursor) {
+      items.push(cursor.value);
+      cursor = await cursor.continue();
+    }
+
+    await tx.done;
+  
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
-        
-        while (cursor) {
-          const jsonString = JSON.stringify(cursor.value) + '\n'; // NDJSON用に改行を追加
+  
+        for (const value of items) {
+          if (value.blob) {
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject();
+              reader.readAsDataURL(value.blob);
+            });
+            value.blob = dataUrl;
+          }
+  
+          const jsonString = JSON.stringify(value) + "\n";
           controller.enqueue(encoder.encode(jsonString));
-          cursor = await cursor.continue();
         }
   
         controller.close();
@@ -192,56 +209,75 @@ export class IndexedDBFileSystem extends FileSystem {
       headers: { 'Content-Type': 'application/x-ndjson' }
     });
   
-    const blob = await response.blob();
-    saveAs(blob, 'filesystem-dump.ndjson'); // 拡張子を.ndjsonに変更
+    const blob = await response.blob();  
+    saveAs(blob, 'filesystem-dump.ndjson');
   }
-
+  
   async undump(blob: Blob): Promise<void> {
-    const batchSize = 1000;
-    const stream = blob.stream();
-    const nodes = readNDJSONStream(stream);
-    
-    console.log('Start undump');
-    await this.db!.transaction('nodes', 'readwrite')
-      .objectStore('nodes')
-      .clear();
-
-    let batch: any[] = [];
-    let count = 0;
-
-    const saveBatch =  async (batch: any[]) => {
+    console.log("Start undump");
+  
+    {
       const tx = this.db!.transaction('nodes', 'readwrite');
       const store = tx.objectStore('nodes');
-
-      for (const node of batch) {
-        await store.put(node);
-      }
-
-      await tx.done;
+      await store.clear();
+      await tx.done;  // ここでトランザクション確実に終了
     }
-
-    console.log('Start processing nodes');
+  
+    const stream = blob.stream();
+    const nodes = readNDJSONStream(stream);
+  
+    let allItems: any[] = [];
+    let count = 0;
+  
+    console.log("Start processing nodes");
     for await (const node of nodes) {
-      console.log(node);
-      batch.push(node);
+      // Base64からBlobを復元（トランザクション外）
+      if (node.blob) {
+        const res = await fetch(node.blob);
+        node.blob = await res.blob();
+      }
+      allItems.push(node);
       count++;
-
+    }
+    console.log(`Loaded ${count} nodes in memory`);
+  
+    // 3) バッチ単位で write (複数のトランザクションを使う)
+    const batchSize = 1000;
+    let batch: any[] = [];
+    let writtenCount = 0;
+  
+    const saveBatch = async (itemsBatch: any[]) => {
+      const tx = this.db!.transaction('nodes', 'readwrite');
+      const store = tx.objectStore('nodes');
+      for (const item of itemsBatch) {
+        await store.put(item);
+      }
+      await tx.done;
+    };
+  
+    for (const node of allItems) {
+      batch.push(node);
       if (batch.length >= batchSize) {
-        console.log(`Processing ${count} nodes`);
-        await saveBatch.call(this, batch);
+        console.log(`Processing ${writtenCount + batch.length} / ${count}...`);
+        await saveBatch(batch);
+        writtenCount += batch.length;
         batch = [];
-        console.log(`Processed`);
+        console.log("Processed batch");
       }
     }
-
-    // 残りのノードを保存
+  
+    // 最後のバッチがあれば保存
     if (batch.length > 0) {
-      await saveBatch.call(this, batch);
-      console.log(`Processed ${count} nodes in total`);
+      console.log(`Processing final ${writtenCount + batch.length} / ${count}...`);
+      await saveBatch(batch);
+      writtenCount += batch.length;
+      console.log("Processed final batch");
     }
+  
+    console.log(`Processed ${writtenCount} nodes in total`);
   }
 }
-
+  
 export class IndexedDBFile extends File {
   db: IDBPDatabase;
 
@@ -272,7 +308,7 @@ export class IndexedDBFile extends File {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
-      } else {
+      } else if (data.content){
         const image = new Image();
         image.src = data.content;
         await image.decode();
@@ -280,6 +316,8 @@ export class IndexedDBFile extends File {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(image, 0, 0);
+      } else {
+        throw new Error('No content or blob in the file.');
       }
     }
 
