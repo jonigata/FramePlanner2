@@ -9,6 +9,7 @@
   import { saveAs } from 'file-saver';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { writeEnvelope } from "../lib/book/envelope";
+  import { progress } from '../utils/loadingStore';
 
   import trashIcon from '../assets/fileManager/trash.png';
   import renameIcon from '../assets/fileManager/rename.png';
@@ -118,10 +119,12 @@
   }
 
   async function makePackage() {
+    $progress = 0;
     const file = (await fileSystem.getNode(nodeId))!.asFile()!;
     const book = await loadBookFrom(fileSystem, file);
-    const blob = await writeEnvelope(book);
+    const blob = await writeEnvelope(book, n => $progress = n);
     saveAs(blob, `${filename}.envelope`);
+    $progress = null;
   }
 
   onMount(async () => {

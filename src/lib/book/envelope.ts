@@ -22,12 +22,13 @@ export type EnvelopedBook = {
 
 export type CanvasBag = { [fileId: string]: { type: MediaType, data: HTMLCanvasElement | HTMLVideoElement } };
 
-export async function readEnvelope(blob: Blob): Promise<Book> {
+export async function readEnvelope(blob: Blob, progress: (n: number) => void): Promise<Book> {
   const uint8Array = new Uint8Array(await blob.arrayBuffer());
   const envelopedBook: EnvelopedBook = decode(uint8Array);
 
   const bag: CanvasBag = {};
   if (envelopedBook.images) {
+    progress(0);
     for (const imageId in envelopedBook.images) {
       // TODO: Video対応
       const blob = new Blob([envelopedBook.images[imageId]], { type: 'image/png' });
@@ -39,9 +40,11 @@ export async function readEnvelope(blob: Blob): Promise<Book> {
       const canvas = createCanvasFromImage(image);
       (canvas as any)["envelopeFileId"] = imageId;
       bag[imageId] = { type: 'image', data: canvas };
+      progress(Object.keys(bag).length / Object.keys(envelopedBook.images).length);
     }
   }
   if (envelopedBook.medias) {
+    progress(0);
     for (const imageId in envelopedBook.medias) {
       const media = envelopedBook.medias[imageId];
       const blob = new Blob([media.data], { type: media.type === 'image' ? 'image/png' : 'video/mp4' });
@@ -62,6 +65,7 @@ export async function readEnvelope(blob: Blob): Promise<Book> {
         URL.revokeObjectURL(url);
         bag[imageId] = { type: 'video', data: video };
       }
+      progress(Object.keys(bag).length / Object.keys(envelopedBook.medias).length);
     }
   }
 
@@ -97,7 +101,7 @@ export async function readEnvelope(blob: Blob): Promise<Book> {
   return book;
 }
 
-export async function writeEnvelope(book: Book): Promise<Blob> {
+export async function writeEnvelope(book: Book, progress: (n: number) => void): Promise<Blob> {
   const envelopedBook: EnvelopedBook = {
     pages: [],
     direction: book.direction,
@@ -105,6 +109,7 @@ export async function writeEnvelope(book: Book): Promise<Blob> {
     notebook: book.notebook,
     medias: {},
   };
+
   for (const page of book.pages) {
     const markUp = await putFrameMedias(page.frameTree, envelopedBook.medias!, 'v');
     const bubbles = await putBubbleMedias(page.bubbles, envelopedBook.medias!);
@@ -119,6 +124,7 @@ export async function writeEnvelope(book: Book): Promise<Blob> {
       frameWidth: page.frameWidth,
     }
     envelopedBook.pages.push(serializedPage);    
+    progress(envelopedBook.pages.length / book.pages.length);
   }
 
   const encoded = encode(envelopedBook);
