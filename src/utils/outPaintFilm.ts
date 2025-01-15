@@ -1,7 +1,7 @@
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
-import { outPaint } from "../supabase";
-import { createCanvasFromBlob } from "../lib/layeredCanvas/tools/imageUtil";
+import { outPaint, pollImagingStatus } from "../supabase";
+import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import type { Rect, Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import type { Page } from 'manga-renderer';
@@ -33,8 +33,8 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
 
-  const response = await fetch(r.images[0]);
-  const canvas = await createCanvasFromBlob(await response.blob());
+  const images = await pollImagingStatus("outpaint", r.request_id);
+  const canvas = createCanvasFromImage(images[0]);
 
   const newFilm = film.clone();
   newFilm.media = new ImageMedia(canvas);

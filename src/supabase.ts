@@ -4,6 +4,7 @@ import { type TransformTextRequest, TransformTextResponseSchema } from "./utils/
 import { type TextToImageRequest, TextToImageResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { type OutPaintRequest, OutPaintResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { type RemoveBgRequest, RemoveBgResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
+import { type ImagingStatusRequest, ImagingStatusResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
 import { CheckUsernameAvailableResponseSchema, GetProfileResponseSchema, RecordPublicationResponseSchema, type RecordPublicationRequest } from "./utils/edgeFunctions/types/snsTypes.d";
 import { UpdateProfileResponseSchema, type UpdateProfileRequest } from "./utils/edgeFunctions/types/snsTypes.d";
@@ -12,6 +13,7 @@ import { Storyboard } from "$bookTypes/storyboard";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
+import { createImageFromBlob } from './lib/layeredCanvas/tools/imageUtil';
 
 export let supabase: SupabaseClient;
 
@@ -38,6 +40,10 @@ export async function transformText(req: TransformTextRequest) {
 
 export async function text2Image(req: TextToImageRequest) {
   return await invoke("charged/imaging/t2i", req, TextToImageResponseSchema);
+}
+
+export async function imagingStatus(req: ImagingStatusRequest) {
+  return await invoke("charged/imaging/status", req, ImagingStatusResponseSchema);
 }
 
 export async function outPaint(req: OutPaintRequest) {
@@ -109,4 +115,32 @@ export async function recordPublication(req: RecordPublicationRequest) {
 }
 
 export async function notifyShare(text: string) {
+}
+
+export async function pollImagingStatus(mode: string, request_id: string) {
+  let images: string[] | undefined;
+  while (!images) {
+    const status = await imagingStatus({mode, request_id});
+    console.log(status);
+    switch (status.status) {
+      case "IN_QUEUE":
+      await new Promise(resolve => setTimeout(resolve, 1000));
+        break;  
+      case "IN_PROGRESS":
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        break;
+      case "COMPLETED":
+        images = status.result!;
+        break;
+    } 
+  }
+
+  const imageElements: HTMLImageElement[] = await Promise.all(images.map(async imageUrl => {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const image = await createImageFromBlob(blob);
+    return image;
+  }));
+
+  return imageElements;
 }

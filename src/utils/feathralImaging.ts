@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { text2Image } from '../supabase';
+import { text2Image, imagingStatus, pollImagingStatus } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
@@ -23,6 +23,16 @@ export type Mode = "schnell" | "pro" | "chibi" | "manga";
 export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<HTMLImageElement[]> {
   console.log("running feathral");
   try {
+    let imageRequest: TextToImageRequest = {
+      prompt, 
+      image_size,
+      num_images,
+      mode, 
+    };
+    console.log(imageRequest);
+    const { request_id } = await text2Image(imageRequest);
+
+    /*
     let q = null;
     if (context.awakeWarningToken) {
       q = setTimeout(() => {
@@ -31,31 +41,19 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
       }, 10000);
       context.awakeWarningToken = false;
     }
-    let imageRequest: TextToImageRequest = {
-      prompt, 
-      image_size,
-      num_images,
-      mode, 
-    };
-    console.log(imageRequest);
+    */
 
     const perf = performance.now();
-    const r = await text2Image(imageRequest);
-    console.log("RESULT", r);
-    const { images } = r;
+    const images = await pollImagingStatus(mode, request_id);
+
+    /*
     if (q != null) {
       clearTimeout(q);
     }
+    */
     console.log("generateImageFromTextWithFlux", performance.now() - perf);
 
-    const imageElements: HTMLImageElement[] = await Promise.all(images.map(async imageUrl => {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const image = await createImageFromBlob(blob);
-      return image;
-    }));
-
-    return imageElements;
+    return images;
   }
   catch(error) {
     console.log(error);

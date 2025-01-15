@@ -13,7 +13,7 @@ export const TextToImageRequestSchema = z.object({
 export type TextToImageRequest = z.infer<typeof TextToImageRequestSchema>;
 
 export const TextToImageResponseSchema = z.object({
-  images: z.array(z.string()).describe("image urls"),
+  request_id: z.string().describe("request id"),
 });
 export type TextToImageResponse = z.infer<typeof TextToImageResponseSchema>;
 
@@ -36,7 +36,7 @@ export const OutPaintRequestSchema = z.object({
 export type OutPaintRequest = z.infer<typeof OutPaintRequestSchema>;
 
 export const OutPaintResponseSchema = z.object({
-  images: z.array(z.string()).describe("image urls"),
+  request_id: z.string().describe("request id"),
 });
 export type OutPaintResponse = z.infer<typeof OutPaintResponseSchema>;
 
@@ -46,8 +46,18 @@ export const RemoveBgRequestSchema = z.object({
 export type RemoveBgRequest = z.infer<typeof RemoveBgRequestSchema>;
 
 export const RemoveBgResponseSchema = z.object({
-  url: z.string().describe("image url"),
+  request_id: z.string().describe("request id"),
 });
 export type RemoveBgResponse = z.infer<typeof RemoveBgResponseSchema>;
 
+export const ImagingStatusRequestSchema = z.object({
+  mode: z.string(),
+  request_id: z.string(),
+});
+export type ImagingStatusRequest = z.infer<typeof ImagingStatusRequestSchema>;
 
+export const ImagingStatusResponseSchema = z.object({
+  status: z.string(),
+  result: z.array(z.string()).optional(),
+});
+export type ImagingStatusResponse = z.infer<typeof ImagingStatusResponseSchema>;
