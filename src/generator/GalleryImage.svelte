@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { createEventDispatcher } from "svelte";
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { imageViewerTarget } from '../utils/imageViewerStore';
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { createImageFromCanvas } from '../lib/layeredCanvas/tools/imageUtil';
 
   import drop from '../assets/drop.png';
   import reference from '../assets/reference.png';
@@ -22,10 +23,21 @@
   const dispatch = createEventDispatcher();
 
   $: onCanvasChanged(canvas);
-  function onCanvasChanged(c: HTMLCanvasElement) {
+  async function onCanvasChanged(c: HTMLCanvasElement) {
     if (c) {
       height = getHeight();
       console.log("onCanvasChanged", c.width, c.height, width, height);
+      console.log("change image size", canvas.width, canvas.height);
+      const w = Math.min(width, canvas.width);
+      const h = Math.min(height, canvas.height);
+
+      image = await createImageFromCanvas(canvas);
+      image.style.width = `${w}px`;
+      image.style.height = `${h}px`;
+      image.style.position = 'absolute';
+      image.style.top = (width / 2 - w / 2).toString() + 'px';
+      image.style.left = (height / 2 - h / 2).toString() + 'px';
+      container.appendChild(image);
     }
   }
 
@@ -70,29 +82,6 @@
   function getHeight() {
     return (canvas.height / canvas.width) * width;
   }
-
-  onMount(() => {
-    console.log("change image size", canvas.width, canvas.height);
-    const w = Math.min(width, canvas.width);
-    const h = Math.min(height, canvas.height);
-
-    image = new Image();
-    canvas.toBlob(async function(blob) {
-      const image = new Image();
-      if (blob !== null) {
-        const url = URL.createObjectURL(blob);
-        image.src = url;
-        await image.decode();
-        URL.revokeObjectURL(url);
-      }
-      image.style.width = `${w}px`;
-      image.style.height = `${h}px`;
-      image.style.position = 'absolute';
-      image.style.top = (width / 2 - w / 2).toString() + 'px';
-      image.style.left = (height / 2 - h / 2).toString() + 'px';
-      container.appendChild(image);
-    }, 'image/png');
-  });
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

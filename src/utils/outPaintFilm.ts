@@ -33,7 +33,7 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
 
-  const images = await pollImagingStatus("outpaint", r.request_id);
+  const { images } = await pollImagingStatus("outpaint", r.request_id);
   const canvas = createCanvasFromImage(images[0]);
 
   const newFilm = film.clone();

@@ -16,12 +16,7 @@
   }
 
   async function onDelete(e: CustomEvent<HTMLCanvasElement>) {
-    console.log(canvases.indexOf(e.detail));
-    canvases.splice(canvases.indexOf(e.detail), 1);
-    const newImages = canvases;
-    canvases = [];
-    await tick();
-    canvases = newImages;
+    canvases = canvases.filter(c => c !== e.detail);
     dispatch("delete", e.detail);
   }
 

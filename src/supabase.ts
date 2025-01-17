@@ -118,8 +118,8 @@ export async function notifyShare(text: string) {
 }
 
 export async function pollImagingStatus(mode: string, request_id: string) {
-  let images: string[] | undefined;
-  while (!images) {
+  let urls: string[] | undefined;
+  while (!urls) {
     const status = await imagingStatus({mode, request_id});
     console.log(status);
     switch (status.status) {
@@ -130,17 +130,17 @@ export async function pollImagingStatus(mode: string, request_id: string) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         break;
       case "COMPLETED":
-        images = status.result!;
+        urls = status.result!;
         break;
     } 
   }
 
-  const imageElements: HTMLImageElement[] = await Promise.all(images.map(async imageUrl => {
+  const images: HTMLImageElement[] = await Promise.all(urls.map(async imageUrl => {
     const response = await fetch(imageUrl);
     const blob = await response.blob();
     const image = await createImageFromBlob(blob);
     return image;
   }));
 
-  return imageElements;
+  return { urls, images };
 }

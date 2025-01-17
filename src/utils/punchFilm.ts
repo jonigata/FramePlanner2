@@ -11,7 +11,7 @@ export async function punchFilm(film: Film) {
   const dataUrl = imageMedia.canvas.toDataURL("image/png");
   const r = await removeBg({dataUrl});
 
-  const images = await pollImagingStatus("removebg", r.request_id);
+  const { images } = await pollImagingStatus("removebg", r.request_id);
 
   const canvas = createCanvasFromImage(images[0]);
   film.media = new ImageMedia(canvas);
