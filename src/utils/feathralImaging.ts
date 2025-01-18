@@ -35,7 +35,7 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
     const { request_id } = await text2Image(imageRequest);
 
     await saveRequest(get(fileSystem)!, mode, request_id);
-    return [];
+    // return [];
 
     const perf = performance.now();
     const { images } = await pollImagingStatus(mode, request_id);
@@ -120,7 +120,7 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
     const media = new ImageMedia(createCanvasFromImage(images[0]));
     const film = new Film(media);
     frame.filmStack.films.push(film);
-    frame.gallery.push(media.canvas);
+    frame.gallery.push(media.drawSourceCanvas);
     imagingContext.succeeded++;
     redrawToken.set(true);
   } else {

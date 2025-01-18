@@ -2,7 +2,7 @@
   import { rosterOpen, rosterSelectedCharacter } from "./rosterStore";
   import Drawer from "../utils/Drawer.svelte";
   import { onMount } from "svelte";
-  import type { Character } from "../lib/book/notebook";
+  import type { Character } from "$bookTypes/notebook";
   import { fileSystem } from "../filemanager/fileManagerStore";
   import { getNodeByPath, rm } from "../lib/filesystem/fileSystem";
   import trashIcon from '../assets/trash.png';

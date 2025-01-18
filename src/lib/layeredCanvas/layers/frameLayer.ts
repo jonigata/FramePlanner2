@@ -1254,8 +1254,8 @@ export class FrameLayer extends LayerBase {
     this.videoRedrawInterval = undefined;      
     if (layout) {
       for (const film of layout.element.filmStack.films) {
-        if (film.media instanceof VideoMedia) {
-          film.media.video.pause();
+        if (film.media.player) {
+          film.media.player.pause();
         }
       }
     }
@@ -1266,9 +1266,9 @@ export class FrameLayer extends LayerBase {
 
     let playFlag = false;
     for (const film of layout.element.filmStack.films) {
-      if (film.media instanceof VideoMedia) {
+      if (film.media.player) {
         playFlag = true;
-        film.media.video.play();
+        film.media.player.play();
       }
     }
     if (playFlag) {

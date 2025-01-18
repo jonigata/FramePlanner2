@@ -77,7 +77,7 @@ export class OutlineEffect extends Effect {
   async apply(inputMedia: Media): Promise<Media> { 
 
     if (this.inputMedia != inputMedia) {
-      const inputCanvas = (inputMedia as ImageMedia).canvas;
+      const inputCanvas = (inputMedia as ImageMedia).drawSource;
 
       const plainImage = FloatField.createFromImageOrCanvas(inputCanvas);
       const seedMap = JFACompute.createJFASeedMap(plainImage, 0.5, false);
@@ -86,7 +86,7 @@ export class OutlineEffect extends Effect {
     } else {
     }
 
-    const inputCanvas = (inputMedia as ImageMedia).canvas;
+    const inputCanvas = (inputMedia as ImageMedia).drawSource;
 
     // 入力自体へんかしている
     const baseWidth = Math.max(inputMedia.naturalWidth, inputMedia.naturalHeight);

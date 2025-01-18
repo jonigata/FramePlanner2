@@ -68,7 +68,7 @@
       const film = new Film(media);
       film.media = media;
       frame.filmStack.films.push(film);
-      frame.gallery.push(media.canvas);
+      frame.gallery.push(media.drawSourceCanvas);
 
       const transformer = new FilmStackTransformer(paperSize, frame.filmStack.films);
       transformer.scale(0.01);

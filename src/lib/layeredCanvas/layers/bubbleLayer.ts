@@ -1470,9 +1470,7 @@ export class BubbleLayer extends LayerBase {
     this.videoRedrawInterval = undefined;      
     if (bubble) {
       for (const film of bubble.filmStack.films) {
-        if (film.media instanceof VideoMedia) {
-          film.media.video.pause();
-        }
+        film.media.player?.pause();
       }
     }
   }
@@ -1482,9 +1480,9 @@ export class BubbleLayer extends LayerBase {
 
     let playFlag = false;
     for (const film of bubble.filmStack.films) {
-      if (film.media instanceof VideoMedia) {
+      if (film.media.player) {
         playFlag = true;
-        film.media.video.play();
+        film.media.player.play();
       }
     }
     if (playFlag) {

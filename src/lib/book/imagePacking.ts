@@ -138,7 +138,7 @@ export async function unpackFrameMedias(paperSize: Vector, markUp: any, loadMedi
   // films内のimageをgalleryに格納
   for (const film of frameTree.filmStack.films) {
     if (film.media instanceof ImageMedia) {
-      frameTree.gallery.push(film.media.canvas);
+      frameTree.gallery.push(film.media.drawSource);
     }
   }
 
@@ -197,7 +197,7 @@ export async function unpackBubbleMedias(paperSize: Vector, markUps: any[], Load
   for (const bubble of unpackedBubbles) {
     for (const film of bubble.filmStack.films) {
       if (film.media instanceof ImageMedia) {
-        bubble.gallery.push(film.media.canvas);
+        bubble.gallery.push(film.media.drawSource);
       }
     }
   }

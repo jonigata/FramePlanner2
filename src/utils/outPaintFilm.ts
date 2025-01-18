@@ -28,8 +28,8 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
     padding.bottom = tmp;
   }
 
-  const size = { width: imageMedia.canvas.width, height: imageMedia.canvas.height };
-  const imageUrl = imageMedia.canvas.toDataURL("image/png");
+  const size = { width: imageMedia.naturalWidth, height: imageMedia.naturalHeight };
+  const imageUrl = imageMedia.drawSourceCanvas.toDataURL("image/png");
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
 

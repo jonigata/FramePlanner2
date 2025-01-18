@@ -180,7 +180,7 @@ export class InlinePainterLayer extends LayerBase {
     if (!(media instanceof ImageMedia)) {
       return null;
     }
-    return media.canvas;
+    return media.drawSourceCanvas;
   }
 
   async undo() {

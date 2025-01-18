@@ -16,7 +16,8 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "$bookTypes/*": ["src/lib/book/types/*"]
+      "$bookTypes/*": ["src/lib/book/types/*"],
+      "$protocolTypes/*": ["src/utils/edgeFunctions/types/*"]
     }    
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", ],

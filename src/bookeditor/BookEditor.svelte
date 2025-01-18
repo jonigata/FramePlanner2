@@ -466,7 +466,7 @@
     await painter.runWithFrame(fit.page, fit.frame, fit.commandTargetFilm!);
     const media = fit.commandTargetFilm!.media;
     if (media instanceof ImageMedia) {
-      const canvas = media.canvas;
+      const canvas = media.drawSource; // HACK: ImageMediaのdrawSourceが実体であることを前提にしている
       (canvas as any)["clean"] = {};
     }
     commit(null);
