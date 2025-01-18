@@ -6,6 +6,11 @@ import { initializeApp } from "./firebase";
 import { initializeSupabase } from "./supabase";
 import { initPaperJs } from "./lib/layeredCanvas/tools/draw/bubbleGraphic"
 
+import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+  
+import { storePopup } from '@skeletonlabs/skeleton';
+storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
+
 // localhostか127.0.0.1だったら
 developmentFlag.set(
   location.hostname === "localhost" || location.hostname === "127.0.0.1" || 

@@ -9,6 +9,7 @@
   import { bookEditor } from "../bookStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { calculateFramePadding } from '../../utils/outPaintFilm'
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -44,6 +45,9 @@
   function onPunch(e: CustomEvent<Film>) {
     $frameInspectorTarget!.commandTargetFilm = e.detail;
     $frameInspectorTarget!.command = "punch";
+  }
+
+  function onVideo(e: CustomEvent<Film>) {
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
@@ -98,6 +102,7 @@
           on:scribble={onScribble} 
           on:generate={onGenerate} 
           on:punch={onPunch} 
+          on:video={onVideo}
           on:accept={onAccept}
           on:outpainting={onOutPainting}
           calculateOutPaintingCost={calculateOutPaintingCost}/>

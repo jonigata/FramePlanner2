@@ -35,7 +35,6 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
     const { request_id } = await text2Image(imageRequest);
 
     await saveRequest(get(fileSystem)!, mode, request_id);
-    return [];
 
     const perf = performance.now();
     const { images } = await pollImagingStatus(mode, request_id);

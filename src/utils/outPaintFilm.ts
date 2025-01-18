@@ -1,3 +1,4 @@
+import { get } from 'svelte/store';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { outPaint, pollImagingStatus } from "../supabase";
@@ -8,6 +9,8 @@ import type { Page } from 'manga-renderer';
 import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
+import { saveRequest } from '../filemanager/warehouse';
+import { fileSystem } from '../filemanager/fileManagerStore';
 
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
@@ -32,6 +35,7 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const imageUrl = imageMedia.canvas.toDataURL("image/png");
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
+  await saveRequest(get(fileSystem)!, "removebg", r.request_id);
 
   const { images } = await pollImagingStatus("outpaint", r.request_id);
   const canvas = createCanvasFromImage(images[0]);
