@@ -92,3 +92,13 @@ export async function imageToBlob(image: HTMLImageElement): Promise<Blob> {
   const canvas = createCanvasFromImage(image);
   return await canvasToBlob(canvas);
 }
+
+export async function createVideoFromBlob(blob: Blob): Promise<HTMLVideoElement> {
+  const video = document.createElement("video");
+  const url = URL.createObjectURL(blob);
+  video.src = url;
+  (video as any).file = blob;
+  await getFirstFrameOfVideo(video);
+  URL.revokeObjectURL(url);
+  return video;
+}

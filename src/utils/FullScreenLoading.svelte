@@ -6,10 +6,8 @@
   $: onLoadingChange($loading);
   function onLoadingChange(loading: boolean) {
     if (loading) {
-      console.log("open modal");
       openModal(Loading);
     } else {
-      console.log("close modal");
       closeModal();
     }
   }

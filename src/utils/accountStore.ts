@@ -21,8 +21,6 @@ interface AuthStore extends Writable<AuthState> {
 
 export type Provider = "google" | "github" | "discord" | "twitter";
 
-console.log("ENV", JSON.stringify(import.meta.env, null, 2));
-
 function createAuthStore(): AuthStore {
   const { subscribe, set, update } = writable<AuthState>({
     user: null,
@@ -32,12 +30,10 @@ function createAuthStore(): AuthStore {
 
   async function initialize(): Promise<() => void> {
     const cookies = document.cookie.split(/\s*;\s*/).map(cookie => cookie.split('='));
-    console.log("COOKIES(#)", cookies);
     const accessTokenCookie = cookies.find(x => x[0] == 'my-access-token');
     const refreshTokenCookie = cookies.find(x => x[0] == 'my-refresh-token');
     
     if (accessTokenCookie && refreshTokenCookie) {
-      console.log("COOKIES", accessTokenCookie, refreshTokenCookie);
       try {
         await supabase.auth.setSession({
           access_token: accessTokenCookie[1],
@@ -47,20 +43,16 @@ function createAuthStore(): AuthStore {
       catch (error) {
         console.error("setSession error");
       }
-    } else {
-      console.log("NO COOKIES");
     }
 
     // 認証状態の変更を監視
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(event);
 
       const isDevelopment = storeGet(developmentFlag);
       const domain = isDevelopment ? '.example.local' : '.manga-farm.online';
       const secure = isDevelopment ? '' : 'secure';
-      console.log("DOMAIN", domain);
 
       if (event === 'SIGNED_OUT') {
         // delete cookies on sign out
@@ -181,7 +173,6 @@ async function subscribeToWallet(uid: string) {
         filter: `id=eq.${uid}`,
       },
       (payload) => {
-        console.log(`PAYLOAD ${JSON.stringify(payload)}`);
         const money = payload.new.fragile + payload.new.money;
         onlineAccount.update((account) => {
           if (account) {
@@ -196,13 +187,11 @@ async function subscribeToWallet(uid: string) {
         console.error("ERROR", err);
         return;
       }
-      console.log("WATCHING: ", status);
     })
 }
 
 export function bootstrap() {
   authStore.subscribe(async (state) => {
-    console.log("STATE", state);
     if (state.loading) return;
 
     if (state.user) {
@@ -237,7 +226,6 @@ export function bootstrap() {
 
       // subscribe wallet changes
       await subscribeToWallet(state.user.id);
-      console.log(storeGet(onlineStatus));
     } else {
       onlineAccount.set(null);
       onlineStatus.set("signed-out");

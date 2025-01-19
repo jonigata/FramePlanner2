@@ -131,7 +131,7 @@ export class FirebaseFile extends File {
     await set(child(this.nodeRef, 'link'), id);
   }
 
-  async readCanvas(_waitsComplete: boolean): Promise<HTMLCanvasElement> {
+  async readCanvas(): Promise<HTMLCanvasElement> {
     const snapshot = await get(child(this.nodeRef, 'link'));
     const id = snapshot.val();
     return await (this.fileSystem as FirebaseFileSystem).storage!.readCanvas(id);

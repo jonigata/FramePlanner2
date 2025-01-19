@@ -50,3 +50,7 @@ export async function blobToSha1(blob: Blob) {
   const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
+
+export async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

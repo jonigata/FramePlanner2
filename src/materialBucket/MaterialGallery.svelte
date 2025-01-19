@@ -62,7 +62,7 @@
     const canvases = [];
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
-      const canvas = await material.asFile()!.readCanvas(true);
+      const canvas = await material.asFile()!.readCanvas() as HTMLCanvasElement;
       (canvas as any)["materialBindId"] = materials[i][0];
       canvases.push(canvas);
     }

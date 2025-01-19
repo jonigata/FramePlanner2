@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { fileSystem } from '../filemanager/fileManagerStore';
-import { text2Image, imagingStatus, pollImagingStatus } from '../supabase';
+import { text2Image, pollMediaStatus } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
@@ -22,7 +22,7 @@ export type ImagingContext = {
 
 export type Mode = "schnell" | "pro" | "chibi" | "manga";
 
-export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<HTMLImageElement[]> {
+export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<HTMLCanvasElement[]> {
   console.log("running feathral");
   try {
     let imageRequest: TextToImageRequest = {
@@ -34,15 +34,15 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
     console.log(imageRequest);
     const { request_id } = await text2Image(imageRequest);
 
-    await saveRequest(get(fileSystem)!, mode, request_id);
+    await saveRequest(get(fileSystem)!, "image", mode, request_id);
     // return [];
 
     const perf = performance.now();
-    const { images } = await pollImagingStatus(mode, request_id);
+    const { mediaResources } = await pollMediaStatus("image", mode, request_id);
 
     console.log("generateImageFromTextWithFlux", performance.now() - perf);
 
-    return images;
+    return mediaResources as HTMLCanvasElement[];
   }
   catch(error) {
     console.log(error);
@@ -116,8 +116,7 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
   console.log("postfix", postfix);
   const images = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
   if (0 < images.length) {
-    await images[0].decode();
-    const media = new ImageMedia(createCanvasFromImage(images[0]));
+    const media = new ImageMedia(images[0]);
     const film = new Film(media);
     frame.filmStack.films.push(film);
     frame.gallery.push(media.drawSourceCanvas);

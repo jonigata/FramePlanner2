@@ -22,7 +22,7 @@
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { type Folder, type File, ls } from '../lib/filesystem/fileSystem';
   import { rosterOpen, rosterSelectedCharacter } from './rosterStore';
-  import { imageToBlob } from '../lib/layeredCanvas/tools/imageUtil';
+  import { imageToBlob, createImageFromCanvas } from '../lib/layeredCanvas/tools/imageUtil';
   import { waitForChange } from '../utils/reactUtil';
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
@@ -264,19 +264,17 @@
       succeeded: 0,
       failed: 0,
     };
-    const images = await executeProcessAndNotify(
+    const canvases = await executeProcessAndNotify(
       5000, "画像が生成されました",
       async () => {
         return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, imagingContext);
       });
-    if (images == null) {
+    if (canvases == null) {
       c.portrait = null;
       return;
     }
 
-    await images[0].decode();
-    console.log(images);
-    c.portrait = images[0]; // HTMLImageElement
+    c.portrait = await createImageFromCanvas(canvases[0]); // HTMLImageElement
     notebook!.characters = notebook!.characters;
   }
 

@@ -16,7 +16,6 @@
     const dpr = window.devicePixelRatio || 1;
     canvasWidth = Math.ceil(w * dpr);
     canvasHeight = Math.ceil(h * dpr);
-    console.log("onChangeContainerSize", w, h, canvasWidth, canvasHeight);
     dispatch('resize', { width: w, height: h });
   }
 </script>

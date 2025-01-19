@@ -13,7 +13,7 @@ import { Storyboard } from "$bookTypes/storyboard";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
-import { createImageFromBlob } from './lib/layeredCanvas/tools/imageUtil';
+import { createCanvasFromBlob, createVideoFromBlob } from './lib/layeredCanvas/tools/imageUtil';
 
 export let supabase: SupabaseClient;
 
@@ -117,7 +117,7 @@ export async function recordPublication(req: RecordPublicationRequest) {
 export async function notifyShare(text: string) {
 }
 
-export async function pollImagingStatus(mode: string, request_id: string) {
+export async function pollMediaStatus(type: 'image' | 'video', mode: string, request_id: string) {
   let urls: string[] | undefined;
   while (!urls) {
     const status = await imagingStatus({mode, request_id});
@@ -135,12 +135,18 @@ export async function pollImagingStatus(mode: string, request_id: string) {
     } 
   }
 
-  const images: HTMLImageElement[] = await Promise.all(urls.map(async imageUrl => {
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    const image = await createImageFromBlob(blob);
-    return image;
-  }));
+  const mediaResources: (HTMLCanvasElement | HTMLVideoElement)[] = await Promise.all(
+    urls.map(async url => {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      if (type === 'video') {
+        const video = await createVideoFromBlob(blob);
+        return video;
+      } else {
+        const image = await createCanvasFromBlob(blob);
+        return image;
+      }
+    }));
 
-  return { urls, images };
+  return { urls, mediaResources };
 }

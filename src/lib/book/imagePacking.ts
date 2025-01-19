@@ -2,7 +2,7 @@ import type { Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { Film } from "../layeredCanvas/dataModels/film";
-import { ImageMedia, VideoMedia } from "../layeredCanvas/dataModels/media";
+import { ImageMedia, VideoMedia, type RemoteMediaReference } from "../layeredCanvas/dataModels/media";
 import { Effect } from "../layeredCanvas/dataModels/effect";
 
 export type MediaType = 'image' | 'video';
@@ -20,7 +20,7 @@ interface FilmMarkUp {
   effects: any[];
 }
 
-export type MediaResource = HTMLCanvasElement | HTMLVideoElement | null;
+export type MediaResource = HTMLCanvasElement | HTMLVideoElement | RemoteMediaReference | null;
 export type LoadMediaFunc = (imageId: string, mediaType: MediaType) => Promise<MediaResource>;
 export type SaveMediaFunc = (mediaResource: MediaResource, mediaType: MediaType) => Promise<string>;
   
@@ -164,7 +164,7 @@ export async function unpackBubbleMedias(paperSize: Vector, markUps: any[], Load
     if (imageMarkUp) {
       // 旧バージョンはvideoに対応していない
       const mediaResource = await LoadMediaFunc(imageMarkUp.image, 'image');
-      if (mediaResource) {
+      if (mediaResource instanceof HTMLCanvasElement) {
         const s_imageSize = Math.min(mediaResource.width, mediaResource.height) ;
         const s_pageSize = Math.min(paperSize[0], paperSize[1]);
 
@@ -214,7 +214,7 @@ export async function packFilms(films: Film[], saveMediaFunc: SaveMediaFunc): Pr
       effects.push({ tag: effect.tag, properties: markUp });
     }
 
-    const fileId = await saveMediaFunc(film.media.drawSource, film.media.type);
+    const fileId = await saveMediaFunc(film.media.persistentSource, film.media.type);
 
     const filmMarkUp = {
       ulid: film.ulid,
@@ -249,8 +249,8 @@ export async function unpackFilms(markUp: any, loadMediaFunc: LoadMediaFunc): Pr
 
     const media = 
       filmMarkUp.mediaType === 'video' ? // 古いデータはundefined
-      new VideoMedia(mediaResource as HTMLVideoElement) : 
-      new ImageMedia(mediaResource as HTMLCanvasElement);
+      new VideoMedia(mediaResource as any) : 
+      new ImageMedia(mediaResource as any);
 
     const film = new Film(media);
     if (filmMarkUp.ulid) film.ulid = filmMarkUp.ulid;

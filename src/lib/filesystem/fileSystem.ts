@@ -8,6 +8,9 @@ export type FileSystemId = string & { _FileSystemId: never };
 export type Entry = [BindId, string, NodeId];
 export type EmbodiedEntry = [BindId, string, Node];
 
+// リモートメディア=fal.aiなどの画像生成サービス側にあり、まだダウンロードしていないファイル
+export type RemoteMediaReference = { mode: string, requestId: string };
+
 export interface Watcher {
   onInsert: (bindId: BindId, index: number, sourceParent: Folder | null) => void;
   onDelete: (bindId: BindId) => void;
@@ -81,10 +84,10 @@ export abstract class Node implements Node {
 export interface File {
   read(): Promise<any>;
   write(data: any): Promise<void>;
-  readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement>;
-  writeCanvas(canvas: HTMLCanvasElement): Promise<void>;
-  readVideo(waitsComplete: boolean): Promise<HTMLVideoElement>;
-  writeVideo(video: HTMLVideoElement): Promise<void>;
+  readCanvas(): Promise<HTMLCanvasElement | RemoteMediaReference>;
+  writeCanvas(canvas: HTMLCanvasElement | RemoteMediaReference): Promise<void>;
+  readVideo(): Promise<HTMLVideoElement | RemoteMediaReference>;
+  writeVideo(video: HTMLVideoElement | RemoteMediaReference): Promise<void>;
   readBlob(): Promise<Blob>;
   writeBlob(blob: Blob): Promise<void>;
 }

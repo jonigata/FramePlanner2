@@ -1,8 +1,9 @@
-import type { FileSystem, NodeId } from "../lib/filesystem/fileSystem";
+import type { FileSystem } from "../lib/filesystem/fileSystem";
 
 export interface RemoteRequest {
   type: "request";
   createdAt: string;
+  mediaType: "image" | "video";
   mode: string;
   requestId: string;
 }
@@ -10,6 +11,7 @@ export interface RemoteRequest {
 export interface RemoteEntity {
   type: "entity";
   createdAt: string;
+  mediaType: "image" | "video";
   mode: string;
   requestId: string;
   imageUrls: string[];
@@ -17,7 +19,7 @@ export interface RemoteEntity {
 
 export type RemoteEntry = RemoteEntity | RemoteRequest;
 
-export async function saveRequest(fileSystem: FileSystem, mode: string, requestId: string) {
+export async function saveRequest(fileSystem: FileSystem, mediaType: "image" | "video", mode: string, requestId: string) {
   const root = await fileSystem.getRoot();
   const warehouse = (await root.getNodeByName("倉庫"))!.asFolder()!;
 
@@ -25,6 +27,7 @@ export async function saveRequest(fileSystem: FileSystem, mode: string, requestI
   file.write({
     type: "request", 
     createdAt: new Date().toISOString(),
+    mediaType,
     mode,
     requestId, 
   });
@@ -32,14 +35,15 @@ export async function saveRequest(fileSystem: FileSystem, mode: string, requestI
   await warehouse.link(requestId, file.id);
 }
 
-export async function saveEntity(fileSystem: FileSystem, mode: string, requestId: string, imageUrls: string[]) {
+export async function saveEntity(fileSystem: FileSystem, mediaType: "image" | "video", mode: string, requestId: string, imageUrls: string[]) {
   const root = await fileSystem.getRoot();
   const warehouse = (await root.getNodeByName("倉庫"))!.asFolder()!;
 
   const file = (await warehouse.getEmbodiedEntryByName(requestId))![2].asFile()!;
   file.write({
     type: "entity", 
-  createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    mediaType,
     mode,
     requestId,
     imageUrls,

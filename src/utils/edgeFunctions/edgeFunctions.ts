@@ -7,7 +7,6 @@ export async function invoke<Req, Res>(functionName: string, req: Req, responseS
     {
       body: JSON.stringify(req)
     });
-  console.log("DATA", data);
 
   return responseSchema.parse(data.data); // validate response
 }

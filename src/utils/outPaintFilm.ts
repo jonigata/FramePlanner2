@@ -1,10 +1,9 @@
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
+import type { Page } from '../lib/book/book';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
-import { outPaint, pollImagingStatus } from "../supabase";
-import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
+import { outPaint, pollMediaStatus } from "../supabase";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import type { Rect, Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
-import type { Page } from 'manga-renderer';
 import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -33,8 +32,8 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
 
-  const { images } = await pollImagingStatus("outpaint", r.request_id);
-  const canvas = createCanvasFromImage(images[0]);
+  const { mediaResources } = await pollMediaStatus("image", "outpaint", r.request_id);
+  const canvas = mediaResources[0] as HTMLCanvasElement;
 
   const newFilm = film.clone();
   newFilm.media = new ImageMedia(canvas);

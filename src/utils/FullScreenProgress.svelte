@@ -8,13 +8,11 @@
   $: onProgressChange($progress);
   function onProgressChange(progress: number | null) {
     if (progress != null) {
-      console.log("open modal");
       if (!opened) {
         opened = true;
         openModal(Progress);
       }
     } else {
-      console.log("close modal");
       opened = false;
       closeModal();
     }

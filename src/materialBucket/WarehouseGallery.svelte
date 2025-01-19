@@ -10,7 +10,7 @@
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher } from 'svelte';
-  import { pollImagingStatus } from '../supabase';
+  import { pollMediaStatus } from '../supabase';
   import { createCanvasFromImage, createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { ls } from '../lib/filesystem/fileSystem';
 
@@ -78,18 +78,20 @@
         const loadingIndex = canvases.length;
         canvases.push(loadingCanvas);
         
-        pollImagingStatus(entry.mode, entry.requestId).then(async ({urls, images}) => {
-          if (images.length > 0) {
+        pollMediaStatus(entry.mediaType, entry.mode, entry.requestId).then(async ({urls, mediaResources}) => {
+          if (mediaResources.length > 0) {
             console.log("The images are ready!");
 
-            await saveEntity($fileSystem!, entry.mode, entry.requestId, urls);
+            await saveEntity($fileSystem!, entry.mediaType, entry.mode, entry.requestId, urls);
 
-            const generatedCanvases = await Promise.all(images.map(img => createCanvasFromImage(img)));
-            generatedCanvases.forEach((canvas) => {
-              (canvas as any)["requestId"] = entry.requestId;
+            // TODO: Video対応
+            const canvases = mediaResources.filter((mediaResource) => mediaResource instanceof HTMLCanvasElement);
+
+            canvases.forEach((mediaResource) => {
+              (mediaResource as any)["requestId"] = entry.requestId;
             });
 
-            canvases.splice(loadingIndex, 1, ...generatedCanvases);
+            canvases.splice(loadingIndex, 1, ...canvases);
             gallery = [...canvases];
           }
         }).catch(console.error);

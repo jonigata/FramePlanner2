@@ -1,20 +1,20 @@
 import type { Vector } from "../tools/geometry/geometry";
-import { EventEmitter } from 'events';
 
 export type MediaType = 'image' | 'video';
+export type RemoteMediaReference = { mode: string, requestId: string };
 
 export interface Media {
   readonly player: Player | null;
   readonly drawSource: HTMLCanvasElement | HTMLVideoElement;
   readonly drawSourceCanvas: HTMLCanvasElement;
+  readonly persistentSource: HTMLCanvasElement | HTMLVideoElement | RemoteMediaReference; 
   readonly naturalWidth: number;
   readonly naturalHeight: number;
   readonly type: MediaType;
   readonly size: Vector;
   readonly fileId: { [key: string]: string };
   readonly isLoaded: boolean;
-  subscribeLoadStatusChange(listener: (isLoaded: boolean) => void): () => void;
-  setLoaded(isLoaded: boolean): void;
+  setMedia(media: HTMLCanvasElement | HTMLVideoElement): void;
 }
 
 export interface Player {
@@ -23,7 +23,7 @@ export interface Player {
   seek(time: number): Promise<void>;
 }
 
-export abstract class MediaBase extends EventEmitter implements Media {
+export abstract class MediaBase implements Media {
   fileId: { [key: string]: string }; // filesystemId => fileId
   protected _isLoaded: boolean = false;
   private static loadingCanvas: HTMLCanvasElement;
@@ -32,7 +32,6 @@ export abstract class MediaBase extends EventEmitter implements Media {
   }
 
   constructor() {
-    super();
     this.fileId = {};
   }
 
@@ -43,6 +42,7 @@ export abstract class MediaBase extends EventEmitter implements Media {
   abstract get player(): Player | null;
   abstract get drawSource(): HTMLCanvasElement | HTMLVideoElement;
   abstract get drawSourceCanvas(): HTMLCanvasElement;
+  abstract get persistentSource(): HTMLCanvasElement | HTMLVideoElement | RemoteMediaReference;
   abstract get naturalWidth(): number;
   abstract get naturalHeight(): number;
   abstract get type(): MediaType;
@@ -51,18 +51,10 @@ export abstract class MediaBase extends EventEmitter implements Media {
     return this._isLoaded;
   }
 
-  subscribeLoadStatusChange(listener: (isLoaded: boolean) => void): () => void {
-    this.on('loadStatusChange', listener);
-    return () => {
-      this.off('loadStatusChange', listener);
-    };
-  }
+  abstract setMedia(media: HTMLCanvasElement | HTMLVideoElement): void;
 
   setLoaded(isLoaded: boolean): void {
-    if (this._isLoaded !== isLoaded) {
-      this._isLoaded = isLoaded;
-      this.emit('loadStatusChange', isLoaded);
-    }
+    this._isLoaded = isLoaded;
   }
 
   getFileId(fileSystemId: string): string {
@@ -101,21 +93,36 @@ export abstract class MediaBase extends EventEmitter implements Media {
 
 export class ImageMedia extends MediaBase {
   private canvas: HTMLCanvasElement | undefined;
-  constructor(canvas?: HTMLCanvasElement) {
+  private remoteMediaReference: RemoteMediaReference | undefined;
+
+  constructor(mediaResource: HTMLCanvasElement | RemoteMediaReference) {
+    console.log("ImageMedia.constructor", mediaResource);
     super();
-    if (canvas) {
-      this.setCanvas(canvas);
+    if (mediaResource instanceof HTMLCanvasElement) {
+      this.setCanvas(mediaResource);
+    } else {
+      this.remoteMediaReference = mediaResource;
     }
+  }
+
+  setMedia(media: HTMLCanvasElement) {
+    console.log("ImageMedia.setMedia", media);
+    this.setCanvas(media);
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
+    this.remoteMediaReference = undefined;
     this.setLoaded(true);
   }
 
   get player(): Player | null { return null; }
   get drawSource(): HTMLCanvasElement { return this.canvas ?? this.getLoadingCanvas(); }
   get drawSourceCanvas(): HTMLCanvasElement { return this.drawSource; }
+  get persistentSource(): HTMLCanvasElement | RemoteMediaReference { 
+    console.log("ImageMedia.persistentSource", this.remoteMediaReference, this.drawSource);
+    return this.remoteMediaReference ?? this.drawSource; 
+  }
   get naturalWidth(): number { return this.drawSource.width; }
   get naturalHeight(): number { return this.drawSource.height; }
   get type(): MediaType { return 'image'; }
@@ -123,15 +130,24 @@ export class ImageMedia extends MediaBase {
 
 export class VideoMedia extends MediaBase {
   private video: HTMLVideoElement | undefined;
-  constructor(video?: HTMLVideoElement) {
+  private remoteMediaReference: RemoteMediaReference | undefined;
+
+  constructor(mediaResource: HTMLVideoElement | RemoteMediaReference) {
     super();
-    if (video) {
-      this.setVideo(video);
+    if (mediaResource instanceof HTMLVideoElement) {
+      this.setVideo(mediaResource);
+    } else {
+      this.remoteMediaReference = mediaResource;
     }
+  }
+
+  setMedia(media: HTMLVideoElement) {
+    this.setVideo(media);
   }
 
   setVideo(video: HTMLVideoElement) {
     this.video = video;
+    this.remoteMediaReference = undefined
     this.setLoaded(true);
   }
 
@@ -152,6 +168,7 @@ export class VideoMedia extends MediaBase {
     ctx.drawImage(this.video!, 0, 0);
     return canvas;
   }
+  get persistentSource(): HTMLVideoElement | RemoteMediaReference { return this.remoteMediaReference ?? this.video!; }
   get naturalWidth(): number { return this.video ? this.video.videoWidth : this.getLoadingCanvas().width; }
   get naturalHeight(): number { return this.video ? this.video.videoHeight : this.getLoadingCanvas().height; }
   get type(): MediaType { return 'video'; }

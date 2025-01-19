@@ -30,7 +30,6 @@
     return rosterOpen.subscribe(async (value) => {
       if (value) {
         if (!opened) {
-          console.log("roster opened");
           opened = true;
           const fs = $fileSystem!;
           const folder = (
@@ -53,7 +52,6 @@
           characters = characters;
         }
       } else {
-        console.log("roster closed");
         opened = false;
       }
     });

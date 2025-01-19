@@ -63,25 +63,14 @@
         failed: 0,
       };
 
-      const images = await executeProcessAndNotify(
+      const canvases = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
           return await generateFluxImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, imagingContext);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      if (images.length === 0) {
+      if (canvases.length === 0) {
         return;
-      }
-
-      const promises = [];
-      for (let i = 0; i < images.length; i++) {
-        promises.push(images[i].decode());
-      }
-      await Promise.all(promises);
-      
-      const canvases = [];
-      for (let i = 0; i < images.length; i++) {
-        canvases.push(createCanvasFromImage(images[i]));
       }
 
       gallery.push(...canvases);

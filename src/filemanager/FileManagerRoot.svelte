@@ -24,7 +24,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
-  import { effectProcessorQueue } from '../utils/effectprocessor/effectProcessorStore';
+  import { filmProcessorQueue } from '../utils/filmprocessor/filmProcessorStore';
   import { emptyNotebook } from '$bookTypes/notebook';
   import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
@@ -186,13 +186,11 @@
   }
 
   async function loadSharedBook(): Promise<boolean> {
-    console.log("loadSharedBook");
     const localFileSystem = fileSystem; // ややこしいのでalias
     const localRoot = await localFileSystem.getRoot();
     const localDesktop = (await localRoot.getNodeByName("デスクトップ"))!.asFolder()!;
 
     const urlParams = new URLSearchParams(window.location.search);
-    console.log("URLParams", urlParams);
     if (urlParams.has('box') && urlParams.get('file')) {
       logEvent(getAnalytics(), 'shared');
       const box = urlParams.get('box')!;
@@ -314,7 +312,8 @@
     const usedImages = [];
     for (const imageFile of usedImageFiles) {
       const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
-      const canvas = await file.readCanvas(true);
+      const canvas = await file.readCanvas();
+      if (!(canvas instanceof HTMLCanvasElement)) {continue;}
       console.log("loaded used image", canvas);
       usedImages.push(canvas);
     }
@@ -322,7 +321,8 @@
     const strayImages = [];
     for (const imageFile of strayImageFiles) {
       const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
-      const canvas = await file.asFile().readCanvas(true);
+      const canvas = await file.asFile().readCanvas();
+      if (!(canvas instanceof HTMLCanvasElement)) {continue;}
       console.log("loaded stray image", canvas);
       strayImages.push(canvas);
     }
@@ -389,7 +389,7 @@
     // book内のfilmをすべてpublishする
     const films = collectAllFilms(book);
     for (const film of films) {
-      effectProcessorQueue.publish(film);
+      filmProcessorQueue.publish(film);
     }
   }
 

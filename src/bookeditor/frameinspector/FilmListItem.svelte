@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { Effect, OutlineEffect } from "../../lib/layeredCanvas/dataModels/effect";
   import { redrawToken } from '../bookStore';
   import FilmEffect from "./FilmEffect.svelte";
   import { moveInArray } from '../../utils/moveInArray';
-  import { sortableList } from '../../utils/sortableList'
-  import { effectProcessorQueue } from '../../utils/effectprocessor/effectProcessorStore';
+  import { sortableList } from '../../utils/sortableList';
+  import { filmProcessorQueue } from '../../utils/filmprocessor/filmProcessorStore';
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -96,7 +96,7 @@
           break;
       }
       film!.effects = film!.effects;
-      effectProcessorQueue.publish(film!);
+      filmProcessorQueue.publish(film!);
     };
   }
 
@@ -111,7 +111,7 @@
     console.log("onDeleteEffect", index);
     film!.effects.splice(index, 1);
     film!.effects = film!.effects;
-    effectProcessorQueue.publish(film!);
+    filmProcessorQueue.publish(film!);
     console.log("--- onDeleteEffect ---");
     dispatch('commit', true);
   }
@@ -124,7 +124,7 @@
       }
       if (flag) {
         effect.setOutputDirty();
-        effectProcessorQueue.publish(film!);
+        filmProcessorQueue.publish(film!);
       }
     }
     dispatch('commit', false);
@@ -145,6 +145,10 @@
     if (source) {
       outPaintingCost = calculateOutPaintingCost(film!);
     }
+  }
+
+  $: if($redrawToken) {
+    canvas = canvas;
   }
 
 </script>

@@ -221,7 +221,6 @@
 
   $: onChangePaperSize($newPageProperty.paperSize);
   function onChangePaperSize(paperSize: [number, number]) {
-    console.log("onChangePaperSize");
     if ($mainBook == null) { return; }
     for (const page of $mainBook.pages) {
       page.paperSize = paperSize;
@@ -423,7 +422,6 @@
 
   $: onFrameCommand($frameInspectorTarget);
   async function onFrameCommand(fit: FrameInspectorTarget | null) {
-    console.log("onFrameCommand", fit);
     delayedCommiter.force();
     if (fit && fit.command != null) {
       $frameInspectorTarget = { ...fit, command: null };

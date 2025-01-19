@@ -1,6 +1,6 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import type { NodeId, NodeType, BindId, Entry } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
 import { getFirstFrameOfVideo } from '../layeredCanvas/tools/imageUtil';
@@ -295,94 +295,85 @@ export class IndexedDBFile extends File {
     await this.db.put('nodes', { id: this.id, type: 'file', content: data });
   }
 
-  async readCanvas(waitsComplete: boolean): Promise<HTMLCanvasElement> {
+  async readCanvas(): Promise<HTMLCanvasElement | RemoteMediaReference> {
+    const data = await this.db.get('nodes', this.id)!;
+    if (data.remote) {
+      return data.remote as RemoteMediaReference;
+    }
+
     const canvas = document.createElement("canvas");
 
-    async function makeCanvasFromData(data: any): Promise<void> {
-      if (data.blob) {
-        const image = new Image();
-        image.src = URL.createObjectURL(data.blob);
-        await image.decode();
-        URL.revokeObjectURL(image.src);
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(image, 0, 0);
-      } else if (data.content){
-        const image = new Image();
-        image.src = data.content;
-        await image.decode();
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(image, 0, 0);
-      } else {
-        throw new Error('No content or blob in the file.');
-      }
+    if (data.blob) {
+      const image = new Image();
+      image.src = URL.createObjectURL(data.blob);
+      await image.decode();
+      URL.revokeObjectURL(image.src);
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+    } else if (data.content){
+      const image = new Image();
+      image.src = data.content;
+      await image.decode();
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+    } else {
+      throw new Error('No content or blob in the file.');
     }
 
-    if (waitsComplete) {
-      const data = await this.db.get('nodes', this.id)!;
-      await makeCanvasFromData(data);
-    } else {
-      this.db.get('nodes', this.id).then(async (data) => {
-        await makeCanvasFromData(data);
-      }).catch((e) => {
-        console.log(e);
-      });
-    }
     return canvas;
   }
 
-  async readVideo(waitsComplete: boolean): Promise<HTMLVideoElement> {
+  async readVideo(): Promise<HTMLVideoElement | RemoteMediaReference> {
     console.log("READING VIDEO");
+    const data = await this.db.get('nodes', this.id)!;
+    if (data.remote) {
+      return data.remote as RemoteMediaReference;
+    }
 
     const video = document.createElement("video");
+    const url = URL.createObjectURL(data.blob);
+    console.log(url);
+    video.src = url;
+    (video as any).file = data.blob;
+    await getFirstFrameOfVideo(video);
+    URL.revokeObjectURL(url);
 
-    async function makeVideoFromData(data: any): Promise<void> {
-      const url = URL.createObjectURL(data.blob);
-      console.log(url);
-      video.src = url;
-      (video as any).file = data.blob;
-      await getFirstFrameOfVideo(video);
-      URL.revokeObjectURL(url);
-    }
-
-    if (waitsComplete) {
-      const data = await this.db.get('nodes', this.id)!;
-      await makeVideoFromData(data);
-    } else {
-      this.db.get('nodes', this.id).then(async (data) => {
-        await makeVideoFromData(data);
-      }).catch((e) => {
-        console.log(e);
-      });
-    }
     return video;
   }
 
-  async writeCanvas(canvas: HTMLCanvasElement): Promise<void> {
-    const blob: Blob = await new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-          if (blob) {
-              resolve(blob);
-          } else {
-              reject(new Error('Failed to convert canvas to Blob.'));
-          }
-      }, 'image/png');
-    });
-    await this.db.put('nodes', { id: this.id, type: 'file', blob: blob });
-  }
-
-  async writeVideo(video: HTMLVideoElement): Promise<void> {
-    const file = (video as any).file;
-    if (!file) {
-      console.trace();
-      throw new Error('Video file not associated with the video element.');
+  async writeCanvas(canvas: HTMLCanvasElement | RemoteMediaReference): Promise<void> {
+    if (canvas instanceof HTMLCanvasElement) {
+      const blob: Blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (blob) {
+                resolve(blob);
+            } else {
+                reject(new Error('Failed to convert canvas to Blob.'));
+            }
+        }, 'image/png');
+      });
+      await this.db.put('nodes', { id: this.id, type: 'file', blob: blob });
+    } else {
+      await this.db.put('nodes', { id: this.id, type: 'file', remote: { mode: canvas.mode, requestId: canvas.requestId } });
     }
-    await this.db.put('nodes', { id: this.id, type: 'file', blob: file });
   }
 
+  async writeVideo(video: HTMLVideoElement | RemoteMediaReference): Promise<void> {
+    if (video instanceof HTMLVideoElement) {
+      const file = (video as any).file;
+      if (!file) {
+        console.trace();
+        throw new Error('Video file not associated with the video element.');
+      }
+      await this.db.put('nodes', { id: this.id, type: 'file', blob: file });
+    } else {
+      await this.db.put('nodes', { id: this.id, type: 'file', remote: { mode: video.mode, requestId: video.requestId } });
+    }
+  }
 
   async readBlob(): Promise<Blob> {
     // 現状envelope格納専用のため

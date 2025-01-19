@@ -73,7 +73,6 @@ export class SupabaseFileSystem extends FileSystem {
         await this.storage!.erase(linkId);
       }
     }
-    console.log("destroyNode", id);
     await supabase
       .from('cloud_files')
       .delete()
@@ -99,15 +98,11 @@ export class SupabaseFileSystem extends FileSystem {
   }
 
   async getRoot(): Promise<Folder> {
-    console.log("getRoot:UserId", this.userId);
     const rootId = "root" as NodeId;
-    console.log("searching...");
     const node = await this.getNode(rootId) as Folder;
     if (node) { 
-      console.log("found");
       return node; 
     }
-    console.log("not found");
     await supabase
       .from('cloud_files')
       .insert([{ id: rootId, type: 'folder', owner_id: this.userId }]);
@@ -154,7 +149,7 @@ export class SupabaseFile extends File {
       .eq('id', this.id);
   }
 
-  async readCanvas(_waitsComplete: boolean): Promise<HTMLCanvasElement> {
+  async readCanvas(): Promise<HTMLCanvasElement> {
     const { data, error } = await supabase
       .from('cloud_files')
       .select('link')

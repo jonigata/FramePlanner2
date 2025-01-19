@@ -103,7 +103,6 @@
     bootstrap();
 
     const urlParams = new URLSearchParams(window.location.search);
-    console.log("URLParams", urlParams);
 
     if (urlParams.has('saveFiles')) {
       const data: any = await copyIndexedDB('FileSystemDB');
