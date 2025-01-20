@@ -7,8 +7,8 @@ export async function buildFileSystem(): Promise<FileSystem> {
   await fs.open();
 
   await makeFolders(fs, specialFolders);
-  const tree = await folderTree(fs);
-  console.log(tree);
+  // const tree = await folderTree(fs);
+  // console.log(tree);
 
   return fs;
 }

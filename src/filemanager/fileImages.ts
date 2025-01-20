@@ -70,9 +70,7 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
   } else {
     try {
       const file = (await fileSystem.getNode(mediaResourceId as NodeId))!.asFile()!;
-
-      const mediaResource: any = 
-        mediaType === "image" ? await file.readCanvas() : await file.readVideo();
+      const mediaResource = file.readMediaResource();
 
       const r: any = mediaResource;
       r["fileId"] = {}
@@ -97,17 +95,6 @@ async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, vi
   
   const r = mediaResource as any;
 
-  async function writeTo(file: File) {
-    console.log("************** WRITE MEDIA", r);
-    if (mediaType === "image") {
-      await file.writeCanvas(r);
-    } else if (mediaType === "video") {
-      await file.writeVideo(r);
-    } else {
-      throw new Error("saveMediaResource: unknown mediaType");
-    }
-  }
-
   mediaResourceCache[fileSystem.id] ??= {};
   r["fileId"] ??= {};
   r["clean"] ??= {};
@@ -117,7 +104,7 @@ async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, vi
     if (!r["clean"][fileSystem.id]) {
       console.log("************** DIRTY MEDIA");
       const file = (await fileSystem.getNode(fileId))!.asFile()!;
-      await writeTo(file)
+      await file.writeMediaResource(r)
       return fileId;
     }
     if (mediaResourceCache[fileSystem.id][fileId]) {
@@ -127,7 +114,7 @@ async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, vi
     throw new Error("saveMediaResource: fileId is not null but canvas is not in cache");
   } else {
     const file = await fileSystem.createFile();
-    await writeTo(file);
+    file.writeMediaResource(r);
     r["fileId"][fileSystem.id] = file.id;
     r["clean"][fileSystem.id] = true;
     mediaResourceCache[fileSystem.id][file.id] = mediaResource;

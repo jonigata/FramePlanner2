@@ -11,6 +11,7 @@ import { emptyNotebook } from "$bookTypes/notebook";
 import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages";
 import { writeEnvelope, readEnvelope } from "../lib/book/envelope";
 import { dryUnpackBubbleMedias, dryUnpackFrameMedias } from "../lib/book/imagePacking";
+import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
 export type Dragging = {
   fileSystem: FileSystem;
@@ -229,15 +230,15 @@ export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images
   }
 }
 
-export async function saveMaterialCanvas(fileSystem: FileSystem, canvas: HTMLCanvasElement): Promise<BindId> {
+export async function saveMaterial(fileSystem: FileSystem, media: Media): Promise<BindId> {
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
   const file = await fileSystem.createFile();
-  await file.writeCanvas(canvas);
+  await file.writeMediaResource(media.persistentSource);
   return await materialFolder.link(file.id, file.id);
 }
 
-export async function deleteMaterialCanvas(fileSystem: FileSystem, materialBindId: BindId): Promise<void> {
+export async function deleteMaterial(fileSystem: FileSystem, materialBindId: BindId): Promise<void> {
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
   const nodeId = (await materialFolder.getEntry(materialBindId))![2];

@@ -488,8 +488,8 @@
     const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
     const leafLayout = findLayoutOf(pageLayout, leaf);
 
-    const { canvas, prompt } = r;
-    const film = new Film(new ImageMedia(canvas));
+    const { media, prompt } = r;
+    const film = new Film(media);
     film.prompt = prompt;
 
     const frameRect = trapezoidBoundingRect(leafLayout!.corners);
@@ -507,7 +507,7 @@
     const bubble = bit.bubble;
     const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
     if (r == null) { return; }
-    const film = new Film(new ImageMedia(r.canvas));
+    const film = new Film(r.media);
     const paperSize = bit.page.paperSize;
     const bubbleSize = bubble.getPhysicalSize(paperSize);
     const scale = minimumBoundingScale(film.media.size, bubbleSize);

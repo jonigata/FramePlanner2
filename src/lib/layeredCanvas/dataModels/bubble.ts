@@ -4,6 +4,7 @@ import { rectContains } from '../tools/geometry/geometry';
 import { type RectHandle, rectHandles } from '../tools/rectHandle';
 import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawText";
 import { type Film, FilmStack, insertFilms } from "./film";
+import type { Media } from "./media";
 
 const minimumBubbleSize = 72;
 const threshold = 10;
@@ -57,7 +58,7 @@ export class Bubble {
   appearanceDelay?: number; // ムービー生成時に使う出現までの時間(コマ単位)
   hidesText?: boolean; // ムービー生成時に使うテキスト非表示フラグ
   prompt: string = '';
-  gallery: HTMLCanvasElement[] = [];
+  gallery: Media[] = [];
 
   renderInfo?: BubbleRenderInfo;
 

@@ -16,8 +16,6 @@
   import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import { collectGarbage } from '../utils/garbageCollection';
-  import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { DelayedCommiter } from '../utils/delayedCommiter';
   import { loading } from '../utils/loadingStore'
@@ -306,31 +304,6 @@
   }
 
   async function displayStoredImages() {
-    $loading = true;
-    const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
-
-    const usedImages = [];
-    for (const imageFile of usedImageFiles) {
-      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
-      const canvas = await file.readCanvas();
-      if (!(canvas instanceof HTMLCanvasElement)) {continue;}
-      console.log("loaded used image", canvas);
-      usedImages.push(canvas);
-    }
-
-    const strayImages = [];
-    for (const imageFile of strayImageFiles) {
-      const file = (await fileSystem.getNode(imageFile as NodeId))!.asFile()!;
-      const canvas = await file.asFile().readCanvas();
-      if (!(canvas instanceof HTMLCanvasElement)) {continue;}
-      console.log("loaded stray image", canvas);
-      strayImages.push(canvas);
-    }
-
-    $browserUsedImages = usedImages;
-    $browserStrayImages = strayImages;
-    $loading = false;
-
     const d: ModalSettings = {
       type: 'component',
       component: 'fileBrowser',

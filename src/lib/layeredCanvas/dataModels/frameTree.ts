@@ -2,6 +2,7 @@ import { type Vector, lineIntersection, line, line2, deg2rad, isVectorZero, add2
 import { trapezoidBoundingRect, type Trapezoid, isPointInTrapezoid, extendTrapezoid, pointToQuadrilateralDistance } from "../tools/geometry/trapezoid";
 import { type RectHandle, rectHandles } from "../tools/rectHandle";
 import { type Film, FilmStack, fitFilms, insertFilms } from "./film";
+import type { Media } from "./media";
 
 // formal～はoffsetが含まれない値
 export type CornerOffsets = { topLeft: Vector, topRight: Vector, bottomLeft: Vector, bottomRight: Vector };
@@ -39,7 +40,7 @@ export class FrameElement {
   filmStack: FilmStack;
 
   // 以下は揮発性
-  gallery: HTMLCanvasElement[];
+  gallery: Media[];
   focused: boolean;
   residenceTime: number;
 

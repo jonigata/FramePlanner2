@@ -2,15 +2,16 @@
   import { makePlainCanvas } from "../lib/layeredCanvas/tools/imageUtil";
   import SliderEdit from '../utils/SliderEdit.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
+  import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
 
-  export let chosen: HTMLCanvasElement | null = null;
+  export let chosen: Media | null = null;
 
   let width: number = 512;
   let height: number = 512;
   let color: string = "#ffffff00";
 
   async function generate() {
-    chosen = makePlainCanvas(width, height, color);
+    chosen = new ImageMedia(makePlainCanvas(width, height, color));
   }
 </script>
 

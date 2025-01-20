@@ -1,15 +1,55 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-  import { browserStrayImages, browserUsedImages } from './fileBrowserStore';
 	import Gallery from '../generator/Gallery.svelte';
+  import { onMount } from 'svelte';
+  import { collectGarbage } from '../utils/garbageCollection';
+  import { fileSystem } from '../filemanager/fileManagerStore';
+  import type { NodeId, File } from '../lib/filesystem/fileSystem';
+  import { buildMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
+
+  let usedMedias: (() => Promise<Media[]>)[] = [];
+  let strayMedias: (() => Promise<Media[]>)[] = [];
+
+  async function loadMedia(file: File): Promise<Media[]> {
+    const media = await file.readMediaResource();
+    return [buildMedia(media)];
+  }
+
+  onMount(async () => {
+    const fs = $fileSystem!;
+    const { usedImageFiles, strayImageFiles } = await collectGarbage(fs);
+
+    usedMedias = [];
+    let i = 0;
+    for (const imageFile of usedImageFiles) {
+      const file = (await fs.getNode(imageFile as NodeId))!.asFile()!;
+      usedMedias.push(() => loadMedia(file));
+      i++;
+      if (i % 3 === 0) {
+        usedMedias = usedMedias;
+      }
+    }
+
+    strayMedias = [];
+    i = 0;
+    for (const imageFile of strayImageFiles) {
+      const file = (await fs.getNode(imageFile as NodeId))!.asFile()!;
+      strayMedias.push(() => loadMedia(file));
+      strayMedias = strayMedias;
+      i++; 
+      if (i % 3 === 0) {
+        strayMedias = strayMedias;
+      }
+    }
+  });
 </script>
 
 <div class="page-container">
   <div class="box">
     <h2>使用中</h2>
-    <Gallery columnWidth={220} bind:canvases={$browserUsedImages} accessable={false}/>
+    <Gallery columnWidth={220} bind:items={usedMedias} accessable={false}/>
     <h2>リンク切れ</h2>
-    <Gallery columnWidth={220} bind:canvases={$browserStrayImages} accessable={false}/>
+    <Gallery columnWidth={220} bind:items={strayMedias} accessable={false}/>
   </div>
 
   <!-- svelte-ignore a11y-click-events-have-key-events -->

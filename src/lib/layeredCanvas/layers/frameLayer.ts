@@ -1254,9 +1254,7 @@ export class FrameLayer extends LayerBase {
     this.videoRedrawInterval = undefined;      
     if (layout) {
       for (const film of layout.element.filmStack.films) {
-        if (film.media.player) {
-          film.media.player.pause();
-        }
+        film.media.player?.pause();
       }
     }
   }

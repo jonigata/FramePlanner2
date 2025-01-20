@@ -1,21 +1,20 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Gallery from '../generator/Gallery.svelte';
-  import { loading } from '../utils/loadingStore'
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { getEntries, saveEntity, deleteEntry } from '../filemanager/warehouse';
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { Film } from '../lib/layeredCanvas/dataModels/film';
-  import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
+  import { buildMedia, ImageMedia, type Media, type MediaType } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher } from 'svelte';
   import { pollMediaStatus } from '../supabase';
-  import { createCanvasFromImage, createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
+  import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { ls } from '../lib/filesystem/fileSystem';
 
   const dispatch = createEventDispatcher();
-  let gallery: HTMLCanvasElement[] | null = null;
+  let items: (() => Promise<Media[]>)[] = [];
 
   function onChooseImage(e: CustomEvent<HTMLCanvasElement>) {
     const page = $bookEditor!.getFocusedPage();
@@ -65,63 +64,78 @@
     return canvas;
   }
 
-  async function displayWarehouseImages() {
-    $loading = true;
-    const canvases: HTMLCanvasElement[] = [];
+  async function handleRequest(mediaType: MediaType, mode: string, requestId: string) {
+    try {
+      const { mediaResources, urls } = await pollMediaStatus(mediaType, mode, requestId);
+      await saveEntity($fileSystem!, mediaType, mode, requestId, urls);
+      return mediaResources.map((mediaResource) => {
+        const media = buildMedia(mediaResource);
+        (media as any)["requestId"] = requestId;
+        return media;
+      });
+    }
+    catch (e) {
+      // fal.aiは7日間しかリクエストを保存しないので、おそらくそれ
+      console.log(e);
+      deleteEntry($fileSystem!, requestId);
+      return [];
+    }
+  }
 
-    console.log(await ls($fileSystem!, "倉庫"));
-    
-    for await (const entry of getEntries($fileSystem!)) {
-      console.log(entry);
-      if (entry.type === "request") {
-        const loadingCanvas = await createLoadingCanvas(512, 512);
-        const loadingIndex = canvases.length;
-        canvases.push(loadingCanvas);
-        
-        pollMediaStatus(entry.mediaType, entry.mode, entry.requestId).then(async ({urls, mediaResources}) => {
-          if (mediaResources.length > 0) {
-            console.log("The images are ready!");
-
-            await saveEntity($fileSystem!, entry.mediaType, entry.mode, entry.requestId, urls);
-
-            // TODO: Video対応
-            const canvases = mediaResources.filter((mediaResource) => mediaResource instanceof HTMLCanvasElement);
-
-            canvases.forEach((mediaResource) => {
-              (mediaResource as any)["requestId"] = entry.requestId;
-            });
-
-            canvases.splice(loadingIndex, 1, ...canvases);
-            gallery = [...canvases];
-          }
-        }).catch(console.error);
+  async function handleEntity(mediaType: MediaType, requestId: string, mediaUrls: string[]) {
+    const mediaResources = await Promise.all(mediaUrls.map(async (url) => {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      if (mediaType === "image") {
+        const canvas = await createCanvasFromBlob(blob);
+        (canvas as any)["requestId"] = requestId;
+        return canvas;
+      } else if (mediaType === "video") {
+        const video = await createVideoFromBlob(blob);
+        (video as any)["requestId"] = requestId;
+        return video;
       }
-      if (entry.type === "entity") {
-        console.log("completed request", entry.imageUrls);
-        entry.imageUrls.forEach(async (url) => {
-          const response = await fetch(url);
-          console.log("response", response);
-          const blob = await response.blob();
-          const canvas = await createCanvasFromBlob(blob);
-          console.log("canvas", canvas.width, canvas.height);
-          (canvas as any)["requestId"] = entry.requestId;
-          canvases.push(canvas);
-          gallery = [...canvases];
-        });
+      throw new Error("Invalid media type");
+    }));
+    return mediaResources.map((media) => {
+      return buildMedia(media);
+    });
+  }
+
+  async function displayWarehouseImages() {
+    console.log(await ls($fileSystem!, "倉庫"));
+
+    items = [];
+    for (const entry of await getEntries($fileSystem!)) {
+      console.log(entry);
+
+      switch (entry.type) {
+        case "request":
+          items.push(
+            async () => {
+              return await handleRequest(entry.mediaType, entry.mode, entry.requestId);
+            });
+          break;
+        case "entity":
+          items.push(
+            async () => {
+              return await handleEntity(entry.mediaType, entry.requestId, entry.mediaUrls);
+            });
+          break;
+        default:
+          throw new Error("Invalid entry type");
       }
     }
+    items = items;
 
     console.log("done");
-    $loading = false;
   }
 
   onMount(displayWarehouseImages);
 </script>
 
 <div class="gallery-content">
-  {#if gallery != null}
-    <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
-  {/if}
+  <Gallery columnWidth={220} bind:items={items} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
 </div>
 
 <style>

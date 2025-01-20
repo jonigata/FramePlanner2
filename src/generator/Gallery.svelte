@@ -1,33 +1,44 @@
 <script lang="ts">
-  import { createEventDispatcher, tick } from "svelte";
-  import GalleryImage from "./GalleryImage.svelte";
+  import { createEventDispatcher } from "svelte";
+  import type { Media } from "../lib/layeredCanvas/dataModels/media";
+  import GalleryMember from "./GalleryMember.svelte";
+  import type { GalleryItem } from "./gallery";
 
-  export let canvases: HTMLCanvasElement[];
-  export let columnWidth = 220;
-  export let accessable = true;
+  export let items: GalleryItem[];
+  export let columnWidth: number;
+  export let accessable: boolean = true;
 
-  export let chosen: HTMLCanvasElement | null = null;
-  export let refered: HTMLCanvasElement | null = null;
+  export let chosen: Media | null = null;
+  export let refered: Media | null = null;
 
   const dispatch = createEventDispatcher();
 
-  function onCommit(e: CustomEvent<HTMLCanvasElement>) {
+  function onCommit(e: CustomEvent<Media>) {
     dispatch("commit", e.detail);
   }
 
-  async function onDelete(e: CustomEvent<HTMLCanvasElement>) {
-    canvases = canvases.filter(c => c !== e.detail);
+  async function onDelete(e: CustomEvent<GalleryItem>) {
+    items = items.filter(c => c !== e.detail);
     dispatch("delete", e.detail);
   }
 
-  function onDragStart(e: CustomEvent<HTMLImageElement>) {
+  function onDragStart(e: CustomEvent<Media>) {
     dispatch("dragstart", e.detail);
   }
 </script>
 
 <div class="gallery">
-  {#each canvases as canvas}
-    <GalleryImage bind:chosen={chosen} bind:refered={refered} width={columnWidth} canvas={canvas} accessable={accessable} on:commit={onCommit} on:delete={onDelete} on:dragstart={onDragStart}/>
+  {#each items as item}
+    <GalleryMember
+      item={item}
+      {columnWidth}
+      bind:chosen
+      bind:refered
+      {accessable}
+      on:commit={onCommit}
+      on:delete={onDelete}
+      on:dragstart={onDragStart}
+    />
   {/each}
 </div>
 

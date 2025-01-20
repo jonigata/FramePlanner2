@@ -97,6 +97,8 @@
     }
   };
 
+  let fileManagerActive = false;
+
   onMount(async () => {
     document.body.style.overflow = 'hidden'; // HACK
 
@@ -114,6 +116,10 @@
       a.download = 'FileSystemDB.json';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    if (!urlParams.has('disableFileManager')) {
+      fileManagerActive = true;
     }
 
     /*
@@ -170,7 +176,9 @@
 <FontChooser/>
 <ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
-<FileManager/>
+{#if fileManagerActive}
+  <FileManager/>
+{/if}
 <About/>
 <BatchImaging/>
 <TemplateChooser/>

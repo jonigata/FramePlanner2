@@ -224,7 +224,7 @@ export function fitFilms(paperSize: Vector, constraintRect: Rect, films: Film[])
   });
 }
 
-export function insertFilms(paperSize: Vector, constraintRect: Rect, index: number, films: Film[], targetFilms: Film[], gallery: HTMLCanvasElement[]): void {
+export function insertFilms(paperSize: Vector, constraintRect: Rect, index: number, films: Film[], targetFilms: Film[], gallery: Media[]): void {
   const transformer = new FilmStackTransformer(paperSize, films);
   transformer.scale(0.01);
   fitFilms(paperSize, constraintRect, films);
@@ -234,7 +234,7 @@ export function insertFilms(paperSize: Vector, constraintRect: Rect, index: numb
   for (const film of films) {     
     const media = film.media;
     if (media instanceof ImageMedia) {
-      gallery.push(media.drawSource);
+      gallery.push(media);
     }
   }
 }

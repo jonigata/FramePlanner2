@@ -8,12 +8,13 @@
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";
   import ImageGeneratorFlux from "./ImageGeneratorFlux.svelte";
   import ImageGeneratorPlain from "./ImageGeneratorPlain.svelte";
+  import { type Media } from "../lib/layeredCanvas/dataModels/media";
 
   let busy: boolean;
   let tabSet: number = 0;
   let prompt: string = 'zzz';
-  let gallery: HTMLCanvasElement[] = [];
-  let chosen: HTMLCanvasElement | null = null;
+  let gallery: Media[] = [];
+  let chosen: Media | null = null;
 
   $: onTargetChanged($imageGeneratorTarget);
   function onTargetChanged(igt: ImageGeneratorTarget | null) {
@@ -23,7 +24,7 @@
   }
 
   $: onChangeGallery($imageGeneratorTarget?.gallery);
-  async function onChangeGallery(g: HTMLCanvasElement[] | undefined) {
+  async function onChangeGallery(g: Media[] | undefined) {
     if (g) {
       gallery = [];
       await tick(); // HACK: なんかこうしないとHTMLが更新されない
@@ -32,12 +33,12 @@
   }
 
   $: onChosen(chosen);
-  function onChosen(c: HTMLCanvasElement | null) {
+  function onChosen(c: Media | null) {
     if (c != null) {
       const t = $imageGeneratorTarget!;
       $imageGeneratorTarget = null;
       chosen = null;
-      t.onDone({ canvas: c, prompt: prompt });
+      t.onDone({ media: c, prompt: prompt });
     }
   }
 

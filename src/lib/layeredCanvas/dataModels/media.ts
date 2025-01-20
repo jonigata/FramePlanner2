@@ -1,20 +1,22 @@
 import type { Vector } from "../tools/geometry/geometry";
 
 export type MediaType = 'image' | 'video';
-export type RemoteMediaReference = { mode: string, requestId: string };
+export type RemoteMediaReference = { mediaType: MediaType, mode: string, requestId: string };
+export type MaterializedType = HTMLCanvasElement | HTMLVideoElement;
+export type MediaResource = MaterializedType | RemoteMediaReference;
 
 export interface Media {
   readonly player: Player | null;
-  readonly drawSource: HTMLCanvasElement | HTMLVideoElement;
+  readonly drawSource: MaterializedType;
   readonly drawSourceCanvas: HTMLCanvasElement;
-  readonly persistentSource: HTMLCanvasElement | HTMLVideoElement | RemoteMediaReference; 
+  readonly persistentSource: MediaResource; 
   readonly naturalWidth: number;
   readonly naturalHeight: number;
   readonly type: MediaType;
   readonly size: Vector;
   readonly fileId: { [key: string]: string };
   readonly isLoaded: boolean;
-  setMedia(media: HTMLCanvasElement | HTMLVideoElement): void;
+  setMedia(media: MaterializedType): void;
 }
 
 export interface Player {
@@ -40,9 +42,9 @@ export abstract class MediaBase implements Media {
   }
 
   abstract get player(): Player | null;
-  abstract get drawSource(): HTMLCanvasElement | HTMLVideoElement;
+  abstract get drawSource(): MaterializedType;
   abstract get drawSourceCanvas(): HTMLCanvasElement;
-  abstract get persistentSource(): HTMLCanvasElement | HTMLVideoElement | RemoteMediaReference;
+  abstract get persistentSource(): MediaResource;
   abstract get naturalWidth(): number;
   abstract get naturalHeight(): number;
   abstract get type(): MediaType;
@@ -51,7 +53,7 @@ export abstract class MediaBase implements Media {
     return this._isLoaded;
   }
 
-  abstract setMedia(media: HTMLCanvasElement | HTMLVideoElement): void;
+  abstract setMedia(media: MaterializedType): void;
 
   setLoaded(isLoaded: boolean): void {
     this._isLoaded = isLoaded;
@@ -119,7 +121,7 @@ export class ImageMedia extends MediaBase {
   get player(): Player | null { return null; }
   get drawSource(): HTMLCanvasElement { return this.canvas ?? this.getLoadingCanvas(); }
   get drawSourceCanvas(): HTMLCanvasElement { return this.drawSource; }
-  get persistentSource(): HTMLCanvasElement | RemoteMediaReference { 
+  get persistentSource(): MediaResource { 
     console.log("ImageMedia.persistentSource", this.remoteMediaReference, this.drawSource);
     return this.remoteMediaReference ?? this.drawSource; 
   }
@@ -158,7 +160,7 @@ export class VideoMedia extends MediaBase {
       seek: async (time: number) => { this.video!.currentTime = time; }
     };
   }
-  get drawSource(): HTMLVideoElement | HTMLCanvasElement { return this.video ?? this.getLoadingCanvas(); }
+  get drawSource(): MaterializedType { return this.video ?? this.getLoadingCanvas(); }
   get drawSourceCanvas(): HTMLCanvasElement { 
     if (!this.video) { return this.getLoadingCanvas(); }
     const canvas = document.createElement('canvas');
@@ -168,9 +170,20 @@ export class VideoMedia extends MediaBase {
     ctx.drawImage(this.video!, 0, 0);
     return canvas;
   }
-  get persistentSource(): HTMLVideoElement | RemoteMediaReference { return this.remoteMediaReference ?? this.video!; }
+  get persistentSource(): MediaResource { return this.remoteMediaReference ?? this.video!; }
   get naturalWidth(): number { return this.video ? this.video.videoWidth : this.getLoadingCanvas().width; }
   get naturalHeight(): number { return this.video ? this.video.videoHeight : this.getLoadingCanvas().height; }
   get type(): MediaType { return 'video'; }
 }
 
+export function buildMedia(mediaResource: MediaResource): Media {
+  if (mediaResource instanceof HTMLCanvasElement) {
+    return new ImageMedia(mediaResource);
+  } else if (mediaResource instanceof HTMLVideoElement) {
+    return new VideoMedia(mediaResource);
+  } else if (mediaResource.mediaType === 'image') {
+    return new ImageMedia(mediaResource);
+  } else {
+    return new VideoMedia(mediaResource);
+  }
+}

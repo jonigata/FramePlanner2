@@ -9,7 +9,10 @@ export type Entry = [BindId, string, NodeId];
 export type EmbodiedEntry = [BindId, string, Node];
 
 // リモートメディア=fal.aiなどの画像生成サービス側にあり、まだダウンロードしていないファイル
-export type RemoteMediaReference = { mode: string, requestId: string };
+export type MediaType  = 'image' | 'video';
+export type RemoteMediaReference = { mediaType: MediaType, mode: string, requestId: string };
+export type MaterializedType = HTMLCanvasElement | HTMLVideoElement;
+export type MediaResource = MaterializedType | RemoteMediaReference;
 
 export interface Watcher {
   onInsert: (bindId: BindId, index: number, sourceParent: Folder | null) => void;
@@ -84,10 +87,8 @@ export abstract class Node implements Node {
 export interface File {
   read(): Promise<any>;
   write(data: any): Promise<void>;
-  readCanvas(): Promise<HTMLCanvasElement | RemoteMediaReference>;
-  writeCanvas(canvas: HTMLCanvasElement | RemoteMediaReference): Promise<void>;
-  readVideo(): Promise<HTMLVideoElement | RemoteMediaReference>;
-  writeVideo(video: HTMLVideoElement | RemoteMediaReference): Promise<void>;
+  readMediaResource(): Promise<MediaResource>;
+  writeMediaResource(mediaResource: MediaResource): Promise<void>;
   readBlob(): Promise<Blob>;
   writeBlob(blob: Blob): Promise<void>;
 }
@@ -200,17 +201,23 @@ export async function folderTree(fs: FileSystem): Promise<string[]> {
   const root = await fs.getRoot();
   const s: string[] = [];
   await folderTreeSub(root, '/', s);
+  console.log(s);
   return s;
 }
 
 async function folderTreeSub(folder: Folder, prefix: string, result: string[]) {
+  console.log(`${prefix} listEmbodied start`);
   const children = await folder.listEmbodied();
+  console.log(`${prefix} listEmbodied end`);
   for (const c of children) {
     const node = c[2];
     if (node?.getType() === 'folder') {
       const cprefix = `${prefix}${c[1]}/`;
+      console.log(cprefix);
       result.push(cprefix);
       await folderTreeSub(node.asFolder()!, cprefix, result);
+    } else {
+      console.log(`${prefix}${c[1]}`);
     }
   }
 }

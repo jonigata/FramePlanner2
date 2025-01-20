@@ -14,19 +14,5 @@ export async function punchFilm(film: Film) {
 
   film.media = new ImageMedia(mediaResources[0] as HTMLCanvasElement);
 
-/*
-  お金のかからない実験用
-  let imageRequest: TextToImageRequest = {
-    prompt: "1 chibi girl with a sword", 
-    image_size: {width: 512, height: 512},
-    num_images: 1,
-    mode: "schnell", 
-  };
-  console.log(imageRequest);
-  const { request_id } = await text2Image(imageRequest);
-  film.media = new ImageMedia({requestId: request_id, mode: "schnell"});
-  filmProcessorQueue.publish(film);
-*/
-
   logEvent(getAnalytics(), 'punch');
 }

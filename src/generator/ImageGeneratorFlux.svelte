@@ -14,17 +14,18 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import FluxModes from './FluxModes.svelte';
+  import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
 
   import clipboardIcon from '../assets/clipboard.png';
   import FeathralCost from '../utils/FeathralCost.svelte';
 
   export let busy: boolean;
   export let prompt: string;
-  export let gallery: HTMLCanvasElement[];
-  export let chosen: HTMLCanvasElement | null;
+  export let gallery: Media[];
+  export let chosen: Media | null;
 
   let progress = 0;
-  let refered: HTMLCanvasElement | null= null;
+  let refered: Media | null= null;
   let postfix: string = "";
   let batchCount = 1;
   let mode: Mode = "schnell";
@@ -32,7 +33,7 @@
   let height = 1024;
   let estimatedCost = 0;
 
-  function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
+  function onChooseImage({detail}: CustomEvent<Media>) {
     chosen = detail;
   }
 
@@ -73,7 +74,7 @@
         return;
       }
 
-      gallery.push(...canvases);
+      gallery.push(...canvases.map(c => new ImageMedia(c)));
       gallery = gallery;
       progress = 1;
 
@@ -162,7 +163,7 @@
     <ProgressBar label="Progress Bar" value={progress} max={1} />
   </div>
   {/if}
-  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} bind:refered={refered}/>
   {:else}
     <p>サインインしてください</p>
   {/if}

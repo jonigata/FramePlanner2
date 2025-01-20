@@ -1,33 +1,37 @@
 <script lang="ts">
   import { modalStore } from "@skeletonlabs/skeleton";
   import { imageViewerTarget } from "./imageViewerStore";
+  import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
-  let containerDiv: HTMLDivElement;
-  let img: HTMLImageElement;
+  $: media = $imageViewerTarget;
 
-  $: onCanvasChanged($imageViewerTarget, img);
-
-  function onCanvasChanged(canvas: HTMLCanvasElement | null, imgElement: HTMLImageElement | null) {
-    if (!canvas || !imgElement) return;
-    
-    // Convert Canvas to data URL and set it as the image source
-    const dataURL = canvas.toDataURL();
-    imgElement.src = dataURL;
+  function getVideo(media: Media) {
+    return media.drawSource as HTMLVideoElement;
   }
-
 </script>
 
-<div class="page-container" bind:this={containerDiv}>
-  <!-- svelte-ignore a11y-img-redundant-alt -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-  <img
-    bind:this={img}
-    class="draggable-image"
-    alt="Viewer image"
-    draggable="true"
-    on:click={modalStore.close}
-  />
+<div class="page-container">
+  {#if media}
+    {#if media.type === 'video' && media.isLoaded}
+      <video 
+        src={getVideo(media).src}
+        controls
+        class="draggable-media"
+        draggable="true"
+        on:click={() => modalStore.close()}
+      >
+        <track kind="captions" />
+      </video>
+    {:else}
+      <img 
+        src={media.drawSourceCanvas.toDataURL()}
+        class="draggable-media"
+        alt="Viewer image"
+        draggable="true"
+        on:click={() => modalStore.close()}
+      />
+    {/if}
+  {/if}
 </div>
 
 <style>
@@ -40,7 +44,7 @@
     overflow: hidden;
     position: relative;
   }
-  .draggable-image {
+  :global(.draggable-media) {
     width: 100%;
     height: 100%;
     object-fit: contain;

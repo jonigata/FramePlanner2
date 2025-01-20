@@ -7,11 +7,12 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { makePlainCanvas, canvasToBase64 } from "../lib/layeredCanvas/tools/imageUtil";
   import { createPreference } from '../preferences';
+  import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
 
   export let busy: boolean;
   export let prompt: string;
-  export let gallery: HTMLCanvasElement[];
-  export let chosen: HTMLCanvasElement | null;
+  export let gallery: Media[];
+  export let chosen: Media | null;
 
   let url: string = "http://localhost:7860";
   let imageRequest = {
@@ -24,7 +25,7 @@
      "cfgScale": 7,
   }
   let progress = 0;
-  let refered: HTMLCanvasElement | null = null;
+  let refered: Media | null = null;
 
   const preference1 = createPreference<string>("imaging", "imageRequest");
   const preference2 = createPreference<string>("imaging", "url");
@@ -49,7 +50,8 @@
     f();
     try {
       const newImages = await generateImages(url, { ...imageRequest, positive: prompt });
-      gallery.splice(gallery.length, 0, ...newImages);
+      const newMedias = newImages.map(c => new ImageMedia(c));
+      gallery.splice(gallery.length, 0, ...newMedias);
       gallery = gallery;
       progress = 1;
     } catch (e) {
@@ -60,7 +62,7 @@
     busy = false;
   }
 
-  function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
+  function onChooseImage({detail}: CustomEvent<Media>) {
     chosen = detail;
   }
 
@@ -74,7 +76,7 @@
 
   function generateWhiteImage() {
     const img = makePlainCanvas(imageRequest.width, imageRequest.height, "#ffffff");
-    gallery.push(img);
+    gallery.push(new ImageMedia(img));
     gallery = gallery;
   }
 
@@ -102,7 +104,7 @@
     busy = true;
     f();
     try {
-      const encoded_image = canvasToBase64(refered!);
+      const encoded_image = canvasToBase64(refered.drawSourceCanvas);
 
       const alwaysonScripts = {
         controlNet: {
@@ -122,7 +124,8 @@
 
       const req = { ...imageRequest, alwayson_scripts: alwaysonScripts };
       const newImages = await generateImages(url, req);
-      gallery.splice(gallery.length, 0, ...newImages);
+      const newMedias = newImages.map(c => new ImageMedia(c));
+      gallery.splice(gallery.length, 0, ...newMedias);
       gallery = gallery;
       progress = 1;
     } catch (e) {
@@ -176,7 +179,7 @@
   </div>
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <style>

@@ -6,14 +6,15 @@
   import OpenAI from 'openai';
   import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { createPreference } from '../preferences';
+  import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
 
   export let busy: boolean;
   export let prompt: string;
-  export let gallery: HTMLCanvasElement[];
-  export let chosen: HTMLCanvasElement | null;
+  export let gallery: Media[];
+  export let chosen: Media | null;
 
   let progress = 0;
-  let refered: HTMLCanvasElement | null;
+  let refered: Media | null;
   let apiKey: string = '';
 
   const apiKeyPreference1 = createPreference<string>("imaging", "openAiApiKey");
@@ -49,7 +50,7 @@
       await img.decode();
       const canvas = createCanvasFromImage(img);
 
-      gallery.push(canvas);
+      gallery.push(new ImageMedia(canvas));
       gallery = gallery;
       progress = 1;
 
@@ -62,7 +63,7 @@
     busy = false;
   }
 
-  function onChooseImage({detail}: CustomEvent<HTMLCanvasElement>) {
+  function onChooseImage({detail}: CustomEvent<Media>) {
     console.log("chooseImage", detail);
     chosen = detail;
   }
@@ -85,7 +86,7 @@
   </div>
 
   <ProgressBar label="Progress Bar" value={progress} max={1} />
-  <Gallery columnWidth={220} bind:canvases={gallery} on:commit={onChooseImage} bind:refered={refered}/>
+  <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} bind:refered={refered}/>
 </div>
 
 <style>

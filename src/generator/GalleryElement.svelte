@@ -4,16 +4,17 @@
   import { imageViewerTarget } from '../utils/imageViewerStore';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { createImageFromCanvas } from '../lib/layeredCanvas/tools/imageUtil';
+  import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
   import drop from '../assets/drop.png';
   import reference from '../assets/reference.png';
   import referenceSelected from '../assets/reference-selected.png';
   import telescope from '../assets/telescope.png';
 
-  export let canvas: HTMLCanvasElement;
+  export let media: Media;
   export let width = 160;
-  export let chosen: HTMLCanvasElement | null = null;
-  export let refered: HTMLCanvasElement | null = null;
+  export let chosen: Media | null = null;
+  export let refered: Media | null = null;
   export let accessable: boolean = true;
 
   let container: HTMLDivElement;
@@ -22,16 +23,16 @@
 
   const dispatch = createEventDispatcher();
 
-  $: onCanvasChanged(canvas);
-  async function onCanvasChanged(c: HTMLCanvasElement) {
+  $: onMediaChanged(media);
+  async function onMediaChanged(c: Media) {
     if (c) {
-      height = getHeight();
-      console.log("onCanvasChanged", c.width, c.height, width, height);
-      console.log("change image size", canvas.width, canvas.height);
-      const w = Math.min(width, canvas.width);
-      const h = Math.min(height, canvas.height);
+      const size = media.size;
+      height = (size[1] / size[0]) * width; // fix aspect ratio
+      console.log("onCanvasChanged", size[0], size[1], width, height);
+      const w = Math.min(width, size[0]);
+      const h = Math.min(height, size[1]);
 
-      image = await createImageFromCanvas(canvas);
+      image = await createImageFromCanvas(media.drawSourceCanvas);
       image.style.width = `${w}px`;
       image.style.height = `${h}px`;
       image.style.position = 'absolute';
@@ -43,33 +44,33 @@
 
   function onClick() {
     console.log("onClick");
-    if (chosen === canvas) {
-      dispatch("commit", canvas);
+    if (chosen === media) {
+      dispatch("commit", media);
       return;
     }
-    chosen = canvas;
+    chosen = media;
   }
 
-  function onDelete(e: MouseEvent, canvas: HTMLCanvasElement) {
+  function onDelete(e: MouseEvent) {
     console.log("onDelete");
     e.stopPropagation();
-    dispatch("delete", canvas);
+    dispatch("delete", media);
   }
 
-  function onRefer(e: MouseEvent, canvas: HTMLCanvasElement) {
+  function onRefer(e: MouseEvent) {
     console.log("onRefer");
     e.stopPropagation();
-    refered = refered === canvas ? null : canvas;
+    refered = refered === media ? null : media;
   }
 
   function onDragStart(e: DragEvent) {
     console.log("onDragStart");
-    dispatch("dragstart", canvas);
+    dispatch("dragstart", media);
   }
 
-  function onView(e: MouseEvent, canvas: HTMLCanvasElement) {
+  function onView(e: MouseEvent) {
     console.log("onView");
-    $imageViewerTarget = canvas;
+    $imageViewerTarget = media;
     e.stopPropagation();
     const d: ModalSettings = {
       type: 'component',
@@ -77,27 +78,22 @@
     };
     modalStore.trigger(d);
   }
-
-  // fix aspect ratio
-  function getHeight() {
-    return (canvas.height / canvas.width) * width;
-  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="frame" class:selected={chosen === canvas} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
+<div class="frame" class:selected={chosen === media} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
   <div class="container w-full h-full" bind:this={container} >
   </div>
   {#if accessable}
-    <div class="delete-button" on:click={e => onDelete(e, canvas)} use:toolTip={"削除"}>
+    <div class="delete-button" on:click={e => onDelete(e)} use:toolTip={"削除"}>
       <img src={drop} alt="delete"/>
     </div>
-    <div class="telescope-button" on:click={e => onView(e, canvas)} use:toolTip={"見る"}>
+    <div class="telescope-button" on:click={e => onView(e)} use:toolTip={"見る"}>
       <img src={telescope} alt="view" />
     </div>
-    <div class="reference-button" on:click={e => onRefer(e, canvas)} use:toolTip={"i2i参照"}>
-      {#if refered === canvas}
+    <div class="reference-button" on:click={e => onRefer(e)} use:toolTip={"i2i参照"}>
+      {#if refered === media}
         <img src={referenceSelected} alt="reference"/>
       {:else}
         <img src={reference} alt="reference" />
