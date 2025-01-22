@@ -61,3 +61,16 @@ export const ImagingStatusResponseSchema = z.object({
   result: z.array(z.string()).optional(),
 });
 export type ImagingStatusResponse = z.infer<typeof ImagingStatusResponseSchema>;
+
+export const ImageToVideoRequestSchema = z.object({
+  prompt: z.string(),
+  image_url: z.string(),
+  duration: z.enum(["5", "10"]),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16"]),
+});
+export type ImageToVideoRequest = z.infer<typeof ImageToVideoRequestSchema>;
+
+export const ImageToVideoResponseSchema = z.object({
+  request_id: z.string().describe("request id"),
+});
+export type ImageToVideoResponse = z.infer<typeof ImageToVideoResponseSchema>;
