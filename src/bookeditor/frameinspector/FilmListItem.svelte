@@ -10,6 +10,9 @@
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { popup } from '@skeletonlabs/skeleton';
+  import type { PopupSettings } from '@skeletonlabs/skeleton';
+  import { toolTip } from '../../utils/passiveToolTipStore';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -18,7 +21,8 @@
   import punchIcon from '../../assets/filmlist/punch.png';
   import effectIcon from '../../assets/filmlist/effect.png';
   import outPaintingIcon from '../../assets/filmlist/outpainting.png';
-  import { toolTip } from '../../utils/passiveToolTipStore';
+  import popupIcon from '../../assets/filmlist/popup.png';
+  import videoIcon from '../../assets/video.png';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
@@ -27,6 +31,14 @@
   let effectVisible = false;
   let outPaintingCost = 0;
 
+  // TODO: ポップアップメニューが開いているときにもう一度別のボタンをクリックすると勝手に閉じる
+
+  const transformixMenu: PopupSettings = {
+    event: 'click',
+    target: 'transformix',
+    placement: 'bottom',
+  };
+					
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
@@ -79,6 +91,11 @@
       return;
     }
     dispatch('outpainting', film)
+  }
+
+  function onVideo(ev: MouseEvent) {
+    console.log("onVideo");
+    dispatch('video', film)
   }
 
   function onToggleeffectVisible(ev: MouseEvent) {
@@ -184,14 +201,13 @@
       -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
-      {#if calculateOutPaintingCost != null}
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <img draggable={false} class="outpainting-icon" src={outPaintingIcon} alt="アウトペインティング" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング(コスト " + outPaintingCost + ")"} on:click={onOutPainting}/>
-      {/if}
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="scribble-icon" src={scribbleIcon} alt="落書き" use:toolTip={"落書き"} on:click={onScribble}/>
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="punch-icon" src={punchIcon} alt="背景除去" use:toolTip={"背景除去[1]"} on:click={onPunch}/>
+
+      <button 
+        class="transformix-icon" 
+        use:popup={transformixMenu} 
+      >
+        <img draggable={false} src={popupIcon} alt="変換メニュー"/>
+      </button>
     </div>
     {#if effectVisible}
       <div class="effect-panel">
@@ -209,6 +225,23 @@
       </div>
     {/if}
   {/if}
+</div>
+
+<div class="card p-4 shadow-xl z-[1001]" data-popup="transformix" style="z-index: 100;">
+  {#if calculateOutPaintingCost != null}
+    <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
+      <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+    </button>
+  {/if}
+  <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
+    <img draggable={false} src={scribbleIcon} alt="落書き"/>
+  </button>
+  <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
+    <img draggable={false} src={punchIcon} alt="背景除去"/>
+  </button>
+  <button class="transformix-item" use:toolTip={"ムービー作成"} on:click={onVideo}>
+    <img draggable={false} src={videoIcon} alt="ムービー作成"/>
+  </button>
 </div>
 
 <style lang="postcss">
@@ -281,24 +314,14 @@
   .effect-icon.active {
     filter: opacity(100%);
   }
-  .outpainting-icon {
-    position: absolute;
-    right: 72px;
-    bottom: 4px;
-    width: 32px;
-    height: 32px;
-  }
-  .scribble-icon {
-    position: absolute;
-    right: 40px;
-    bottom: 4px;
-    width: 32px;
-    height: 32px;
-  }
-  .punch-icon {
+  .transformix-icon {
     position: absolute;
     right: 4px;
     bottom: 4px;
+    width: 32px;
+    height: 32px;
+  }
+  .transformix-item {
     width: 32px;
     height: 32px;
   }

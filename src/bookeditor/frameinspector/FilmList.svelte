@@ -89,6 +89,11 @@
     dispatch('outpainting', e.detail);
   }
 
+  function onVideo(e: CustomEvent<Film>) {
+    console.log("onVideo", e.detail);
+    dispatch('video', e.detail);
+  }
+
   function onSortableUpdate(e: {oldIndex: number | undefined, newIndex:number | undefined}) {
     // reversed order
     const oldIndex = filmStack.films.length - 1 - e.oldIndex!;

@@ -9,7 +9,7 @@
   import * as Sentry from "@sentry/svelte";
   import { Modals } from 'svelte-modals'
   import { bootstrap, onlineStatus } from './utils/accountStore';
-
+			
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
   import BookEditor from './bookeditor/BookEditor.svelte';
@@ -59,6 +59,7 @@
   import AuthForm from './utils/AuthForm.svelte';
   import SocialCard from './publication/SocialCard.svelte';
   import Roster from './notebook/Roster.svelte';
+  import MovieGenerator from './utils/MovieGenerator.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -94,6 +95,9 @@
     },
     socialCard: {
       ref: SocialCard,
+    },
+    movieGenerator: {
+      ref: MovieGenerator,
     }
   };
 
@@ -151,17 +155,17 @@
     <AboutButton/>
     <DownloadButton />
     <VideoButton />
+    <DebugOnly>
+      <SaveOffButton/>
+    </DebugOnly>
   </div>
 </div>
 
 <!-- dialogs -->
-<ControlPanel />
+<ControlPanel/>
 <PageInspector/>
 <FrameInspector/>
 <BubbleInspector/>
-<DebugOnly>
-  <SaveOffButton/>
-</DebugOnly>
 <StructureTree/>
 <MaterialBucket/>
 <BubbleBucket/>

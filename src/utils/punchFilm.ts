@@ -1,7 +1,10 @@
+import { get } from 'svelte/store';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { removeBg, pollMediaStatus } from "../supabase";
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { saveRequest } from '../filemanager/warehouse';
+import { fileSystem } from '../filemanager/fileManagerStore';
 
 export async function punchFilm(film: Film) {
   const imageMedia = film.media as ImageMedia;
@@ -9,6 +12,7 @@ export async function punchFilm(film: Film) {
 
   const dataUrl = imageMedia.drawSourceCanvas.toDataURL("image/png");
   const r = await removeBg({dataUrl});
+  await saveRequest(get(fileSystem)!, "removebg", r.request_id);
 
   const { mediaResources } = await pollMediaStatus("image", "removebg", r.request_id);
 
