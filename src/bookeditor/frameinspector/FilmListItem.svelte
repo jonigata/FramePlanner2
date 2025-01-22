@@ -228,20 +228,22 @@
 </div>
 
 <div class="card p-4 shadow-xl z-[1001]" data-popup="transformix" style="z-index: 100;">
-  {#if calculateOutPaintingCost != null}
-    <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
-      <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+  <div class="flex flex-row gap-2">
+    {#if calculateOutPaintingCost != null}
+      <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
+        <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+      </button>
+    {/if}
+    <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
+      <img draggable={false} src={scribbleIcon} alt="落書き"/>
     </button>
-  {/if}
-  <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
-    <img draggable={false} src={scribbleIcon} alt="落書き"/>
-  </button>
-  <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
-    <img draggable={false} src={punchIcon} alt="背景除去"/>
-  </button>
-  <button class="transformix-item" use:toolTip={"ムービー作成"} on:click={onVideo}>
-    <img draggable={false} src={videoIcon} alt="ムービー作成"/>
-  </button>
+    <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
+      <img draggable={false} src={punchIcon} alt="背景除去"/>
+    </button>
+    <button class="transformix-item" use:toolTip={"ムービー作成"} on:click={onVideo}>
+      <img draggable={false} src={videoIcon} alt="ムービー作成"/>
+    </button>
+  </div>
 </div>
 
 <style lang="postcss">
