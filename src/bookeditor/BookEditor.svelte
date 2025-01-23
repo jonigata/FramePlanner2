@@ -38,6 +38,7 @@
   import { outPaintFilm, calculateFramePadding } from '../utils/outPaintFilm'
   import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -426,16 +427,23 @@
     if (fit && fit.command != null) {
       $frameInspectorTarget = { ...fit, command: null };
 
-      const command = fit.command;
-      if (command === "scribble") {
-        await modalFrameScribble(fit);
-      } else if (command === "generate") {
-        await modalFrameGenerate(fit);
-      } else if (command === "punch") {
-        await punchFrameFilm(fit);
-      } else if (command === "outpainting") {
-        await outPaintFrameFilm(fit);
-      }
+      switch (fit.command) {
+        case "scribble":
+          await modalFrameScribble(fit);
+          break;
+        case "generate": 
+          await modalFrameGenerate(fit);
+          break;
+        case "punch":
+          await punchFrameFilm(fit);
+          break;
+        case "outpainting":
+          await outPaintFrameFilm(fit);
+          break;
+        case "video":
+          await modalFrameVideo(fit);
+          break;
+      } 
       $frameInspectorRebuildToken++;
     }
   }
@@ -446,14 +454,17 @@
     if (bit && bit.command != null) {
       $bubbleInspectorTarget = { ...bit, command: null };
 
-      const command = bit.command;
-      if (command === "scribble") {
-        await modalBubbleScribble(bit);
-      } else if (command === "generate") {
-        await modalBubbleGenerate(bit);
-      } else if (command === "punch") {
-        await punchBubbleFilm(bit);
-      }
+      switch (bit.command) {
+        case "scribble":
+          await modalBubbleScribble(bit);
+          break;
+        case "generate":
+          await modalBubbleGenerate(bit);
+          break;
+        case "punch":
+          await punchBubbleFilm(bit);
+          break;
+      } 
       $bubbleInspectorRebuildToken++;
     }
   }
@@ -572,6 +583,17 @@
     } finally {
       $loading = false;
     }
+  }
+
+  async function modalFrameVideo(fit: FrameInspectorTarget) {
+    const film = fit.commandTargetFilm!;
+    if (!(film.media instanceof ImageMedia)) { return; }
+
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'videoGenerator',
+    };
+    modalStore.trigger(d);    
   }
 
   onDestroy(() => {

@@ -70,27 +70,12 @@
     filmStack = filmStack;
   }
 
-  function onScribble(e: CustomEvent<Film>) {
-    console.log("onScribble", e.detail);
-    dispatch('scribble', e.detail);
-  }
-
   function onGenerate() {
     dispatch('generate');
   }
 
-  function onPunch(e: CustomEvent<Film>) {
-    console.log("onPunch", e.detail);
-    dispatch('punch', e.detail);
-  }
-
-  function onOutPainting(e: CustomEvent<Film>) {
-    console.log("onOutPainting", e.detail);
-    dispatch('outpainting', e.detail);
-  }
-
   function onVideo(e: CustomEvent<Film>) {
-    console.log("onVideo", e.detail);
+    console.log("FilmList.onVideo", e.detail);
     dispatch('video', e.detail);
   }
 
@@ -103,11 +88,6 @@
     moveInArray(filmStack.films, oldIndex, newIndex);
     dispatch('commit', true);
     filmStack = filmStack;
-  }
-
-  function onCommit(e: CustomEvent<boolean>) {
-    console.log(e.detail);
-    dispatch('commit', e.detail);
   }
 
 </script>
@@ -124,7 +104,14 @@
       {#if isDragging && ghostIndex === index}
         <div data-ghost class="ghost-element"/>
       {/if}
-      <FilmListItem bind:film={film} on:select={onSelectFilm} on:delete={onDeleteFilm} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:commit={onCommit} on:outpainting={onOutPainting} calculateOutPaintingCost={calculateOutPaintingCost}/>
+      <FilmListItem
+        bind:film={film} 
+        on:select={onSelectFilm} 
+        on:delete={onDeleteFilm} 
+        on:video={onVideo}
+        on:scribble on:generate on:punch on:outpainting on:commit
+        calculateOutPaintingCost={calculateOutPaintingCost}
+      />
     {/each}
     {#if isDragging && ghostIndex === filmStack.films.length}
       <div data-ghost class="ghost-element"/>

@@ -217,6 +217,11 @@
     $bubbleInspectorTarget!.command = "punch";
   }
 
+  function onVideo(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "video";
+  }
+
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
     const {index, films} = e.detail;
     const page = $bubbleInspectorTarget!.page;
@@ -455,7 +460,7 @@
       <h1>レイヤー</h1>
       <div class="w-full text-left">
         {#key $bubbleInspectorRebuildToken}
-          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept}/>
+          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept} on:video={onVideo}/>
         {/key}
       </div>
     </div>

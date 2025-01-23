@@ -9,7 +9,6 @@
   import { bookEditor } from "../bookStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { calculateFramePadding } from '../../utils/outPaintFilm'
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -48,6 +47,10 @@
   }
 
   function onVideo(e: CustomEvent<Film>) {
+    console.log("FrameInspector.onVideo",)
+
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "video";
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {

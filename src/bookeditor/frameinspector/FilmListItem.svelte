@@ -30,6 +30,7 @@
   let canvas: HTMLCanvasElement;
   let effectVisible = false;
   let outPaintingCost = 0;
+  let dispatchEvent: string | null = null;
 
   // TODO: ポップアップメニューが開いているときにもう一度別のボタンをクリックすると勝手に閉じる
 
@@ -61,23 +62,11 @@
 
   function onScribble(ev: MouseEvent) {
     console.log("onScribble");
-    ev.stopPropagation();
-    ev.preventDefault();
     dispatch('scribble', film)
-  }
-
-  function onGenerate(ev: MouseEvent) {
-    // scribble用、今は使ってない
-    console.log("onGenerate");
-    ev.stopPropagation();
-    ev.preventDefault();
-    dispatch('generate')
   }
 
   function onPunch(ev: MouseEvent) {
     console.log("onPunch");
-    ev.stopPropagation();
-    ev.preventDefault();
     dispatch('punch', film)
   }
 
@@ -94,8 +83,8 @@
   }
 
   function onVideo(ev: MouseEvent) {
-    console.log("onVideo");
-    dispatch('video', film)
+    console.log("FilmListItem.onVideo");
+    dispatchEvent = 'video';
   }
 
   function onToggleeffectVisible(ev: MouseEvent) {
@@ -166,6 +155,11 @@
 
   $: if($redrawToken) {
     canvas = canvas;
+  }
+
+  $: if (dispatchEvent) {
+    console.log("dispatchEvent", dispatchEvent);
+    dispatch(dispatchEvent, film);
   }
 
 </script>

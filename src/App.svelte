@@ -59,7 +59,7 @@
   import AuthForm from './utils/AuthForm.svelte';
   import SocialCard from './publication/SocialCard.svelte';
   import Roster from './notebook/Roster.svelte';
-  import MovieGenerator from './utils/MovieGenerator.svelte';
+  import VideoGenerator from './generator/VideoGenerator.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -96,8 +96,8 @@
     socialCard: {
       ref: SocialCard,
     },
-    movieGenerator: {
-      ref: MovieGenerator,
+    videoGenerator: {
+      ref: VideoGenerator,
     }
   };
 
