@@ -10,9 +10,8 @@
   import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { popup } from '@skeletonlabs/skeleton';
-  import type { PopupSettings } from '@skeletonlabs/skeleton';
   import { toolTip } from '../../utils/passiveToolTipStore';
+  import Popup from '../../utils/Popup.svelte';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -30,16 +29,11 @@
   let canvas: HTMLCanvasElement;
   let effectVisible = false;
   let outPaintingCost = 0;
-  let dispatchEvent: string | null = null;
+  let popupVisible = false;
+  let popupButton: HTMLButtonElement;
 
   // TODO: ポップアップメニューが開いているときにもう一度別のボタンをクリックすると勝手に閉じる
 
-  const transformixMenu: PopupSettings = {
-    event: 'click',
-    target: 'transformix',
-    placement: 'bottom',
-  };
-					
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
@@ -62,18 +56,19 @@
 
   function onScribble(ev: MouseEvent) {
     console.log("onScribble");
+    popupVisible = false;
     dispatch('scribble', film)
   }
 
   function onPunch(ev: MouseEvent) {
     console.log("onPunch");
+    popupVisible = false;
     dispatch('punch', film)
   }
 
   function onOutPainting(ev: MouseEvent) {
     console.log("onOutPainting");
-    ev.stopPropagation();
-    ev.preventDefault();
+    popupVisible = false;
 
     if (outPaintingCost === 0) {
       toastStore.trigger({ message: "アウトペインティング余地がありません", timeout: 3000 });
@@ -84,7 +79,8 @@
 
   function onVideo(ev: MouseEvent) {
     console.log("FilmListItem.onVideo");
-    dispatchEvent = 'video';
+    popupVisible = false;
+    dispatch('video', film)
   }
 
   function onToggleeffectVisible(ev: MouseEvent) {
@@ -153,14 +149,17 @@
     }
   }
 
+  function togglePopup(ev: MouseEvent) {
+    popupVisible = !popupVisible;
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+
   $: if($redrawToken) {
     canvas = canvas;
   }
 
-  $: if (dispatchEvent) {
-    console.log("dispatchEvent", dispatchEvent);
-    dispatch(dispatchEvent, film);
-  }
+  $: console.log("popupVisible", popupVisible);
 
 </script>
 
@@ -197,8 +196,9 @@
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
 
       <button 
-        class="transformix-icon" 
-        use:popup={transformixMenu} 
+        class="transformix-icon"
+        bind:this={popupButton}
+        on:click={togglePopup}
       >
         <img draggable={false} src={popupIcon} alt="変換メニュー"/>
       </button>
@@ -221,24 +221,29 @@
   {/if}
 </div>
 
-<div class="card p-4 shadow-xl z-[1001]" data-popup="transformix" style="z-index: 100;">
-  <div class="flex flex-row gap-2">
-    {#if calculateOutPaintingCost != null}
-      <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
-        <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+<Popup
+  show={popupVisible}
+  target={popupButton}
+  on:close={() => popupVisible = false}>
+  <div class="card p-4 shadow-xl z-[1001]" style="z-index: 100;">
+    <div class="flex flex-row gap-2">
+      {#if calculateOutPaintingCost != null}
+        <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
+          <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+        </button>
+      {/if}
+      <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
+        <img draggable={false} src={scribbleIcon} alt="落書き"/>
       </button>
-    {/if}
-    <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
-      <img draggable={false} src={scribbleIcon} alt="落書き"/>
-    </button>
-    <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
-      <img draggable={false} src={punchIcon} alt="背景除去"/>
-    </button>
-    <button class="transformix-item" use:toolTip={"ムービー作成"} on:click={onVideo}>
-      <img draggable={false} src={videoIcon} alt="ムービー作成"/>
-    </button>
+      <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
+        <img draggable={false} src={punchIcon} alt="背景除去"/>
+      </button>
+      <button class="transformix-item" use:toolTip={"ムービー作成"} on:click={onVideo}>
+        <img draggable={false} src={videoIcon} alt="ムービー作成"/>
+      </button>
+    </div>
   </div>
-</div>
+</Popup>
 
 <style lang="postcss">
   .film {

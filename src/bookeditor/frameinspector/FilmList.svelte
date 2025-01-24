@@ -74,11 +74,6 @@
     dispatch('generate');
   }
 
-  function onVideo(e: CustomEvent<Film>) {
-    console.log("FilmList.onVideo", e.detail);
-    dispatch('video', e.detail);
-  }
-
   function onSortableUpdate(e: {oldIndex: number | undefined, newIndex:number | undefined}) {
     // reversed order
     const oldIndex = filmStack.films.length - 1 - e.oldIndex!;
@@ -108,7 +103,6 @@
         bind:film={film} 
         on:select={onSelectFilm} 
         on:delete={onDeleteFilm} 
-        on:video={onVideo}
         on:scribble on:generate on:punch on:outpainting on:commit
         calculateOutPaintingCost={calculateOutPaintingCost}
       />
