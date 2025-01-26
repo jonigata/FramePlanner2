@@ -588,6 +588,7 @@
 
   async function modalFrameVideo(fit: FrameInspectorTarget) {
     await generateMovie(fit.frame.filmStack, fit.commandTargetFilm!);
+    commit(null);
   }
 
   onDestroy(() => {

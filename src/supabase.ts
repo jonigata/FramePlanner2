@@ -123,6 +123,8 @@ export async function notifyShare(text: string) {
 }
 
 export async function pollMediaStatus(type: 'image' | 'video', mode: string, request_id: string) {
+  const interval = type === 'video' ? 10000 : 1000;
+
   let urls: string[] | undefined;
   while (!urls) {
     const status = await imagingStatus({mode, request_id});
@@ -132,7 +134,7 @@ export async function pollMediaStatus(type: 'image' | 'video', mode: string, req
       await new Promise(resolve => setTimeout(resolve, 1000));
         break;  
       case "IN_PROGRESS":
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, interval));
         break;
       case "COMPLETED":
         urls = status.result!;
