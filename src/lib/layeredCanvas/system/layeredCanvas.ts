@@ -544,20 +544,21 @@ export class LayeredCanvas {
   }
 
   async handleDrop(event: DragEvent): Promise<void> {
-    async function loadVideo(file: File) {
+    async function loadVideoFromUrl(url: string) {
       const video = document.createElement('video');
-      video.muted = true; // オートプレイポリシーを回避するためミュート
-      video.src = URL.createObjectURL(file);
-      (video as any).file = file; // HACK: セーブ時に必要
-      
-      // 以下消すと画面に表示されなくなる
+      video.muted = true;
+      video.src = url;
       try {
         await getFirstFrameOfVideo(video);
-        URL.revokeObjectURL(video.src);
       } catch (error) {
         console.error('Error loading video', error);
       }
-    
+      return video;
+    }
+
+    async function loadVideo(file: File) {
+      const video = await loadVideoFromUrl(URL.createObjectURL(file));
+      URL.revokeObjectURL(video.src);
       return video;
     }
 
@@ -566,6 +567,14 @@ export class LayeredCanvas {
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
     var file = event.dataTransfer!.files[0];
+    const url = event.dataTransfer!.getData('video/mp4');
+    if (url !== "") { 
+      console.log("video url", url);
+      const video = await loadVideoFromUrl(url);
+      this.rootPaper.handleDrop(p, video);
+      return;
+    }
+
     if (!file) return; // 選択テキストのドロップなど
     if (file.type.startsWith('image/svg')) { return; } // 念の為
     if (file.type.startsWith('image/')) {

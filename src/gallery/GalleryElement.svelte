@@ -39,6 +39,20 @@
       image.style.position = 'absolute';
       image.style.top = (width / 2 - w / 2).toString() + 'px';
       image.style.left = (height / 2 - h / 2).toString() + 'px';
+
+      if (media.type === 'video') {
+        image.ondragstart = (e) => {
+          if (!e.dataTransfer) return;
+
+          const blob  = (media.persistentSource as any)["file"];
+          // drop時に存在していないといけないので、revokeはしない
+          // そんなに大きなものではないそうなので、捨てる
+          const url = URL.createObjectURL(blob); 
+
+          e.dataTransfer?.setData("video/mp4", url);
+        }
+      }
+
       container.appendChild(image);
     }
   }

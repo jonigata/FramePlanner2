@@ -44,26 +44,6 @@
     deleteEntry($fileSystem!, (e.detail as any)["requestId"]);
   }
 
-  async function createLoadingCanvas(width: number, height: number): Promise<HTMLCanvasElement> {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d')!;
-    
-    // グレーの背景
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(0, 0, width, height);
-    
-    // "Loading..."テキスト
-    ctx.fillStyle = '#666666';
-    ctx.font = '40px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Loading...', width/2, height/2);
-    
-    return canvas;
-  }
-
   async function handleRequest(mediaType: MediaType, mode: string, requestId: string) {
     try {
       const { mediaResources, urls } = await pollMediaStatus(mediaType, mode, requestId);
@@ -93,6 +73,7 @@
       } else if (mediaType === "video") {
         const video = await createVideoFromBlob(blob);
         (video as any)["requestId"] = requestId;
+        (video as any)["file"] = blob;
         return video;
       }
       throw new Error("Invalid media type");
