@@ -12,7 +12,7 @@ export async function punchFilm(film: Film) {
 
   const dataUrl = imageMedia.drawSourceCanvas.toDataURL("image/png");
   const r = await removeBg({dataUrl});
-  await saveRequest(get(fileSystem)!, "removebg", r.request_id);
+  await saveRequest(get(fileSystem)!, "image", "removebg", r.request_id);
 
   const { mediaResources } = await pollMediaStatus("image", "removebg", r.request_id);
 

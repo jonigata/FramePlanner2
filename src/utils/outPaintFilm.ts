@@ -34,7 +34,7 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const imageUrl = imageMedia.drawSourceCanvas.toDataURL("image/png");
   const r = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", r);
-  await saveRequest(get(fileSystem)!, "removebg", r.request_id);
+  await saveRequest(get(fileSystem)!, "image", "removebg", r.request_id);
 
   const { mediaResources } = await pollMediaStatus("image", "outpaint", r.request_id);
   const canvas = mediaResources[0] as HTMLCanvasElement;

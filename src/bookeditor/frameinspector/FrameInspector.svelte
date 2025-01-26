@@ -49,8 +49,8 @@
   function onVideo(e: CustomEvent<Film>) {
     console.log("FrameInspector.onVideo",)
 
-    // $frameInspectorTarget!.commandTargetFilm = e.detail;
-    // $frameInspectorTarget!.command = "video";
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "video";
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {

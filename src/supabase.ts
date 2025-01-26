@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { invoke } from "./utils/edgeFunctions/edgeFunctions";
 import { type TransformTextRequest, TransformTextResponseSchema } from "./utils/edgeFunctions/types/transformTextTypes.d"
-import { type TextToImageRequest, TextToImageResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
+import { type ImageToVideoRequest, ImageToVideoResponseSchema, type TextToImageRequest, TextToImageResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { type OutPaintRequest, OutPaintResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { type RemoveBgRequest, RemoveBgResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { type ImagingStatusRequest, ImagingStatusResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
+import { type VisionRequest, VisionResponseSchema } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
 import { CheckUsernameAvailableResponseSchema, GetProfileResponseSchema, RecordPublicationResponseSchema, type RecordPublicationRequest } from "./utils/edgeFunctions/types/snsTypes.d";
 import { UpdateProfileResponseSchema, type UpdateProfileRequest } from "./utils/edgeFunctions/types/snsTypes.d";
@@ -40,6 +41,10 @@ export async function transformText(req: TransformTextRequest) {
 
 export async function text2Image(req: TextToImageRequest) {
   return await invoke("charged/imaging/t2i", req, TextToImageResponseSchema);
+}
+
+export async function image2Video(req: ImageToVideoRequest) {
+  return await invoke("charged/imaging/i2v", req, ImageToVideoResponseSchema);
 }
 
 export async function imagingStatus(req: ImagingStatusRequest) {
@@ -149,4 +154,8 @@ export async function pollMediaStatus(type: 'image' | 'video', mode: string, req
     }));
 
   return { urls, mediaResources };
+}
+
+export async function recognizeImage(req: VisionRequest) {
+  return await invoke("charged/utilities/vision", req, VisionResponseSchema);
 }

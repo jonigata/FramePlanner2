@@ -38,7 +38,8 @@
   import { outPaintFilm, calculateFramePadding } from '../utils/outPaintFilm'
   import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
-  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { waitDialog } from '../utils/waitDialog';
+  import { generateMovie } from '../utils/generateMovie';
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -586,14 +587,7 @@
   }
 
   async function modalFrameVideo(fit: FrameInspectorTarget) {
-    const film = fit.commandTargetFilm!;
-    if (!(film.media instanceof ImageMedia)) { return; }
-
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'videoGenerator',
-    };
-    modalStore.trigger(d);    
+    await generateMovie(fit.frame.filmStack, fit.commandTargetFilm!);
   }
 
   onDestroy(() => {

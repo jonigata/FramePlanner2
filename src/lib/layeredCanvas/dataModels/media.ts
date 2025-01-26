@@ -155,8 +155,8 @@ export class VideoMedia extends MediaBase {
 
   get player(): Player {
     return {
-      play: () => this.video!.play(),
-      pause: () => this.video!.pause(),
+      play: () => this.video?.play(),
+      pause: () => this.video?.pause(),
       seek: async (time: number) => { this.video!.currentTime = time; }
     };
   }

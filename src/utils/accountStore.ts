@@ -34,11 +34,15 @@ function createAuthStore(): AuthStore {
     const refreshTokenCookie = cookies.find(x => x[0] == 'my-refresh-token');
     
     if (accessTokenCookie && refreshTokenCookie) {
+      // 例外が起きるわけではないみたい
+      // TODO: 失敗したら消してやり直すべき？
+      // わざとaccessTokenを壊して試す
       try {
-        await supabase.auth.setSession({
+        const authResponse = await supabase.auth.setSession({
           access_token: accessTokenCookie[1],
           refresh_token: refreshTokenCookie[1],
         })
+        console.log(authResponse);
       }
       catch (error) {
         console.error("setSession error");

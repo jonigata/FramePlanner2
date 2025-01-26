@@ -74,3 +74,14 @@ export const ImageToVideoResponseSchema = z.object({
   request_id: z.string().describe("request id"),
 });
 export type ImageToVideoResponse = z.infer<typeof ImageToVideoResponseSchema>;
+
+export const VisionRequestSchema = z.object({
+  dataUrl: z.string(),
+  prompt: z.string(),
+});
+export type VisionRequest = z.infer<typeof VisionRequestSchema>;
+
+export const VisionResponseSchema = z.object({
+  text: z.string().describe('In japanese.'),
+});
+export type VisionResponse = z.infer<typeof VisionResponseSchema>;
