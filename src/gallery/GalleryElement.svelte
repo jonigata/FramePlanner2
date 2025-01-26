@@ -1,10 +1,11 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
-  import { imageViewerTarget } from '../utils/imageViewerStore';
+  import { mediaViewerTarget } from './mediaViewerStore';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { createImageFromCanvas } from '../lib/layeredCanvas/tools/imageUtil';
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
+  import { formatDuration } from '../utils/timeFormat';
 
   import drop from '../assets/drop.png';
   import reference from '../assets/reference.png';
@@ -42,6 +43,10 @@
     }
   }
 
+  $: duration = media.type === 'video' ? 
+    (media.drawSource as HTMLVideoElement).duration : 
+    null;
+
   function onClick() {
     console.log("onClick");
     if (chosen === media) {
@@ -70,11 +75,11 @@
 
   function onView(e: MouseEvent) {
     console.log("onView");
-    $imageViewerTarget = media;
+    $mediaViewerTarget = media;
     e.stopPropagation();
     const d: ModalSettings = {
       type: 'component',
-      component: 'imageViewer',
+      component: 'mediaViewer',
     };
     modalStore.trigger(d);
   }
@@ -98,6 +103,11 @@
       {:else}
         <img src={reference} alt="reference" />
       {/if}
+    </div>
+  {/if}
+  {#if media.type === 'video' && duration}
+    <div class="duration-label">
+      {formatDuration(duration)}
     </div>
   {/if}
 </div>
@@ -141,5 +151,15 @@
     width: 20px;
     height: 20px;
     filter: drop-shadow(0 0 2px black);
+  }
+  .duration-label {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 0.8em;
   }
 </style>

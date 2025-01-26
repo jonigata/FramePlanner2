@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Gallery from '../generator/Gallery.svelte';
+  import Gallery from '../gallery/Gallery.svelte';
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { getEntries, saveEntity, deleteEntry } from '../filemanager/warehouse';
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';

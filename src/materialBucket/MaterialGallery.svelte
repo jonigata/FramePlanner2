@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Gallery from '../generator/Gallery.svelte';
+  import Gallery from '../gallery/Gallery.svelte';
   import { loading } from '../utils/loadingStore'
   import { deleteMaterial, fileSystem, saveMaterial } from '../filemanager/fileManagerStore';
   import { dropzone } from '../utils/dropzone';
-  import { createCanvasFromBlob, createImageFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
+  import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { bookEditor, redrawToken } from '../bookeditor/bookStore';

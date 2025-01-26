@@ -70,7 +70,7 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
   } else {
     try {
       const file = (await fileSystem.getNode(mediaResourceId as NodeId))!.asFile()!;
-      const mediaResource = file.readMediaResource();
+      const mediaResource = await file.readMediaResource();
 
       const r: any = mediaResource;
       r["fileId"] = {}

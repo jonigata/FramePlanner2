@@ -1,7 +1,7 @@
 <script lang="ts">
   import { generateImages, getProgression } from "./sdwebui";
   import { ProgressBar } from '@skeletonlabs/skeleton';
-	import Gallery from './Gallery.svelte';
+	import Gallery from '../gallery/Gallery.svelte';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import { onMount } from "svelte";
   import { toastStore } from '@skeletonlabs/skeleton';

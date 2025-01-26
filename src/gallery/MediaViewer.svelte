@@ -1,12 +1,12 @@
 <script lang="ts">
   import { modalStore } from "@skeletonlabs/skeleton";
-  import { imageViewerTarget } from "./imageViewerStore";
+  import { mediaViewerTarget } from "./mediaViewerStore";
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
-  $: media = $imageViewerTarget;
+  $: media = $mediaViewerTarget;
 
   function getVideo(media: Media) {
-    return media.drawSource as HTMLVideoElement;
+    return (media.drawSource as HTMLVideoElement).src;
   }
 </script>
 
@@ -14,7 +14,7 @@
   {#if media}
     {#if media.type === 'video' && media.isLoaded}
       <video 
-        src={getVideo(media).src}
+        src={getVideo(media)}
         controls
         class="draggable-media"
         draggable="true"
@@ -23,6 +23,9 @@
         <track kind="captions" />
       </video>
     {:else}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <!-- svelte-ignore a11y-img-redundant-alt -->
       <img 
         src={media.drawSourceCanvas.toDataURL()}
         class="draggable-media"

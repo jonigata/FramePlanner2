@@ -1,6 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-	import Gallery from '../generator/Gallery.svelte';
+	import Gallery from '../gallery/Gallery.svelte';
   import { onMount } from 'svelte';
   import { collectGarbage } from '../utils/garbageCollection';
   import { fileSystem } from '../filemanager/fileManagerStore';

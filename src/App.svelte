@@ -53,7 +53,7 @@
   import ColorPickerDialog from './utils/colorpicker/ColorPickerDialog.svelte';
   import EffectChooser from './bookeditor/effectchooser/EffectChooser.svelte';
   import Notebook from './notebook/Notebook.svelte';
-  import ImageViewer from './utils/ImageViewer.svelte';
+  import MediaViewer from './gallery/MediaViewer.svelte';
   import UserProfile from './toolbar/UserProfile.svelte';
   import Publication from './publication/Publication.svelte';
   import AuthForm from './utils/AuthForm.svelte';
@@ -81,8 +81,8 @@
     videoMaker: {
       ref: VideoMaker,
     },
-    imageViewer: {
-      ref: ImageViewer,
+    mediaViewer: {
+      ref: MediaViewer,
     },
     userProfile: {
       ref: UserProfile,

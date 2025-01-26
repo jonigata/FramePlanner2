@@ -5,7 +5,7 @@
   import { recognizeImage } from '../supabase';
   import type { Media } from '../lib/layeredCanvas/dataModels/media';
   import { onMount } from 'svelte';
-  import { on } from 'events';
+  import FeathralCost from '../utils/FeathralCost.svelte';
   
   let prompt = '';
   let duration: "5" | "10" = "5";
@@ -94,7 +94,7 @@
       キャンセル
     </button>
     <button class="btn variant-filled-primary" on:click={onSubmit}>
-      生成
+      生成 <FeathralCost cost={50}/>
     </button>
   </footer>
 </div>
