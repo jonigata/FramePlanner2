@@ -569,7 +569,7 @@ export class LayeredCanvas {
     var file = event.dataTransfer!.files[0];
     const url = event.dataTransfer!.getData('video/mp4');
     if (url !== "") { 
-      console.log("video url", url);
+      console.log("video url", url, event.dataTransfer!.files.length);
       const video = await loadVideoFromUrl(url);
       this.rootPaper.handleDrop(p, video);
       return;

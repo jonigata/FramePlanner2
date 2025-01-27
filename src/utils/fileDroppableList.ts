@@ -3,7 +3,7 @@
 //   受付ゾーンを今より広げるために必要
 
 type DropZoneOptions = {
-  onFileDrop: (files: FileList, index: number) => Promise<void>;
+  onFileDrop: (files: Blob[], index: number) => Promise<void>;
   onDragUpdate: (index: number) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -42,15 +42,21 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
     }
   }
 
-  function onDrop(ev: DragEvent) {
+  async function onDrop(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
     if (isDragging) {
       const index = getDropIndex(ev.clientY);
       const dt = ev.dataTransfer!;
-      const files = dt.files;
-      if (files && files.length > 0) {
-        options.onFileDrop(files, index);
+      const url = dt.getData('video/mp4');
+      if (url !== "") { 
+        const blob = await fetch(url).then(res => res.blob());
+        options.onFileDrop([blob], index);
+      } else {
+        const files = dt.files;
+        if (files && files.length > 0) {
+          options.onFileDrop(Array.from(files), index);
+        }
       }
     }
     endDrag();
@@ -126,13 +132,13 @@ export class FileDroppableContainer<T> {
   private ghostIndex: number = -1;
   
   constructor(
-    private importer: (files: FileList) => Promise<T[]>, 
+    private importer: (files: Blob[]) => Promise<T[]>, 
     private onAccept: (index: number, elements: T[]) => void,
     private onGhost: (isDragging: boolean, ghostIndex: number) => void
   ) {
   }
 
-  async handleFileDrop(files: FileList, index: number): Promise<void> {
+  async handleFileDrop(files: Blob[], index: number): Promise<void> {
     const importedFiles = await this.importer(files);
     if (importedFiles.length === 0) {
       return;

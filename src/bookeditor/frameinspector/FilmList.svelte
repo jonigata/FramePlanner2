@@ -20,7 +20,7 @@
   let isDragging = false;
   let ghostIndex = -1;
 
-  async function importFiles(files: FileList): Promise<Film[]> {
+  async function importFiles(files: Blob[]): Promise<Film[]> {
     console.log("importFiles");
     const file = files[0];
     if (file.type.startsWith("image/")) {
