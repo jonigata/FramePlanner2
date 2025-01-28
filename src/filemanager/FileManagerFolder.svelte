@@ -10,7 +10,7 @@
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { loading } from '../utils/loadingStore'
+  import { loading, progress } from '../utils/loadingStore'
   import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
 
   import newFileIcon from '../assets/fileManager/new-file.png';
@@ -70,38 +70,48 @@
       await moveToHere(0);
     } else {
       // jsonだったら、jsonの中身を見て、適切な処理をする
-      try {
-        $loading = true;
-        if (ev.dataTransfer?.files.length === 1) {
-          const file = ev.dataTransfer.files[0];
-          const fileName = file.name;
-          $loading = true;
-          if (file.type === "application/json") {
-            // 旧タイプのenvelope
+      if (ev.dataTransfer?.files.length === 1) {
+        const file = ev.dataTransfer.files[0];
+        const fileName = file.name;
+        if (file.type === "application/json") {
+          // 旧タイプのenvelope
+          try {
+            $loading = true;
             const json = await file.text();
             const book = await readOldEnvelope(json);
             const newFile = await fileSystem.createFile();
             await saveBookTo(book, fileSystem, newFile);
             await node.link("パッケージ", newFile.id);
             node = node;
-            return;
           }
-          if (fileName.endsWith(".envelope")) {
-            // 新タイプのenvelope
-            const book = await readEnvelope(file);
+          finally {
+            $loading = false;
+          }
+          return;
+        }
+        if (fileName.endsWith(".envelope")) {
+          // 新タイプのenvelope
+          try {
+            $progress = 0;
+            const book = await readEnvelope(file, n => $progress = n);
             const newFile = await fileSystem.createFile();
             book.revision.id = newFile.id;
+            $progress = null;
+            $loading = true;
             await saveBookTo(book, fileSystem, newFile);
             const basename = fileName.replace(/\.envelope$/, "");
+            console.log("importing done")
             await node.link(basename, newFile.id);
             node = node;
-            return;
-          }        
-        } 
-      }
-      finally {
-          $loading = false;
-      }
+            $loading = false;
+          }
+          finally {
+            $progress = null;
+            $loading = false;
+          }
+          return;
+        }        
+      } 
       console.log("not acceptable");
     }
   }

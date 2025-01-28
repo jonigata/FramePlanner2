@@ -231,6 +231,20 @@
     commit(null);
   }
 
+  $: onChangeBookProperty($mainBook?.direction, $mainBook?.wrapMode);
+  function onChangeBookProperty(newDirection: ReadingDirection | undefined, newWrapMode: WrapMode | undefined) {
+    console.log("onChangeBookProperty", newDirection, wrapMode);
+    if (newDirection == null || newWrapMode == null) { return; }
+    if (readingDirection != newDirection || wrapMode != newWrapMode) {
+      console.log("onChangeBookProperty");
+      readingDirection = newDirection;
+      wrapMode = newWrapMode;
+      forceRebuild = true;
+      $mainBook = $mainBook;
+      commit(null);
+    }
+  }
+
   $: onChangeBook(canvas, $mainBook!);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
     if (!canvas || !book) { return; }

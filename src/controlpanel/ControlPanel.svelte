@@ -1,13 +1,13 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
   import { mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
-  import { toastStore } from '@skeletonlabs/skeleton';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import Drawer from '../utils/Drawer.svelte'
   import { controlPanelOpen } from './controlPanelStore';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
+  import type { Book } from '../lib/book/book';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -38,6 +38,11 @@
     p.paperSize[0] = w;
     p.paperSize[1] = h;
     $newPageProperty = p;
+  }
+
+  $: onBookChanged(book);
+  function onBookChanged(b: Book) {
+    $mainBook = b;
   }
 
 </script>
