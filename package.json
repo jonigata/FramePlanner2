@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.svelte-check.json",
     "staging": "npm run stamp && firebase hosting:channel:deploy staging",
-    "deploy": "if [ \"$(git rev-parse --abbrev-ref HEAD)\" = \"main\" ]; then npm run stamp && firebase deploy --only hosting; else echo 'Error: Must be on main branch to deploy' && exit 1; fi",
+    "deploy": "git branch --show-current | grep -q '^main$' && npm run stamp && firebase deploy --only hosting || echo 'Deployment failed: not on main branch'",
     "vitest": "vitest",
     "deploy:preview": "firebase hosting:channel:deploy preview",
     "list-preview": "firebase hosting:channel:list",
