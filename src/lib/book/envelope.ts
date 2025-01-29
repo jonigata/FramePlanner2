@@ -58,10 +58,8 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
         bag[imageId] = { type: 'image', data: canvas };
       } else {
         const video = document.createElement('video');
-        (video as any).file = blob;
         video.src = url;
         await getFirstFrameOfVideo(video);
-        URL.revokeObjectURL(url);
         bag[imageId] = { type: 'video', data: video };
       }
       progress(Object.keys(bag).length / Object.keys(envelopedBook.medias).length);
@@ -173,7 +171,7 @@ async function mediaResourceToUint8Array(mediaResource: MediaResource, mediaType
     const arrayBuffer = await blob.arrayBuffer();
     return new Uint8Array(arrayBuffer);
   } else {
-    const blob = (mediaResource as any).file;
+    const blob = await fetch((mediaResource as HTMLVideoElement).src).then(res => res.blob());
     return new Uint8Array(await blob.arrayBuffer());
   }
 }

@@ -55,6 +55,7 @@
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
     const {index, films} = e.detail;
+    console.log("FrameInspector.onAccept", index, films);
     const page = $frameInspectorTarget!.page;
     const element = $frameInspectorTarget!.frame;
     const paperSize = page.paperSize;

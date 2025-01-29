@@ -1,3 +1,4 @@
+import { handleDataTransfer } from "../tools/fileUtil";
 import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
@@ -544,58 +545,14 @@ export class LayeredCanvas {
   }
 
   async handleDrop(event: DragEvent): Promise<void> {
-    async function loadVideoFromUrl(url: string) {
-      const video = document.createElement('video');
-      video.muted = true;
-      video.src = url;
-      try {
-        await getFirstFrameOfVideo(video);
-      } catch (error) {
-        console.error('Error loading video', error);
-      }
-      return video;
-    }
-
-    async function loadVideo(file: File) {
-      const video = await loadVideoFromUrl(URL.createObjectURL(file));
-      URL.revokeObjectURL(video.src);
-      return video;
-    }
-
     const p = this.eventPositionToRootPaperPosition(event);
     this.pointerCursor = p;
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
-    var file = event.dataTransfer!.files[0];
-    const url = event.dataTransfer!.getData('video/mp4');
-    if (url !== "") { 
-      console.log("video url", url, event.dataTransfer!.files.length);
-      const video = await loadVideoFromUrl(url);
-      this.rootPaper.handleDrop(p, video);
-      return;
-    }
-
-    if (!file) return; // 選択テキストのドロップなど
-    if (file.type.startsWith('image/svg')) { return; } // 念の為
-    if (file.type.startsWith('image/')) {
-      const image = new Image();
-      image.src = URL.createObjectURL(file);
-      await image.decode();
-      URL.revokeObjectURL(image.src);
-      console.log("image loaded", image.width, image.height);
-
-      const canvas = document.createElement('canvas');
-      canvas.width = image.width;
-      canvas.height = image.height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(image, 0, 0);
-
-      this.rootPaper.handleDrop(p, canvas);
-    }
-    if (file.type.startsWith('video/')) {
-      const video = await loadVideo(file);
-      console.log("video loaded", video.videoWidth, video.videoHeight);
-      this.rootPaper.handleDrop(p, video);
+    const mediaResources = await handleDataTransfer(event.dataTransfer!);
+    if (mediaResources.length === 0) { return; }
+    for (let media of mediaResources) {
+      this.rootPaper.handleDrop(p, media);
     }
   }
 

@@ -57,9 +57,7 @@
   function onDragStart(e: DragEvent) {
     console.log("onDragStart");
     if (media.type === 'video' && e.dataTransfer) {
-      const blob = (media.persistentSource as any)["file"];
-      const url = URL.createObjectURL(blob);
-      e.dataTransfer.setData("video/mp4", url);
+      e.dataTransfer.setData("video/mp4", (media.persistentSource as HTMLVideoElement).src);
     }
     dispatch("dragstart", media);
   }

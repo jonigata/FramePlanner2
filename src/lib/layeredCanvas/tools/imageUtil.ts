@@ -93,12 +93,17 @@ export async function imageToBlob(image: HTMLImageElement): Promise<Blob> {
   return await canvasToBlob(canvas);
 }
 
-export async function createVideoFromBlob(blob: Blob): Promise<HTMLVideoElement> {
+export async function createVideoFromDataUrl(dataUrl: string): Promise<HTMLVideoElement> {
   const video = document.createElement("video");
-  const url = URL.createObjectURL(blob);
-  video.src = url;
-  (video as any).file = blob;
+  video.muted = true;
+  video.src = dataUrl;
   await getFirstFrameOfVideo(video);
+  return video;
+}
+
+export async function createVideoFromBlob(blob: Blob): Promise<HTMLVideoElement> {
+  const url = URL.createObjectURL(blob);
+  const video = await createVideoFromDataUrl(url);
   // URL.revokeObjectURL(url); ダウンロードできるようにrevokeしない
   return video;
 }

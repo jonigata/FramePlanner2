@@ -7,6 +7,7 @@
   import { moveInArray } from '../../utils/moveInArray';
   import FilmListItem from "./FilmListItem.svelte";
   import { createCanvasFromBlob } from '../../lib/layeredCanvas/tools/imageUtil';
+  import { buildMedia } from '../../lib/layeredCanvas/dataModels/media';
   
   export let filmStack: FilmStack;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
@@ -20,22 +21,9 @@
   let isDragging = false;
   let ghostIndex = -1;
 
-  async function importFiles(files: Blob[]): Promise<Film[]> {
-    console.log("importFiles");
-    const file = files[0];
-    if (file.type.startsWith("image/")) {
-      console.log("image file");
-      const canvas = await createCanvasFromBlob(file);
-
-      const film = new Film(new ImageMedia(canvas));
-      film.index = filmStack.films.length;
-      return [film];
-    }
-    return [];
-  }
-
-  function onAcceptDrop(newIndex: number, films: Film[]) {
+  function onAcceptDrop(newIndex: number, mediaResources: (HTMLCanvasElement | HTMLVideoElement)[]) {
     const index = filmStack.films.length - newIndex;
+    const films = mediaResources.map(buildMedia).map(media => new Film(media));
     dispatch('accept', {index, films});
   }
 
@@ -46,7 +34,6 @@
   }
 
   const fileDroppableContainer = new FileDroppableContainer(
-    importFiles,
     onAcceptDrop,
     onGhost);
 

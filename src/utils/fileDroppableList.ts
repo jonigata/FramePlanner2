@@ -2,8 +2,10 @@
 //   現状だと、fileDrappableListを複数のelementでuseすると正しく動作しないため
 //   受付ゾーンを今より広げるために必要
 
+import { handleDataTransfer } from "../lib/layeredCanvas/tools/fileUtil";
+
 type DropZoneOptions = {
-  onFileDrop: (files: Blob[], index: number) => Promise<void>;
+  onFileDrop: (index: number, files: (HTMLCanvasElement | HTMLVideoElement)[]) => Promise<void>;
   onDragUpdate: (index: number) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -47,16 +49,10 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
     ev.stopPropagation();
     if (isDragging) {
       const index = getDropIndex(ev.clientY);
-      const dt = ev.dataTransfer!;
-      const url = dt.getData('video/mp4');
-      if (url !== "") { 
-        const blob = await fetch(url).then(res => res.blob());
-        options.onFileDrop([blob], index);
-      } else {
-        const files = dt.files;
-        if (files && files.length > 0) {
-          options.onFileDrop(Array.from(files), index);
-        }
+      console.log("drop index", index);
+      const mediaResources = await handleDataTransfer(ev.dataTransfer!);
+      if (mediaResources.length > 0) {
+        options.onFileDrop(index, mediaResources);
       }
     }
     endDrag();
@@ -127,25 +123,20 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
   };
 }
 
-export class FileDroppableContainer<T> {
+export class FileDroppableContainer {
   private isDragging: boolean = false;
   private ghostIndex: number = -1;
   
   constructor(
-    private importer: (files: Blob[]) => Promise<T[]>, 
-    private onAccept: (index: number, elements: T[]) => void,
+    private onAccept: (index: number, elements: (HTMLCanvasElement | HTMLVideoElement)[]) => void,
     private onGhost: (isDragging: boolean, ghostIndex: number) => void
   ) {
   }
 
-  async handleFileDrop(files: Blob[], index: number): Promise<void> {
-    const importedFiles = await this.importer(files);
-    if (importedFiles.length === 0) {
-      return;
-    }
+  async handleFileDrop(index: number, files: (HTMLCanvasElement | HTMLVideoElement)[]): Promise<void> {
     this.isDragging = false;
     this.ghostIndex = -1;
-    this.onAccept(index, importedFiles);
+    this.onAccept(index, files);
   }
 
   handleDragUpdate(index: number): void {

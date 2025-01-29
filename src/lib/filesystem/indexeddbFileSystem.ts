@@ -336,7 +336,8 @@ export class IndexedDBFile extends File {
       const blob = await canvasToBlob(mediaResource);
       await this.db.put('nodes', { id: this.id, type: 'file', blob, mediaType: 'image' });
     } else if (mediaResource instanceof HTMLVideoElement) {
-      const blob = (mediaResource as any).file;
+      // video.srcからblobを取得
+      const blob = await fetch(mediaResource.src).then(res => res.blob());
       await this.db.put('nodes', { id: this.id, type: 'file', blob, mediaType: 'video' });
     } else {
       await this.db.put('nodes', { id: this.id, type: 'file', remote: mediaResource });

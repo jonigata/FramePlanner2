@@ -73,7 +73,6 @@
       } else if (mediaType === "video") {
         const video = await createVideoFromBlob(blob);
         (video as any)["requestId"] = requestId;
-        (video as any)["file"] = blob;
         return video;
       }
       throw new Error("Invalid media type");
