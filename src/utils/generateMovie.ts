@@ -6,6 +6,7 @@ import { ImageMedia, VideoMedia } from '../lib/layeredCanvas/dataModels/media';
 import { waitDialog } from '../utils/waitDialog';
 import { image2Video } from '../supabase';
 import { saveRequest } from '../filemanager/warehouse';
+import { loading } from './loadingStore';
 
 export async function generateMovie(filmStack: FilmStack, film: Film) {
   if (!(film.media instanceof ImageMedia)) { return; }
@@ -15,6 +16,7 @@ export async function generateMovie(filmStack: FilmStack, film: Film) {
 
   if (!request) { return; }
 
+  loading.set(true);
   const { request_id } = await image2Video(request);
   await saveRequest(get(fileSystem)!, "video", "kling", request_id);
 
@@ -23,4 +25,5 @@ export async function generateMovie(filmStack: FilmStack, film: Film) {
 
   const index = filmStack.films.indexOf(film);
   filmStack.films.splice(index + 1, 0, newFilm);
+  loading.set(false);
 }

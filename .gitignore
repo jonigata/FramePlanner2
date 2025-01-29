@@ -16,7 +16,8 @@ public/ads
 junk/*
 public/stamp.txt
 .editorconfig
-
+public/banners/*
+testdata/*
 
 # Editor directories and files
 .vscode/*

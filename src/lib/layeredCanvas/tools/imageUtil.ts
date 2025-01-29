@@ -99,6 +99,6 @@ export async function createVideoFromBlob(blob: Blob): Promise<HTMLVideoElement>
   video.src = url;
   (video as any).file = blob;
   await getFirstFrameOfVideo(video);
-  URL.revokeObjectURL(url);
+  // URL.revokeObjectURL(url); ダウンロードできるようにrevokeしない
   return video;
 }

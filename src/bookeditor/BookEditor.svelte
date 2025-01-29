@@ -603,6 +603,7 @@
   async function modalFrameVideo(fit: FrameInspectorTarget) {
     await generateMovie(fit.frame.filmStack, fit.commandTargetFilm!);
     commit(null);
+    toastStore.trigger({ message: `ムービー生成には6分程度かかります`, timeout: 3000});
   }
 
   onDestroy(() => {

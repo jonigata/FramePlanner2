@@ -3,9 +3,9 @@
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { mediaViewerTarget } from './mediaViewerStore';
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { createImageFromCanvas } from '../lib/layeredCanvas/tools/imageUtil';
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
   import { formatDuration } from '../utils/timeFormat';
+  import MediaFrame from './MediaFrame.svelte';
 
   import drop from '../assets/drop.png';
   import reference from '../assets/reference.png';
@@ -18,42 +18,14 @@
   export let refered: Media | null = null;
   export let accessable: boolean = true;
 
-  let container: HTMLDivElement;
   let height: number = 160;
-  let image: HTMLImageElement;
 
   const dispatch = createEventDispatcher();
 
-  $: onMediaChanged(media);
-  async function onMediaChanged(c: Media) {
-    if (c) {
+  $: {
+    if (media) {
       const size = media.size;
       height = (size[1] / size[0]) * width; // fix aspect ratio
-      console.log("onCanvasChanged", size[0], size[1], width, height);
-      const w = Math.min(width, size[0]);
-      const h = Math.min(height, size[1]);
-
-      image = await createImageFromCanvas(media.drawSourceCanvas);
-      image.style.width = `${w}px`;
-      image.style.height = `${h}px`;
-      image.style.position = 'absolute';
-      image.style.top = (width / 2 - w / 2).toString() + 'px';
-      image.style.left = (height / 2 - h / 2).toString() + 'px';
-
-      if (media.type === 'video') {
-        image.ondragstart = (e) => {
-          if (!e.dataTransfer) return;
-
-          const blob  = (media.persistentSource as any)["file"];
-          // drop時に存在していないといけないので、revokeはしない
-          // そんなに大きなものではないそうなので、捨てる
-          const url = URL.createObjectURL(blob); 
-
-          e.dataTransfer?.setData("video/mp4", url);
-        }
-      }
-
-      container.appendChild(image);
     }
   }
 
@@ -84,6 +56,11 @@
 
   function onDragStart(e: DragEvent) {
     console.log("onDragStart");
+    if (media.type === 'video' && e.dataTransfer) {
+      const blob = (media.persistentSource as any)["file"];
+      const url = URL.createObjectURL(blob);
+      e.dataTransfer.setData("video/mp4", url);
+    }
     dispatch("dragstart", media);
   }
 
@@ -101,8 +78,16 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="frame" class:selected={chosen === media} on:click={onClick} style="width: {width}px; height: {height}px;" draggable="true" on:dragstart={onDragStart}>
-  <div class="container w-full h-full" bind:this={container} >
+<div 
+  class="frame" 
+  class:selected={chosen === media} 
+  style="width: {width}px; height: {height}px;"
+  draggable="true" 
+  on:dragstart={onDragStart}
+  on:click={onClick}
+>
+  <div class="media-container">
+    <MediaFrame {media} />
   </div>
   {#if accessable}
     <div class="delete-button" on:click={e => onDelete(e)} use:toolTip={"削除"}>
@@ -137,6 +122,10 @@
   }
   .selected {
     border-color: blue;
+  }
+  .media-container {
+    width: 100%;
+    height: 100%;
   }
   .delete-button {
     position: absolute;
