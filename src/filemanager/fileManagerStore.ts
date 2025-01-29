@@ -302,7 +302,7 @@ async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSys
         console.log("================ Local -> Vault");
         const sourceFile = sourceNode.asFile()!;
         const book = await loadBookFrom(sourceFileSystem, sourceFile);
-        const blob = await writeEnvelope(book);
+        const blob = await writeEnvelope(book, n => {});
         const targetFile = await targetFileSystem.createFile();
         await targetFile.writeBlob(blob);
         return targetFile.id;

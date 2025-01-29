@@ -78,9 +78,11 @@
   }
 
   async function makeEnvelope() {
+    $progress = 0;
     const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
     const book = await loadBookFrom($fileSystem!, file);
-    const blob = await writeEnvelope(book);
+    const blob = await writeEnvelope(book, (n) => $progress = n);
+    $progress = null;
     return {file, blob};
   }
 
