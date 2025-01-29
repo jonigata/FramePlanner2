@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { Effect, OutlineEffect } from "../../lib/layeredCanvas/dataModels/effect";
   import { redrawToken } from '../bookStore';
@@ -7,15 +7,14 @@
   import { moveInArray } from '../../utils/moveInArray';
   import { sortableList } from '../../utils/sortableList';
   import { filmProcessorQueue } from '../../utils/filmprocessor/filmProcessorStore';
-  import SpreadCanvas from '../../utils/SpreadCanvas.svelte';
   import { effectChoiceNotifier } from '../effectchooser/effectChooserStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { toolTip } from '../../utils/passiveToolTipStore';
   import Popup from '../../utils/Popup.svelte';
+  import MediaFrame from '../../gallery/MediaFrame.svelte';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
-  // import generateIcon from '../../assets/filmlist/generate.png';
   import trashIcon from '../../assets/filmlist/trash.png';
   import punchIcon from '../../assets/filmlist/punch.png';
   import effectIcon from '../../assets/filmlist/effect.png';
@@ -26,13 +25,10 @@
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
 
-  let canvas: HTMLCanvasElement;
   let effectVisible = false;
   let outPaintingCost = 0;
   let popupVisible = false;
   let popupButton: HTMLButtonElement;
-
-  // TODO: ポップアップメニューが開いているときにもう一度別のボタンをクリックすると勝手に閉じる
 
   const dispatch = createEventDispatcher();
 
@@ -132,14 +128,6 @@
     dispatch('commit', false);
   }
 
-  $: onCanvas(canvas);
-  function onCanvas(c: HTMLCanvasElement) {
-    if (!c) return;
-    const source = film?.media.drawSource!;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(source, 0, 0);
-  }
-
   function onHover(e: MouseEvent) {
     if (!calculateOutPaintingCost) return;
 
@@ -153,10 +141,6 @@
     popupVisible = !popupVisible;
     ev.stopPropagation();
     ev.preventDefault();
-  }
-
-  $: if($redrawToken) {
-    canvas = canvas;
   }
 
   $: console.log("popupVisible", popupVisible);
@@ -183,15 +167,13 @@
       on:pointerover={onHover}
       on:click={onClick}
     >
-      <SpreadCanvas width={film.media.naturalWidth} height={film.media.naturalHeight} bind:canvas={canvas}/>
+      <div class="media-container">
+        <MediaFrame media={film.media} showControls={false}/>
+      </div>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" use:toolTip={"可視/不可視"} on:click={onToggleVisible}/>
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <!--
-      <img draggable={false} class="generate-icon" src={generateIcon} alt="AI生成" use:toolTip={"AI生成"} on:click={onGenerate}/>
-      -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
 
@@ -263,6 +245,10 @@
     justify-content: center;
     gap: 8px;
     position: relative;
+  }
+  .media-container {
+    width: 100%;
+    height: 100%;
   }
   .effect-panel {
     width: 100%;

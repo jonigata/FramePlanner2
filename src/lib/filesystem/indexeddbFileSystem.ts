@@ -331,12 +331,13 @@ export class IndexedDBFile extends File {
   }
 
   async writeMediaResource(mediaResource: MediaResource): Promise<void> {
+    console.log("writeMediaResource", mediaResource);
     if (mediaResource instanceof HTMLCanvasElement) {
       const blob = await canvasToBlob(mediaResource);
-      await this.db.put('nodes', { id: this.id, type: 'file', blob });
+      await this.db.put('nodes', { id: this.id, type: 'file', blob, mediaType: 'image' });
     } else if (mediaResource instanceof HTMLVideoElement) {
-      const file = (mediaResource as any).file;
-      await this.db.put('nodes', { id: this.id, type: 'file', blob: file });
+      const blob = (mediaResource as any).file;
+      await this.db.put('nodes', { id: this.id, type: 'file', blob, mediaType: 'video' });
     } else {
       await this.db.put('nodes', { id: this.id, type: 'file', remote: mediaResource });
     }

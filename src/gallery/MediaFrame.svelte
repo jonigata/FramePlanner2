@@ -3,9 +3,21 @@
 
   export let media: Media;
   export let onClick: () => void = () => {};
+  export let showControls: boolean = true;
 
   function getVideoSource(media: Media) {
     return (media.drawSource as HTMLVideoElement).src;
+  }
+
+  let container: HTMLDivElement;
+
+  $: if (container && media && media.type !== 'video') {
+    // 既存の子要素をクリア
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    // canvasを追加
+    container.appendChild(media.drawSourceCanvas);
   }
 </script>
 
@@ -13,21 +25,16 @@
   {#if media.type === 'video' && media.isLoaded}
     <video 
       src={getVideoSource(media)}
-      controls
+      controls={showControls}
       class="media-element"
       draggable="true"
       on:click={onClick}
     >
-      <track kind="captions" />
     </video>
   {:else}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img 
-      src={media.drawSourceCanvas.toDataURL()}
-      class="media-element"
-      alt="Media content"
-      draggable="true"
+    <div 
+      class="canvas-container"
+      bind:this={container}
       on:click={onClick}
     />
   {/if}
@@ -44,6 +51,18 @@
     position: relative;
   }
   .media-element {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .canvas-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .canvas-container :global(canvas) {
     width: 100%;
     height: 100%;
     object-fit: contain;

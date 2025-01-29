@@ -87,7 +87,7 @@
   on:click={onClick}
 >
   <div class="media-container">
-    <MediaFrame {media} />
+    <MediaFrame {media} showControls={false}/>
   </div>
   {#if accessable}
     <div class="delete-button" on:click={e => onDelete(e)} use:toolTip={"削除"}>
