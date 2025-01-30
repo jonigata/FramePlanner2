@@ -9,32 +9,43 @@
     return (media.drawSource as HTMLVideoElement).src;
   }
 
-  let container: HTMLDivElement;
+  let imageDataUrl: string | null = null;
 
-  $: if (container && media && media.type !== 'video') {
-    // 既存の子要素をクリア
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
+  async function updateImageDataUrl() {
+    if (media.type === 'image' && media.drawSourceCanvas) {
+      const blob = await new Promise<Blob | null>((resolve) => {
+        media.drawSourceCanvas.toBlob(resolve, 'image/png');
+      });
+
+      if (blob) {
+        imageDataUrl = URL.createObjectURL(blob);
+      }
     }
-    // canvasを追加
-    container.appendChild(media.drawSourceCanvas);
+  }
+
+  // メディアが変更されたら画像URLを更新
+  $: if (media.type === 'image') {
+    updateImageDataUrl();
   }
 </script>
 
 <div class="media-frame">
   {#if media.type === 'video' && media.isLoaded}
+    <!-- svelte-ignore a11y-media-has-caption -->
     <video 
       src={getVideoSource(media)}
       controls={showControls}
       class="media-element"
       draggable="true"
       on:click={onClick}
-    >
-    </video>
-  {:else}
-    <div 
-      class="canvas-container"
-      bind:this={container}
+    />
+  {:else if media.type === 'image' && imageDataUrl}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img
+      src={imageDataUrl}
+      class="media-element"
+      alt=""
       on:click={onClick}
     />
   {/if}

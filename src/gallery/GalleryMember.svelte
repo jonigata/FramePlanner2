@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { ImageMedia, VideoMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
   import GalleryElement from './GalleryElement.svelte';
-  import GalleryLoading from './GalleryLoading.svelte';
+  import MediaLoading from './MediaLoading.svelte';
   import type { GalleryItem } from './gallery';
 
   export let item: GalleryItem;
@@ -39,10 +39,10 @@
 
 <div bind:this={element}>
   {#if !promise}
-    <GalleryLoading width={columnWidth}/>
+    <MediaLoading width={columnWidth}/>
   {:else }
     {#await promise}
-      <GalleryLoading width={columnWidth}/>
+      <MediaLoading width={columnWidth}/>
     {:then resolvedMedias}
       {#each resolvedMedias as resolvedMedia}
         <GalleryElement 
