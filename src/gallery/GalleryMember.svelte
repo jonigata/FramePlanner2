@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { ImageMedia, VideoMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
   import GalleryElement from './GalleryElement.svelte';
   import MediaLoading from './MediaLoading.svelte';
@@ -11,51 +11,62 @@
   export let refered: Media | null;
   export let accessable: boolean;
 
-  let isIntersecting = false;
-  let promise: Promise<Media[]> | null = null;
-  let element: HTMLElement;
+  let medias: Media[] | undefined;
+  let observerTarget: HTMLDivElement; // 監視用の DOM 要素
+
+  const distach = createEventDispatcher();
+
+  function onDelete(e: CustomEvent<Media>) {
+    console.log('GalleryMember.onDelete(before)', e.detail, medias!.length);
+    medias = medias!.filter(c => c !== e.detail);
+    console.log('GalleryMember.onDelete(after)', e.detail, medias!.length);
+    if (medias!.length === 0) {
+      distach('delete', item);
+    }
+  }
 
   onMount(() => {
+    // すでに単一の ImageMedia / VideoMedia であれば即座に読み込む
     if (item instanceof ImageMedia || item instanceof VideoMedia) {
-      promise = Promise.resolve([item]);
+      medias = [item];
       return;
     }
 
+    // IntersectionObserver をプレースホルダー用の要素にだけ紐付ける
     const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        isIntersecting = entry.isIntersecting;
-        if (isIntersecting && !promise) {
-          promise = (item as (() => Promise<Media[]>))();
+      ([entry]) => {
+        if (entry.isIntersecting && !medias) {
+          (item as () => Promise<Media[]>)().then(result => {
+            medias = result;
+          });
         }
       },
       { threshold: 0.1 }
     );
+    observer.observe(observerTarget);
 
-    observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   });
 </script>
 
-<div bind:this={element}>
-  {#if !promise}
-    <MediaLoading width={columnWidth}/>
-  {:else }
-    {#await promise}
-      <MediaLoading width={columnWidth}/>
-    {:then resolvedMedias}
-      {#each resolvedMedias as resolvedMedia}
-        <GalleryElement 
-          bind:chosen
-          bind:refered
-          width={columnWidth}
-          media={resolvedMedia}
-          {accessable}
-          on:commit
-          on:delete
-          on:dragstart
-        />
-      {/each}
-    {/await}
-  {/if}
-</div>
+{#if !medias}
+  <!-- ロードされる前のみ表示される 1マスぶんのプレースホルダー -->
+  <div bind:this={observerTarget}>
+    <MediaLoading width={columnWidth} />
+  </div>
+{:else}
+  {#each medias as media}
+    <GalleryElement
+      bind:chosen
+      bind:refered
+      width={columnWidth}
+      media={media}
+      {accessable}
+      on:commit
+      on:delete={onDelete}
+      on:dragstart
+    />
+  {/each}
+{/if}

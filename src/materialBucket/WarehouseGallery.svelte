@@ -3,45 +3,25 @@
   import Gallery from '../gallery/Gallery.svelte';
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { getEntries, saveEntity, deleteEntry } from '../filemanager/warehouse';
-  import { bookEditor, redrawToken } from '../bookeditor/bookStore';
-  import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-  import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
-  import { Film } from '../lib/layeredCanvas/dataModels/film';
-  import { buildMedia, ImageMedia, type Media, type MediaType } from '../lib/layeredCanvas/dataModels/media';
+  import { buildMedia, type Media, type MediaType } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher } from 'svelte';
   import { pollMediaStatus } from '../supabase';
   import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { ls } from '../lib/filesystem/fileSystem';
+  import type { GalleryItem } from "../gallery/gallery";
 
   const dispatch = createEventDispatcher();
   let items: (() => Promise<Media[]>)[] = [];
+  let requestIds = new WeakMap<(Media | (() => Promise<Media[]>)), string>();
 
-  function onChooseImage(e: CustomEvent<HTMLCanvasElement>) {
-    const page = $bookEditor!.getFocusedPage();
-    const canvas = e.detail;
-    const bubble = new Bubble();
-    const paperSize = page.paperSize;
-    const imageSize = [canvas.width, canvas.height];
-    const x = Math.random() * (paperSize[0] - imageSize[0]);
-    const y = Math.random() * (paperSize[1] - imageSize[1]);
-    bubble.setPhysicalRect(paperSize, [x, y, ...imageSize] as Rect);
-    bubble.forceEnoughSize(paperSize);
-    bubble.shape = "none";
-    bubble.initOptions();
-    bubble.text = "";
-    const film = new Film(new ImageMedia(canvas));
-    bubble.filmStack.films.push(film);
-    page.bubbles.push(bubble);
-    $bookEditor!.focusBubble(page, bubble);
-    $redrawToken = true;
-  }
-
-  function onChildDragStart(e: CustomEvent<HTMLCanvasElement>) {
+  function onChildDragStart(e: CustomEvent<Media>) {
     dispatch('dragstart', e.detail);
   }
 
-  function onDelete(e: CustomEvent<HTMLCanvasElement>) {
-    deleteEntry($fileSystem!, (e.detail as any)["requestId"]);
+  async function onDelete(e: CustomEvent<GalleryItem>) {
+    console.log("onDelete", e.detail);
+    const requestId = requestIds.get(e.detail);
+    deleteEntry($fileSystem!, requestId!);
   }
 
   async function handleRequest(mediaType: MediaType, mode: string, requestId: string) {
@@ -50,7 +30,6 @@
       await saveEntity($fileSystem!, mediaType, mode, requestId, urls);
       return mediaResources.map((mediaResource) => {
         const media = buildMedia(mediaResource);
-        (media as any)["requestId"] = requestId;
         return media;
       });
     }
@@ -68,45 +47,48 @@
       const blob = await response.blob();
       if (mediaType === "image") {
         const canvas = await createCanvasFromBlob(blob);
-        (canvas as any)["requestId"] = requestId;
         return canvas;
       } else if (mediaType === "video") {
         const video = await createVideoFromBlob(blob);
-        (video as any)["requestId"] = requestId;
         return video;
       }
       throw new Error("Invalid media type");
     }));
-    return mediaResources.map((media) => {
-      return buildMedia(media);
+    return mediaResources.map((mediaResource) => {
+      const media = buildMedia(mediaResource);
+      return media;
     });
   }
 
   async function displayWarehouseImages() {
     console.log(await ls($fileSystem!, "倉庫"));
 
-    items = [];
+    const newItems = [];
+    const newRequestIds = new WeakMap<(Media | (() => Promise<Media[]>)), string>();
     for (const entry of await getEntries($fileSystem!)) {
       console.log(entry);
 
       switch (entry.type) {
         case "request":
-          items.push(
-            async () => {
-              return await handleRequest(entry.mediaType, entry.mode, entry.requestId);
-            });
+          const f = async () => {
+            return await handleRequest(entry.mediaType, entry.mode, entry.requestId);
+          };
+          newItems.push(f);
+          newRequestIds.set(f, entry.requestId);
           break;
         case "entity":
-          items.push(
-            async () => {
-              return await handleEntity(entry.mediaType, entry.requestId, entry.mediaUrls);
-            });
+          const f2 = async () => {
+            return await handleEntity(entry.mediaType, entry.requestId, entry.mediaUrls);
+          };
+          newItems.push(f2);
+          newRequestIds.set(f2, entry.requestId);
           break;
         default:
           throw new Error("Invalid entry type");
       }
     }
-    items = items;
+    items = newItems;
+    requestIds = newRequestIds;
 
     console.log("done");
   }
@@ -115,7 +97,7 @@
 </script>
 
 <div class="gallery-content">
-  <Gallery columnWidth={220} bind:items={items} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+  <Gallery columnWidth={220} bind:items={items} on:dragstart={onChildDragStart} on:delete={onDelete}/>
 </div>
 
 <style>

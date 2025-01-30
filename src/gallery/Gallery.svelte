@@ -18,7 +18,9 @@
   }
 
   async function onDelete(e: CustomEvent<GalleryItem>) {
+    console.log("Gallery.onDelete(before)", e.detail, items.length);
     items = items.filter(c => c !== e.detail);
+    console.log("Gallery.onDelete(after)", e.detail, items.length);
     dispatch("delete", e.detail);
   }
 
