@@ -66,16 +66,4 @@
     height: 100%;
     object-fit: contain;
   }
-  .canvas-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .canvas-container :global(canvas) {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
 </style>

@@ -19,9 +19,9 @@
   async function onSubmit() {
     const request: ImageToVideoRequest = {
       prompt,
-      image_url: sourceMedia.drawSourceCanvas.toDataURL(),
+      imageUrl: sourceMedia.drawSourceCanvas.toDataURL(),
       duration,
-      aspect_ratio: aspectRatio
+      aspectRatio: aspectRatio
     };
     
     // TODO: API call implementation

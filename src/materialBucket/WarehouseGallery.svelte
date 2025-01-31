@@ -24,10 +24,10 @@
     deleteEntry($fileSystem!, requestId!);
   }
 
-  async function handleRequest(mediaType: MediaType, mode: string, requestId: string) {
+  async function handleRequest(mediaType: MediaType, mode: string, request_id: string) {
     try {
-      const { mediaResources, urls } = await pollMediaStatus(mediaType, mode, requestId);
-      await saveEntity($fileSystem!, mediaType, mode, requestId, urls);
+      const { mediaResources, urls } = await pollMediaStatus({mediaType, mode, requestId: request_id});
+      await saveEntity($fileSystem!, mediaType, mode, request_id, urls);
       return mediaResources.map((mediaResource) => {
         const media = buildMedia(mediaResource);
         return media;
@@ -36,7 +36,7 @@
     catch (e) {
       // fal.aiは7日間しかリクエストを保存しないので、おそらくそれ
       console.log(e);
-      deleteEntry($fileSystem!, requestId);
+      deleteEntry($fileSystem!, request_id);
       return [];
     }
   }

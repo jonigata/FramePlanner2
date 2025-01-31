@@ -122,12 +122,13 @@ export async function recordPublication(req: RecordPublicationRequest) {
 export async function notifyShare(text: string) {
 }
 
-export async function pollMediaStatus(type: 'image' | 'video', mode: string, request_id: string) {
-  const interval = type === 'video' ? 10000 : 1000;
+export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'video', mode: string, requestId: string}) {
+  const isVideo = mediaReference.mediaType === 'video';
+  const interval = isVideo ? 10000 : 1000;
 
   let urls: string[] | undefined;
   while (!urls) {
-    const status = await imagingStatus({mode, request_id});
+    const status = await imagingStatus(mediaReference);
     console.log(status);
     switch (status.status) {
       case "IN_QUEUE":
@@ -146,7 +147,7 @@ export async function pollMediaStatus(type: 'image' | 'video', mode: string, req
     urls.map(async url => {
       const response = await fetch(url);
       const blob = await response.blob();
-      if (type === 'video') {
+      if (isVideo) {
         const video = await createVideoFromBlob(blob);
         return video;
       } else {

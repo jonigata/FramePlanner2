@@ -9,9 +9,9 @@ filmProcessorQueue.subscribe(async (film: Film) => {
   console.log("Processing film", film);
   if (!film.media.isLoaded) {
     // Unmaterializedメディアの場合、ロード
-    console.log("Unmaterialized media, loading...");
     const rmr = film.media.persistentSource as RemoteMediaReference;
-    const { mediaResources }  = await pollMediaStatus(film.media.type, rmr.mode, rmr.requestId);
+    console.log("Unmaterialized media, loading...", rmr);
+    const { mediaResources }  = await pollMediaStatus(rmr);
     if (mediaResources.length > 0) {
       console.log("The images are ready!");
       film.media.setMedia(mediaResources[0]);

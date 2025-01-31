@@ -27,17 +27,17 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
   try {
     let imageRequest: TextToImageRequest = {
       prompt, 
-      image_size,
-      num_images,
+      imageSize: image_size,
+      numImages: num_images,
       mode, 
     };
     console.log(imageRequest);
-    const { request_id } = await text2Image(imageRequest);
+    const { requestId } = await text2Image(imageRequest);
 
-    await saveRequest(get(fileSystem)!, "image", mode, request_id);
+    await saveRequest(get(fileSystem)!, "image", mode, requestId);
 
     const perf = performance.now();
-    const { mediaResources } = await pollMediaStatus("image", mode, request_id);
+    const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });
 
     console.log("generateImageFromTextWithFlux", performance.now() - perf);
 
