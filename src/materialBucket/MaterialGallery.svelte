@@ -93,27 +93,24 @@
 </script>
 
 <div class="dropzone" use:dropzone={onFileDrop}>
-  <div class="gallery-content" use:dropzone={onFileDrop}>
-    {#if gallery != null}
-      <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
-    {/if}
-  </div>
+  {#if gallery != null}
+    <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+  {/if}
 </div>
 
 <style>
   .dropzone {
     width: 100%;
-    min-height: 220px;
-    height: auto;
+    height: 100%;
+    overflow: auto;
+    transition: all 0.2s;
+    border-radius: 4px;
+    position: relative;
   }
-  .gallery-content {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    min-height: 220px;
-    height: auto;
-  }
-  :global(.drag-over) {
-    background-color: #f0f0f0;
+  :global(.dropzone.drag-over) {
+    background-color: rgba(0, 123, 255, 0.15) !important;
+    outline: 3px dashed rgba(0, 123, 255, 0.6) !important;
+    outline-offset: -3px !important;
+    z-index: 10 !important;
   }
 </style>

@@ -51,13 +51,19 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    gap: 16px;
+    gap: 24px;
+    padding: 16px;
+  }
+
+  :global(.accordion-item) {
+    margin-top: -8px;
   }
 
   .material-section {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    max-height: calc(100% - 60px); /* アコーディオンの高さ分を引く */
+    overflow: hidden;
   }
 
   h2 {
