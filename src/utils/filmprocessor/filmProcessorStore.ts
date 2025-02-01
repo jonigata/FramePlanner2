@@ -6,14 +6,11 @@ import type { RemoteMediaReference } from "src/lib/filesystem/fileSystem";
 
 export const filmProcessorQueue = new PubSubQueue<Film>();
 filmProcessorQueue.subscribe(async (film: Film) => {
-  console.log("Processing film", film);
   if (!film.media.isLoaded) {
     // Unmaterializedメディアの場合、ロード
     const rmr = film.media.persistentSource as RemoteMediaReference;
-    console.log("Unmaterialized media, loading...", rmr);
     const { mediaResources }  = await pollMediaStatus(rmr);
     if (mediaResources.length > 0) {
-      console.log("The images are ready!");
       film.media.setMedia(mediaResources[0]);
     }
   }

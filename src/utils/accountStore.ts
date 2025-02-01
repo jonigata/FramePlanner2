@@ -42,9 +42,10 @@ function createAuthStore(): AuthStore {
       })
       if (error) {
         console.error(error);
-        return () => {};
+        // 失敗したときは初期ルートと同じ
+      } else {
+        console.log("setSession", data);
       }
-      console.log("setSession", data);
     }
 
     // 認証状態の変更を監視

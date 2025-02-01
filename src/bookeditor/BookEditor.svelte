@@ -234,10 +234,8 @@
 
   $: onChangeBookProperty($mainBook?.direction, $mainBook?.wrapMode);
   function onChangeBookProperty(newDirection: ReadingDirection | undefined, newWrapMode: WrapMode | undefined) {
-    console.log("onChangeBookProperty", newDirection, wrapMode);
     if (newDirection == null || newWrapMode == null) { return; }
     if (readingDirection != newDirection || wrapMode != newWrapMode) {
-      console.log("onChangeBookProperty");
       readingDirection = newDirection;
       wrapMode = newWrapMode;
       forceRebuild = true;

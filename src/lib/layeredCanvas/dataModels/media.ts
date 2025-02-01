@@ -98,7 +98,6 @@ export class ImageMedia extends MediaBase {
   private remoteMediaReference: RemoteMediaReference | undefined;
 
   constructor(mediaResource: HTMLCanvasElement | RemoteMediaReference) {
-    console.log("ImageMedia.constructor", mediaResource);
     super();
     if (mediaResource instanceof HTMLCanvasElement) {
       this.setCanvas(mediaResource);
@@ -108,7 +107,6 @@ export class ImageMedia extends MediaBase {
   }
 
   setMedia(media: HTMLCanvasElement) {
-    console.log("ImageMedia.setMedia", media);
     this.setCanvas(media);
   }
 
@@ -122,7 +120,6 @@ export class ImageMedia extends MediaBase {
   get drawSource(): HTMLCanvasElement { return this.canvas ?? this.getLoadingCanvas(); }
   get drawSourceCanvas(): HTMLCanvasElement { return this.drawSource; }
   get persistentSource(): MediaResource { 
-    console.log("ImageMedia.persistentSource", this.remoteMediaReference, this.drawSource);
     return this.remoteMediaReference ?? this.drawSource; 
   }
   get naturalWidth(): number { return this.drawSource.width; }
