@@ -33,20 +33,18 @@ function createAuthStore(): AuthStore {
     const accessTokenCookie = cookies.find(x => x[0] == 'my-access-token');
     const refreshTokenCookie = cookies.find(x => x[0] == 'my-refresh-token');
     
+    console.log("INITIALIZE");
     if (accessTokenCookie && refreshTokenCookie) {
-      // 例外が起きるわけではないみたい
-      // TODO: 失敗したら消してやり直すべき？
-      // わざとaccessTokenを壊して試す
-      try {
-        const authResponse = await supabase.auth.setSession({
-          access_token: accessTokenCookie[1],
-          refresh_token: refreshTokenCookie[1],
-        })
-        console.log(authResponse);
+      // accessTokenCookie![1] = `adfas-${accessTokenCookie}`;
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessTokenCookie[1],
+        refresh_token: refreshTokenCookie[1],
+      })
+      if (error) {
+        console.error(error);
+        return () => {};
       }
-      catch (error) {
-        console.error("setSession error");
-      }
+      console.log("setSession", data);
     }
 
     // 認証状態の変更を監視
@@ -56,8 +54,9 @@ function createAuthStore(): AuthStore {
 
       const isDevelopment = storeGet(developmentFlag);
       const domain = isDevelopment ? '.example.local' : '.manga-farm.online';
-      const secure = isDevelopment ? '' : 'secure';
+      const secure = isDevelopment ? '' : 'secure;';
 
+      console.log("onAuthStateChanged:", event);
       if (event === 'SIGNED_OUT') {
         // delete cookies on sign out
         const expires = new Date(0).toUTCString()
@@ -196,6 +195,7 @@ async function subscribeToWallet(uid: string) {
 
 export function bootstrap() {
   authStore.subscribe(async (state) => {
+    console.log("authStore.subscribe", state);
     if (state.loading) return;
 
     if (state.user) {
