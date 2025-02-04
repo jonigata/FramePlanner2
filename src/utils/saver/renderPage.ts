@@ -94,10 +94,19 @@ export async function renderPageToPsd(page: Page) {
     ]
   };
 
-  frames.forEach((canvas, i) => {
+  frames.forEach((frame, i) => {
     psd.children[0].children.push({
       name: `コマ #${i+1}`,
-      canvas
+      children: [
+        {
+          name: '内容',
+          canvas: frame.content
+        },
+        {
+          name: '枠',
+          canvas: frame.border
+        }
+      ],
     });
   });
   bubbles.forEach((canvas, i) => {
