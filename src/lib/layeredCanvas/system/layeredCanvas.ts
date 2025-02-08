@@ -489,7 +489,6 @@ export class LayeredCanvas {
   handlePointerDown(event: PointerEvent): void {
     const p = this.eventPositionToRootPaperPosition(event);
 
-    console.log("================");
     const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
     for (let depth of depths) {
       this.dragging = this.rootPaper.handleAccepts(p, event.button, depth);

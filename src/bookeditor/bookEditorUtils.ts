@@ -3,6 +3,7 @@ import { FloorLayer } from '../lib/layeredCanvas/layers/floorLayer';
 // import { SampleLayer } from '../lib/layeredCanvas/layers/SampleLayer';
 import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
+// import { ClickableLayer } from '../lib/layeredCanvas/layers/clickableLayer';
 import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
@@ -123,6 +124,16 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); },
     (e: Border) => { insert(page, e) });
   paper.addLayer(frameLayer);
+
+  // const clickableLayer = new ClickableLayer(page.frameTree, (layout: Layout | null) => {
+  //   console.log('Clicked layout:', layout);
+  //   if (layout) {
+  //     focusFrame(page, layout.element, trapezoidCenter(layout.corners));
+  //   } else {
+  //     focusFrame(page, null, null);
+  //   }
+  // }, focusKeeper);
+  // paper.addLayer(clickableLayer);
 
   // bubbles
   const bubbleLayer = new BubbleLayer(

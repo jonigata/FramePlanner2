@@ -600,7 +600,6 @@ export class BubbleLayer extends LayerBase {
   }
 
   accepts(point: Vector, _button: number, depth: number): any {
-    console.log("bubble accepts", depth);
     if (!this.interactable) {
       return null;
     }
