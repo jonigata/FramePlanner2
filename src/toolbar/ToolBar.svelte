@@ -67,6 +67,7 @@
     } else {
       // https://親ドメイン/authにリダイレクト 
       // frameplanner.manga-farm.online => manga-farm.online
+      const port = ":5174";
       const fullPath = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       const parentDomain = window.location.hostname.split('.').slice(1).join('.');
       const authUrl = `https://${parentDomain}${port}/auth/signout?next=${encodeURIComponent(fullPath)}`;
