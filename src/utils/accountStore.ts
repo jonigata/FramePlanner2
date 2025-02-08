@@ -4,6 +4,7 @@ import { getMyProfile } from "../supabase";
 import { developmentFlag } from "./developmentFlagStore";
 import { get as storeGet } from "svelte/store";
 import { supabase } from "../supabase";
+import { readSupabaseSession } from "./supabaseAuth/readSupabaseSession";
 
 interface AuthState {
   user: User | null;
@@ -29,20 +30,31 @@ function createAuthStore(): AuthStore {
   });
 
   async function initialize(): Promise<() => void> {
-    const cookies = document.cookie.split(/\s*;\s*/).map(cookie => cookie.split('='));
-    const accessTokenCookie = cookies.find(x => x[0] == 'my-access-token');
-    const refreshTokenCookie = cookies.find(x => x[0] == 'my-refresh-token');
+    // const cookies = document.cookie.split(/\s*;\s*/).map(cookie => cookie.split('='));
+    // const accessTokenCookie = cookies.find(x => x[0] == 'my-access-token');
+    // const refreshTokenCookie = cookies.find(x => x[0] == 'my-refresh-token');
+
+    const session = readSupabaseSession('mf');
+    const accessTokenCookie = session?.access_token;
+    const refreshTokenCookie = session?.refresh_token;    
     
-    console.log("INITIALIZE");
+    console.log("INITIALIZE", accessTokenCookie, refreshTokenCookie);
     if (accessTokenCookie && refreshTokenCookie) {
       // accessTokenCookie![1] = `adfas-${accessTokenCookie}`;
       const { data, error } = await supabase.auth.setSession({
-        access_token: accessTokenCookie[1],
-        refresh_token: refreshTokenCookie[1],
+        access_token: accessTokenCookie,
+        refresh_token: refreshTokenCookie,
       })
       if (error) {
         console.error(error);
         // 失敗したときは初期ルートと同じ
+
+        // AuthApiError: Invalid Refresh Token: Already Used
+        // このエラーは、既に使用済みのリフレッシュトークンで再度認証しようとした際に発生します。
+        // 主な原因:
+        // 1.同じリフレッシュトークンを複数回使用
+        // 2.トークンが既に失効している
+        // 3.セッション管理の問題
       } else {
         console.log("setSession", data);
       }

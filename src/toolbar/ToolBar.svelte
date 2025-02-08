@@ -6,6 +6,7 @@
   import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { developmentFlag } from '../utils/developmentFlagStore';
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -29,20 +30,48 @@
     };
     modalStore.trigger(d);    
   }
-  
-
 
   function signIn() {
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'auth',
-    };
-    modalStore.trigger(d);    
-    // authStore.signIn('google'); どうせ帰ってこないのでコンポーネントの方でやる
+    const authHere = $developmentFlag;
+    if (authHere) {
+      if (false) {
+        const d: ModalSettings = {
+          type: 'component',
+          component: 'auth',
+        };
+        modalStore.trigger(d);    
+      } else {
+        console.log(`http://example.local:5174/auth?next=${encodeURIComponent(window.location.href)}`);
+        window.location.href = `http://example.local:5174/auth?next=${encodeURIComponent(window.location.href)}`;
+      }
+    } else {
+      // https://親ドメイン/authにリダイレクト 
+      // frameplanner.manga-farm.online => manga-farm.online
+      const port = ":5174";
+      const fullPath = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
+      const parentDomain = window.location.hostname.split('.').slice(1).join('.');
+      const authUrl = `https://${parentDomain}${port}/auth?next=${encodeURIComponent(fullPath)}`;
+      window.location.href = authUrl;
+    }
   }
 
   function signOut() {
-    authStore.signOut();
+    const authHere = $developmentFlag;
+    if (authHere) {
+      if (false) {
+        authStore.signOut();
+      } else {
+        console.log(`http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`);
+        window.location.href = `http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`;        
+      }
+    } else {
+      // https://親ドメイン/authにリダイレクト 
+      // frameplanner.manga-farm.online => manga-farm.online
+      const fullPath = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
+      const parentDomain = window.location.hostname.split('.').slice(1).join('.');
+      const authUrl = `https://${parentDomain}${port}/auth/signout?next=${encodeURIComponent(fullPath)}`;
+      window.location.href = authUrl;
+    }
   }
 
   function editUserProfile() {
