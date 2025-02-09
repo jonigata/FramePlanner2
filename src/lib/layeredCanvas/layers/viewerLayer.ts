@@ -62,7 +62,6 @@ export class ViewerLayer extends LayerBase {
   }
 
   private handleClick(layout: Layout): void {
-    console.log('Clicked layout:', layout);
     this.selectLayout(layout);
   }
 
@@ -71,13 +70,12 @@ export class ViewerLayer extends LayerBase {
   }
 
   accepts(point: Vector, button: number, depth: number): any {
-    if (!this.interactable) { return null; }
+    // if (!this.interactable) { return null; }　// 破壊的ではないので敢えて無視
     if (depth !== 0) { return null; }
     if (keyDownFlags["Space"]) { return null; }
 
     const layout = this.calculateRootLayout();
     const clickedLayout = findLayoutAt(layout, point, 0);
-    console.log('Clicked layout:', clickedLayout);
     
     if (clickedLayout) {
       return { action: "click", layout: clickedLayout };
@@ -101,7 +99,6 @@ export class ViewerLayer extends LayerBase {
   }
 
   changeFocus(layer: Layer | null) {
-    console.log('changeFocus:', layer);
     if (layer !== this) {
       // フォーカスが他のレイヤーに移った場合のみ処理
       this.onFocus(null);
@@ -111,8 +108,8 @@ export class ViewerLayer extends LayerBase {
 
   selectLayout(layout: Layout | null): void {
     if (layout === this.selected) { return; }
+    this.stopVideo(this.selected);
     this.selected = layout;
-    this.stopVideo(layout);
     this.startVideo(layout);
     this.onFocus(layout);
     // フォーカスの変更を通知
