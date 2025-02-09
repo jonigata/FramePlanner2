@@ -4,7 +4,9 @@ import { type Layout, calculatePhysicalLayout, findLayoutAt } from "../dataModel
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { keyDownFlags } from "../system/keyCache";
 
-export class ClickableLayer extends LayerBase {
+export class ViewerLayer extends LayerBase {
+  private selected: Layout | null = null;
+
   constructor(
     private frameTree: any,
     private onFocus: (layout: Layout | null) => void,
@@ -108,13 +110,50 @@ export class ClickableLayer extends LayerBase {
   }
 
   selectLayout(layout: Layout | null): void {
+    if (layout === this.selected) { return; }
+    this.selected = layout;
+    this.stopVideo(layout);
+    this.startVideo(layout);
     this.onFocus(layout);
     // フォーカスの変更を通知
     this.focusKeeper.setFocus(layout ? this : null);
     this.redraw();
   }
 
+  videoRedrawFrameId: number | undefined;
+  stopVideo(layout: Layout | null) {
+    if (this.videoRedrawFrameId !== undefined) {
+      cancelAnimationFrame(this.videoRedrawFrameId);
+      this.videoRedrawFrameId = undefined;
+    }
+    if (layout) {
+      for (const film of layout.element.filmStack.films) {
+        film.media.player?.pause();
+      }
+    }
+  }
+
+  startVideo(layout: Layout | null) {
+    if (!layout) { return; }
+
+    let playFlag = false;
+    for (const film of layout.element.filmStack.films) {
+      if (film.media.player) {
+        playFlag = true;
+        film.media.player.play();
+      }
+    }
+    if (playFlag) {
+      const redraw = () => {
+        this.redraw();  // 毎フレーム描画
+        this.videoRedrawFrameId = requestAnimationFrame(redraw);
+      };
+
+      this.videoRedrawFrameId = requestAnimationFrame(redraw);
+    }
+  }
+
   get interactable(): boolean { return this.mode == null; }
 }
 
-sequentializePointer(ClickableLayer);
+sequentializePointer(ViewerLayer);

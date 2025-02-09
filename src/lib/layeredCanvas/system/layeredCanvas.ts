@@ -390,6 +390,8 @@ export class Paper {
 
 
 export class LayeredCanvas {
+  private renderCount = 0;
+  private lastRenderCountLog = performance.now();
   keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   viewport: Viewport;
   rootPaper: Paper;
@@ -440,6 +442,21 @@ export class LayeredCanvas {
 
       this.keyDownHandler = this.handleKeyDown.bind(this);
       document.addEventListener('keydown', this.keyDownHandler);
+      
+      // Add render counter
+      setInterval(() => {
+        const now = performance.now();
+        const elapsed = now - this.lastRenderCountLog;
+        if (elapsed >= 1000) { // Every second
+            const fps = Math.round(this.renderCount * 1000 / elapsed);
+            if (fps > 0) {
+                // console.log(`Renders per second: ${fps}`);
+            }
+            this.renderCount = 0;
+            this.lastRenderCountLog = now;
+        }
+      }, 1000);
+
       setInterval(() => {this.redrawIfRequired();}, 33);
     }
   }
@@ -580,10 +597,12 @@ export class LayeredCanvas {
   }
 
   render(): void {
+    this.renderCount++;
     this.rebuildPageLayouts();
 
     const canvas = this.viewport.canvas;
     const ctx = this.viewport.ctx;
+    const renderTimes: {depth: number, time: number}[] = [];
 
     ctx.fillStyle = "rgb(240,240,240)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -592,8 +611,17 @@ export class LayeredCanvas {
 
     const depths = this.rootPaper.renderDepths();
     for (let depth of depths) {
-      this.rootPaper.render(ctx, depth);
+        const startTime = performance.now();
+        this.rootPaper.render(ctx, depth);
+        const endTime = performance.now();
+        renderTimes.push({
+            depth: depth,
+            time: endTime - startTime
+        });
     }
+
+    // Log render times
+    // console.log(`Render times per depth: ${renderTimes.map(({depth, time}) => `${depth}: ${time.toFixed(2)}ms`).join(', ')}`);  
   }
 
   redraw(): void {

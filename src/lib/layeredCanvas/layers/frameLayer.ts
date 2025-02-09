@@ -1237,7 +1237,6 @@ export class FrameLayer extends LayerBase {
 
   // 基本的には直接呼び出さない
   // changeFocusとselectLayoutからのみ
-  videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
   doSelectLayout(layout: Layout | null): void {
     if (layout?.element !== this.selectedLayout?.element) {
       this.stopVideo(this.selectedLayout);
@@ -1249,9 +1248,12 @@ export class FrameLayer extends LayerBase {
     this.onFocus(layout);
   }
 
+  videoRedrawFrameId: number | undefined;
   stopVideo(layout: Layout | null) {
-    clearInterval(this.videoRedrawInterval);
-    this.videoRedrawInterval = undefined;      
+    if (this.videoRedrawFrameId !== undefined) {
+      cancelAnimationFrame(this.videoRedrawFrameId);
+      this.videoRedrawFrameId = undefined;
+    }
     if (layout) {
       for (const film of layout.element.filmStack.films) {
         film.media.player?.pause();
@@ -1270,9 +1272,12 @@ export class FrameLayer extends LayerBase {
       }
     }
     if (playFlag) {
-      this.videoRedrawInterval = setInterval(() => {
-        this.redraw();
-      }, 1000/24);
+      const redraw = () => {
+        this.redraw();  // 毎フレーム描画
+        this.videoRedrawFrameId = requestAnimationFrame(redraw);
+      };
+
+      this.videoRedrawFrameId = requestAnimationFrame(redraw);
     }
   }
 

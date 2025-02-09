@@ -3,7 +3,7 @@ import { FloorLayer } from '../lib/layeredCanvas/layers/floorLayer';
 // import { SampleLayer } from '../lib/layeredCanvas/layers/SampleLayer';
 import { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import { FrameLayer } from '../lib/layeredCanvas/layers/frameLayer';
-// import { ClickableLayer } from '../lib/layeredCanvas/layers/clickableLayer';
+import { ViewerLayer } from '../lib/layeredCanvas/layers/viewerLayer';
 import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
 import { UndoLayer } from '../lib/layeredCanvas/layers/undoLayer';
 import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
@@ -89,11 +89,51 @@ export function getDirectionFromReadingDirection(readingDirection: ReadingDirect
   }
 }
 
-function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book: Book, page: Page, {commit, revert, undo, redo, shift, unshift, swap, insert, focusFrame, focusBubble, chase }: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
+function addFrameLayer(paper: Paper, page: Page, paperRendererLayer: PaperRendererLayer, focusKeeper: FocusKeeper, operators: BookOperators): FrameLayer {
+  page.frameTree.bgColor = page.paperColor;
+  page.frameTree.borderColor = page.frameColor;
+  page.frameTree.borderWidth = page.frameWidth;
+  
+  const frameLayer = new FrameLayer(
+    paperRendererLayer,
+    focusKeeper,
+    page.frameTree,
+    (l: Layout | null) => { 
+      if (l) {
+        operators.focusFrame(page, l.element, trapezoidCenter(l.corners));
+      } else {
+        operators.focusFrame(page, null, null);
+      }
+    },
+    () => { operators.commit(null); },
+    () => { operators.revert(); },
+    (e: FrameElement) => { operators.shift(page, e); },
+    (e: FrameElement) => { operators.unshift(page, e); },
+    (e1: FrameElement, e2: FrameElement) => { operators.swap(page, e1, e2); },
+    (e: Border) => { operators.insert(page, e) }
+  );
+  paper.addLayer(frameLayer);
+  return frameLayer;
+}
+
+function addViewerLayer(paper: Paper, page: Page, focusKeeper: FocusKeeper, operators: BookOperators): ViewerLayer {
+  const viewerLayer = new ViewerLayer(page.frameTree, (layout: Layout | null) => {
+    console.log('Clicked layout:', layout);
+    if (layout) {
+      operators.focusFrame(page, layout.element, trapezoidCenter(layout.corners));
+    } else {
+      operators.focusFrame(page, null, null);
+    }
+  }, focusKeeper);
+  paper.addLayer(viewerLayer);
+  return viewerLayer;
+}
+
+function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book: Book, page: Page, operators: BookOperators, defaultBubbleSlot: DefaultBubbleSlot) {
   const paper = new Paper(page.paperSize, false);
 
   // undo
-  const undoLayer = new UndoLayer(() => undo(), () => redo());
+  const undoLayer = new UndoLayer(() => operators.undo(), () => operators.redo());
   paper.addLayer(undoLayer);
 
   // renderer
@@ -102,38 +142,9 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
   paperRendererLayer.setBubbles(page.bubbles);
   paper.addLayer(paperRendererLayer);
 
-  // frame
-  page.frameTree.bgColor = page.paperColor;
-  page.frameTree.borderColor = page.frameColor;
-  page.frameTree.borderWidth = page.frameWidth;
-  const frameLayer = new FrameLayer(
-    paperRendererLayer,
-    focusKeeper,
-    page.frameTree,
-    (l: Layout | null) => { 
-      if (l) {
-        focusFrame(page, l.element, trapezoidCenter(l.corners));
-      } else {
-        focusFrame(page, null, null);
-      }
-    },
-    () => { commit(null); },
-    () => { revert(); },
-    (e: FrameElement) => { shift(page, e); },
-    (e: FrameElement) => { unshift(page, e); },
-    (e1: FrameElement, e2: FrameElement) => { swap(page, e1, e2); },
-    (e: Border) => { insert(page, e) });
-  paper.addLayer(frameLayer);
-
-  // const clickableLayer = new ClickableLayer(page.frameTree, (layout: Layout | null) => {
-  //   console.log('Clicked layout:', layout);
-  //   if (layout) {
-  //     focusFrame(page, layout.element, trapezoidCenter(layout.corners));
-  //   } else {
-  //     focusFrame(page, null, null);
-  //   }
-  // }, focusKeeper);
-  // paper.addLayer(clickableLayer);
+  // frame and viewer
+  const frameLayer = addFrameLayer(paper, page, paperRendererLayer, focusKeeper, operators);
+  // addViewerLayer(paper, page, focusKeeper, operators);
 
   // bubbles
   const bubbleLayer = new BubbleLayer(
@@ -144,15 +155,15 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     page.bubbles,
     2,
     (bubble: Bubble | null) => { 
-      focusBubble(page, bubble);
+      operators.focusBubble(page, bubble);
     },
-    (weak?: boolean) => { commit(weak ? 'bubble' : null); },
-    () => { revert(); },
+    (weak?: boolean) => { operators.commit(weak ? 'bubble' : null); },
+    () => { operators.revert(); },
     (bubble: Bubble) => { potentialCrossPage(layeredCanvas, book, page, bubble); });
   paper.addLayer(bubbleLayer);
 
   // inline painter
-  const inlinePainterLayer = new InlinePainterLayer(frameLayer, chase);
+  const inlinePainterLayer = new InlinePainterLayer(frameLayer, operators.chase);
   paper.addLayer(inlinePainterLayer);
 
   return paper;
