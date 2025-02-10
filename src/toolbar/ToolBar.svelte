@@ -17,6 +17,7 @@
 
   function getParentUrl(): string {
     const parentDomain = getParentDomain();
+    console.log("getParentUrl", `https://${parentDomain}`);
     return `https://${parentDomain}`;
   }
   
@@ -45,6 +46,19 @@
     const parentDomain = getParentDomain();
     const path = action === 'signin' ? 'auth' : 'auth/signout';
     return `https://${parentDomain}/${path}?next=${encodeURIComponent(fullPath)}`;
+  }
+
+  function openMangaFarm() {
+    console.log("openMangaFarm", window.opener, window.opener?.closed);
+    console.log("managafarm: opener does not exist");
+
+    // openerがない場合は新しいタブを名前付きで開く
+    console.log("managafarm: opener does not exist");
+    const targetUrl = 
+      window.location.hostname === 'frameplanner.example.local'
+        ? 'http://example.local:5174/home'
+        : `${getParentUrl()}/home`;
+    window.location.href = targetUrl;
   }
 
   function signIn() {
@@ -111,7 +125,7 @@
   <ul class="flex space-x-6">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <li class="hover:text-yellow-500 cursor-pointer"><a href="{getParentUrl()}/home">まんがファーム(β)!へ</a></li>
+    <li class="hover:text-yellow-500 cursor-pointer"><button on:click={openMangaFarm}>まんがファーム(β)!へ</button></li>
   </ul>
 
   {#if $onlineStatus === "signed-in"}
