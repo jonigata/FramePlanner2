@@ -18,7 +18,7 @@
   import type { Book, Page } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
   import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
-  import { onlineProfile } from './accountStore';
+  import { onlineStatus, onlineProfile } from './accountStore';
   import { waitDialog } from "./waitDialog";
 
   $: onTask($bookArchiver);
@@ -56,7 +56,9 @@
             break;
           case 'envelope':
             console.log("envelope", $mainBook!.revision);
-            const {blob} = await makeEnvelope();
+            $progress = 0;
+            const {blob} = await makeEnvelope(n => $progress = n);
+            $progress = 1;
             saveAs(blob, "manga.envelope");
             break;
           case 'export-prompts':
@@ -77,16 +79,19 @@
     }
   }
 
-  async function makeEnvelope() {
-    $progress = 0;
+  async function makeEnvelope(progress: (n: number) => void) {
     const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
     const book = await loadBookFrom($fileSystem!, file);
-    const blob = await writeEnvelope(book, (n) => $progress = n);
-    $progress = null;
+    const blob = await writeEnvelope(book, progress);
     return {file, blob};
   }
 
   async function publishEnvelope() {
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: "公開するにはサインインが必要です", timeout: 1500});
+      return;
+    }
+
     if ($onlineProfile === null) {
       toastStore.trigger({ message: "公開するにはユーザー情報の登録が必要です", timeout: 1500});
       const r = await waitDialog<boolean>('userProfile');
@@ -119,21 +124,22 @@
     }
     
     $progress = 0;
+    console.log("progress", $progress);
     try {
-      const {file, blob} = await makeEnvelope();
+      const {file, blob} = await makeEnvelope(n => $progress = n * 0.5);
 
       const cover = await renderPageToBlob($mainBook!.pages[0]);
       const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
 
       // 本体
       const content_url = await postFile(`${file.id}.envelope`, blob);      
-      $progress = 0.2;
-      const cover_url = await postFile(`${file.id}_cover.png`, cover);
-      $progress = 0.4;
-      const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
       $progress = 0.6;
-      const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.png`, socialCard) : null;
+      const cover_url = await postFile(`${file.id}_cover.png`, cover);
+      $progress = 0.7;
+      const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
       $progress = 0.8;
+      const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.png`, socialCard) : null;
+      $progress = 0.9;
 
       console.log("recordPublication", {
         title,
@@ -165,6 +171,7 @@
       const downloadUrl = currentUrl.toString();
       console.log(downloadUrl);
       try {
+        // localhost及びhttps以外では失敗する
         navigator.clipboard.writeText(downloadUrl);
         toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
       }
