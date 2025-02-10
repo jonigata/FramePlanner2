@@ -10,6 +10,15 @@
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
+
+  function getParentDomain(): string {
+    return window.location.hostname.split('.').slice(1).join('.');
+  }
+
+  function getParentUrl(): string {
+    const parentDomain = getParentDomain();
+    return `https://${parentDomain}`;
+  }
   
   function undo() {
     $undoToken = 'undo';
@@ -31,6 +40,13 @@
     modalStore.trigger(d);    
   }
 
+  function generateAuthUrl(action: 'signin' | 'signout'): string {
+    const fullPath = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
+    const parentDomain = getParentDomain();
+    const path = action === 'signin' ? 'auth' : 'auth/signout';
+    return `https://${parentDomain}/${path}?next=${encodeURIComponent(fullPath)}`;
+  }
+
   function signIn() {
     const authHere = $developmentFlag;
     if (authHere) {
@@ -45,13 +61,7 @@
         window.location.href = `http://example.local:5174/auth?next=${encodeURIComponent(window.location.href)}`;
       }
     } else {
-      // https://親ドメイン/authにリダイレクト 
-      // frameplanner.manga-farm.online => manga-farm.online
-      const port = ":5174";
-      const fullPath = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
-      const parentDomain = window.location.hostname.split('.').slice(1).join('.');
-      const authUrl = `https://${parentDomain}${port}/auth?next=${encodeURIComponent(fullPath)}`;
-      window.location.href = authUrl;
+      window.location.href = generateAuthUrl('signin');
     }
   }
 
@@ -65,13 +75,7 @@
         window.location.href = `http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`;        
       }
     } else {
-      // https://親ドメイン/authにリダイレクト 
-      // frameplanner.manga-farm.online => manga-farm.online
-      const port = ":5174";
-      const fullPath = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
-      const parentDomain = window.location.hostname.split('.').slice(1).join('.');
-      const authUrl = `https://${parentDomain}${port}/auth/signout?next=${encodeURIComponent(fullPath)}`;
-      window.location.href = authUrl;
+      window.location.href = generateAuthUrl('signout');
     }
   }
 
@@ -107,7 +111,7 @@
   <ul class="flex space-x-6">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <li class="hover:text-yellow-500 cursor-pointer"><a href="/home">まんがファーム(β)！へ</a></li>
+    <li class="hover:text-yellow-500 cursor-pointer"><a href="{getParentUrl()}/home">まんがファーム(β)!へ</a></li>
   </ul>
 
   {#if $onlineStatus === "signed-in"}
