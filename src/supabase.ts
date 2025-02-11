@@ -24,8 +24,8 @@ export function initializeSupabase() {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.gpZggwJtk1lUvFnttnL1yLgrXxfZbPf2mWiWUHMntLg";
 
   if (!storeGet(developmentFlag)) {
-    supabaseUrl = "https://gajoxnktxfjazbkajlkm.supabase.co";
-     supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdham94bmt0eGZqYXpia2FqbGttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0Nzk1OTcsImV4cCI6MjA1MTA1NTU5N30.pXMpN0F2lu9P5TJ9yts8XVGEGzpHmyWkBU4TaRMtnXc";
+    supabaseUrl = "https://cdexhqfcodzlkdzltnuv.supabase.co";
+     supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZXhocWZjb2R6bGtkemx0bnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDM2MTEsImV4cCI6MjA1NDgxOTYxMX0.2hTKWqXipxIQT8S1H7lQBvJKe6I37J6eADhASCIhcIQ";
   }
 
   supabase = createClient(
