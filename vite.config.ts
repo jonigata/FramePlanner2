@@ -20,7 +20,6 @@ export default defineConfig({
       }
     },
     outDir: 'dist',
-    sourcemap: true,
   },
   plugins: [svelte()],
   resolve: {
