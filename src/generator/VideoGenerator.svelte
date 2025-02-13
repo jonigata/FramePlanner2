@@ -5,6 +5,7 @@
   import { recognizeImage } from '../supabase';
   import type { Media } from '../lib/layeredCanvas/dataModels/media';
   import { onMount } from 'svelte';
+  import { resizeCanvas } from '../lib/layeredCanvas/tools/imageUtil';
   import FeathralCost from '../utils/FeathralCost.svelte';
   
   let prompt = '';
@@ -17,22 +18,31 @@
   }
 
   async function onSubmit() {
+    const resizedImageUrl = sourceMedia.drawSourceCanvas.toDataURL();
     const request: ImageToVideoRequest = {
       prompt,
-      imageUrl: sourceMedia.drawSourceCanvas.toDataURL(),
+      imageUrl: resizedImageUrl,
       duration,
       aspectRatio: aspectRatio
     };
     
-    // TODO: API call implementation
     $modalStore[0].response!(request);
     modalStore.close();
   }
 
   async function onAskPrompt() {
+    const resizedCanvas = resizeCanvas(sourceMedia.drawSourceCanvas, 512);
+    const resizedImageUrl = resizedCanvas.toDataURL();
+    console.log("resizedImageUrl", resizedImageUrl.length);
     const response = await recognizeImage({
-      dataUrl: sourceMedia.drawSourceCanvas.toDataURL(),
-      prompt: "画像を把握して、この画像から始まる動画を自由に想像して、動画生成AIに渡すプロンプトを考えてください。"
+      dataUrl: resizedImageUrl,
+      prompt: `
+画像を把握して、この画像から始まる短いシーン(5秒程度の動画)を考えて、説明してください。
+画面上の物体がよく動く様子やカメラワーク、ライティングを具体的に記述してください。
+この画像以前の動画を描くことはできないので、注意してください。
+つまり、必ずこの画像から始まる動画を生成するためのプロンプトを作成する必要があります。
+
+`
     });
     console.log(response);
     prompt = response.text;

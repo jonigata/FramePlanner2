@@ -107,3 +107,57 @@ export async function createVideoFromBlob(blob: Blob): Promise<HTMLVideoElement>
   // URL.revokeObjectURL(url); ダウンロードできるようにrevokeしない
   return video;
 }
+
+export async function resizeImage(dataUrl: string, maxSize: number = 1024): Promise<string> {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  await new Promise((resolve) => {
+    img.onload = () => resolve(true);
+    img.src = dataUrl;
+  });
+
+  let width = img.width;
+  let height = img.height;
+
+  if (width > maxSize || height > maxSize) {
+    if (width > height) {
+      height = Math.round((height * maxSize) / width);
+      width = maxSize;
+    } else {
+      width = Math.round((width * maxSize) / height);
+      height = maxSize;
+    }
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  ctx?.drawImage(img, 0, 0, width, height);
+  
+  return canvas.toDataURL();
+}
+
+export function resizeCanvas(canvas: HTMLCanvasElement, maxSize: number = 1024): HTMLCanvasElement {
+  const outputCanvas = document.createElement('canvas');
+  let width = canvas.width;
+  let height = canvas.height;
+
+  if (width > maxSize || height > maxSize) {
+    if (width > height) {
+      height = Math.round((height * maxSize) / width);
+      width = maxSize;
+    } else {
+      width = Math.round((width * maxSize) / height);
+      height = maxSize;
+    }
+  }
+
+  outputCanvas.width = width;
+  outputCanvas.height = height;
+  const ctx = outputCanvas.getContext('2d');
+  ctx?.drawImage(canvas, 0, 0, width, height);
+  
+  return outputCanvas;
+}
+
