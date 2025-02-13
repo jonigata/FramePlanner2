@@ -18,6 +18,7 @@ public/stamp.txt
 .editorconfig
 public/banners/*
 testdata/*
+stats.html
 
 # Editor directories and files
 .vscode/*

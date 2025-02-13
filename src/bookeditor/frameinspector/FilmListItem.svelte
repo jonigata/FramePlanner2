@@ -220,7 +220,7 @@
       <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
         <img draggable={false} src={punchIcon} alt="背景除去"/>
       </button>
-      <button class="transformix-item" use:toolTip={"ムービー作成"} on:click={onVideo}>
+      <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
         <img draggable={false} src={videoIcon} alt="ムービー作成"/>
       </button>
     </div>
