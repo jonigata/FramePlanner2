@@ -2,7 +2,6 @@
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
   export let media: Media;
-  export let onClick: () => void = () => {};
   export let showControls: boolean = true;
 
   function getVideoSource(media: Media) {
@@ -37,7 +36,7 @@
       controls={showControls}
       class="media-element"
       draggable="true"
-      on:click={onClick}
+      on:click
     />
   {:else if media.type === 'image' && imageDataUrl}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -46,7 +45,7 @@
       src={imageDataUrl}
       class="media-element"
       alt=""
-      on:click={onClick}
+      on:click
     />
   {/if}
 </div>
