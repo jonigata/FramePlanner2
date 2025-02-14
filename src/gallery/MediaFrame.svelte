@@ -73,31 +73,33 @@
 </script>
 
 <div class="media-frame" bind:this={containerDiv}>
-  {#if media.type === 'video' && media.isLoaded}
-    <!-- svelte-ignore a11y-media-has-caption -->
-    <video 
-      src={getVideoSource(media)}
-      controls={showControls}
-      class="media-element"
-      draggable="true"
-      on:click
-    />
-  {:else if media.type === 'image'}
-    {#if useCanvas && media.drawSourceCanvas}
-      <canvas
-        bind:this={canvas}
+  {#if media.isLoaded}
+    {#if media.type === 'video'}
+      <!-- svelte-ignore a11y-media-has-caption -->
+      <video 
+        src={getVideoSource(media)}
+        controls={showControls}
         class="media-element"
+        draggable="true"
         on:click
       />
-    {:else if imageDataUrl}
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img
-        src={imageDataUrl}
-        class="media-element"
-        alt=""
-        on:click
-      />
+    {:else if media.type === 'image'}
+      {#if useCanvas && media.drawSourceCanvas}
+        <canvas
+          bind:this={canvas}
+          class="media-element"
+          on:click
+        />
+      {:else if imageDataUrl}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <img
+          src={imageDataUrl}
+          class="media-element"
+          alt=""
+          on:click
+        />
+      {/if}
     {/if}
   {:else}
     <MediaLoading />
