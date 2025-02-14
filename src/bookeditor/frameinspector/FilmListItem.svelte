@@ -12,6 +12,7 @@
   import { toolTip } from '../../utils/passiveToolTipStore';
   import Popup from '../../utils/Popup.svelte';
   import MediaFrame from '../../gallery/MediaFrame.svelte';
+  import MediaLoading from '../../gallery/MediaLoading.svelte';
 
   import visibleIcon from '../../assets/filmlist/eye.png';
   import scribbleIcon from '../../assets/filmlist/scribble.png';
@@ -162,13 +163,13 @@
   {:else if film.media} <!-- ほぼ確定だけど!が使えずエラーになるため -->
     <div 
       class="image-panel" 
-      class:variant-filled-primary={film?.selected}
-      class:variant-soft-tertiary={!film?.selected}
+      class:variant-filled-primary={film.selected}
+      class:variant-soft-tertiary={!film.selected}
       on:pointerover={onHover}
       on:click={onClick}
     >
       <div class="media-container">
-        <MediaFrame media={film.media} showControls={false}/>
+          <MediaFrame media={film.media} showControls={false} useCanvas={true}/>
       </div>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
