@@ -94,13 +94,11 @@
   }
 
   function editUserProfile() {
-    /*
     const d: ModalSettings = {
       type: 'component',
       component: 'userProfile',
     };
     modalStore.trigger(d);    
-    */
   }
 
   // プレースホルダーアバター画像
