@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { redrawToken } from '../bookeditor/bookStore';
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
+  import { computeAspectFitSize } from "../lib/layeredCanvas/tools/imageUtil";
   import MediaLoading from './MediaLoading.svelte';
 
   export let media: Media;
@@ -25,24 +27,12 @@
           imageDataUrl = URL.createObjectURL(blob);
         }
       } else if (canvas && containerDiv) {
-        // canvas.widthとstyle.widthが異なる場合、描画が汚くなるので計算する
-        
-        // コンテナのサイズを取得
         const rect = containerDiv.getBoundingClientRect();
-        const containerAspect = rect.width / rect.height;
-        const imageAspect = media.drawSourceCanvas.width / media.drawSourceCanvas.height;
+        const { width: targetWidth, height: targetHeight } = computeAspectFitSize(
+          rect,
+          media.size,
+        );
 
-        // アスペクト比を維持しながら、コンテナに収まるサイズを計算
-        let targetWidth, targetHeight;
-        if (containerAspect > imageAspect) {
-          targetHeight = rect.height;
-          targetWidth = targetHeight * imageAspect;
-        } else {
-          targetWidth = rect.width;
-          targetHeight = targetWidth / imageAspect;
-        }
-
-        // キャンバスの実サイズを設定
         canvas.width = targetWidth;
         canvas.height = targetHeight;
 
@@ -58,6 +48,10 @@
 
   // メディアが変更されたら表示を更新
   $: if (media.type === 'image') {
+    updateMediaDisplay();
+  }
+
+  $: if ($redrawToken) {
     updateMediaDisplay();
   }
 

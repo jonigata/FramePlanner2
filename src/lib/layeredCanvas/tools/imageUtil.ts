@@ -161,3 +161,25 @@ export function resizeCanvas(canvas: HTMLCanvasElement, maxSize: number = 1024):
   return outputCanvas;
 }
 
+export function resizeCanvasIfNeeded(canvas: HTMLCanvasElement, maxSize: number = 1024): HTMLCanvasElement {
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // サイズが制限以下なら単にコピーして返す
+  if (width <= maxSize && height <= maxSize) {
+    return copyCanvas(canvas);
+  }
+
+  // サイズが制限を超えている場合はリサイズ
+  return resizeCanvas(canvas, maxSize);
+}
+
+export function computeAspectFitSize(r: DOMRect, [w,h]: [number, number]): { width: number, height: number } {
+  const aspect = w / h;
+  const rectAspect = r.width / r.height;
+  if (aspect > rectAspect) {
+    return { width: r.width, height: r.width / aspect };
+  } else {
+    return { width: r.height * aspect, height: r.height };
+  }
+}

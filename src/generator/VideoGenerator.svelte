@@ -5,20 +5,22 @@
   import { recognizeImage } from '../supabase';
   import type { Media } from '../lib/layeredCanvas/dataModels/media';
   import { onMount } from 'svelte';
-  import { resizeCanvas } from '../lib/layeredCanvas/tools/imageUtil';
+  import { resizeCanvasIfNeeded } from '../lib/layeredCanvas/tools/imageUtil';
   import FeathralCost from '../utils/FeathralCost.svelte';
   
   let prompt = '';
   let duration: "5" | "10" = "5";
   let aspectRatio: "1:1" | "16:9" | "9:16" = "1:1";
   let sourceMedia: Media;
+  let promptWaiting: boolean;
 
   function onCancel() {
     modalStore.close();
   }
 
   async function onSubmit() {
-    const resizedImageUrl = sourceMedia.drawSourceCanvas.toDataURL();
+    const resizedCanvas = resizeCanvasIfNeeded(sourceMedia.drawSourceCanvas, 1024);
+    const resizedImageUrl = resizedCanvas.toDataURL();
     const request: ImageToVideoRequest = {
       prompt,
       imageUrl: resizedImageUrl,
@@ -31,21 +33,26 @@
   }
 
   async function onAskPrompt() {
-    const resizedCanvas = resizeCanvas(sourceMedia.drawSourceCanvas, 512);
-    const resizedImageUrl = resizedCanvas.toDataURL();
-    console.log("resizedImageUrl", resizedImageUrl.length);
-    const response = await recognizeImage({
-      dataUrl: resizedImageUrl,
-      prompt: `
-画像を把握して、この画像から始まる短いシーン(5秒程度の動画)を考えて、説明してください。
-画面上の物体がよく動く様子やカメラワーク、ライティングを具体的に記述してください。
-この画像以前の動画を描くことはできないので、注意してください。
-つまり、必ずこの画像から始まる動画を生成するためのプロンプトを作成する必要があります。
+    try {
+      promptWaiting = true;
+      const resizedCanvas = resizeCanvasIfNeeded(sourceMedia.drawSourceCanvas, 512);
+      const resizedImageUrl = resizedCanvas.toDataURL();
+      console.log("resizedImageUrl", resizedImageUrl.length);
+      const response = await recognizeImage({
+        dataUrl: resizedImageUrl,
+        prompt: `
+  画像を把握して、この画像から始まる短いシーン(5秒程度の動画)を考えて、説明してください。
+  画面上の物体がよく動く様子やカメラワーク、ライティングを具体的に記述してください。
+  この画像以前の動画を描くことはできないので、注意してください。
+  つまり、必ずこの画像から始まる動画を生成するためのプロンプトを作成する必要があります。
 
-`
-    });
-    console.log(response);
-    prompt = response.text;
+  `
+      });
+      console.log(response);
+      prompt = response.text;
+    } finally {
+      promptWaiting = false;
+    }
   }
 
   onMount(() => {
@@ -74,7 +81,8 @@
           bind:value={prompt}
           minHeight={90}
           placeholder="Describe the video you want to generate..."
-          cost={1}
+          cost={2}
+          bind:waiting={promptWaiting}
           on:advise={onAskPrompt}
         />
       </div>

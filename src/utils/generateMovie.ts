@@ -28,16 +28,22 @@ export async function generateMovie(filmStack: FilmStack, film: Film) {
   if (!request) { return; }
 
   loading.set(true);
-  const { requestId: request_id } = await image2Video(request);
-  await saveRequest(get(fileSystem)!, "video", "kling", request_id);
+  try {
+    const { requestId: request_id } = await image2Video(request);
+    await saveRequest(get(fileSystem)!, "video", "kling", request_id);
 
-  const newMedia = new VideoMedia({ mediaType: "video", mode: "kling", requestId: request_id });
-  const newFilm = new Film(newMedia);
-  filmProcessorQueue.publish(newFilm);
+    const newMedia = new VideoMedia({ mediaType: "video", mode: "kling", requestId: request_id });
+    const newFilm = new Film(newMedia);
+    filmProcessorQueue.publish(newFilm);
 
-  const index = filmStack.films.indexOf(film);
-  filmStack.films.splice(index + 1, 0, newFilm);
-  loading.set(false);
+    const index = filmStack.films.indexOf(film);
+    filmStack.films.splice(index + 1, 0, newFilm);
+    loading.set(false);
 
-  toastStore.trigger({ message: `ムービー生成には6分程度かかります`, timeout: 3000});
+    toastStore.trigger({ message: `ムービー生成には6分程度かかります`, timeout: 3000});
+  }
+  catch (e) {
+    loading.set(false);
+    toastStore.trigger({ message: `動画生成に失敗しました`, timeout: 3000});
+  }
 }
