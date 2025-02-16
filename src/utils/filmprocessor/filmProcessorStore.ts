@@ -1,8 +1,9 @@
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-import { redrawToken } from "../../bookeditor/bookStore";
+import { redrawToken, bookEditor } from "../../bookeditor/bookStore";
 import { PubSubQueue } from "../pubsub";
 import { pollMediaStatus } from '../../supabase';
 import type { RemoteMediaReference } from "src/lib/filesystem/fileSystem";
+import { get } from "svelte/store";
 
 export const filmProcessorQueue = new PubSubQueue<Film>();
 filmProcessorQueue.subscribe(async (film: Film) => {
@@ -13,6 +14,8 @@ filmProcessorQueue.subscribe(async (film: Film) => {
     if (mediaResources.length > 0) {
       film.media.setMedia(mediaResources[0]);
     }
+    console.log("================================================================ filmProcessorQueue.subscribe", film.media);
+    get(bookEditor)?.commit(null);
   }
 
   let inputMedia = film.media;
