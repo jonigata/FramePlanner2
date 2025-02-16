@@ -1463,10 +1463,12 @@ export class BubbleLayer extends LayerBase {
     this.redraw();
   }
 
-  videoRedrawInterval: ReturnType<typeof setTimeout> | undefined;
+  videoRedrawFrameId: number | undefined;
   stopVideo(bubble: Bubble | null) {
-    clearInterval(this.videoRedrawInterval);
-    this.videoRedrawInterval = undefined;      
+    if (this.videoRedrawFrameId !== undefined) {
+      cancelAnimationFrame(this.videoRedrawFrameId);
+      this.videoRedrawFrameId = undefined;
+    }
     if (bubble) {
       for (const film of bubble.filmStack.films) {
         film.media.player?.pause();
@@ -1485,10 +1487,29 @@ export class BubbleLayer extends LayerBase {
       }
     }
     if (playFlag) {
-      this.videoRedrawInterval = setInterval(() => {
+      const redraw = () => {
         this.redraw();
-      }, 1000/24);
+        this.videoRedrawFrameId = requestAnimationFrame(redraw);
+      };
+      this.videoRedrawFrameId = requestAnimationFrame(redraw);
     }
+  }
+
+  tearDown() {
+    console.log("bubble tearDown");
+    // 動画再生のrequestAnimationFrameをキャンセル
+    if (this.videoRedrawFrameId !== undefined) {
+      cancelAnimationFrame(this.videoRedrawFrameId);
+      this.videoRedrawFrameId = undefined;
+    }
+
+    // 選択中のバブルの動画を停止
+    if (this.selected) {
+      this.stopVideo(this.selected);
+    }
+
+    // 基底クラスのtearDownを呼び出す
+    super.tearDown();
   }
 
 

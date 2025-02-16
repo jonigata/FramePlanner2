@@ -400,4 +400,17 @@ export class ArrayLayer extends LayerBase {
   get mode() { return super.mode; }
 
   get interactable(): boolean {return this.mode == null; }
+
+  tearDown() {
+    // PaperArrayのクリーンアップ
+    if (this.array) {
+      for (const paper of this.array.papers) {
+        paper.paper.tearDown();
+      }
+      this.array.papers = [];
+    }
+
+    // 基底クラスのtearDownを呼び出す
+    super.tearDown();
+  }
 }

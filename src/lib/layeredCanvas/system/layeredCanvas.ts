@@ -99,6 +99,7 @@ export interface Layer {
   renderDepths(): number[];
   acceptDepths(): number[];
   pick(p: Vector): Picked[];
+  tearDown(): void;
 
   paper: Paper;
   redrawRequired: boolean;
@@ -122,6 +123,7 @@ export class LayerBase implements Layer {
   redraw() { this.redrawRequired = true; }
   pierce() { this.pierceRequired = true; }
   showHint(rect: Rect | null, message: string | null) {this.paper.showHint(rect, message); }
+  tearDown() {} // デフォルトの実装は何もしない
 
   pointerHover(position: Vector | null): boolean { return false; }
   accepts(position: Vector, button: number, depth: number): any { return null; }
@@ -165,6 +167,16 @@ export class Paper {
     this.size = size;
     this.root = root;
     this.layers = [];
+  }
+
+  tearDown() {
+    // 全てのレイヤーのtearDownを呼び出す
+    for (const layer of this.layers) {
+      layer.tearDown();
+    }
+    // 自身のクリーンアップ
+    this.layers = [];
+    this.hint = null;
   }
 
   handleAccepts(p: Vector, button: number, depth: number): Dragging | null {
@@ -476,6 +488,8 @@ export class LayeredCanvas {
     for (let listener of this.listeners) {
       this.viewport.canvas.removeEventListener(...listener);
     }
+    // rootPaperとその配下のレイヤーをクリーンアップ
+    this.rootPaper.tearDown();
   }
 
   eventPositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {

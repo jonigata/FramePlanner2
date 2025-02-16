@@ -1311,6 +1311,23 @@ export class FrameLayer extends LayerBase {
   renderDepths(): number[] { return [0]; }
 
   get interactable(): boolean { return this.mode == null; }
+
+  tearDown() {
+    console.log("frame tearDown");
+    // 動画再生のrequestAnimationFrameをキャンセル
+    if (this.videoRedrawFrameId !== undefined) {
+      cancelAnimationFrame(this.videoRedrawFrameId);
+      this.videoRedrawFrameId = undefined;
+    }
+
+    // 選択中のレイアウトの動画を停止
+    if (this.selectedLayout) {
+      this.stopVideo(this.selectedLayout);
+    }
+
+    // 基底クラスのtearDownを呼び出す
+    super.tearDown();
+  }
 }
 sequentializePointer(FrameLayer);
 
