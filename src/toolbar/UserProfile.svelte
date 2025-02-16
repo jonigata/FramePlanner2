@@ -128,15 +128,6 @@
     </label>
 
     <label class="label">
-      <span>関連URL（他のユーザに表示されます）</span>
-      <input
-        class="input p-2 pl-4"
-        type="text"
-        bind:value={related_url}
-      />
-    </label>
-
-    <label class="label">
       <span>プロフィール</span>
       <textarea
         class="textarea p-2 pl-4"
@@ -147,7 +138,7 @@
     </label>
 
     <label class="label">
-      <span>関連URL</span>  
+      <span>関連URL（他のユーザに表示されます）</span>
       <input
         class="input p-2 pl-4"
         type="text"

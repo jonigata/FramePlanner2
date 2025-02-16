@@ -7,6 +7,8 @@
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { developmentFlag } from '../utils/developmentFlagStore';
+  import { toastStore } from '@skeletonlabs/skeleton';
+  import { waitDialog } from "../utils/waitDialog";
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -93,12 +95,13 @@
     }
   }
 
-  function editUserProfile() {
-    const d: ModalSettings = {
-      type: 'component',
-      component: 'userProfile',
-    };
-    modalStore.trigger(d);    
+  async function editUserProfile() {
+    const r = await waitDialog<boolean>('userProfile');
+    if (r) {
+      toastStore.trigger({ message: "プロフィールを更新しました", timeout: 1500});
+    } else {
+      toastStore.trigger({ message: "プロフィール更新を取りやめました", timeout: 1500});
+    }
   }
 
   // プレースホルダーアバター画像

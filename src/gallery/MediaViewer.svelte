@@ -9,7 +9,7 @@
     <div class="media-container">
       <MediaFrame 
         media={$mediaViewerTarget}
-        onClick={() => modalStore.close()} 
+        on:click={() => modalStore.close()} 
       />
     </div>
   {/if}
