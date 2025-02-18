@@ -59,6 +59,8 @@
   import UserProfile from './toolbar/UserProfile.svelte';
   import Publication from './publication/Publication.svelte';
   import SocialCard from './publication/SocialCard.svelte';
+  import Dump from './transfer/Dump.svelte';
+  import Undump from './transfer/Undump.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -91,6 +93,12 @@
     },
     socialCard: {
       ref: SocialCard,
+    },
+    dump: {
+      ref: Dump
+    },
+    undump: {
+      ref: Undump
     }
   };
 
