@@ -1,7 +1,7 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
 
-  let filesize: number | null = null;
+  let filesize: string | null = null;
 
   function handleSubmit() {
     $modalStore[0].response!(true);
@@ -14,36 +14,56 @@
 </script>
 
 <div class="card p-4 w-full max-w-lg">
-  <h2 class="h2 mb-4">データエクスポート</h2>
+  <h2 class="h2">データ引き継ぎ</h2>
 
-  <div class="p-4">
-    <p>
-      FramePlannerのファイルシステムは、ドメイン（https://frameplanner-e5569.web.app/、
-      https://frameplanner.online/、https://frameplanner.manga-farm.online'）ごとにすべて独立しています。
-      今まで https://frameplanner-e5569.web.app/ や https://frameplanner.online/ を使っていた方には、
-      https://frameplanner.manga-farm.onlinew/ に移行することをおすすめしています。
-      その際、今までのサイトでデータをエクスポートし、まんがファームのサイトでインポートをすれば
-      今までのデータを引き継ぐことができます。
-    </p>
+  <div class="variant-ghost-secondary p-1 pt-2 m-2 mb-4 rounded">
+    <div class="px-4">
+      <h3>FramePlannerとまんがファームについて</h3>
+      <div class="p-2">
+        <p>
+          新規サイト<a href="https://manga-farm.online/">まんがファーム</a>のオープンに伴い、
+          FramePlannerはまんがファームの「作る」セクションとして<b>リニューアル</b>されます。
+        </p>
+      </div>
+      <div class="p-2">
+        <p>
+          そして、今後FramePlannerの既存サイト
+        </p>
+        <ul>
+          <li>https://frameplanner-e5569.web.app/</li>
+          <li>https://frameplanner.online/</li>
+        </ul>
+        <p>
+          は基本的に更新されなくなります。
+        </p>
+      </div>
+      <div class="p-2 mb-4">
+        <p class="mt-2">
+          失いたいくないデータがある場合は、こちらのサイトで<b>エクスポート</b>してファイルをダウンロードし、まんがファームでそのファイルをインポートしてください。
+        </p>
+      </div>
+    </div>
   </div>
 
-  <div class="p-4">
+  <div class="px-4">
     <h3>エクスポート</h3>
-    <p>FramePlannerファイルシステムを、ローカルストレージにアーカイブファイルとしてダウンロードします。</p>
-    <p>ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、元のファイルを損傷するおそれがあります。</p>
-    <p>推定ファイルサイズ： {filesize ?? '計算中'}GB</p>
+    <div class="p-2">
+      <p>FramePlannerのデータを、ローカルストレージにアーカイブファイルとして<b>ダウンロード</b>します。</p>
+      <p class="mt-2">ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、元のファイルを損傷するおそれがあります。</p>
+      <p class="mt-2">推定ファイルサイズ： <b>{filesize ?? '計算中'}</b></p>
+    </div>
   </div>
 
   <div class="flex justify-end gap-2 mt-4">
     <button type="button" class="btn variant-ghost" on:click={handleCancel}>
-      キャンセル
+      今はやらない
     </button>
     <button 
       type="button" 
       class="btn variant-filled-primary"
       on:click={handleSubmit}
     >
-      OK
+      エクスポートを実行する
     </button>
   </div>
 </div>
@@ -60,5 +80,13 @@
     font-size: 20px;
     display: flex;
     gap: 8px;
+  }
+  ul {
+    font-size: 16px;
+    list-style-type: disc;
+    margin-left: 32px;
+  }
+  b {
+    font-family: '源暎エムゴ';
   }
 </style>

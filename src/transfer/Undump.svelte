@@ -15,43 +15,51 @@
 </script>
 
 <div class="card p-4 w-full max-w-lg">
-  <h2 class="h2 mb-4">データインポート</h2>
+  <h2 class="h2">データ引き継ぎ</h2>
 
-  <div class="p-4">
-    <p>
-      FramePlannerのファイルシステムは、ドメイン（https://frameplanner-e5569.web.app/、
-      https://frameplanner.online/、https://frameplanner.manga-farm.online'）ごとにすべて独立しています。
-      今まで https://frameplanner-e5569.web.app/ や https://frameplanner.online/ を使っていた方には、
-      https://frameplanner.manga-farm.onlinew/ に移行することをおすすめしています。
-      その際、今までのサイトでデータをエクスポートし、まんがファームのサイトでインポートをすれば
-      今までのデータを引き継ぐことができます。
-    </p>
+  <div class="variant-ghost-secondary p-1 pt-2 m-2 mb-4 rounded">
+    <div class="px-4">
+      <h3>FramePlannerについて</h3>
+      <div class="p-2">
+        <p>
+          今まで以下のサイトでFramePlannerを使っていた方は、そちらでデータを<b>エクスポート</b>して
+          こちらで<b>インポート</b>することによって、データを引き継ぐことができます。
+        </p>
+        <ul>
+          <li>https://frameplanner-e5569.web.app/</li>
+          <li>https://frameplanner.online/</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
-  <div class="p-4">
+  <div class="px-4">
     <h3>インポート</h3>
-    <p>ローカルストレージにダウンロードされたエクスポートデータをFramePlannerファイルシステムにインポートします。</p>
-    <p>エクスポートデータのインポートは上書き処理なので、<b>現在のFramePlannerファイルシステム上のファイルがすべて削除されます</b>。これは復元不能な処理なので、十分に注意して行ってください。</p>
-    <p>ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、失敗する可能性があります。</p>
-    <p>推定ファイルサイズ： {filesize ?? '計算中'}GB</p>
-  </div>
-
-  <div>
-    <p>実行するには、以下の編集ボックスで「overwrite」と入力してください。</p>
-    <input type="text" class="input" placeholder="overwrite" value={overwrite} />
+    <div class="p-2">
+      <p>既存のFramePlannerでエクスポートしたデータファイルを、まんがファームのFramePlanner(ここ)に<b>インポート</b>します。</p>
+    </div>
+    <div class="p-2">
+      <p>
+        こちらでファイルを作った後にインポートを行うと、
+        <span class="text-red-700"><b>こちらで作ったファイルを上書きしてこちらで作ったファイルが消えてしまう</b></span>
+        ので、移行を行う場合はこちらでファイルを作る前に実行してください。
+      </p>
+    </div>
+    <div class="p-2">
+      <p class="mt-2">ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、インポートに失敗するおそれがあります。</p>
+    </div>
   </div>
 
   <div class="flex justify-end gap-2 mt-4">
     <button type="button" class="btn variant-ghost" on:click={handleCancel}>
-      キャンセル
+      今はやらない
     </button>
     <button 
       type="button" 
       class="btn variant-filled-primary"
-      disabled={overwrite !== 'overwrite'}
       on:click={handleSubmit}
     >
-      OK
+      インポートを実行する
     </button>
   </div>
 </div>
@@ -68,5 +76,14 @@
     font-size: 20px;
     display: flex;
     gap: 8px;
+  }
+  ul {
+    font-size: 16px;
+    list-style-type: disc;
+    margin-left: 32px;
+    margin-bottom: 4px;
+  }
+  b {
+    font-family: '源暎エムゴ';
   }
 </style>
