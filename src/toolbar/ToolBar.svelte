@@ -6,6 +6,9 @@
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { waitDialog } from "../utils/waitDialog";
+  import { loading } from '../utils/loadingStore'
+  import { mainBookFileSystem } from "../filemanager/fileManagerStore";
+  import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -22,6 +25,10 @@
     console.log("dump");
     const r = await waitDialog<boolean>('dump');
     if (r) {
+      $loading = true;
+      await ($mainBookFileSystem as IndexedDBFileSystem).dump();
+      $loading = false;
+
       console.log("dumped");
     } else {
       console.log("canceled");
@@ -30,7 +37,7 @@
 
   async function undump() {
     console.log("undump");
-    const r = await waitDialog<boolean>('undump');
+    const r = await waitDialog<FileList>('undump');
     if (r) {
       console.log("undumped");
     } else {
