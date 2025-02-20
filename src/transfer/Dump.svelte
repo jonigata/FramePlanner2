@@ -1,5 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
+  import dumpRestorePicture from '../assets/dump-restore.png';
 
   let filesize: string | null = null;
 
@@ -16,7 +17,7 @@
 <div class="card p-4 w-full max-w-lg">
   <h2 class="h2">データ引き継ぎ</h2>
 
-  <div class="variant-ghost-secondary p-1 pt-2 m-2 mb-4 rounded">
+  <div class="variant-ghost-primary p-1 pt-2 m-2 mb-4 rounded">
     <div class="px-4">
       <h3>FramePlannerとまんがファームについて</h3>
       <div class="p-2">
@@ -39,17 +40,19 @@
       </div>
       <div class="p-2 mb-4">
         <p class="mt-2">
-          失いたいくないデータがある場合は、こちらのサイトで<b>エクスポート</b>してファイルをダウンロードし、まんがファームでそのファイルをインポートしてください。
+          失いたいくないデータがある場合は、こちらのサイトで<b>ダンプ</b>してファイルをダウンロードし、まんがファームでそのファイルをリストアしてください。
         </p>
       </div>
     </div>
   </div>
 
+  <img src={dumpRestorePicture} alt="データ引き継ぎ" class="w-full mb-4"/>
+
   <div class="px-4">
-    <h3>エクスポート</h3>
+    <h3>ダンプ</h3>
     <div class="p-2">
-      <p>FramePlannerのデータを、ローカルストレージにアーカイブファイルとして<b>ダウンロード</b>します。</p>
-      <p class="mt-2">ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、元のファイルを損傷するおそれがあります。</p>
+      <p>FramePlannerのデータのほとんどを、ローカルストレージにアーカイブファイルとして<b>ダウンロード</b>します。</p>
+      <p class="mt-2">ローカルストレージの残り容量には十分注意してください。ストレージ容量が不足していると、元のファイルを損傷するおそれがあります。</p>
       <p class="mt-2">推定ファイルサイズ： <b>{filesize ?? '計算中'}</b></p>
     </div>
   </div>
@@ -63,7 +66,7 @@
       class="btn variant-filled-primary"
       on:click={handleSubmit}
     >
-      エクスポートを実行する
+      ダンプを実行する
     </button>
   </div>
 </div>

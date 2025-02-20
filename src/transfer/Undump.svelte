@@ -1,5 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
+  import dumpRestorePicture from '../assets/dump-restore.png';
 
   let filesize: number | null = null;
   let overwrite = '';
@@ -22,8 +23,8 @@
       <h3>FramePlannerについて</h3>
       <div class="p-2">
         <p>
-          今まで以下のサイトでFramePlannerを使っていた方は、そちらでデータを<b>エクスポート</b>して
-          こちらで<b>インポート</b>することによって、データを引き継ぐことができます。
+          今まで以下のサイトでFramePlannerを使っていた方は、そちらでデータを<b>ダンプ</b>して
+          こちらで<b>リストア</b>することによって、データを引き継ぐことができます。
         </p>
         <ul>
           <li>https://frameplanner-e5569.web.app/</li>
@@ -33,20 +34,22 @@
     </div>
   </div>
 
+  <img src={dumpRestorePicture} alt="データ引き継ぎ" class="w-full mb-4"/>
+
   <div class="px-4">
-    <h3>インポート</h3>
+    <h3>リストア</h3>
     <div class="p-2">
-      <p>既存のFramePlannerでエクスポートしたデータファイルを、まんがファームのFramePlanner(ここ)に<b>インポート</b>します。</p>
+      <p>既存のFramePlannerでダンプしたデータファイルを、まんがファームのFramePlanner(ここ)で<b>リストア</b>します。</p>
     </div>
     <div class="p-2">
       <p>
-        こちらでファイルを作った後にインポートを行うと、
-        <span class="text-red-700"><b>こちらで作ったファイルを上書きしてこちらで作ったファイルが消えてしまう</b></span>
+        こちらのサイトでまんがを作った後にリストアを行うと、
+        <span class="text-red-700"><b>こちらで作ったファイルを上書きして消してしまう</b></span>
         ので、移行を行う場合はこちらでファイルを作る前に実行してください。
       </p>
     </div>
     <div class="p-2">
-      <p class="mt-2">ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、インポートに失敗するおそれがあります。</p>
+      <p class="mt-2">ローカルストレージの残り容量には十分気をつけてください。ストレージ容量が不足していると、リストアに失敗するおそれがあります。</p>
     </div>
   </div>
 
@@ -59,7 +62,7 @@
       class="btn variant-filled-primary"
       on:click={handleSubmit}
     >
-      インポートを実行する
+      リストアを実行する
     </button>
   </div>
 </div>
