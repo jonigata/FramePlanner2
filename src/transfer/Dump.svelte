@@ -24,6 +24,7 @@
         <p>
           新規サイト<a href="https://manga-farm.online/">まんがファーム</a>のオープンに伴い、
           FramePlannerはまんがファームの「作る」セクションとして<b>リニューアル</b>されます。
+          （今まで通り無料で使えます！）
         </p>
       </div>
       <div class="p-2">

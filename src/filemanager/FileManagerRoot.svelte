@@ -20,7 +20,7 @@
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { DelayedCommiter } from '../utils/delayedCommiter';
-  import { loading } from '../utils/loadingStore'
+  import { loading, progress } from '../utils/loadingStore'
   import { toolTip } from '../utils/passiveToolTipStore';
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
@@ -94,9 +94,11 @@
   }
 
   $: onUsedSizeUpdate($fileManagerUsedSizeToken);
-  async function onUsedSizeUpdate(fs: FileSystem | null) {
+  function onUsedSizeUpdate(fs: FileSystem | null) {
     if (fs && fs === fileSystem) {
-      usedSize = formatMillions(await fs.collectTotalSize());
+      fs.collectTotalSize().then((size) => {
+        usedSize = formatMillions(size);
+      });
     }
   }
 
@@ -342,13 +344,13 @@
   }
 
   function formatMillions(n: number) {
-    return (n / 1000000).toFixed(2) + 'M';
+    return (n / 1000000000).toFixed(2) + 'GB';
   }
 
   async function dumpFileSystem() {
-    $loading = true;
-    await (fileSystem as IndexedDBFileSystem).dump();
-    $loading = false;
+    $progress = 0;
+    await (fileSystem as IndexedDBFileSystem).dump((n) => $progress = n);
+    $progress = 1;
   }
 
   let dumpFiles: FileList | null;
@@ -360,7 +362,7 @@
   }
 
   let importFiles: FileList | null;
-  $: onImportFile(importFiles);
+  $: onImportFile(importFiles!);
   async function onImportFile(importFiles: FileList | null) {
     if (importFiles) {
       const root = await fileSystem.getRoot();
@@ -431,7 +433,7 @@
         {/if}
       </div>
       <div class="flex flex-row gap-2 items-center justify-center">
-        <p>ファイルシステム使用量: {usedSize}</p>
+        <p>ファイルシステム使用量: {usedSize ?? '計算中'}</p>
         <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
       </div>
       <div class="flex flex-row gap-2 items-center justify-center">

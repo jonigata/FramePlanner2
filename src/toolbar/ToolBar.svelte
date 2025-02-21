@@ -6,9 +6,10 @@
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import { waitDialog } from "../utils/waitDialog";
-  import { loading } from '../utils/loadingStore'
+  import { progress } from '../utils/loadingStore'
   import { mainBookFileSystem } from "../filemanager/fileManagerStore";
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
+  import { clearCurrentFileInfo } from '../filemanager/currentFile';
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -25,9 +26,13 @@
     console.log("dump");
     const r = await waitDialog<boolean>('dump');
     if (r) {
-      $loading = true;
-      await ($mainBookFileSystem as IndexedDBFileSystem).dump();
-      $loading = false;
+      $progress = 0;
+      await ($mainBookFileSystem as IndexedDBFileSystem).dump((n)=>$progress = n);
+      $progress = 1;
+
+      // １秒待つ
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      $progress = null;
 
       console.log("dumped");
     } else {
@@ -37,8 +42,18 @@
 
   async function undump() {
     console.log("undump");
-    const r = await waitDialog<FileList>('undump');
-    if (r) {
+    const dumpFiles = await waitDialog<FileList>('undump');
+    if (dumpFiles) {
+      $progress = 0;
+      console.log("undump start");
+
+      await ($mainBookFileSystem as IndexedDBFileSystem).undump(dumpFiles[0]);
+      await clearCurrentFileInfo();
+      location.reload();
+
+      console.log("undump done");
+      $progress = 1;
+
       console.log("undumped");
     } else {
       console.log("canceled");
