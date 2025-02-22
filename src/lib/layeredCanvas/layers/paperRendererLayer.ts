@@ -7,6 +7,7 @@ import { drawFilmStack } from "../tools/draw/drawFilmStack";
 import type { Layout } from "../dataModels/frameTree";
 import { drawText, measureText, type Direction } from "../tools/draw/drawText";
 import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
+import { makePlainCanvas } from "../tools/imageUtil";
 
 type InheritanceContext = {
   borderColor: string, 
@@ -198,6 +199,28 @@ export class PaperRendererLayer extends LayerBase {
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
+    this.renderFrameContent(ctx, layout, embeddedBubbles);
+    if (element.visibility < 2) { return; }
+
+    // ■■■ visility 2;
+    this.renderFrameBorder(ctx, layout, inheritanceContext);
+  }
+
+  renderFrameBackground(ctx: CanvasRenderingContext2D, layout: Layout) {
+    if (layout.element.visibility === 0) { return; }
+
+    ctx.beginPath();
+    ctx.lineJoin = "miter";
+    trapezoidPath(ctx, layout.corners);
+  
+    if (!layout.element.bgColor) { return; }
+    ctx.fillStyle = layout.element.bgColor;
+    ctx.fill();
+  }
+
+  // visibility 1
+  renderFrameContent(ctx: CanvasRenderingContext2D, layout: Layout, embeddedBubbles: EmbeddedBubbles) {
+    const element = layout.element;
     if (0 < element.filmStack.films.length || embeddedBubbles.has(layout)) {
       // clip
       ctx.save();
@@ -215,10 +238,10 @@ export class PaperRendererLayer extends LayerBase {
       // unclip
       ctx.restore();
     }
+  }
 
-    if (element.visibility < 2) { return; }
 
-    // ■■■ visility 2;
+  renderFrameBorder(ctx: CanvasRenderingContext2D, layout: Layout, inheritanceContext: InheritanceContext) {
     const borderWidth = inheritanceContext.borderWidth;
     if (0 < borderWidth) {
       ctx.beginPath();
@@ -228,18 +251,6 @@ export class PaperRendererLayer extends LayerBase {
       trapezoidPath(ctx, layout.corners);
       ctx.stroke();
     }
-  }
-
-  renderFrameBackground(ctx: CanvasRenderingContext2D, layout: Layout) {
-    if (layout.element.visibility === 0) { return; }
-
-    ctx.beginPath();
-    ctx.lineJoin = "miter";
-    trapezoidPath(ctx, layout.corners);
-  
-    if (!layout.element.bgColor) { return; }
-    ctx.fillStyle = layout.element.bgColor;
-    ctx.fill();
   }
 
   renderBubbles(ctx: CanvasRenderingContext2D, bubbles: Bubble[]) {
@@ -463,13 +474,11 @@ export class PaperRendererLayer extends LayerBase {
     this.frameTree = frameTree;
   }
 
-  renderApart() {
+  renderApart(): { frames: {border: HTMLCanvasElement, content: HTMLCanvasElement}[], bubbles: HTMLCanvasElement[] } {
     const size = this.getPaperSize();
 
     function makeCanvas() {
-      const canvas = document.createElement('canvas');
-      canvas.width = size[0];
-      canvas.height = size[1];
+      const canvas = makePlainCanvas(size[0], size[1]);
       const ctx = canvas.getContext('2d')!;
       return { canvas, ctx };
     }
@@ -483,9 +492,17 @@ export class PaperRendererLayer extends LayerBase {
     foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
     for (let { layout, inheritanceContext } of foregrounds) {
       if (layout.element.visibility < 1) { continue; }
-      const { canvas, ctx } = makeCanvas();
-      this.renderFrame(ctx, layout, inheritanceContext, new Map());
-      canvases.push(canvas);
+      const { canvas: border } = makeCanvas();
+      const { canvas: content } = makeCanvas();
+
+      const ctx = content.getContext('2d')!;
+      this.renderFrameBackground(ctx, layout);
+      this.renderFrameContent(ctx, layout, embeddedBubbles);
+
+      const ctx2 = border.getContext('2d')!;
+      this.renderFrameBorder(ctx2, layout, inheritanceContext);
+
+      canvases.push({ border, content });
     }
 
     const bubbles: Bubble[] = [...[...embeddedBubbles.values()].flat(), ...floatingBubbles];

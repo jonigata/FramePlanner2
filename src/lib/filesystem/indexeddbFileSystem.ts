@@ -160,57 +160,76 @@ export class IndexedDBFileSystem extends FileSystem {
     while (cursor) {
       const value = cursor.value;
       if (value.type === 'file') {
-        const filesize = value.content?.length ?? value.blob?.size ?? 0;
+        let filesize = 0;
+        if (value.content !== undefined) {
+          if (typeof value.content === 'string') {
+            filesize = value.content.length;
+          } else {
+            filesize = 0;
+          }
+        } else if (value.blob !== undefined) {
+          filesize = value.blob.size;
+        } else if (value.remote !== undefined) {
+          filesize = 0;
+        } else {
+          console.log(`unknown type: ${JSON.stringify(value)}`);
+        }
         total += filesize;
       }
       cursor = await cursor.continue();
     }
     await tx.done;
+    console.log(`Total size: ${total}`);
     return total;
   }
   
-  async dump(): Promise<void> {
+  async dump(progress: (n: number)=>void): Promise<void> {
     const tx = this.db!.transaction("nodes", "readonly");
     const store = tx.store;
     let cursor = await store.openCursor();
-  
+    
     const items: any[] = [];
+    progress(0);
     while (cursor) {
       items.push(cursor.value);
       cursor = await cursor.continue();
     }
-
+    progress(0.1);
+    
     await tx.done;
-  
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-  
-        for (const value of items) {
-          if (value.blob) {
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = () => reject();
-              reader.readAsDataURL(value.blob);
-            });
-            value.blob = dataUrl;
-          }
-  
-          const jsonString = JSON.stringify(value) + "\n";
-          controller.enqueue(encoder.encode(jsonString));
-        }
-  
-        controller.close();
+    
+    // ループ中の進捗をリアルタイムに反映させるなら
+    // await new Promise((r) => setTimeout(r, 0)) を適宜挟む
+    const chunks: Uint8Array[] = [];
+    const encoder = new TextEncoder();
+    
+    let count = 0;
+    for (const value of items) {
+      if (value.blob) {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject();
+          reader.readAsDataURL(value.blob);
+        });
+        value.blob = dataUrl;
       }
-    });
-  
-    const response = new Response(stream, {
-      headers: { 'Content-Type': 'application/x-ndjson' }
-    });
-  
-    const blob = await response.blob();  
-    saveAs(blob, 'filesystem-dump.ndjson');
+    
+      const jsonString = JSON.stringify(value) + "\n";
+      chunks.push(encoder.encode(jsonString));
+    
+      count++;
+      progress(0.1 + 0.8 * (count / items.length));
+    
+      // 適宜小休止
+      if (count % 100 === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+    
+    const blob = new Blob(chunks, { type: "application/x-ndjson" });
+    saveAs(blob, "filesystem-dump.ndjson");
+    progress(1);
   }
   
   async undump(blob: Blob): Promise<void> {

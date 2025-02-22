@@ -60,6 +60,8 @@
   import SocialCard from './publication/SocialCard.svelte';
   import Roster from './notebook/Roster.svelte';
   import VideoGenerator from './generator/VideoGenerator.svelte';
+  import Dump from './transfer/Dump.svelte';
+  import Undump from './transfer/Undump.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -98,6 +100,12 @@
     },
     videoGenerator: {
       ref: VideoGenerator,
+    },
+    dump: {
+      ref: Dump
+    },
+    undump: {
+      ref: Undump
     }
   };
 
