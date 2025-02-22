@@ -16,7 +16,16 @@ public/ads
 junk/*
 public/stamp.txt
 .editorconfig
-
+# アーカイバ
+md-archiver
+# アーカイブファイル
+archive.md
+# バナー広告
+public/banners/*
+# npmのサイズとか出すやつ
+stats.html
+# ダンプ用の巨大なテストデータ
+testdata/*
 
 # Editor directories and files
 .vscode/*

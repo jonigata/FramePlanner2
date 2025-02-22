@@ -2,10 +2,14 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { undoToken } from '../bookeditor/bookStore';
   import { onlineStatus, signIn, signOut } from '../utils/accountStore';
-  import { tryOutToken } from '../utils/tryOutStore';
   import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+  import { waitDialog } from "../utils/waitDialog";
+  import { progress } from '../utils/loadingStore'
+  import { mainBookFileSystem } from "../filemanager/fileManagerStore";
+  import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
+  import { clearCurrentFileInfo } from '../filemanager/currentFile';
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -18,13 +22,45 @@
     $undoToken = 'redo';
   }
 
-  function tryOut() {
-    $tryOutToken = true;
+  async function dump() {
+    console.log("dump");
+    const r = await waitDialog<boolean>('dump');
+    if (r) {
+      $progress = 0;
+      await ($mainBookFileSystem as IndexedDBFileSystem).dump((n)=>$progress = n);
+      $progress = 1;
+
+      // １秒待つ
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      $progress = null;
+
+      console.log("dumped");
+    } else {
+      console.log("canceled");
+    }
   }
 
-  function openFarm() {
-    window.open('/farm/', 'frameplanner-farm');
+  async function undump() {
+    console.log("undump");
+    const dumpFiles = await waitDialog<FileList>('undump');
+    if (dumpFiles) {
+      $progress = 0;
+      console.log("undump start");
+
+      await ($mainBookFileSystem as IndexedDBFileSystem).undump(dumpFiles[0]);
+      await clearCurrentFileInfo();
+      location.reload();
+
+      console.log("undump done");
+      $progress = 1;
+
+      console.log("undumped");
+    } else {
+      console.log("canceled");
+    }
   }
+
+
 
   function editUserProfile() {
     /*
@@ -41,11 +77,6 @@
 </script>
 
 <div class="w-screen h-8 bg-surface-900 text-slate-100 gap-2 flex items-center pl-4 pr-2 pt-2 pb-2">
-  <!-- 
-  <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={tryOut} use:toolTip={"tryOut"}>
-    TryOut
-  </button>
-  -->
   <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={undo} use:toolTip={"アンドゥ"}>
     <img src={undoIcon} alt="undo" class="h-6 w-auto"/>
   </button>
@@ -54,13 +85,12 @@
   </button>
   
   <div class="flex-grow"></div>
-  
-  <!--
-  <ul class="flex space-x-6">
-    <li class="hover:text-yellow-500 cursor-pointer" on:click={openFarm}>まんがファーム(β)！へ</li>
-  </ul>
-  -->
 
+  <button on:click={dump}>ダンプ</button>
+  <button on:click={undump}>アンダンプ</button>
+  
+  <div class="flex-grow"></div>
+  
   {#if $onlineStatus === "signed-in"}
     <Feathral/>
     <AvatarIcon on:click={editUserProfile}/>

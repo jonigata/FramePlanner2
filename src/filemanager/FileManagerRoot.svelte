@@ -20,8 +20,7 @@
   import { browserStrayImages, browserUsedImages } from '../utils/fileBrowserStore';
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { DelayedCommiter } from '../utils/delayedCommiter';
-  import { loading } from '../utils/loadingStore'
-  import { toolTip } from '../utils/passiveToolTipStore';
+  import { loading, progress } from '../utils/loadingStore'
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { mascotVisible } from '../mascot/mascotStore';
@@ -30,6 +29,7 @@
   import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
+  import { waitDialog } from "../utils/waitDialog";
 
   export let fileSystem: FileSystem;
 
@@ -94,9 +94,11 @@
   }
 
   $: onUsedSizeUpdate($fileManagerUsedSizeToken);
-  async function onUsedSizeUpdate(fs: FileSystem | null) {
+  function onUsedSizeUpdate(fs: FileSystem | null) {
     if (fs && fs === fileSystem) {
-      usedSize = formatMillions(await fs.collectTotalSize());
+      fs.collectTotalSize().then((size) => {
+        usedSize = formatMillions(size);
+      });
     }
   }
 
@@ -342,25 +344,49 @@
   }
 
   function formatMillions(n: number) {
-    return (n / 1000000).toFixed(2) + 'M';
+    return (n / 1000000000).toFixed(2) + 'GB';
   }
 
-  async function dumpFileSystem() {
-    $loading = true;
-    await (fileSystem as IndexedDBFileSystem).dump();
-    $loading = false;
+  async function dump() {
+    console.log("dump");
+    const r = await waitDialog<boolean>('dump');
+    if (r) {
+      $progress = 0;
+      await ($mainBookFileSystem as IndexedDBFileSystem).dump((n)=>$progress = n);
+      $progress = 1;
+
+      // １秒待つ
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      $progress = null;
+
+      console.log("dumped");
+    } else {
+      console.log("canceled");
+    }
   }
 
-  let dumpFiles: FileList | null;
-  $: onUndumpFileSystem(dumpFiles);
-  async function onUndumpFileSystem(dumpFiles: FileList | null) {
+  async function undump() {
+    console.log("undump");
+    const dumpFiles = await waitDialog<FileList>('undump');
     if (dumpFiles) {
-      undumpCounter = 0;
+      $progress = 0;
+      console.log("undump start");
+
+      await ($mainBookFileSystem as IndexedDBFileSystem).undump(dumpFiles[0]);
+      await clearCurrentFileInfo();
+      location.reload();
+
+      console.log("undump done");
+      $progress = 1;
+
+      console.log("undumped");
+    } else {
+      console.log("canceled");
     }
   }
 
   let importFiles: FileList | null;
-  $: onImportFile(importFiles);
+  $: onImportFile(importFiles!);
   async function onImportFile(importFiles: FileList | null) {
     if (importFiles) {
       const root = await fileSystem.getRoot();
@@ -368,23 +394,6 @@
       const file = await fileSystem.createFile();
       file.write(await importFiles[0].text());
       await desktop.link("imported file", file.id)
-    }
-  }
-
-  async function onUndumpCounter() {
-    undumpCounter++;
-    if (undumpCounter == 5) {
-      $loading = true;
-      console.log("undump start");
-      for (const file of dumpFiles!) {
-        console.log("undump", file);
-        await (fileSystem as IndexedDBFileSystem).undump(file);
-        await clearCurrentFileInfo();
-        location.reload();
-      }
-      console.log("undump done");
-      $loading = false;
-      dumpFiles = null;
     }
   }
 
@@ -431,17 +440,12 @@
         {/if}
       </div>
       <div class="flex flex-row gap-2 items-center justify-center">
-        <p>ファイルシステム使用量: {usedSize}</p>
+        <p>ファイルシステム使用量: {usedSize ?? '計算中'}</p>
         <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
       </div>
-      <div class="flex flex-row gap-2 items-center justify-center">
-        <button class="btn-sm w-32 variant-filled" on:click={dumpFileSystem}>ダンプ</button>
-        <div class="hbox gap mx-2" style="margin-top: 8px;">
-          リストア<input accept=".ndjson" bind:files={dumpFiles} id="dump" name="dump" type="file" />
-        </div>
-        {#if dumpFiles}
-          <button class="btn-sm w-8 variant-filled" on:click={onUndumpCounter} use:toolTip={"5で実行"}>{undumpCounter}</button>
-        {/if}
+      <div class="flex flex-row gap-2 items-center justify-center p-2">
+        <button class="btn-sm w-32 variant-filled"  on:click={dump}>ダンプ</button>
+        <button class="btn-sm w-32 variant-filled"  on:click={undump}>リストア</button>
       </div>
       <h2>クラウド</h2>
       <p>この機能はβ版です。断りなくサービス停止する可能性があります。ログインすると使えます。</p>
