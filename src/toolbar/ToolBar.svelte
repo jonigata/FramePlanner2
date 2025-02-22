@@ -86,9 +86,8 @@
   
   <div class="flex-grow"></div>
 
-  <button on:click={dump}>ダンプ</button>
-  <button on:click={undump}>アンダンプ</button>
-  
+  <span>新サイト <a href="https://manga-farm.online/">まんがファーム(β)</a> オープン！ データ移行は</span><button class="link-button" on:click={dump}>こちら</button>
+
   <div class="flex-grow"></div>
   
   {#if $onlineStatus === "signed-in"}
@@ -114,5 +113,15 @@
   .undo-redo-button {
     width: 50px;
     height: 24px;
+  }
+  /* Make the link selector more specific by adding parent div class */
+  .link-button,
+  .w-screen a,
+  .w-screen a:visited,
+  .w-screen a:hover,
+  .w-screen a:active,
+  .w-screen a:focus {
+    color: #ccf !important; /* Using !important as a last resort */
+    text-decoration: underline;
   }
 </style>
