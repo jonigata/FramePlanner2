@@ -1,5 +1,9 @@
 <script lang="ts">
-  import feathralIcon from '../assets/feathral.png';
+  import sprytIcon from '../assets/spryt.png';
+
+  // 通貨単位はfeathral => sprytに変更
+  // 内部データは変更困難なので、表示のみ変更
+
   export let showsLabel = true;
   export let cost: number;
 </script>
@@ -8,7 +12,7 @@
   {#if showsLabel}
     <span class="caption">消費</span>
   {/if}
-  <img src={feathralIcon} alt="feathral" width=20 height=20/>
+  <img src={sprytIcon} alt="spryt" width=20 height=20/>
   <span class="caption">x{cost}</span>
 </span>
 
