@@ -168,11 +168,13 @@ export type OnlineProfile = {
 };
 
 export type OnlineStatus = "unknown" | "signed-in" | "signed-out";
+export type SubscriptionPlan = "free" | "basic" | "premium";
 
 export const updateToken: Writable<boolean> = writable(false);
 export const onlineStatus: Writable<OnlineStatus> = writable("unknown");
 export const onlineAccount: Writable<OnlineAccount | null> = writable(null);
 export const onlineProfile: Writable<OnlineProfile | null> = writable(null);
+export const subscriptionPlan: Writable<SubscriptionPlan | null> = writable(null); // 未ログインならnull、ログインしているならdefaultはfree
 
 async function subscribeToWallet(uid: string) {
   const jwt = await supabase.auth.getSession();
@@ -222,7 +224,7 @@ export function bootstrap() {
 
       const {data, error} = await supabase
         .from("wallet_total_points")
-        .select("total_points")
+        .select("total_points, subscription_plan")
         .eq("id", state.user.id)
         .single();
       if (error) {
@@ -231,9 +233,11 @@ export function bootstrap() {
         return;
       }
       const feathral = data?.total_points ?? 0;
+      const plan = data?.subscription_plan;
 
       onlineAccount.set({ user: state.user, feathral });
       onlineStatus.set("signed-in");
+      subscriptionPlan.set(plan);
 
       // fetch profile
       const profile = await getMyProfile();

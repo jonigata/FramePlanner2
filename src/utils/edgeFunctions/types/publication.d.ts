@@ -8,6 +8,12 @@ export interface UserProfile {
   is_suspended: boolean;
 };
 
+export interface Wallet {
+  subscription_plan?: 'free' | 'basic' | 'premium';
+  resilient: number;
+  permanent: number;
+}
+
 export interface PublicationContent {
   id: string;
   title: string;

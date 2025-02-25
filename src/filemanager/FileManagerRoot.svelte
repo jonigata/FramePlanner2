@@ -23,7 +23,7 @@
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { filmProcessorQueue } from '../utils/filmprocessor/filmProcessorStore';
   import { emptyNotebook } from '$bookTypes/notebook';
-  import { onlineStatus, type OnlineStatus } from '../utils/accountStore';
+  import { onlineStatus, subscriptionPlan, type SubscriptionPlan } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
@@ -43,9 +43,9 @@
 
   let usedSize: string;
 
-  $: onBuildCloudFileSystem($onlineStatus);
-  async function onBuildCloudFileSystem(status: OnlineStatus) { 
-    if (status != 'signed-in') { return; }
+  $: onBuildCloudFileSystem($subscriptionPlan);
+  async function onBuildCloudFileSystem(plan: SubscriptionPlan | null) { 
+    if (plan != 'basic' && plan != 'premium') { return; }
     cloudFileSystem = await buildCloudFileSystem();
 
     cloudRoot = await cloudFileSystem.getRoot();
