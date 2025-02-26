@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toolTip } from '../utils/passiveToolTipStore';
   import { undoToken } from '../bookeditor/bookStore';
-  import { onlineStatus, authStore } from '../utils/accountStore';
+  import { onlineStatus, authStore, onlineProfile, onlineAccount, subscriptionPlan } from '../utils/accountStore';
   import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore, toastStore } from '@skeletonlabs/skeleton';
@@ -14,6 +14,7 @@
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
+  import sprytIcon from '../assets/spryt.png';
 
   function getParentDomain(): string {
     return window.location.hostname.split('.').slice(1).join('.');
@@ -78,17 +79,32 @@
     return `https://${parentDomain}/${path}?next=${encodeURIComponent(fullPath)}`;
   }
 
+  function getMangaFarmUrl() {
+    return window.location.hostname === 'frameplanner.example.local'
+      ? 'http://example.local:5174'
+      : `${getParentUrl()}`;
+  }
+
   function openMangaFarm() {
     console.log("openMangaFarm", window.opener, window.opener?.closed);
     console.log("managafarm: opener does not exist");
 
     // openerがない場合は新しいタブを名前付きで開く
     console.log("managafarm: opener does not exist");
-    const targetUrl = 
-      window.location.hostname === 'frameplanner.example.local'
-        ? 'http://example.local:5174/home'
-        : `${getParentUrl()}/home`;
+    const targetUrl = `${getMangaFarmUrl()}/home`;
     window.location.href = targetUrl;
+  }
+
+  function onChangePlan() {
+    console.log("onChangePlan");
+    const targetUrl = `${getMangaFarmUrl()}/subscription`;
+    window.open(targetUrl, 'billing');
+  }
+
+  function onBuySpryt() {
+    console.log("onBuySpryt");
+    const targetUrl = `${getMangaFarmUrl()}/spryt`;
+    window.open(targetUrl, 'billing');
   }
 
   function signIn() {
@@ -154,29 +170,41 @@
   </ul>
 
   <div class="flex-grow"></div>
-  
-  {#if $onlineStatus === "signed-in"}
-    <Feathral/>
-    <AvatarIcon on:click={editUserProfile}/>
+  {#if $onlineProfile !== null}
+    <div class="flex items-center gap-2">
+      <AvatarIcon on:click={editUserProfile} username={$onlineProfile.display_name} size="w-8 h-8" />
+      <span class="text-white">{$onlineProfile.display_name}</span>
+      
+      <button class="bg-white text-black px-2 rounded ml-2 cursor-pointer flex items-center justify-center w-24" on:click={onChangePlan}>
+        Basicプラン
+      </button>
+      
+      <Feathral/>
+      
+      <button class="bg-green-600 text-white hover:bg-green-700 rounded ml-2 flex items-center justify-center w-16" on:click={onBuySpryt}>
+        購入
+      </button>
+      
+      <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signOut}>
+        Sign out
+      </button>
+    </div>
   {/if}
   {#if $onlineStatus === "signed-out"}
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signIn}>
+    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signIn}>
       Sign in
-    </button>
-  {/if}
-  {#if $onlineStatus === "signed-in"}
-    <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 function-button hbox" on:click={signOut}>
-      Sign out
     </button>
   {/if}
 </div>
 
 <style>
-  .function-button {
-    width: 125px;
-  }
   .undo-redo-button {
     width: 50px;
     height: 24px;
+  }
+  
+  /* アイコンのシャドウを白に */
+  :global(.avatar img) {
+    box-shadow: 0 1px 3px rgba(255, 255, 255, 0.3) !important;
   }
 </style>
