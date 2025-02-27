@@ -23,7 +23,7 @@
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { filmProcessorQueue } from '../utils/filmprocessor/filmProcessorStore';
   import { emptyNotebook } from '$bookTypes/notebook';
-  import { onlineStatus, subscriptionPlan, type SubscriptionPlan } from '../utils/accountStore';
+  import { onlineStatus, onlineAccount, type SubscriptionPlan } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
@@ -43,7 +43,7 @@
 
   let usedSize: string;
 
-  $: onBuildCloudFileSystem($subscriptionPlan);
+  $: onBuildCloudFileSystem($onlineAccount?.subscriptionPlan ?? null);
   async function onBuildCloudFileSystem(plan: SubscriptionPlan | null) { 
     if (plan != 'basic' && plan != 'premium') { return; }
     cloudFileSystem = await buildCloudFileSystem();

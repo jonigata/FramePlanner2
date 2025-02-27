@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toolTip } from '../utils/passiveToolTipStore';
   import { undoToken } from '../bookeditor/bookStore';
-  import { onlineStatus, authStore, onlineProfile, onlineAccount, subscriptionPlan } from '../utils/accountStore';
+  import { onlineStatus, authStore, onlineProfile, onlineAccount, type SubscriptionPlan } from '../utils/accountStore';
   import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from './AvatarIcon.svelte';
   import { type ModalSettings, modalStore, toastStore } from '@skeletonlabs/skeleton';
@@ -11,6 +11,7 @@
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { clearCurrentFileInfo } from '../filemanager/currentFile';
   import { developmentFlag } from '../utils/developmentFlagStore';
+  import { subscriptionPlans } from '../utils/billingData/subscriptionPlans';
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
@@ -175,15 +176,33 @@
       <AvatarIcon on:click={editUserProfile} username={$onlineProfile.display_name} size="w-8 h-8" />
       <span class="text-white">{$onlineProfile.display_name}</span>
       
-      <button class="bg-white text-black px-2 rounded ml-2 cursor-pointer flex items-center justify-center w-24" on:click={onChangePlan}>
-        Basicプラン
-      </button>
+      {#if $onlineAccount}
+        {@const planId = $onlineAccount.subscriptionPlan}
+        {@const planInfo = subscriptionPlans.find(plan => plan.id === planId) || subscriptionPlans[0]}
+        <button
+          class="px-2 rounded ml-2 cursor-pointer flex items-center justify-center w-24 {planId === 'free' ? 'bg-gray-300 text-black' : 'bg-blue-500 text-white'}"
+          on:click={onChangePlan}
+        >
+          {planInfo.name}
+        </button>
+      {/if}
       
       <Feathral/>
       
-      <button class="bg-green-600 text-white hover:bg-green-700 rounded ml-2 flex items-center justify-center w-16" on:click={onBuySpryt}>
-        購入
-      </button>
+      {#if $onlineAccount}
+        {@const planId = $onlineAccount.subscriptionPlan}
+        {@const canBuySpryt = planId === 'basic' || planId === 'premium'}
+        
+        {#if canBuySpryt}
+          <button class="bg-green-600 text-white hover:bg-green-700 rounded ml-2 flex items-center justify-center w-16" on:click={onBuySpryt}>
+            購入
+          </button>
+        {:else}
+          <button class="bg-yellow-500 text-white hover:bg-yellow-600 rounded ml-2 flex items-center justify-center w-24" on:click={onChangePlan}>
+            アップグレード
+          </button>
+        {/if}
+      {/if}
       
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signOut}>
         Sign out

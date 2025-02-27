@@ -156,6 +156,7 @@ export const authStore = createAuthStore();
 export type OnlineAccount = {
   user: any;
   feathral: number;
+  subscriptionPlan: SubscriptionPlan;
 };
 
 export type OnlineProfile = {
@@ -174,7 +175,6 @@ export const updateToken: Writable<boolean> = writable(false);
 export const onlineStatus: Writable<OnlineStatus> = writable("unknown");
 export const onlineAccount: Writable<OnlineAccount | null> = writable(null);
 export const onlineProfile: Writable<OnlineProfile | null> = writable(null);
-export const subscriptionPlan: Writable<SubscriptionPlan | null> = writable(null); // 未ログインならnull、ログインしているならdefaultはfree
 
 async function subscribeToWallet(uid: string) {
   const jwt = await supabase.auth.getSession();
@@ -235,9 +235,8 @@ export function bootstrap() {
       const feathral = data?.total_points ?? 0;
       const plan = data?.subscription_plan;
 
-      onlineAccount.set({ user: state.user, feathral });
+      onlineAccount.set({ user: state.user, feathral, subscriptionPlan: plan });
       onlineStatus.set("signed-in");
-      subscriptionPlan.set(plan);
 
       // fetch profile
       const profile = await getMyProfile();
