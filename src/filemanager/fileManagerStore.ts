@@ -292,7 +292,7 @@ async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSys
         const targetFile = await targetFileSystem.createFile();
         const importedBook = await readEnvelope(blob, n => {});
         importedBook.revision.id = targetFile.id;
-        saveBookTo(importedBook, targetFileSystem, targetFile);
+        await saveBookTo(importedBook, targetFileSystem, targetFile);
         return targetFile.id;
       }
     } else {
