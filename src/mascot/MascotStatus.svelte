@@ -18,7 +18,7 @@
   };
   let message: string | null = null;
   let aiStatusRef: DatabaseReference | null = null;
-  let q: NodeJS.Timer | undefined = undefined;
+  let q: ReturnType<typeof setInterval> | undefined = undefined;
 
   onMount(() => {
     // firebase realtime databaseの/Users/${$accountUser.uid}/aiStatusを監視する

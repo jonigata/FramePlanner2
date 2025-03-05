@@ -44,7 +44,7 @@
     }
 
     busy = true;
-    let q: NodeJS.Timer | undefined = undefined;
+    let q: ReturnType<typeof setInterval> | undefined = undefined;
     try {
       progress = 0;
       let pixelRatio = width * height / 1024 / 1024;

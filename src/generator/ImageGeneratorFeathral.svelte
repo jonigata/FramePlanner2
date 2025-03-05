@@ -30,7 +30,7 @@
 
   async function generate() {
     busy = true;
-    let q: NodeJS.Timer | undefined = undefined;
+    let q: ReturnType<typeof setInterval> | undefined = undefined;
     try {
       progress = 0;
       let delta = 1 / 8;
@@ -66,7 +66,9 @@
       $onlineAccount!.feathral = result.feathral;
     }
     finally {
-      clearInterval(q);
+      if (q !== undefined) {
+        clearInterval(q);
+      }
     }
     busy = false;
   }

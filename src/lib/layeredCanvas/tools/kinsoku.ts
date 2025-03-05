@@ -97,15 +97,15 @@ export function kinsoku(
   let a: KinsokuResult<string>[] = [];
   let startIndex = 0;
   for (let s of ss.split('\n')) {
-    function* createIterator(): Iterator<string> {
+    function* createIterator(text: string): Iterator<string> {
       let i = 0;
-      while (i < s.length) {
-        if (isEmojiAt(s, i)) {
-          const c = getEmojiAt(s, i);
+      while (i < text.length) {
+        if (isEmojiAt(text, i)) {
+          const c = getEmojiAt(text, i);
           i += c.length;
           yield c;
         } else {
-          yield s.charAt(i);
+          yield text.charAt(i);
           i++;
         }
       }
@@ -114,7 +114,7 @@ export function kinsoku(
     a.push(...kinsokuGenerator(
       wrapDetector,
       wrapSize,
-      createIterator(),
+      createIterator(s),
       startIndex,
       leaderChars.has.bind(leaderChars),
       trailerChars.has.bind(trailerChars)
