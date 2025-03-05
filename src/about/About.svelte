@@ -165,6 +165,7 @@
     </p>
 
     <h2>要望(Contact)</h2>
+    <p>回答はX(<a href="https://x.com/jonigata_ai" target="_blank" rel="noopener noreferrer">https://x.com/jonigata_ai</a>)で行うことがあります</p>
     <div class="hbox mx-2" style="margin-top: 4px;">
       <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
       <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>送信</button>
