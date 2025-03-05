@@ -5,7 +5,10 @@ const FileRequestSchema = z.object({
   filename: z.string(),
 });
 
-export const GetUploadUrlRequestSchema = FileRequestSchema;
+export const GetUploadUrlRequestSchema = z.object({
+  filename: z.string(),
+  test: z.boolean().optional(),
+});
 export type GetUploadUrlRequest = z.infer<typeof GetUploadUrlRequestSchema>;
 
 export const GetUploadUrlResponseSchema = z.object({

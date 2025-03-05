@@ -66,6 +66,9 @@
           case 'publish':
             await publishEnvelope();
             break;
+          case 'download-publication-files':
+            await downloadPublicationFiles();
+            break;
           case 'share-book':
             await shareBook($mainBook!);
             break;
@@ -101,7 +104,7 @@
       }
     }
 
-    const r = 
+    const r =
       await waitDialog<{title:string, description: string, related_url: string, is_public: boolean}>('publication');
     if (!r) {
       toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
@@ -132,7 +135,7 @@
       const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
 
       // 本体
-      const content_url = await postFile(`${file.id}.envelope`, blob);      
+      const content_url = await postFile(`${file.id}.envelope`, blob);
       $progress = 0.6;
       const cover_url = await postFile(`${file.id}_cover.png`, cover);
       $progress = 0.7;
@@ -179,6 +182,63 @@
         console.log(e);
         toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>をクリップボードにコピーできませんでした。タブがアクティブでなかったためかもしれません。`});
       }
+    }
+    catch(e: any) {
+      console.log(e);
+      toastStore.trigger({ message: e, timeout: 1500});
+    }
+    finally {
+      // 0.5秒待つ
+      await new Promise(resolve => setTimeout(resolve, 500));
+      $progress = null;
+    }
+  }
+
+  /**
+   * publishEnvelopeで作成される4つのファイルを作成してダウンロードするだけの関数
+   * 1. ${file.id}.envelope - 本体ファイル
+   * 2. ${file.id}_cover.png - カバー画像
+   * 3. ${file.id}_thumbnail.png - サムネイル画像
+   * 4. ${file.id}_socialcard.png - ソーシャルカード画像（オプション）
+   */
+  async function downloadPublicationFiles() {
+    // ソーシャルカードの取得
+    const r2 = await waitDialog<{socialCard: Blob}>('socialCard');
+    if (!r2) {
+      toastStore.trigger({ message: "ダウンロードをとりやめました", timeout: 1500});
+      return;
+    }
+    const { socialCard } = r2;
+    if (socialCard === null) {
+      console.log("skipping social card");
+    }
+    
+    $progress = 0;
+    console.log("progress", $progress);
+    try {
+      // 本体ファイルの作成
+      const {file, blob} = await makeEnvelope(n => $progress = n * 0.5);
+      
+      // カバーとサムネイルの作成
+      const cover = await renderPageToBlob($mainBook!.pages[0]);
+      const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
+
+      // 各ファイルをダウンロード
+      saveAs(blob, `${file.id}.envelope`);
+      $progress = 0.6;
+      
+      saveAs(cover, `${file.id}_cover.png`);
+      $progress = 0.7;
+      
+      saveAs(thumbnail, `${file.id}_thumbnail.png`);
+      $progress = 0.8;
+      
+      if (socialCard) {
+        saveAs(socialCard, `${file.id}_socialcard.png`);
+      }
+      $progress = 1.0;
+
+      toastStore.trigger({ message: "4つのファイルがダウンロードされました", timeout: 3000});
     }
     catch(e: any) {
       console.log(e);

@@ -8,6 +8,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { developmentFlag } from '../utils/developmentFlagStore';
 
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download, hint: "画像としてダウンロードします\n対象ページが複数の場合はzipファイルになります"},
@@ -20,6 +21,10 @@
     {label: "まんがファームに投稿！", onClick: publishEnvelope, hint: "ドキュメントをまんがファームに公開し、\n誰でも閲覧できるようにします"},
     // {label: "test", onClick: testIt }
   ];  
+
+  if ($developmentFlag) {
+    buttons.push({label: "テスト: 投稿用ダウンロード", onClick: downloadPublicationFiles, hint: "テスト：投稿用データのダウンロード"});
+  }
 
   function archive(op: BookArchiveOperation) {
     $bookArchiver.push(op);
@@ -66,6 +71,10 @@
   async function publishEnvelope() {
     logEvent(getAnalytics(), 'publish_envelop');
     archive('publish');
+  }
+
+  async function downloadPublicationFiles() {
+    archive('download-publication-files');
   }
 
   function testIt() {

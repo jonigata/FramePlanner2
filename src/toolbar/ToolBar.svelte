@@ -171,10 +171,12 @@
   </ul>
 
   <div class="flex-grow"></div>
-  {#if $onlineProfile !== null}
+  {#if $onlineStatus === "signed-in"}
     <div class="flex items-center gap-2">
-      <AvatarIcon on:click={editUserProfile} username={$onlineProfile.display_name} size="w-8 h-8" />
-      <span class="text-white">{$onlineProfile.display_name}</span>
+      {#if $onlineProfile !== null}
+        <AvatarIcon on:click={editUserProfile} username={$onlineProfile.display_name} size="w-8 h-8" />
+        <span class="text-white">{$onlineProfile.display_name}</span>
+      {/if}
       
       {#if $onlineAccount}
         {@const planId = $onlineAccount.subscriptionPlan}

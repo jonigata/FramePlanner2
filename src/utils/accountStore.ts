@@ -214,17 +214,20 @@ export function bootstrap() {
     if (state.loading) return;
 
     if (state.user) {
+      console.log("authStore.subscribe", state.user);
+
       const { data: data2, error: error2 } = await supabase
-        .rpc('claim_daily_bonus')
+        .rpc('claim_daily_charge')
       if (error2) {
         console.error(error2);
         onlineStatus.set("signed-out");
         return;
       }
+      console.log("claim_daily_charge", data2);
 
       const {data, error} = await supabase
-        .from("wallet_total_points")
-        .select("total_points, subscription_plan")
+        .from("charge_total")
+        .select("total_charges, subscription_plan")
         .eq("id", state.user.id)
         .single();
       if (error) {
@@ -232,8 +235,9 @@ export function bootstrap() {
         onlineStatus.set("signed-out");
         return;
       }
-      const feathral = data?.total_points ?? 0;
+      const feathral = data?.total_charges ?? 0;
       const plan = data?.subscription_plan;
+      console.log("charge_total", data);
 
       onlineAccount.set({ user: state.user, feathral, subscriptionPlan: plan });
       onlineStatus.set("signed-in");
