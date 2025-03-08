@@ -14,9 +14,7 @@ const Bubble = z.object({
   owner: z.string(),
   speech: z.string().describe("セリフは10文字前後までとしろ。また、適切に改行コード(\\n)を入れ、1行5文字程度に収めろ"),
   color: z.string().describe("セリフの色。話者のテーマカラー"),
-  shape: z.enum(["rounded", "square", "ellipse", "polygon", "shout", "soft", "none"])
-    .describe("セリフの形")
-    .default("ellipse"),
+  shape: z.enum(["rounded", "square", "ellipse", "polygon", "shout", "soft", "none"]).describe("セリフの形"),
 }).describe("キャラクターのセリフ");
 
 const Panel = z.object({

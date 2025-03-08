@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { type FirebaseApp, initializeApp } from "firebase/app";
-import { getAnalytics, logEvent } from "firebase/analytics";
+import { analyticsEvent } from "./utils/analyticsEvent";
 import { getAuth, signInAnonymously, type UserCredential, onAuthStateChanged, type User } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type { Storyboard } from "./utils/hiruma";
@@ -25,14 +25,13 @@ let app: FirebaseApp;
 export function initializeApp2(authDomain: string) {
   console.log("authDomain", authDomain);
   const firebaseConfig = {
-    apiKey: "AIzaSyCPPVAnF20YkqizR5XbgprhM_lGka-FcmM",
-    authDomain: authDomain,
-    databaseURL: "https://frameplanner-e5569-default-rtdb.firebaseio.com",
-    projectId: "frameplanner-e5569",
-    storageBucket: "frameplanner-e5569.appspot.com",
-    messagingSenderId: "415667920948",
-    appId: "1:415667920948:web:6a16664190f63933c7aa61",
-    measurementId: "G-KFVR03HSSF"
+    apiKey: "AIzaSyCmyqkTy8C88UojorpPDsSB4os-OD3N2Ow",
+    authDomain: "mangafarm-4a82e.firebaseapp.com",
+    projectId: "mangafarm-4a82e",
+    storageBucket: "mangafarm-4a82e.firebasestorage.app",
+    messagingSenderId: "881545466298",
+    appId: "1:881545466298:web:b18e30d54cbd456f504d83",
+    measurementId: "G-3GPZQ4DTB4"
   };
   app = initializeApp(firebaseConfig);
 }
@@ -136,25 +135,25 @@ async function callFunc(name: string, data: any, timeout: number | null): Promis
 
 export async function generateImageFromTextWithFeathral(data: any): Promise<any> {
   const r = await callFunc('generateimagefromtext', data, 180);
-  logEvent(getAnalytics(), 'feathral_generate');
+  analyticsEvent('feathral_generate');
   return r;
 }
 
 export async function generateImageFromTextWithFlux(data: any): Promise<any> {
   const r = await callFunc('generateimagefromtextflux', data, 180);
-  logEvent(getAnalytics(), 'flux_generate');
+  analyticsEvent('flux_generate');
   return r;
 }
 
 export async function aiChat(log: ProtocolChatLog[], documents: RichChatDocument[]): Promise<any> {
   const r = await callFunc('chat', {log, documents}, 180);
-  logEvent(getAnalytics(), 'chat');
+  analyticsEvent('chat');
   return r;
 }
 
 export async function advise(data: any): Promise<{feathral: number, result: any}> {
   const r = await callFunc('advise', data, 180);
-  logEvent(getAnalytics(), 'advise');
+  analyticsEvent('advise');
   return r;
 }
 

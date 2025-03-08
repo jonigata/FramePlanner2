@@ -3,7 +3,7 @@ import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import type { Page } from '../lib/book/book';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { outPaint, pollMediaStatus } from "../supabase";
-import { getAnalytics, logEvent } from "firebase/analytics";
+import { analyticsEvent } from "./analyticsEvent";
 import type { Rect, Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
@@ -51,7 +51,7 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   newFilm.n_scale = newScale * (newIdealImageSize / newActualImageSize);
   newFilm.n_translation = [0, 0]; // 微妙にずれるケースがあるが諦める
 
-  logEvent(getAnalytics(), 'outpaint');
+  analyticsEvent('outpaint');
 
   console.log("B", newFilm);
   return newFilm;

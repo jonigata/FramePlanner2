@@ -11,7 +11,7 @@
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { getAnalytics, logEvent } from "firebase/analytics";
+  import { analyticsEvent } from "../utils/analyticsEvent";
   import { getLayover } from "../firebase";
   import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
@@ -136,7 +136,7 @@
             $mainBookFileSystem = fileSystem;
             $mainBook = newBook;
             $frameInspectorTarget = null;
-            logEvent(getAnalytics(), 'continue_book');
+            analyticsEvent('continue_book');
             performance.mark('endPoint');
             performance.measure(
                 'perfResult',
@@ -165,7 +165,7 @@
         currentRevision = {...book.revision};
         $mainBookFileSystem = fileSystem;
         $mainBook = book;
-        logEvent(getAnalytics(), 'new_book');
+        analyticsEvent('new_book');
       }
       finally {
         $loading = false;
@@ -192,7 +192,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('box') && urlParams.get('file')) {
-      logEvent(getAnalytics(), 'shared');
+      analyticsEvent('shared');
       const box = urlParams.get('box')!;
       const file = urlParams.get('file')!;
       console.log("box:file = ", box, file);
@@ -212,7 +212,7 @@
       await recordCurrentFileInfo({id: file as NodeId, fileSystem: 'local'});
     } else if (urlParams.has('build')) {
       console.log("loadSharedBook: build");
-      logEvent(getAnalytics(), 'layover');
+      analyticsEvent('layover');
       const build = urlParams.get('build');
       if (!build) { return false; }
       const storyboard = await getLayover(build);
@@ -229,6 +229,7 @@
         wrapMode: 'none',
         chatLogs: [],
         notebook: emptyNotebook(),
+        attributes: { publishUrl: null },
       }
       commitBook(book, null);
       await saveBookTo(book, localFileSystem, localFile);
@@ -262,7 +263,7 @@
       $mainBookFileSystem = fileSystem;
       $mainBook = book;
       $frameInspectorTarget = null;
-      logEvent(getAnalytics(), 'new_book');
+      analyticsEvent('new_book');
       toastStore.trigger({ message: "新規ファイルを作成しました", timeout: 1500});
     }
   }

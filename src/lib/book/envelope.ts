@@ -74,6 +74,7 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
     wrapMode: envelopedBook.wrapMode,
     chatLogs: [],
     notebook: envelopedBook.notebook ?? emptyNotebook(),
+    attributes: { publishUrl: null },
   };
 
   const getCanvas = async (imageId: string) => bag[imageId].data;
@@ -204,6 +205,7 @@ export async function readOldEnvelope(json: string): Promise<Book> {
     wrapMode: envelopedBook.wrapMode,
     chatLogs: [],
     notebook: envelopedBook.notebook ?? emptyNotebook(),
+    attributes: { publishUrl: null },
   };
 
   const getCanvas = async (imageId: string) => bag[imageId].data;

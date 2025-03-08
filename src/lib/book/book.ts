@@ -60,6 +60,10 @@ export type VideoSettings = {
   standardScale: number;
 }
 
+export type BookAtributes = {
+  publishUrl: string | null;
+}
+
 export type Book = {
   revision: Revision;
   pages: Page[];
@@ -68,6 +72,7 @@ export type Book = {
   wrapMode: WrapMode;
   chatLogs: RichChatLog[];
   notebook: Notebook;
+  attributes: BookAtributes;
 
   // 以下揮発性
   video?: VideoSettings;
@@ -83,6 +88,10 @@ export type SerializedPage = {
   frameWidth: number,
 }
 
+export type SerializedBookAttributes = {
+  publishUrl: string | null,
+}
+
 
 export type SerializedBook = {
   revision: {id: string, revision: number, prefix: Prefix},
@@ -91,6 +100,7 @@ export type SerializedBook = {
   wrapMode: WrapMode,
   chatLogs: ProtocolChatLog[],
   notebook: Notebook,
+  attributes: SerializedBookAttributes,
 }
 
 
@@ -179,6 +189,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
     wrapMode: 'two-pages',
     chatLogs: [],
     notebook: emptyNotebook(),
+    attributes: { publishUrl: null },
   }
   commitBook(book, null);
   return book;
@@ -199,6 +210,7 @@ export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Pref
     wrapMode: 'none',
     chatLogs: [],
     notebook: emptyNotebook(),
+    attributes: { publishUrl: null },
   }
   commitBook(book, null);
   return book;
@@ -254,6 +266,7 @@ export function cloneBook(book: Book): Book {
     wrapMode: book.wrapMode,
     chatLogs: book.chatLogs.map(l => ({ ...l })),
     notebook: { ...book.notebook, characters: book.notebook.characters.map(c => ({ ...c })) },
+    attributes: { ...book.attributes },
   };
 }
 

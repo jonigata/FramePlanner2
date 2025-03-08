@@ -3,7 +3,7 @@
 	import Gallery from '../gallery/Gallery.svelte';
   import { onlineAccount, onlineStatus } from "../utils/accountStore";
   import { onMount } from 'svelte';
-  import { getAnalytics, logEvent } from "firebase/analytics";
+  import { analyticsEvent } from "../utils/analyticsEvent";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -78,7 +78,7 @@
       gallery = gallery;
       progress = 1;
 
-      logEvent(getAnalytics(), 'generate_flux');
+      analyticsEvent('generate_flux');
     }
     finally {
       clearInterval(q);

@@ -48,6 +48,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
     notebook: book.notebook,
+    attributes: book.attributes,
   };
   for (const page of book.pages) {
     const markUp = await storeFrameImages(page.frameTree, fileSystem, imageFolder, videoFolder, 'v');
@@ -77,6 +78,7 @@ export function serializeBook(book: Book): SerializedBook {
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
     notebook: book.notebook,
+    attributes: book.attributes,
   }
 }
 
@@ -119,6 +121,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     wrapMode: serializedBook.wrapMode ?? 'none',
     chatLogs,
     notebook: serializedBook.notebook ?? emptyNotebook(),
+    attributes: serializedBook.attributes ?? { publishUrl: null },
   };
 
   performance.mark("loadBookFrom-images-start");
@@ -171,6 +174,7 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
     wrapMode: 'none',
     chatLogs: [],
     notebook: emptyNotebook(),
+    attributes: { publishUrl: null },
   };
   commitBook(book, null);
 

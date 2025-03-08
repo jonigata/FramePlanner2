@@ -11,7 +11,7 @@
   import { buildMovie } from './generateScenes';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { getAnalytics, logEvent } from "firebase/analytics";
+  import { analyticsEvent } from "../utils/analyticsEvent";
   import { type Book, type VideoSettings, cloneBook } from '../lib/book/book';
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import { onDestroy, onMount } from 'svelte';
@@ -42,7 +42,7 @@
       progress = 0;
       const url = await buildMovie(program!, $video, book, (n) => progress = n);
       toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
-      logEvent(getAnalytics(), 'build_movie');
+      analyticsEvent('build_movie');
       download(url);
       URL.revokeObjectURL(url);
     }

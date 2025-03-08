@@ -26,7 +26,7 @@
   import { batchImagingPage } from '../generator/batchImagingStore';
   import { copyToClipboard } from '../utils/saver/copyToClipboard';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { getAnalytics, logEvent } from "firebase/analytics";
+  import { analyticsEvent } from "../utils/analyticsEvent";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
   import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoice } from "./templateChooserStore";
@@ -168,7 +168,7 @@
 
   function copyPageToClipboard(index: number) {
     const page = $mainBook!.pages[index];
-    logEvent(getAnalytics(), 'copy_page_to_clipboard');
+    analyticsEvent('copy_page_to_clipboard');
     copyToClipboard(page);
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }

@@ -4,7 +4,7 @@
   import downloadIcon from '../assets/get.png';
   import clipboardIcon from '../assets/clipboard.png';
   import aiPictorsIcon from '../assets/aipictors_logo_0.png'
-  import { getAnalytics, logEvent } from "firebase/analytics";
+  import { analyticsEvent } from "../utils/analyticsEvent";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toolTip } from '../utils/passiveToolTipStore';
@@ -32,44 +32,44 @@
   }
 
   function download() {
-    logEvent(getAnalytics(), 'download');
+    analyticsEvent('download');
     archive('download');
   }
 
   function postAIPictors() {
-    logEvent(getAnalytics(), 'post_to_aipictors');
+    analyticsEvent('post_to_aipictors');
     archive('aipictors');
   }
 
   function copyToClipboard() {
-    logEvent(getAnalytics(), 'copy_book_to_clipboard');
+    analyticsEvent('copy_book_to_clipboard');
     archive('copy');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
 
   async function downloadPSD() {
-    logEvent(getAnalytics(), 'export_psd');
+    analyticsEvent('export_psd');
     archive('export-psd');
   }
 
   async function shareBook() {
-    logEvent(getAnalytics(), 'share_book');
+    analyticsEvent('share_book');
     archive('share-book');
   }
 
   async function downloadEnvelop() {
-    logEvent(getAnalytics(), 'download_envelop');
+    analyticsEvent('download_envelop');
     archive('envelope');
   }
 
   async function exportPrompts() {
-    logEvent(getAnalytics(), 'export_prompts');
+    analyticsEvent('export_prompts');
     archive('export-prompts');
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
 
   async function publishEnvelope() {
-    logEvent(getAnalytics(), 'publish_envelop');
+    analyticsEvent('publish_envelop');
     archive('publish');
   }
 
