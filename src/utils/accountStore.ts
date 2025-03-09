@@ -191,7 +191,8 @@ async function subscribeToWallet(uid: string) {
         filter: `id=eq.${uid}`,
       },
       (payload) => {
-        const money = payload.new.fragile + payload.new.money;
+        console.log("payload", payload);
+        const money = payload.new.resilient + payload.new.permanent;
         onlineAccount.update((account) => {
           if (account) {
             account.feathral = money;
