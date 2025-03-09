@@ -9,6 +9,7 @@
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { developmentFlag } from '../utils/developmentFlagStore';
+  import { mainBook } from '../bookeditor/bookStore';
 
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download, hint: "画像としてダウンロードします\n対象ページが複数の場合はzipファイルになります"},
@@ -106,6 +107,12 @@
       <span class="text-xs text-slate-800">
       ※対象ページとは、マークされたページがある場合はそれを、ない場合はすべてのページを指します。対象ページが複数の場合の挙動は機能によって違うので、ヒントを参照してください。
       </span>
+
+      {#if $mainBook?.attributes.publishUrl != null}
+        <div>
+          <a target="_blank" href={$mainBook.attributes.publishUrl}>公開済みURL</a>
+        </div>
+      {/if}
     </div>
   </Drawer>
 </div>

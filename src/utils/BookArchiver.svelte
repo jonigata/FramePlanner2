@@ -172,6 +172,8 @@
       
       // URLをコピー
       const downloadUrl = currentUrl.toString();
+      $mainBook!.attributes.publishUrl = downloadUrl;
+      $bookEditor!.commit(null);
       console.log(downloadUrl);
       try {
         // localhost及びhttps以外では失敗する
