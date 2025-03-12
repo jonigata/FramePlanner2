@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fileManagerDragging, fileManagerMarkedFlag, loadBookFrom, loadToken, saveBookTo, type Dragging } from "./fileManagerStore";
+  import { fileManagerDragging, fileManagerMarkedFlag, loadBookFrom, loadToken, saveBookTo, selectedFile, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder } from "../lib/filesystem/fileSystem";
   import { mainBook, bookEditor } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
@@ -31,25 +31,17 @@
 
   let acceptable = false;
   let isDiscardable = false;
-  let selected = false;
+  let loaded = false;
   let renameEdit: RenameEdit | null = null;
   let renaming = false;
 
   $: if ($mainBook) {
-    selected = $mainBook.revision.id === nodeId;
+    loaded = $mainBook.revision.id === nodeId;
   }
 
   $: ondrag($fileManagerDragging);
   function ondrag(dragging: Dragging | null) {
     acceptable = dragging != null && !path.includes(dragging.bindId);
-  }
-
-  async function onDoubleClick() {
-    if (fileSystem.isVault) {
-      toastStore.trigger({ message: `クラウドファイルを直接開くことはできません<br/>ローカルにコピーしてから開いてください`, timeout: 3000});
-      return;
-    }
-    $loadToken = { fileSystem, nodeId };
   }
 
 	async function onDragStart (ev: DragEvent) {
@@ -97,12 +89,14 @@
   }
 
   async function onClick(e: MouseEvent) {
-    if (e.ctrlKey) {
-      if (!nodeId) { return; }
-      const file = (await fileSystem.getNode(nodeId))!.asFile()!;
-      const s = await file.read();
-      const blob = new Blob([s], {type: "application/json"});
-      saveAs(blob, "file.json");
+    if ($selectedFile === nodeId) {
+      if (fileSystem.isVault) {
+        toastStore.trigger({ message: `クラウドファイルを直接開くことはできません<br/>ローカルにコピーしてから開いてください`, timeout: 3000});
+        return;
+      }
+      $loadToken = { fileSystem, nodeId };
+    } else {
+      $selectedFile = nodeId;
     }
   }
 
@@ -133,11 +127,11 @@
   
 </script>
 
-<div class="file">
+<div class="file" class:selected={nodeId === $selectedFile}>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="file-title" class:selected={selected} use:toolTip={"ドラッグで移動、ダブルクリックで編集"}
-    draggable={true} on:click={onClick} on:dblclick={onDoubleClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
+  <div class="file-title" class:loaded={loaded} use:toolTip={"ドラッグで移動、ダブルクリックで編集"}
+    draggable={true} on:click={onClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
     <img class="button" src={fileIcon} alt="symbol"/>
     {#if isDiscardable}
       <div class="filename">
@@ -181,6 +175,7 @@
     flex-direction: row;
     align-items: center;
     position: relative;
+    border: 2px solid transparent;
   }
   .file:hover {
     background-color: #fff4;
@@ -206,9 +201,12 @@
     height: 16px;
     display: inline;
   }
-  .selected {
+  .loaded {
     background-color: #f8f4;
     border-radius: 8px;
+  }
+  .selected {
+    border-color: #4a90e2;
   }
 
 </style>

@@ -32,6 +32,7 @@ export const fileManagerUsedSizeToken: Writable<FileSystem | null> = writable(nu
 export const loadToken: Writable<LoadToken | null> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
 export const mainBookFileSystem: Writable<FileSystem | null> = writable(null);
+export const selectedFile: Writable<NodeId | null> = writable(null);
 
 export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File): Promise<void> {
   console.tag("saveBookTo", "cyan", file.id);
