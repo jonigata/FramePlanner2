@@ -191,7 +191,7 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
     notebook: emptyNotebook(),
     attributes: { publishUrl: null },
   }
-  commitBook(book, null);
+  $bookEditor!.commit(null);
   return book;
 }
 

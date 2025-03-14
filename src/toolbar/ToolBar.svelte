@@ -15,7 +15,6 @@
 
   import undoIcon from '../assets/undo.png';
   import redoIcon from '../assets/redo.png';
-  import sprytIcon from '../assets/spryt.png';
 
   function getParentDomain(): string {
     return window.location.hostname.split('.').slice(1).join('.');
@@ -127,14 +126,11 @@
   }
 
   function signOut() {
+    authStore.signOut();
     const authHere = $developmentFlag;
     if (authHere) {
-      if (false) {
-        authStore.signOut();
-      } else {
-        console.log(`http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`);
-        window.location.href = `http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`;        
-      }
+      console.log(`http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`);
+      window.location.href = `http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`;        
     } else {
       window.location.href = generateAuthUrl('signout');
     }
