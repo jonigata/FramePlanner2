@@ -4,7 +4,7 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { loading } from '../utils/loadingStore';
-  import { onlineProfile, type OnlineProfile } from '../utils/accountStore';
+  import { onlineProfile, type OnlineProfile, updateOnlineProfile } from '../utils/accountStore';
   
   let username = '';
   let display_name = '';
@@ -32,6 +32,7 @@
       try {
         $loading = true;
         await updateProfile({ username, display_name, bio, related_url });
+        await updateOnlineProfile();
         $modalStore[0].response!(true);
         modalStore.close();
       } catch (error) {

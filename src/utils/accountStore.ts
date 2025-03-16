@@ -261,6 +261,7 @@ export function bootstrap() {
 
       // fetch profile
       const profile = await getMyProfile();
+      console.log("getMyProfile", profile);
       if (profile) {
         const profileWithEmail = {
           ...profile,
@@ -279,3 +280,16 @@ export function bootstrap() {
 
   authStore.initialize();
 }
+
+export async function updateOnlineProfile() {
+  const profile = await getMyProfile();
+  console.log("getMyProfile", profile);
+  if (profile) {
+    const profileWithEmail = {
+      ...profile,
+      email: storeGet(onlineAccount)?.user.email ?? ''
+    }
+    onlineProfile.set(profileWithEmail);
+  }
+}
+
