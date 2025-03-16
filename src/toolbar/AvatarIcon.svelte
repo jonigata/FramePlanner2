@@ -1,35 +1,31 @@
 <script lang="ts">
-  import md5 from 'md5'; // md5ハッシュ化のためのライブラリを使用
-  import { onlineProfile } from '../utils/accountStore';
-
-  export let email: string | null = null;
-  export let src: string | null = null;
   export let size = "w-6 h-6";
-  export let alt = "User avatar";
-  export let username = "？";
+  export let username: string | null;
+  export let avatarUrl: string | null
 
-  $: email = $onlineProfile?.email ?? email;
+  let initials = '?';
+
+  $: console.log("avatarUrl", avatarUrl);
 
   // ユーザー名からイニシャルを取得
-  $: initials = username
-    .split(' ')
-    .map(word => word.charAt(0))
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  $: if (username) {
+    initials = username
+      .split(' ')
+      .map(word => word.charAt(0))
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  }
 
   // ユーザー名のハッシュ値で色を決定
-  $: backgroundColor = `hsl(${[...username].reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 60%)`;
-
-  // Gravatar URLを生成（srcがない場合のみ使用）
-  $: gravatarUrl = email ? `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}` : null;
+  $: backgroundColor = `hsl(${[...(username ?? '')].reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 60%)`;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="avatar {size} rounded-full flex items-center justify-center" style="background-color: {backgroundColor};" on:click>
-  {#if src || gravatarUrl}
-    <img src={src || gravatarUrl} {alt} class="rounded-full object-cover w-full h-full shadow-md group-hover:shadow-xl transition-shadow" />
+  {#if avatarUrl}
+    <img src={avatarUrl} alt={"user avatar"} class="rounded-full object-cover w-full h-full shadow-md group-hover:shadow-xl transition-shadow" />
   {:else}
     <span class="text-white text-sm font-medium">
       {initials}

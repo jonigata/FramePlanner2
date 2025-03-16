@@ -1,7 +1,6 @@
 export interface UserProfile {
   username: string;
   display_name: string;
-  email: string;
   bio: string;
   related_url: string;
   is_admin: boolean; //updateMyProfileでは見てない
@@ -12,6 +11,8 @@ export interface Wallet {
   subscription_plan?: 'free' | 'basic' | 'premium';
   resilient: number;
   permanent: number;
+  pending_downgrade: boolean;
+  downgrade_scheduled_at: number | null;
 }
 
 export interface PublicationContent {

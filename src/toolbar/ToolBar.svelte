@@ -169,10 +169,10 @@
   <div class="flex-grow"></div>
   {#if $onlineStatus === "signed-in"}
     <div class="flex items-center gap-2">
-      {#if $onlineProfile !== null}
-        <AvatarIcon on:click={editUserProfile} username={$onlineProfile.display_name} size="w-8 h-8" />
-        <span class="text-white">{$onlineProfile.display_name}</span>
+      {#if $onlineAccount !== null}
+        <AvatarIcon on:click={editUserProfile} avatarUrl={$onlineAccount.avatar} username={$onlineProfile?.display_name ?? null}/>
       {/if}
+      <span class="text-white">{$onlineProfile?.display_name ?? 'プロフィール未登録'}</span>
       
       {#if $onlineAccount}
         {@const planId = $onlineAccount.subscriptionPlan}
@@ -194,10 +194,6 @@
         {#if canBuySpryt}
           <button class="bg-green-600 text-white hover:bg-green-700 rounded ml-2 flex items-center justify-center w-16" on:click={onBuySpryt}>
             購入
-          </button>
-        {:else}
-          <button class="bg-yellow-500 text-white hover:bg-yellow-600 rounded ml-2 flex items-center justify-center w-24" on:click={onChangePlan}>
-            アップグレード
           </button>
         {/if}
       {/if}

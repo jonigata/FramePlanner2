@@ -8,7 +8,6 @@
   
   let username = '';
   let display_name = '';
-  let email = '';
   let bio = '';
   let related_url = '';
   
@@ -32,7 +31,7 @@
     if (isAvailable && isDisplayNameValid) {
       try {
         $loading = true;
-        await updateProfile({ username, display_name, email, bio, related_url });
+        await updateProfile({ username, display_name, bio, related_url });
         $modalStore[0].response!(true);
         modalStore.close();
       } catch (error) {
@@ -63,7 +62,6 @@
     if (profile) {
       username = profile.username;
       display_name = profile.display_name;
-      email = profile.email;
       bio = profile.bio;
       related_url = profile.related_url;
       isAvailable = true;
@@ -115,15 +113,6 @@
         bind:value={display_name}
         required
         maxlength="50"
-      />
-    </label>
-
-    <label class="label">
-      <span>メールアドレス（<a href="https://ja.gravatar.com/" target="_blank" rel="noopener noreferrer">gravatar</a>対応）</span>
-      <input
-        class="input p-2 pl-4"
-        type="email"
-        bind:value={email}
       />
     </label>
 

@@ -25,7 +25,6 @@ export type CheckUsernameAvailableResponse = z.infer<typeof CheckUsernameAvailab
 export const UpdateProfileRequestSchema = z.object({
   username: z.string().min(1),
   display_name: z.string().min(1),
-  email: z.string().email().optional().or(z.literal('')),
   bio: z.string(),
   related_url: z.string(),
 });
@@ -44,7 +43,6 @@ export type GetProfileRequest = z.infer<typeof GetProfileRequestSchema>;
 export const GetProfileResponseSchema = z.object({
   username: z.string(),
   display_name: z.string(),
-  email: z.string(),
   bio: z.string(),
   related_url: z.string(),
   is_admin: z.boolean(),

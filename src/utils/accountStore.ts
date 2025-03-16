@@ -5,6 +5,7 @@ import { developmentFlag } from "./developmentFlagStore";
 import { get as storeGet } from "svelte/store";
 import { supabase } from "../supabase";
 import { readSupabaseSession } from "./supabaseAuth/readSupabaseSession";
+import md5 from 'md5'; // md5ハッシュ化のためのライブラリを使用
 
 interface AuthState {
   user: User | null;
@@ -157,6 +158,7 @@ export type OnlineAccount = {
   user: any;
   feathral: number;
   subscriptionPlan: SubscriptionPlan;
+  avatar: string;
 };
 
 export type OnlineProfile = {
@@ -209,6 +211,10 @@ async function subscribeToWallet(uid: string) {
     })
 }
 
+function getAvatarUrl(email: string | undefined): string | null{
+  return email ? `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}` : null;
+}
+
 export function bootstrap() {
   authStore.subscribe(async (state) => {
     console.log("authStore.subscribe", state);
@@ -240,13 +246,27 @@ export function bootstrap() {
       const plan = data?.subscription_plan;
       console.log("charge_total", data);
 
-      onlineAccount.set({ user: state.user, feathral, subscriptionPlan: plan });
+      onlineAccount.set({
+        user: state.user, 
+        feathral, 
+        subscriptionPlan: plan,
+        avatar:
+          state.user.user_metadata.avatar_url ??
+          state.user.user_metadata.picture ??
+          getAvatarUrl(state.user.email) ??
+          'https://api.dicebear.com/8.x/fun-emoji/svg' // emailがundefinedなことはまずないはずなので、ここはまずこない
+      });
+      console.log("onlineAccount", storeGet(onlineAccount));
       onlineStatus.set("signed-in");
 
       // fetch profile
       const profile = await getMyProfile();
       if (profile) {
-        onlineProfile.set(profile);
+        const profileWithEmail = {
+          ...profile,
+          email: state.user.email ?? ''
+        }
+        onlineProfile.set(profileWithEmail);
       }
 
       // subscribe wallet changes
