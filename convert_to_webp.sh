@@ -1,7 +1,32 @@
 #!/bin/bash
 
-# src/assetsディレクトリ内のすべてのPNGファイルをWebP形式に変換するスクリプト
+# 指定されたディレクトリ内のすべてのPNGファイルをWebP形式に変換するスクリプト
 # 変換後、元のPNGファイルは削除します
+
+# 使用方法を表示する関数
+show_usage() {
+  echo "使用方法: $0 [ディレクトリパス]"
+  echo "例: $0 src/assets"
+  echo "引数が指定されない場合、デフォルトで src/assets ディレクトリが使用されます"
+}
+
+# 引数チェック
+TARGET_DIR="src/assets"  # デフォルト値
+
+if [ $# -eq 1 ]; then
+  if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    show_usage
+    exit 0
+  fi
+  TARGET_DIR="$1"
+fi
+
+# 指定されたディレクトリが存在するか確認
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "エラー: 指定されたディレクトリ '$TARGET_DIR' が存在しません"
+  show_usage
+  exit 1
+fi
 
 # cwebpコマンドのパス
 CWEBP="/home/linuxbrew/.linuxbrew/bin/cwebp"
@@ -10,8 +35,10 @@ CWEBP="/home/linuxbrew/.linuxbrew/bin/cwebp"
 converted=0
 failed=0
 
-# src/assetsディレクトリ内のすべてのPNGファイルを検索して処理
-find src/assets -type f -name "*.png" | while read png_file; do
+echo "ディレクトリ '$TARGET_DIR' 内のPNGファイルをWebP形式に変換します..."
+
+# 指定されたディレクトリ内のすべてのPNGファイルを検索して処理
+find "$TARGET_DIR" -type f -name "*.png" | while read png_file; do
   # 出力ファイル名（拡張子をwebpに変更）
   webp_file="${png_file%.png}.webp"
   
@@ -41,6 +68,7 @@ done
 
 echo "-------------------------------------"
 echo "変換完了！"
+echo "対象ディレクトリ: $TARGET_DIR"
 echo "変換成功: $converted ファイル"
 echo "変換失敗: $failed ファイル"
 echo "-------------------------------------"
