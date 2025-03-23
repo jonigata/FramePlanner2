@@ -1,4 +1,4 @@
-import { createCanvasFromImage } from '../../layeredCanvas/tools/imageUtil';
+import { createCanvasFromImage, canvasToBlob } from '../../layeredCanvas/tools/imageUtil';
 import { blobToSha1 } from '../../layeredCanvas/tools/misc';
 import { ContentStorageBase, type ContentId } from './contentStorage';
 import { getUploadUrl, getDownloadUrl, eraseFile } from '../../../supabase';
@@ -85,16 +85,8 @@ export class BackblazeContentStorage extends ContentStorageBase {
   }
 
   async writeCanvas(canvas: HTMLCanvasElement): Promise<ContentId> {
-    const blob: Blob = await new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-            if (blob) {
-                resolve(blob);
-            } else {
-                reject(new Error('Failed to convert canvas to Blob.'));
-            }
-        }, 'image/png');
-    });
     console.log(canvas.width, canvas.height);
+    const blob = await canvasToBlob(canvas);
     console.log("blob.length: ", blob.size);
     const sha1 = await blobToSha1(blob);
     const id = `${sha1}.blob` as ContentId;

@@ -6,7 +6,7 @@ import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./b
 import { type Notebook, emptyNotebook } from "./types/notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
-import { createCanvasFromImage, getFirstFrameOfVideo } from "../layeredCanvas/tools/imageUtil";
+import { createCanvasFromImage, getFirstFrameOfVideo, canvasToBlob } from "../layeredCanvas/tools/imageUtil";
 
 // 互換性維持のため、imagesは残してmediasを追加する
 
@@ -15,7 +15,7 @@ export type EnvelopedBook = {
   direction: ReadingDirection,
   wrapMode: WrapMode,
   images?: { [fileId: string]: Uint8Array },
-  medias?: { [fileId: string]: { type: MediaType, data: Uint8Array } },
+  medias?: { [fileId: string]: { type: MediaType, data: Uint8Array, format?: string } },
   notebook: Notebook | null,
 };
 
@@ -45,7 +45,11 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
     progress(0);
     for (const mediaId in envelopedBook.medias) {
       const media = envelopedBook.medias[mediaId];
-      const blob = new Blob([media.data], { type: media.type === 'image' ? 'image/png' : 'video/mp4' });
+      const blob = new Blob(
+        [media.data], 
+        { 
+          type: media.type === 'image' ? `image/${media.format ?? 'png'}` : 'video/mp4' 
+        });
       const url = URL.createObjectURL(blob);
       if (media.type === 'image') {
         const image = new Image();
@@ -129,11 +133,11 @@ export async function writeEnvelope(book: Book, progress: (n: number) => void): 
 }
 
 
-async function putFrameMedias(frameTree: FrameElement, medias: { [fileId: string]: { type: MediaType, data: Uint8Array } }, parentDirection: 'h' | 'v'): Promise<any> {
+async function putFrameMedias(frameTree: FrameElement, medias: { [fileId: string]: { type: MediaType, data: Uint8Array, format?: string } }, parentDirection: 'h' | 'v'): Promise<any> {
   const f: SaveMediaFunc = async (mediaResource, mediaType) => {
     const array = await mediaResourceToUint8Array(mediaResource, mediaType);
     const fileId = ulid();
-    medias[fileId] = { type: mediaType, data: array };
+    medias[fileId] = { type: mediaType, data: array, format: 'webp' };
     return fileId;
   };
 
@@ -166,7 +170,7 @@ async function putBubbleMedias(bubbles: Bubble[], images: { [fileId: string]: { 
 async function mediaResourceToUint8Array(mediaResource: MediaResource, mediaType: MediaType): Promise<Uint8Array> {
   if (mediaType === 'image') {
     const canvas = mediaResource as HTMLCanvasElement;
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    const blob = await canvasToBlob(canvas);
     if (!blob) throw new Error("Canvas toBlob failed");
     const arrayBuffer = await blob.arrayBuffer();
     return new Uint8Array(arrayBuffer);
