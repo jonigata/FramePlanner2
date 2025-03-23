@@ -60,6 +60,7 @@
             const {blob} = await makeEnvelope(n => $progress = n);
             $progress = 1;
             saveAs(blob, "manga.envelope");
+            $progress = null;
             break;
           case 'export-prompts':
             await exportPrompts(targetPages);
