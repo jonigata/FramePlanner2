@@ -3,7 +3,7 @@ import { LayeredCanvas, Viewport } from '../../lib/layeredCanvas/system/layeredC
 import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
 import { writePsd } from 'ag-psd';
 
-export async function renderPageToBlob(page: Page): Promise<Blob> {
+export async function renderPageToPngBlob(page: Page): Promise<Blob> {
   const canvas = await renderPage(page);
   const png: Blob = await new Promise(
     (r) => {
@@ -13,7 +13,17 @@ export async function renderPageToBlob(page: Page): Promise<Blob> {
   return png;
 }
 
-export async function renderThumbnailToBlob(page: Page, [w,h]: [number, number]): Promise<Blob> {
+export async function renderPageToWebpBlob(page: Page): Promise<Blob> {
+  const canvas = await renderPage(page);
+  const png: Blob = await new Promise(
+    (r) => {
+      canvas.toBlob(
+        blob => r(blob ?? new Blob()), 'image/webp')
+    });
+  return png;
+}
+
+export async function renderThumbnailToWebpBlob(page: Page, [w,h]: [number, number]): Promise<Blob> {
   // keep aspect ratio
   const canvas = await renderPage(page);
   const aspect = canvas.width / canvas.height;
@@ -30,7 +40,7 @@ export async function renderThumbnailToBlob(page: Page, [w,h]: [number, number])
   const png: Blob = await new Promise(
     (r) => {
       thumbnailCanvas.toBlob(
-        blob => r(blob ?? new Blob()), 'image/png')
+        blob => r(blob ?? new Blob()), 'image/webp')
     });
   return png;
 }

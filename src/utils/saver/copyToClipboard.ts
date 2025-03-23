@@ -1,10 +1,10 @@
 import type { Page } from '../../lib/book/book';
-import { renderPageToBlob } from './renderPage';
+import { renderPageToPngBlob } from './renderPage';
 
 export async function copyToClipboard(page: Page) {
   try {
       // CanvasをBlobとして取得する
-      const blob = await renderPageToBlob(page);
+      const blob = await renderPageToPngBlob(page);
 
       if (blob) {
           // BlobをClipboardItemとしてクリップボードに書き込む

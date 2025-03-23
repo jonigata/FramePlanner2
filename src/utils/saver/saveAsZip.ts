@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import type { Page } from '../../lib/book/book';
-import { renderPageToBlob, renderPageToPsd } from './renderPage';
+import { renderPageToPngBlob, renderPageToPsd } from './renderPage';
 
 export async function makeZip(pages: Page[], render: (page: Page) => Promise<Blob>, ext: string): Promise<Blob> {
   const zip = new JSZip();
@@ -17,7 +17,7 @@ export async function makeZip(pages: Page[], render: (page: Page) => Promise<Blo
 }
 
 export async function saveAsPngZip(pages: Page[]) {
-  const zipFile = await makeZip(pages, renderPageToBlob, 'png');
+  const zipFile = await makeZip(pages, renderPageToPngBlob, 'png');
   saveAs(zipFile, `book.zip`);
 }
 

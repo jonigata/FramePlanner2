@@ -17,7 +17,7 @@
   import { loading, progress } from './loadingStore';
   import type { Book, Page } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
-  import { renderPageToBlob, renderThumbnailToBlob } from './saver/renderPage';
+  import { renderPageToPngBlob, renderPageToWebpBlob, renderThumbnailToWebpBlob } from './saver/renderPage';
   import { onlineStatus, onlineProfile } from './accountStore';
   import { waitDialog } from "./waitDialog";
 
@@ -131,8 +131,8 @@
     try {
       const {file, blob} = await makeEnvelope(n => $progress = n * 0.5);
 
-      const cover = await renderPageToBlob($mainBook!.pages[0]);
-      const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
+      const cover = await renderPageToWebpBlob($mainBook!.pages[0]);
+      const thumbnail = await renderThumbnailToWebpBlob($mainBook!.pages[0], [384, 516]);
 
       // 本体
       const content_url = await postFile(`${file.id}.envelope`, blob);
@@ -222,8 +222,8 @@
       const {file, blob} = await makeEnvelope(n => $progress = n * 0.5);
       
       // カバーとサムネイルの作成
-      const cover = await renderPageToBlob($mainBook!.pages[0]);
-      const thumbnail = await renderThumbnailToBlob($mainBook!.pages[0], [384, 516]);
+      const cover = await renderPageToWebpBlob($mainBook!.pages[0]);
+      const thumbnail = await renderThumbnailToWebpBlob($mainBook!.pages[0], [384, 516]);
 
       // 各ファイルをダウンロード
       saveAs(blob, `${file.id}.envelope`);
@@ -258,7 +258,7 @@
     
     $loading = true;
     try {
-      const zipFile = await makeZip(pages, renderPageToBlob, 'png');
+      const zipFile = await makeZip(pages, renderPageToPngBlob, 'png');
       const sha1 = await blobToSha1(zipFile);
         
       let content_url;

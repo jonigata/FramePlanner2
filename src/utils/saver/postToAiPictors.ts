@@ -1,5 +1,5 @@
 import type { Page } from '../../lib/book/book';
-import { renderPageToBlob, renderPageToDataUrl } from './renderPage';
+import { renderPageToDataUrl } from './renderPage';
 
 export async function postToAiPictors(page: Page): Promise<void> {
   const dataUrl = await renderPageToDataUrl(page);

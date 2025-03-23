@@ -1,7 +1,7 @@
 import { decode, encode } from 'cbor-x'
 import { ulid } from 'ulid';
 import { unpackFrameMedias, unpackBubbleMedias, packFrameMedias, packBubbleMedias } from "./imagePacking";
-import type { SaveMediaFunc, LoadMediaFunc, MediaResource, MediaType } from "./imagePacking";
+import type { SaveMediaFunc, MediaResource, MediaType } from "./imagePacking";
 import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./book";
 import { type Notebook, emptyNotebook } from "./types/notebook";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
@@ -29,7 +29,6 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
   if (envelopedBook.images) {
     progress(0);
     for (const imageId in envelopedBook.images) {
-      // TODO: Video対応
       const blob = new Blob([envelopedBook.images[imageId]], { type: 'image/png' });
       const url = URL.createObjectURL(blob);
       const image = new Image();
@@ -44,8 +43,8 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
   }
   if (envelopedBook.medias) {
     progress(0);
-    for (const imageId in envelopedBook.medias) {
-      const media = envelopedBook.medias[imageId];
+    for (const mediaId in envelopedBook.medias) {
+      const media = envelopedBook.medias[mediaId];
       const blob = new Blob([media.data], { type: media.type === 'image' ? 'image/png' : 'video/mp4' });
       const url = URL.createObjectURL(blob);
       if (media.type === 'image') {
@@ -54,13 +53,13 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
         await image.decode();
         URL.revokeObjectURL(url);
         const canvas = createCanvasFromImage(image);
-        (canvas as any)["envelopeFileId"] = imageId;
-        bag[imageId] = { type: 'image', data: canvas };
+        (canvas as any)["envelopeFileId"] = mediaId;
+        bag[mediaId] = { type: 'image', data: canvas };
       } else {
         const video = document.createElement('video');
         video.src = url;
         await getFirstFrameOfVideo(video);
-        bag[imageId] = { type: 'video', data: video };
+        bag[mediaId] = { type: 'video', data: video };
       }
       progress(Object.keys(bag).length / Object.keys(envelopedBook.medias).length);
     }
