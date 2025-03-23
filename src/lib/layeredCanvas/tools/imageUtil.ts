@@ -31,7 +31,7 @@ export function createCanvasFromImage(image: HTMLImageElement): HTMLCanvasElemen
 
 export async function createImageFromCanvas(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
   const image = new Image();
-  image.src = canvas.toDataURL();
+  image.src = canvas.toDataURL("image/webp");
   await image.decode();
   return image;
 }
@@ -51,7 +51,7 @@ export function copyCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
 }
 
 export function canvasToBase64(canvas: HTMLCanvasElement): string {
-  return canvas.toDataURL();
+  return canvas.toDataURL("image/webp");
 }
 
 export function imageToBase64(imgElement: HTMLImageElement) {
@@ -60,7 +60,7 @@ export function imageToBase64(imgElement: HTMLImageElement) {
   canvas.height = imgElement.naturalHeight;
   canvas.getContext("2d")!.drawImage(imgElement, 0, 0);
 
-  let base64Image = canvas.toDataURL("image/png");
+  let base64Image = canvas.toDataURL("image/webp");
   return base64Image;
 }
 
@@ -72,7 +72,7 @@ export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
       } else {
         throw new Error("Failed to convert canvas to blob");
       }
-    }, "image/png");
+    }, "image/webp");
   });
 }
 
@@ -106,36 +106,6 @@ export async function createVideoFromBlob(blob: Blob): Promise<HTMLVideoElement>
   const video = await createVideoFromDataUrl(url);
   // URL.revokeObjectURL(url); ダウンロードできるようにrevokeしない
   return video;
-}
-
-export async function resizeImage(dataUrl: string, maxSize: number = 1024): Promise<string> {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-  
-  await new Promise((resolve) => {
-    img.onload = () => resolve(true);
-    img.src = dataUrl;
-  });
-
-  let width = img.width;
-  let height = img.height;
-
-  if (width > maxSize || height > maxSize) {
-    if (width > height) {
-      height = Math.round((height * maxSize) / width);
-      width = maxSize;
-    } else {
-      width = Math.round((width * maxSize) / height);
-      height = maxSize;
-    }
-  }
-
-  canvas.width = width;
-  canvas.height = height;
-  ctx?.drawImage(img, 0, 0, width, height);
-  
-  return canvas.toDataURL();
 }
 
 export function resizeCanvas(canvas: HTMLCanvasElement, maxSize: number = 1024): HTMLCanvasElement {
