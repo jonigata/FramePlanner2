@@ -2,7 +2,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { onMount } from 'svelte';
-  import barricadeIcon from '../assets/barricade.png';
+  import barricadeIcon from '../assets/barricade.webp';
   
   function toggle() {
     $saveProhibitFlag = !$saveProhibitFlag;

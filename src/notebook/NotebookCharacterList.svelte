@@ -5,7 +5,7 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import NotebookCharacter from './NotebookCharacter.svelte';
 
-  import bellIcon from '../assets/bell.png';
+  import bellIcon from '../assets/bell.webp';
 
   const dispatch = createEventDispatcher();
 

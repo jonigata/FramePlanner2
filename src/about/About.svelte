@@ -2,7 +2,7 @@
   import Drawer from '../utils/Drawer.svelte'
   import { aboutOpen } from './aboutStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
-  import aiPictorsIcon from '../assets/aipictors_logo_0.png'
+  import aiPictorsIcon from '../assets/aipictors_logo_0.webp'
   import { postContact } from '../firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
 

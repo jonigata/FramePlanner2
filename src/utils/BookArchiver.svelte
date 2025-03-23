@@ -137,11 +137,11 @@
       // 本体
       const content_url = await postFile(`${file.id}.envelope`, blob);
       $progress = 0.6;
-      const cover_url = await postFile(`${file.id}_cover.png`, cover);
+      const cover_url = await postFile(`${file.id}_cover.webp`, cover);
       $progress = 0.7;
-      const thumbnail_url = await postFile(`${file.id}_thumbnail.png`, thumbnail);
+      const thumbnail_url = await postFile(`${file.id}_thumbnail.webp`, thumbnail);
       $progress = 0.8;
-      const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.png`, socialCard) : null;
+      const socialcard_url = socialCard ? await postFile(`${file.id}_socialcard.webp`, socialCard) : null;
       $progress = 0.9;
 
       console.log("recordPublication", {
@@ -199,9 +199,9 @@
   /**
    * publishEnvelopeで作成される4つのファイルを作成してダウンロードするだけの関数
    * 1. ${file.id}.envelope - 本体ファイル
-   * 2. ${file.id}_cover.png - カバー画像
-   * 3. ${file.id}_thumbnail.png - サムネイル画像
-   * 4. ${file.id}_socialcard.png - ソーシャルカード画像（オプション）
+   * 2. ${file.id}_cover.webp - カバー画像
+   * 3. ${file.id}_thumbnail.webp - サムネイル画像
+   * 4. ${file.id}_socialcard.webp - ソーシャルカード画像（オプション）
    */
   async function downloadPublicationFiles() {
     // ソーシャルカードの取得
@@ -229,14 +229,14 @@
       saveAs(blob, `${file.id}.envelope`);
       $progress = 0.6;
       
-      saveAs(cover, `${file.id}_cover.png`);
+      saveAs(cover, `${file.id}_cover.webp`);
       $progress = 0.7;
       
-      saveAs(thumbnail, `${file.id}_thumbnail.png`);
+      saveAs(thumbnail, `${file.id}_thumbnail.webp`);
       $progress = 0.8;
       
       if (socialCard) {
-        saveAs(socialCard, `${file.id}_socialcard.png`);
+        saveAs(socialCard, `${file.id}_socialcard.webp`);
       }
       $progress = 1.0;
 

@@ -5,8 +5,8 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { toastStore } from '@skeletonlabs/skeleton';
 
-  import bellIcon from '../assets/bell.png';
-  import clipboardIcon from '../assets/clipboard.png';
+  import bellIcon from '../assets/bell.webp';
+  import clipboardIcon from '../assets/clipboard.webp';
 
   const dispatch = createEventDispatcher();
 

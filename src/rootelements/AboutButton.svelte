@@ -1,6 +1,6 @@
 <script lang="ts">
   import { aboutOpen } from '../about/aboutStore';
-  import aboutIcon from '../assets/about.png';
+  import aboutIcon from '../assets/about.webp';
   import BaseRootButton from './BaseRootButton.svelte';
 
   function download() {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-  import dumpRestorePicture from '../assets/dump-restore.png';
+  import dumpRestorePicture from '../assets/dump-restore.webp';
 
   let filesize: string | null = null;
 

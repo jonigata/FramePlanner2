@@ -3,7 +3,7 @@
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble.js";
   import { drawBubble } from "../../lib/layeredCanvas/tools/draw/bubbleGraphic";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
-  import trashIcon from '../../assets/trash.png';
+  import trashIcon from '../../assets/trash.webp';
 
   export let size: Vector = [64, 96];
   export let bubble: Bubble;

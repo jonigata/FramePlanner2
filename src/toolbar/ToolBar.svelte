@@ -13,8 +13,8 @@
   import { developmentFlag } from '../utils/developmentFlagStore';
   import { subscriptionPlans } from '../utils/billingData/subscriptionPlans';
 
-  import undoIcon from '../assets/undo.png';
-  import redoIcon from '../assets/redo.png';
+  import undoIcon from '../assets/undo.webp';
+  import redoIcon from '../assets/redo.webp';
 
   function getParentDomain(): string {
     return window.location.hostname.split('.').slice(1).join('.');

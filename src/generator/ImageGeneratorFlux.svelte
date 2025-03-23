@@ -16,7 +16,7 @@
   import FluxModes from './FluxModes.svelte';
   import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
 
-  import clipboardIcon from '../assets/clipboard.png';
+  import clipboardIcon from '../assets/clipboard.webp';
   import FeathralCost from '../utils/FeathralCost.svelte';
 
   export let busy: boolean;

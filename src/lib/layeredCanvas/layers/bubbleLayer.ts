@@ -87,26 +87,26 @@ export class BubbleLayer extends LayerBase {
 
     const unit = iconUnit;
     const mp = () => this.paper.matrix;
-    this.createBubbleIcon = new ClickableIcon(["bubbleLayer/bubble.png"],[64,64],[0,1],"ドラッグで作成", () => this.interactable, mp);
+    this.createBubbleIcon = new ClickableIcon(["bubbleLayer/bubble.webp"],[64,64],[0,1],"ドラッグで作成", () => this.interactable, mp);
     this.createBubbleIcon.position = [0, -16];
 
-    this.dragIcon = new ClickableIcon(["bubbleLayer/drag.png"],unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected != null, mp);
-    this.offsetIcon = new ClickableIcon(["bubbleLayer/bubble-offset.png"],unit,[0.5,0],"ドラッグで位置調整", () => this.interactable && this.selected != null, mp);
-    this.zPlusIcon = new ClickableIcon(["bubbleLayer/bubble-zplus.png"],unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected != null, mp);
-    this.zMinusIcon = new ClickableIcon(["bubbleLayer/bubble-zminus.png"],unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected != null, mp);
-    this.removeIcon = new ClickableIcon(["bubbleLayer/remove.png"],unit,[1,0],"削除", () => this.interactable && this.selected != null, mp);
-    this.rotateIcon = new ClickableIcon(["bubbleLayer/bubble-rotate.png"],unit,[0.5,1],"左右ドラッグで回転", () => this.interactable && this.selected != null, mp);
+    this.dragIcon = new ClickableIcon(["bubbleLayer/drag.webp"],unit,[0.5,0],"ドラッグで移動", () => this.interactable && this.selected != null, mp);
+    this.offsetIcon = new ClickableIcon(["bubbleLayer/bubble-offset.webp"],unit,[0.5,0],"ドラッグで位置調整", () => this.interactable && this.selected != null, mp);
+    this.zPlusIcon = new ClickableIcon(["bubbleLayer/bubble-zplus.webp"],unit,[0,0],"フキダシ順で手前", () => this.interactable && this.selected != null, mp);
+    this.zMinusIcon = new ClickableIcon(["bubbleLayer/bubble-zminus.webp"],unit,[0,0],"フキダシ順で奥", () => this.interactable && this.selected != null, mp);
+    this.removeIcon = new ClickableIcon(["bubbleLayer/remove.webp"],unit,[1,0],"削除", () => this.interactable && this.selected != null, mp);
+    this.rotateIcon = new ClickableIcon(["bubbleLayer/bubble-rotate.webp"],unit,[0.5,1],"左右ドラッグで回転", () => this.interactable && this.selected != null, mp);
 
-    this.imageScaleLockIcon = new ClickableIcon(["bubbleLayer/bubble-unlock.png","bubbleLayer/bubble-lock.png"],unit,[1,1], "スケール同期", () => this.interactable && 0 < (this.selected?.filmStack.films.length ?? 0), mp);
+    this.imageScaleLockIcon = new ClickableIcon(["bubbleLayer/bubble-unlock.webp","bubbleLayer/bubble-lock.webp"],unit,[1,1], "スケール同期", () => this.interactable && 0 < (this.selected?.filmStack.films.length ?? 0), mp);
     this.imageScaleLockIcon.index = 0;
-    this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.png"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null && 0 < this.selected?.filmStack.films.length, mp);
+    this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.webp"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null && 0 < this.selected?.filmStack.films.length, mp);
 
     this.optionIcons = {};
-    this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.png"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.curve = new ClickableIcon(["bubbleLayer/tail-mid.png"],unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.unite = new ClickableIcon(["bubbleLayer/unite.png"],unit,[0.5,1],"ドラッグで他のフキダシと結合", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.circle = new ClickableIcon(["bubbleLayer/circle.png"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
-    this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.png"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.webp"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.curve = new ClickableIcon(["bubbleLayer/tail-mid.webp"],unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.unite = new ClickableIcon(["bubbleLayer/unite.webp"],unit,[0.5,1],"ドラッグで他のフキダシと結合", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.circle = new ClickableIcon(["bubbleLayer/circle.webp"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
+    this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.webp"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
     for (let icon of [this.dragIcon, this.offsetIcon, this.zPlusIcon, this.zMinusIcon, this.removeIcon, this.rotateIcon, this.imageScaleLockIcon, this.scaleIcon]) {
       if (icon instanceof ClickableIcon) {

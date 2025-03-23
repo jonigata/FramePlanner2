@@ -2,7 +2,7 @@
   import { type ImageGeneratorTarget, imageGeneratorTarget } from "./imageGeneratorStore";
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { tick } from "svelte";
-  import feathralIcon from '../assets/feathral.png';
+  import feathralIcon from '../assets/feathral.webp';
   import Drawer from '../utils/Drawer.svelte';
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";

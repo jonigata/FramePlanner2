@@ -1,7 +1,7 @@
 <script type="ts">
   import { downloaderOpen } from '../downloader/downloaderStore';
   import BaseRootButton from './BaseRootButton.svelte';
-  import downloadIcon from '../assets/download.png';
+  import downloadIcon from '../assets/download.webp';
 
   function download() {
     $downloaderOpen = !$downloaderOpen;

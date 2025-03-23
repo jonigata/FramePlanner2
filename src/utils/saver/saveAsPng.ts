@@ -4,5 +4,5 @@ import { renderPageToBlob } from './renderPage';
 
 export async function saveAsPng(page: Page) {
   const png = await renderPageToBlob(page);
-  saveAs(png, 'comic.png');
+  saveAs(png, 'comic.webp');
 }

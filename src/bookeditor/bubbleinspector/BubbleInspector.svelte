@@ -28,10 +28,10 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { onlineStatus } from "../../utils/accountStore";
 
-  import horizontalIcon from '../../assets/horizontal.png';
-  import verticalIcon from '../../assets/vertical.png';
-  import embeddedIcon from '../../assets/embedded.png';
-  import unembeddedIcon from '../../assets/unembedded.png';
+  import horizontalIcon from '../../assets/horizontal.webp';
+  import verticalIcon from '../../assets/vertical.webp';
+  import embeddedIcon from '../../assets/embedded.webp';
+  import unembeddedIcon from '../../assets/unembedded.webp';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;

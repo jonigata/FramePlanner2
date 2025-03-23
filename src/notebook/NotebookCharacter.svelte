@@ -5,9 +5,9 @@
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
 
-  import bellIcon from '../assets/bell.png';
+  import bellIcon from '../assets/bell.webp';
 
-  import trashIcon from '../assets/trash.png'
+  import trashIcon from '../assets/trash.webp'
 
   const dispatch = createEventDispatcher();
 

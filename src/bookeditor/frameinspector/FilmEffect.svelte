@@ -6,7 +6,7 @@
 	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { onMount } from "svelte";
 
-  import deleteIcon from '../../assets/filmlist/delete.png';
+  import deleteIcon from '../../assets/filmlist/delete.webp';
 
   const dispatch = createEventDispatcher();
 

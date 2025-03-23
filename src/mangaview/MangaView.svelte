@@ -2,8 +2,8 @@
   import { onMount, createEventDispatcher } from "svelte";
   import { buildRenderer, Renderer, type Book } from "manga-renderer";
   import AutoSizeCanvas from "../utils/AutoSizeCanvas.svelte";
-  import leftIcon from "../assets/viewer/left.png";
-  import rightIcon from "../assets/viewer/right.png";
+  import leftIcon from "../assets/viewer/left.webp";
+  import rightIcon from "../assets/viewer/right.webp";
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
 

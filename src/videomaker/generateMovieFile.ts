@@ -42,7 +42,7 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
   let progress = 0.5;
   for (let i = 0; i < scenes.length; i++) {
     const scene = scenes[i];
-    await writeCanvasToFile(scene.canvas, `image${i}.png`);
+    await writeCanvasToFile(scene.canvas, `image${i}.webp`);
     progress += 0.25 / scenes.length;
     reportProgress(progress);
   }
@@ -51,14 +51,14 @@ export async function createVideoWithImages(w: number, h: number, fps: number, d
   let fileListString = "";
   let totalDuration = 0;
   for (let i = 0; i < scenes.length; i++) {
-    fileListString += `file 'image${i}.png'\n`;
+    fileListString += `file 'image${i}.webp'\n`;
     const nextKey = i < scenes.length - 1 ? scenes[i + 1].key : d;
     const currKey = scenes[i].key;
     const duration = nextKey - currKey;
     fileListString += `duration ${duration.toFixed(2)}\n`;
     totalDuration += duration;
   }
-  fileListString += `file 'image${scenes.length - 1}.png'\n`;
+  fileListString += `file 'image${scenes.length - 1}.webp'\n`;
 
   console.log("================ totalDuration", totalDuration);
   console.log(fileListString);

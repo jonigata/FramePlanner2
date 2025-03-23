@@ -5,7 +5,7 @@
   import { mainBook } from '../bookeditor/bookStore';
   import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import BaseRootButton from './BaseRootButton.svelte';
-  import newBookIcon from '../assets/new-book.png';
+  import newBookIcon from '../assets/new-book.webp';
 
   async function createNewFile(e: CustomEvent<MouseEvent>) {
     if (e.detail.ctrlKey) {

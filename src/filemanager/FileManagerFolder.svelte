@@ -13,11 +13,11 @@
   import { loading, progress } from '../utils/loadingStore'
   import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
 
-  import newFileIcon from '../assets/fileManager/new-file.png';
-  import newFolderIcon from '../assets/fileManager/new-folder.png';
-  import trashIcon from '../assets/fileManager/trash.png';
-  import folderIcon from '../assets/fileManager/folder.png';
-  import renameIcon from '../assets/fileManager/rename.png';
+  import newFileIcon from '../assets/fileManager/new-file.webp';
+  import newFolderIcon from '../assets/fileManager/new-folder.webp';
+  import trashIcon from '../assets/fileManager/trash.webp';
+  import folderIcon from '../assets/fileManager/folder.webp';
+  import renameIcon from '../assets/fileManager/rename.webp';
 
   export let fileSystem: FileSystem;
   export let filename: string;

@@ -4,8 +4,8 @@
   import { shineEffect } from '../shineEffect';
   import { toolTip } from '../passiveToolTipStore';
 
-  import adsIcon from '../../assets/binoculars.png';
-  import leaveIcon from '../../assets/ads-leave.png';
+  import adsIcon from '../../assets/binoculars.webp';
+  import leaveIcon from '../../assets/ads-leave.webp';
 
   export let advertiser: string = "jonigata";
 

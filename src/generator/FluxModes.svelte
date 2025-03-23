@@ -1,7 +1,7 @@
 <script lang="ts">
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import type { Mode } from '../utils/feathralImaging';
-  import feathralIcon from '../assets/feathral.png';
+  import feathralIcon from '../assets/feathral.webp';
   import { onMount } from 'svelte';
   import { createPreference } from '../preferences';
   import FeathralCost from '../utils/FeathralCost.svelte';

@@ -11,11 +11,11 @@
   import { writeEnvelope } from "../lib/book/envelope";
   import { progress } from '../utils/loadingStore';
 
-  import trashIcon from '../assets/fileManager/trash.png';
-  import renameIcon from '../assets/fileManager/rename.png';
-  import fileIcon from '../assets/fileManager/file.png';
-  import pasteIcon from '../assets/fileManager/paste.png'
-  import packageIcon from '../assets/fileManager/package-export.png'
+  import trashIcon from '../assets/fileManager/trash.webp';
+  import renameIcon from '../assets/fileManager/rename.webp';
+  import fileIcon from '../assets/fileManager/file.webp';
+  import pasteIcon from '../assets/fileManager/paste.webp'
+  import packageIcon from '../assets/fileManager/package-export.webp'
 
   const dispatch = createEventDispatcher();
 

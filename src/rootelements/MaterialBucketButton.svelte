@@ -1,7 +1,7 @@
 <script type="ts">
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
   import BaseRootButton from './BaseRootButton.svelte';
-  import stampIcon from '../assets/stamp.png';
+  import stampIcon from '../assets/stamp.webp';
   
   function openMaterialBucket() {
     $materialBucketOpen = !$materialBucketOpen;

@@ -53,22 +53,22 @@ export class ArrayLayer extends LayerBase {
 
     const mp = () => this.paper.matrix;
     for (let i = 0; i < this.array.papers.length; i++) {
-      const trashIcon = new ClickableIcon(["page-trash.png"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
+      const trashIcon = new ClickableIcon(["page-trash.webp"],[32,32],[0.5,0],"ページ削除", () => 1 < this.array.papers.length, mp);
       this.trashIcons.push(trashIcon);
-      const markIcon = new ClickableIcon(["page-mark.png", "page-mark-on.png"],[32,32],[0.5,0],"ページマーク", null, mp);
+      const markIcon = new ClickableIcon(["page-mark.webp", "page-mark-on.webp"],[32,32],[0.5,0],"ページマーク", null, mp);
       this.markIcons.push(markIcon);
-      const imagingIcon = new ClickableIcon(["page-imaging.png"],[32,32],[0.5,0],"バッチ画像生成", null, mp);
+      const imagingIcon = new ClickableIcon(["page-imaging.webp"],[32,32],[0.5,0],"バッチ画像生成", null, mp);
       this.imagingIcons.push(imagingIcon);
-      const editBubblesIcon = new ClickableIcon(["page-bubbles.png"],[32,32],[0.5,0],"吹き出し一括編集", null, mp);
+      const editBubblesIcon = new ClickableIcon(["page-bubbles.webp"],[32,32],[0.5,0],"吹き出し一括編集", null, mp);
       this.bubblesIcons.push(editBubblesIcon);
-      const copyIcon = new ClickableIcon(["page-clipboard.png"],[32,32],[0.5,0],"クリップボードにコピー", null, mp);
+      const copyIcon = new ClickableIcon(["page-clipboard.webp"],[32,32],[0.5,0],"クリップボードにコピー", null, mp);
       this.copyIcons.push(copyIcon);
-      const tweakIcon = new ClickableIcon(["page-tweak.png"],[32,32],[0.5,0],"ページ調整", null, mp);
+      const tweakIcon = new ClickableIcon(["page-tweak.webp"],[32,32],[0.5,0],"ページ調整", null, mp);
       this.tweakIcons.push(tweakIcon);
       this.markFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
-      const insertIcon = new ClickableIcon(["page-insert.png", "page-insert-vertical.png", "page-paste.png"],[24,24],[0.5,0],`p${i+1}挿入`, null, mp);
+      const insertIcon = new ClickableIcon(["page-insert.webp", "page-insert-vertical.webp", "page-paste.webp"],[24,24],[0.5,0],`p${i+1}挿入`, null, mp);
       this.insertIcons.push(insertIcon);
     }
     this.calculateIconPositions();

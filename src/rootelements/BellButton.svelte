@@ -3,7 +3,7 @@
   import { onlineStatus } from '../utils/accountStore';
   import { toastStore } from '@skeletonlabs/skeleton';
   import BaseRootButton from './BaseRootButton.svelte';
-  import bellIcon from '../assets/bell.png';
+  import bellIcon from '../assets/bell.webp';
   
   function callFairy() {
     if ($onlineStatus !== "signed-in") {

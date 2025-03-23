@@ -1,7 +1,7 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import { toolTip } from '../utils/passiveToolTipStore';
-  import dumpRestorePicture from '../assets/dump-restore.png';
+  import dumpRestorePicture from '../assets/dump-restore.webp';
 
   let filesize: number | null = null;
   let overwrite = '';

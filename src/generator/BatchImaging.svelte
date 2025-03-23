@@ -11,7 +11,7 @@
   import ImagingProgressBar from './ImagingProgressBar.svelte';
 
   import "../box.css"  
-  import feathralIcon from '../assets/feathral.png';
+  import feathralIcon from '../assets/feathral.webp';
 
   let tabSet: number = 0;
   let imagingContext: ImagingContext = {

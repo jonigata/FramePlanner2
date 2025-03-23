@@ -73,7 +73,7 @@ export class BackblazeContentStorage extends ContentStorageBase {
   }
 
   async readCanvas(id: string): Promise<HTMLCanvasElement> {
-    const {url} = await getDownloadUrl(`${id}.png`);
+    const {url} = await getDownloadUrl(`${id}.webp`);
     console.log(url);
 
     const image = new Image();

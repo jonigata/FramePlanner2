@@ -17,7 +17,7 @@
 
   onMount(async () => {
     const family = font.family.replace(/ /g, "-");
-    url = new URL(`../../assets/fonts/labels/${family}.png`, import.meta.url).href;
+    url = new URL(`../../assets/fonts/labels/${family}.webp`, import.meta.url).href;
   });
 
 </script>

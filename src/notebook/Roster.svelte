@@ -5,7 +5,7 @@
   import type { Character } from "$bookTypes/notebook";
   import { fileSystem } from "../filemanager/fileManagerStore";
   import { getNodeByPath, rm } from "../lib/filesystem/fileSystem";
-  import trashIcon from '../assets/trash.png';
+  import trashIcon from '../assets/trash.webp';
 
   let opened = false;
   let characters: Character[] = [];

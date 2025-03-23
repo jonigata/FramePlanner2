@@ -1,9 +1,9 @@
 <script lang="ts">
   import Drawer from '../utils/Drawer.svelte'
   import { downloaderOpen } from './downloaderStore';
-  import downloadIcon from '../assets/get.png';
-  import clipboardIcon from '../assets/clipboard.png';
-  import aiPictorsIcon from '../assets/aipictors_logo_0.png'
+  import downloadIcon from '../assets/get.webp';
+  import clipboardIcon from '../assets/clipboard.webp';
+  import aiPictorsIcon from '../assets/aipictors_logo_0.webp'
   import { analyticsEvent } from "../utils/analyticsEvent";
   import { toastStore } from '@skeletonlabs/skeleton';
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";

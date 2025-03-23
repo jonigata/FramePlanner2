@@ -14,14 +14,14 @@
   import MediaFrame from '../../gallery/MediaFrame.svelte';
   import MediaLoading from '../../gallery/MediaLoading.svelte';
 
-  import visibleIcon from '../../assets/filmlist/eye.png';
-  import scribbleIcon from '../../assets/filmlist/scribble.png';
-  import trashIcon from '../../assets/filmlist/trash.png';
-  import punchIcon from '../../assets/filmlist/punch.png';
-  import effectIcon from '../../assets/filmlist/effect.png';
-  import outPaintingIcon from '../../assets/filmlist/outpainting.png';
-  import popupIcon from '../../assets/filmlist/popup.png';
-  import videoIcon from '../../assets/video.png';
+  import visibleIcon from '../../assets/filmlist/eye.webp';
+  import scribbleIcon from '../../assets/filmlist/scribble.webp';
+  import trashIcon from '../../assets/filmlist/trash.webp';
+  import punchIcon from '../../assets/filmlist/punch.webp';
+  import effectIcon from '../../assets/filmlist/effect.webp';
+  import outPaintingIcon from '../../assets/filmlist/outpainting.webp';
+  import popupIcon from '../../assets/filmlist/popup.webp';
+  import videoIcon from '../../assets/video.webp';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;

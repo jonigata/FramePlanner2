@@ -1,7 +1,7 @@
 <script type="ts">
   import { controlPanelOpen } from '../controlpanel/controlPanelStore';
   import BaseRootButton from './BaseRootButton.svelte';
-  import rulerIcon from '../assets/ruler.png';
+  import rulerIcon from '../assets/ruler.webp';
 
   function openRuler() {
     $controlPanelOpen = !$controlPanelOpen;

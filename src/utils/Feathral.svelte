@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onlineAccount } from "../utils/accountStore";
-  import sprytIcon from '../assets/spryt.png';
+  import sprytIcon from '../assets/spryt.webp';
 
   // 通貨単位はfeathral => sprytに変更
   // 内部データは変更困難なので、表示のみ変更

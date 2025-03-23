@@ -4,8 +4,8 @@
   import { buildBookRenderer, type DisplayProgramEntry } from './buildProgram';
   import { onDestroy, onMount, tick } from 'svelte';
   import { buildTimeTable, renderAtTime, type TimeTableEntry } from './renderProgram';
-  import playIcon from '../assets/videomaker/play.png';
-  import pauseIcon from '../assets/videomaker/pause.png';
+  import playIcon from '../assets/videomaker/play.webp';
+  import pauseIcon from '../assets/videomaker/pause.webp';
   import Spreader from '../utils/Spreader.svelte'
   import type { Book, VideoSettings } from '../lib/book/book';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';

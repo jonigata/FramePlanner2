@@ -5,7 +5,7 @@
   import HistoryStorage from './HistoryStorage.svelte';
   import WebFontList from './WebFontList.svelte';
   import { type SearchOptions, fontChooserOpen, chosenFont } from './fontStore';
-  import trash from '../../assets/trash.png';
+  import trash from '../../assets/trash.webp';
 
   let searchOptions: SearchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
   let drawerPage = 0;

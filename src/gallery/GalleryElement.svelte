@@ -7,10 +7,10 @@
   import { formatDuration } from '../utils/timeFormat';
   import MediaFrame from './MediaFrame.svelte';
 
-  import drop from '../assets/drop.png';
-  import reference from '../assets/reference.png';
-  import referenceSelected from '../assets/reference-selected.png';
-  import telescope from '../assets/telescope.png';
+  import drop from '../assets/drop.webp';
+  import reference from '../assets/reference.webp';
+  import referenceSelected from '../assets/reference-selected.webp';
+  import telescope from '../assets/telescope.webp';
 
   export let media: Media;
   export let width = 160;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import BaseRootButton from './BaseRootButton.svelte';
-  import videoIcon from '../assets/video.png';
+  import videoIcon from '../assets/video.webp';
 
   function openVideoMaker() {
     const d: ModalSettings = {
