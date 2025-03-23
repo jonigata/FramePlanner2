@@ -1,7 +1,7 @@
 <script lang="ts">
   import { redrawToken } from '../bookeditor/bookStore';
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
-  import { computeAspectFitSize } from "../lib/layeredCanvas/tools/imageUtil";
+  import { canvasToBlob, computeAspectFitSize } from "../lib/layeredCanvas/tools/imageUtil";
   import MediaLoading from './MediaLoading.svelte';
 
   export let media: Media;
@@ -19,10 +19,7 @@
   async function updateMediaDisplay() {
     if (media.type === 'image' && media.drawSourceCanvas) {
       if (!useCanvas) {
-        const blob = await new Promise<Blob | null>((resolve) => {
-          media.drawSourceCanvas.toBlob(resolve, 'image/png');
-        });
-
+        const blob = await canvasToBlob(media.drawSourceCanvas);
         if (blob) {
           imageDataUrl = URL.createObjectURL(blob);
         }
