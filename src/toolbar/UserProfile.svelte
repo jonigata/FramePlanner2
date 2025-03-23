@@ -14,11 +14,14 @@
   let isChecking = false;
   let isAvailable = false;
   let isDirty = false;
+  let reason = '';
 
   let uniqueChecker = new DelayedCommiter(async () => {
     isChecking = true;
     try {
-      isAvailable = (await checkUsernameAvailable(username)).is_available;
+      const r = await checkUsernameAvailable(username);
+      isAvailable = r.is_available;
+      reason = r.reason;
     } catch (error) {
       console.error('Username check failed:', error);
     } finally {
@@ -99,7 +102,7 @@
           {#if isAvailable}
             <span class="text-sm text-success-500">✓ 使用可能です</span>
           {:else}
-            <span class="text-sm text-error-500">このユーザー名は既に使用されています</span>
+            <span class="text-sm text-error-500">{reason}</span>
           {/if}
         {/if}
       </div>

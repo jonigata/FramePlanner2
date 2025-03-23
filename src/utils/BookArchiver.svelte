@@ -178,7 +178,7 @@
       console.log(downloadUrl);
       try {
         // localhost及びhttps以外では失敗する
-        navigator.clipboard.writeText(downloadUrl);
+        await navigator.clipboard.writeText(downloadUrl);
         toastStore.trigger({ message: `<a target="_blank" href="${downloadUrl}"><span class="text-yellow-200">公開URL</span></a>がクリップボードにコピーされました`, timeout: 10000});
       }
       catch(e) {
