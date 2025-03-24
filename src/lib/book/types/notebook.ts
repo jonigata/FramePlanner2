@@ -1,37 +1,25 @@
 import { z } from "zod";
-import { Storyboard } from "./storyboard"; // @deno-ts
+import { StoryboardSchema } from "./storyboard"; // @deno-ts
 
-export const Character = z.object({
-  ulid: z.string(),
+export const CharacterBaseSchema = z.object({
   name: z.string(),
   personality: z.string(),
   appearance: z.string(),
   themeColor: z.string(),
-  portrait: z.any().nullable(), // 'loading' | HTMLImageElement
+  ulid: z.string(),
 });
+export type CharacterBase = z.infer<typeof CharacterBaseSchema>;
 
-export const Notebook = z.object({
+export const CharactersBaseSchema = z.array(CharacterBaseSchema);
+export type CharactersBase = z.infer<typeof CharactersBaseSchema>;
+
+export const NotebookBaseSchema = z.object({
   theme: z.string(),
-  characters: z.array(Character),
+  characters: z.array(CharacterBaseSchema),
   plot: z.string(),
   scenario: z.string(),
-  storyboard: Storyboard.nullable(),
+  storyboard: StoryboardSchema.nullable(),
   critique: z.string(),
 });
+export type NotebookBase = z.infer<typeof NotebookBaseSchema>;
 
-export type Character = z.infer<typeof Character>;
-export type Notebook = z.infer<typeof Notebook>;
-
-export const Characters = z.array(Character);
-export type Characters = z.infer<typeof Characters>;
-
-export function emptyNotebook(): Notebook {
-  return {
-    theme: "",
-    characters: [],
-    plot: "",
-    scenario: "",
-    storyboard: null,
-    critique: "",
-  };
-}

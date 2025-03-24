@@ -1,12 +1,18 @@
 import { supabase } from "../../supabase";
-import { ZodSchema } from "zod";
+import { z, ZodSchema, ZodObject, type ZodRawShape } from "zod";
 
-export async function invoke<Req, Res>(functionName: string, req: Req, responseSchema: ZodSchema<Res>): Promise<Res> {
-  const data = await supabase.functions.invoke(
-    `aigateway/${functionName}`,
-    {
-      body: JSON.stringify(req)
-    });
+export async function invoke<ResSchema extends ZodSchema>(
+  functionName: string,
+  req: any,
+  requestSchema: ZodObject<ZodRawShape>, // ここを限定
+  responseSchema: ResSchema,
+): Promise<z.infer<ResSchema>> {
+  const parsedReq = requestSchema.strip().parse(req);
+  console.log("invoke", req, parsedReq);
 
-  return responseSchema.parse(data.data); // validate response
+  const data = await supabase.functions.invoke(`aigateway/${functionName}`, {
+    body: JSON.stringify(parsedReq),
+  });
+
+  return responseSchema.parse(data.data);
 }

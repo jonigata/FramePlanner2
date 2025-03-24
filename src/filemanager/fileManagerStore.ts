@@ -1,14 +1,13 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
 import type { Page, Book, SerializedBook, SerializedPage } from "../lib/book/book";
-import { commitBook } from "../lib/book/book";
+import { commitBook, emptyNotebook } from "../lib/book/book";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "$bookTypes/richChat";
-import { emptyNotebook } from "$bookTypes/notebook";
-import { storeFrameImages, storeBubbleImages, fetchFrameImages, fetchBubbleImages } from "./fileImages";
+import { storeFrameImages, storeBubbleImages, storeNotebookImages, fetchFrameImages, fetchBubbleImages, fetchNotebookImages } from "./fileImages";
 import { writeEnvelope, readEnvelope } from "../lib/book/envelope";
 import { dryUnpackBubbleMedias, dryUnpackFrameMedias } from "../lib/book/imagePacking";
 import type { Media } from "../lib/layeredCanvas/dataModels/media";
@@ -41,13 +40,15 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
   const imageFolder = (await root.getNodesByName('画像'))[0] as Folder;
   const videoFolder = (await root.getNodesByName('動画'))[0] as Folder;
 
+  const notebook = await storeNotebookImages(book.notebook, fileSystem, imageFolder, videoFolder);
+
   const serializedBook: SerializedBook = {
     revision: book.revision,
     pages: [],
     direction: book.direction,
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
-    notebook: book.notebook,
+    notebook: notebook,
     attributes: book.attributes,
   };
   for (const page of book.pages) {
@@ -77,7 +78,12 @@ export function serializeBook(book: Book): SerializedBook {
     direction: book.direction,
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
-    notebook: book.notebook,
+    notebook: {
+       ...book.notebook,
+       characters: book.notebook.characters.map(character => {
+         return { ...character, portrait: null }
+       })
+    },
     attributes: book.attributes,
   }
 }
@@ -110,6 +116,11 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
 
   const chatLogs = protocolChatLogToRichChatLog(serializedBook.chatLogs ?? []);
 
+  const notebook = 
+    serializedBook.notebook 
+    ? await fetchNotebookImages(serializedBook.notebook, fileSystem) 
+    : emptyNotebook();
+
   const book: Book = {
     revision: serializedBook.revision,
     pages: [],
@@ -120,7 +131,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     direction: serializedBook.direction ?? 'right-to-left',
     wrapMode: serializedBook.wrapMode ?? 'none',
     chatLogs,
-    notebook: serializedBook.notebook ?? emptyNotebook(),
+    notebook: notebook,
     attributes: serializedBook.attributes ?? { publishUrl: null },
   };
 

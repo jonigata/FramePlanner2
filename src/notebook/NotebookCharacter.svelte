@@ -1,17 +1,19 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { Character } from '$bookTypes/notebook';
+  import type { CharacterLocal } from '../lib/book/book';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
+  import MediaFrame from "../gallery/MediaFrame.svelte";
 
   import bellIcon from '../assets/bell.webp';
-
   import trashIcon from '../assets/trash.webp'
 
   const dispatch = createEventDispatcher();
 
-  export let character: Character;
+  export let character: CharacterLocal;
+
+  $: media = character.portrait != 'loading' ? character.portrait : null;
 
   function portrait() {
     dispatch('portrait', character);
@@ -44,8 +46,10 @@
             <div class="waiting">
               <ProgressRadial stroke={100} width="w-4"/>
             </div>
-          {:else if character.portrait}
-            <img src={character.portrait.src} alt="見た目"/>
+          {:else if media}
+            <MediaFrame 
+              media={media}
+            />
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={portrait}/>

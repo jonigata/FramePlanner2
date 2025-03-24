@@ -1,9 +1,9 @@
 import { decode, encode } from 'cbor-x'
 import { ulid } from 'ulid';
-import { unpackFrameMedias, unpackBubbleMedias, packFrameMedias, packBubbleMedias } from "./imagePacking";
+import { unpackFrameMedias, unpackBubbleMedias, unpackNotebookMedias, packFrameMedias, packBubbleMedias, packNotebookMedias } from "./imagePacking";
 import type { SaveMediaFunc, MediaResource, MediaType } from "./imagePacking";
-import type { Book, Page, WrapMode, ReadingDirection, SerializedPage } from "./book";
-import { type Notebook, emptyNotebook } from "./types/notebook";
+import type { Book, Page, WrapMode, ReadingDirection, SerializedPage, SerializedNotebook, NotebookLocal } from "./book";
+import { emptyNotebook } from "./book";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { createCanvasFromImage, getFirstFrameOfVideo, canvasToBlob } from "../layeredCanvas/tools/imageUtil";
@@ -16,7 +16,7 @@ export type EnvelopedBook = {
   wrapMode: WrapMode,
   images?: { [fileId: string]: Uint8Array },
   medias?: { [fileId: string]: { type: MediaType, data: Uint8Array, format?: string } },
-  notebook: Notebook | null,
+  notebook: SerializedNotebook | null,
 };
 
 export type CanvasBag = { [fileId: string]: { type: MediaType, data: HTMLCanvasElement | HTMLVideoElement } };
@@ -69,6 +69,10 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
     }
   }
 
+  const notebook = envelopedBook.notebook 
+    ? await unpackNotebookMedias(envelopedBook.notebook, async (imageId: string) => bag[imageId].data) 
+    : emptyNotebook();
+
   const book: Book = {
     revision: { id: 'not visited', revision: 1, prefix: 'envelope-' },
     pages: [],
@@ -76,7 +80,7 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
     direction: envelopedBook.direction,
     wrapMode: envelopedBook.wrapMode,
     chatLogs: [],
-    notebook: envelopedBook.notebook ?? emptyNotebook(),
+    notebook,
     attributes: { publishUrl: null },
   };
 
@@ -107,9 +111,11 @@ export async function writeEnvelope(book: Book, progress: (n: number) => void): 
     pages: [],
     direction: book.direction,
     wrapMode: book.wrapMode,
-    notebook: book.notebook,
+    notebook: null,
     medias: {},
   };
+
+  envelopedBook.notebook = await putNotebookMedias(book.notebook, envelopedBook.medias!);
 
   for (const page of book.pages) {
     const markUp = await putFrameMedias(page.frameTree, envelopedBook.medias!, 'v');
@@ -167,6 +173,16 @@ async function putBubbleMedias(bubbles: Bubble[], images: { [fileId: string]: { 
   return await packBubbleMedias(bubbles, f);
 }
 
+async function putNotebookMedias(notebook: NotebookLocal, images: { [fileId: string]: { type: MediaType, data: Uint8Array } }): Promise<SerializedNotebook> {
+  const f: SaveMediaFunc = async (mediaResource, mediaType) => {
+    const array = await mediaResourceToUint8Array(mediaResource, mediaType);
+    const fileId = ulid();
+    images[fileId] = { type: mediaType, data: array };
+    return fileId;
+  };
+  return await packNotebookMedias(notebook, f);
+}
+
 async function mediaResourceToUint8Array(mediaResource: MediaResource, mediaType: MediaType): Promise<Uint8Array> {
   if (mediaType === 'image') {
     const canvas = mediaResource as HTMLCanvasElement;
@@ -185,7 +201,7 @@ export type OldEnvelopedBook = {
   direction: ReadingDirection,
   wrapMode: WrapMode,
   images: { [fileId: string]: string }
-  notebook: Notebook | null,
+  notebook: NotebookLocal | null, // portraitなどは多分腐っている
 };
 
 export async function readOldEnvelope(json: string): Promise<Book> {

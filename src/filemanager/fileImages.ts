@@ -1,9 +1,17 @@
 import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-import type { FileSystem, Folder, NodeId, File } from "../lib/filesystem/fileSystem";
-import { type MediaType, type MediaResource, packFrameMedias, unpackFrameMedias, packBubbleMedias, unpackBubbleMedias, type SaveMediaFunc } from "../lib/book/imagePacking";
+import type { FileSystem, Folder, NodeId } from "../lib/filesystem/fileSystem";
+import { 
+  type MediaType, 
+  type MediaResource, 
+  type SaveMediaFunc, 
+  packFrameMedias, unpackFrameMedias, 
+  packBubbleMedias, unpackBubbleMedias,
+  packNotebookMedias, unpackNotebookMedias,
+} from "../lib/book/imagePacking";
 import type { RemoteMediaReference } from "../lib/layeredCanvas/dataModels/media";
+import { type NotebookLocal, type SerializedNotebook } from "../lib/book/book";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvas/video/remoteFileRequestオブジェクトには
@@ -33,6 +41,11 @@ export async function fetchBubbleImages(paperSize: Vector, markUps: any[], fileS
   return await unpackBubbleMedias(paperSize, markUps, f);
 }
 
+export async function fetchNotebookImages(serializedNotebook: SerializedNotebook, fileSystem: FileSystem): Promise<NotebookLocal> {
+  const f = (imageId: string, mediaType: MediaType) => loadMediaResource(fileSystem, imageId as NodeId, mediaType);
+  return await unpackNotebookMedias(serializedNotebook, f);
+}
+
 export async function storeFrameImages(frameTree: FrameElement, fileSystem: FileSystem, imageFolder: Folder, videoFolder: Folder, parentDirection: 'h' | 'v'): Promise<any> {
   const f: SaveMediaFunc = async (mediaResource: MediaResource, mediaType: MediaType) => {
     return await saveMediaResource(fileSystem, imageFolder, videoFolder, mediaResource, mediaType);
@@ -58,6 +71,13 @@ export async function storeBubbleImages(bubbles: Bubble[], fileSystem: FileSyste
     return await saveMediaResource(fileSystem, imageFolder, videoFolder, mediaResource, mediaType);
   };
   return await packBubbleMedias(bubbles, f);
+}
+
+export async function storeNotebookImages(notebook: NotebookLocal, fileSystem: FileSystem, imageFolder: Folder, videoFolder: Folder): Promise<SerializedNotebook> {
+  const f: SaveMediaFunc = async (mediaResource: MediaResource, mediaType: MediaType) => {
+    return await saveMediaResource(fileSystem, imageFolder, videoFolder, mediaResource, mediaType);
+  };
+  return await packNotebookMedias(notebook, f);
 }
 
 async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId, mediaType: MediaType): Promise<MediaResource> {

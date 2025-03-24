@@ -8,7 +8,7 @@ export interface UserProfile {
 };
 
 export interface Wallet {
-  subscription_plan?: 'free' | 'basic' | 'premium';
+  subscription_plan: 'free' | 'basic' | 'premium';
   resilient: number;
   permanent: number;
   pending_downgrade: boolean;
@@ -17,6 +17,7 @@ export interface Wallet {
 
 export interface PublicationContent {
   id: string;
+  author_id: string;
   title: string;
   is_public: boolean;
   is_suspended: boolean;
@@ -29,10 +30,11 @@ export interface PublicationContent {
   author_display_name: string;
   fav_count: number;
   comment_count: number;
-  is_faved: boolean;
-  is_favable: boolean;
-  socialcard_url: string | null;
+  socialcard_url: string;
   related_url: string;
+  author_display_name: string;
+  author_username: string;
+  author_is_suspended: boolean;
 }
 
 export interface Works {
@@ -43,7 +45,7 @@ export interface Works {
 export interface Mail {
   id: string;
   created_at: string;
-  sender_display_name: string | null;
+  sender_display_name: string;
   title: string;
   content: string;
   read_at: string | null;

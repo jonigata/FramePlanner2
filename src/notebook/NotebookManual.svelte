@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Character } from '$bookTypes/notebook';
-  import { Storyboard } from '$bookTypes/storyboard';
-  import { commitBook } from '../lib/book/book';
+  import { type CharacterBase, type CharactersBase } from '$bookTypes/notebook';
+  import { StoryboardSchema } from '$bookTypes/storyboard';
+  import { commitBook, type NotebookLocal, type CharacterLocal } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
@@ -18,14 +18,14 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import FluxModes from '../generator/FluxModes.svelte';
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
-  import { Notebook as NotebookProtocol } from '$bookTypes/notebook';
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { type Folder, type File, ls } from '../lib/filesystem/fileSystem';
   import { rosterOpen, rosterSelectedCharacter } from './rosterStore';
-  import { imageToBlob, createImageFromCanvas } from '../lib/layeredCanvas/tools/imageUtil';
   import { waitForChange } from '../utils/reactUtil';
+  import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
 
-  $: notebook = $mainBook ? $mainBook.notebook : null;
+  let notebook: NotebookLocal | null;
+  $: notebook = $mainBook?.notebook ?? null;
 
   let fullAutoRunning = false;
   let themeWaiting = false;
@@ -83,7 +83,8 @@
   async function onThemeAdvise() {
     try {
       themeWaiting = true;
-      notebook!.theme = await adviseTheme(notebook as NotebookProtocol);
+      console.log('advise theme', notebook);
+      notebook!.theme = await adviseTheme(notebook!);
       commit();
     }
     catch(e) {
@@ -99,9 +100,14 @@
     try {
       charactersWaiting = true;
       notebook!.characters = [];
-      const newCharacters: Character[] = await adviseCharacters(notebook as NotebookProtocol) as Character[];
-      newCharacters.forEach((c: Character) => c.ulid = ulid());
-      notebook!.characters = newCharacters;
+      const newCharacters: CharactersBase = await adviseCharacters(notebook!) as CharactersBase;
+      newCharacters.forEach((c: CharacterBase) => {
+        notebook!.characters.push({
+          ...c,
+          ulid: ulid(),
+          portrait: null,
+        });
+      });
       commit();
     }
     catch(e) {
@@ -116,16 +122,18 @@
   async function onAddCharacter() {
     try {
       charactersWaiting = true;
-      const newCharacters = await adviseCharacters(notebook as NotebookProtocol) as Character[];
+      const newCharacters = await adviseCharacters(notebook!) as CharactersBase;
+
       for (const c of newCharacters) {
         const index = notebook!.characters.findIndex((v) => v.name === c.name);
         if (index < 0) {
-          c.ulid = ulid();
-          notebook!.characters.push(c);
+          notebook!.characters.push({
+            ...c,
+            ulid: ulid(),
+            portrait: null,
+          });
         } else {
-          c.portrait = notebook!.characters[index].portrait;
-          c.ulid = notebook!.characters[index].ulid;
-          notebook!.characters[index] = c;
+          Object.assign(notebook!.characters[index], c);
         }
       }
       commit();
@@ -172,7 +180,7 @@
   async function onPlotAdvise() {
     try {
       plotWaiting = true;
-      notebook!.plot = await advisePlot(notebook as NotebookProtocol, plotInstruction);
+      notebook!.plot = await advisePlot(notebook!, plotInstruction);
       commit();
     }
     catch(e) {
@@ -187,7 +195,7 @@
   async function onScenarioAdvise() {
     try {
       scenarioWaiting = true;
-      notebook!.scenario = await adviseScenario(notebook as NotebookProtocol);
+      notebook!.scenario = await adviseScenario(notebook!);
       commit();
     }
     catch(e) {
@@ -211,7 +219,7 @@
     console.log('build storyboard');
     try {
       storyboardWaiting = true;
-      const result = await adviseStoryboard(notebook as NotebookProtocol);
+      const result = await adviseStoryboard(notebook!);
       notebook!.storyboard = result as Storyboard;
       storyboardWaiting = false;
       console.log(result);
@@ -240,7 +248,7 @@
   async function onCritiqueAdvise() {
     try {
       critiqueWaiting = true;
-      const result = await adviseCritique(notebook as NotebookProtocol);
+      const result = await adviseCritique(notebook!);
       critiqueWaiting = false;
       console.log(result);
       notebook!.critique = result;
@@ -252,7 +260,7 @@
     }
   }
 
-  async function onGeneratePortrait(e: CustomEvent<Character>) {
+  async function onGeneratePortrait(e: CustomEvent<CharacterLocal>) {
     const c = e.detail;
 
     c.portrait = 'loading';
@@ -274,11 +282,11 @@
       return;
     }
 
-    c.portrait = await createImageFromCanvas(canvases[0]); // HTMLImageElement
+    c.portrait = buildMedia(canvases[0]); // HTMLImageElement
     notebook!.characters = notebook!.characters;
   }
 
-  function onRemoveCharacter(e: CustomEvent<Character>) {
+  function onRemoveCharacter(e: CustomEvent<CharacterLocal>) {
     const c = e.detail;
     const index = notebook!.characters.findIndex((v) => v.ulid === c.ulid);
     if (index >= 0) {
@@ -287,7 +295,7 @@
     }
   }
 
-  async function onRegisterCharacter(e: CustomEvent<Character>) {
+  async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
     const ulid = e.detail.ulid!;
     const entry = await rosterFolder.getEmbodiedEntryByName(ulid);
     let file: File;
@@ -301,8 +309,6 @@
     const c = {...e.detail};
     if (c.portrait === 'loading') {
       c.portrait = null;
-    } else if (c.portrait instanceof HTMLImageElement) {
-      c.portrait = await imageToBlob(c.portrait);
     }
     console.log(c);
     await file.write(c);

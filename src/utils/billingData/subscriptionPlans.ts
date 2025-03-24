@@ -15,7 +15,6 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     price: '¥0/月',
     features: [
       { name: '基本機能の利用', included: true },
-      { name: '50 Spryt(揮発性)/日', included: true },
       { name: 'ボーナスSpryt', included: false },
       { name: '追加Spryt購入', included: false },
       { name: 'FramePlanner クラウドストレージ', included: false },
@@ -27,10 +26,9 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     price: '¥500/月',
     features: [
       { name: '基本機能の利用', included: true },
-      { name: '50 Spryt(揮発性)/日', included: true },
       { name: 'ボーナス 400Spryt/月', included: true },
       { name: '追加Spryt購入 300Spryt/500円', included: true },
-      { name: 'FramePlanner クラウドストレージ', included: true },
+      { name: 'FramePlanner クラウドストレージ(実験中)', included: true },
     ]
   }
 ];

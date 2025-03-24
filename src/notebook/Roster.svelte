@@ -2,33 +2,42 @@
   import { rosterOpen, rosterSelectedCharacter } from "./rosterStore";
   import Drawer from "../utils/Drawer.svelte";
   import { onMount } from "svelte";
-  import type { Character } from "$bookTypes/notebook";
+  import type { CharacterBase } from "../lib/book/types/notebook";
+  import type { CharacterLocal } from "../lib/book/book";
   import { fileSystem } from "../filemanager/fileManagerStore";
   import { getNodeByPath, rm } from "../lib/filesystem/fileSystem";
   import trashIcon from '../assets/trash.webp';
+  import { createCanvasFromBlob } from "../lib/layeredCanvas/tools/imageUtil";
+  import { buildNullableMedia } from "../lib/layeredCanvas/dataModels/media";
+  import MediaFrame from "../gallery/MediaFrame.svelte";
+
+  interface CharacterInRoster extends CharacterBase {
+    ulid: string;
+    portrait: Blob | null;
+  }
 
   let opened = false;
-  let characters: Character[] = [];
+  let characters: CharacterLocal[] = [];
 
   function onClickAway() {
     $rosterOpen = false;
   }
 
-  function offer(c: Character) {
+  function offer(c: CharacterLocal) {
     console.log("offer");
     $rosterSelectedCharacter = c;
     $rosterOpen = false;
   }
 
-  function remove(c: Character) {
+  function remove(c: CharacterLocal) {
     console.log("remove");
     characters = characters.filter((char) => char !== c);
     rm($fileSystem!, `AI/キャラクター/${c.ulid}`);
   }
 
   onMount(() => {
-    return rosterOpen.subscribe(async (value) => {
-      if (value) {
+    return rosterOpen.subscribe(async (newOpened) => {
+      if (newOpened) {
         if (!opened) {
           opened = true;
           const fs = $fileSystem!;
@@ -38,16 +47,12 @@
           const entries = await folder!.listEmbodied();
           characters = [];
           for (const entry of entries) {
-            const content = await entry[2].asFile()!.read();
-            const c = content as Character;
-            if (c.portrait instanceof Blob) {
-              c.portrait = {
-                src: URL.createObjectURL(c.portrait),
-                blob: c.portrait,
-              };
-            }
-
-            characters.push(c);
+            const c = await entry[2].asFile()!.read() as CharacterInRoster;
+            const portrait = c.portrait ? await createCanvasFromBlob(c.portrait) : null;
+            characters.push({
+              ...c,
+              portrait: buildNullableMedia(portrait)
+            });
           }
           characters = characters;
         }
@@ -85,8 +90,10 @@
             <div class="flex flex-row gap-1">
               <div class="flex flex-col gap-2">
                 <div class="portrait flex justify-center items-center">
-                  {#if character.portrait}
-                    <img src={character.portrait.src} alt="見た目"/>
+                  {#if character.portrait && character.portrait != 'loading'}
+                    <MediaFrame 
+                      media={character.portrait}
+                    />
                   {:else}
                     容姿未登録
                   {/if}

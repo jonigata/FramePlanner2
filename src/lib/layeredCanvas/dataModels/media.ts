@@ -184,3 +184,10 @@ export function buildMedia(mediaResource: MediaResource): Media {
     return new VideoMedia(mediaResource);
   }
 }
+
+export function buildNullableMedia(mediaResource: MediaResource | null): Media | null {
+  if (mediaResource === null) {
+    return null;
+  }
+  return buildMedia(mediaResource);
+}

@@ -24,7 +24,7 @@ archive.md
 public/banners/*
 # npmのサイズとか出すやつ
 stats.html
-# ダンプ用の巨大なテストデータ
+# ダンプ用の巨大なテストデータやenvelope
 testdata/*
 
 # Editor directories and files

@@ -1,13 +1,15 @@
+import { z } from "zod";
 import { ulid } from 'ulid';
 import type { Bubble } from '../layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, type Border, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../layeredCanvas/dataModels/frameTree';
 import { Film, FilmStack, FilmStackTransformer } from '../layeredCanvas/dataModels/film';
-import { ImageMedia } from '../layeredCanvas/dataModels/media';
+import { type Media, ImageMedia } from '../layeredCanvas/dataModels/media';
 import { frameExamples } from '../layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../layeredCanvas/tools/geometry/trapezoid";
 import type { RichChatLog, ProtocolChatLog } from './types/richChat';
-import { emptyNotebook, type Notebook } from "./types/notebook";
+import { type CharacterBase, type NotebookBase } from "./types/notebook";
+import type { Storyboard } from '$bookTypes/storyboard';
 
 // history処理では基本的にすべてdeep copyを使う
 
@@ -71,7 +73,7 @@ export type Book = {
   direction: ReadingDirection;
   wrapMode: WrapMode;
   chatLogs: RichChatLog[];
-  notebook: Notebook;
+  notebook: NotebookLocal;
   attributes: BookAtributes;
 
   // 以下揮発性
@@ -92,6 +94,23 @@ export type SerializedBookAttributes = {
   publishUrl: string | null,
 }
 
+export type SerializedCharacter = {
+  name: string;
+  personality: string;
+  appearance: string;
+  themeColor: string;
+  ulid: string;
+  portrait: string | null;
+}
+
+export type SerializedNotebook = {
+  theme: string;
+  characters: SerializedCharacter[];
+  plot: string;
+  scenario: string;
+  storyboard: Storyboard | null;
+  critique: string;
+}
 
 export type SerializedBook = {
   revision: {id: string, revision: number, prefix: Prefix},
@@ -99,10 +118,30 @@ export type SerializedBook = {
   direction: ReadingDirection,
   wrapMode: WrapMode,
   chatLogs: ProtocolChatLog[],
-  notebook: Notebook,
+  notebook: SerializedNotebook | null,
   attributes: SerializedBookAttributes,
 }
 
+export interface CharacterLocal extends CharacterBase {
+  portrait: 'loading' | Media | null;
+}
+
+export type CharactersLocal = CharactersLocal[];
+
+export interface NotebookLocal extends NotebookBase {
+  characters: CharacterLocal[];
+};
+
+export function emptyNotebook(): NotebookLocal {
+  return {
+    theme: "",
+    characters: [],
+    plot: "",
+    scenario: "",
+    critique: "",
+    storyboard: null,
+  };
+}
 
 export function incrementRevision(revision: Revision): void {
   revision.revision++;

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
-  import type { Book } from '../lib/book/book';
+  import { type Book, emptyNotebook } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore';
   import type { Revision } from "../lib/book/book";
@@ -22,7 +22,6 @@
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { filmProcessorQueue } from '../utils/filmprocessor/filmProcessorStore';
-  import { emptyNotebook } from '$bookTypes/notebook';
   import { onlineStatus, onlineAccount, type SubscriptionPlan } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';

@@ -2,8 +2,9 @@ import type { Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { Film } from "../layeredCanvas/dataModels/film";
-import { ImageMedia, VideoMedia, type RemoteMediaReference } from "../layeredCanvas/dataModels/media";
+import { ImageMedia, VideoMedia, type RemoteMediaReference, buildNullableMedia } from "../layeredCanvas/dataModels/media";
 import { Effect } from "../layeredCanvas/dataModels/effect";
+import type { SerializedCharacter, SerializedNotebook, NotebookLocal, CharacterLocal } from "./book";
 
 export type MediaType = 'image' | 'video';
 
@@ -155,7 +156,6 @@ export async function packBubbleMedias(bubbles: Bubble[], saveMediaFunc: SaveMed
   return packedBubbles;
 }
 
-
 export async function unpackBubbleMedias(paperSize: Vector, markUps: any[], LoadMediaFunc: LoadMediaFunc): Promise<Bubble[]> {
   const unpackedBubbles: Bubble[] = [];
   for (const markUp of markUps) {
@@ -265,4 +265,45 @@ export async function unpackFilms(markUp: any, loadMediaFunc: LoadMediaFunc): Pr
   }
   return films;
 }
+
+export async function packNotebookMedias(notebook: NotebookLocal, saveMediaFunc: SaveMediaFunc): Promise<SerializedNotebook> {
+  const packedCharacters = [];
+  for (const character of notebook.characters) {
+    const fileId = 
+      character.portrait && character.portrait != 'loading' 
+      ? await saveMediaFunc(character.portrait.persistentSource, 'image') 
+      : null;
+    const markUp: SerializedCharacter = {
+      name: character.name,
+      personality: character.personality,
+      appearance: character.appearance,
+      themeColor: character.themeColor,
+      ulid: character.ulid,
+      portrait: fileId,
+    };
+    packedCharacters.push(markUp);
+  }
+
+  return {
+    ...notebook,
+    characters: packedCharacters,
+  };
+}
+
+export async function unpackNotebookMedias(serializedNotebook: SerializedNotebook, LoadMediaFunc: LoadMediaFunc): Promise<NotebookLocal> {
+  const characters: CharacterLocal[] = [];
+  for (const serializedCharacter of serializedNotebook.characters) {
+    const portrait = serializedCharacter.portrait ? await LoadMediaFunc(serializedCharacter.portrait, 'image') : null;
+    characters.push({
+      ...serializedCharacter,
+      portrait: buildNullableMedia(portrait),
+    });
+  }
+
+  return {
+    ...serializedNotebook,
+    characters,
+  };
+}
+
 
