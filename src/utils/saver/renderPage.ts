@@ -18,7 +18,7 @@ export async function renderPageToWebpBlob(page: Page): Promise<Blob> {
   const png: Blob = await new Promise(
     (r) => {
       canvas.toBlob(
-        blob => r(blob ?? new Blob()), 'image/webp')
+        blob => r(blob ?? new Blob()), 'image/webp', 1.0)
     });
   return png;
 }
@@ -40,7 +40,7 @@ export async function renderThumbnailToWebpBlob(page: Page, [w,h]: [number, numb
   const png: Blob = await new Promise(
     (r) => {
       thumbnailCanvas.toBlob(
-        blob => r(blob ?? new Blob()), 'image/webp')
+        blob => r(blob ?? new Blob()), 'image/webp', 1.0)
     });
   return png;
 }

@@ -31,7 +31,7 @@ export function createCanvasFromImage(image: HTMLImageElement): HTMLCanvasElemen
 
 export async function createImageFromCanvas(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
   const image = new Image();
-  image.src = canvas.toDataURL("image/webp");
+  image.src = canvas.toDataURL("image/webp", 1.0);
   await image.decode();
   return image;
 }
@@ -51,7 +51,7 @@ export function copyCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
 }
 
 export function canvasToBase64(canvas: HTMLCanvasElement): string {
-  return canvas.toDataURL("image/webp");
+  return canvas.toDataURL("image/webp", 1.0);
 }
 
 export function imageToBase64(imgElement: HTMLImageElement) {
@@ -60,7 +60,7 @@ export function imageToBase64(imgElement: HTMLImageElement) {
   canvas.height = imgElement.naturalHeight;
   canvas.getContext("2d")!.drawImage(imgElement, 0, 0);
 
-  let base64Image = canvas.toDataURL("image/webp");
+  let base64Image = canvas.toDataURL("image/webp", 1.0);
   return base64Image;
 }
 
@@ -72,7 +72,7 @@ export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
       } else {
         throw new Error("Failed to convert canvas to blob");
       }
-    }, "image/webp");
+    }, "image/webp", 1.0);
   });
 }
 
