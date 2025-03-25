@@ -20,7 +20,7 @@
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
   import { fileSystem } from '../filemanager/fileManagerStore';
   import { type Folder, type File, ls } from '../lib/filesystem/fileSystem';
-  import { rosterOpen, rosterSelectedCharacter } from './rosterStore';
+  import { rosterOpen, rosterSelectedCharacter, saveCharacterToRoster } from './rosterStore';
   import { waitForChange } from '../utils/reactUtil';
   import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
 
@@ -297,21 +297,7 @@
 
   async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
     const ulid = e.detail.ulid!;
-    const entry = await rosterFolder.getEmbodiedEntryByName(ulid);
-    let file: File;
-    if (entry) {
-      file = entry[2].asFile()!;
-    } else {
-      file = await $fileSystem!.createFile();
-      await rosterFolder.link(ulid, file.id);
-    }
-
-    const c = {...e.detail};
-    if (c.portrait === 'loading') {
-      c.portrait = null;
-    }
-    console.log(c);
-    await file.write(c);
+    await saveCharacterToRoster($fileSystem!, e.detail);
     toastStore.trigger({ message: 'キャラクターを登録しました', timeout: 1500});
   }
 

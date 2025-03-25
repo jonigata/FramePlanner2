@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { rosterOpen, rosterSelectedCharacter } from "./rosterStore";
+  import { loadCharactersFromRoster, rosterOpen, rosterSelectedCharacter } from "./rosterStore";
   import Drawer from "../utils/Drawer.svelte";
   import { onMount } from "svelte";
   import type { CharacterBase } from "../lib/book/types/notebook";
   import type { CharacterLocal } from "../lib/book/book";
   import { fileSystem } from "../filemanager/fileManagerStore";
-  import { getNodeByPath, rm } from "../lib/filesystem/fileSystem";
+  import { rm } from "../lib/filesystem/fileSystem";
   import trashIcon from '../assets/trash.webp';
-  import { createCanvasFromBlob } from "../lib/layeredCanvas/tools/imageUtil";
-  import { buildNullableMedia } from "../lib/layeredCanvas/dataModels/media";
   import MediaFrame from "../gallery/MediaFrame.svelte";
 
   interface CharacterInRoster extends CharacterBase {
@@ -40,21 +38,7 @@
       if (newOpened) {
         if (!opened) {
           opened = true;
-          const fs = $fileSystem!;
-          const folder = (
-            await getNodeByPath(fs, "AI/キャラクター")
-          ).asFolder();
-          const entries = await folder!.listEmbodied();
-          characters = [];
-          for (const entry of entries) {
-            const c = await entry[2].asFile()!.read() as CharacterInRoster;
-            const portrait = c.portrait ? await createCanvasFromBlob(c.portrait) : null;
-            characters.push({
-              ...c,
-              portrait: buildNullableMedia(portrait)
-            });
-          }
-          characters = characters;
+          characters = await loadCharactersFromRoster($fileSystem!);
         }
       } else {
         opened = false;
