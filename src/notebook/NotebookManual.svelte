@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type CharacterBase, type CharactersBase } from '$bookTypes/notebook';
-  import { StoryboardSchema } from '$bookTypes/storyboard';
+  import { type Storyboard } from '$bookTypes/storyboard';
   import { commitBook, type NotebookLocal, type CharacterLocal } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
