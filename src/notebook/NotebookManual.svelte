@@ -346,81 +346,85 @@
 </div>
 {:else if notebook} <!-- 絶対に真だがsvelteで!演算子が使えないため -->
 <div class="drawer-content">
-  <h1>カイルちゃんの創作ノート</h1>
-  <div class="flex justify-start">
-    <Feathral/>
-  </div>
-  <div class="section">
-    <h2 class:progress={themeWaiting}>テーマ
-      {#if themeWaiting}
-        <ProgressRadial stroke={200} width="w-5"/>
-      {/if}
-    </h2>
-    <div class="w-full">
-      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
-    </div>
-    {#if !fullAutoRunning}
-      <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
-    {/if}
-  </div>
-  <div class="section">
-    <h2 class:progress={charactersWaiting}>登場人物
-      {#if charactersWaiting}
-        <ProgressRadial stroke={200} width="w-5"/>
-      {/if}
-    </h2>
-    <div class="w-full">
-      <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
-    </div>
-    <div class="flex flex-row mt-2 items-center">
-      <span class="w-16">スタイル</span>
-      <input type="text" class="input portrait-style" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
+  <div class="header">
+    <h1>カイルちゃんの創作ノート</h1>
+    <div class="flex justify-start">
+      <Feathral/>
     </div>
   </div>
-  <div class="section">
-    <h2 class:progress={plotWaiting}>プロット
-      {#if plotWaiting}
-        <ProgressRadial stroke={200} width="w-5"/>
+  <div class="body">
+    <div class="section">
+      <h2 class:progress={themeWaiting}>テーマ
+        {#if themeWaiting}
+          <ProgressRadial stroke={200} width="w-5"/>
+        {/if}
+      </h2>
+      <div class="w-full">
+        <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
+      </div>
+      {#if !fullAutoRunning}
+        <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
       {/if}
-    </h2>
-    <div class="w-full">
-      <NotebookTextarea bind:value={notebook.plot} cost={2} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
-      {#if notebook.plot}
-        <div class="flex flex-row items-center">
-          <span class="w-24">変更指示</span>
-          <input type="text" bind:value={plotInstruction} class="input portrait-style"/>
-        </div>
-      {/if}
-    </div>
-  </div>
-  <div class="section">
-    <h2 class:progress={scenarioWaiting}>シナリオ
-      {#if scenarioWaiting}
-        <ProgressRadial stroke={200} width="w-5"/>
-      {/if}
-    </h2>
-    <div class="w-full">
-      <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
-    </div>
-  </div>
-  <div class="flex flex-row gap-4 mb-4">
-    <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
-    <span class="flex-grow"></span>
-    <button class="btn variant-filled-primary" on:click={onBuildStoryboard} use:toolTip={"コマ割り、プロンプト・フキダシ作成[15]"}>ネーム作成！</button>
-  </div>
-  {#if notebook.storyboard}
-    <div class="flex flex-row gap-4 mb-4 items-center">
-      <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
-      <span class="flex-grow"></span>
-      <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
     </div>
     <div class="section">
-      <h2>ネームはどう？</h2>
+      <h2 class:progress={charactersWaiting}>登場人物
+        {#if charactersWaiting}
+          <ProgressRadial stroke={200} width="w-5"/>
+        {/if}
+      </h2>
       <div class="w-full">
-        <NotebookTextarea bind:value={notebook.critique} cost={2} waiting={critiqueWaiting} on:advise={onCritiqueAdvise} minHeight={240}/>
+        <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
+      </div>
+      <div class="flex flex-row mt-2 items-center">
+        <span class="w-16">スタイル</span>
+        <input type="text" class="input portrait-style" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
       </div>
     </div>
-  {/if}
+    <div class="section">
+      <h2 class:progress={plotWaiting}>プロット
+        {#if plotWaiting}
+          <ProgressRadial stroke={200} width="w-5"/>
+        {/if}
+      </h2>
+      <div class="w-full">
+        <NotebookTextarea bind:value={notebook.plot} cost={2} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
+        {#if notebook.plot}
+          <div class="flex flex-row items-center">
+            <span class="w-24">変更指示</span>
+            <input type="text" bind:value={plotInstruction} class="input portrait-style"/>
+          </div>
+        {/if}
+      </div>
+    </div>
+    <div class="section">
+      <h2 class:progress={scenarioWaiting}>シナリオ
+        {#if scenarioWaiting}
+          <ProgressRadial stroke={200} width="w-5"/>
+        {/if}
+      </h2>
+      <div class="w-full">
+        <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
+      </div>
+    </div>
+    <div class="flex flex-row gap-4 mb-4">
+      <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
+      <span class="flex-grow"></span>
+      <button class="btn variant-filled-primary" on:click={onBuildStoryboard} use:toolTip={"コマ割り、プロンプト・フキダシ作成[15]"}>ネーム作成！</button>
+    </div>
+    {#if notebook.storyboard}
+      <div class="flex flex-row gap-4 mb-4 items-center">
+        <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
+        <span class="flex-grow"></span>
+        <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
+      </div>
+      <div class="section">
+        <h2>ネームはどう？</h2>
+        <div class="w-full">
+          <NotebookTextarea bind:value={notebook.critique} cost={2} waiting={critiqueWaiting} on:advise={onCritiqueAdvise} minHeight={240}/>
+        </div>
+      </div>
+    {/if}
+  </div>
 </div>
 {/if}
 
@@ -429,6 +433,31 @@
     width: 100%;
     height: 100%;
     padding: 16px;
+    padding-right: 0px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .drawer-content .header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgb(var(--color-surface-200));
+    flex-shrink: 0;
+  }
+  .drawer-content .body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 16px;
+  }
+  h1 {
+    font-family: '源暎エムゴ';
+    font-size: 32px;
+    margin-bottom: 8px;
   }
   h2 {
     font-family: '源暎エムゴ';

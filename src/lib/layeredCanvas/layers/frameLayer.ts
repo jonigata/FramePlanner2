@@ -465,17 +465,14 @@ export class FrameLayer extends LayerBase {
   }
 
   accepts(point: Vector, button: number, depth: number): any {
-    console.log("frame accepts", depth);
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
     if (depth == 1) {
       const q = this.acceptsForeground(point, button);
-      console.log("q1", q);
       return q;
     } else {
       const q = this.acceptsBackground(point, button);
-      console.log("q2", q);
       return q;
     }
   }

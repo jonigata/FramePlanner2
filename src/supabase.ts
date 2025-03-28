@@ -130,7 +130,7 @@ export async function updateProfile(profile: UpdateProfileRequest) {
 }
 
 export async function getMyProfile() {
-  return await invoke("sns/profile/getmyprofile", {}, GetProfileRequestSchema, GetProfileResponseSchema);
+  return await invoke("sns/profile/getmyprofile", {}, z.object({}), GetProfileResponseSchema);
 }
 
 export async function recordPublication(req: RecordPublicationRequest) {
