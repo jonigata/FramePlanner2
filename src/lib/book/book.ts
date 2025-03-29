@@ -110,6 +110,8 @@ export type SerializedNotebook = {
   scenario: string;
   storyboard: Storyboard | null;
   critique: string;
+  pageNumber: number | null;
+  format: '4koma' | 'standard' | null;
 }
 
 export type SerializedBook = {
@@ -140,6 +142,8 @@ export function emptyNotebook(): NotebookLocal {
     scenario: "",
     critique: "",
     storyboard: null,
+    pageNumber: null,
+    format: "standard",
   };
 }
 

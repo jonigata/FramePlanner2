@@ -7,6 +7,7 @@
 
   import bellIcon from '../assets/bell.webp';
   import clipboardIcon from '../assets/clipboard.webp';
+  import trashIcon from '../assets/trash.webp';
 
   const dispatch = createEventDispatcher();
 
@@ -19,6 +20,10 @@
   function copyToClipboard() {
     navigator.clipboard.writeText(value);
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+  }
+
+  function erase() {
+    value = '';
   }
 </script>
 
@@ -36,6 +41,9 @@
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img src={clipboardIcon} alt="クリップボードにコピー" on:click={copyToClipboard} use:toolTip={"クリップボードにコピー"} />
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <img src={trashIcon} alt="削除" on:click={erase} use:toolTip={"削除"} />
     </div>
   {/if}
 </div>        

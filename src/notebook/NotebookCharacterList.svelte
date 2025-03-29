@@ -23,6 +23,10 @@
     dispatch('add');
   }
 
+  function addBlank() {
+    dispatch('addBlank');
+  }
+
   function hire() {
     dispatch('hire');
   }
@@ -30,28 +34,31 @@
 </script>
 
 <div class="character-container">
+  <div class="icon-container">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img class="advise" src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！[2]"}/>
+  </div>
   {#if waiting}
     <div class="h-24 waiting rounded-corner-token textarea">
       <ProgressRadial stroke={100} width="w-10"/>
     </div>
   {:else if characters.length === 0}
     <div class="h-24 rounded-corner-token textarea p-2 flex flex-col">
-    </div>
-    <div class="icon-container">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="advise" src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！[2]"}/>
-    </div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="flex gap-2 mt-2 w-full">
-      <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={add}>
-        <img class="advise" src={bellIcon} alt="キャラクター追加"/>
-        <span class="add-character">キャラクター追加</span>
-      </button>
-      <button class="btn variant-filled-secondary flex items-center gap-2 flex-1 rounded" on:click={hire}>
-        <span class="add-character">名簿から配役</span>
-      </button>
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div class="flex gap-2 mt-2 w-full">
+        <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={add}>
+          <img class="advise" src={bellIcon} alt="キャラクター追加"/>
+          <span class="add-character">キャラクター追加？</span>
+        </button>
+        <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={addBlank}>
+          <span class="add-character">枠だけ追加</span>
+        </button>
+        <button class="btn variant-filled-secondary flex items-center gap-2 flex-1 rounded" on:click={hire}>
+          <span class="add-character">名簿から配役</span>
+        </button>
+      </div>
     </div>
   {:else}
     <div class="rounded-corner-token textarea p-2 flex flex-col gap-4">
@@ -65,15 +72,13 @@
           <img class="advise" src={bellIcon} alt="キャラクター追加"/>
           <span class="add-character">キャラクター追加</span>
         </button>
-        <button class="btn variant-filled-secondary flex items-center gap-2 flex-1 rounded" on:click={hire}>
+        <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={addBlank}>
+          <span class="add-character">枠だけ追加</span>
+        </button>
+          <button class="btn variant-filled-secondary flex items-center gap-2 flex-1 rounded" on:click={hire}>
           <span class="add-character">名簿から配役</span>
         </button>
       </div>
-    </div>
-    <div class="icon-container">
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="advise" src={bellIcon} alt="AI生成" on:click={() => dispatch('advise', value)}/>
     </div>
   {/if}
 </div>        

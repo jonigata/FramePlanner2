@@ -25,6 +25,8 @@
   import { waitForChange } from '../utils/reactUtil';
   import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import ThinkerSelector from './ThinkerSelector.svelte';
+  import NumberEdit from '../utils/NumberEdit.svelte';
+  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
@@ -52,6 +54,17 @@
   let rootFolder: Folder;
   let aiFolder: Folder;
   let rosterFolder: Folder;
+  
+  // ページ数の設定を有効にするかどうか
+  let enablePageNumber: boolean = false;
+  // ページ数の値（NumberEditで使用）
+  let pageNumberValue: number = 1;
+  
+  // notebookが変更されたときにenablePageNumberとpageNumberValueを更新
+  $: if (notebook) {
+    enablePageNumber = notebook.pageNumber !== null;
+    pageNumberValue = notebook.pageNumber ?? 1;
+  }
 
   function commit() {
     commitBook($mainBook!, null);
@@ -94,7 +107,10 @@
     try {
       themeWaiting = true;
       console.log('advise theme', notebook);
-      notebook!.theme = await adviseTheme(makeRequest());
+      const r = await adviseTheme(makeRequest());
+      notebook!.theme = r.theme;
+      notebook!.pageNumber = r.pageNumber;
+      notebook!.format = r.format;
       commit();
     }
     catch(e) {
@@ -155,6 +171,19 @@
     finally {
       charactersWaiting = false;
     }
+  }
+
+  function onAddBlank() {
+    const c: CharacterLocal = {
+      name: '',
+      personality: '',
+      appearance: '',
+      ulid: ulid(),
+      portrait: null,
+      themeColor: '#000000',
+    };
+    notebook!.characters.push(c);
+    notebook!.characters = notebook!.characters;
   }
 
   async function onHireCharacter() {
@@ -365,18 +394,66 @@
   </div>
   <div class="body">
     <div class="section">
-      <h2 class:progress={themeWaiting}>テーマ
-        {#if themeWaiting}
-          <ProgressRadial stroke={200} width="w-5"/>
-        {/if}
-      </h2>
-      <div class="w-full">
-        <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
-      </div>
-      {#if !fullAutoRunning}
-        <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
+    <h2 class:progress={themeWaiting}>テーマ
+      {#if themeWaiting}
+        <ProgressRadial stroke={200} width="w-5"/>
       {/if}
+    </h2>
+    <div class="w-full">
+      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
     </div>
+    <div class="flex flex-row gap-4 items-center mt-2 mb-2">
+      <div class="flex items-center gap-2">
+        <span class="text-sm">フォーマット：</span>
+        <RadioGroup class="flex">
+          <RadioItem bind:group={notebook.format} name="format" value="4koma">
+            <span class="text-sm">4コマ</span>
+          </RadioItem>
+          <RadioItem bind:group={notebook.format} name="format" value="standard">
+            <span class="text-sm">標準</span>
+          </RadioItem>
+        </RadioGroup>
+      </div>
+      
+      <div class="flex items-center gap-2 ml-2">
+        <span class="text-sm">ページ数：</span>
+        <div class="flex items-center gap-1">
+          <input
+            type="checkbox"
+            class="checkbox"
+            checked={enablePageNumber}
+            on:change={() => {
+              // 明示的に再代入して反応性をトリガー
+              enablePageNumber = !enablePageNumber;
+              console.log("enablePageNumber:", enablePageNumber);
+              
+              if (enablePageNumber) {
+                notebook.pageNumber = pageNumberValue;
+              } else {
+                notebook.pageNumber = null;
+              }
+            }}
+          />
+          指定
+        </div>
+        {#if enablePageNumber}
+          <div class="number-box ml-1" style="width: 50px; min-width: 50px; height: 24px;" dir="rtl">
+            <NumberEdit
+              bind:value={pageNumberValue}
+              min={1}
+              max={100}
+              on:submit={() => {
+                notebook.pageNumber = pageNumberValue;
+              }}
+            />
+          </div>
+        {/if}
+      </div>
+    </div>
+    {#if !fullAutoRunning}
+      <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
+    {/if}
+  </div>
     <div class="section">
       <h2 class:progress={charactersWaiting}>登場人物
         {#if charactersWaiting}
@@ -384,7 +461,7 @@
         {/if}
       </h2>
       <div class="w-full">
-        <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
+        <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:addBlank={onAddBlank} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
       </div>
       <div class="flex flex-row mt-2 items-center">
         <span class="w-16">スタイル</span>

@@ -10,7 +10,7 @@ import {
   type VisionRequest, VisionRequestSchema, VisionResponseSchema
 } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
-import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest } from "$protocolTypes/adviseTypes.d";
+import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest, AdviseThemeResponseSchema, type AdviseThemeResponse } from "$protocolTypes/adviseTypes.d";
 
 // リクエストスキーマの定義
 const GetUploadUrlRequestSchema = z.object({ filename: z.string() });
@@ -77,7 +77,7 @@ export async function removeBg(req: RemoveBgRequest) {
 }
 
 export async function adviseTheme(req: NotebookRequest) {
-  return await invoke("charged/advise/theme", req, NotebookRequestSchema, z.string());
+  return await invoke("charged/advise/theme", req, NotebookRequestSchema, AdviseThemeResponseSchema);
 }
 
 export async function adviseCharacters(req: NotebookRequest) {

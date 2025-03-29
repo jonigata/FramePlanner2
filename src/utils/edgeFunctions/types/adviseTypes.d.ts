@@ -16,3 +16,10 @@ export const NotebookWithInstructionRequestSchema = NotebookRequestSchema.extend
 });
 export type NotebookWithInstructionRequest = z.infer<typeof NotebookWithInstructionRequestSchema>;
 
+export const AdviseThemeResponseSchema = z.object({
+  theme: z.string(),
+  pageNumber: z.number(),
+  format: z.enum(["4koma", "standard"])
+});
+export type AdviseThemeResponse = z.infer<typeof AdviseThemeResponseSchema>;
+

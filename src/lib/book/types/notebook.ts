@@ -20,6 +20,8 @@ export const NotebookBaseSchema = z.object({
   scenario: z.string(),
   storyboard: StoryboardSchema.nullable(),
   critique: z.string(),
+  pageNumber: z.number().nullable(),
+  format: z.enum(["4koma", "standard"]),
 });
 export type NotebookBase = z.infer<typeof NotebookBaseSchema>;
 

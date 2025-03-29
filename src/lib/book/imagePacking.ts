@@ -303,7 +303,6 @@ export async function unpackNotebookMedias(serializedNotebook: SerializedNoteboo
   return {
     ...serializedNotebook,
     characters,
+    format: serializedNotebook.format ?? 'standard',
   };
 }
-
-
