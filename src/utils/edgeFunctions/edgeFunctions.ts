@@ -12,12 +12,14 @@ export async function invoke<ResSchema extends ZodSchema>(
 
   const startTime = performance.now();
   
-  const data = await supabase.functions.invoke(`aigateway/${functionName}`, {
-    body: JSON.stringify(parsedReq),
-  });
-  
-  const endTime = performance.now();
-  console.log(`Function ${functionName} executed in ${(endTime - startTime).toFixed(2)}ms`);
-
-  return responseSchema.parse(data.data);
+  try {
+    const data = await supabase.functions.invoke(`aigateway/${functionName}`, {
+      body: JSON.stringify(parsedReq),
+    });
+    
+    return responseSchema.parse(data.data);
+  } finally {
+    const endTime = performance.now();
+    console.log(`Function ${functionName} executed in ${(endTime - startTime).toFixed(2)}ms`);
+  }
 }
