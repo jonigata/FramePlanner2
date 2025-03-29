@@ -14,7 +14,7 @@ const BubbleSchema = z.object({
   owner: z.string(),
   speech: z.string().describe("セリフは10文字前後までとしろ。また、適切に改行コード(\\n)を入れ、1行5文字程度に収めろ"),
   color: z.string().describe("セリフの色。話者のテーマカラー"),
-  shape: z.enum(["square", "ellipse", "polygon", "shout", "soft", "none"]).describe("セリフの形。基本はsoft。キャラクタの感情にあわせろ。使ってよいのはsoft, polygon, shout, noneのいずれか。"),
+  shape: z.enum(["rounded", "square", "ellipse", "polygon", "shout", "soft", "none"]).describe("セリフの形。基本はsoft。キャラクタの感情にあわせろ。使ってよいのはsoft, polygon, shout, noneのいずれか。"),
 }).describe("キャラクターのセリフ");
 
 const PanelSchema = z.object({
