@@ -10,6 +10,7 @@ import {
   type VisionRequest, VisionRequestSchema, VisionResponseSchema
 } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
+import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest } from "$protocolTypes/adviseTypes.d";
 
 // リクエストスキーマの定義
 const GetUploadUrlRequestSchema = z.object({ filename: z.string() });
@@ -23,6 +24,8 @@ import {
 import {
   UpdateProfileRequestSchema, UpdateProfileResponseSchema, type UpdateProfileRequest
 } from "./utils/edgeFunctions/types/snsTypes.d";
+
+
 import { type NotebookBase, NotebookBaseSchema, CharactersBaseSchema } from "$bookTypes/notebook";
 import { StoryboardSchema } from "$bookTypes/storyboard";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
@@ -73,32 +76,28 @@ export async function removeBg(req: RemoveBgRequest) {
   return await invoke("charged/imaging/removebg", req, RemoveBgRequestSchema, RemoveBgResponseSchema);
 }
 
-export async function adviseTheme(req: NotebookBase) {
-  return await invoke("charged/advise/theme", req, NotebookBaseSchema, z.string());
+export async function adviseTheme(req: NotebookRequest) {
+  return await invoke("charged/advise/theme", req, NotebookRequestSchema, z.string());
 }
 
-export async function adviseCharacters(notebook: NotebookBase) {
-  return await invoke("charged/advise/characters", notebook, NotebookBaseSchema, CharactersBaseSchema);
+export async function adviseCharacters(req: NotebookRequest) {
+  return await invoke("charged/advise/characters", req, NotebookRequestSchema, CharactersBaseSchema);
 }
 
-export async function advisePlot(notebook: NotebookBase, instruction: string) {
-  const RequestSchema = z.object({ 
-    notebook: NotebookBaseSchema, 
-    instruction: z.string() 
-  });
-  return await invoke("charged/advise/plot", { notebook, instruction }, RequestSchema, z.string());
+export async function advisePlot(req: NotebookWithInstructionRequest) {
+  return await invoke("charged/advise/plot", req, NotebookWithInstructionRequestSchema, z.string());
 }
 
-export async function adviseScenario(req: NotebookBase) {
-  return await invoke("charged/advise/scenario", req, NotebookBaseSchema, z.string());
+export async function adviseScenario(req: NotebookRequest) {
+  return await invoke("charged/advise/scenario", req, NotebookRequestSchema, z.string());
 }
 
-export async function adviseCritique(req: NotebookBase) {
-  return await invoke("charged/advise/critique", req, NotebookBaseSchema, z.string());
+export async function adviseCritique(req: NotebookRequest) {
+  return await invoke("charged/advise/critique", req, NotebookRequestSchema, z.string());
 }
 
-export async function adviseStoryboard(req: NotebookBase) {
-  return await invoke("charged/advise/storyboard", req, NotebookBaseSchema, StoryboardSchema);
+export async function adviseStoryboard(req: NotebookRequest) {
+  return await invoke("charged/advise/storyboard", req, NotebookRequestSchema, StoryboardSchema);
 }
 
 export async function getUploadUrl(filename: string) {

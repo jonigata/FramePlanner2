@@ -1,6 +1,7 @@
 <script lang="ts">
   import { type CharacterBase, type CharactersBase } from '$bookTypes/notebook';
   import { type Storyboard } from '$bookTypes/storyboard';
+  import { type Thinker } from "$protocolTypes/adviseTypes.d";
   import { commitBook, type NotebookLocal, type CharacterLocal } from '../lib/book/book';
   import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
@@ -23,9 +24,11 @@
   import { rosterOpen, rosterSelectedCharacter, saveCharacterToRoster } from './rosterStore';
   import { waitForChange } from '../utils/reactUtil';
   import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
+  import ThinkerSelector from './ThinkerSelector.svelte';
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
+  let thinker: Thinker = "sonnet";
 
   let fullAutoRunning = false;
   let themeWaiting = false;
@@ -80,11 +83,18 @@
     fullAutoRunning = false;
   }
 
+  function makeRequest() { 
+    return {
+      thinker,
+      notebook: notebook!,
+    };
+  }
+
   async function onThemeAdvise() {
     try {
       themeWaiting = true;
       console.log('advise theme', notebook);
-      notebook!.theme = await adviseTheme(notebook!);
+      notebook!.theme = await adviseTheme(makeRequest());
       commit();
     }
     catch(e) {
@@ -100,7 +110,7 @@
     try {
       charactersWaiting = true;
       notebook!.characters = [];
-      const newCharacters: CharactersBase = await adviseCharacters(notebook!) as CharactersBase;
+      const newCharacters: CharactersBase = await adviseCharacters(makeRequest()) as CharactersBase;
       newCharacters.forEach((c: CharacterBase) => {
         notebook!.characters.push({
           ...c,
@@ -122,7 +132,7 @@
   async function onAddCharacter() {
     try {
       charactersWaiting = true;
-      const newCharacters = await adviseCharacters(notebook!) as CharactersBase;
+      const newCharacters = await adviseCharacters(makeRequest()) as CharactersBase;
 
       for (const c of newCharacters) {
         const index = notebook!.characters.findIndex((v) => v.name === c.name);
@@ -180,7 +190,7 @@
   async function onPlotAdvise() {
     try {
       plotWaiting = true;
-      notebook!.plot = await advisePlot(notebook!, plotInstruction);
+      notebook!.plot = await advisePlot({...makeRequest(), instruction:plotInstruction});
       commit();
     }
     catch(e) {
@@ -195,7 +205,7 @@
   async function onScenarioAdvise() {
     try {
       scenarioWaiting = true;
-      notebook!.scenario = await adviseScenario(notebook!);
+      notebook!.scenario = await adviseScenario(makeRequest());
       commit();
     }
     catch(e) {
@@ -219,7 +229,7 @@
     console.log('build storyboard');
     try {
       storyboardWaiting = true;
-      const result = await adviseStoryboard(notebook!);
+      const result = await adviseStoryboard(makeRequest());
       notebook!.storyboard = result as Storyboard;
       storyboardWaiting = false;
       console.log(result);
@@ -248,7 +258,7 @@
   async function onCritiqueAdvise() {
     try {
       critiqueWaiting = true;
-      const result = await adviseCritique(notebook!);
+      const result = await adviseCritique(makeRequest());
       critiqueWaiting = false;
       console.log(result);
       notebook!.critique = result;
@@ -348,8 +358,9 @@
 <div class="drawer-content">
   <div class="header">
     <h1>カイルちゃんの創作ノート</h1>
-    <div class="flex justify-start">
+    <div class="flex justify-between gap-2 items-center mr-4">
       <Feathral/>
+      <ThinkerSelector bind:thinker={thinker}/>
     </div>
   </div>
   <div class="body">
