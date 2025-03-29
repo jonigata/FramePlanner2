@@ -111,8 +111,8 @@
     <button class="btn variant-ghost-surface" on:click={onCancel}>
       キャンセル
     </button>
-    <button class="btn variant-filled-primary" on:click={onSubmit}>
-      生成 <FeathralCost cost={50}/>
+    <button class="btn variant-filled-primary flex flex-row gap-2" on:click={onSubmit}>
+      <span class="generate-text">生成</span><FeathralCost cost={50}/>
     </button>
   </footer>
 </div>
@@ -127,5 +127,9 @@
     font-family: '源暎エムゴ';
     font-size: 18px;
     margin-top: 8px;
+  }
+  button .generate-text {
+    font-family: '源暎エムゴ';
+    font-size: 18px;
   }
 </style>
