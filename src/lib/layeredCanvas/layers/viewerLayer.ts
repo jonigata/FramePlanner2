@@ -1,11 +1,13 @@
 import { type Layer, LayerBase, sequentializePointer, type Picked } from "../system/layeredCanvas";
-import { type Vector } from '../tools/geometry/geometry';
+import { type Vector, subtract2D } from '../tools/geometry/geometry';
 import { type Layout, calculatePhysicalLayout, findLayoutAt } from "../dataModels/frameTree";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { keyDownFlags } from "../system/keyCache";
+import { ClickableIcon } from "../tools/draw/clickableIcon";
 
 export class ViewerLayer extends LayerBase {
   private selected: Layout | null = null;
+  private playIcon: ClickableIcon;
 
   constructor(
     private frameTree: any,
@@ -13,6 +15,9 @@ export class ViewerLayer extends LayerBase {
     private focusKeeper: FocusKeeper,
   ) {
     super();
+
+    this.playIcon = new ClickableIcon(["viewerLayer/play.webp"],[32,32],[1,1],"再生", () => true, () => this.paper.matrix);
+
     focusKeeper.subscribe(this.changeFocus.bind(this));
   }
 
@@ -21,12 +26,17 @@ export class ViewerLayer extends LayerBase {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    if (!this.interactable) { return; }
     if (depth !== 0) { return; }
 
-    // クリック可能な領域を可視化(デバッグ用)
     const layout = this.calculateRootLayout();
-    this.renderLayoutRecursive(ctx, layout);
+
+    if (this.interactable) { 
+      // クリック可能な領域を可視化(デバッグ用)
+      this.renderLayoutRecursive(ctx, layout);
+      this.renderPlayButtons(ctx, layout);
+    } else {
+      this.renderPlayButtons(ctx, layout);
+    }
   }
 
   private renderLayoutRecursive(ctx: CanvasRenderingContext2D, layout: Layout): void {
@@ -44,6 +54,20 @@ export class ViewerLayer extends LayerBase {
     // 子レイアウトを再帰的に描画
     layout.children?.forEach(child => {
       this.renderLayoutRecursive(ctx, child);
+    });
+  }
+
+  private renderPlayButtons(ctx: CanvasRenderingContext2D, layout: Layout): void {
+    if (this.hasVideo(layout)) {
+      // 再生ボタンを描画
+      this.playIcon.position = subtract2D(layout.corners.bottomRight, [8,8]);
+      this.playIcon.shadowColor = "rgba(0, 0, 0, 0.5)";
+      this.playIcon.render(ctx);
+    }
+
+    // 子レイアウトを再帰的に描画
+    layout.children?.forEach(child => {
+      this.renderPlayButtons(ctx, child);
     });
   }
 
@@ -148,6 +172,18 @@ export class ViewerLayer extends LayerBase {
 
       this.videoRedrawFrameId = requestAnimationFrame(redraw);
     }
+  }
+
+  hasVideo(layout: Layout | null): boolean {
+    if (!layout) { return false; }
+    if (layout.element.filmStack) {
+      for (const film of layout.element.filmStack.films) {
+        if (film.media.player) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   get interactable(): boolean { return this.mode == null; }
