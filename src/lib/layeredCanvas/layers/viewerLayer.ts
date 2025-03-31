@@ -1,17 +1,20 @@
 import { type Layer, LayerBase, sequentializePointer, type Picked } from "../system/layeredCanvas";
 import { type Vector, subtract2D } from '../tools/geometry/geometry';
-import { type Layout, calculatePhysicalLayout, findLayoutAt } from "../dataModels/frameTree";
+import { type Layout, type FrameElement, calculatePhysicalLayout, findLayoutAt } from "../dataModels/frameTree";
+import { Bubble } from "../dataModels/bubble";
 import type { FocusKeeper } from "../tools/focusKeeper";
 import { keyDownFlags } from "../system/keyCache";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
+import { type FilmStack } from "../dataModels/film";
 
 export class ViewerLayer extends LayerBase {
-  private selected: Layout | null = null;
+  private selected: Layout | Bubble | null = null;
   private playIcon: ClickableIcon;
 
   constructor(
-    private frameTree: any,
-    private onFocus: (layout: Layout | null) => void,
+    private frameTree: FrameElement,
+    private bubbles: Bubble[],
+    private onFocus: (target: Layout | Bubble | null) => void,
     private focusKeeper: FocusKeeper,
   ) {
     super();
@@ -26,16 +29,17 @@ export class ViewerLayer extends LayerBase {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    if (depth !== 0) { return; }
+    if (depth === 0) {
+      const layout = this.calculateRootLayout();
 
-    const layout = this.calculateRootLayout();
-
-    if (this.interactable) { 
-      // クリック可能な領域を可視化(デバッグ用)
-      this.renderLayoutRecursive(ctx, layout);
-      this.renderPlayButtons(ctx, layout);
-    } else {
-      this.renderPlayButtons(ctx, layout);
+      if (this.interactable) { 
+        // クリック可能な領域を可視化(デバッグ用)
+        this.renderLayoutRecursive(ctx, layout);
+      }
+      this.renderFramePlayButtons(ctx, layout);
+    }
+    if (depth === 1) {
+      this.renderBubblePlayButtons(ctx);
     }
   }
 
@@ -57,36 +61,39 @@ export class ViewerLayer extends LayerBase {
     });
   }
 
-  private renderPlayButtons(ctx: CanvasRenderingContext2D, layout: Layout): void {
-    if (this.hasVideo(layout)) {
+  private renderFramePlayButtons(ctx: CanvasRenderingContext2D, layout: Layout): void {
+    if (this.hasVideo(layout?.element.filmStack)) {
       // 再生ボタンを描画
       this.playIcon.position = subtract2D(layout.corners.bottomRight, [8,8]);
+      this.playIcon.pivot = [1, 1];      
       this.playIcon.shadowColor = "rgba(0, 0, 0, 0.5)";
       this.playIcon.render(ctx);
     }
 
     // 子レイアウトを再帰的に描画
     layout.children?.forEach(child => {
-      this.renderPlayButtons(ctx, child);
+      this.renderFramePlayButtons(ctx, child);
     });
   }
 
-  pick(point: Vector): Picked[] {
-    const layout = this.calculateRootLayout();
-    const layouts = this.findClickableLayouts(layout, point);
-    return layouts.map(layout => ({
-      selected: false,
-      action: () => this.handleClick(layout),
-    }));
+  private renderBubblePlayButtons(ctx: CanvasRenderingContext2D): void {
+    for (const bubble of this.bubbles) {
+      if (this.hasVideo(bubble.filmStack)) {
+        const paperSize = this.getPaperSize();
+        const [x0, y0, w, h] = bubble.getPhysicalRect(paperSize);
+        const p: Vector = [x0 + w / 2, y0];
+
+        // 再生ボタンを描画
+        this.playIcon.position = p;
+        this.playIcon.pivot = [0.5, 0];
+        this.playIcon.shadowColor = "rgba(0, 0, 0, 0.5)";
+        this.playIcon.render(ctx);
+      }
+    }
   }
 
-  private findClickableLayouts(layout: Layout, point: Vector): Layout[] {
-    const found = findLayoutAt(layout, point, 0);
-    return found ? [found] : [];
-  }
-
-  private handleClick(layout: Layout): void {
-    this.selectLayout(layout);
+  private handleClick(target: Layout | Bubble): void {
+    this.selectTarget(target);
   }
 
   acceptDepths(): number[] {
@@ -95,17 +102,26 @@ export class ViewerLayer extends LayerBase {
 
   accepts(point: Vector, button: number, depth: number): any {
     // if (!this.interactable) { return null; }　// 破壊的ではないので敢えて無視
-    if (depth !== 0) { return null; }
     if (keyDownFlags["Space"]) { return null; }
 
-    const layout = this.calculateRootLayout();
-    const clickedLayout = findLayoutAt(layout, point, 0);
-    
-    if (clickedLayout) {
-      return { action: "click", layout: clickedLayout };
+    if (depth === 1) {
+      for (const bubble of this.bubbles) {
+        const paperSize = this.getPaperSize();
+        if (bubble.contains(paperSize, point)) {
+          return { action: "click", layout: bubble };
+        }
+      }
+      return null;
+    } else {
+      const layout = this.calculateRootLayout();
+      const clickedLayout = findLayoutAt(layout, point, 0);
+      
+      if (clickedLayout) {
+        return { action: "click", layout: clickedLayout };
+      }
+      this.selectTarget(null);
+      return null;
     }
-    this.selectLayout(null);
-    return null;
   }
 
   async *pointer(p: Vector, payload: any) {
@@ -116,7 +132,7 @@ export class ViewerLayer extends LayerBase {
 
   async keyDown(_position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (event.code === "Escape") {
-      this.selectLayout(null);
+      this.selectTarget(null);
       return true;
     }
     return false;
@@ -130,35 +146,37 @@ export class ViewerLayer extends LayerBase {
     }
   }
 
-  selectLayout(layout: Layout | null): void {
-    if (layout === this.selected) { return; }
+  selectTarget(target: Layout | Bubble | null): void {
+    if (target === this.selected) { return; }
     this.stopVideo(this.selected);
-    this.selected = layout;
-    this.startVideo(layout);
-    this.onFocus(layout);
+    this.selected = target;
+    this.startVideo(target);
+    this.onFocus(target);
     // フォーカスの変更を通知
-    this.focusKeeper.setFocus(layout ? this : null);
+    this.focusKeeper.setFocus(target ? this : null);
     this.redraw();
   }
 
   videoRedrawFrameId: number | undefined;
-  stopVideo(layout: Layout | null) {
+  stopVideo(target: Layout | Bubble | null) {
     if (this.videoRedrawFrameId !== undefined) {
       cancelAnimationFrame(this.videoRedrawFrameId);
       this.videoRedrawFrameId = undefined;
     }
-    if (layout) {
-      for (const film of layout.element.filmStack.films) {
+    if (target) {
+      const filmStack = this.getFilmStack(target);
+      for (const film of filmStack.films) {
         film.media.player?.pause();
       }
     }
   }
 
-  startVideo(layout: Layout | null) {
-    if (!layout) { return; }
+  startVideo(target: Layout | Bubble | null) {
+    if (!target) { return; }
 
     let playFlag = false;
-    for (const film of layout.element.filmStack.films) {
+    const filmStack = this.getFilmStack(target);
+    for (const film of filmStack.films) {
       if (film.media.player) {
         playFlag = true;
         film.media.player.play();
@@ -174,13 +192,18 @@ export class ViewerLayer extends LayerBase {
     }
   }
 
-  hasVideo(layout: Layout | null): boolean {
-    if (!layout) { return false; }
-    if (layout.element.filmStack) {
-      for (const film of layout.element.filmStack.films) {
-        if (film.media.player) {
-          return true;
-        }
+  getFilmStack(target: Layout | Bubble): FilmStack {
+    if (target instanceof Bubble) {
+      return target.filmStack;
+    } else {
+      return target.element.filmStack;
+    }
+  }
+
+  hasVideo(filmStack: FilmStack): boolean {
+    for (const film of filmStack.films) {
+      if (film.media.player) {
+        return true;
       }
     }
     return false;

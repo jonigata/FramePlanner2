@@ -117,14 +117,13 @@ function addFrameLayer(paper: Paper, page: Page, paperRendererLayer: PaperRender
 }
 
 function addViewerLayer(paper: Paper, page: Page, focusKeeper: FocusKeeper, operators: BookOperators): ViewerLayer {
-  const viewerLayer = new ViewerLayer(page.frameTree, (layout: Layout | null) => {
-    console.log('Clicked layout:', layout);
-    if (layout) {
-      operators.focusFrame(page, layout.element, trapezoidCenter(layout.corners));
-    } else {
-      operators.focusFrame(page, null, null);
-    }
-  }, focusKeeper);
+  const viewerLayer = new ViewerLayer(
+    page.frameTree, 
+    page.bubbles,
+    (layout: Layout | Bubble | null) => {
+      console.log('viewer: Clicked', layout);
+    }, 
+    focusKeeper);
   paper.addLayer(viewerLayer);
   return viewerLayer;
 }
@@ -144,7 +143,6 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
 
   // frame and viewer
   const frameLayer = addFrameLayer(paper, page, paperRendererLayer, focusKeeper, operators);
-  // addViewerLayer(paper, page, focusKeeper, operators);
 
   // bubbles
   const bubbleLayer = new BubbleLayer(
@@ -161,6 +159,9 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
     () => { operators.revert(); },
     (bubble: Bubble) => { potentialCrossPage(layeredCanvas, book, page, bubble); });
   paper.addLayer(bubbleLayer);
+
+  // viewer (debug)
+  addViewerLayer(paper, page, focusKeeper, operators);
 
   // inline painter
   const inlinePainterLayer = new InlinePainterLayer(frameLayer, operators.chase);
