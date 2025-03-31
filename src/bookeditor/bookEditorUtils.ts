@@ -161,7 +161,7 @@ function buildPaper(layeredCanvas: LayeredCanvas, focusKeeper: FocusKeeper, book
   paper.addLayer(bubbleLayer);
 
   // viewer (debug)
-  addViewerLayer(paper, page, focusKeeper, operators);
+  // addViewerLayer(paper, page, focusKeeper, operators);
 
   // inline painter
   const inlinePainterLayer = new InlinePainterLayer(frameLayer, operators.chase);
