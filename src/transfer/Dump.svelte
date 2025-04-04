@@ -1,6 +1,8 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import dumpRestorePicture from '../assets/dump-restore.png';
+  import { onMount } from 'svelte';
+  import { fileSystem } from '../filemanager/fileManagerStore';
 
   let filesize: string | null = null;
 
@@ -12,6 +14,22 @@
   function handleCancel() {
     modalStore.close();
   }
+
+  onMount(async () => {
+    const totalSize = await $fileSystem!.collectTotalSize();
+    let sizeValue: number;
+    let sizeUnit: string;
+    
+    if (totalSize >= 1024 * 1024 * 1024) {
+      sizeValue = totalSize / (1024 * 1024 * 1024);
+      sizeUnit = 'GB';
+    } else {
+      sizeValue = totalSize / (1024 * 1024);
+      sizeUnit = 'MB';
+    }
+    
+    filesize = `${sizeValue.toFixed(2)} ${sizeUnit}`;
+  });
 </script>
 
 <div class="card p-4 w-full max-w-lg">

@@ -86,7 +86,7 @@
   
   <div class="flex-grow"></div>
 
-  <!-- <span>新サイト <a href="https://manga-farm.online/">まんがファーム(β)</a> オープン！ データ移行は</span><button class="link-button" on:click={dump}>こちら</button> -->
+  <span>新サイト <a href="https://manga-farm.online/">まんがファーム(β)</a> オープン！ データ移行は</span><button class="link-button" on:click={dump}>こちら</button>
 
   <div class="flex-grow"></div>
   
