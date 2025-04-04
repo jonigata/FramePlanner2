@@ -97,7 +97,7 @@ export class ViewerLayer extends LayerBase {
   }
 
   acceptDepths(): number[] {
-    return [0];
+    return [0,1];
   }
 
   accepts(point: Vector, button: number, depth: number): any {

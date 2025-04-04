@@ -162,7 +162,7 @@
     </div>
   </div>
   <div class="card m-3 p-3 bg-surface-300 flex items-center justify-center">
-    <canvas width="392" height="200" bind:this={previewCanvas}></canvas>
+    <canvas width="1024" height="536" bind:this={previewCanvas} style="width: 392px; height: 200px;"></canvas>
   </div>
   <div class="flex gap-2 mt-4 w-full">
     <button class="btn variant-ghost" on:click={handleSkip}>

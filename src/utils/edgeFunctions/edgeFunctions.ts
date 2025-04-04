@@ -13,11 +13,14 @@ export async function invoke<ResSchema extends ZodSchema>(
   const startTime = performance.now();
   
   try {
-    const data = await supabase.functions.invoke(`aigateway/${functionName}`, {
+    const {data, error} = await supabase.functions.invoke(`aigateway/${functionName}`, {
       body: JSON.stringify(parsedReq),
     });
+    if (error) {
+      console.error("Error invoking function:", functionName, error);
+    }
     
-    return responseSchema.parse(data.data);
+    return responseSchema.parse(data);
   } finally {
     const endTime = performance.now();
     console.log(`Function ${functionName} executed in ${(endTime - startTime).toFixed(2)}ms`);
