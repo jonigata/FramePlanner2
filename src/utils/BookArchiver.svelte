@@ -169,13 +169,13 @@
 
       // http://localhost:5173/viewer/01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
       const currentUrl = new URL(window.location.href);
-      currentUrl.pathname = '/viewer/' + workId;
+      currentUrl.pathname = '/viewer/' + workId.id;
       
       // URLをコピー
       const downloadUrl = currentUrl.toString();
       $mainBook!.attributes.publishUrl = downloadUrl;
       $bookEditor!.commit(null);
-      console.log(downloadUrl);
+      console.log("downloadUrl", downloadUrl);
       try {
         // localhost及びhttps以外では失敗する
         await navigator.clipboard.writeText(downloadUrl);
