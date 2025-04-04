@@ -170,6 +170,10 @@
       // http://localhost:5173/viewer/01J9KERHBNGKW6XRRK9TJWHY6J のようなURLの作成
       const currentUrl = new URL(window.location.href);
       currentUrl.pathname = '/viewer/' + workId.id;
+      // Remove "frameplanner." prefix from the hostname if it exists
+      if (currentUrl.hostname.startsWith('frameplanner.')) {
+        currentUrl.hostname = currentUrl.hostname.replace('frameplanner.', '');
+      }
       
       // URLをコピー
       const downloadUrl = currentUrl.toString();
