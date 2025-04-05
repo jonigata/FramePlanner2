@@ -12,4 +12,4 @@
   }
 </script>
 
-<BaseRootButton icon={videoIcon} alt={"video"} hint={"ビデオ撮影"} origin={"topright"} location={[0,1]} on:click={openVideoMaker}/>
+<BaseRootButton icon={videoIcon} alt={"video"} hint={"ビデオ撮影"} origin={"topright"} location={[0,2]} on:click={openVideoMaker}/>

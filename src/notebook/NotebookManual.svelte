@@ -494,6 +494,9 @@
         <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
       </div>
     </div>
+    <div class="section">
+      <h2 class="warning">ごめんなさい、ネーム作成はAIの調子が悪く調整中です</h2>
+    </div>
     <div class="flex flex-row gap-4 mb-4">
       <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
       <span class="flex-grow"></span>
@@ -571,5 +574,8 @@
   button {
     font-family: '源暎エムゴ';
     height: 30px;
+  }
+  .warning {
+    color: #d1b826;
   }
 </style>

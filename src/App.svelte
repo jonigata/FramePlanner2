@@ -32,6 +32,7 @@
   import AboutButton from './rootelements/AboutButton.svelte';
   import DownloadButton from './rootelements/DownloadButton.svelte';
   import VideoButton from './rootelements/VideoButton.svelte';
+  import PostButton from './rootelements/PostButton.svelte';
   import BatchImaging from './generator/BatchImaging.svelte';
   import BookArchiver from './utils/BookArchiver.svelte';
   import FileBrowser from './utils/FileBrowser.svelte';
@@ -163,6 +164,7 @@
     <AboutButton/>
     <DownloadButton />
     <VideoButton />
+    <PostButton />
     <DebugOnly>
       <SaveOffButton/>
     </DebugOnly>
