@@ -6,9 +6,9 @@
   import postIcon from '../assets/post.webp';
 
   function postBook() {
+    console.log("postBook");
     analyticsEvent('publish_envelop');
-    $bookArchiver.push('publish');
-    $bookArchiver = $bookArchiver;
+    $bookArchiver = $bookArchiver.concat(['publish']);
   }
 </script>
 

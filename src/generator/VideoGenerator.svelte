@@ -103,6 +103,9 @@
           <option value="9:16">縦長 (9:16)</option>
         </select>
       </label>
+
+      <h3>時間</h3>
+      <p class="mx-4">5秒</p>
     </div>
   </section>
 

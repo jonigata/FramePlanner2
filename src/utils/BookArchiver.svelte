@@ -91,6 +91,7 @@
   }
 
   async function publishEnvelope() {
+    console.log("publishEnvelope", $mainBook!.revision);
     if ($onlineStatus !== 'signed-in') {
       toastStore.trigger({ message: "公開するにはサインインが必要です", timeout: 1500});
       return;
