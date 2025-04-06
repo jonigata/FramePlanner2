@@ -574,7 +574,7 @@
     font-family: '源暎エムゴ';
     height: 30px;
   }
-  .warning {
+  /* .warning {
     color: #d1b826;
-  }
+  } */
 </style>
