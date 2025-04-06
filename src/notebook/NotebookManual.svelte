@@ -61,11 +61,16 @@
   $: onNotebookChanged(notebook);
   function onNotebookChanged(notebook: NotebookLocal | null) {
     if (!notebook) {return;}
+    console.log("onNotebookChanged", notebook.pageNumber);
     enablePageNumber = notebook.pageNumber !== null;
     pageNumberValue = notebook.pageNumber ?? 1;
   }
-  $: if (notebook) {
-    notebook.pageNumber = enablePageNumber ? pageNumberValue : null;
+  $: onPageNumberChanged(enablePageNumber, pageNumberValue);
+  function onPageNumberChanged(enablePageNumber: boolean, pageNumberValue: number) {
+    if (notebook) {
+      notebook.pageNumber = enablePageNumber ? pageNumberValue : null;
+      console.log("change notebook pageNumber", notebook.pageNumber);
+    }
   }
 
   function commit() {

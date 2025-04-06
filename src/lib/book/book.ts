@@ -37,7 +37,7 @@ export type Page = {
   source: any; // 一時的、Storyboard.Bubble
 }
 
-export type HistoryTag = 'bubble' | 'page-attribute' | "effect" | null;
+export type HistoryTag = 'bubble' | 'page-attribute' | "effect" | "notebook" | null;
 
 export type HistoryWeight = "light" | "heavy";
 

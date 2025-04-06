@@ -22,6 +22,7 @@
   import outPaintingIcon from '../../assets/filmlist/outpainting.webp';
   import popupIcon from '../../assets/filmlist/popup.webp';
   import videoIcon from '../../assets/video.webp';
+  import upscaleIcon from '../../assets/filmlist/upscale.webp';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
@@ -61,6 +62,12 @@
     console.log("onPunch");
     popupVisible = false;
     dispatch('punch', film)
+  }
+
+  function onUpscale(ev: MouseEvent) {
+    console.log("onUpscale");
+    popupVisible = false;
+    dispatch('upscale', film)
   }
 
   function onOutPainting(ev: MouseEvent) {
@@ -220,6 +227,9 @@
       </button>
       <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
         <img draggable={false} src={punchIcon} alt="背景除去"/>
+      </button>
+      <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
+        <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
       </button>
       <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
         <img draggable={false} src={videoIcon} alt="ムービー作成"/>

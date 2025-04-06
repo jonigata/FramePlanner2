@@ -19,7 +19,8 @@
     "merged": "git branch --merged",
     "merged:delete": "git branch --merged | grep -v '^\\*' | xargs -n 1 git branch -d",
     "serve": "supabase functions serve --debug --env-file supabase/functions/.env.local --no-verify-jwt",
-    "released-version": "curl https://frameplanner.online/stamp.txt"
+    "released-version": "curl https://frameplanner.online/stamp.txt",
+    "webp": "sh convert_to_webp.sh"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241205.0",

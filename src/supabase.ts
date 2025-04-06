@@ -6,6 +6,7 @@ import {
   type TextToImageRequest, TextToImageRequestSchema, TextToImageResponseSchema,
   type OutPaintRequest, OutPaintRequestSchema, OutPaintResponseSchema,
   type RemoveBgRequest, RemoveBgRequestSchema, RemoveBgResponseSchema,
+  type UpscaleRequest, UpscaleRequestSchema, UpscaleResponseSchema,
   type ImagingStatusRequest, ImagingStatusRequestSchema, ImagingStatusResponseSchema,
   type VisionRequest, VisionRequestSchema, VisionResponseSchema
 } from "./utils/edgeFunctions/types/imagingTypes.d";
@@ -74,6 +75,10 @@ export async function outPaint(req: OutPaintRequest) {
 
 export async function removeBg(req: RemoveBgRequest) {
   return await invoke("charged/imaging/removebg", req, RemoveBgRequestSchema, RemoveBgResponseSchema);
+}
+
+export async function upscale(req: UpscaleRequest) {
+  return await invoke("charged/imaging/upscale", req, UpscaleRequestSchema, UpscaleResponseSchema);
 }
 
 export async function adviseTheme(req: NotebookRequest) {

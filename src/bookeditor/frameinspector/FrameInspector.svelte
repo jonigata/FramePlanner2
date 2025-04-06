@@ -48,9 +48,14 @@
 
   function onVideo(e: CustomEvent<Film>) {
     console.log("FrameInspector.onVideo",)
-
     $frameInspectorTarget!.commandTargetFilm = e.detail;
     $frameInspectorTarget!.command = "video";
+  }
+
+  function onUpscale(e: CustomEvent<Film>) {
+    console.log("FrameInspector.onUpscale")
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "upscale";
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
@@ -106,6 +111,7 @@
           on:scribble={onScribble} 
           on:generate={onGenerate} 
           on:punch={onPunch} 
+          on:upscale={onUpscale}
           on:video={onVideo}
           on:accept={onAccept}
           on:outpainting={onOutPainting}

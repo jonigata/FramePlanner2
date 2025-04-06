@@ -35,10 +35,10 @@
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
   import { punchFilm } from '../utils/punchFilm'
+  import { upscaleFilm } from '../utils/upscaleFilm'
   import { outPaintFilm, calculateFramePadding } from '../utils/outPaintFilm'
   import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
-  import { waitDialog } from '../utils/waitDialog';
   import { generateMovie } from '../utils/generateMovie';
 
   let canvas: HTMLCanvasElement;
@@ -450,6 +450,9 @@
         case "punch":
           await punchFrameFilm(fit);
           break;
+        case "upscale":
+          await upscaleFrameFilm(fit);
+          break;
         case "outpainting":
           await outPaintFrameFilm(fit);
           break;
@@ -476,6 +479,9 @@
           break;
         case "punch":
           await punchBubbleFilm(bit);
+          break;
+        case "upscale":
+          await upscaleBubbleFilm(bit);
           break;
       } 
       $bubbleInspectorRebuildToken++;
@@ -569,6 +575,34 @@
     await punchFilm(film)
     commit(null);
     $loading = false;
+  }
+
+  async function upscaleFrameFilm(fit: FrameInspectorTarget) {
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      return;
+    }
+
+    const film = fit.commandTargetFilm!;
+    if (!(film.media instanceof ImageMedia)) { return; }
+
+    await upscaleFilm(film)
+    commit(null);
+    toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
+  }
+
+  async function upscaleBubbleFilm(bit: BubbleInspectorTarget) {
+    if ($onlineStatus !== 'signed-in') {
+      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      return;
+    }
+
+    const film = bit.commandTargetFilm!;
+    if (!(film.media instanceof ImageMedia)) { return; }
+
+    await upscaleFilm(film)
+    commit(null);
+    toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
   }
 
   async function outPaintFrameFilm(fit: FrameInspectorTarget) {

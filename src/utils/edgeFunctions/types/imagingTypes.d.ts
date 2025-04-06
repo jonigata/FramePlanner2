@@ -85,3 +85,15 @@ export const VisionResponseSchema = z.object({
   text: z.string().describe('In japanese.'),
 });
 export type VisionResponse = z.infer<typeof VisionResponseSchema>;
+
+export const UpscaleRequestSchema = z.object({
+  dataUrl: z.string(),
+  scale: z.enum(["2x", "4x"]),
+  provider: z.enum(["standard"]),
+});
+export type UpscaleRequest = z.infer<typeof UpscaleRequestSchema>;
+
+export const UpscaleResponseSchema = z.object({
+  requestId: z.string().describe("request id"),
+});
+export type UpscaleResponse = z.infer<typeof UpscaleResponseSchema>;
