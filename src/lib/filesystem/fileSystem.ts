@@ -101,7 +101,7 @@ export abstract class File extends Node implements File {
 
 export interface Folder {
   setAttribute(key: string, value: string): Promise<void>;
-  getAttribute(key: string): Promise<string>;
+  getAttribute(key: string): Promise<string | null>;
   list(): Promise<Entry[]>;
   link(name: string, nodeId: NodeId): Promise<BindId>;
   unlink(bindId: BindId): Promise<void>;

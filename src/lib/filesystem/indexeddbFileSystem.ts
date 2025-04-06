@@ -428,7 +428,7 @@ export class IndexedDBFolder extends Folder {
     await tx.done;
   }
 
-  async getAttribute(key: string): Promise<string> {
+  async getAttribute(key: string): Promise<string | null> {
     const tx = this.db.transaction("nodes", "readonly");
     const store = tx.store;
     const data = await store.get(this.id);
@@ -518,7 +518,7 @@ export class IndexedDBFolder extends Folder {
     return bindId;
   }
 
-  async getEntry(bindId: BindId): Promise<Entry> {
+  async getEntry(bindId: BindId): Promise<Entry | null> {
     const tx = this.db.transaction("nodes", "readonly");
     const store = tx.store;
     const value = await store.get(this.id);
@@ -526,7 +526,7 @@ export class IndexedDBFolder extends Folder {
     return value ? value.children.find(([b, _, __]: [BindId, unknown, unknown]) => b === bindId) : null;
   }
 
-  async getEntryByName(name: string): Promise<Entry> {
+  async getEntryByName(name: string): Promise<Entry | null> {
     const tx = this.db.transaction("nodes", "readonly");
     const store = tx.store;
     const value = await store.get(this.id);
