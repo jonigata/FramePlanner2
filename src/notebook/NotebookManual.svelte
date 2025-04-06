@@ -20,7 +20,7 @@
   import FluxModes from '../generator/FluxModes.svelte';
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
   import { fileSystem } from '../filemanager/fileManagerStore';
-  import { type Folder, type File, ls } from '../lib/filesystem/fileSystem';
+  import { type Folder } from '../lib/filesystem/fileSystem';
   import { rosterOpen, rosterSelectedCharacter, saveCharacterToRoster } from './rosterStore';
   import { waitForChange } from '../utils/reactUtil';
   import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
@@ -55,15 +55,17 @@
   let aiFolder: Folder;
   let rosterFolder: Folder;
   
-  // ページ数の設定を有効にするかどうか
   let enablePageNumber: boolean = false;
-  // ページ数の値（NumberEditで使用）
   let pageNumberValue: number = 1;
-  
-  // notebookが変更されたときにenablePageNumberとpageNumberValueを更新
-  $: if (notebook) {
+
+  $: onNotebookChanged(notebook);
+  function onNotebookChanged(notebook: NotebookLocal | null) {
+    if (!notebook) {return;}
     enablePageNumber = notebook.pageNumber !== null;
     pageNumberValue = notebook.pageNumber ?? 1;
+  }
+  $: if (notebook) {
+    notebook.pageNumber = enablePageNumber ? pageNumberValue : null;
   }
 
   function commit() {
@@ -441,10 +443,7 @@
             <NumberEdit
               bind:value={pageNumberValue}
               min={1}
-              max={100}
-              on:submit={() => {
-                notebook.pageNumber = pageNumberValue;
-              }}
+              max={5}
             />
           </div>
         {/if}
@@ -494,9 +493,9 @@
         <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
       </div>
     </div>
-    <div class="section">
+    <!-- <div class="section">
       <h2 class="warning">ごめんなさい、ネーム作成はAIの調子が悪く調整中です</h2>
-    </div>
+    </div> -->
     <div class="flex flex-row gap-4 mb-4">
       <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
       <span class="flex-grow"></span>

@@ -20,12 +20,7 @@ const BubbleSchema = z.object({
 const PanelSchema = z.object({
   composition: z.string()
     .describe("そのコマの視覚情報。画像生成AIに渡されるプロンプト。セリフや音声情報を含めるな。キャラクターはいなくてもよい。キャラクターのリアクションはオーバーにし、コマごとに大きく変化させろ。"),
-  camera: z.enum([
-    'from side', 'from back', 'Dutch angle shot', 'dramatic angle',
-    'top-down view', 'aerial shot', 'birds-eye-view shot', 'top angle view',
-    'from above', 'wide angle', 'eye-level shot', 'front view',
-    'straight-on', 'from below'
-  ]).describe("そのコマのカメラ。"),
+  camera: z.string().describe("そのコマのカメラ。例: from side, from back, Dutch angle shot, dramatic angle, from side, from back, Dutch angle shot, dramatic angle, top-down view, aerial shot, birds-eye-view shot, top angle view, from above, wide angle, eye-level shot, front view, straight-on, from below, etc."),
   bubbles: z.array(BubbleSchema).describe("そのコマのセリフ。セリフがない場合は空配列にしろ"),
   weight: z.number().describe("そのコマの重要度。0～1の範囲で指定しろ。0が最も不要で、1が最も重要"),
 });
