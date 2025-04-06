@@ -56,19 +56,16 @@
     console.log("undump");
     const dumpFiles = await waitDialog<FileList>('undump');
     if (dumpFiles) {
-      $progress = 0;
       console.log("undump start");
 
-      await ($mainBookFileSystem as IndexedDBFileSystem).undump(dumpFiles[0]);
+      await ($mainBookFileSystem as IndexedDBFileSystem).undump(
+        dumpFiles[0],
+        (n) => { $progress = n; });
       await clearCurrentFileInfo();
-      location.reload();
-
       console.log("undump done");
-      $progress = 1;
-
-      console.log("undumped");
+      location.reload();
     } else {
-      console.log("canceled");
+      console.log("undump canceled");
     }
   }
 

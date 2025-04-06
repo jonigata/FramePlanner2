@@ -321,9 +321,7 @@
     console.log("dump");
     const r = await waitDialog<boolean>('dump');
     if (r) {
-      $progress = 0;
       await ($mainBookFileSystem as IndexedDBFileSystem).dump((n)=>$progress = n);
-      $progress = 1;
 
       // １秒待つ
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -339,19 +337,16 @@
     console.log("undump");
     const dumpFiles = await waitDialog<FileList>('undump');
     if (dumpFiles) {
-      $progress = 0;
       console.log("undump start");
 
-      await ($mainBookFileSystem as IndexedDBFileSystem).undump(dumpFiles[0]);
+      await ($mainBookFileSystem as IndexedDBFileSystem).undump(
+        dumpFiles[0],
+        (n) => { $progress = n; });
       await clearCurrentFileInfo();
-      location.reload();
-
       console.log("undump done");
-      $progress = 1;
-
-      console.log("undumped");
+      location.reload();
     } else {
-      console.log("canceled");
+      console.log("undump canceled");
     }
   }
 

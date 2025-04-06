@@ -5,6 +5,29 @@ import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
 import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
 
+async function countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let lineCount = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      const chunk = decoder.decode(value, { stream: true });
+      lineCount += chunk.split('\n').length - 1;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return lineCount;
+}
+
 async function* readNDJSONStream(
   stream: ReadableStream<Uint8Array>
 ): AsyncGenerator<any, void, unknown> {
@@ -232,9 +255,10 @@ export class IndexedDBFileSystem extends FileSystem {
     progress(1);
   }
   
-  async undump(blob: Blob): Promise<void> {
+  async undump(blob: Blob, progress: (n: number)=>void): Promise<void> {
     console.log("Start undump");
-  
+    progress(0);
+    
     {
       const tx = this.db!.transaction('nodes', 'readwrite');
       const store = tx.objectStore('nodes');
@@ -242,8 +266,10 @@ export class IndexedDBFileSystem extends FileSystem {
       await tx.done;  // ここでトランザクション確実に終了
     }
   
+    const lineCount = await countLines(blob.stream());
+
     const stream = blob.stream();
-    const nodes = readNDJSONStream(stream);
+    const nodes = readNDJSONStream(stream); // async generator
   
     let allItems: any[] = [];
     let count = 0;
@@ -257,6 +283,7 @@ export class IndexedDBFileSystem extends FileSystem {
       }
       allItems.push(node);
       count++;
+      progress(0.1 + 0.8 * (count / lineCount));
     }
     console.log(`Loaded ${count} nodes in memory`);
   
@@ -302,6 +329,7 @@ export class IndexedDBFileSystem extends FileSystem {
     }
   
     console.log(`Processed ${writtenCount} nodes in total`);
+    progress(1);
   }
 }
   
