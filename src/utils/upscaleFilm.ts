@@ -9,6 +9,8 @@ import { toastStore } from '@skeletonlabs/skeleton';
 import { onlineStatus } from './accountStore';
 import { analyticsEvent } from "./analyticsEvent";
 import { upscale, pollMediaStatus } from "../supabase";
+import { loading } from './loadingStore';
+import { load } from 'webfontloader';
 
 export async function upscaleFilm(film: Film) {
   if (!(film.media instanceof ImageMedia)) { 
@@ -27,6 +29,7 @@ export async function upscaleFilm(film: Film) {
 
   if (!request) { return; }
 
+  loading.set(true);
   const dataUrl = imageMedia.drawSourceCanvas.toDataURL("image/png");
   const { requestId } = await upscale({
     dataUrl,
@@ -38,6 +41,7 @@ export async function upscaleFilm(film: Film) {
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "upscale", requestId});
 
   film.media = new ImageMedia(mediaResources[0] as HTMLCanvasElement);
+  loading.set(false);
   
   analyticsEvent('upscale');
 }
