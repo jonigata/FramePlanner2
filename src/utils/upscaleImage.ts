@@ -1,15 +1,15 @@
 import { get } from 'svelte/store';
-import { fileSystem } from '../filemanager/fileManagerStore';
+import { fileSystem } from '../filemanager/fileManagerStore.js';
 import type { UpscaleRequest } from '$protocolTypes/imagingTypes.d';
-import { Film } from '../lib/layeredCanvas/dataModels/film';
-import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-import { waitDialog } from './waitDialog';
-import { saveRequest } from '../filemanager/warehouse';
+import { Film } from '../lib/layeredCanvas/dataModels/film.js';
+import { ImageMedia } from '../lib/layeredCanvas/dataModels/media.js';
+import { waitDialog } from './waitDialog.js';
+import { saveRequest } from '../filemanager/warehouse.js';
 import { toastStore } from '@skeletonlabs/skeleton';
-import { onlineStatus } from './accountStore';
-import { analyticsEvent } from "./analyticsEvent";
-import { upscale, pollMediaStatus } from "../supabase";
-import { loading } from './loadingStore';
+import { onlineStatus } from './accountStore.js';
+import { analyticsEvent } from "./analyticsEvent.js";
+import { upscale, pollMediaStatus } from "../supabase.js";
+import { loading } from './loadingStore.js';
 
 export async function upscaleFilm(film: Film) {
   if (!(film.media instanceof ImageMedia)) { 

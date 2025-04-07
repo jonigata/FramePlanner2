@@ -2,7 +2,7 @@ import type { Page } from '../../lib/book/book';
 import { renderPage } from './renderPage';
 import { toastStore } from '@skeletonlabs/skeleton';
 import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
-import { upscaleCanvas } from '../upscaleFilm';
+import { upscaleCanvas } from '../upscaleImage';
 
 export async function copyToClipboard(page: Page, upscales: boolean) {
   try {

@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import type { Page } from '../../lib/book/book';
 import { renderPage } from './renderPage';
-import { upscaleCanvas } from '../upscaleFilm';
+import { upscaleCanvas } from '../upscaleImage';
 import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
 
 export async function saveAsPng(page: Page, upscales: boolean) {

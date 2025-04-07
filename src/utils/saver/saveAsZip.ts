@@ -2,7 +2,7 @@ import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import type { Page } from '../../lib/book/book';
 import { renderPage, renderPageToPsd } from './renderPage';
-import { upscaleCanvasWithoutDialog } from '../upscaleFilm';
+import { upscaleCanvasWithoutDialog } from '../upscaleImage';
 import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
 
 export async function makeZip(pages: Page[], render: (page: Page) => Promise<Blob>, ext: string): Promise<Blob> {

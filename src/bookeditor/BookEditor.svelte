@@ -34,8 +34,8 @@
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
   import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
-  import { punchFilm } from '../utils/punchFilm'
-  import { upscaleFilm } from '../utils/upscaleFilm'
+  import { punchFilm } from '../utils/punchImage'
+  import { upscaleFilm } from '../utils/upscaleImage'
   import { outPaintFilm, calculateFramePadding } from '../utils/outPaintFilm'
   import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
@@ -169,7 +169,7 @@
   function copyPageToClipboard(index: number) {
     const page = $mainBook!.pages[index];
     analyticsEvent('copy_page_to_clipboard');
-    copyToClipboard(page);
+    copyToClipboard(page, false);
     toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
 
