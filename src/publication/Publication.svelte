@@ -12,6 +12,7 @@
   }
 
   function handleCancel() {
+    $modalStore[0].response!(null);
     modalStore.close();
   }
 
