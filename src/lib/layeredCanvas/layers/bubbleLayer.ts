@@ -425,6 +425,10 @@ export class BubbleLayer extends LayerBase {
           return true;
         }
       }
+      if (event.code === 'Delete') {
+        this.removeBubble(this.selected);
+        return true;
+      }
     }
     return false;
   }

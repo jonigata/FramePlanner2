@@ -51,7 +51,7 @@ export async function renderPageToDataUrl(page: Page): Promise<string> {
   return png;
 }
 
-async function renderPage(page: Page): Promise<HTMLCanvasElement> {
+export async function renderPage(page: Page): Promise<HTMLCanvasElement> {
   const canvas = document.createElement("canvas");
   canvas.width = page.paperSize[0]
   canvas.height = page.paperSize[1]

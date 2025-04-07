@@ -14,6 +14,8 @@
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download, hint: "画像としてダウンロードします\n対象ページが複数の場合はzipファイルになります"},
     {icon: clipboardIcon, label: "クリップボードにコピー", onClick: copyToClipboard, hint: "クリップボードにコピーします\n対象ページが複数の場合は最初のページのみ"},
+    {icon: downloadIcon, label: "アップスケールして\nダウンロード", onClick: downloadAfterUpscale, hint: "画像としてダウンロードします\n対象ページが複数の場合はzipファイルになります\nアップスケールコスト 枚数x1"},
+    {icon: clipboardIcon, label: "アップスケールして\nクリップボードにコピー", onClick: copyToClipboardAfterUpscale, hint: "クリップボードにコピーします\n対象ページが複数の場合は最初のページのみ\nアップスケールコスト 枚数x1"},
     // {icon: aiPictorsIcon, label: "に投稿", onClick: postAIPictors, hint: "aiPictorsに投稿します"},
     {label: "PSDでエクスポート", onClick: downloadPSD, hint: "PSDファイルとしてダウンロードします\n対象ページが複数の場合はzipファイルになります"},
     {label: "シェア", onClick: shareBook, hint: "ドキュメントのコピーを\n編集できる形でアップロードします"},
@@ -37,6 +39,11 @@
     archive('download');
   }
 
+  function downloadAfterUpscale() {
+    analyticsEvent('download_after_upscale');
+    archive('download-after-upscale');
+  }
+
   function postAIPictors() {
     analyticsEvent('post_to_aipictors');
     archive('aipictors');
@@ -45,7 +52,11 @@
   function copyToClipboard() {
     analyticsEvent('copy_book_to_clipboard');
     archive('copy');
-    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+  }
+
+  function copyToClipboardAfterUpscale() {
+    analyticsEvent('copy_book_to_clipboard_after_upscale');
+    archive('copy-after-upscale');
   }
 
   async function downloadPSD() {
@@ -99,7 +110,11 @@
               <img src={icon} alt={label} class="h-8 w-auto"/>
             {/if}            
             {#if label != null}
-              {label}
+              <div class="flex flex-col">
+                {#each label.split('\n') as line}
+                  <span>{line}</span>
+                {/each}
+              </div>
             {/if}
           </button>
         {/each}

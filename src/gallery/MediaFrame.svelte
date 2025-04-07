@@ -30,14 +30,16 @@
           media.size,
         );
 
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
+        canvas.width = media.size[0];
+        canvas.height = media.size[1];
+        canvas.style.width = `${targetWidth}px`;
+        canvas.style.height = `${targetHeight}px`;
 
         const ctx = canvas.getContext('2d');
         if (ctx && media.drawSourceCanvas) {
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(media.drawSourceCanvas, 0, 0, targetWidth, targetHeight);
+          ctx.drawImage(media.drawSourceCanvas, 0, 0);
         }
       }
     }

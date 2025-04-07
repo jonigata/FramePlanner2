@@ -2,7 +2,9 @@ import { type Writable, writable } from "svelte/store";
 
 export type BookArchiveOperation =
   'download' |
+  'download-after-upscale' |
   'copy' |
+  'copy-after-upscale' |
   'export-psd' |
   'aipictors' |
   'envelope' |

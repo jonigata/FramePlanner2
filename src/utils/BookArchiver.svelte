@@ -35,13 +35,23 @@
         switch (operation) {
           case 'download':
             if (targetPages.length === 1) {
-              await saveAsPng(targetPages[0]);
+              await saveAsPng(targetPages[0], false);
             } else {
-              await saveAsPngZip(targetPages);
+              await saveAsPngZip(targetPages, false);
+            }
+            break;
+          case 'download-after-upscale':
+            if (targetPages.length === 1) {
+              await saveAsPng(targetPages[0], true);
+            } else {
+              await saveAsPngZip(targetPages, true);
             }
             break;
           case 'copy':
-            await copyToClipboard(targetPages[0])
+            await copyToClipboard(targetPages[0], false)
+            break;
+          case 'copy-after-upscale':
+            await copyToClipboard(targetPages[0], true)
             break;
           case 'export-psd':
             if (targetPages.length === 1) {

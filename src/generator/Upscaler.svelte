@@ -4,9 +4,8 @@
   import { onMount } from 'svelte';
   import { resizeCanvasIfNeeded } from '../lib/layeredCanvas/tools/imageUtil';
   import FeathralCost from '../utils/FeathralCost.svelte';
-  import type { Media } from '../lib/layeredCanvas/dataModels/media';
   
-  let sourceMedia: Media;
+  let canvas: HTMLCanvasElement;
   let scale: "2x" | "4x" = "2x";
   let targetWidth = 0;
   let targetHeight = 0;
@@ -16,15 +15,15 @@
   }
 
   function updateTargetDimensions() {
-    if (!sourceMedia) return;
+    if (!canvas) return;
     
     const scaleFactor = scale === "2x" ? 2 : 4;
-    targetWidth = sourceMedia.drawSourceCanvas.width * scaleFactor;
-    targetHeight = sourceMedia.drawSourceCanvas.height * scaleFactor;
+    targetWidth = canvas.width * scaleFactor;
+    targetHeight = canvas.height * scaleFactor;
   }
 
   async function onSubmit() {
-    const resizedCanvas = resizeCanvasIfNeeded(sourceMedia.drawSourceCanvas, 1024);
+    const resizedCanvas = resizeCanvasIfNeeded(canvas!, 2048);
     const resizedImageUrl = resizedCanvas.toDataURL();
     const request: UpscaleRequest = {
       dataUrl: resizedImageUrl,
@@ -36,14 +35,14 @@
     modalStore.close();
   }
 
-  onMount(() => {
-    sourceMedia = $modalStore[0].meta.media;
-    updateTargetDimensions();
-  });
-
-  $: if (sourceMedia && scale) {
+  $: if (canvas && scale) {
     updateTargetDimensions();
   }
+
+  onMount(() => {
+    canvas = $modalStore[0].meta.canvas;
+    updateTargetDimensions();
+  });
 </script>
 
 <div class="card p-4 w-modal shadow-xl">
@@ -55,7 +54,7 @@
     <div class="grid grid-cols-1 gap-4">
       <div class="preview-image">
         <img 
-          src={sourceMedia?.drawSourceCanvas.toDataURL()}
+          src={canvas?.toDataURL()}
           alt="Source" 
           class="w-full h-64 object-contain"
         />
@@ -64,7 +63,7 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <h3>現在のサイズ</h3>
-          <p class="mx-4">{sourceMedia?.drawSourceCanvas.width || 0} x {sourceMedia?.drawSourceCanvas.height || 0}</p>
+          <p class="mx-4">{canvas?.width || 0} x {canvas?.height || 0}</p>
         </div>
         <div>
           <h3>変換後のサイズ</h3>

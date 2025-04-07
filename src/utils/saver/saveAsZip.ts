@@ -1,7 +1,9 @@
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import type { Page } from '../../lib/book/book';
-import { renderPageToPngBlob, renderPageToPsd } from './renderPage';
+import { renderPage, renderPageToPsd } from './renderPage';
+import { upscaleCanvasWithoutDialog } from '../upscaleFilm';
+import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
 
 export async function makeZip(pages: Page[], render: (page: Page) => Promise<Blob>, ext: string): Promise<Blob> {
   const zip = new JSZip();
@@ -16,8 +18,19 @@ export async function makeZip(pages: Page[], render: (page: Page) => Promise<Blo
   return zipFile;
 }
 
-export async function saveAsPngZip(pages: Page[]) {
-  const zipFile = await makeZip(pages, renderPageToPngBlob, 'png');
+export async function saveAsPngZip(pages: Page[], upscales: boolean) {
+  async function makeBlob(page: Page): Promise<Blob> {
+    let canvas = await renderPage(page);
+    if (upscales) {
+      const newCanvas = await upscaleCanvasWithoutDialog(canvas);
+      if (newCanvas) {
+        canvas = newCanvas;
+      }
+    }
+    return canvasToBlob(canvas);
+  }
+
+  const zipFile = await makeZip(pages, makeBlob, 'png');
   saveAs(zipFile, `book.zip`);
 }
 
