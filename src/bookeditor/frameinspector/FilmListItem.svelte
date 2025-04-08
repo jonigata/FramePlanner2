@@ -23,6 +23,7 @@
   import popupIcon from '../../assets/filmlist/popup.webp';
   import videoIcon from '../../assets/video.webp';
   import upscaleIcon from '../../assets/filmlist/upscale.webp';
+  import dupliateIcon from '../../assets/filmlist/duplicate.webp';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
@@ -68,6 +69,12 @@
     console.log("onUpscale");
     popupVisible = false;
     dispatch('upscale', film)
+  }
+
+  function onDuplicate(ev: MouseEvent) {
+    console.log("onDuplicate");
+    popupVisible = false;
+    dispatch('duplicate', film)
   }
 
   function onOutPainting(ev: MouseEvent) {
@@ -230,6 +237,9 @@
       </button>
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
         <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
+      </button>
+      <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
+        <img draggable={false} src={dupliateIcon} alt="複製"/>
       </button>
       <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
         <img draggable={false} src={videoIcon} alt="ムービー作成"/>

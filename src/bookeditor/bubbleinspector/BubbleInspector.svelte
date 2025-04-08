@@ -217,6 +217,25 @@
     $bubbleInspectorTarget!.command = "punch";
   }
 
+  function onUpscale(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "upscale";
+  }
+
+  function onDuplicate(e: CustomEvent<Film>) {
+    const page = $bubbleInspectorTarget!.page;
+    const b = $bubbleInspectorTarget!.bubble;
+    const film = e.detail;
+    const filmStack = b.filmStack;
+    const index = filmStack.films.indexOf(film);
+    const newFilm = film.clone();
+    const paperSize = page.paperSize;
+    insertBubbleLayers(paperSize, b, index, [newFilm]);
+
+    bubble.update(b => b);
+    $bookEditor!.commit(null);
+  }
+
   function onVideo(e: CustomEvent<Film>) {
     $bubbleInspectorTarget!.commandTargetFilm = e.detail;
     $bubbleInspectorTarget!.command = "video";
@@ -460,7 +479,7 @@
       <h1>レイヤー</h1>
       <div class="w-full text-left">
         {#key $bubbleInspectorRebuildToken}
-          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept} on:video={onVideo}/>
+          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept} on:video={onVideo} on:upscale={onUpscale} on:duplicate={onDuplicate}/>
         {/key}
       </div>
     </div>

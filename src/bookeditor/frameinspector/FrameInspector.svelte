@@ -58,6 +58,19 @@
     $frameInspectorTarget!.command = "upscale";
   }
 
+  function onDuplicate(e: CustomEvent<Film>) {
+    console.log("FrameInspector.onDuplicate", e.detail);
+    const film = e.detail;
+    const index = filmStack.films.indexOf(film);
+    const page = $frameInspectorTarget!.page;
+    const element = $frameInspectorTarget!.frame;
+    const paperSize = page.paperSize;
+    const newFilm = film.clone();
+    insertFrameLayers(page.frameTree, paperSize, element, index, [newFilm]);
+    filmStack = filmStack;
+    $bookEditor!.commit(null);
+  }
+
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
     const {index, films} = e.detail;
     console.log("FrameInspector.onAccept", index, films);
@@ -112,6 +125,7 @@
           on:generate={onGenerate} 
           on:punch={onPunch} 
           on:upscale={onUpscale}
+          on:duplicate={onDuplicate}
           on:video={onVideo}
           on:accept={onAccept}
           on:outpainting={onOutPainting}
