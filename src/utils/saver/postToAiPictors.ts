@@ -1,8 +1,10 @@
 import type { Page } from '../../lib/book/book';
-import { renderPageToDataUrl } from './renderPage';
+import { renderPage } from './renderPage';
+import { canvasToBase64 } from '../../lib/layeredCanvas/tools/imageUtil';
 
 export async function postToAiPictors(page: Page): Promise<void> {
-  const dataUrl = await renderPageToDataUrl(page);
+  const canvas = await renderPage(page);
+  const dataUrl = canvasToBase64(canvas);
   const blob = new Blob([dataUrl], { type: "text/plain" });
   const formData = new FormData();
   formData.append("imageData", blob);

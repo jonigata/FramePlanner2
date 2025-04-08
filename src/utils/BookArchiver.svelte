@@ -12,14 +12,15 @@
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
-  import { getPublishUrl, getTransportUrl, notifyShare, recordPublication } from "../supabase";
+  import { getPublishUrl, getTransportUrl, recordPublication } from "../supabase";
   import { blobToSha1 } from '../lib/layeredCanvas/tools/misc';
   import { loading, progress } from './loadingStore';
   import type { Book, Page } from '../lib/book/book';
   import { buildShareFileSystem } from '../filemanager/shareFileSystem';
-  import { renderPageToPngBlob, renderPageToWebpBlob, renderThumbnailToWebpBlob } from './saver/renderPage';
+  import { renderPage, renderThumbnailToWebpBlob } from './saver/renderPage';
   import { onlineStatus, onlineProfile } from './accountStore';
   import { waitDialog } from "./waitDialog";
+  import { canvasToBlob } from "../lib/layeredCanvas/tools/imageUtil";
 
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
@@ -143,7 +144,8 @@
     try {
       const {file, blob} = await makeEnvelope(n => $progress = n * 0.5);
 
-      const cover = await renderPageToWebpBlob($mainBook!.pages[0]);
+      const canvas = await renderPage($mainBook!.pages[0]);
+      const cover = await canvasToBlob(canvas);
       const thumbnail = await renderThumbnailToWebpBlob($mainBook!.pages[0], [384, 516]);
 
       // 本体
@@ -238,7 +240,8 @@
       const {file, blob} = await makeEnvelope(n => $progress = n * 0.5);
       
       // カバーとサムネイルの作成
-      const cover = await renderPageToWebpBlob($mainBook!.pages[0]);
+      const canvas = await renderPage($mainBook!.pages[0]);
+      const cover = await canvasToBlob(canvas);
       const thumbnail = await renderThumbnailToWebpBlob($mainBook!.pages[0], [384, 516]);
 
       // 各ファイルをダウンロード
@@ -274,7 +277,12 @@
     
     $loading = true;
     try {
-      const zipFile = await makeZip(pages, renderPageToPngBlob, 'png');
+      const pageToBlob = async (page: Page) => {
+        const canvas = await renderPage(page);
+        const blob = await canvasToBlob(canvas);
+        return blob;
+      };
+      const zipFile = await makeZip(pages, pageToBlob, 'png');
       const sha1 = await blobToSha1(zipFile);
         
       let content_url;

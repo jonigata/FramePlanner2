@@ -170,7 +170,6 @@
     const page = $mainBook!.pages[index];
     analyticsEvent('copy_page_to_clipboard');
     copyToClipboard(page, false);
-    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
   }
 
   function batchImaging(index: number) {

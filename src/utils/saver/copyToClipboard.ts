@@ -10,13 +10,13 @@ export async function copyToClipboard(page: Page, upscales: boolean) {
     console.log("copyToClipboard", canvas.width, canvas.height);
 
     if (upscales) {
-      const newCanvas = await upscaleCanvas(canvas);
+      const newCanvas = await upscaleCanvas(canvas, "アップスケールを行います。待機中にタブやウィンドウを切り替えてフォーカスを失うと、クリップボードへのコピーに失敗しますので、そのままでお待ち下さい。");
       if (!newCanvas) {return;}
       canvas = newCanvas;
     }
     console.log("copyToClipboard upscaled", canvas.width, canvas.height);
 
-    const blob = await canvasToBlob(canvas);
+    const blob = await canvasToBlob(canvas, "image/png");
     await navigator.clipboard.write([
       new ClipboardItem({ [blob.type]: blob }),
     ]);

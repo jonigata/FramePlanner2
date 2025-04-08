@@ -225,7 +225,7 @@
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
         <img draggable={false} src={scribbleIcon} alt="落書き"/>
       </button>
-      <button class="transformix-item" use:toolTip={"背景除去[1]"} on:click={onPunch}>
+      <button class="transformix-item" use:toolTip={"背景除去[3]"} on:click={onPunch}>
         <img draggable={false} src={punchIcon} alt="背景除去"/>
       </button>
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>

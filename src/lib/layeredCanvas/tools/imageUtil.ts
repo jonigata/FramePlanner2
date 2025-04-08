@@ -64,7 +64,7 @@ export function imageToBase64(imgElement: HTMLImageElement) {
   return base64Image;
 }
 
-export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+export async function canvasToBlob(canvas: HTMLCanvasElement, format: string = "image/webp"): Promise<Blob> {
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (blob) {
@@ -72,7 +72,7 @@ export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
       } else {
         throw new Error("Failed to convert canvas to blob");
       }
-    }, "image/webp", 1.0);
+    }, format, 1.0);
   });
 }
 

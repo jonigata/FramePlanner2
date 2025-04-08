@@ -26,7 +26,7 @@ export async function upscaleFilm(film: Film) {
   analyticsEvent('upscale');
 }
 
-export async function upscaleCanvas(canvas: HTMLCanvasElement): Promise<HTMLCanvasElement | null> {
+export async function upscaleCanvas(canvas: HTMLCanvasElement, warning: string | null = null): Promise<HTMLCanvasElement | null> {
   if (get(onlineStatus) !== "signed-in") {
     toastStore.trigger({ message: `アップスケールはサインインしてないと使えません`, timeout: 3000});
     return null;
@@ -36,6 +36,10 @@ export async function upscaleCanvas(canvas: HTMLCanvasElement): Promise<HTMLCanv
   console.log("upscale", request);
 
   if (!request) { return null; }
+
+  if (warning) {
+    toastStore.trigger({ message: warning, timeout: 6000});
+  }
 
   loading.set(true);
   const { requestId } = await upscale(request);
