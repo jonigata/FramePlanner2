@@ -104,12 +104,12 @@
   async function publishEnvelope() {
     console.log("publishEnvelope", $mainBook!.revision);
     if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: "公開するにはサインインが必要です", timeout: 1500});
+      toastStore.trigger({ message: "まんがファーム！への公開にはサインインが必要です", timeout: 1500});
       return;
     }
 
     if ($onlineProfile === null) {
-      toastStore.trigger({ message: "公開するにはユーザー情報の登録が必要です", timeout: 1500});
+      toastStore.trigger({ message: "まんがファーム！への公開にはユーザー情報の登録が必要です", timeout: 1500});
       const r = await waitDialog<boolean>('userProfile');
       if (!r) {
         toastStore.trigger({ message: "公開をとりやめました", timeout: 1500});
