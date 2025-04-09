@@ -38,9 +38,7 @@
     clippingBox.style.top = `${pageRect[1]}px`;
     clippingBox.style.width = `${pageRect[2]}px`;
     clippingBox.style.height = `${pageRect[3]}px`;
-    console.log("clippingBox", pageRect);
     if (cursorWidth === 0 || pageRect[2] < cursorWidth) {
-      console.log("onCanvasChanged: setting cursorWidth", pageRect[2]);
       cursorWidth = pageRect[2];
     }
 
@@ -71,7 +69,6 @@
     }
     
     if (newWidth <= clippingBox.clientWidth) {
-      console.log("handleResize: setting cursorWidth");
       cursorWidth = newWidth;
       // 型アサーションを使用
       (event.target as HTMLElement).style.transform = 'translate(0, 0)';
@@ -95,7 +92,6 @@
       y: cursorRect.top + cursorRect.height / 2 - boxRect.top
     };
     const cursorPosition = clippingBoxRenderer.layeredCanvas.viewport.canvasPositionToViewportPosition([cursorCenter.x, cursorCenter.y]);
-    console.log("cursorPosition", cursorPosition);
 
     previewRenderer.layeredCanvas.viewport.translate = [-cursorPosition[0], -cursorPosition[1]];
     previewRenderer.layeredCanvas.viewport.dirty = true;

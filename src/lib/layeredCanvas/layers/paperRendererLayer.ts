@@ -393,10 +393,8 @@ export class PaperRendererLayer extends LayerBase {
       // 変更が起きたときのみ
       ri.textJson = json;
 
-      if (!ri.textCanvas) {
-        ri.textCanvas = document.createElement('canvas');
-        ri.textCtx = ri.textCanvas.getContext('2d')!;
-      }
+      ri.textCanvas = document.createElement('canvas');
+      ri.textCtx = ri.textCanvas.getContext('2d')!;
   
       const canvas = ri.textCanvas;
       const ctx = ri.textCtx;
