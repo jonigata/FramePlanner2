@@ -4,7 +4,7 @@
   import { mainBook } from "../bookeditor/bookStore";
   import { draggable } from '@neodrag/svelte';
   import type { DragEventData } from '@neodrag/svelte';
-  import { buildRenderer, Renderer } from "manga-renderer";
+  import { buildBookRenderer, BookRenderer } from "../lib/layeredCanvas/tools/bookRenderer"
   import { canvasToBlob } from "../lib/layeredCanvas/tools/imageUtil";
 
   $: book = $mainBook!;
@@ -27,10 +27,10 @@
   let clippingBox: HTMLDivElement;
   let cursor: HTMLDivElement;
   let previewCanvas: HTMLCanvasElement;
-  let previewRenderer: Renderer;
-  let clippingBoxRenderer: Renderer;
+  let previewRenderer: BookRenderer;
+  let clippingBoxRenderer: BookRenderer;
 
-  function onCanvasChanged(e: CustomEvent<{ pageIndex: number, realScale: number, pageRect: [number,number,number,number], renderer: Renderer }>) {
+  function onCanvasChanged(e: CustomEvent<{ pageIndex: number, realScale: number, pageRect: [number,number,number,number], renderer: BookRenderer }>) {
     const {pageRect, renderer} = e.detail;
     clippingBoxRenderer = renderer;
 
@@ -44,7 +44,7 @@
       cursorWidth = pageRect[2];
     }
 
-    previewRenderer = buildRenderer(previewCanvas, book, e.detail.pageIndex, 1);
+    previewRenderer = buildBookRenderer(previewCanvas, book, e.detail.pageIndex, 1);
     drawPreview();
   }
 

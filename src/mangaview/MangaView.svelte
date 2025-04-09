@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { buildRenderer, Renderer, type Book } from "manga-renderer";
+  import { buildBookRenderer, BookRenderer } from "../lib/layeredCanvas/tools/bookRenderer"
+  import type { Book } from "../lib/book/book";
   import AutoSizeCanvas from "../utils/AutoSizeCanvas.svelte";
   import leftIcon from "../assets/viewer/left.webp";
   import rightIcon from "../assets/viewer/right.webp";
@@ -14,7 +15,7 @@
   export let showsPageButtons = true;
 
   let canvas: HTMLCanvasElement;
-  let renderer: Renderer;
+  let renderer: BookRenderer;
   let pageIndex = 1;
   let min = 1;
   let max = 4;
@@ -54,7 +55,7 @@
     if (!book) return;
     if (!canvas) return;
     console.log("onCanvasUpdate:B");
-    renderer = buildRenderer(canvas, book, pageIndex-1, 1);
+    renderer = buildBookRenderer(canvas, book, pageIndex-1, 1);
     renderer.focusToPage(0, pageScale);
 
     const pageRect = renderer.arrayLayer.array.getPaperRect(0);
