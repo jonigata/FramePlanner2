@@ -417,22 +417,26 @@ export class FrameLayer extends LayerBase {
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
     if (event.code === "KeyV" && event.ctrlKey) {
+      let layoutlet = this.findReceiverLayout(position);
+      if (!layoutlet) { return false; }
+
       try {
         console.log('クリップボードから画像を貼り付け');
         const items = await navigator.clipboard.read();
         console.log(items);
         
         for (let item of items) {
+          console.log(item.types);
           for (let type of item.types) {
-            console.log(type);
             if (type.startsWith("image/")) {
               const blob = await item.getType(type);
               const canvas = await createCanvasFromBlob(blob);
-              this.dropped(position, canvas);
-              return true;
+              this.importMedia(layoutlet.element, new ImageMedia(canvas));
             }
           }
         }
+        this.selectLayout(layoutlet);
+        this.onCommit();
       }
       catch(err) {
         console.error('ユーザが拒否、もしくはなんらかの理由で失敗', err);
