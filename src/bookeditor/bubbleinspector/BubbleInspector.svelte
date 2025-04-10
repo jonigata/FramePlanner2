@@ -430,7 +430,7 @@
           <div class="flex gap-2">
             <div>
               <BubbleSample size={[64,96]} bind:shape={$chosenShape} on:click={chooseShape}/>
-              <button class="save-button btn btn-sm variant-filled paper-size" on:click={saveTemplate}>SAVE</button>
+              <button class="btn btn-sm variant-filled paper-size h-6 mt-2" on:click={saveTemplate}>テンプレートに登録</button>
             </div>
             <div class="flex flex-col gap-2">
               <div class="flex items-center">
@@ -547,9 +547,6 @@
     height: 20px;
     margin-left: 4px;
     margin-right: 4px;
-  }
-  .save-button {
-    height: 12px;
   }
   h1 {
     font-family: '源暎エムゴ';

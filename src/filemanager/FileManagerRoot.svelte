@@ -277,6 +277,7 @@
     const file = await fileSystem.createFile();
     await saveBubbleTo(bubble, file);
     await folder.asFolder().link(getCurrentDateTime(), file.id);
+    toastStore.trigger({ message: "フキダシテンプレートを登録しました<br/>シェイプと同様に使えます", timeout: 1500});
   }
 
   $:onLoadRequest($loadToken);
