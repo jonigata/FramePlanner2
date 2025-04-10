@@ -17,6 +17,7 @@ import type { FocusKeeper } from "../tools/focusKeeper";
 import { Grid } from "../tools/grid";
 import paper from 'paper';
 import { PaperOffset } from "paperjs-offset";
+import { createCanvasFromBlob } from "../tools/imageUtil";
 
 const SHEET_Y_MARGIN = 48;
 
@@ -275,22 +276,8 @@ export class FrameLayer extends LayerBase {
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
     if (!this.interactable) { return false; }
 
-    let layoutlet: Layout | null = null;
-
-    if (this.selectedLayout) {
-      const r = this.calculateSheetRect(this.selectedLayout.corners);
-      if (rectContains(r, position)) {
-        layoutlet = this.selectedLayout;
-      }
-    }
-
-    if (!layoutlet) {
-      const layout = this.calculateRootLayout();
-      layoutlet = findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
-      if (!layoutlet) {
-        return false;
-      }
-    }
+    let layoutlet = this.findReceiverLayout(position);
+    if (!layoutlet) { return false; }
 
     if (media instanceof HTMLCanvasElement) {
       this.importMedia(layoutlet.element, new ImageMedia(media));
@@ -304,6 +291,20 @@ export class FrameLayer extends LayerBase {
     this.onFocus(layoutlet);
     this.onCommit();
     return true;
+  }
+
+  findReceiverLayout(position: Vector): Layout | null {
+    if (!this.interactable) { return null; }
+
+    if (this.selectedLayout) {
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (rectContains(r, position)) {
+        return this.selectedLayout;
+      }
+    }
+
+    const layout = this.calculateRootLayout();
+    return findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
   }
 
   updateLit(point: Vector): void {
@@ -426,16 +427,7 @@ export class FrameLayer extends LayerBase {
             console.log(type);
             if (type.startsWith("image/")) {
               const blob = await item.getType(type);
-              const url = URL.createObjectURL(blob);
-              const image = new Image();
-              image.src = url;
-              await image.decode();
-              URL.revokeObjectURL(url);
-              const canvas = document.createElement("canvas");
-              canvas.width = image.width;
-              canvas.height = image.height;
-              const ctx = canvas.getContext("2d")!;
-              ctx.drawImage(image, 0, 0);
+              const canvas = await createCanvasFromBlob(blob);
               this.dropped(position, canvas);
               return true;
             }
