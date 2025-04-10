@@ -71,7 +71,9 @@ export class ArrayLayer extends LayerBase {
       this.markFlags[i] = false;
     }
     for (let i = 0; i <= this.array.papers.length; i++) {
-      const insertIcon = new ClickableIcon(["page-insert.webp", "page-insert-vertical.webp", "page-paste.webp"],[24,24],[0.5,0],`p${i+1}挿入`, null, mp);
+      const insertIcon = new ClickableIcon(
+        ["page-insert.webp", "page-insert-vertical.webp", "page-paste.webp"],[24,24],[0.5,0],
+        ["新しいページを挿入", "新しいページを挿入", "マークしたページをここに移動\nCtrlを押しているとコピー"], null, mp);
       this.insertIcons.push(insertIcon);
     }
     this.calculateIconPositions();

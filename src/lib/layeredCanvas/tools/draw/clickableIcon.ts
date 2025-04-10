@@ -8,7 +8,7 @@ export abstract class ClickableSlate implements ClickableSlate {
   position: Vector;
   size: Vector;
   pivot: Vector;
-  hint: string;
+  hints: string[];
   visibleConditionProvider: (() => boolean) | null;
   matrixProvider: () => DOMMatrix;
   marginLeft = 0;
@@ -16,11 +16,11 @@ export abstract class ClickableSlate implements ClickableSlate {
   marginRight = 0;
   marginBottom = 0;
   
-  constructor(size: Vector, pivot: Vector, hint: string, visibleConditionProvider: (() => boolean) | null, matrixProvider: () => DOMMatrix) {
+  constructor(size: Vector, pivot: Vector, hints: string | string[], visibleConditionProvider: (() => boolean) | null, matrixProvider: () => DOMMatrix) {
     this.position = [0,0];
     this.size = size;
     this.pivot = pivot;
-    this.hint = hint;
+    this.hints = Array.isArray(hints) ? hints : [hints];
     this.visibleConditionProvider = visibleConditionProvider;
     this.matrixProvider = matrixProvider;
   }
@@ -42,7 +42,7 @@ export abstract class ClickableSlate implements ClickableSlate {
 
   hintIfContains(point: Vector, f: (r: Rect, h: string) => void): boolean {
     if (this.contains(point)) {
-      f(this.boundingRect, this.hint);
+      f(this.boundingRect, this.hints[this.state]);
       return true;
     }
     return false;
@@ -75,6 +75,10 @@ export abstract class ClickableSlate implements ClickableSlate {
     return 1 / this.matrixProvider().a;
   }
 
+  get state(): number {
+    return 0;
+  }
+
   static calcPosition(rect: Rect, unit: Vector, regularizedOrigin: Vector, offsetUnit: Vector): Vector {
     const [x, y, w, h] = rect;
     const origin = [x + w * regularizedOrigin[0], y + h * regularizedOrigin[1]];
@@ -90,8 +94,8 @@ export class ClickableIcon extends ClickableSlate {
   index: number;
   shadowColor: string;
   
-  constructor(srcs: string[], size: Vector, pivot: Vector, hint: string, visibleConditionProvider: (() => boolean) | null, matrixProvider: () => DOMMatrix) {
-    super(size, pivot, hint, visibleConditionProvider, matrixProvider);
+  constructor(srcs: string[], size: Vector, pivot: Vector, hints: string | string[], visibleConditionProvider: (() => boolean) | null, matrixProvider: () => DOMMatrix) {
+    super(size, pivot, hints, visibleConditionProvider, matrixProvider);
     this.images = srcs.map(src => {
       const image = new Image();
       image.src = new URL(`../../../../assets/${src}`, import.meta.url).href;
@@ -130,6 +134,10 @@ export class ClickableIcon extends ClickableSlate {
     ctx.shadowBlur = 10;
     ctx.drawImage(ClickableIcon.tmpCanvas, x, y, w, h);
     ctx.restore();
+  }
+
+  get state(): number {
+    return this.index;
   }
 }
 
