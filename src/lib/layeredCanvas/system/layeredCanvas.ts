@@ -2,7 +2,7 @@ import { handleDataTransfer } from "../tools/fileUtil";
 import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
-import { getFirstFrameOfVideo } from "../tools/imageUtil";
+
 
 type OnHint = (p: Rect | null, s: string | null) => void;
 
@@ -90,7 +90,8 @@ export interface Layer {
   pointerCancel(position: Vector, payload: any): void;
   prerender(): void;
   render(ctx: CanvasRenderingContext2D, depth: number): void;
-  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean;
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean;
+  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean;
   beforeDoubleClick(position: Vector): boolean;
   doubleClicked(position: Vector): boolean;
   keyDown(position: Vector, event: KeyboardEvent): Promise<boolean>;
@@ -134,6 +135,7 @@ export class LayerBase implements Layer {
   prerender() {}
   render(ctx: CanvasRenderingContext2D, depth: number) {}
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) { return false; }
+  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement) { return false; }
   beforeDoubleClick(position: Vector) { return false; }
   doubleClicked(position: Vector) { return false; }
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
@@ -223,10 +225,20 @@ export class Paper {
     dragging.layer.pointerCancel(p, dragging.payload);
   }
         
-  handleDrop(p: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
+  handleDrop(p: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
       if (layer.dropped(p, media)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  handlePaste(p: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    for (let i = this.layers.length - 1; i >= 0; i--) {
+      const layer = this.layers[i];
+      if (layer.pasted(p, media)) {
         return true;
       }
     }
@@ -448,6 +460,7 @@ export class LayeredCanvas {
       addEventListener('pointerleave', this.handlePointerLeave as EventListener);
       addEventListener('dragover', this.handleDragOver as EventListener);
       addEventListener('drop', this.handleDrop as unknown as EventListener);
+      addEventListener('paste', this.handlePaste as unknown as EventListener);
       addEventListener('dblclick', this.handleDoubleClick as EventListener);
       addEventListener('contextmenu', this.handleContextMenu as EventListener);
       addEventListener('wheel', this.handleWheel as EventListener);
@@ -580,9 +593,17 @@ export class LayeredCanvas {
 
     event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
     const mediaResources = await handleDataTransfer(event.dataTransfer!);
-    if (mediaResources.length === 0) { return; }
     for (let media of mediaResources) {
       this.rootPaper.handleDrop(p, media);
+    }
+  }
+
+  async handlePaste(event: ClipboardEvent): Promise<void> {
+    if (event.clipboardData == null) { return; }
+
+    const mediaResources = await handleDataTransfer(event.clipboardData);
+    for (let media of mediaResources) {
+      this.rootPaper.handlePaste(this.pointerCursor!, media);
     }
   }
 

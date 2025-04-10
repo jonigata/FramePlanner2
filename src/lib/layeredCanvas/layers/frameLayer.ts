@@ -415,34 +415,17 @@ export class FrameLayer extends LayerBase {
     return false;
   }
 
-  async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
-    if (event.code === "KeyV" && event.ctrlKey) {
-      let layoutlet = this.findReceiverLayout(position);
-      if (!layoutlet) { return false; }
+  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    console.log("PASTED", position, media)
 
-      try {
-        console.log('クリップボードから画像を貼り付け');
-        const items = await navigator.clipboard.read();
-        console.log(items);
-        
-        for (let item of items) {
-          console.log(item.types);
-          for (let type of item.types) {
-            if (type.startsWith("image/")) {
-              const blob = await item.getType(type);
-              const canvas = await createCanvasFromBlob(blob);
-              this.importMedia(layoutlet.element, new ImageMedia(canvas));
-            }
-          }
-        }
-        this.selectLayout(layoutlet);
-        this.onCommit();
-      }
-      catch(err) {
-        console.error('ユーザが拒否、もしくはなんらかの理由で失敗', err);
-      }
+    let layoutlet = this.findReceiverLayout(position);
+    if (!layoutlet) { return false; }
+
+    if (media instanceof HTMLCanvasElement) {
+      this.importMedia(layoutlet.element, new ImageMedia(media));
     }
-    return false;
+
+    return true;
   }
 
   pick(point: Vector): Picked[] {

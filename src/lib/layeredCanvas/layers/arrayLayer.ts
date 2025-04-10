@@ -334,9 +334,14 @@ export class ArrayLayer extends LayerBase {
     });
   }
 
-  dropped(p: Vector, canvas: HTMLCanvasElement): boolean {
+  dropped(p: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    return paper.handleDrop(position, canvas);
+    return paper.handleDrop(position, media);
+  }
+
+  pasted(p: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
+    return paper.handlePaste(position, media);
   }
 
   beforeDoubleClick(p: Vector): boolean { 

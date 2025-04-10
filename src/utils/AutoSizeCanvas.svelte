@@ -21,7 +21,7 @@
 </script>
 
 <div class="canvas-container" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
-  <canvas width={canvasWidth} height={canvasHeight} style="width: {containerWidth}px; height: {containerHeight}px;" bind:this={canvas}/>
+  <canvas width={canvasWidth} height={canvasHeight} style="width: {containerWidth}px; height: {containerHeight}px;" tabindex={0} bind:this={canvas}/>
   <slot/>
 </div>    
 
