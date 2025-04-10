@@ -277,6 +277,7 @@ export interface BookOperators {
   insertPage: (index: number) => void;
   deletePage: (index: number) => void;
   movePages: (from: number[], to: number) => void;
+  duplicatePages: (from: number[], to: number) => void;
   copyPageToClipboard: (index: number) => void;
   batchImaging: (index: number) => void;
   editBubbles: (index: number) => void;

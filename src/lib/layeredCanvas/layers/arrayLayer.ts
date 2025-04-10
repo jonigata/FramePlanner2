@@ -11,6 +11,7 @@ export class ArrayLayer extends LayerBase {
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
   onMove: (from: number[], to: number) => void;
+  onDup: (from: number[], to: number) => void;
   onCopyToClipboard: (index: number) => void;
   onBatchImaging: (index: number) => void;
   onEditBubbles: (index: number) => void;
@@ -35,6 +36,7 @@ export class ArrayLayer extends LayerBase {
     onInsert: (index: number) => void, 
     onDelete: (index: number) => void,
     onMove: (from: number[], to: number) => void,
+    onDup: (from: number[], to: number) => void,
     onCopyToClipboard: (index: number) => void,
     onBatchImaging: (index: number) => void,
     onEditBubbles: (index: number) => void,
@@ -46,6 +48,7 @@ export class ArrayLayer extends LayerBase {
     this.onInsert = onInsert;
     this.onDelete = onDelete;
     this.onMove = onMove;
+    this.onDup = onDup;
     this.onCopyToClipboard = onCopyToClipboard;
     this.onBatchImaging = onBatchImaging;
     this.onEditBubbles = onEditBubbles;
@@ -200,9 +203,13 @@ export class ArrayLayer extends LayerBase {
     for (let [i, e] of this.insertIcons.entries()) {
       if (e.contains(p)) {
         if (this.markFlags.some(e => e)) {
+          if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
+            this.onDup(this.markFlags.map((e, i) => e ? i : -1).filter(e => 0 <= e), i);
+          } else {
           // markFlagsが立っているページが前にある場合、その分indexを減らす
           const n = this.markFlags.slice(0, i).filter(e => e).length;
-          this.onMove(this.markFlags.map((e, i) => e ? i : -1).filter(e => 0 <= e), i - n);
+            this.onMove(this.markFlags.map((e, i) => e ? i : -1).filter(e => 0 <= e), i - n);
+          }
         } else {
           this.onInsert(i);
         }

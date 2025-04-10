@@ -46,6 +46,7 @@ export function buildBookEditor(
     editor.insertPage,
     editor.deletePage,
     editor.movePages,
+    editor.duplicatePages,
     editor.copyPageToClipboard,
     editor.batchImaging,
     editor.editBubbles,

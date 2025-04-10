@@ -66,6 +66,7 @@ export function buildBookRenderer(canvas: HTMLCanvasElement, book: Book, startIn
     () => {},
     () => {},
     () => {},
+    () => {},
     () => {});
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 

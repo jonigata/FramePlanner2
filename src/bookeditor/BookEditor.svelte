@@ -13,7 +13,7 @@
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
-  import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
+  import { clonePage, undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
@@ -163,6 +163,16 @@
     const restPages = $mainBook!.pages.filter((_, i) => !from.includes(i));
     const movedPages = from.map(i => $mainBook!.pages[i]);
     $mainBook!.pages = [...restPages.slice(0, to), ...movedPages, ...restPages.slice(to)];
+    commit(null);
+  }
+
+  function duplicatePages(from: number[], to: number) {
+    const targetPages = from.map(i => clonePage($mainBook!.pages[i]));
+    $mainBook!.pages = [
+      ...$mainBook!.pages.slice(0, to),
+      ...targetPages,
+      ...$mainBook!.pages.slice(to)
+    ];
     commit(null);
   }
 
@@ -320,6 +330,7 @@
       insertPage,
       deletePage,
       movePages,
+      duplicatePages,
       copyPageToClipboard,
       batchImaging,
       editBubbles,
