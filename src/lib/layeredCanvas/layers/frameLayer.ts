@@ -273,7 +273,7 @@ export class FrameLayer extends LayerBase {
     drawSheet(ctx, corners, this.calculateSheetRect(corners), "rgba(64, 64, 128, 0.7)");
   }
 
-  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
     if (!this.interactable) { return false; }
 
     let layoutlet = this.findReceiverLayout(position);
@@ -290,6 +290,19 @@ export class FrameLayer extends LayerBase {
     }
     this.onFocus(layoutlet);
     this.onCommit();
+    return true;
+  }
+
+  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    console.log("PASTED", position, media)
+
+    let layoutlet = this.findReceiverLayout(position);
+    if (!layoutlet) { return false; }
+
+    if (media instanceof HTMLCanvasElement) {
+      this.importMedia(layoutlet.element, new ImageMedia(media));
+    }
+
     return true;
   }
 
@@ -413,19 +426,6 @@ export class FrameLayer extends LayerBase {
       }
     }
     return false;
-  }
-
-  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
-    console.log("PASTED", position, media)
-
-    let layoutlet = this.findReceiverLayout(position);
-    if (!layoutlet) { return false; }
-
-    if (media instanceof HTMLCanvasElement) {
-      this.importMedia(layoutlet.element, new ImageMedia(media));
-    }
-
-    return true;
   }
 
   pick(point: Vector): Picked[] {

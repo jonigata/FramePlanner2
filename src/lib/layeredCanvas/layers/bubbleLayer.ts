@@ -815,8 +815,14 @@ export class BubbleLayer extends LayerBase {
     this.onCommit();
   };
 
-  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement): boolean {
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
     if (!this.interactable) { return false; }
+
+    if (typeof media === "string") {
+      this.createTextBubble(media);
+      this.onCommit();
+      return true;
+    }
 
     if (this.createBubbleIcon.contains(position)) {
       this.createMediaBubble(media);
@@ -837,7 +843,12 @@ export class BubbleLayer extends LayerBase {
         return true;
       }
     }
+
     return false;
+  }
+
+  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    return this.dropped(position, media);
   }
 
   doubleClicked(p: Vector): boolean {

@@ -9,10 +9,11 @@ export async function handleDataTransfer(dataTransfer: DataTransfer): Promise<(H
     return [video];
   }
 
+  const files = [...dataTransfer.files]; // なぜかこうしないとawaitの間に変化するらしく、うまく列挙できない
   const result = [];
-  for (let i = 0; i < dataTransfer.items.length; i++) {
-    var file = dataTransfer.files[i];
-    console.log(file.type);
+  for (let i = 0; i < files.length; i++) {
+    var file = files[i];
+    console.log("file", i, file.type);
     if (file.type.startsWith('image/svg')) { continue; } // 念の為
     if (file.type.startsWith('image/')) {
       console.log("image file", file);
