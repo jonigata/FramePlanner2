@@ -34,3 +34,10 @@ export async function handleDataTransfer(dataTransfer: DataTransfer): Promise<(H
 
   return result;
 }
+
+export function excludeTextFiles(mediaResources: (HTMLCanvasElement | HTMLVideoElement | string)[]): (HTMLCanvasElement | HTMLVideoElement)[] {
+  const filteredResources = mediaResources.filter((resource) => {
+    return !(typeof resource === 'string');
+  });
+  return filteredResources;
+}

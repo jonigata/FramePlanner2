@@ -2,7 +2,7 @@ import { ulid } from 'ulid';
 import type { Bubble } from '../layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, type Border, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../layeredCanvas/dataModels/frameTree';
 import { Film, FilmStack, FilmStackTransformer } from '../layeredCanvas/dataModels/film';
-import { type Media, ImageMedia } from '../layeredCanvas/dataModels/media';
+import { type Media, buildMedia, ImageMedia, mediaResourceSize } from '../layeredCanvas/dataModels/media';
 import { frameExamples } from '../layeredCanvas/tools/frameExamples';
 import type { Rect, Vector } from "../layeredCanvas/tools/geometry/geometry";
 import { isPointInTrapezoid, trapezoidBoundingRect } from "../layeredCanvas/tools/geometry/trapezoid";
@@ -237,16 +237,23 @@ export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book 
   return book;
 }
 
-export function newImageBook(id: string, canvas: HTMLCanvasElement, prefix: Prefix): Book {
-  const frameTree = FrameElement.compile(frameExamples[2].frameTree);
-  const film = new Film(new ImageMedia(canvas));
-  frameTree.children[0].filmStack.films = [film];
+export function newImageBook(id: string, media: (HTMLCanvasElement | HTMLVideoElement)[], prefix: Prefix): Book {
+  const paperSize = mediaResourceSize(media[0])!;
 
-  const page = newPage(frameTree, []);
-  page.paperSize = [canvas.width, canvas.height];
+  const pages = [];
+  for (const m of media) {
+    const frameTree = FrameElement.compile(frameExamples[2].frameTree);
+    const film = new Film(buildMedia(m));
+    frameTree.children[0].filmStack.films = [film];
+  
+    const page = newPage(frameTree, []);
+    page.paperSize = paperSize!;
+    pages.push(page);
+  }
+
   const book: Book = {
     revision: { id, revision:1, prefix },
-    pages: [page],
+    pages,
     history: { entries: [], cursor: 0 },
     direction: 'right-to-left',
     wrapMode: 'none',

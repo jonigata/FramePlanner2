@@ -3,7 +3,6 @@ import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
 
-
 type OnHint = (p: Rect | null, s: string | null) => void;
 
 export class Viewport {

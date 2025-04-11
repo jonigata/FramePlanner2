@@ -4,8 +4,11 @@
   import { hoverKey } from '../utils/hoverKeyStore';
   import { mainBook } from '../bookeditor/bookStore';
   import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
+  import { excludeTextFiles, handleDataTransfer } from "../lib/layeredCanvas/tools/fileUtil";
+
   import BaseRootButton from './BaseRootButton.svelte';
   import newBookIcon from '../assets/new-book.webp';
+
 
   async function createNewFile(e: CustomEvent<MouseEvent>) {
     if (e.detail.ctrlKey) {
@@ -39,17 +42,11 @@
   async function onDrop(ev: DragEvent) {
     ev.preventDefault();
     ev.stopPropagation();
-    const dt = ev.dataTransfer!;
-    const files = dt.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      console.log(file.type)
-      if (file.type.startsWith("image/")) {
-        const canvas = await createCanvasFromBlob(file);
-        const book = newImageBook("not visited", canvas, "drop-")
-        $newBookToken = book;
-      }
-    }
+
+    const mediaResources = await handleDataTransfer(ev.dataTransfer!);
+    const filteredResources = excludeTextFiles(mediaResources);
+    const book = newImageBook("not visited", filteredResources, "drop-")
+    $newBookToken = book;
   }
 
   async function onKeyDown(e: KeyboardEvent) {

@@ -2,7 +2,7 @@
 //   現状だと、fileDrappableListを複数のelementでuseすると正しく動作しないため
 //   受付ゾーンを今より広げるために必要
 
-import { handleDataTransfer } from "../lib/layeredCanvas/tools/fileUtil";
+import { excludeTextFiles, handleDataTransfer } from "../lib/layeredCanvas/tools/fileUtil";
 
 type DropZoneOptions = {
   onFileDrop: (index: number, files: (HTMLCanvasElement | HTMLVideoElement)[]) => Promise<void>;
@@ -52,9 +52,7 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
       console.log("drop index", index);
       const mediaResources = await handleDataTransfer(ev.dataTransfer!);
       // stringを除去
-      const filteredResources = mediaResources.filter((resource) => {
-        return !(typeof resource === 'string');
-      });
+      const filteredResources = excludeTextFiles(mediaResources);
       if (mediaResources.length > 0) {
         options.onFileDrop(index, filteredResources);
       }

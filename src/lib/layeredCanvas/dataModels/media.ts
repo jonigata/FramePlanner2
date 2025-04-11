@@ -191,3 +191,13 @@ export function buildNullableMedia(mediaResource: MediaResource | null): Media |
   }
   return buildMedia(mediaResource);
 }
+
+export function mediaResourceSize(mediaResource: MediaResource): Vector | null {
+  if (mediaResource instanceof HTMLCanvasElement) {
+    return [mediaResource.width, mediaResource.height];
+  } else if (mediaResource instanceof HTMLVideoElement) {
+    return [mediaResource.videoWidth, mediaResource.videoHeight];
+  } else {
+    return null;
+  }
+}
