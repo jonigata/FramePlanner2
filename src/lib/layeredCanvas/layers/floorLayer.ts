@@ -7,11 +7,25 @@ import type { FocusKeeper } from "../tools/focusKeeper";
 export class FloorLayer extends LayerBase {
   viewport: Viewport;
   onViewportChanged: () => void; // ここで責任とれないこと（例えばsvelteUI)
+  onResidual: (media: HTMLCanvasElement | HTMLVideoElement | string) => void;
 
-  constructor(viewport: Viewport, onViewportChanged: () => void, private focusKeeper: FocusKeeper) {
+  constructor(viewport: Viewport, onViewportChanged: () => void, onResidual: (media: HTMLCanvasElement | HTMLVideoElement | string) => void, private focusKeeper: FocusKeeper) {
     super();
     this.viewport = viewport;
     this.onViewportChanged = onViewportChanged;
+    this.onResidual = onResidual;
+  }
+
+  dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    console.log("floor received");
+    this.onResidual(media);
+    return true;
+  }
+
+  pasted(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
+    console.log("floor received");
+    this.onResidual(media);
+    return true;
   }
 
   wheel(_position: Vector, delta: number) {

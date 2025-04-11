@@ -42,5 +42,6 @@ export function insertNewPageToBook(book: Book, p: NewPageProperty, index: numbe
   page.frameColor = p.frameColor;
   page.frameWidth = p.frameWidth;
   book.pages.splice(index, 0, page);
+  return page;
 }
 

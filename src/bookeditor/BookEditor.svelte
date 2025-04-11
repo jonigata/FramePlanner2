@@ -1,11 +1,10 @@
-
 <script lang="ts">
   import { derived } from 'svelte/store';
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
-  import { FrameElement, calculatePhysicalLayout, findLayoutOf, type Border } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { FrameElement, calculatePhysicalLayout, findLayoutOf, type Border, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
-  import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
+  import { ImageMedia, buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -40,6 +39,8 @@
   import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
   import { generateMovie } from '../utils/generateMovie';
+  import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
+  import { FilmStackTransformer } from "../lib/layeredCanvas/dataModels/film";
 
   let canvas: HTMLCanvasElement;
   let layeredCanvas : LayeredCanvas;
@@ -140,6 +141,30 @@
 
   function viewportChanged() {
     $viewport = $viewport;
+  }
+
+  function rescueResidual(media: HTMLCanvasElement | HTMLVideoElement | string) {
+    console.log("rescueResidual", media);
+
+    if (typeof media === "string") { return; }
+
+    const book = $mainBook!;
+    const page = insertNewPageToBook(book, $newPageProperty, book.pages.length);
+    const paperSize = page.paperSize;
+
+    const rootFrameTree = FrameElement.compile(frameExamples[2].frameTree);
+    const frameTree = rootFrameTree.children[0];
+    const film = new Film(buildMedia(media));
+    frameTree.filmStack.films = [film];
+
+    const transformer = new FilmStackTransformer(paperSize, frameTree.filmStack.films);
+    transformer.scale(0.01);
+    const layout = calculatePhysicalLayout(rootFrameTree, paperSize, [0, 0]);
+    constraintLeaf(page.paperSize, findLayoutOf(layout, frameTree)!);
+
+    page.frameTree = rootFrameTree;
+
+    commit(null);
   }
 
   function insertPage(pageIndex: number) {
@@ -331,6 +356,7 @@
       deletePage,
       movePages,
       duplicatePages,
+      rescueResidual,
       copyPageToClipboard,
       batchImaging,
       editBubbles,
@@ -689,6 +715,10 @@
   function resetBubbleCache() {
     let i = 0;
     const pages = $mainBook!.pages;
+    if (pages.length != arrayLayer.array.papers.length) {
+      // ページ数が変わったため、再構築するはずなので無視して良い
+      return;
+    }
     for (const paper of arrayLayer.array.papers) {
       const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
       rendererLayer.setBubbles(pages[i++].bubbles);

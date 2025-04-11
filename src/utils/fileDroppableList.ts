@@ -51,8 +51,12 @@ export function fileDroppableList(node: HTMLElement, options: DropZoneOptions) {
       const index = getDropIndex(ev.clientY);
       console.log("drop index", index);
       const mediaResources = await handleDataTransfer(ev.dataTransfer!);
+      // stringを除去
+      const filteredResources = mediaResources.filter((resource) => {
+        return !(typeof resource === 'string');
+      });
       if (mediaResources.length > 0) {
-        options.onFileDrop(index, mediaResources);
+        options.onFileDrop(index, filteredResources);
       }
     }
     endDrag();
