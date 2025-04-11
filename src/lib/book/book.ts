@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { ulid } from 'ulid';
 import type { Bubble } from '../layeredCanvas/dataModels/bubble';
 import { FrameElement, type Layout, type Border, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../layeredCanvas/dataModels/frameTree';

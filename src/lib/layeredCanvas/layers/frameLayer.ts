@@ -17,7 +17,6 @@ import type { FocusKeeper } from "../tools/focusKeeper";
 import { Grid } from "../tools/grid";
 import paper from 'paper';
 import { PaperOffset } from "paperjs-offset";
-import { createCanvasFromBlob } from "../tools/imageUtil";
 
 const SHEET_Y_MARGIN = 48;
 
