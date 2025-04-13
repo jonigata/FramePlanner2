@@ -40,6 +40,8 @@ export class InlinePainterLayer extends LayerBase {
 
   renderDepths(): number[] { return [0,1]; }
 
+  acceptDepths(): number[] { return [0]; }
+
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.canvas) {return;}
     if (depth !== this.depth) { return; }
@@ -62,7 +64,6 @@ export class InlinePainterLayer extends LayerBase {
   }
 
   accepts(_point: Vector, _button: number, depth: number): any {
-    if (0 < depth) { return null; }
     if (!this.canvas) {return null;}
     return {};
   }
