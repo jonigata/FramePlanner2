@@ -77,9 +77,9 @@ export function buildBookEditor(
 export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number, gapX: number, gapY: number } {
   switch (wrapMode) {
     case "none":
-      return { fold: 0, gapX: 100, gapY: 0 };
+      return { fold: 0, gapX: 250, gapY: 0 };
     case "two-pages":
-      return { fold: 2, gapX: 100, gapY: 200 };
+      return { fold: 2, gapX: 250, gapY: 500 };
     case "one-page":
       return { fold: 1, gapX: 0, gapY: 0 };
   }
