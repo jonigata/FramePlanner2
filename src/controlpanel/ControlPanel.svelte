@@ -1,6 +1,6 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { mainBook, viewport, newPageProperty, redrawToken } from '../bookeditor/bookStore';
+  import { mainBook, viewport, redrawToken } from '../bookeditor/bookStore';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import Drawer from '../utils/Drawer.svelte'
@@ -26,6 +26,30 @@
     }
   );
 
+  const paperWidth = writableDerived(
+    mainBook,
+    (b) => b?.newPageProperty.paperSize[0]!,
+    (s, b) => {
+      if (b) {
+        b.newPageProperty.paperSize[0] = s!;
+        $redrawToken = true;
+      }
+      return b;
+    }
+  );
+
+  const paperHeight = writableDerived(
+    mainBook,
+    (b) => b?.newPageProperty.paperSize[1]!,
+    (s, b) => {
+      if (b) {
+        b.newPageProperty.paperSize[1] = s!;
+        $redrawToken = true;
+      }
+      return b;
+    }
+  );
+
   let scalePercent = $scale * 100;
   scale.subscribe((v) => scalePercent = v * 100);
   $: $scale = scalePercent / 100;
@@ -34,10 +58,10 @@
 
   function setDimensions(w: number, h: number) {
     // 入れ物ごと交換するとbindが崩れる模様
-    const p = $newPageProperty;
+    const p = $mainBook!.newPageProperty;
     p.paperSize[0] = w;
     p.paperSize[1] = h;
-    $newPageProperty = p;
+    $mainBook!.newPageProperty = p;
   }
 
   $: onBookChanged(book);
@@ -56,20 +80,20 @@
             <div class="hbox">
               <div class="font-bold slider-label">W</div>
               <div style="width: 140px;">
-                <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[0]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+                <ExponentialRangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
               </div>
               <div class="text-xs slider-value-text hbox gap-0.5">
-                <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[0]} min={min} max={max}/></div>
+                <div class="number-box"><NumberEdit bind:value={$paperWidth} min={min} max={max}/></div>
                 / {max}
               </div>
             </div>
             <div class="hbox">
               <div class="font-bold slider-label">H</div>
               <div style="width: 140px;">
-                <ExponentialRangeSlider name="range-slider" bind:value={$newPageProperty.paperSize[1]} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+                <ExponentialRangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
               </div>
               <div class="text-xs slider-value-text hbox gap-0.5">
-                <div class="number-box"><NumberEdit bind:value={$newPageProperty.paperSize[1]} min={min} max={max}/></div>
+                <div class="number-box"><NumberEdit bind:value={$paperHeight} min={min} max={max}/></div>
                  / {max}
               </div>
             </div>

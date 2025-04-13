@@ -17,23 +17,8 @@ export const undoToken: Writable<'undo' | 'redo' | null> = writable(null);
 export const forceFontLoadToken = writable(false);
 export const fontLoadToken: Writable<{family: string, weight: string}[] | null> = writable(null);
 
-export type NewPageProperty = {
-  paperSize: [number, number],
-  paperColor: string,
-  frameColor: string,
-  frameWidth: number,
-  templateName: string,
-};
-
-export const newPageProperty: Writable<NewPageProperty> = writable({
-  paperSize: [840, 1188],
-  paperColor: "#FFFFFF", 
-  frameColor: "#000000", 
-  frameWidth: 2, 
-  templateName: "standard",
-});
-
-export function insertNewPageToBook(book: Book, p: NewPageProperty, index: number) {
+export function insertNewPageToBook(book: Book, index: number) {
+  const p = book.newPageProperty;
   const example = frameExamples[p.templateName];
   const bubbles = example.bubbles.map((b: any) => Bubble.compile(p.paperSize, b));
   const page = newPage(FrameElement.compile(example.frameTree), bubbles);

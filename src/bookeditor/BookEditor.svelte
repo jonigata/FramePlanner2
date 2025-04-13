@@ -13,7 +13,7 @@
   import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
   import { clonePage, undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
-  import { mainBook, bookEditor, viewport, newPageProperty, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
+  import { mainBook, bookEditor, viewport, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
@@ -93,6 +93,9 @@
       "effect": () => {
         commitInternal("effect");
       },
+      "page-size": () => {
+        commitInternal("page-size");
+      },
     });
 
   function commitInternal(tag: HistoryTag) {
@@ -149,7 +152,7 @@
     if (typeof media === "string") { return; }
 
     const book = $mainBook!;
-    const page = insertNewPageToBook(book, $newPageProperty, book.pages.length);
+    const page = insertNewPageToBook(book, book.pages.length);
     const paperSize = page.paperSize;
 
     const rootFrameTree = FrameElement.compile(frameExamples[2].frameTree);
@@ -172,8 +175,8 @@
     $redrawToken = true;
     triggerTemplateChoice.trigger().then(result => {
       if (result != null) {
-        $newPageProperty.templateName = result;
-        insertNewPageToBook($mainBook!, $newPageProperty, pageIndex);
+        $mainBook!.newPageProperty.templateName = result;
+        insertNewPageToBook($mainBook!, pageIndex);
         commit(null);
       }
     });
@@ -255,15 +258,22 @@
     commit(null);
   }
 
-  $: onChangePaperSize($newPageProperty.paperSize);
-  function onChangePaperSize(paperSize: [number, number]) {
-    if ($mainBook == null) { return; }
-    for (const page of $mainBook.pages) {
-      page.paperSize = paperSize;
+  $: onChangePaperSize($mainBook?.newPageProperty.paperSize);
+  function onChangePaperSize(paperSize: [number, number] | undefined) {
+    if (!paperSize) { return; }
+    let modified = false;
+    for (const page of $mainBook!.pages) {
+      console.log(page.paperSize, paperSize);
+      if (page.paperSize[0] === paperSize[0] && page.paperSize[1] === paperSize[1]) {
+        continue;
+      }
+      page.paperSize = [...paperSize];
+      modified = true;
     }
+    if (!modified) { return; }
     forceRebuild = true;
     $mainBook = $mainBook;
-    commit(null);
+    commit('page-size');
   }
 
   $: onChangeBookProperty($mainBook?.direction, $mainBook?.wrapMode);
@@ -280,6 +290,7 @@
 
   $: onChangeBook(canvas, $mainBook!);
   function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
+    console.log("onChangeBook");
     if (!canvas || !book) { return; }
 
     if (arrayLayer && 

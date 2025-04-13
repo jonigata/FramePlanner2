@@ -4,7 +4,7 @@ import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import { newPage } from "../lib/book/book";
 import type * as Storyboard from '$bookTypes/storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
-import { newPageProperty } from '../bookeditor/bookStore';
+import { mainBook } from '../bookeditor/bookStore';
 import { get } from "svelte/store";
 import parseColor from 'color-parse';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
@@ -30,7 +30,7 @@ function whitenColor(s: string, ratio: number): string {
 export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
   console.log(JSON.stringify(storyboard));
   console.log(storyboard.format);
-  const paperSize = get(newPageProperty).paperSize;
+  const paperSize = get(mainBook)!.newPageProperty.paperSize;
 
   const pages = [];
   for (const storyboardPage of storyboard.pages) {

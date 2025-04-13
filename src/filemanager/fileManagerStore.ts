@@ -53,6 +53,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     attributes: book.attributes,
     newPageProperty: book.newPageProperty,
   };
+
   for (const page of book.pages) {
     const markUp = await storeFrameImages(page.frameTree, fileSystem, imageFolder, videoFolder, 'v');
     const bubbles = await storeBubbleImages(page.bubbles, fileSystem, imageFolder, videoFolder, page.paperSize);
