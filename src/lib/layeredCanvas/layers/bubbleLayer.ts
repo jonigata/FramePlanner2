@@ -146,7 +146,6 @@ export class BubbleLayer extends LayerBase {
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.interactable) { return; }
-    console.log("render", depth);
     if (depth === 2) {
       this.renderSelected(ctx);
     } else {
@@ -187,7 +186,6 @@ export class BubbleLayer extends LayerBase {
   renderOthers(ctx: CanvasRenderingContext2D): void {
     this.createBubbleIcon.render(ctx);
     if (this.lit) {
-      console.log("lit", this.lit);
       this.drawLitUI(ctx, this.lit);
     }
   }
@@ -238,7 +236,7 @@ export class BubbleLayer extends LayerBase {
       ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
       const handleRect = bubble.getHandleRect(paperSize, this.handle);
       if (handleRect) {
-        // ctx.fillRect(...handleRect);
+        ctx.fillRect(...handleRect);
       }
       ctx.restore();
     }
