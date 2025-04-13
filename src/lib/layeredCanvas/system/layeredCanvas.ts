@@ -81,6 +81,8 @@ export interface Layer {
   pierce(): void;
   showHint(rect: Rect | null, message: string | null): void;
 
+  renderDepths(): number[];
+  acceptDepths(): number[];
   pointerHover(position: Vector | null): boolean;
   accepts(position: Vector, button: number, depth: number): any;
   pointerDown(position: Vector, payload: any): void;
@@ -96,8 +98,6 @@ export interface Layer {
   keyDown(position: Vector, event: KeyboardEvent): Promise<boolean>;
   wheel(position: Vector, delta: number): boolean;
   flushHints(viewport: Viewport): void;
-  renderDepths(): number[];
-  acceptDepths(): number[];
   pick(p: Vector): Picked[];
   tearDown(): void;
 
@@ -125,6 +125,8 @@ export class LayerBase implements Layer {
   showHint(rect: Rect | null, message: string | null) {this.paper.showHint(rect, message); }
   tearDown() {} // デフォルトの実装は何もしない
 
+  renderDepths(): number[] { return []; }
+  acceptDepths(): number[] { return []; }
   pointerHover(position: Vector | null): boolean { return false; }
   accepts(position: Vector, button: number, depth: number): any { return null; }
   pointerDown(position: Vector, payload: any) {}
@@ -140,8 +142,6 @@ export class LayerBase implements Layer {
   async keyDown(position: Vector, event: KeyboardEvent) { return false; }
   wheel(position: Vector, delta: number) { return false; }
   flushHints(viewport: Viewport) {}
-  renderDepths(): number[] { return []; }
-  acceptDepths(): number[] { return []; }
   pick(p: Vector): Picked[] { return []; }
 
   redrawRequired_: boolean = false;
@@ -178,6 +178,21 @@ export class Paper {
     // 自身のクリーンアップ
     this.layers = [];
     this.hint = null;
+  }
+
+  renderDepths(): number[] { 
+    // layer全部から集めてsort/uniq
+    const depths = this.layers.flatMap(e => e.renderDepths());
+    const uniq = [...new Set(depths)];
+    uniq.sort((a, b) => a - b);
+    return uniq;
+  }
+
+  acceptDepths(): number[] {
+    const depths = this.layers.flatMap(e => e.acceptDepths());
+    const uniq = [...new Set(depths)];
+    uniq.sort((a, b) => a - b);
+    return uniq;
   }
 
   handleAccepts(p: Vector, button: number, depth: number): Dragging | null {
@@ -389,21 +404,6 @@ export class Paper {
       }
     }
     return null;
-  }
-
-  renderDepths(): number[] { 
-    // layer全部から集めてsort/uniq
-    const depths = this.layers.flatMap(e => e.renderDepths());
-    const uniq = [...new Set(depths)];
-    uniq.sort((a, b) => a - b);
-    return uniq;
-  }
-
-  acceptDepths(): number[] {
-    const depths = this.layers.flatMap(e => e.acceptDepths());
-    const uniq = [...new Set(depths)];
-    uniq.sort((a, b) => a - b);
-    return uniq;
   }
 
   mode_: any = null;

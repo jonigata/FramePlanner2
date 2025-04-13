@@ -38,6 +38,8 @@ export class PaperRendererLayer extends LayerBase {
     super();
   }
 
+  renderDepths(): number[] { return [0,1]; }
+
   prerender() {
     const size = this.getPaperSize();
     const layout = calculatePhysicalLayout(this.frameTree!, size, [0, 0]);
@@ -522,8 +524,6 @@ export class PaperRendererLayer extends LayerBase {
 
     return { frames: canvases, bubbles: Object.values(bubbleCanvases) };
   }
-
-  renderDepths(): number[] { return [0,1]; }
 
   resetCache(){
     for (let bubble of this.rawBubbles!) {

@@ -38,6 +38,8 @@ export class InlinePainterLayer extends LayerBase {
     this.drawsBackground = false;
   }
 
+  renderDepths(): number[] { return [0,1]; }
+
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.canvas) {return;}
     if (depth !== this.depth) { return; }
@@ -242,8 +244,6 @@ export class InlinePainterLayer extends LayerBase {
       }
     }
   }
-
-  renderDepths(): number[] { return [0]; }
 
 }
 sequentializePointer(InlinePainterLayer);

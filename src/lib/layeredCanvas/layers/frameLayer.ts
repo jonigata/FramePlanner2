@@ -176,14 +176,57 @@ export class FrameLayer extends LayerBase {
     this.canvasPattern = pctx.createPattern(pcanvas, 'repeat')!;
   }
 
+  renderDepths(): number[] { return [0,2]; }
+
+  acceptDepths(): number[] {
+    return [0,2];
+  }
+
   prerender(): void {
     this.renderLayer.setFrameTree(this.frameTree);
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.interactable) { return; }
-    if (depth !== 0) { return; }
 
+    if (depth === 2) {
+      this.renderSelected(ctx);
+    } else {
+      this.renderOtheers(ctx, depth);
+    }
+  }
+
+  renderSelected(ctx: CanvasRenderingContext2D): void { 
+    if (this.selectedBorder) {
+      const corners = this.selectedBorder.corners;
+      const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
+
+      // 線のスタイルを設定して描画
+      ctx.fillStyle = this.canvasPattern;
+      ctx.fill(canvasPath);
+    } else if (this.selectedLayout) {
+      const paperSize = this.getPaperSize();
+      const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
+      ctx.save();
+      ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
+      drawFilmStackBorders(ctx, this.selectedLayout.element.filmStack, paperSize);
+      ctx.restore();
+
+      // シート角丸
+      if (0 < this.selectedLayout.element.visibility) {
+        this.drawSheet(ctx, this.selectedLayout.corners);
+      }
+
+      // 選択枠
+      if (this.selectedLayout.element.visibility === 0) {
+        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners, 1, 2, false);
+      } else {
+        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
+      }
+    }
+  }
+
+  renderOtheers(ctx: CanvasRenderingContext2D, depth: number): void {
     function fillTrapezoid(corners: Trapezoid, color: string) {
       ctx.fillStyle = color;
       ctx.beginPath();
@@ -228,34 +271,6 @@ export class FrameLayer extends LayerBase {
         strokeTrapezoid(this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
         strokeTrapezoid(this.litLayout.corners, "rgba(192, 192, 255, 1)", 3);
         strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
-      }
-    }
-
-    if (this.selectedBorder) {
-      const corners = this.selectedBorder.corners;
-      const canvasPath = getTrapezoidPath(corners, BORDER_MARGIN, true);
-
-      // 線のスタイルを設定して描画
-      ctx.fillStyle = this.canvasPattern;
-      ctx.fill(canvasPath);
-    } else if (this.selectedLayout) {
-      const paperSize = this.getPaperSize();
-      const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
-      ctx.save();
-      ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
-      drawFilmStackBorders(ctx, this.selectedLayout.element.filmStack, paperSize);
-      ctx.restore();
-
-      // シート角丸
-      if (0 < this.selectedLayout.element.visibility) {
-        this.drawSheet(ctx, this.selectedLayout.corners);
-      }
-
-      // 選択枠
-      if (this.selectedLayout.element.visibility === 0) {
-        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners, 1, 2, false);
-      } else {
-        drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
       }
     }
 
@@ -438,15 +453,11 @@ export class FrameLayer extends LayerBase {
       });
   }
 
-  acceptDepths(): number[] {
-    return [0,1];
-  }
-
   accepts(point: Vector, button: number, depth: number): any {
     if (!this.interactable) {return null;}
     if (keyDownFlags["Space"]) {return null;}
 
-    if (depth == 1) {
+    if (depth == 2) {
       const q = this.acceptsForeground(point, button);
       return q;
     } else {
@@ -1282,8 +1293,6 @@ export class FrameLayer extends LayerBase {
     this.selectLayout(null);
     this.redraw();
   }
-
-  renderDepths(): number[] { return [0]; }
 
   get interactable(): boolean { return this.mode == null; }
 

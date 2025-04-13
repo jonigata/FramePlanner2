@@ -7,6 +7,8 @@ export class SampleLayer extends LayerBase {
     super();
   }
 
+  renderDepths(): number[] { return [0]; }
+
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (depth !== 0) { return; }
     
@@ -20,6 +22,4 @@ export class SampleLayer extends LayerBase {
     ctx.fill();
     
   }
-
-  renderDepths(): number[] { return [0]; }
 }

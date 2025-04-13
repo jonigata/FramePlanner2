@@ -139,14 +139,16 @@ export class BubbleLayer extends LayerBase {
   }
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
-    if (depth !== 1) { return; }
-    this.createBubbleIcon.render(ctx);
-
-    if (this.interactable && this.lit) {
-      this.drawLitUI(ctx, this.lit);
+    if (!this.interactable) { return; }
+    if (depth === 0) {
+      this.renderSelected(ctx);
+    } else {
+      this.renderOthers(ctx);
     }
+  }
 
-    if (this.interactable && this.selected) {
+  renderSelected(ctx: CanvasRenderingContext2D): void {
+    if (this.selected) {
       try {
         this.drawSheet(ctx, this.selected.getPhysicalRegularizedRect(this.getPaperSize()));
         this.drawSelectedUI(ctx, this.selected);
@@ -170,8 +172,15 @@ export class BubbleLayer extends LayerBase {
       }
     }
 
-    if (this.interactable && this.creatingBubble) {
+    if (this.creatingBubble) {
       this.drawSelectedUI(ctx, this.creatingBubble);
+    }
+  }
+
+  renderOthers(ctx: CanvasRenderingContext2D): void {
+    this.createBubbleIcon.render(ctx);
+    if (this.lit) {
+      this.drawLitUI(ctx, this.lit);
     }
   }
 
@@ -599,10 +608,6 @@ export class BubbleLayer extends LayerBase {
     return picked;
   }
 
-  acceptDepths(): number[] {
-    return [0,1];
-  }
-
   accepts(point: Vector, _button: number, depth: number): any {
     if (!this.interactable) {
       return null;
@@ -622,7 +627,7 @@ export class BubbleLayer extends LayerBase {
       return { action: "create" };
     }
 
-    if (depth == 1) {
+    if (depth == 2) {
       return this.acceptsForeground(point, _button);
     } else {
       return this.acceptsBackground(point, _button);
@@ -1527,9 +1532,11 @@ export class BubbleLayer extends LayerBase {
     super.tearDown();
   }
 
+  renderDepths(): number[] { return [1,2]; }
 
-
-  renderDepths(): number[] { return [1]; }
+  acceptDepths(): number[] {
+    return [0,2];
+  }
 
   get interactable(): boolean { return this.mode == null; }
 
