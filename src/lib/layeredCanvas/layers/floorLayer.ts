@@ -16,6 +16,10 @@ export class FloorLayer extends LayerBase {
     this.onResidual = onResidual;
   }
 
+  acceptDepths(): number[] {
+    return [0];
+  }
+
   dropped(position: Vector, media: HTMLCanvasElement | HTMLVideoElement | string): boolean {
     console.log("floor received");
     this.onResidual(media);
@@ -53,7 +57,6 @@ export class FloorLayer extends LayerBase {
   }
 
   accepts(_point: Vector, button: number, depth: number): any {
-    if (0 < depth) return null;
     return keyDownFlags["Space"] || 0 < button;
   }
 
