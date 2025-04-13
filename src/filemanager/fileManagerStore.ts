@@ -1,7 +1,7 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
 import type { Page, Book, SerializedBook, SerializedPage } from "../lib/book/book";
-import { commitBook, emptyNotebook } from "../lib/book/book";
+import { commitBook, emptyNotebook, trivialNewPageProperty } from "../lib/book/book";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
@@ -51,6 +51,7 @@ export async function saveBookTo(book: Book, fileSystem: FileSystem, file: File)
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
     notebook: notebook,
     attributes: book.attributes,
+    newPageProperty: book.newPageProperty,
   };
   for (const page of book.pages) {
     const markUp = await storeFrameImages(page.frameTree, fileSystem, imageFolder, videoFolder, 'v');
@@ -86,6 +87,7 @@ export function serializeBook(book: Book): SerializedBook {
        })
     },
     attributes: book.attributes,
+    newPageProperty: book.newPageProperty,
   }
 }
 
@@ -134,6 +136,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     chatLogs,
     notebook: notebook,
     attributes: serializedBook.attributes ?? { publishUrl: null },
+    newPageProperty: serializedBook.newPageProperty ?? trivialNewPageProperty,
   };
 
   performance.mark("loadBookFrom-images-start");
@@ -187,6 +190,13 @@ async function wrapPageAsBook(serializedPage: any, frameTree: FrameElement, bubb
     chatLogs: [],
     notebook: emptyNotebook(),
     attributes: { publishUrl: null },
+    newPageProperty: {
+      paperSize: [840, 1188],
+      paperColor: "#FFFFFF",
+      frameColor: "#000000",
+      frameWidth: 2,
+      templateName: "standard",
+    },
   };
   commitBook(book, null);
 

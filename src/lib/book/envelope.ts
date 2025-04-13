@@ -2,8 +2,8 @@ import { decode, encode } from 'cbor-x'
 import { ulid } from 'ulid';
 import { unpackFrameMedias, unpackBubbleMedias, unpackNotebookMedias, packFrameMedias, packBubbleMedias, packNotebookMedias } from "./imagePacking";
 import type { SaveMediaFunc, MediaResource, MediaType } from "./imagePacking";
-import type { Book, Page, WrapMode, ReadingDirection, SerializedPage, SerializedNotebook, NotebookLocal } from "./book";
-import { emptyNotebook } from "./book";
+import type { Book, Page, WrapMode, ReadingDirection, SerializedPage, SerializedNotebook, SerializedNewPageProperty, NotebookLocal } from "./book";
+import { emptyNotebook, trivialNewPageProperty } from "./book";
 import { Bubble } from "../layeredCanvas/dataModels/bubble";
 import { FrameElement } from "../layeredCanvas/dataModels/frameTree";
 import { createCanvasFromImage, getFirstFrameOfVideo, canvasToBlob } from "../layeredCanvas/tools/imageUtil";
@@ -17,6 +17,7 @@ export type EnvelopedBook = {
   images?: { [fileId: string]: Uint8Array },
   medias?: { [fileId: string]: { type: MediaType, data: Uint8Array, format?: string } },
   notebook: SerializedNotebook | null,
+  newPageProperty: SerializedNewPageProperty | null,
 };
 
 export type CanvasBag = { [fileId: string]: { type: MediaType, data: HTMLCanvasElement | HTMLVideoElement } };
@@ -82,6 +83,7 @@ export async function readEnvelope(blob: Blob, progress: (n: number) => void): P
     chatLogs: [],
     notebook,
     attributes: { publishUrl: null },
+    newPageProperty: envelopedBook.newPageProperty ?? {...trivialNewPageProperty},
   };
 
   const getCanvas = async (imageId: string) => bag[imageId].data;
@@ -113,6 +115,7 @@ export async function writeEnvelope(book: Book, progress: (n: number) => void): 
     wrapMode: book.wrapMode,
     notebook: null,
     medias: {},
+    newPageProperty: book.newPageProperty,
   };
 
   envelopedBook.notebook = await putNotebookMedias(book.notebook, envelopedBook.medias!);
@@ -225,6 +228,7 @@ export async function readOldEnvelope(json: string): Promise<Book> {
     chatLogs: [],
     notebook: envelopedBook.notebook ?? emptyNotebook(),
     attributes: { publishUrl: null },
+    newPageProperty: {...trivialNewPageProperty},
   };
 
   const getCanvas = async (imageId: string) => bag[imageId].data;

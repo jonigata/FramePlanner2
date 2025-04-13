@@ -65,6 +65,22 @@ export type BookAtributes = {
   publishUrl: string | null;
 }
 
+export type NewPageProperty = {
+  paperSize: [number, number],
+  paperColor: string,
+  frameColor: string,
+  frameWidth: number,
+  templateName: string,
+};
+
+export const trivialNewPageProperty: NewPageProperty = {
+  paperSize: [840, 1188],
+  paperColor: "#FFFFFF", 
+  frameColor: "#000000", 
+  frameWidth: 2, 
+  templateName: "standard",
+};
+
 export type Book = {
   revision: Revision;
   pages: Page[];
@@ -74,6 +90,7 @@ export type Book = {
   chatLogs: RichChatLog[];
   notebook: NotebookLocal;
   attributes: BookAtributes;
+  newPageProperty: NewPageProperty;
 
   // 以下揮発性
   video?: VideoSettings;
@@ -113,6 +130,14 @@ export type SerializedNotebook = {
   format: '4koma' | 'standard' | null;
 }
 
+export type SerializedNewPageProperty = {
+  paperSize: [number, number],
+  paperColor: string,
+  frameColor: string,
+  frameWidth: number,
+  templateName: string,
+};
+
 export type SerializedBook = {
   revision: {id: string, revision: number, prefix: Prefix},
   pages: SerializedPage[],
@@ -121,6 +146,7 @@ export type SerializedBook = {
   chatLogs: ProtocolChatLog[],
   notebook: SerializedNotebook | null,
   attributes: SerializedBookAttributes,
+  newPageProperty: SerializedNewPageProperty,
 }
 
 export interface CharacterLocal extends CharacterBase {
@@ -232,6 +258,7 @@ export function newBook(id: string, prefix: Prefix, exampleName: string): Book {
     chatLogs: [],
     notebook: emptyNotebook(),
     attributes: { publishUrl: null },
+    newPageProperty: {...trivialNewPageProperty},
   }
   commitBook(book, null);
   return book;
@@ -260,6 +287,7 @@ export function newImageBook(id: string, media: (HTMLCanvasElement | HTMLVideoEl
     chatLogs: [],
     notebook: emptyNotebook(),
     attributes: { publishUrl: null },
+    newPageProperty: {...trivialNewPageProperty},
   }
   commitBook(book, null);
   return book;
@@ -318,6 +346,7 @@ export function cloneBook(book: Book): Book {
     chatLogs: book.chatLogs.map(l => ({ ...l })),
     notebook: { ...book.notebook, characters: book.notebook.characters.map(c => ({ ...c })) },
     attributes: { ...book.attributes },
+    newPageProperty: { ...book.newPageProperty },
   };
 }
 
