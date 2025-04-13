@@ -26,7 +26,7 @@
         if (type.startsWith("image/")) {
           const blob = await item.getType(type);
           const canvas = await createCanvasFromBlob(blob);
-          const book = newImageBook("not visited", canvas, "paste-")
+          const book = newImageBook("not visited", [canvas], "paste-")
           $newBookToken = book;
           return;
         }
