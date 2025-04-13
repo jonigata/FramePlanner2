@@ -204,6 +204,8 @@ export class FrameLayer extends LayerBase {
       // 線のスタイルを設定して描画
       ctx.fillStyle = this.canvasPattern;
       ctx.fill(canvasPath);
+
+      this.borderIcons.forEach(icon => icon.render(ctx));
     } else if (this.selectedLayout) {
       const paperSize = this.getPaperSize();
       const [x0, y0, w, h] = trapezoidBoundingRect(this.selectedLayout.corners);
@@ -223,6 +225,8 @@ export class FrameLayer extends LayerBase {
       } else {
         drawSelectionFrame(ctx, "rgba(0, 128, 255, 1)", this.selectedLayout.corners);
       }
+
+      this.frameIcons.forEach(icon => icon.render(ctx));
     }
   }
 
@@ -272,11 +276,9 @@ export class FrameLayer extends LayerBase {
         strokeTrapezoid(this.litLayout.corners, "rgba(192, 192, 255, 1)", 3);
         strokeConnectors(this.litLayout.corners, this.litLayout.formalCorners, "rgba(0, 0, 255, 0.4)", 1);
       }
-    }
 
-    this.frameIcons.forEach(icon => icon.render(ctx));
-    this.borderIcons.forEach(icon => icon.render(ctx));
-    this.litIcons.forEach(icon => icon.render(ctx));
+      this.litIcons.forEach(icon => icon.render(ctx));
+    }
   }
 
   calculateSheetRect(corners: Trapezoid): Rect {
