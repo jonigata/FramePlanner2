@@ -125,7 +125,7 @@
 
   async function addFile() {
     console.log("add file");
-    const book = newBook("not visited", "add-in-folder-", 0);
+    const book = newBook("not visited", "add-in-folder-", "standard");
     await newFile(fileSystem, node, getCurrentDateTime(), book);
     node = node;
   }

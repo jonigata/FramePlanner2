@@ -172,7 +172,7 @@
     $redrawToken = true;
     triggerTemplateChoice.trigger().then(result => {
       if (result != null) {
-        $newPageProperty.templateIndex = result;
+        $newPageProperty.templateName = result;
         insertNewPageToBook($mainBook!, $newPageProperty, pageIndex);
         commit(null);
       }

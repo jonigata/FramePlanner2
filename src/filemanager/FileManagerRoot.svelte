@@ -157,7 +157,7 @@
         // 初起動またはクラウドストレージ接続失敗の場合デスクトップにセーブ
         const root = await fileSystem.getRoot();
         const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
-        book = newBook('not visited', "initial-", 0);
+        book = newBook('not visited', "initial-", "standard");
         await newFile(fileSystem, desktop, getCurrentDateTime(), book);
         await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local' });
 

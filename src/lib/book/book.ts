@@ -219,8 +219,8 @@ export function newPage(frameTree: FrameElement, bubbles: Bubble[]) {
   return page;
 }
 
-export function newBook(id: string, prefix: Prefix, exampleIndex: number): Book {
-  const example = frameExamples[exampleIndex];
+export function newBook(id: string, prefix: Prefix, exampleName: string): Book {
+  const example = frameExamples[exampleName];
   const frameTree = FrameElement.compile(example.frameTree);
   const page = newPage(frameTree, []);
   const book: Book = {
@@ -242,7 +242,7 @@ export function newImageBook(id: string, media: (HTMLCanvasElement | HTMLVideoEl
 
   const pages = [];
   for (const m of media) {
-    const frameTree = FrameElement.compile(frameExamples[2].frameTree);
+    const frameTree = FrameElement.compile(frameExamples["white-paper"].frameTree);
     const film = new Film(buildMedia(m));
     frameTree.children[0].filmStack.films = [film];
   

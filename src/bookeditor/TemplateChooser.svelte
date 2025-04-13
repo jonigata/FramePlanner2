@@ -4,8 +4,8 @@
   import { triggerTemplateChoice } from './templateChooserStore';
   import TemplateSample from './TemplateSample.svelte';
 
-  function onClick(index: number) {
-    triggerTemplateChoice.resolve(index);
+  function onClick(key: string) {
+    triggerTemplateChoice.resolve(key);
   }
 
   function onClickAway() {
@@ -21,8 +21,8 @@
     on:clickAway={onClickAway}
   >
     <div class="drawer-content">
-    {#each frameExamples as sample, index}
-      <TemplateSample sample={sample} on:click={() => onClick(index)}/>
+    {#each Object.keys(frameExamples) as sampleKey}
+      <TemplateSample sample={frameExamples[sampleKey]} on:click={() => onClick(sampleKey)}/>
     {/each}
   </div>
 </Drawer>

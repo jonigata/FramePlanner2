@@ -22,7 +22,7 @@ export type NewPageProperty = {
   paperColor: string,
   frameColor: string,
   frameWidth: number,
-  templateIndex: number,
+  templateName: string,
 };
 
 export const newPageProperty: Writable<NewPageProperty> = writable({
@@ -30,12 +30,12 @@ export const newPageProperty: Writable<NewPageProperty> = writable({
   paperColor: "#FFFFFF", 
   frameColor: "#000000", 
   frameWidth: 2, 
-  templateIndex: 0,
+  templateName: "standard",
 });
 
 export function insertNewPageToBook(book: Book, p: NewPageProperty, index: number) {
-  const example = frameExamples[p.templateIndex];
-  const bubbles = example.bubbles.map(b => Bubble.compile(p.paperSize, b));
+  const example = frameExamples[p.templateName];
+  const bubbles = example.bubbles.map((b: any) => Bubble.compile(p.paperSize, b));
   const page = newPage(FrameElement.compile(example.frameTree), bubbles);
   page.paperSize = [...p.paperSize];
   page.paperColor = p.paperColor;

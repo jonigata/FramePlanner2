@@ -14,7 +14,7 @@
     if (e.detail.ctrlKey) {
       await createNewImageFileUsingClipboard();
     } else {
-      $newBookToken = newBook("not visited", "shortcut-", 0);
+      $newBookToken = newBook("not visited", "shortcut-", "standard");
     }
   }
 

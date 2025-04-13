@@ -1,5 +1,5 @@
-export const frameExamples = [
-  {
+export const frameExamples: Record<string, any> = {
+  "standard": {
     frameTree: { // オーソドックス
       bgColor: "white",
       height: 100,
@@ -30,7 +30,7 @@ export const frameExamples = [
     },
     bubbles: []
   },
-  {
+  "1koma": {
     frameTree: { // 一コマ
       bgColor: "white",
       height: 100,
@@ -55,7 +55,7 @@ export const frameExamples = [
     },
     bubbles: []
   },
-  {
+  "white-paper": {
     frameTree: { // 一コマ(マージンなし)
       bgColor: "white",
       height: 100,
@@ -68,7 +68,7 @@ export const frameExamples = [
     },
     bubbles: []
   },
-  {
+  "4koma": {
     frameTree: { // 4コマ
       bgColor: "white",
       height: 100,
@@ -125,7 +125,7 @@ export const frameExamples = [
       }
     ]
   },
-  {
+  "4koma-x2": {
     frameTree: { // 4コマ2段
       bgColor: "white",
       height: 100,
@@ -221,7 +221,7 @@ export const frameExamples = [
       }
     ]
   },
-  {
+  "standard1": {
     frameTree: { // オーソドックス2
       height: 100,
       bgColor: "white",
@@ -264,14 +264,14 @@ export const frameExamples = [
     },
     bubbles: []
   },
-  {
+  "transparent": {
     frameTree: {
       bgColor: "transparent",
       borderWidth: 0,
     },
     bubbles: []
   }
-];
+};
 
 export const aiTemplates = [
   // 2コマ
@@ -755,4 +755,5 @@ export const aiTemplates = [
     },
     bubbles: []
   },
-]
+];
+

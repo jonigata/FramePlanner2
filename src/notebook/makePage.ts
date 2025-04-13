@@ -36,9 +36,9 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
   for (const storyboardPage of storyboard.pages) {
     console.log(storyboardPage.layout);
 
-    let sample: ConvertedLayout | null = null;
+    let sample: ConvertedLayout;
     if (storyboard.format == '4koma') {
-      sample = frameExamples[3];
+      sample = frameExamples["4koma"];
     } else {
       sample = makePageTemplateFromLightLayout(storyboardPage.layout!);
     }
