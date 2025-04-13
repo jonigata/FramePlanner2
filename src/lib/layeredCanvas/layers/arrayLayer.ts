@@ -1,4 +1,4 @@
-import { LayerBase, Paper, type Viewport, type Picked } from '../system/layeredCanvas';
+import { type Layer, LayerBase, Paper, type Viewport, type Picked } from '../system/layeredCanvas';
 import { PaperArray } from '../system/paperArray';
 import type { Vector } from "../tools/geometry/geometry";
 import { ClickableIcon } from "../tools/draw/clickableIcon";
@@ -172,24 +172,34 @@ export class ArrayLayer extends LayerBase {
     }
   }
 
-  pointerHover(p: Vector): boolean {
-    if (!this.interactable) {return false;}
+  pointerHover(p: Vector, depth: number): Layer | null {
+    if (!this.interactable) { return null; }
 
     this.hint(null, null);
 
     const {paper, position} = this.array.parentPositionToNearestChildPosition(p);
-    if (paper.handlePointerHover(position)) {
-      return true;
+    const litLayer = paper.handlePointerHover(position, depth);
+    if (litLayer) {
+      return litLayer;
     }
 
     for (let icons of [this.insertIcons, this.trashIcons, this.markIcons, this.copyIcons, this.imagingIcons, this.bubblesIcons, this.tweakIcons]) {
       for (let icon of icons) {
         if (icon.hintIfContains(p, this.hint.bind(this))) {
-          return true;
+          return this;
         }
       }
     }
-    return false;
+
+    return null;
+  }
+
+  pointerUnhover(layer: Layer) {
+    if (!this.interactable) {return;}
+
+    for (let paper of this.array.papers) {
+      paper.paper.handlePointerUnhover(layer);
+    }
   }
 
   accepts(p: Vector, button: number, depth: number): any { 

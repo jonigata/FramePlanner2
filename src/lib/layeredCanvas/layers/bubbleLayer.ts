@@ -43,7 +43,7 @@ export class BubbleLayer extends LayerBase {
   optionEditActive: Record<string, boolean>;
   selected: Bubble | null;
   lit: Bubble | null;
-  handle: RectHandle | null;
+  handle: RectHandle | null; // サイズをドラッグするときのハンドル
 
   createBubbleIcon: ClickableIcon;
   dragIcon: ClickableIcon;
@@ -130,6 +130,12 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
+  renderDepths(): number[] { return [1,2]; }
+
+  acceptDepths(): number[] {
+    return [1,2];
+  }
+
   prerender(): void {
     const bubbles = [...this.bubbles];
     if (this.creatingBubble) {
@@ -140,7 +146,8 @@ export class BubbleLayer extends LayerBase {
 
   render(ctx: CanvasRenderingContext2D, depth: number): void {
     if (!this.interactable) { return; }
-    if (depth === 0) {
+    console.log("render", depth);
+    if (depth === 2) {
       this.renderSelected(ctx);
     } else {
       this.renderOthers(ctx);
@@ -180,6 +187,7 @@ export class BubbleLayer extends LayerBase {
   renderOthers(ctx: CanvasRenderingContext2D): void {
     this.createBubbleIcon.render(ctx);
     if (this.lit) {
+      console.log("lit", this.lit);
       this.drawLitUI(ctx, this.lit);
     }
   }
@@ -230,7 +238,7 @@ export class BubbleLayer extends LayerBase {
       ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
       const handleRect = bubble.getHandleRect(paperSize, this.handle);
       if (handleRect) {
-        ctx.fillRect(...handleRect);
+        // ctx.fillRect(...handleRect);
       }
       ctx.restore();
     }
@@ -344,16 +352,16 @@ export class BubbleLayer extends LayerBase {
     }
   }
 
-  pointerHover(p: Vector): boolean {
-    if (!p) { return false; }
-    if (keyDownFlags["Space"]) {return false;}
-
-    this.lit = null;
-
-    if (this.createBubbleIcon.hintIfContains(p, this.hint)) {
-      return true;      
+  pointerHover(p: Vector, depth: number): Layer | null {
+    if (keyDownFlags["Space"]) { return null; }
+    if (depth === 2){
+      return this.pointerHoverSelected(p);
+    } else {
+      return this.pointerHoverOthers(p);
     }
+  }
 
+  pointerHoverSelected(p: Vector): Layer | null {
     const paperSize = this.getPaperSize();
     if (this.selected) {
       this.handle = this.selected.getHandleAt(paperSize, p);
@@ -374,20 +382,35 @@ export class BubbleLayer extends LayerBase {
 
       if (this.handle || this.selected.contains(paperSize, p)) {
         this.redraw();
-        return true;
+        return this;
       }
     }
+    return null;
+  }
 
+  pointerHoverOthers(p: Vector): Layer | null {
+    if (this.createBubbleIcon.hintIfContains(p, this.hint)) {
+      return this;      
+    }
+
+    const paperSize = this.getPaperSize();
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, p)) {
         const r = bubble.getPhysicalRegularizedRect(paperSize);
         this.hint(r, "Alt+ドラッグで移動、クリックで選択");
         this.lit = bubble;
         this.redraw();
-        return true;
+        return this;
       }
     }
-    return false;
+    return null;
+  }
+
+  pointerUnhover(layer: Layer) {
+    if (layer === this) {return;}
+    this.lit = null;
+    this.handle = null;
+    this.redraw();
   }
 
   async keyDown(position: Vector, event: KeyboardEvent): Promise<boolean> {
@@ -1530,12 +1553,6 @@ export class BubbleLayer extends LayerBase {
 
     // 基底クラスのtearDownを呼び出す
     super.tearDown();
-  }
-
-  renderDepths(): number[] { return [1,2]; }
-
-  acceptDepths(): number[] {
-    return [0,2];
   }
 
   get interactable(): boolean { return this.mode == null; }

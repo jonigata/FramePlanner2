@@ -60,7 +60,7 @@ export class FrameLayer extends LayerBase {
   litBorder: Border | null = null;
   selectedLayout: Layout | null = null;
   selectedBorder: Border | null = null;
-  focusedPadding: PaddingHandle | null = null;
+  litPadding: PaddingHandle | null = null;
   pointerHandler: any = null;
   canvasPattern!: CanvasPattern;
 
@@ -254,8 +254,8 @@ export class FrameLayer extends LayerBase {
       }
     }
 
-    if (this.focusedPadding) {
-      fillTrapezoid(this.focusedPadding.corners, "rgba(200,200,0, 0.7)");
+    if (this.litPadding) {
+      fillTrapezoid(this.litPadding.corners, "rgba(200,200,0, 0.7)");
     }
 
     if (this.litBorder) {
@@ -334,64 +334,66 @@ export class FrameLayer extends LayerBase {
     return findLayoutAt(layout, position, PADDING_HANDLE_OUTER_WIDTH);
   }
 
-  updateLit(point: Vector): void {
-    const layout = this.calculateRootLayout();
-
-    this.focusedPadding = null;
-    this.litBorder = null;
-    this.litLayout = null;
-
-    if (this.selectedLayout) {
-      for (let icon of this.frameIcons) {
-        if (icon.contains(point)) {
-          this.litLayout = this.selectedLayout;
-          return;
-        }
-      }
-
-      if (pointToQuadrilateralDistance(point, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
-        const padding = findPaddingOn(this.selectedLayout, point, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
-        this.focusedPadding = padding;
-        this.litLayout = this.selectedLayout;
-        return;
-      }
-
-      const r = this.calculateSheetRect(this.selectedLayout.corners);
-      if (rectContains(r, point)) {
-        return;
-      }
-    }
-
-    if (this.selectedBorder) {
-      if (isPointInTrapezoid(point, this.selectedBorder.corners)) {
-        this.litBorder = this.selectedBorder;
-        return;
-      }
-    }
-
-    this.litBorder = findBorderAt(layout, point, BORDER_MARGIN);
-    if (this.litBorder) {
-      return;
-    }
-
-    this.litLayout = findLayoutAt(layout, point, PADDING_HANDLE_OUTER_WIDTH);
-    if (this.litLayout) {
-      this.relayoutLitIcons(this.litLayout);
+  pointerHover(position: Vector, depth: number): Layer | null {
+    if (keyDownFlags["Space"]) { return null; }
+    this.cursorPosition = position;
+    if (depth === 2) {
+      return this.pointerHoverSelected(position);
+    } else {
+      return this.pointerHoverOthers(position);
     }
   }
 
-  pointerHover(position: Vector): boolean {
-    this.cursorPosition = position;
-    if(!position) {
+  pointerHoverSelected(position: Vector): Layer | null {
+    if (this.selectedBorder) {
+      if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
+        console.log("hover: selected border");
+        this.litBorder = this.selectedBorder;
+        return this;
+      }
+    }
+    if (this.selectedLayout) {
+      const r = this.calculateSheetRect(this.selectedLayout.corners);
+      if (rectContains(r, position)) {
+        if (pointToQuadrilateralDistance(position, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
+          const padding = findPaddingOn(this.selectedLayout, position, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
+          this.litPadding = padding;
+        }
+
+        this.litLayout = this.selectedLayout;
+        return this;
+      }
+    }
+    return null;
+  }
+
+  pointerHoverOthers(position: Vector): Layer | null {
+    const rootLayout = this.calculateRootLayout();
+
+    const border = findBorderAt(rootLayout, position, BORDER_MARGIN);
+    if (border != this.litBorder) { this.redraw(); }
+    if (border) {
+      this.litBorder = border;
+      return this;
+    }
+    const layout = findLayoutAt(rootLayout, position, PADDING_HANDLE_OUTER_WIDTH);
+    if (layout != this.litLayout) { this.redraw(); }
+    if (layout) {
+      this.litLayout = layout;
+      this.relayoutLitIcons(this.litLayout);
+      return this;
+    }
+
+    return this.decideHint(position) ? this : null;
+  }
+
+  pointerUnhover(litLayer: Layer): void {
+    if (litLayer === this) { return; }
+    if (this.litLayout || this.litBorder) {
       this.litLayout = null;
       this.litBorder = null;
-      return false;
+      this.redraw();
     }
-    if (keyDownFlags["Space"]) { return false; }
-    this.updateLit(position);
-    this.redraw();
-
-    return this.decideHint(position);
   }
 
   decideHint(position: Vector): boolean {
@@ -432,7 +434,7 @@ export class FrameLayer extends LayerBase {
       const r = this.calculateSheetRect(this.selectedLayout.corners);
       if (hintIfContains(this.frameIcons)) {
         return true;
-      } else if (this.focusedPadding) {
+      } else if (this.litPadding) {
         this.hint(r, "ドラッグでパディング変更");
         return true;
       } else if (rectContains(r, position)) {
@@ -488,8 +490,8 @@ export class FrameLayer extends LayerBase {
         const r = this.calculateSheetRect(this.selectedLayout.corners);
 
         if (rectContains(r, point)) {
-          if (this.focusedPadding) {
-            return { action: "move-padding", padding: this.focusedPadding };
+          if (this.litPadding) {
+            return { action: "move-padding", padding: this.litPadding };
           }
           if (this.selectedLayout.element.filmStack.films.length !== 0) {
             if (keyDownFlags["ControlLeft"] || keyDownFlags["ControlRight"]) {
@@ -1099,9 +1101,9 @@ export class FrameLayer extends LayerBase {
     const rootLayout = this.calculateRootLayout();
     this.selectLayout(findLayoutOf(rootLayout, this.selectedLayout.element));
 
-    if (this.focusedPadding) {
-      const handle = this.focusedPadding.handle;
-      this.focusedPadding = findPaddingOf(this.selectedLayout, handle, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
+    if (this.litPadding) {
+      const handle = this.litPadding.handle;
+      this.litPadding = findPaddingOf(this.selectedLayout, handle, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
     }
   }
 

@@ -83,7 +83,8 @@ export interface Layer {
 
   renderDepths(): number[];
   acceptDepths(): number[];
-  pointerHover(position: Vector | null): boolean;
+  pointerHover(position: Vector, depth: number): Layer | null;
+  pointerUnhover(litLayer: Layer): void;
   accepts(position: Vector, button: number, depth: number): any;
   pointerDown(position: Vector, payload: any): void;
   pointerMove(position: Vector, payload: any): void;
@@ -127,7 +128,8 @@ export class LayerBase implements Layer {
 
   renderDepths(): number[] { return []; }
   acceptDepths(): number[] { return []; }
-  pointerHover(position: Vector | null): boolean { return false; }
+  pointerHover(position: Vector, depth: number): Layer | null { return null; }
+  pointerUnhover(litLayer: Layer) {}
   accepts(position: Vector, button: number, depth: number): any { return null; }
   pointerDown(position: Vector, payload: any) {}
   pointerMove(position: Vector, payload: any) {}
@@ -199,6 +201,7 @@ export class Paper {
     var result: Dragging | null = null;
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
+      if (layer.acceptDepths().indexOf(depth) < 0) { continue; }
       const payload = layer.accepts(p, button, depth);
       if (payload) {
         result = {layer, payload};
@@ -212,15 +215,22 @@ export class Paper {
     dragging.layer.pointerDown(p, dragging.payload);
   }
       
-  handlePointerHover(p: Vector): boolean {
-    let q: Vector | null = p;
+  handlePointerHover(p: Vector, depth: number): Layer | null {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const layer = this.layers[i];
-      if (layer.pointerHover(q)) {
-        q = null;
+      if (layer.acceptDepths().indexOf(depth) < 0) { continue; }
+      const litLayer = layer.pointerHover(p, depth);
+      if (litLayer) {
+        return litLayer
       }
     }
-    return q == null;
+    return null;
+  }
+
+  handlePointerUnhover(litLayer: Layer): void {
+    for (let layer of this.layers) {
+      layer.pointerUnhover(litLayer);
+    }
   }
     
   handlePointerMove(p: Vector, dragging: Dragging): void {
@@ -329,6 +339,7 @@ export class Paper {
     ctx.save();
     ctx.setTransform(this.matrix);
     for (let layer of this.layers) {
+      if (layer.renderDepths().indexOf(depth) < 0) { continue; }
       layer.render(ctx, depth);
     }
     ctx.restore();
@@ -489,7 +500,7 @@ export class LayeredCanvas {
     if (this.listeners.length === 0) { return; }
     if (this.pointerCursor) {
       this.rebuildPageLayouts();
-      this.rootPaper.handlePointerHover(this.pointerCursor);
+      this.doPointerHover(this.pointerCursor);
     }
   }
 
@@ -549,7 +560,7 @@ export class LayeredCanvas {
     if (this.dragging) {
       this.rootPaper.handlePointerMove(p, this.dragging);
     } else {
-      this.rootPaper.handlePointerHover(p);
+      this.doPointerHover(p);
     }
   }
     
@@ -719,6 +730,20 @@ export class LayeredCanvas {
     matrix = matrix.scale(this.viewport.scale, this.viewport.scale);
 
     this.rootPaper.rebuildPageLayouts(matrix);
+  }
+
+  doPointerHover(p: Vector) {
+    const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
+    let litLayer: Layer  | null = null;
+    for (let depth of depths) {
+      litLayer = this.rootPaper.handlePointerHover(p, depth);
+      if (litLayer) { 
+        break; 
+      }
+    }
+    if (litLayer) {
+      this.rootPaper.handlePointerUnhover(litLayer);
+    }
   }
 
   set mode(mode: any) {this.rootPaper.mode = mode;}
