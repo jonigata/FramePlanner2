@@ -9,7 +9,7 @@ import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "$bookTypes/richChat";
 import { storeFrameImages, storeBubbleImages, storeNotebookImages, fetchFrameImages, fetchBubbleImages, fetchNotebookImages } from "./fileImages";
 import { writeEnvelope, readEnvelope } from "../lib/book/envelope";
-import { writeHierarchicalEnvelopeZip, type HierarchyNode } from "../lib/book/envelopeZip";
+import { writeHierarchicalEnvelopeZip, readHierarchicalEnvelopeZip, type HierarchyNode } from "../lib/book/envelopeZip";
 import { dryUnpackBubbleMedias, dryUnpackFrameMedias } from "../lib/book/imagePacking";
 import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
@@ -406,4 +406,100 @@ export async function exportFolderAsEnvelopeZip(
   
   // ZIPファイルを生成
   return await writeHierarchicalEnvelopeZip(hierarchy, progress);
+}
+
+/**
+ * 階層構造をファイルシステムに保存する
+ * @param fileSystem ファイルシステム
+ * @param parentFolder 親フォルダ
+ * @param node 階層構造ノード
+ * @param progress 進捗コールバック
+ */
+export async function saveHierarchyToFolder(
+  fileSystem: FileSystem,
+  parentFolder: Folder,
+  node: HierarchyNode,
+  progress: (n: number) => void = () => {}
+): Promise<void> {
+  let total = 0;
+  let current = 0;
+  
+  // ノードの総数を計算
+  function countAllNodes(n: HierarchyNode): number {
+    let count = 1;
+    if (n.children) {
+      for (const child of n.children) {
+        count += countAllNodes(child);
+      }
+    }
+    return count;
+  }
+  
+  total = countAllNodes(node);
+  
+  // 再帰的に保存
+  async function saveNodeToFolder(folder: Folder, node: HierarchyNode): Promise<void> {
+    if (node.isFolder) {
+      // ルートノード（空の名前）の場合は親フォルダをそのまま使用
+      let targetFolder: Folder;
+      
+      if (node.name === '') {
+        // 空の名前のノード（ルートノード）は新しいフォルダを作らない
+        targetFolder = folder;
+      } else {
+        // 通常のフォルダの場合は新しいフォルダを作成
+        const newFolder = await fileSystem.createFolder();
+        await folder.link(node.name, newFolder.id);
+        targetFolder = newFolder;
+      }
+      
+      // 子ノードを処理
+      if (node.children) {
+        for (const child of node.children) {
+          await saveNodeToFolder(targetFolder, child);
+        }
+      }
+    } else if (node.book) {
+      // ファイルの場合はBookを保存
+      const file = await fileSystem.createFile();
+      node.book.revision.id = file.id;
+      await saveBookTo(node.book, fileSystem, file);
+      await folder.link(node.name, file.id);
+    }
+    
+    // 進捗を更新
+    current++;
+    progress(current / total);
+  }
+  
+  await saveNodeToFolder(parentFolder, node);
+}
+
+/**
+ * ZIPファイルから階層構造をインポートしてフォルダに保存する
+ * @param fileSystem ファイルシステム
+ * @param folder 保存先フォルダ
+ * @param zipBlob ZIPファイルのBlob
+ * @param progress 進捗コールバック
+ */
+export async function importEnvelopeZipToFolder(
+  fileSystem: FileSystem,
+  folder: Folder,
+  zipBlob: Blob,
+  progress: (n: number) => void = () => {}
+): Promise<void> {
+  // 進捗の2段階表示用
+  const phaseProgress = (phase: number, value: number) => {
+    progress(phase * 0.5 + value * 0.5);
+  };
+  
+  // ZIPから階層構造を読み込む
+  const hierarchy = await readHierarchicalEnvelopeZip(zipBlob,
+    (value) => phaseProgress(0, value)
+  );
+  
+  // 階層構造をフォルダに保存
+  await saveHierarchyToFolder(fileSystem, folder, hierarchy,
+    (value) => phaseProgress(1, value)
+  );
 }

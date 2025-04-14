@@ -2,7 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip } from "./fileManagerStore";
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip, importEnvelopeZipToFolder } from "./fileManagerStore";
   import { readEnvelope, readOldEnvelope } from "../lib/book/envelope";
   import { newBook } from "../lib/book/book";
   import { mainBook } from '../bookeditor/bookStore';
@@ -102,18 +102,47 @@
             $loading = true;
             await saveBookTo(book, fileSystem, newFile);
             const basename = fileName.replace(/\.envelope$/, "");
-            console.log("importing done")
+            console.log("importing envelope done")
             await node.link(basename, newFile.id);
             node = node;
-            $loading = false;
+            toastStore.trigger({ message: "envelopeファイルをインポートしました", timeout: 2000});
           }
           finally {
             $progress = null;
             $loading = false;
           }
           return;
-        }        
-      } 
+        }
+        
+        if (fileName.endsWith(".zip")) {
+          // ZIPファイル（階層型envelope）
+          try {
+            $progress = 0;
+            $loading = true;
+            
+            // ZIPファイルの読み込み
+            await importEnvelopeZipToFolder(
+              fileSystem,
+              node,
+              file,
+              n => $progress = n
+            );
+            
+            // 更新を反映
+            node = node;
+            toastStore.trigger({ message: "フォルダ構造をインポートしました", timeout: 2000});
+          }
+          catch (error) {
+            console.error('ZIPファイルのインポート中にエラーが発生しました:', error);
+            toastStore.trigger({ message: "ZIPファイルのインポートに失敗しました", timeout: 3000});
+          }
+          finally {
+            $progress = null;
+            $loading = false;
+          }
+          return;
+        }
+      }
       console.log("not acceptable");
     }
   }

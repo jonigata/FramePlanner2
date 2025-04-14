@@ -46,23 +46,28 @@ async function processNode(
   currentPath: string,
   onProgress: () => void
 ): Promise<void> {
-  const nodePath = currentPath ? `${currentPath}/${node.name}` : node.name;
-  
   // ファイル名のサニタイズ
   const safeName = sanitizeFileName(node.name);
   
   if (node.isFolder) {
-    // フォルダの場合は子ノードを処理
-    const folder = nodePath ? zip.folder(safeName)! : zip;
+    // フォルダの場合は新しいZIPフォルダを作成
+    const newPath = currentPath ? `${currentPath}/${safeName}` : safeName;
+    // ルートノードの場合は特別処理（空の名前を使う）
+    const folderPath = node.name === 'root' ? '' : newPath;
+    const folder = node.name === 'root' ? zip : zip.folder(folderPath)!;
+    
     if (node.children) {
       for (const child of node.children) {
-        await processNode(child, zip, nodePath, onProgress);
+        // 子ノードには新しいフォルダオブジェクトと新しいパスを渡す
+        const childPath = node.name === 'root' ? '' : newPath;
+        await processNode(child, zip, childPath, onProgress);
       }
     }
   } else if (node.book) {
     // ファイルの場合はenvelopeを生成してZIPに追加
+    const filePath = currentPath ? `${currentPath}/${safeName}.envelope` : `${safeName}.envelope`;
     const blob = await writeEnvelope(node.book, () => {});
-    zip.file(`${safeName}.envelope`, blob);
+    zip.file(filePath, blob);
     onProgress();
   }
 }
@@ -96,69 +101,68 @@ export async function writeHierarchicalEnvelopeZip(
  * パスから階層構造を構築する補助関数
  */
 function ensurePathInHierarchy(
-  rootNode: HierarchyNode, 
+  rootNode: HierarchyNode,
   path: string
 ): HierarchyNode {
+  // パスがファイルを指していない場合はrootNodeを返す
+  if (!path.endsWith('.envelope')) {
+    return rootNode;
+  }
+  
   const parts = path.split('/');
   let currentNode = rootNode;
   
-  // ルートパスの処理
-  if (parts[0] === '') {
-    parts.shift();
-  }
+  // 最後の要素はファイル名なので別処理
+  const fileName = parts.pop() || '';
   
-  // パスの各部分を処理
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
+  // ファイル名から.envelopeを削除してサニタイズ
+  const fileNameWithoutExtension = fileName.substring(0, fileName.length - 9);
+  const safeName = sanitizeFileName(fileNameWithoutExtension);
+  
+  // フォルダパスの各部分を処理
+  for (const part of parts) {
     if (!part) continue; // 空の部分をスキップ
     
-    // 最後の部分がファイル名かどうかを判断
-    const isLastPart = i === parts.length - 1;
-    const isFile = isLastPart && part.endsWith('.envelope');
-    
-    if (isFile) {
-      // ファイル名から.envelopeを削除
-      // .envelopeを除去してファイル名を取得
-      const name = sanitizeFileName(part.substring(0, part.length - 9));
-      
-      // ファイルノードを作成（Bookは後で設定）
-      if (!currentNode.children) {
-        currentNode.children = [];
-      }
-      
-      let fileNode = currentNode.children.find(
-        child => !child.isFolder && child.name === name
-      );
-      
-      if (!fileNode) {
-        fileNode = { name, isFolder: false };
-        currentNode.children.push(fileNode);
-      }
-      
-      return fileNode;
-    } else {
-      // フォルダノードを探すか作成
-      if (!currentNode.children) {
-        currentNode.children = [];
-      }
-      // フォルダ名はZIP内ですでにサニタイズされているはずなので、
-      // 検索時にも同じように処理する
-      const sanitizedPart = sanitizeFileName(part);
-      let folderNode = currentNode.children.find(
-        child => child.isFolder && child.name === sanitizedPart
-      );
-      
-      
-      if (!folderNode) {
-        folderNode = { name: part, isFolder: true, children: [] };
-        currentNode.children.push(folderNode);
-      }
-      
-      currentNode = folderNode;
+    // フォルダノードを探すか作成
+    if (!currentNode.children) {
+      currentNode.children = [];
     }
+    
+    const sanitizedPart = sanitizeFileName(part);
+    let folderNode = currentNode.children.find(
+      child => child.isFolder && sanitizeFileName(child.name) === sanitizedPart
+    );
+    
+    if (!folderNode) {
+      folderNode = {
+        name: part,
+        isFolder: true,
+        children: []
+      };
+      currentNode.children.push(folderNode);
+    }
+    
+    currentNode = folderNode;
   }
   
-  return currentNode;
+  // ファイルノードを作成（Bookは後で設定）
+  if (!currentNode.children) {
+    currentNode.children = [];
+  }
+  
+  let fileNode = currentNode.children.find(
+    child => !child.isFolder && sanitizeFileName(child.name) === safeName
+  );
+  
+  if (!fileNode) {
+    fileNode = {
+      name: fileNameWithoutExtension,
+      isFolder: false
+    };
+    currentNode.children.push(fileNode);
+  }
+  
+  return fileNode;
 }
 
 /**
@@ -170,7 +174,7 @@ export async function readHierarchicalEnvelopeZip(
 ): Promise<HierarchyNode> {
   const zip = await JSZip.loadAsync(blob);
   const rootNode: HierarchyNode = {
-    name: 'root',
+    name: '',  // 空の名前を使用して余計な階層を作らないようにする
     isFolder: true,
     children: []
   };
