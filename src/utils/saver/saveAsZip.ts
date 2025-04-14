@@ -27,7 +27,7 @@ export async function saveAsPngZip(pages: Page[], upscales: boolean) {
         canvas = newCanvas;
       }
     }
-    return canvasToBlob(canvas);
+    return canvasToBlob(canvas, "image/png");
   }
 
   const zipFile = await makeZip(pages, makeBlob, 'png');

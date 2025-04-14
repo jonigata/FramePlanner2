@@ -15,6 +15,6 @@ export async function saveAsPng(page: Page, upscales: boolean) {
   }
   console.log("saveAsPng upscaled", canvas.width, canvas.height);
 
-  const blob = await canvasToBlob(canvas);
+  const blob = await canvasToBlob(canvas, "image/png");
   saveAs(blob, 'comic.png');
 }
