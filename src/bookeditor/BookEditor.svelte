@@ -10,7 +10,7 @@
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
-  import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget } from './frameinspector/frameInspectorStore';
+  import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget, setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
   import { clonePage, undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
@@ -481,36 +481,17 @@
     }
   }
 
-  $: onFrameCommand($frameInspectorTarget);
-  async function onFrameCommand(fit: FrameInspectorTarget | null) {
-    delayedCommiter.force();
-    if (fit && fit.command != null) {
-      $frameInspectorTarget = { ...fit, command: null };
+  // フレーム操作コマンドのハンドラ初期化
+  $: setFrameCommandTools(
+    commit,
+    delayedCommiter.force,
+    painter?.runWithFrame?.bind(painter),
+    imageProvider?.run?.bind(imageProvider)
+  );
 
-      switch (fit.command) {
-        case "scribble":
-          await modalFrameScribble(fit);
-          break;
-        case "generate": 
-          await modalFrameGenerate(fit);
-          break;
-        case "punch":
-          await punchFrameFilm(fit);
-          break;
-        case "upscale":
-          await upscaleFrameFilm(fit);
-          break;
-        case "outpainting":
-          await outPaintFrameFilm(fit);
-          break;
-        case "video":
-          await modalFrameVideo(fit);
-          break;
-      } 
-      $frameInspectorRebuildToken++;
-    }
-  }
+  // フレームコマンドは自動的にサブスクライブされるので監視不要
 
+  // バブルコマンド監視
   $: onBubbleCommand($bubbleInspectorTarget);
   async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
     delayedCommiter.force();
@@ -530,53 +511,15 @@
         case "upscale":
           await upscaleBubbleFilm(bit);
           break;
-      } 
+      }
       $bubbleInspectorRebuildToken++;
     }
-  }
-
-  async function modalFrameScribble(fit: FrameInspectorTarget) {
-    delayedCommiter.force();
-    toolTipRequest.set(null);
-    await painter.runWithFrame(fit.page, fit.frame, fit.commandTargetFilm!);
-    const media = fit.commandTargetFilm!.media;
-    if (media instanceof ImageMedia) {
-      const canvas = media.drawSource; // HACK: ImageMediaのdrawSourceが実体であることを前提にしている
-      (canvas as any)["clean"] = {};
-    }
-    commit(null);
   }
 
   async function modalBubbleScribble(bit: BubbleInspectorTarget) {
     delayedCommiter.force();
     toolTipRequest.set(null);
     await painter.runWithBubble(bit.page, bit.bubble, bit.commandTargetFilm!);
-    commit(null);
-  }
-
-  async function modalFrameGenerate(fit: FrameInspectorTarget) {
-    delayedCommiter.force();
-    toolTipRequest.set(null);
-    const page = fit.page;
-    const leaf = fit.frame;
-    const r = await imageProvider.run(leaf.prompt, leaf.filmStack, leaf.gallery);
-    if (!r) { return; }
-
-    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-    const leafLayout = findLayoutOf(pageLayout, leaf);
-
-    const { media, prompt } = r;
-    const film = new Film(media);
-    film.prompt = prompt;
-
-    const frameRect = trapezoidBoundingRect(leafLayout!.corners);
-    const scale = minimumBoundingScale(film.media.size, [frameRect[2], frameRect[3]]);
-    film.setShiftedScale(page.paperSize, scale);
-
-    fit.frame.filmStack.films.push(film);
-    fit.frame.prompt = prompt;
-    $frameInspectorTarget = $frameInspectorTarget;
-
     commit(null);
   }
 
@@ -594,21 +537,6 @@
     $bubbleInspectorTarget = $bubbleInspectorTarget;
   }
 
-  async function punchFrameFilm(fit: FrameInspectorTarget) {
-    if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-      return;
-    }
-
-    const film = fit.commandTargetFilm!;
-    if (!(film.media instanceof ImageMedia)) { return; }
-
-    $loading = true;
-    await punchFilm(film)
-    commit(null);
-    $loading = false;
-  }
-
   async function punchBubbleFilm(bit: BubbleInspectorTarget) {
     if ($onlineStatus !== 'signed-in') {
       toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
@@ -624,20 +552,6 @@
     $loading = false;
   }
 
-  async function upscaleFrameFilm(fit: FrameInspectorTarget) {
-    if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-      return;
-    }
-
-    const film = fit.commandTargetFilm!;
-    if (!(film.media instanceof ImageMedia)) { return; }
-
-    await upscaleFilm(film)
-    commit(null);
-    toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
-  }
-
   async function upscaleBubbleFilm(bit: BubbleInspectorTarget) {
     if ($onlineStatus !== 'signed-in') {
       toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
@@ -650,38 +564,6 @@
     await upscaleFilm(film)
     commit(null);
     toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
-  }
-
-  async function outPaintFrameFilm(fit: FrameInspectorTarget) {
-    console.log($onlineStatus);
-    if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-      return;
-    }
-
-    const film = fit.commandTargetFilm!;
-    if (!(film.media instanceof ImageMedia)) { return; }
-
-    $loading = true;
-    const padding = calculateFramePadding(fit.page, fit.frame, film);
-    console.log("padding", padding);
-    try {
-      const newFilm = await outPaintFilm(film, padding);
-      console.log("newFilm", newFilm);
-      const index = fit.frame.filmStack.films.indexOf(film);
-      fit.frame.filmStack.films.splice(index + 1, 0, newFilm!);
-      commit(null);
-    } catch (e) {
-      console.error(e);
-      toastStore.trigger({ message: `アウトペインティングに失敗しました`, timeout: 3000});
-    } finally {
-      $loading = false;
-    }
-  }
-
-  async function modalFrameVideo(fit: FrameInspectorTarget) {
-    await generateMovie(fit.frame.filmStack, fit.commandTargetFilm!);
-    commit(null);
   }
 
   onDestroy(() => {
