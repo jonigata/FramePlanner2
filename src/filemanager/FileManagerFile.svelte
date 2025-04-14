@@ -195,6 +195,7 @@
     min-width: 20px;
     height: 16px;
     display: flex;
+    gap: 4px;
   }
   .button {
     width: 16px;

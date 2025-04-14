@@ -2,7 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo } from "./fileManagerStore";
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip } from "./fileManagerStore";
   import { readEnvelope, readOldEnvelope } from "../lib/book/envelope";
   import { newBook } from "../lib/book/book";
   import { mainBook } from '../bookeditor/bookStore';
@@ -12,12 +12,14 @@
   import { toolTip } from '../utils/passiveToolTipStore';
   import { loading, progress } from '../utils/loadingStore'
   import { collectGarbage, purgeCollectedGarbage } from "../utils/garbageCollection";
+  import { toastStore } from '@skeletonlabs/skeleton';
 
   import newFileIcon from '../assets/fileManager/new-file.webp';
   import newFolderIcon from '../assets/fileManager/new-folder.webp';
   import trashIcon from '../assets/fileManager/trash.webp';
   import folderIcon from '../assets/fileManager/folder.webp';
   import renameIcon from '../assets/fileManager/rename.webp';
+  import packageExportIcon from '../assets/fileManager/package-export.webp';
 
   export let fileSystem: FileSystem;
   export let filename: string;
@@ -289,6 +291,64 @@
     }
   });
 
+  /**
+   * ファイル名をサニタイズする
+   * ZIPファイル名に使えない文字を置き換える
+   */
+  function sanitizeFileName(name: string): string {
+    return name
+      .replace(/[\/:*?"<>|\\]/g, '_') // Windows/ZIPで無効な文字を置き換え
+      .replace(/\s+/g, ' ')           // 連続した空白を1つに
+      .trim();                         // 先頭と末尾の空白を削除
+  }
+
+  /**
+   * フォルダをZIPファイルとしてエクスポートする
+   */
+  async function exportAsZip() {
+    try {
+      // プログレスバーの表示
+      $loading = true;
+      $progress = 0;
+      
+      // ZIPファイルの生成
+      const zipBlob = await exportFolderAsEnvelopeZip(
+        fileSystem,
+        node,
+        filename,
+        (value) => { $progress = value; }
+      );
+      
+      // ファイル名のサニタイズ
+      const safeFilename = sanitizeFileName(filename || 'folder');
+      const dateStr = new Date().toISOString().replace(/[-:]/g, '').substring(0, 15);
+      const downloadFilename = `${safeFilename}_${dateStr}.zip`;
+      
+      // ダウンロードリンクの作成
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadFilename;
+      document.body.appendChild(a);
+      
+      // クリックでダウンロード開始
+      a.click();
+      
+      // クリーンアップ
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      // 成功メッセージ
+      toastStore.trigger({ message: "ZIPファイルとしてエクスポートしました", timeout: 2000});
+    } catch (error) {
+      console.error('エクスポート中にエラーが発生しました:', error);
+      toastStore.trigger({ message: "エクスポート中にエラーが発生しました", timeout: 3000});
+    } finally {
+      // プログレスバーの非表示
+      $progress = null;
+      $loading = false;
+    }
+  }
 </script>
 
 {#if node}
@@ -328,11 +388,19 @@
     <div class="buttons hbox gap-2">
       <div class="button-container">
         {#if isDiscardable}
+          <!-- アーカイブボタン - フォルダのエクスポート用 -->
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+          <img class="button" src={packageExportIcon} alt="archive" on:click={exportAsZip} use:toolTip={"フォルダをZIPに保存"}/>
+        {/if}
+      </div>
+      <div class="button-container">
+        {#if isDiscardable}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"フォルダ名変更"}/>
         {/if}
-      </div>  
+      </div>
       <div class="button-container">
         {#if isDiscardable}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -369,6 +437,7 @@
     flex-direction: row;
     align-items: center;
     height: 24px;
+    margin-right: 2px;
     position: relative; /* InsertZone用 */
   }
   .folder-title-line:hover {
@@ -413,6 +482,7 @@
   }
   .button-container {
     width: 20px;
+    min-width: 20px;
     height: 16px;
     display: flex;
     gap: 4px;

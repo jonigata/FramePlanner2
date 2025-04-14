@@ -9,6 +9,7 @@ import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { protocolChatLogToRichChatLog, richChatLogToProtocolChatLog } from "$bookTypes/richChat";
 import { storeFrameImages, storeBubbleImages, storeNotebookImages, fetchFrameImages, fetchBubbleImages, fetchNotebookImages } from "./fileImages";
 import { writeEnvelope, readEnvelope } from "../lib/book/envelope";
+import { writeHierarchicalEnvelopeZip, type HierarchyNode } from "../lib/book/envelopeZip";
 import { dryUnpackBubbleMedias, dryUnpackFrameMedias } from "../lib/book/imagePacking";
 import type { Media } from "../lib/layeredCanvas/dataModels/media";
 
@@ -340,4 +341,69 @@ async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSys
       }
     }
   }
+}
+
+/**
+ * フォルダの階層構造を再帰的に取得して、HierarchyNode形式に変換する
+ * @param fileSystem ファイルシステム
+ * @param folder 対象フォルダ
+ * @param folderName フォルダ名
+ * @returns HierarchyNode
+ */
+export async function createHierarchyFromFolder(
+  fileSystem: FileSystem,
+  folder: Folder,
+  folderName: string
+): Promise<HierarchyNode> {
+  const entries = await folder.listEmbodied();
+  const rootNode: HierarchyNode = {
+    name: folderName,
+    isFolder: true,
+    children: []
+  };
+  
+  for (const [bindId, name, node] of entries) {
+    if (node.getType() === 'folder') {
+      // フォルダの場合は再帰的に処理
+      const childFolder = node.asFolder()!;
+      const childNode = await createHierarchyFromFolder(fileSystem, childFolder, name);
+      rootNode.children!.push(childNode);
+    } else {
+      // ファイルの場合はBookとして処理
+      try {
+        const file = node.asFile()!;
+        const book = await loadBookFrom(fileSystem, file);
+        rootNode.children!.push({
+          name,
+          book,
+          isFolder: false
+        });
+      } catch (error) {
+        console.error(`Failed to load book from ${name}:`, error);
+      }
+    }
+  }
+  
+  return rootNode;
+}
+
+/**
+ * フォルダのコンテンツをZIPファイルとしてエクスポートする
+ * @param fileSystem ファイルシステム
+ * @param folder 対象フォルダ
+ * @param folderName フォルダ名
+ * @param progress 進捗コールバック
+ * @returns ZIPファイルのBlobオブジェクト
+ */
+export async function exportFolderAsEnvelopeZip(
+  fileSystem: FileSystem,
+  folder: Folder,
+  folderName: string,
+  progress: (n: number) => void = () => {}
+): Promise<Blob> {
+  // 階層構造を構築
+  const hierarchy = await createHierarchyFromFolder(fileSystem, folder, folderName);
+  
+  // ZIPファイルを生成
+  return await writeHierarchicalEnvelopeZip(hierarchy, progress);
 }
