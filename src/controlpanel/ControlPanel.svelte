@@ -2,11 +2,10 @@
   import writableDerived from "svelte-writable-derived";
   import { mainBook, viewport, redrawToken } from '../bookeditor/bookStore';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
-  import { RangeSlider } from '@skeletonlabs/skeleton';
   import Drawer from '../utils/Drawer.svelte'
   import { controlPanelOpen } from './controlPanelStore';
-  import NumberEdit from '../utils/NumberEdit.svelte';
-  import ExponentialRangeSlider from '../utils/ExponentialRangeSlider.svelte';
+  import ExponentialSliderEdit from '../utils/ExponentialSliderEdit.svelte';
+  import SliderEdit from '../utils/SliderEdit.svelte';
   import type { Book } from '../lib/book/book';
 
   let min = 256;
@@ -15,10 +14,10 @@
 
   const scale = writableDerived(
   	viewport,
-  	(v) => v?.scale!,
+  	(v) => v?.scale! * 100,
   	(s, v) => {
       if (v) {
-        v.scale = s!;
+        v.scale = s! / 100;
         v.dirty = true;
         $redrawToken = true;
       }
@@ -72,54 +71,47 @@
 </script>
 
 <div class="drawer-outer">
-  <Drawer placement="left" open={$controlPanelOpen} size="400px" on:clickAway={() => $controlPanelOpen = false}>
+  <Drawer placement="left" open={$controlPanelOpen} size="350px" on:clickAway={() => $controlPanelOpen = false}>
     <div class="drawer-content">
-      <div class="flex flex-col gap-2 m-2">
-        <div class="hbox space-around canvas-size-container">
-          <div class="vbox expand">
-            <div class="hbox">
-              <div class="font-bold slider-label">W</div>
-              <div style="width: 140px;">
-                <ExponentialRangeSlider name="range-slider" bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
-              </div>
-              <div class="text-xs slider-value-text hbox gap-0.5">
-                <div class="number-box"><NumberEdit bind:value={$paperWidth} min={min} max={max}/></div>
-                / {max}
-              </div>
-            </div>
-            <div class="hbox">
-              <div class="font-bold slider-label">H</div>
-              <div style="width: 140px;">
-                <ExponentialRangeSlider name="range-slider" bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
-              </div>
-              <div class="text-xs slider-value-text hbox gap-0.5">
-                <div class="number-box"><NumberEdit bind:value={$paperHeight} min={min} max={max}/></div>
-                 / {max}
-              </div>
-            </div>
+      <details open>
+        <summary>紙のサイズ</summary>
+        <div class="section">
+          <h2>カスタム</h2>
+          <ExponentialSliderEdit label="W" labelWidth={"20px"} bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <ExponentialSliderEdit label="H" labelWidth={"20px"} bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
+          <h2>正方形</h2>
+          <div class="hbox gap-0.5">
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1024, 1024)}>S2</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(512, 512)}>S1</button>
           </div>
-          <div class="vbox space-around" style="width: 90px; height: 52px;">
-            <div class="hbox gap-0.5">
-              <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1024, 1024)}>S2</button>
-              <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1680, 2376)}>A3</button>
-              <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1456, 2056)}>B4</button>
-            </div>
-            <div class="hbox gap-0.5">
-              <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(512, 512)}>S1</button>
-              <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(840, 1188)}>A4</button>
-              <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
-            </div>  
+          <h2>縦長</h2>
+          <div class="hbox gap-0.5">
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1680, 2376)}>A3</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1456, 2056)}>B4</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(840, 1188)}>A4</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
+          </div>
+          <h2>横長</h2>
+          <div class="hbox gap-0.5">
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(2376, 1680)}>A3</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(2056, 1456)}>B4</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1188, 840)}>A4</button>
+            <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1028, 728)}>B5</button>
           </div>
         </div>
-        <div class="hbox gap my-1">
-          進行方向
+      </details>
+
+      <details open>
+        <summary>進行方向・折り返し</summary>
+        <div class="section">
+          <h2>進行方向</h2>
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
               <RadioItem bind:group={book.direction} name="direction" value={'right-to-left'}><span class="radio-text">◀</span></RadioItem>
               <RadioItem bind:group={book.direction} name="direction" value={'left-to-right'}><span class="radio-text">▶</span></RadioItem>
             </RadioGroup>
           </div>
-          折返し
+          <h2>折返し</h2>
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
               <RadioItem bind:group={book.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">なし</span></RadioItem>
@@ -128,22 +120,54 @@
             </RadioGroup>
           </div>
         </div>
-        <div class="hbox gap" style="margin-top: 16px;">
-          拡大率<RangeSlider name="scale" bind:value={$scale} min={0.1} max={10} step={0.01} style="width:200px;"/>
-          <div class="number-box"><NumberEdit bind:value={scalePercent} min={10} max={1000}/></div>
-          <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=1}>100%</button>
+      </details>
+
+      <details open>
+        <summary>拡大率</summary>
+        <div class="section">
+          <div class="flex flex-row w-full gap-1 items-center">
+            <SliderEdit bind:value={$scale} min={10} max={400} step={1}/>％
+          </div>
+          <button class="btn btn-sm variant-filled paper-size" on:click={() => $scale=100}>100%</button>
         </div>
-      </div>
+      </details>
     </div>
   </Drawer>
 </div>
 
 <style>
   .drawer-content {
-    width: 100%;
+    width: 350px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
   .drawer-outer :global(.drawer .panel) {
     background-color: rgb(var(--color-surface-100));
+  }
+  summary {
+    font-family: '源暎エムゴ';
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .section {
+    margin-left: 32px;
+    margin-right: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 4px;
+  }
+  h2 {
+    font-family: '源暎エムゴ';
+    font-size: 16px;
+    line-height: normal;
+    margin-left: -16px;
   }
   .slider-label {
     width: 20px;

@@ -1,20 +1,22 @@
 <script lang="ts">
-  import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from './NumberEdit.svelte';
+  import ExponentialRangeSlider from './ExponentialRangeSlider.svelte';
 
-  export let label: string | undefined = undefined;
+  export let label: string;
+  export let labelWidth: string = "100px";
   export let value: number;
   export let min: number;
   export let max: number;
   export let step: number = 1;
+  export let exponentialMin: number = 1;
+  export let exponentialRegion: number = 1000;
+  export let powPerStep: number = 0.0001;
 </script>
 
 <div class="flex flex-row gap-0.5 expand w-full h-full">
-  {#if label}
-    <div class="font-bold slider-label">{label}</div>
-  {/if}
+  <div class="font-bold slider-label" style="width: {labelWidth}">{label}</div>
   <div class="grow">
-    <RangeSlider name="batch-count" bind:value={value} min={min} max={max} step={step}/>
+    <ExponentialRangeSlider name="range-slider" bind:value={value} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={exponentialRegion} powPerStep={powPerStep} step={step}/>
   </div>
   <div class="text-xs number-box">
     <NumberEdit bind:value={value} min={min} max={max}/>
