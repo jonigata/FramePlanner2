@@ -169,23 +169,6 @@
     line-height: normal;
     margin-left: -16px;
   }
-  .slider-label {
-    width: 20px;
-  }
-  .slider-value-text {
-    width: 76px;
-    text-align: right;
-  }
-  .canvas-size-container {
-    margin-right: 16px;
-    margin-top: 4px;
-  }
-  .number-box {
-    width: 35px;
-    height: 20px;
-    display: inline-block;
-    vertical-align: bottom;
-  }
   .paper-size {
     height: 20px;
   }
