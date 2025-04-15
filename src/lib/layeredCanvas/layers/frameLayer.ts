@@ -93,7 +93,7 @@ export class FrameLayer extends LayerBase {
     this.resetPaddingIcon = new ClickableIcon(["frameLayer/reset-padding.webp"],unit,[1,0],"パディングのリセット", isFrameActiveAndVisible, mp);
     this.zplusIcon = new ClickableIcon(["frameLayer/increment.webp"],spinUnit,[0,0],"手前に", isFrameActiveAndVisible, mp);
     this.zminusIcon = new ClickableIcon(["frameLayer/decrement.webp"],spinUnit,[0,0],"奥に", isFrameActiveAndVisible, mp);
-    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.webp","frameLayer/visibility2.webp","frameLayer/visibility3.webp"],unit,[0,0], "不可視/背景と絵/枠線も", isFrameActiveAndVisible, mp);
+    this.visibilityIcon = new ClickableIcon(["frameLayer/visibility1.webp","frameLayer/visibility2.webp","frameLayer/visibility3.webp"],unit,[0,0], ["不可視/背景と絵/枠線も","不可視/背景と絵/枠線も","不可視/背景と絵/枠線も"], isFrameActiveAndVisible, mp);
     this.visibilityIcon.index = 2;
     this.zvalue = new ClickableSelfRenderer(
       (ctx: CanvasRenderingContext2D, csr: ClickableSelfRenderer) => {
@@ -347,23 +347,42 @@ export class FrameLayer extends LayerBase {
   }
 
   pointerHoverSelected(position: Vector): Layer | null {
+    const hintIfContains = (a: ClickableSlate[]): boolean => {
+      for (let e of a) {
+        if (e.hintIfContains(position, this.hint)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     if (this.selectedBorder) {
+      if (hintIfContains(this.borderIcons)) {
+        return this;
+      }
       if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
-        console.log("hover: selected border");
+        this.hint([...trapezoidCenter(this.selectedBorder.corners), 0, 0], "ドラッグで移動");
         this.litBorder = this.selectedBorder;
         return this;
       }
     }
     if (this.selectedLayout) {
       const r = this.calculateSheetRect(this.selectedLayout.corners);
-      if (rectContains(r, position)) {
+      if (hintIfContains(this.frameIcons)) {
+        return this;
+      } else if (rectContains(r, position)) {
         if (pointToQuadrilateralDistance(position, this.selectedLayout.corners, false) < PADDING_HANDLE_OUTER_WIDTH) {
           const padding = findPaddingOn(this.selectedLayout, position, PADDING_HANDLE_INNER_WIDTH, PADDING_HANDLE_OUTER_WIDTH);
           this.litPadding = padding;
+          if (padding) {
+            this.hint(r, "ドラッグでパディング変更");
+            return this;
+          }           
         }
-
         this.litLayout = this.selectedLayout;
         return this;
+      } else {
+        this.litPadding = null;
       }
     }
     return null;
@@ -376,6 +395,9 @@ export class FrameLayer extends LayerBase {
     if (border != this.litBorder) { this.redraw(); }
     this.litBorder = border;
     if (border) {
+      if (isPointInTrapezoid(position, border.corners)) {
+        this.hint([...trapezoidCenter(border.corners), 0, 0], "クリックで選択");
+      }
       return this;
     }
     const layout = findLayoutAt(rootLayout, position, PADDING_HANDLE_OUTER_WIDTH);
@@ -384,10 +406,17 @@ export class FrameLayer extends LayerBase {
     if (layout) {
       console.log("lit layout");
       this.relayoutLitIcons(layout);
+      if (this.swapIcon.hintIfContains(position, this.hint)) {
+        return this;
+      }
+      if (0 < layout.element.visibility) {
+        const r = trapezoidBoundingRect(layout.corners);
+        this.hint(r, "画像をドロップ");
+      }
       return this;
     }
 
-    return this.decideHint(position) ? this : null;
+    return null;
   }
 
   pointerUnhover(litLayer: Layer): void {
@@ -397,54 +426,6 @@ export class FrameLayer extends LayerBase {
       this.litBorder = null;
       this.redraw();
     }
-  }
-
-  decideHint(position: Vector): boolean {
-    const hintIfContains = (a: ClickableSlate[]): boolean => {
-      for (let e of a) {
-        if (e.hintIfContains(position, this.hint)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    if (this.litLayout && this.litLayout.element != this.selectedLayout?.element) {
-      if (this.swapIcon.hintIfContains(position, this.hint)) {
-        return true;
-      }
-
-      if (0 < this.litLayout.element.visibility) {
-        const r = trapezoidBoundingRect(this.litLayout.corners);
-        this.hint(r, "画像をドロップ");
-        return true;
-      }
-    } else if (this.litBorder && this.litBorder.layout.element != this.selectedBorder?.layout.element) {
-      if (isPointInTrapezoid(position, this.litBorder.corners)) {
-        this.hint([...trapezoidCenter(this.litBorder.corners), 0, 0], "クリックで選択");
-        return true;
-      }
-    } else if (this.selectedBorder) {
-      if (hintIfContains(this.borderIcons)) {
-        return true;
-      }
-      if (isPointInTrapezoid(position, this.selectedBorder.corners)) {
-        this.hint([...trapezoidCenter(this.selectedBorder.corners), 0, 0], "ドラッグで移動");
-        return true;
-      }
-      return true;
-    } else if (this.selectedLayout) { 
-      const r = this.calculateSheetRect(this.selectedLayout.corners);
-      if (hintIfContains(this.frameIcons)) {
-        return true;
-      } else if (this.litPadding) {
-        this.hint(r, "ドラッグでパディング変更");
-        return true;
-      } else if (rectContains(r, position)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   pick(point: Vector): Picked[] {
@@ -1235,6 +1216,7 @@ export class FrameLayer extends LayerBase {
     }
 
     this.selectedLayout = layout;
+    this.litPadding = null;
     this.relayoutIcons();
     this.onFocus(layout);
   }
