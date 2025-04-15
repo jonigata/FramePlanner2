@@ -9,7 +9,7 @@
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
+  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget, setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget, setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
   import { clonePage, undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
@@ -492,79 +492,15 @@
   // フレームコマンドは自動的にサブスクライブされるので監視不要
 
   // バブルコマンド監視
-  $: onBubbleCommand($bubbleInspectorTarget);
-  async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
-    delayedCommiter.force();
-    if (bit && bit.command != null) {
-      $bubbleInspectorTarget = { ...bit, command: null };
+  // バブル操作コマンドのハンドラ初期化
+  $: setBubbleCommandTools(
+    commit,
+    delayedCommiter.force,
+    painter?.runWithBubble?.bind(painter),
+    imageProvider?.run?.bind(imageProvider)
+  );
 
-      switch (bit.command) {
-        case "scribble":
-          await modalBubbleScribble(bit);
-          break;
-        case "generate":
-          await modalBubbleGenerate(bit);
-          break;
-        case "punch":
-          await punchBubbleFilm(bit);
-          break;
-        case "upscale":
-          await upscaleBubbleFilm(bit);
-          break;
-      }
-      $bubbleInspectorRebuildToken++;
-    }
-  }
-
-  async function modalBubbleScribble(bit: BubbleInspectorTarget) {
-    delayedCommiter.force();
-    toolTipRequest.set(null);
-    await painter.runWithBubble(bit.page, bit.bubble, bit.commandTargetFilm!);
-    commit(null);
-  }
-
-  async function modalBubbleGenerate(bit: BubbleInspectorTarget) {
-    const bubble = bit.bubble;
-    const r = await imageProvider.run(bubble.prompt, bubble.filmStack, bubble.gallery);
-    if (r == null) { return; }
-    const film = new Film(r.media);
-    const paperSize = bit.page.paperSize;
-    const bubbleSize = bubble.getPhysicalSize(paperSize);
-    const scale = minimumBoundingScale(film.media.size, bubbleSize);
-    film.setShiftedScale(paperSize, scale);
-    bubble.filmStack.films.push(film);
-    bubble.prompt = r.prompt;
-    $bubbleInspectorTarget = $bubbleInspectorTarget;
-  }
-
-  async function punchBubbleFilm(bit: BubbleInspectorTarget) {
-    if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-      return;
-    }
-
-    const film = bit.commandTargetFilm!;
-    if (!(film.media instanceof ImageMedia)) { return; }
-
-    $loading = true;
-    await punchFilm(film)
-    commit(null);
-    $loading = false;
-  }
-
-  async function upscaleBubbleFilm(bit: BubbleInspectorTarget) {
-    if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-      return;
-    }
-
-    const film = bit.commandTargetFilm!;
-    if (!(film.media instanceof ImageMedia)) { return; }
-
-    await upscaleFilm(film)
-    commit(null);
-    toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
-  }
+  // バブルコマンドは自動的にサブスクライブされるので監視不要
 
   onDestroy(() => {
     layeredCanvas.cleanup();
