@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
   import { writable } from 'svelte/store';
-  import writableDerived from "svelte-writable-derived";
   import Spreader from './Spreader.svelte';
 
   export let value: number;
@@ -15,23 +14,8 @@
 
   let key = 0; // undo防止
 
-  const valueStore = writable(value);
-  $: valueStore.set(value);
-  valueStore.subscribe((v) => {
-    value = v;
-  });
-  const textValue = writableDerived(
-    valueStore,
-    (v: number) => {
-      if (v == null) { return ''; }
-      let s = allowDecimal ? v.toFixed(2) : v.toString();
-      return s;
-    },
-    (tv: string, old: number) => {
-      if (tv == '' || tv == null) { return 0; }
-      let n = allowDecimal ? parseFloat(tv) : parseInt(tv, 10);
-      return Math.max(min, Math.min(max, n));
-    });
+  $: valueText = writable(value.toString());
+  $: value = allowDecimal ? parseFloat($valueText) : parseInt($valueText, 10);
 
   onMount(() => {
     original = value;
@@ -58,8 +42,7 @@
     let s = (event.target as HTMLInputElement).value;
     let n = allowDecimal ? parseFloat(s) : parseInt(s, 10);
     n = Math.max(min, Math.min(max, n));
-    value = n; // なぜ両方必要なのかわからん
-    textValue.set(n.toString());
+    valueText.set(n.toString());
     submit();
     key++; // undo防止
   }
@@ -72,7 +55,7 @@
     {#key key}
     <input
       type="number"
-      bind:value={$textValue}
+      bind:value={$valueText}
       on:focus={edit}
       on:keydown={keydown}
       on:blur={handleBlur}

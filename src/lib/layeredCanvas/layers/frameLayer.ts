@@ -1301,7 +1301,6 @@ export class FrameLayer extends LayerBase {
   get interactable(): boolean { return this.mode == null; }
 
   tearDown() {
-    console.log("frame tearDown");
     // 動画再生のrequestAnimationFrameをキャンセル
     if (this.videoRedrawFrameId !== undefined) {
       cancelAnimationFrame(this.videoRedrawFrameId);

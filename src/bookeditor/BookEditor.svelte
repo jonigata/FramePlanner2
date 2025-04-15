@@ -188,7 +188,6 @@
     if (!paperSize) { return; }
     let modified = false;
     for (const page of $mainBook!.pages) {
-      console.log(page.paperSize, paperSize);
       if (page.paperSize[0] === paperSize[0] && page.paperSize[1] === paperSize[1]) {
         continue;
       }

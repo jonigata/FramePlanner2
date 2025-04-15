@@ -1537,7 +1537,6 @@ export class BubbleLayer extends LayerBase {
   }
 
   tearDown() {
-    console.log("bubble tearDown");
     // 動画再生のrequestAnimationFrameをキャンセル
     if (this.videoRedrawFrameId !== undefined) {
       cancelAnimationFrame(this.videoRedrawFrameId);
