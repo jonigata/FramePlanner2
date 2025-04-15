@@ -11,7 +11,7 @@ import { initializeKeyCache } from '../../lib/layeredCanvas/system/keyCache';
 import type { Book, Page, BookOperators, WrapMode, ReadingDirection } from '../../lib/book/book';
 import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
 import type { FrameElement, Layout, Border } from '../../lib/layeredCanvas/dataModels/frameTree';
-import type { Bubble } from '../../lib/layeredCanvas/dataModels/bubble';
+import { Bubble } from '../../lib/layeredCanvas/dataModels/bubble';
 import { trapezoidCenter } from '../../lib/layeredCanvas/tools/geometry/trapezoid';
 import { FocusKeeper } from '../../lib/layeredCanvas/tools/focusKeeper';
 
@@ -19,9 +19,9 @@ export function buildBookEditor(
   viewport: Viewport,
   book: Book,
   editor: BookOperators,
-  defaultBubbleSlot: DefaultBubbleSlot
 ) {
   const focusKeeper = new FocusKeeper();
+  const defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
 
   const layeredCanvas = new LayeredCanvas(viewport, true);
 
@@ -89,7 +89,7 @@ export function buildBookEditor(
     );
   });
 
-  return { arrayLayer, layeredCanvas, focusKeeper, marks };
+  return { arrayLayer, layeredCanvas, focusKeeper, marks, defaultBubbleSlot };
 }
 
 export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number; gapX: number; gapY: number } {

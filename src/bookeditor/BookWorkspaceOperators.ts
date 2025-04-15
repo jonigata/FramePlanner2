@@ -1,50 +1,50 @@
-import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-import type { Border } from '../lib/layeredCanvas/dataModels/frameTree';
-import type { Book, Page, BookOperators, HistoryTag } from '../lib/book/book';
-import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
-import { collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
-import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
-import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
-import type { Vector, Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
-import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
-import { FilmStackTransformer } from "../lib/layeredCanvas/dataModels/film";
-import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-import { Film } from '../lib/layeredCanvas/dataModels/film';
-import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
-import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { Bubble } from '../lib/layeredCanvas/dataModels/bubble.js';
+import type { Border } from '../lib/layeredCanvas/dataModels/frameTree.js';
+import type { Book, Page, BookOperators, HistoryTag } from '../lib/book/book.js';
+import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer.js';
+import { collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book.js';
+import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer.js';
+import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas.js';
+import type { Vector, Rect } from "../lib/layeredCanvas/tools/geometry/geometry.js";
+import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper.js";
+import { FilmStackTransformer } from "../lib/layeredCanvas/dataModels/film.js";
+import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples.js';
+import { Film } from '../lib/layeredCanvas/dataModels/film.js';
+import { buildMedia } from '../lib/layeredCanvas/dataModels/media.js';
+import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree.js';
 
 // ストアを直接インポート
-import { frameInspectorTarget } from './frameinspector/frameInspectorStore';
-import { bubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
-import { batchImagingPage } from '../generator/batchImagingStore';
-import { bubbleBucketPage } from '../bubbleBucket/bubbleBucketStore';
-import { pageInspectorTarget } from './pageinspector/pageInspectorStore';
-import { redrawToken, viewport } from './bookStore';
-import { analyticsEvent } from '../utils/analyticsEvent';
-import { copyToClipboard } from '../utils/saver/copyToClipboard';
-import { toolTipRequest } from '../utils/passiveToolTipStore';
-import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
+import { frameInspectorTarget } from './frameinspector/frameInspectorStore.js';
+import { bubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore.js';
+import { batchImagingPage } from '../generator/batchImagingStore.js';
+import { bubbleBucketPage } from '../bubbleBucket/bubbleBucketStore.js';
+import { pageInspectorTarget } from './pageinspector/pageInspectorStore.js';
+import { redrawToken, viewport } from './bookStore.js';
+import { analyticsEvent } from '../utils/analyticsEvent.js';
+import { copyToClipboard } from '../utils/saver/copyToClipboard.js';
+import { toolTipRequest } from '../utils/passiveToolTipStore.js';
+import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint.js';
 
 // 直接 operations/ から関数をインポート
 import {
   insertPage, deletePage, movePages, duplicatePages,
   makeCopyPageToClipboard, makeBatchImaging, makeEditBubbles, makeTweak
-} from './operations/pageOperations';
+} from './operations/pageOperations.js';
 import {
   commit, revert, undoBookState, redoBookState,
   delayedCommiter, setLayerRefs
-} from './operations/commit';
+} from './operations/commitOperations.ts';
 
-export class BookEditorImpl implements BookOperators {
+export class BookWorkspaceOperators implements BookOperators {
   private canvas: HTMLCanvasElement;
   private book: Book;
   // ビルドされたブックエディタのリソース
   private layeredCanvas: LayeredCanvas | null = null;
   private arrayLayer: ArrayLayer | null = null;
   private focusKeeper: FocusKeeper | null = null;
+  private defaultBubbleSlot: DefaultBubbleSlot | null = null;
   private marks: boolean[] = [];
   private painterChase: () => void;
-  private defaultBubbleSlot: DefaultBubbleSlot;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -54,14 +54,6 @@ export class BookEditorImpl implements BookOperators {
     this.canvas = canvas;
     this.book = book;
     this.painterChase = painterChase;
-    this.defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
-  }
-
-  /**
-   * DefaultBubbleSlotを取得するメソッド
-   */
-  getDefaultBubbleSlot(): DefaultBubbleSlot {
-    return this.defaultBubbleSlot;
   }
 
   /**
@@ -71,39 +63,21 @@ export class BookEditorImpl implements BookOperators {
     layeredCanvas: LayeredCanvas,
     arrayLayer: ArrayLayer,
     focusKeeper: FocusKeeper,
-    marks: boolean[]
+    marks: boolean[],
+    defaultBubbleSlot: DefaultBubbleSlot
   }) {
     console.log("setBuiltBook", builtBook);
     this.layeredCanvas = builtBook.layeredCanvas;
     this.arrayLayer = builtBook.arrayLayer;
     this.focusKeeper = builtBook.focusKeeper;
     this.marks = builtBook.marks;
+    this.defaultBubbleSlot = builtBook.defaultBubbleSlot;
   }
 
-  /**
-   * Marksを設定するメソッド（BookOperatorsインターフェースで必要）
-   */
   setMarks(marks: boolean[]) {
     this.marks = marks;
   }
 
-  /**
-   * LayeredCanvasを取得
-   */
-  getLayeredCanvas(): LayeredCanvas | null {
-    return this.layeredCanvas;
-  }
-
-  /**
-   * ArrayLayerを取得
-   */
-  getArrayLayer(): ArrayLayer | null {
-    return this.arrayLayer;
-  }
-
-  /**
-   * Marksを取得
-   */
   getMarks(): boolean[] {
     return this.marks;
   }
@@ -208,7 +182,7 @@ export class BookEditorImpl implements BookOperators {
         });
         
         // defaultBubbleSlotを設定
-        this.defaultBubbleSlot.bubble = b;
+        this.defaultBubbleSlot!.bubble = b;
       }
     } else {
       // バブルのインスペクタを非表示

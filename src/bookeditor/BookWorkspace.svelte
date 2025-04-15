@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { setLayerRefs } from './operations/commit';
-  import { BookEditorImpl } from './BookEditorImpl';
+  import { setLayerRefs } from './operations/commitOperations';
+  import { BookWorkspaceOperators } from './BookWorkspaceOperators';
   import { onDestroy } from 'svelte';
-  import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import { setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { setFrameCommandTools } from './frameinspector/frameInspectorStore';
@@ -30,7 +29,7 @@
   let pageIds: string[] = [];
   let readingDirection: ReadingDirection;
   let wrapMode: WrapMode;
-  let bookEditorInstance: BookEditorImpl;
+  let bookEditorInstance: BookWorkspaceOperators;
 
   $: onUndoCommand($undoToken);
   function onUndoCommand(t: 'undo' | 'redo' | null) {
@@ -150,7 +149,7 @@
     editingBookId = book.revision.id;
     
     // BookEditorImplインスタンスを作成
-    bookEditorInstance = new BookEditorImpl(
+    bookEditorInstance = new BookWorkspaceOperators(
       canvas,
       book,
       () => painter.chase()
@@ -164,8 +163,7 @@
     const builtBook = buildBookEditor(
       $viewport,
       book,
-      $bookEditor,
-      bookEditorInstance.getDefaultBubbleSlot());
+      $bookEditor);
     
     // BookEditorImplに作成したリソースを一括設定
     bookEditorInstance.setBuiltBook(builtBook);
@@ -208,11 +206,6 @@
 
 <div class="main-paper-container">
   <AutoSizeCanvas bind:canvas on:resize={onResizeCanvas}>
-    <!--
-    {#if bubbleLayer?.defaultBubble}
-    <p style={getFontStyle2(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!- 事前読み込み、ローカルフォントだと多分エラー出る ->
-    {/if}
-  -->
   </AutoSizeCanvas>
 </div>
 

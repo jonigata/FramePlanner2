@@ -12,7 +12,7 @@
 			
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
-  import BookEditor from './bookeditor/BookEditor.svelte';
+  import BookEditor from './bookeditor/BookWorkspace.svelte';
   import PassiveToolTip from './utils/PassiveToolTip.svelte';
   import About from './about/About.svelte';
   import PageInspector from './bookeditor/pageinspector/PageInspector.svelte';

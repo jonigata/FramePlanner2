@@ -14,7 +14,7 @@ import { generateMovie } from '../../utils/generateMovie';
 import { onlineStatus } from "../../utils/accountStore";
 import { loading } from '../../utils/loadingStore';
 import { toolTipRequest } from '../../utils/passiveToolTipStore';
-import { commit, delayedCommiter } from '../operations/commit';
+import { commit, delayedCommiter } from '../operations/commitOperations';
 
 type FrameInspectorCommand = "generate" | "scribble" | "punch" | "outpainting" | "video" | "upscale";
 

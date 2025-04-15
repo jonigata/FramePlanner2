@@ -10,7 +10,7 @@ import { upscaleFilm } from '../../utils/upscaleImage';
 import { onlineStatus } from "../../utils/accountStore";
 import { loading } from '../../utils/loadingStore';
 import { toolTipRequest } from '../../utils/passiveToolTipStore';
-import { commit, delayedCommiter } from '../operations/commit';
+import { commit, delayedCommiter } from '../operations/commitOperations';
 
 type BubbleInspectorCommand = "generate" | "scribble" | "punch" | "upscale" | "video" | "split";
 
