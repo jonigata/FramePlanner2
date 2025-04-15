@@ -1,4 +1,8 @@
 <script lang="ts">
+  import {
+    insertPage, deletePage, movePages, duplicatePages,
+    makeCopyPageToClipboard, makeBatchImaging, makeEditBubbles, makeTweak
+  } from './operations/pageOperations';
   import { derived } from 'svelte/store';
   import { onDestroy } from 'svelte';
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
@@ -12,7 +16,7 @@
   import { bubbleInspectorTarget, bubbleSplitCursor, type BubbleInspectorTarget, setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
-  import { clonePage, undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
+  import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
   import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
@@ -25,11 +29,9 @@
   import { copyToClipboard } from '../utils/saver/copyToClipboard';
   import { analyticsEvent } from "../utils/analyticsEvent";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
-  import { triggerTemplateChoice } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
-  // import { tryOutToken } from '../utils/tryOutStore';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import { FilmStackTransformer } from "../lib/layeredCanvas/dataModels/film";
 
@@ -159,64 +161,6 @@
     page.frameTree = rootFrameTree;
 
     commit(null);
-  }
-
-  function insertPage(pageIndex: number) {
-    focusKeeper.setFocus(null);
-    $redrawToken = true;
-    triggerTemplateChoice.trigger().then(result => {
-      if (result != null) {
-        $mainBook!.newPageProperty.templateName = result;
-        insertNewPageToBook($mainBook!, pageIndex);
-        commit(null);
-      }
-    });
-  }
-
-  function deletePage(index: number) {
-    $mainBook!.pages.splice(index, 1);
-    commit(null);
-  }
-
-  function movePages(from: number[], to: number) {
-    const restPages = $mainBook!.pages.filter((_, i) => !from.includes(i));
-    const movedPages = from.map(i => $mainBook!.pages[i]);
-    $mainBook!.pages = [...restPages.slice(0, to), ...movedPages, ...restPages.slice(to)];
-    commit(null);
-  }
-
-  function duplicatePages(from: number[], to: number) {
-    const targetPages = from.map(i => clonePage($mainBook!.pages[i]));
-    $mainBook!.pages = [
-      ...$mainBook!.pages.slice(0, to),
-      ...targetPages,
-      ...$mainBook!.pages.slice(to)
-    ];
-    commit(null);
-  }
-
-  function copyPageToClipboard(index: number) {
-    const page = $mainBook!.pages[index];
-    analyticsEvent('copy_page_to_clipboard');
-    copyToClipboard(page, false);
-  }
-
-  function batchImaging(index: number) {
-    console.log("batchImaging", index);
-    $frameInspectorTarget = null;
-    $bubbleInspectorTarget = null;
-    $batchImagingPage = $mainBook!.pages[index];
-  }
-
-  function editBubbles(index: number) {
-    console.log("editBubbles", index);
-    delayedCommiter.force();
-    $bubbleBucketPage = $mainBook!.pages[index];
-  }
-
-  function tweak(index: number) {
-    console.log("tweak", index);
-    $pageInspectorTarget = $mainBook!.pages[index];
   }
 
   $: if ($bubbleBucketDirty) {
@@ -354,15 +298,15 @@
       focusFrame,
       focusBubble,
       viewportChanged,
-      insertPage,
-      deletePage,
-      movePages,
-      duplicatePages,
+      insertPage: (index: number) => insertPage($mainBook!, index, commit, focusKeeper, v => $redrawToken = v),
+      deletePage: (index: number) => deletePage($mainBook!, index, commit),
+      movePages: (from: number[], to: number) => movePages($mainBook!, from, to, commit),
+      duplicatePages: (from: number[], to: number) => duplicatePages($mainBook!, from, to, commit),
       rescueResidual,
-      copyPageToClipboard,
-      batchImaging,
-      editBubbles,
-      tweak,
+      copyPageToClipboard: makeCopyPageToClipboard($mainBook!, analyticsEvent, copyToClipboard),
+      batchImaging: makeBatchImaging($mainBook!, (v: any) => { $frameInspectorTarget = v; }, (v: any) => { $bubbleInspectorTarget = v; }, (page: any) => { $batchImagingPage = page; }),
+      editBubbles: makeEditBubbles($mainBook!, delayedCommiter.force, (page: any) => { $bubbleBucketPage = page; }),
+      tweak: makeTweak($mainBook!, (page: any) => { $pageInspectorTarget = page; }),
       chase,
       getMarks,
       setMarks,
@@ -545,30 +489,11 @@
       rendererLayer.resetCache();
     } 
   }
-/*
-  // 特定のページにフォーカスする
-  $: if ($tryOutToken) {
-    $tryOutToken = false;
-    focusToPage()
-  }
-  function focusToPage() {
-    const [cw, ch] = $viewport!.getCanvasSize();
-    const index = 2;
-    const paper = arrayLayer.array.papers[index];
-    const [pw, ph] = paper.paper.size;
-    const scale = Math.min(cw / pw, ch / ph) * 0.98;
-    const p = paper.center;
-    $viewport!.scale = scale;
-    $viewport!.translate = [-p[0] * scale, -p[1] * scale];
-    $viewport!.dirty = true;
-    layeredCanvas.redraw();
-  }
-*/
 </script>
 
 <div class="main-paper-container">
-  <AutoSizeCanvas bind:canvas={canvas} on:resize={onResize}>
-  <!--
+  <AutoSizeCanvas bind:canvas on:resize={onResize}>
+    <!--
     {#if bubbleLayer?.defaultBubble}
     <p style={getFontStyle2(bubbleLayer.defaultBubble.fontFamily, "400")}>あ</p> <!- 事前読み込み、ローカルフォントだと多分エラー出る ->
     {/if}
@@ -576,8 +501,8 @@
   </AutoSizeCanvas>
 </div>
 
-<Painter bind:this={painter} bind:layeredCanvas bind:arrayLayer/>
-<ImageProvider bind:this={imageProvider}/>
+<Painter bind:this={painter} bind:layeredCanvas bind:arrayLayer />
+<ImageProvider bind:this={imageProvider} />
 
 <style>
   .main-paper-container {
