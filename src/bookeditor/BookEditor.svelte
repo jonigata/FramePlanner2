@@ -5,20 +5,20 @@
   } from './operations/pageOperations';
   import { derived } from 'svelte/store';
   import { onDestroy } from 'svelte';
-  import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, type Border, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
-  import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
+  import type { Vector, Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
   import { bubbleInspectorTarget, bubbleSplitCursor, type BubbleInspectorTarget, setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { frameInspectorTarget, setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
   import { undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
-  import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './bookEditorUtils';
+  import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './operations/buildBookEditor';
+  import { hint } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
   import { BubbleLayer, DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
   import Painter from '../painter/Painter.svelte';
@@ -60,16 +60,6 @@
     $undoToken = null;
     if (t == 'undo') { undo(); }
     if (t == 'redo') { redo(); }
-  }
-
-  function hint(r: [number, number, number, number] | null, s: string | null) {
-    if (s) {
-      const q0 = convertPointFromNodeToPage(canvas, r![0], r![1]);
-      // TODO: w, hの計算がおかしい
-      toolTipRequest.set({ message: s, rect: { left: q0.x, top: q0.y, width: r![2], height: r![3] } });
-    } else {
-      toolTipRequest.set(null);
-    }
   }
 
   // FileManagerRootのsaveと二重にdelayedCommmiterがかかっているのは無駄に見えるが、
@@ -273,31 +263,31 @@
     if (layeredCanvas) {
       layeredCanvas.cleanup();
     }
-
-    if (!$viewport || editingBookId !== book.revision.id) {
-      console.log("================ viewport remake");
-      const v = new Viewport(canvas, hint);
-      v.translate = [150, 0];
-      $viewport = v;
-    }
-    $viewport.dirty = true;
-    editingBookId = book.revision.id;
-
-    const bookEditorInstance: BookOperators = {
-      hint,
-      commit,
-      forceDelayedCommit: delayedCommiter.force,
-      cancelDelayedCommit: delayedCommiter.cancel,
-      revert,
-      undo,
-      redo,
-      shift,
-      unshift,
-      swap,
-      insert,
-      focusFrame,
-      focusBubble,
-      viewportChanged,
+if (!$viewport || editingBookId !== book.revision.id) {
+  console.log("================ viewport remake");
+  const v = new Viewport(canvas, (p,s) => hint(canvas, p, s));
+  v.translate = [150, 0];
+  $viewport = v;
+}
+$viewport.dirty = true;
+editingBookId = book.revision.id;
+const bookEditorInstance: BookOperators = {
+  hint: (p: Rect | null, s: string | null) => {
+    hint(canvas, p, s);
+  },
+  commit,
+  forceDelayedCommit: delayedCommiter.force,
+  cancelDelayedCommit: delayedCommiter.cancel,
+  revert,
+  undo,
+  redo,
+  shift,
+  unshift,
+  swap,
+  insert,
+  focusFrame,
+  focusBubble,
+  viewportChanged,
       insertPage: (index: number) => insertPage($mainBook!, index, commit, focusKeeper, v => $redrawToken = v),
       deletePage: (index: number) => deletePage($mainBook!, index, commit),
       movePages: (from: number[], to: number) => movePages($mainBook!, from, to, commit),
