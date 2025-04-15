@@ -4,13 +4,13 @@
   import { convertPointFromNodeToPage } from '../lib/layeredCanvas/tools/geometry/convertPoint';
   import { FrameElement, calculatePhysicalLayout, findLayoutOf, type Border, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
-  import { ImageMedia, buildMedia } from '../lib/layeredCanvas/dataModels/media';
+  import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { Vector } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { toolTipRequest } from '../utils/passiveToolTipStore';
-  import { bubbleInspectorTarget, bubbleSplitCursor, bubbleInspectorRebuildToken, type BubbleInspectorTarget, setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
-  import { frameInspectorTarget, frameInspectorRebuildToken, type FrameInspectorTarget, setFrameCommandTools } from './frameinspector/frameInspectorStore';
+  import { bubbleInspectorTarget, bubbleSplitCursor, type BubbleInspectorTarget, setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
+  import { frameInspectorTarget, setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book, Page, BookOperators, HistoryTag, ReadingDirection, WrapMode } from '../lib/book/book';
   import { clonePage, undoBookHistory, redoBookHistory, commitBook, revertBook, collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
   import { mainBook, bookEditor, viewport, redrawToken, undoToken, insertNewPageToBook } from './bookStore';
@@ -20,25 +20,16 @@
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import ImageProvider from '../generator/ImageProvider.svelte';
-  import { loading } from '../utils/loadingStore'
   import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import { batchImagingPage } from '../generator/batchImagingStore';
   import { copyToClipboard } from '../utils/saver/copyToClipboard';
-  import { toastStore } from '@skeletonlabs/skeleton';
   import { analyticsEvent } from "../utils/analyticsEvent";
   import { bubbleBucketPage, bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
-  import { minimumBoundingScale } from "../lib/layeredCanvas/tools/geometry/geometry";
   import { triggerTemplateChoice } from "./templateChooserStore";
   import { pageInspectorTarget } from "./pageinspector/pageInspectorStore";
   import type { FocusKeeper } from "../lib/layeredCanvas/tools/focusKeeper";
-  import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
   import { DelayedCommiterGroup } from '../utils/delayedCommiter';
-  import { punchFilm } from '../utils/punchImage'
-  import { upscaleFilm } from '../utils/upscaleImage'
-  import { outPaintFilm, calculateFramePadding } from '../utils/outPaintFilm'
-  import { onlineStatus } from "../utils/accountStore";
   // import { tryOutToken } from '../utils/tryOutStore';
-  import { generateMovie } from '../utils/generateMovie';
   import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
   import { FilmStackTransformer } from "../lib/layeredCanvas/dataModels/film";
 
