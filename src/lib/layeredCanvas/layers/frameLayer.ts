@@ -374,15 +374,16 @@ export class FrameLayer extends LayerBase {
 
     const border = findBorderAt(rootLayout, position, BORDER_MARGIN);
     if (border != this.litBorder) { this.redraw(); }
+    this.litBorder = border;
     if (border) {
-      this.litBorder = border;
       return this;
     }
     const layout = findLayoutAt(rootLayout, position, PADDING_HANDLE_OUTER_WIDTH);
     if (layout != this.litLayout) { this.redraw(); }
+    this.litLayout = layout;
     if (layout) {
-      this.litLayout = layout;
-      this.relayoutLitIcons(this.litLayout);
+      console.log("lit layout");
+      this.relayoutLitIcons(layout);
       return this;
     }
 
