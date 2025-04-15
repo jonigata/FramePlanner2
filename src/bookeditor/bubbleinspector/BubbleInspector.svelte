@@ -14,7 +14,7 @@
   import BubbleInspectorAppendix from './BubbleInspectorAppendix.svelte';
   import { Bubble, insertBubbleLayers } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-  import { bubbleInspectorRebuildToken, bubbleInspectorTarget, bubbleSplitCursor } from './bubbleInspectorStore';
+  import { bubbleInspectorRebuildToken, bubbleInspectorTarget } from './bubbleInspectorStore';
   import { saveBubbleToken } from '../../filemanager/fileManagerStore';
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
@@ -183,7 +183,14 @@
   }
 
   function split() {
-    $bubbleSplitCursor = textarea!.selectionStart;
+    if ($bubbleInspectorTarget && textarea) {
+      const cursor = textarea.selectionStart;
+      $bubbleInspectorTarget = {
+        ...$bubbleInspectorTarget,
+        command: "split",
+        commandArgs: { cursor }
+      };
+    }
   }
 
   function onKeyPress(event: KeyboardEvent) {

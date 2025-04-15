@@ -27,8 +27,8 @@ export function buildBookEditor(
 
   const floorLayer = new FloorLayer(
     layeredCanvas.viewport,
-    editor.viewportChanged,
-    editor.rescueResidual,
+    editor.viewportChanged.bind(editor),
+    editor.rescueResidual.bind(editor),
     focusKeeper
   );
   layeredCanvas.rootPaper.addLayer(floorLayer);
@@ -52,14 +52,14 @@ export function buildBookEditor(
     gapX,
     gapY,
     direction,
-    editor.insertPage,
-    editor.deletePage,
-    editor.movePages,
-    editor.duplicatePages,
-    editor.copyPageToClipboard,
-    editor.batchImaging,
-    editor.editBubbles,
-    editor.tweak
+    editor.insertPage.bind(editor),
+    editor.deletePage.bind(editor),
+    editor.movePages.bind(editor),
+    editor.duplicatePages.bind(editor),
+    editor.copyPageToClipboard.bind(editor),
+    editor.batchImaging.bind(editor),
+    editor.editBubbles.bind(editor),
+    editor.tweak.bind(editor)
   );
   layeredCanvas.rootPaper.addLayer(arrayLayer);
 

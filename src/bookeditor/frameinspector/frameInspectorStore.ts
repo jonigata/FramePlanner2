@@ -14,6 +14,7 @@ import { generateMovie } from '../../utils/generateMovie';
 import { onlineStatus } from "../../utils/accountStore";
 import { loading } from '../../utils/loadingStore';
 import { toolTipRequest } from '../../utils/passiveToolTipStore';
+import { commit, delayedCommiter } from '../operations/commit';
 
 type FrameInspectorCommand = "generate" | "scribble" | "punch" | "outpainting" | "video" | "upscale";
 
@@ -34,8 +35,6 @@ export const frameInspectorTarget: Writable<FrameInspectorTarget | null> = writa
 export const frameInspectorRebuildToken: Writable<number> = writable(0);
 
 // コマンド実行に必要なツールへの参照
-let commitFn: ((tag: any) => void) | null = null;
-let forceCommitFn: (() => void) | null = null;
 let painterRunWithFrame: ((page: Page, frame: FrameElement, film: Film) => Promise<void>) | null = null;
 let runImageGenerator: ((prompt: string, filmStack: any, gallery: any) => Promise<{media: any, prompt: string} | null>) | null = null;
 
@@ -44,13 +43,9 @@ let unsubscribe: Function | null = null;
 
 // ツール参照を設定
 export function setFrameCommandTools(
-  _commitFn: (tag: any) => void,
-  _forceCommitFn: () => void,
   _painterRunWithFrame: (page: Page, frame: FrameElement, film: Film) => Promise<void>,
   _runImageGenerator: (prompt: string, filmStack: any, gallery: any) => Promise<{media: any, prompt: string} | null>
 ) {
-  commitFn = _commitFn;
-  forceCommitFn = _forceCommitFn;
   painterRunWithFrame = _painterRunWithFrame;
   runImageGenerator = _runImageGenerator;
   
@@ -67,12 +62,12 @@ export function setFrameCommandTools(
 async function onFrameCommand(fit: FrameInspectorTarget | null) {
   if (!fit || fit.command === null) return;
   
-  if (!commitFn || !forceCommitFn || !painterRunWithFrame || !runImageGenerator) {
+  if (!painterRunWithFrame || !runImageGenerator) {
     console.error("Frame command tools not initialized");
     return;
   }
 
-  forceCommitFn();
+  delayedCommiter.force();
 
   // commandを保存してnullにリセット
   const command = fit.command;
@@ -103,7 +98,7 @@ async function onFrameCommand(fit: FrameInspectorTarget | null) {
 
 // 各コマンド実行関数
 async function modalFrameScribble(fit: FrameInspectorTarget) {
-  if (!painterRunWithFrame || !commitFn) return;
+  if (!painterRunWithFrame) return;
   
   toolTipRequest.set(null);
   await painterRunWithFrame(fit.page, fit.frame, fit.commandTargetFilm!);
@@ -112,11 +107,11 @@ async function modalFrameScribble(fit: FrameInspectorTarget) {
     const canvas = media.drawSource; // HACK: ImageMediaのdrawSourceが実体であることを前提にしている
     (canvas as any)["clean"] = {};
   }
-  commitFn(null);
+  commit(null);
 }
 
 async function modalFrameGenerate(fit: FrameInspectorTarget) {
-  if (!runImageGenerator || !commitFn) return;
+  if (!runImageGenerator) return;
 
   toolTipRequest.set(null);
   
@@ -141,11 +136,10 @@ async function modalFrameGenerate(fit: FrameInspectorTarget) {
   fit.frame.prompt = outputPrompt;
   frameInspectorTarget.set(get(frameInspectorTarget));
 
-  commitFn(null);
+  commit(null);
 }
 
 async function punchFrameFilm(fit: FrameInspectorTarget) {
-  if (!commitFn) return;
 
   if (get(onlineStatus) !== 'signed-in') {
     toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
@@ -157,12 +151,11 @@ async function punchFrameFilm(fit: FrameInspectorTarget) {
 
   loading.set(true);
   await punchFilm(film);
-  commitFn(null);
+  commit(null);
   loading.set(false);
 }
 
 async function upscaleFrameFilm(fit: FrameInspectorTarget) {
-  if (!commitFn) return;
 
   if (get(onlineStatus) !== 'signed-in') {
     toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
@@ -173,12 +166,11 @@ async function upscaleFrameFilm(fit: FrameInspectorTarget) {
   if (!(film.media instanceof ImageMedia)) { return; }
 
   await upscaleFilm(film);
-  commitFn(null);
+  commit(null);
   toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
 }
 
 async function outPaintFrameFilm(fit: FrameInspectorTarget) {
-  if (!commitFn) return;
 
   if (get(onlineStatus) !== 'signed-in') {
     toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
@@ -194,7 +186,7 @@ async function outPaintFrameFilm(fit: FrameInspectorTarget) {
     const newFilm = await outPaintFilm(film, padding);
     const index = fit.frame.filmStack.films.indexOf(film);
     fit.frame.filmStack.films.splice(index + 1, 0, newFilm!);
-    commitFn(null);
+    commit(null);
   } catch (e) {
     console.error(e);
     toastStore.trigger({ message: `アウトペインティングに失敗しました`, timeout: 3000});
@@ -204,8 +196,7 @@ async function outPaintFrameFilm(fit: FrameInspectorTarget) {
 }
 
 async function modalFrameVideo(fit: FrameInspectorTarget) {
-  if (!commitFn) return;
   
   await generateMovie(fit.frame.filmStack, fit.commandTargetFilm!);
-  commitFn(null);
+  commit(null);
 }
