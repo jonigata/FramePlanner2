@@ -10,6 +10,7 @@
   import { Modals } from 'svelte-modals'
   import { mascotVisible } from './mascot/mascotStore';
   import { bootstrap, onlineStatus } from './utils/accountStore';
+  import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -61,6 +62,7 @@
   import SocialCard from './publication/SocialCard.svelte';
   import Dump from './transfer/Dump.svelte';
   import Undump from './transfer/Undump.svelte';
+  import MangaFarmDialog from './transfer/MangaFarmDialog.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -99,6 +101,9 @@
     },
     undump: {
       ref: Undump
+    },
+    mangafarm: {
+      ref: MangaFarmDialog
     }
   };
 
@@ -134,6 +139,12 @@
       integrations: [new Sentry.Replay()],
     });
   */
+
+    const d: ModalSettings = {
+      type: 'component',
+      component: 'mangafarm',
+    };
+    modalStore.trigger(d);
   });
 </script>
 
