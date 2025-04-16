@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fileManagerDragging, fileManagerMarkedFlag, loadBookFrom, loadToken, saveBookTo, selectedFile, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder } from "../lib/filesystem/fileSystem";
-  import { mainBook, bookEditor } from '../bookeditor/bookStore';
+  import { mainBook, bookOperators } from '../bookeditor/bookStore';
   import { createEventDispatcher, onMount } from 'svelte'
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
@@ -101,7 +101,7 @@
   }
 
   async function copyMarkedPages() {
-    const marked = $bookEditor!.getMarks();
+    const marked = $bookOperators!.getMarks();
     const pages = $mainBook!.pages;
     const markedPages = pages.filter((_, i) => marked[i]);
 

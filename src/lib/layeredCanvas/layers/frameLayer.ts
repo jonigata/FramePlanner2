@@ -404,7 +404,6 @@ export class FrameLayer extends LayerBase {
     if (layout != this.litLayout) { this.redraw(); }
     this.litLayout = layout;
     if (layout) {
-      console.log("lit layout");
       this.relayoutLitIcons(layout);
       if (this.swapIcon.hintIfContains(position, this.hint)) {
         return this;

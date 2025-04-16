@@ -21,7 +21,7 @@
   import { dominantMode } from "../../uiStore";
   import { redrawToken, forceFontLoadToken } from "../bookStore";
   import Drawer from "../../utils/Drawer.svelte";
-  import { bookEditor } from "../bookStore";
+  import { bookOperators } from "../bookStore";
   import { selection, type SelectionInfo } from '../../utils/selection';
   import { transformText } from '../../supabase';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
@@ -142,7 +142,7 @@
           bubbleSnapshot = snapshot;
           $forceFontLoadToken = true;
           $redrawToken = true;
-          $bookEditor!.commit("bubble");
+          $bookOperators!.commit("bubble");
         }
       }
     } else {
@@ -206,7 +206,7 @@
 
   function onCommit(e: CustomEvent<boolean>) {
     console.log("onCommit", e.detail);
-    $bookEditor!.commit(e.detail ? null : "effect");
+    $bookOperators!.commit(e.detail ? null : "effect");
   }
 
   function onScribble(e: CustomEvent<Film>) {
@@ -240,7 +240,7 @@
     insertBubbleLayers(paperSize, b, index, [newFilm]);
 
     bubble.update(b => b);
-    $bookEditor!.commit(null);
+    $bookOperators!.commit(null);
   }
 
   function onVideo(e: CustomEvent<Film>) {
@@ -256,7 +256,7 @@
     insertBubbleLayers(paperSize, b, index, films);
 
     bubble.update(b => b);
-    $bookEditor!.commit(null);
+    $bookOperators!.commit(null);
   }
 
   function onSelectionChanged(info: SelectionInfo) {

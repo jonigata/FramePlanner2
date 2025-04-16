@@ -3,13 +3,13 @@
   import Drawer from '../utils/Drawer.svelte'
   import { notebookOpen } from './notebookStore';
   import NotebookManual from './NotebookManual.svelte';
-  import { bookEditor, mainBook } from '../bookeditor/bookStore'
+  import { bookOperators, mainBook } from '../bookeditor/bookStore'
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 
   function close() {
     if (JSON.stringify(notebook) !== oldNotebook) {
-      $bookEditor!.commit(null);
+      $bookOperators!.commit(null);
     }
     $notebookOpen = false;
   }

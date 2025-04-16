@@ -4,7 +4,7 @@
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book, emptyNotebook, trivialNewPageProperty } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
-  import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { bookOperators, mainBook, redrawToken } from '../bookeditor/bookStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -83,7 +83,7 @@
   $: onOpen($fileManagerOpen);
   async function onOpen(open: boolean) {
     if (open) {
-      $fileManagerMarkedFlag = $bookEditor!.getMarks().some((m) => m);
+      $fileManagerMarkedFlag = $bookOperators!.getMarks().some((m) => m);
       $fileManagerUsedSizeToken = fileSystem;
       console.log("used size updated");
     }

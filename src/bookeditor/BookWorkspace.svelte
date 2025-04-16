@@ -5,33 +5,26 @@
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
   import { setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { setFrameCommandTools } from './frameinspector/frameInspectorStore';
-  import type { Book, ReadingDirection, WrapMode } from '../lib/book/book';
-  import { mainBook, bookEditor, viewport, redrawToken, undoToken } from './bookStore';
-  import { buildBookEditor, getFoldAndGapFromWrapMode, getDirectionFromReadingDirection } from './operations/buildBookEditor';
+  import type { Book } from '../lib/book/book';
+  import { mainBook, bookOperators, viewport, redrawToken, undoToken } from './bookStore';
+  import { buildBookEditor } from './operations/buildBookEditor';
   import { hint } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
-  import { BubbleLayer } from '../lib/layeredCanvas/layers/bubbleLayer';
   import Painter from '../painter/Painter.svelte';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import ImageProvider from '../generator/ImageProvider.svelte';
-  import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import { bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
 
   let canvas: HTMLCanvasElement;
   let painter: Painter;
   let imageProvider: ImageProvider;
 
-  // コンポーネントで直接参照する必要のあるものだけ保持
   let layeredCanvas : LayeredCanvas;
   let arrayLayer: ArrayLayer;
 
   let editingBookId: string | null = null;
-  let editingPageIds: string[] = [];
-  let editingReadingDirection: ReadingDirection;
-  let editingWrapMode: WrapMode;
-  let forceRebuild = false;
 
-  let bookEditorInstance: BookWorkspaceOperators;
+  let operators: BookWorkspaceOperators;
 
   $: onUndoCommand($undoToken);
   function onUndoCommand(t: 'undo' | 'redo' | null) {
@@ -40,21 +33,19 @@
     if (t == 'redo') { redo(); }
   }
 
-  // undo操作 - ペイント中ならペインタのundo、そうでなければbookのundo
   function undo() {
     if (painter.isPainting()) {
       painter.undo();
     } else {
-      bookEditorInstance.undo();
+      operators.undo();
     }
   }
 
-  // redo操作 - ペイント中ならペインタのredo、そうでなければbookのredo
   function redo() {
     if (painter.isPainting()) {
       painter.redo();
     } else {
-      bookEditorInstance.redo();
+      operators.redo();
     }
   }
 
@@ -75,68 +66,13 @@
       modified = true;
     }
     if (!modified) { return; }
-    forceRebuild = true;
-    $mainBook = $mainBook;
     commit('page-size');
   }
 
-  $: onChangeBookProperty($mainBook?.direction, $mainBook?.wrapMode);
-  function onChangeBookProperty(newDirection: ReadingDirection | undefined, newWrapMode: WrapMode | undefined) {
-    if (newDirection == null || newWrapMode == null) { return; }
-    if (editingReadingDirection != newDirection || editingWrapMode != newWrapMode) {
-      editingReadingDirection = newDirection;
-      editingWrapMode = newWrapMode;
-      forceRebuild = true;
-      $mainBook = $mainBook;
-      commit(null);
-    }
-  }
-
-  $: onChangeBook(canvas, $mainBook!);
-  function onChangeBook(canvas: HTMLCanvasElement, book: Book) {
+  $: onChangeBook(canvas, $mainBook);
+  function onChangeBook(canvas: HTMLCanvasElement | null, book: Book | null) {
     console.log("onChangeBook");
     if (!canvas || !book) { return; }
-
-    if (arrayLayer &&
-        (editingReadingDirection != book.direction ||
-         editingWrapMode != book.wrapMode)) {
-
-      editingReadingDirection = book.direction;
-      editingWrapMode = book.wrapMode;
-
-
-      const direction = getDirectionFromReadingDirection(book.direction);
-      const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(editingWrapMode);
-      arrayLayer.array.direction = direction;
-      arrayLayer.array.fold = fold;
-      arrayLayer.array.gapX = gapX;
-      arrayLayer.array.gapY = gapY;
-      for (const paper of arrayLayer.array.papers) {
-        paper.paper.findLayer(BubbleLayer)!.setFold(fold);
-      }
-
-      $viewport!.dirty = true;
-    }
-
-    const newPageIds = book.pages.map(p => p.id);
-    if (!forceRebuild) {
-      if (arrayLayer) {
-        if (editingPageIds.join(",") === newPageIds.join(",")) {
-          // frames/bubblesの再設定だけは毎回しておく
-          let i = 0;
-          for (const paper of arrayLayer.array.papers) {
-            const rendererLayer = paper.paper.findLayer(PaperRendererLayer) as PaperRendererLayer;
-            rendererLayer.setBubbles(book.pages[i].bubbles);
-            rendererLayer.setFrameTree(book.pages[i].frameTree);
-            i++;
-          }
-          layeredCanvas.redraw();
-          return;
-        }
-      }
-    }
-    editingPageIds = newPageIds;
-    forceRebuild = false;
 
     console.log("*********** buildBookEditor from BookEditor");
     layeredCanvas?.cleanup();
@@ -150,25 +86,11 @@
     $viewport.dirty = true;
     editingBookId = book.revision.id;
     
-    // BookEditorImplインスタンスを作成
-    bookEditorInstance = new BookWorkspaceOperators(
-      canvas,
-      book,
-      () => painter.chase()
-    );
-    
-    // BookEditorImplは自身でhintとviewportChangedを実装
-    
-    $bookEditor = bookEditorInstance;
+    operators = new BookWorkspaceOperators(canvas, book, () => painter.chase());
+    $bookOperators = operators;
 
-    // BookEditorに必要なリソースをビルド
-    const builtBook = buildBookEditor(
-      $viewport,
-      book,
-      $bookEditor);
-    
-    // BookEditorImplに作成したリソースを一括設定
-    bookEditorInstance.setBuiltBook(builtBook);
+    const builtBook = buildBookEditor($viewport, book, $bookOperators);
+    operators.setBuiltBook(builtBook);
     
     // Painterなど他のコンポーネントでも使用するため、ローカル変数に保持
     layeredCanvas = builtBook.layeredCanvas;
@@ -188,15 +110,6 @@
     imageProvider?.run?.bind(imageProvider)
   );
 
-  onDestroy(() => {
-    layeredCanvas?.cleanup();
-  });
-
-  function onResizeCanvas(e: CustomEvent) {
-    if (!layeredCanvas || !$viewport) { return; }
-    $viewport.dirty = true;
-  }
-
   $: onRedraw($redrawToken);
   function onRedraw(token: boolean) {
     if (!token) { return; }
@@ -204,9 +117,18 @@
     $redrawToken = false;
   }
 
-  $: if ($viewport?.dirty) {
-    layeredCanvas?.redraw();    
+  function onResizeCanvas(e: CustomEvent) {
+    if (!layeredCanvas || !$viewport) { return; }
+    $viewport.dirty = true;
   }
+
+  $: if ($viewport?.dirty) {
+    layeredCanvas?.redraw();
+  }
+
+  onDestroy(() => {
+    layeredCanvas?.cleanup();
+  });
 </script>
 
 <div class="main-paper-container">

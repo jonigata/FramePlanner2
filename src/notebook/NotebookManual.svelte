@@ -3,7 +3,7 @@
   import { type Storyboard } from '$bookTypes/storyboard';
   import { type Thinker } from "$protocolTypes/adviseTypes.d";
   import { commitBook, type NotebookLocal, type CharacterLocal } from '../lib/book/book';
-  import { bookEditor, mainBook, redrawToken } from '../bookeditor/bookStore'
+  import { bookOperators, mainBook, redrawToken } from '../bookeditor/bookStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
   import { persistentText } from '../utils/persistentText';
@@ -270,7 +270,7 @@
       storyboardWaiting = false;
       console.log(result);
       const receivedPages = makePagesFromStoryboard(result as Storyboard);
-      let marks = $bookEditor!.getMarks();
+      let marks = $bookOperators!.getMarks();
       const newPages = $mainBook!.pages.filter((p, i) => !marks[i]);
       const oldLength = newPages.length;
       newPages.push(...receivedPages);
@@ -278,11 +278,11 @@
       commit();
 
       await tick();
-      marks = $bookEditor!.getMarks();
+      marks = $bookOperators!.getMarks();
       newPages.forEach((p, i) => {
         if (oldLength <= i) marks[i] = true;
       });
-      $bookEditor!.setMarks(marks);
+      $bookOperators!.setMarks(marks);
       $redrawToken = true;
     } catch (e) {
       toastStore.trigger({ message: 'AIエラー', timeout: 1500});

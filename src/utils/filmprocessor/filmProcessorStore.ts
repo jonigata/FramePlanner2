@@ -1,5 +1,5 @@
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-import { redrawToken, bookEditor } from "../../bookeditor/bookStore";
+import { redrawToken, bookOperators } from "../../bookeditor/bookStore";
 import { PubSubQueue } from "../pubsub";
 import { pollMediaStatus } from '../../supabase';
 import type { RemoteMediaReference } from "src/lib/filesystem/fileSystem";
@@ -15,7 +15,7 @@ filmProcessorQueue.subscribe(async (film: Film) => {
       film.media.setMedia(mediaResources[0]);
     }
     console.log("================================================================ filmProcessorQueue.subscribe", film.media);
-    get(bookEditor)?.commit(null);
+    get(bookOperators)?.commit(null);
   }
 
   let inputMedia = film.media;

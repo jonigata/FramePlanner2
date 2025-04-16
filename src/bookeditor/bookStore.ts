@@ -8,7 +8,7 @@ import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 export const mainBook = writable<Book | null>(null);
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
 export const viewport: Writable<Viewport | null> = writable(null);
-export const bookEditor: Writable<BookOperators | null> = writable(null);
+export const bookOperators: Writable<BookOperators | null> = writable(null);
 export const redrawToken = writable(false);
 // redrawToken.subscribe(value => {
 //   console.trace('redrawToken changed:', value);

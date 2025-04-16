@@ -2,7 +2,7 @@
   import { saveAsPngZip, saveAsPsdZip, makeZip } from "./saver/saveAsZip";
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
-  import { mainBook, bookEditor } from "../bookeditor/bookStore";
+  import { mainBook, bookOperators } from "../bookeditor/bookStore";
   import { saveAsPng } from "./saver/saveAsPng";
   import { saveAsPsd } from "./saver/saveAsPsd";
   import { toastStore } from '@skeletonlabs/skeleton';
@@ -26,7 +26,7 @@
   async function onTask(ba: BookArchiveOperation[]) {
     if (ba == null || ba.length === 0) { return; }
     console.log("onTask", ba);
-    const marks: boolean[] = $bookEditor!.getMarks();
+    const marks: boolean[] = $bookOperators!.getMarks();
     const pages = $mainBook!.pages;
     const filteredPages = pages.filter((_, i) => marks[i]);
     const targetPages = 0 < filteredPages.length ? filteredPages : pages;
@@ -191,7 +191,7 @@
       // URLをコピー
       const downloadUrl = currentUrl.toString();
       $mainBook!.attributes.publishUrl = downloadUrl;
-      $bookEditor!.commit(null);
+      $bookOperators!.commit(null);
       console.log("downloadUrl", downloadUrl);
       try {
         // localhost及びhttps以外では失敗する

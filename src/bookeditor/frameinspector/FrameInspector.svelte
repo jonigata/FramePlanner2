@@ -6,7 +6,7 @@
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
   import Drawer from "../../utils/Drawer.svelte";
-  import { bookEditor } from "../bookStore";
+  import { bookOperators } from "../bookStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { calculateFramePadding } from '../../utils/outPaintFilm'
 
@@ -18,7 +18,7 @@
   	(fit) => fit?.frame.visibility,
   	(v, fit) => {
       fit!.frame.visibility = v!;
-      $bookEditor!.commit(null);
+      $bookOperators!.commit(null);
       return fit;
     }
   );
@@ -28,7 +28,7 @@
 
   function onCommit(e: CustomEvent<boolean>) {
     console.log("FrameInspector", e.detail);
-    $bookEditor!.commit(e.detail ? null : "effect");
+    $bookOperators!.commit(e.detail ? null : "effect");
   }
 
   function onScribble(e: CustomEvent<Film>) {
@@ -68,7 +68,7 @@
     const newFilm = film.clone();
     insertFrameLayers(page.frameTree, paperSize, element, index, [newFilm]);
     filmStack = filmStack;
-    $bookEditor!.commit(null);
+    $bookOperators!.commit(null);
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
@@ -80,7 +80,7 @@
     insertFrameLayers(page.frameTree, paperSize, element, index, films);
 
     filmStack = filmStack;
-    $bookEditor!.commit(null);
+    $bookOperators!.commit(null);
   }
 
   function onOutPainting(e: CustomEvent<Film>) {
