@@ -62,6 +62,9 @@
     width: 24px;
     height: 24px;
   }
+  .icon-container img {
+    cursor: pointer;
+  }
   .waiting {
     width: 100%;
     height: 100%;

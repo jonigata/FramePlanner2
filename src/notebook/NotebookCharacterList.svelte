@@ -101,6 +101,7 @@
   .advise {
     width: 24px;
     height: 24px;
+    cursor: pointer;
   }
   .waiting {
     width: 100%;

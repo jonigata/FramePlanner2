@@ -84,6 +84,7 @@
     position: absolute;
     right: 2px;
     bottom: 2px;
+    cursor: pointer;
   }
   .character-name {
     font-size: 16px;
@@ -97,6 +98,7 @@
   .trash {
     width: 20px;
     height: 20px;
+    cursor: pointer;
   }
   .waiting {
     width: 100%;
@@ -108,11 +110,13 @@
   .no-portrait {
     width: 64px;
     height: 64px;
+    cursor: pointer;
   }
   .color-label {
     width: 30px;
     height: 20px;
     margin-left: 4px;
     margin-right: 4px;
+    cursor: pointer;
   }
 </style>
