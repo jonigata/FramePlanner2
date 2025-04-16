@@ -17,6 +17,7 @@ import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type Noteb
 const GetUploadUrlRequestSchema = z.object({ filename: z.string() });
 const GetDownloadUrlRequestSchema = z.object({ filename: z.string() });
 const EraseFileRequestSchema = z.object({ filename: z.string() });
+
 import {
   CheckUsernameAvailableRequestSchema, CheckUsernameAvailableResponseSchema,
   GetProfileRequestSchema, GetProfileResponseSchema,
@@ -183,4 +184,16 @@ export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'vi
 
 export async function recognizeImage(req: VisionRequest) {
   return await invoke("charged/utilities/vision", req, VisionRequestSchema, VisionResponseSchema);
+}
+
+const ContactRequestSchema = z.object({
+  message: z.string(),
+});
+const ContactResponseSchema = z.object({
+  message: z.string(),
+});
+type ContactRequest = z.infer<typeof ContactRequestSchema>;
+
+export async function contact(req: ContactRequest) {
+  return await invoke("contact/contact", req, ContactRequestSchema, ContactResponseSchema);
 }

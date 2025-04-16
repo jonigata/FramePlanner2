@@ -3,8 +3,9 @@
   import { aboutOpen } from './aboutStore';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import aiPictorsIcon from '../assets/aipictors_logo_0.webp'
-  import { postContact } from '../firebase';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { onlineAccount } from '../utils/accountStore';
+  import { contact } from '../supabase';
 
   let contactText = "";
 
@@ -24,7 +25,7 @@
     modalStore.trigger(d);    
   }
   
-  async function contact() {
+  async function doContact() {
     console.log(contactText);
     if (contactText == null || contactText == "") {
       toastStore.trigger({ message: '要望を入力してください', timeout: 1500});
@@ -33,9 +34,15 @@
     if (contactText === "throw error") {
       throw new Error("intentional error");
     }
-    await postContact(contactText);
-    toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
-    contactText = "";
+    try {
+      await contact({message:contactText});
+      toastStore.trigger({ message: '要望を投稿しました', timeout: 1500});
+      contactText = "";
+    }
+    catch (e) {
+      toastStore.trigger({ message: '要望の投稿に失敗しました', timeout: 1500});
+      console.log(e);
+    }
   }
 
 </script>
@@ -164,11 +171,13 @@
       <span class="comic-link" on:click={showLicense}>ライセンス</span>
     </p>
 
+    {#if $onlineAccount}
     <h2>要望(Contact)</h2>
     <div class="hbox mx-2" style="margin-top: 4px;">
       <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
-      <button class="btn btn-sm variant-filled paper-size"  on:click={contact}>送信</button>
+      <button class="btn btn-sm variant-filled paper-size"  on:click={doContact}>送信</button>
     </div>
+    {/if}
   </div>
 </Drawer>
 </div>
@@ -180,8 +189,7 @@
     font-family: 'Yu Gothic', sans-serif;
     font-weight: 500;
     text-align: left;
-    padding-top: 16px;
-    padding-left: 16px;
+    padding: 16px;
   }
   h2 {
     font-family: '源暎エムゴ';
