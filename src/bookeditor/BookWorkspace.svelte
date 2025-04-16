@@ -104,6 +104,7 @@
       editingReadingDirection = book.direction;
       editingWrapMode = book.wrapMode;
 
+
       const direction = getDirectionFromReadingDirection(book.direction);
       const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(editingWrapMode);
       arrayLayer.array.direction = direction;
@@ -115,7 +116,6 @@
       }
 
       $viewport!.dirty = true;
-      layeredCanvas.redraw();
     }
 
     const newPageIds = book.pages.map(p => p.id);
@@ -195,7 +195,6 @@
   function onResizeCanvas(e: CustomEvent) {
     if (!layeredCanvas || !$viewport) { return; }
     $viewport.dirty = true;
-    layeredCanvas.redraw();
   }
 
   $: onRedraw($redrawToken);
@@ -203,6 +202,10 @@
     if (!token) { return; }
     layeredCanvas?.redraw();
     $redrawToken = false;
+  }
+
+  $: if ($viewport?.dirty) {
+    layeredCanvas?.redraw();    
   }
 </script>
 
