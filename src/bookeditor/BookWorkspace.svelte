@@ -18,17 +18,19 @@
   import { bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
 
   let canvas: HTMLCanvasElement;
-  // コンポーネントで直接参照する必要のあるものだけ保持
-  let layeredCanvas : LayeredCanvas;
-  let arrayLayer: ArrayLayer;
-  let editingBookId: string | null = null;
   let painter: Painter;
   let imageProvider: ImageProvider;
 
+  // コンポーネントで直接参照する必要のあるものだけ保持
+  let layeredCanvas : LayeredCanvas;
+  let arrayLayer: ArrayLayer;
+
+  let editingBookId: string | null = null;
+  let editingPageIds: string[] = [];
+  let editingReadingDirection: ReadingDirection;
+  let editingWrapMode: WrapMode;
   let forceRebuild = false;
-  let pageIds: string[] = [];
-  let readingDirection: ReadingDirection;
-  let wrapMode: WrapMode;
+
   let bookEditorInstance: BookWorkspaceOperators;
 
   $: onUndoCommand($undoToken);
@@ -81,9 +83,9 @@
   $: onChangeBookProperty($mainBook?.direction, $mainBook?.wrapMode);
   function onChangeBookProperty(newDirection: ReadingDirection | undefined, newWrapMode: WrapMode | undefined) {
     if (newDirection == null || newWrapMode == null) { return; }
-    if (readingDirection != newDirection || wrapMode != newWrapMode) {
-      readingDirection = newDirection;
-      wrapMode = newWrapMode;
+    if (editingReadingDirection != newDirection || editingWrapMode != newWrapMode) {
+      editingReadingDirection = newDirection;
+      editingWrapMode = newWrapMode;
       forceRebuild = true;
       $mainBook = $mainBook;
       bookEditorInstance?.commit(null);
@@ -96,14 +98,14 @@
     if (!canvas || !book) { return; }
 
     if (arrayLayer &&
-        (readingDirection != book.direction ||
-         wrapMode != book.wrapMode)) {
+        (editingReadingDirection != book.direction ||
+         editingWrapMode != book.wrapMode)) {
 
-      readingDirection = book.direction;
-      wrapMode = book.wrapMode;
+      editingReadingDirection = book.direction;
+      editingWrapMode = book.wrapMode;
 
       const direction = getDirectionFromReadingDirection(book.direction);
-      const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(wrapMode);
+      const {fold, gapX, gapY} = getFoldAndGapFromWrapMode(editingWrapMode);
       arrayLayer.array.direction = direction;
       arrayLayer.array.fold = fold;
       arrayLayer.array.gapX = gapX;
@@ -119,7 +121,7 @@
     const newPageIds = book.pages.map(p => p.id);
     if (!forceRebuild) {
       if (arrayLayer) {
-        if (pageIds.join(",") === newPageIds.join(",")) {
+        if (editingPageIds.join(",") === newPageIds.join(",")) {
           // frames/bubblesの再設定だけは毎回しておく
           let i = 0;
           for (const paper of arrayLayer.array.papers) {
@@ -133,7 +135,7 @@
         }
       }
     }
-    pageIds = newPageIds;
+    editingPageIds = newPageIds;
     forceRebuild = false;
 
     console.log("*********** buildBookEditor from BookEditor");
