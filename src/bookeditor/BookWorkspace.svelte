@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { setLayerRefs } from './operations/commitOperations';
+  import { setLayerRefs, commit } from './operations/commitOperations';
   import { BookWorkspaceOperators } from './BookWorkspaceOperators';
   import { onDestroy } from 'svelte';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
@@ -59,7 +59,7 @@
   }
 
   $: if ($bubbleBucketDirty) {
-    bookEditorInstance?.commit(null);
+    commit(null);
     $bubbleBucketDirty = false;
   }
 
@@ -77,7 +77,7 @@
     if (!modified) { return; }
     forceRebuild = true;
     $mainBook = $mainBook;
-    bookEditorInstance?.commit('page-size');
+    commit('page-size');
   }
 
   $: onChangeBookProperty($mainBook?.direction, $mainBook?.wrapMode);
@@ -88,7 +88,7 @@
       editingWrapMode = newWrapMode;
       forceRebuild = true;
       $mainBook = $mainBook;
-      bookEditorInstance?.commit(null);
+      commit(null);
     }
   }
 

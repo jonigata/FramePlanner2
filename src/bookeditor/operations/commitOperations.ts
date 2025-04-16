@@ -1,13 +1,13 @@
-import type { Book, HistoryTag } from '../../lib/book/book.js';
-import { commitBook, revertBook, undoBookHistory, redoBookHistory } from '../../lib/book/book.js';
-import { mainBook } from '../bookStore.js';
-import type { ArrayLayer } from '../../lib/layeredCanvas/layers/arrayLayer.js';
-import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer.js';
-import { bubbleInspectorTarget } from '../bubbleinspector/bubbleInspectorStore.js';
-import { frameInspectorTarget } from '../frameinspector/frameInspectorStore.js';
-import { DelayedCommiterGroup } from '../../utils/delayedCommiter.js';
-import type { LayeredCanvas } from '../../lib/layeredCanvas/system/layeredCanvas.js';
-import type { FocusKeeper } from '../../lib/layeredCanvas/tools/focusKeeper.js';
+import type { HistoryTag } from '../../lib/book/book';
+import { commitBook, revertBook, undoBookHistory, redoBookHistory } from '../../lib/book/book';
+import { mainBook } from '../bookStore';
+import type { ArrayLayer } from '../../lib/layeredCanvas/layers/arrayLayer';
+import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
+import { bubbleInspectorTarget } from '../bubbleinspector/bubbleInspectorStore';
+import { frameInspectorTarget } from '../frameinspector/frameInspectorStore';
+import { DelayedCommiterGroup } from '../../utils/delayedCommiter';
+import type { LayeredCanvas } from '../../lib/layeredCanvas/system/layeredCanvas';
+import type { FocusKeeper } from '../../lib/layeredCanvas/tools/focusKeeper';
 
 // レイヤードキャンバスの参照
 let _layeredCanvas: LayeredCanvas | null = null;
