@@ -11,7 +11,7 @@
     FramePlannerは、「まんがファーム！」の<a href="https://frameplanner.manga-farm.online" target="_blank">1セクション</a>として再スタートしています。今まで通り無料、ログインなしで使えます！
   </p>
   <p>
-    旧サイト(https://frameplanner.online、https://frameplanner-e5569.web.app)は<span  class="text-red-700">今後更新されません</span>ので、お早めに移行をお願いします。
+    旧サイト(このサイト、つまりhttps://frameplanner.online、https://frameplanner-e5569.web.app)は<span  class="text-red-700">今後更新されません</span>ので、お早めに移行をお願いします。
   </p>
   <p>
     新サイトではすでに、動画埋め込み・フォルダパッケージ・高性能背景除去・アップスケーラー・ページ複製・名簿機能などの新機能を実装済みです。

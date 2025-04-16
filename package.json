@@ -67,6 +67,7 @@
     "firebase": "^10.14.1",
     "firebase-tools": "^13.29.1",
     "firebaseui": "^6.1.0",
+    "glob": "^11.0.1",
     "idb": "^8.0.0",
     "io-ts": "^2.2.21",
     "jsonc-parser": "^3.2.0",
