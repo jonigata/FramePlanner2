@@ -10,6 +10,7 @@
   export let chosen: Media | null;
   export let refered: Media | null;
   export let accessable: boolean;
+  export let referable: boolean;
 
   let medias: Media[] | undefined;
   let observerTarget: HTMLDivElement; // 監視用の DOM 要素
@@ -64,6 +65,7 @@
       width={columnWidth}
       media={media}
       {accessable}
+      {referable}
       on:commit
       on:delete={onDelete}
       on:dragstart

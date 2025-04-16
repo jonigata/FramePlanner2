@@ -94,7 +94,7 @@
 
 <div class="dropzone" use:dropzone={onFileDrop}>
   {#if gallery != null}
-    <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+    <Gallery columnWidth={220} referable={false} bind:items={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
   {/if}
 </div>
 

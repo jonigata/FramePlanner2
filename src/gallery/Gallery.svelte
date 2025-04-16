@@ -7,6 +7,7 @@
   export let items: GalleryItem[];
   export let columnWidth: number;
   export let accessable: boolean = true;
+  export let referable: boolean = true;
 
   export let chosen: Media | null = null;
   export let refered: Media | null = null;
@@ -37,6 +38,7 @@
       bind:chosen
       bind:refered
       {accessable}
+      {referable}
       on:commit={onCommit}
       on:delete={onDelete}
       on:dragstart={onDragStart}

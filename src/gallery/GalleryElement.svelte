@@ -17,6 +17,7 @@
   export let chosen: Media | null = null;
   export let refered: Media | null = null;
   export let accessable: boolean = true;
+  export let referable: boolean = true;
 
   let height: number = 160;
 
@@ -94,13 +95,15 @@
     <div class="telescope-button" on:click={e => onView(e)} use:toolTip={"見る"}>
       <img src={telescope} alt="view" />
     </div>
-    <div class="reference-button" on:click={e => onRefer(e)} use:toolTip={"i2i参照"}>
-      {#if refered === media}
-        <img src={referenceSelected} alt="reference"/>
-      {:else}
-        <img src={reference} alt="reference" />
-      {/if}
-    </div>
+    {#if referable}
+      <div class="reference-button" on:click={e => onRefer(e)} use:toolTip={"i2i参照"}>
+        {#if refered === media}
+          <img src={referenceSelected} alt="reference"/>
+        {:else}
+          <img src={reference} alt="reference" />
+        {/if}
+      </div>
+    {/if}
   {/if}
   {#if media.type === 'video' && duration}
     <div class="duration-label">
