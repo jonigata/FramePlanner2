@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { resolve } from 'path'
-import glob from 'glob'
+import { glob } from 'glob'
 import * as path from 'path'
 import { visualizer } from "rollup-plugin-visualizer";
 
