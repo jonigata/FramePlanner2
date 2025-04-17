@@ -11,7 +11,6 @@
   $: uiValue = value;
   $: onChanged(uiValue);
   function onChanged(v: number) {
-    console.log("onChanged", v);
     value = v;
   }
 </script>

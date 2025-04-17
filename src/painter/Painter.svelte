@@ -104,7 +104,8 @@
   }
 
   function findPaper() {
-    return arrayLayer.array.papers[indexOfPage(painterPage)].paper;
+    const index = indexOfPage(painterPage);
+    return arrayLayer.array.papers[index].paper;
   }
 
   function indexOfPage(page: Page | null) {

@@ -229,7 +229,7 @@ function buildPaper(
   // addViewerLayer(paper, page, focusKeeper, operators);
 
   // inline painter
-  const inlinePainterLayer = new InlinePainterLayer(frameLayer, operators.chase);
+  const inlinePainterLayer = new InlinePainterLayer(frameLayer, () => operators.chase());
   paper.addLayer(inlinePainterLayer);
 
   return paper;

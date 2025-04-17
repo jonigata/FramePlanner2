@@ -148,12 +148,11 @@ export class BookWorkspaceOperators implements BookOperators {
   }
 
   focusFrame(page: Page, f: FrameElement | null, p: Vector | null): void {
+    console.log("focusFrame", page?.id);
     if (f) {
-      const [cx, cy] = p!;
-      const offset = this.canvas.height / 2 < cy ? -1 : 1;
-
       frameInspectorTarget.set({
         frame: f,
+        filmStack: f.filmStack,
         page,
         command: null,
         commandTargetFilm: null,
@@ -176,6 +175,7 @@ export class BookWorkspaceOperators implements BookOperators {
 
         bubbleInspectorTarget.set({
           bubble: b,
+          filmStack: b.filmStack,
           page,
           command: null,
           commandTargetFilm: null,
@@ -293,7 +293,6 @@ export class BookWorkspaceOperators implements BookOperators {
   chase(): void {
     this.painterChase();
   }
-
 
   getFocusedPage(): Page {
     if (!this.arrayLayer) {

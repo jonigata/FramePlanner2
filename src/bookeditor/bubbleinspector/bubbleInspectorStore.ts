@@ -1,25 +1,27 @@
-import { type Writable, writable, get } from "svelte/store";
+import { type Writable, writable } from "svelte/store";
 import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
 import { Film } from "../../lib/layeredCanvas/dataModels/film";
-import { ImageMedia } from "../../lib/layeredCanvas/dataModels/media";
+
 import type { Page } from '../../lib/book/book';
 import { minimumBoundingScale } from "../../lib/layeredCanvas/tools/geometry/geometry";
-import { toastStore } from '@skeletonlabs/skeleton';
-import { punchFilm } from '../../utils/punchImage';
-import { upscaleFilm } from '../../utils/upscaleImage';
-import { onlineStatus } from "../../utils/accountStore";
-import { loading } from '../../utils/loadingStore';
-import { toolTipRequest } from '../../utils/passiveToolTipStore';
-import { commit, delayedCommiter } from '../operations/commitOperations';
+import { commit } from '../operations/commitOperations';
+import type { FilmOperationTarget } from '../operations/filmStackOperations';
+import {
+  setupCommandSubscription,
+  handleScribbleCommand,
+  handleGenerateCommand,
+  handlePunchCommand,
+  handleUpscaleCommand,
+  handleVideoCommand,
+  processCommand
+} from '../operations/filmStackOperations';
 
 type BubbleInspectorCommand = "generate" | "scribble" | "punch" | "upscale" | "video" | "split";
 
-export type BubbleInspectorTarget = {
-  bubble: Bubble,
-  page: Page,
-  command: BubbleInspectorCommand | null,
-  commandTargetFilm: Film | null,
-  commandArgs?: any, // コマンドの追加パラメータ
+export interface BubbleInspectorTarget extends FilmOperationTarget {
+  bubble: Bubble;
+  command: BubbleInspectorCommand | null;
+  commandArgs?: any; // コマンドの追加パラメータ
 }
 
 export const bubbleInspectorTarget: Writable<BubbleInspectorTarget | null> = writable(null);
@@ -29,8 +31,8 @@ export const bubbleInspectorRebuildToken: Writable<number> = writable(0);
 let painterRunWithBubble: ((page: Page, bubble: Bubble, film: Film) => Promise<void>) | null = null;
 let runImageGenerator: ((prompt: string, filmStack: any, gallery: any) => Promise<{media: any, prompt: string} | null>) | null = null;
 
-// サブスクリプション解除用の関数
-let unsubscribe: Function | null = null;
+// サブスクリプション解除用の関数参照用オブジェクト
+const unsubscribeRef = { value: null as Function | null };
 
 // ツール参照を設定
 export function setBubbleCommandTools(
@@ -40,13 +42,12 @@ export function setBubbleCommandTools(
   painterRunWithBubble = _painterRunWithBubble;
   runImageGenerator = _runImageGenerator;
   
-  // 既存のサブスクリプションを解除
-  if (unsubscribe) {
-    unsubscribe();
-  }
-  
-  // 新しいサブスクリプションを開始
-  unsubscribe = bubbleInspectorTarget.subscribe(onBubbleCommand);
+  // 共通ライブラリを使用してサブスクリプション設定
+  setupCommandSubscription<BubbleInspectorTarget>(
+    bubbleInspectorTarget,
+    onBubbleCommand,
+    unsubscribeRef
+  );
 }
 
 // コマンド処理関数
@@ -58,91 +59,27 @@ async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
     return;
   }
 
-  delayedCommiter.force();
-
-  // commandを保存してnullにリセット
-  const command = bit.command;
-  bubbleInspectorTarget.set({ ...bit, command: null });
-
-  switch (command) {
-    case "scribble":
-      await modalBubbleScribble(bit);
-      break;
-    case "generate":
-      await modalBubbleGenerate(bit);
-      break;
-    case "punch":
-      await punchBubbleFilm(bit);
-      break;
-    case "upscale":
-      await upscaleBubbleFilm(bit);
-      break;
-    case "split":
-      await splitBubble(bit);
-      break;
-  }
+  // 共通ライブラリを使用してコマンド処理
+  await processCommand<BubbleInspectorTarget>(bit, bubbleInspectorTarget, {
+    "scribble": async (target) => handleScribbleCommand(target, painterRunWithBubble!, target.bubble),
+    "generate": async (target) => handleGenerateCommand(
+      target,
+      runImageGenerator!,
+      (film, target) => {
+        const paperSize = target.page.paperSize;
+        const bubbleSize = target.bubble.getPhysicalSize(paperSize);
+        return minimumBoundingScale(film.media.size, bubbleSize);
+      },
+      bubbleInspectorTarget,
+      target.bubble
+    ),
+    "punch": handlePunchCommand,
+    "upscale": handleUpscaleCommand,
+    "split": splitBubble,
+    "video": handleVideoCommand
+  });
+  
   bubbleInspectorRebuildToken.update(v => v + 1);
-}
-
-// 各コマンド実行関数
-async function modalBubbleScribble(bit: BubbleInspectorTarget) {
-  if (!painterRunWithBubble) return;
-  
-  toolTipRequest.set(null);
-  await painterRunWithBubble(bit.page, bit.bubble, bit.commandTargetFilm!);
-  commit(null);
-}
-
-async function modalBubbleGenerate(bit: BubbleInspectorTarget) {
-  if (!runImageGenerator) return;
-
-  const bubble = bit.bubble;
-  const inputPrompt = bubble.prompt || "";
-  const r = await runImageGenerator(inputPrompt, bubble.filmStack, bubble.gallery);
-  if (r == null) { return; }
-  
-  const film = new Film(r.media);
-  const paperSize = bit.page.paperSize;
-  const bubbleSize = bubble.getPhysicalSize(paperSize);
-  const scale = minimumBoundingScale(film.media.size, bubbleSize);
-  film.setShiftedScale(paperSize, scale);
-  
-  bubble.filmStack.films.push(film);
-  bubble.prompt = r.prompt;
-  bubbleInspectorTarget.set(get(bubbleInspectorTarget));
-  
-  commit(null);
-}
-
-async function punchBubbleFilm(bit: BubbleInspectorTarget) {
-
-  if (get(onlineStatus) !== 'signed-in') {
-    toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-    return;
-  }
-
-  const film = bit.commandTargetFilm!;
-  if (!(film.media instanceof ImageMedia)) { return; }
-
-  loading.set(true);
-  await punchFilm(film);
-  commit(null);
-  loading.set(false);
-}
-
-async function upscaleBubbleFilm(bit: BubbleInspectorTarget) {
-
-  if (get(onlineStatus) !== 'signed-in') {
-    toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
-    return;
-  }
-
-  const film = bit.commandTargetFilm!;
-  if (!(film.media instanceof ImageMedia)) { return; }
-
-  await upscaleFilm(film);
-  commit(null);
-  toastStore.trigger({ message: `アップスケールしました`, timeout: 3000});
 }
 
 // バブルを分割する処理

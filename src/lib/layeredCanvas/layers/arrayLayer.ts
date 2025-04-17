@@ -5,8 +5,11 @@ import { ClickableIcon } from "../tools/draw/clickableIcon";
 import { keyDownFlags } from "../system/keyCache";
 import { drawSelectionFrame } from "../tools/draw/selectionFrame";
 import { rectToTrapezoid } from '../tools/geometry/trapezoid';
+import { ulid } from 'ulid';
 
 export class ArrayLayer extends LayerBase {
+  ulid: string;
+
   array: PaperArray;
   onInsert: (index: number) => void;
   onDelete: (index: number) => void;
@@ -43,6 +46,8 @@ export class ArrayLayer extends LayerBase {
     onTweak: (index: number) => void) { 
 
     super();
+    this.ulid = ulid();
+
     this.array = new PaperArray(papers, fold, gapX, gapY, direction);
     this.markFlags = marks;
     this.onInsert = onInsert;

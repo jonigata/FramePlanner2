@@ -136,7 +136,7 @@
   </AutoSizeCanvas>
 </div>
 
-<Painter bind:this={painter} bind:layeredCanvas bind:arrayLayer />
+<Painter bind:this={painter} layeredCanvas={layeredCanvas} arrayLayer={arrayLayer} />
 <ImageProvider bind:this={imageProvider} />
 
 <style>
