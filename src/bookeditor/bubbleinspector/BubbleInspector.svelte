@@ -425,6 +425,7 @@
             <select class="select h-8 p-0 w-full" bind:value={transformTextMethod}>
               <option value="translateToEnglish">英訳</option>
               <option value="addFurigana">ふりがな</option>
+              <option value="simplifySpeech">シンプル化</option>
             </select>
             <button type="button" class="btn btn-sm variant-filled" on:click={onTransformText}><span class="text-sm text-white" use:toolTip={"AIテキスト編集の実行[1]"}>適用</span></button>
           </div>          
