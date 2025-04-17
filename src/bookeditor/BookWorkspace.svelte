@@ -14,6 +14,8 @@
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import ImageProvider from '../generator/ImageProvider.svelte';
   import { bubbleBucketDirty } from '../bubbleBucket/bubbleBucketStore';
+  import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
+  import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 
   let canvas: HTMLCanvasElement;
   let painter: Painter;
@@ -26,6 +28,7 @@
   let bookSnapshot: string | null = null;
 
   let operators: BookWorkspaceOperators;
+  const defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
 
   $: onUndoCommand($undoToken);
   function onUndoCommand(t: 'undo' | 'redo' | null) {
@@ -93,8 +96,8 @@
     operators = new BookWorkspaceOperators(canvas, book, () => painter.chase());
     $bookOperators = operators;
 
-    const builtBook = buildBookEditor($viewport, book, $bookOperators);
-    operators.setBuiltBook(builtBook);
+    const builtBook = buildBookEditor($viewport, book, $bookOperators, defaultBubbleSlot);
+    operators.setBuiltBook(builtBook, defaultBubbleSlot);
     
     // Painterなど他のコンポーネントでも使用するため、ローカル変数に保持
     layeredCanvas = builtBook.layeredCanvas;

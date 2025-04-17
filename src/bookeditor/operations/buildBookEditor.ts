@@ -19,9 +19,9 @@ export function buildBookEditor(
   viewport: Viewport,
   book: Book,
   editor: BookOperators,
+  defaultBubbleSlot: DefaultBubbleSlot
 ) {
   const focusKeeper = new FocusKeeper();
-  const defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
 
   const layeredCanvas = new LayeredCanvas(viewport, true);
 
@@ -89,7 +89,7 @@ export function buildBookEditor(
     );
   });
 
-  return { arrayLayer, layeredCanvas, focusKeeper, marks, defaultBubbleSlot };
+  return { arrayLayer, layeredCanvas, focusKeeper, marks };
 }
 
 export function getFoldAndGapFromWrapMode(wrapMode: WrapMode): { fold: number; gapX: number; gapY: number } {

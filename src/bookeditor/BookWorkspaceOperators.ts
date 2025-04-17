@@ -59,19 +59,21 @@ export class BookWorkspaceOperators implements BookOperators {
   /**
    * ビルドされたブックエディタのリソースを一括設定
    */
-  setBuiltBook(builtBook: {
-    layeredCanvas: LayeredCanvas,
-    arrayLayer: ArrayLayer,
-    focusKeeper: FocusKeeper,
-    marks: boolean[],
+  setBuiltBook(
+    builtBook: {
+      layeredCanvas: LayeredCanvas,
+      arrayLayer: ArrayLayer,
+      focusKeeper: FocusKeeper,
+      marks: boolean[],
+    },
     defaultBubbleSlot: DefaultBubbleSlot
-  }) {
+  ) {
     console.log("setBuiltBook", builtBook);
     this.layeredCanvas = builtBook.layeredCanvas;
     this.arrayLayer = builtBook.arrayLayer;
     this.focusKeeper = builtBook.focusKeeper;
     this.marks = builtBook.marks;
-    this.defaultBubbleSlot = builtBook.defaultBubbleSlot;
+    this.defaultBubbleSlot = defaultBubbleSlot;
   }
 
   setMarks(marks: boolean[]) {
