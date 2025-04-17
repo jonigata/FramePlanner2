@@ -9,7 +9,7 @@
     "devbuild": "vite build --mode development",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.svelte-check.json",
-    "deploy": "git branch --show-current | grep -q '^main$' && npm run stamp && wrangler pages deploy || echo 'Deployment failed: not on main branch'",
+    "deploy": "git branch --show-current | grep -q '^sns_main$' && npm run stamp && wrangler pages deploy || echo 'Deployment failed: not on sns_main branch'",
     "which": "which wrangler",
     "vitest": "vitest",
     "deploy:preview": "firebase hosting:channel:deploy preview",
