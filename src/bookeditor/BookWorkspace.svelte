@@ -23,6 +23,7 @@
   let arrayLayer: ArrayLayer;
 
   let editingBookId: string | null = null;
+  let bookSnapshot: string | null = null;
 
   let operators: BookWorkspaceOperators;
 
@@ -71,11 +72,11 @@
 
   $: onChangeBook(canvas, $mainBook);
   function onChangeBook(canvas: HTMLCanvasElement | null, book: Book | null) {
-    console.log("onChangeBook");
     if (!canvas || !book) { return; }
 
-    console.log("*********** buildBookEditor from BookEditor");
-    layeredCanvas?.cleanup();
+    const newBookSnapshot = makeBookSnapshot(book);
+    if (bookSnapshot === newBookSnapshot) { return; }
+    bookSnapshot = newBookSnapshot;
 
     if (!$viewport || editingBookId !== book.revision.id) {
       console.log("================ viewport remake");
@@ -86,6 +87,9 @@
     $viewport.dirty = true;
     editingBookId = book.revision.id;
     
+    console.log("*********** buildBookEditor from BookEditor");
+    layeredCanvas?.cleanup();
+
     operators = new BookWorkspaceOperators(canvas, book, () => painter.chase());
     $bookOperators = operators;
 
@@ -98,6 +102,16 @@
     
     setLayerRefs(layeredCanvas, arrayLayer);
     layeredCanvas.redraw();
+  }
+
+  function makeBookSnapshot(book: Book) {
+    const s = {
+      bookId: book.revision.id,
+      pages: book.pages.map(p => p.id),
+      direction: book.direction,
+      wrapMode: book.wrapMode,
+    };
+    return JSON.stringify(s);
   }
 
   $: setFrameCommandTools(
