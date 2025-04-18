@@ -4,11 +4,14 @@
   import { drawBubble } from "../../lib/layeredCanvas/tools/draw/bubbleGraphic";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
   import trashIcon from '../../assets/trash.webp';
+  import RenameEdit from "../../utils/RenameEdit.svelte";
 
   export let size: Vector = [64, 96];
   export let bubble: Bubble;
 
   let canvas: HTMLCanvasElement;
+  let renameEdit: RenameEdit;
+  let renaming = false;
 
   const dispatch = createEventDispatcher();
 
@@ -37,6 +40,18 @@
     console.log('click');
     dispatch('click', e);
   }
+
+  function startRename() {
+    console.log("renameFile");
+    renameEdit.setFocus();
+  }
+
+  function submitRename(e: CustomEvent<string>) {
+    console.log("submitRename", e.detail);
+    dispatch('rename', { bubble, name: e.detail });
+    renaming = false;
+  }
+
 </script>
 
 <div class="canvas-container" style="width: {size[0]}px; height: {size[1]}px;">
@@ -46,6 +61,11 @@
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <img class="trash" src={trashIcon} on:click={() => dispatch('delete')}/>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="caption" on:click={startRename}>
+    <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={bubble.displayName} on:submit={submitRename} minWidth={"0px"}/>
+  </div>  
 </div>
 
 <style>
@@ -70,5 +90,18 @@
     width: 24px;
     height: 24px;
     cursor: pointer;
+  }
+  .caption {
+    position: absolute;
+    font-size: 12px;
+    color: rgb(8, 7, 75);
+    bottom: 0;
+    width: 100%;
+    -webkit-text-stroke: 0.4px #ddd;    
+    font-family: '源暎エムゴ';
+    height: 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
   }
 </style>

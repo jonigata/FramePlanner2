@@ -5,7 +5,7 @@
   import BubbleSample from "./BubbleSample.svelte";
   import BubbleTemplateSample from './BubbleTemplateSample.svelte';
   import type { BindId } from "../../lib/filesystem/fileSystem";
-  import { fileSystem, loadBubbleFrom } from '../../filemanager/fileManagerStore';
+  import { fileSystem, loadBubbleFrom, saveBubbleTo } from '../../filemanager/fileManagerStore';
   import { bubbleInspectorTarget } from './bubbleInspectorStore';
   import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
@@ -107,6 +107,21 @@
     }
     templateBubbles = templateBubbles;
   }
+
+  async function onRenameBubble(e: CustomEvent<{ bubble: Bubble, name: string }>) {
+    const { bubble, name } = e.detail;
+    bubble.displayName = name;
+
+    const bindId = templateBubbles.find(([b]) => b === bubble)?.[1];
+    if (bindId == null) return;
+
+    const root = await $fileSystem!.getRoot();
+    const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
+    const file = (await folder.getEmbodiedEntry(bindId))![2].asFile()!;
+    await saveBubbleTo(bubble, file);
+
+    console.log(e.detail);
+  }
 </script>
 
 <div class="drawer-outer">
@@ -131,6 +146,7 @@
           bubble={bubble}
           on:click={(e) => chooseTemplate(e, bubble)}
           on:delete={(e) => deleteTemplate(e, bindId)}
+          on:rename={e => onRenameBubble(e)}
         />
       {/each}
     </div>

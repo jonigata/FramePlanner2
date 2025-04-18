@@ -3,6 +3,7 @@
 
   export let value: string;
   export let editing: boolean = false;
+  export let minWidth: string = "40px";
 
   const dispatch = createEventDispatcher();
   let original: string;
@@ -78,6 +79,7 @@
     on:keydown={keydown}
     on:blur={handleBlur}
     class="editable"
+    style="min-width: {minWidth}"
   />
   {/key}
 </div>
@@ -95,7 +97,7 @@
     border-radius: 2px;
     padding-left: 2px;
     border: none;
-    min-width: 40px;
+    min-height: 1em;
     line-height: 1;
   }
   .editable:focus {

@@ -50,6 +50,7 @@ export class Bubble {
   scaleLock!: boolean;
   rubySize!: number;
   rubyDistance!: number;
+  displayName: string;
   optionContext: any;
 
   // 以下一時的
@@ -75,6 +76,7 @@ export class Bubble {
     this.optionContext = {};
     this.fontRenderVersion = 0;
     this.gallery = [];
+    this.displayName = '';
   }
 
   reset() {
@@ -101,6 +103,7 @@ export class Bubble {
     this.hidesText = false;
     this.rubySize = 0.4;    
     this.rubyDistance = 0.45;
+    this.displayName = '';
   }
 
   getStackTrace() {
@@ -133,6 +136,7 @@ export class Bubble {
     b.appearanceDelay = this.appearanceDelay;
     b.rubySize = this.rubySize;
     b.rubyDistance = this.rubyDistance;
+    b.displayName = this.displayName;
 
     if (hard) {
       b.uuid = this.uuid;
@@ -166,6 +170,7 @@ export class Bubble {
     this.optionContext = {...c.optionContext};
     this.rubySize = c.rubySize;
     this.rubyDistance = c.rubyDistance;
+    this.displayName = c.displayName;
   }
 
   static getUnit(paperSize: Vector): number {
@@ -217,6 +222,7 @@ export class Bubble {
     b.parent = json.parent;
     b.rubySize = json.rubySize ?? 0.4;
     b.rubyDistance = json.rubyDistance ?? 0.45;
+    b.displayName = json.displayName ?? '';
     b.optionContext = Bubble.getInitialOptions(b);
     Object.assign(b.optionContext, json.optionContext ?? {});
     b.forceEnoughSize(paperSize);
@@ -252,6 +258,7 @@ export class Bubble {
       parent: b.parent,
       rubySize: b.rubySize == 0.4 ? undefined : b.rubySize,
       rubyDistance: b.rubyDistance == 0.45 ? undefined : b.rubyDistance,
+      displayName: b.displayName,
       optionContext: JSON.stringify(b.optionContext) == JSON.stringify(Bubble.getInitialOptions(b)) ? undefined : b.optionContext,
     };
   }
