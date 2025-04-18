@@ -222,7 +222,7 @@ export class Bubble {
     b.parent = json.parent;
     b.rubySize = json.rubySize ?? 0.4;
     b.rubyDistance = json.rubyDistance ?? 0.45;
-    b.displayName = json.displayName ?? '';
+    b.displayName = json.displayName ?? 'ふきだし';
     b.optionContext = Bubble.getInitialOptions(b);
     Object.assign(b.optionContext, json.optionContext ?? {});
     b.forceEnoughSize(paperSize);
