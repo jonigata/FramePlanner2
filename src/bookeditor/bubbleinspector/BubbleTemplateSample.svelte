@@ -40,9 +40,10 @@
     bubble.renderInfo = {} as BubbleRenderInfo;
     bubble.renderInfo.unitedPath = null;
     bubble.renderInfo.children = [];
-    bubble.n_p0 = [-0.05,-0.05];
-    bubble.n_p1 = [0.05,0.05];
-    bubble.text = texts[Math.floor(Math.random() * texts.length)];
+    bubble.n_p0 = [-0.04,-0.04];
+    bubble.n_p1 = [0.04,0.04];
+    // bubble.text = texts[Math.floor(Math.random() * texts.length)];
+    bubble.text ='';
     renderBubbles(ctx, [w,h], [bubble], false);
     // drawBubble(ctx, "fill", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
     // drawBubble(ctx, "stroke", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
