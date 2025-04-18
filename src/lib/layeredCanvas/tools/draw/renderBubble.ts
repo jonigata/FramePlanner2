@@ -9,9 +9,9 @@ import type { Bubble } from "../../dataModels/bubble";
  * バブルの描画処理をまとめたユーティリティ
  */
 
-export function renderBubbles(ctx: CanvasRenderingContext2D, paperSize: Vector, bubbles: Bubble[]) {
+export function renderBubbles(ctx: CanvasRenderingContext2D, paperSize: Vector, bubbles: Bubble[], minimumSizeWarning: boolean) {
   for (let bubble of bubbles) {
-    renderBubbleBackground(ctx, paperSize, bubble);
+    renderBubbleBackground(ctx, paperSize, bubble, minimumSizeWarning);
     renderBubbleForeground(ctx, paperSize, bubble, false);
   }
   for (let bubble of bubbles) {
@@ -19,7 +19,7 @@ export function renderBubbles(ctx: CanvasRenderingContext2D, paperSize: Vector, 
   }
 }
 
-export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble) {
+export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, minimumSizeWarning: boolean) {
   if (bubble.parent) { return; }
 
   const size = bubble.getPhysicalSize(paperSize);
@@ -30,7 +30,11 @@ export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize:
   ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
   // fill/stroke設定
-  ctx.fillStyle = bubble.hasEnoughSize(paperSize) ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
+  if (minimumSizeWarning) {
+    ctx.fillStyle = bubble.hasEnoughSize(paperSize) ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
+  } else {
+    ctx.fillStyle = bubble.fillColor;
+  }
   ctx.strokeStyle = 0 < strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
   ctx.lineWidth = strokeWidth;
   

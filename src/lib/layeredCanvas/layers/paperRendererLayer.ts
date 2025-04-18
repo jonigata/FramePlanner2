@@ -60,7 +60,7 @@ export class PaperRendererLayer extends LayerBase {
     }
 
     if (depth === 1) {
-      renderBubbles(ctx, this.getPaperSize(), floatingBubbles);
+      renderBubbles(ctx, this.getPaperSize(), floatingBubbles, true);
     }
   }
 

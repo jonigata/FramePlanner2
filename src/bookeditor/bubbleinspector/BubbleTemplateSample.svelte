@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble.js";
-  import { drawBubble } from "../../lib/layeredCanvas/tools/draw/bubbleGraphic";
+  import type { Bubble, BubbleRenderInfo } from "../../lib/layeredCanvas/dataModels/bubble.js";
+  import { renderBubbles } from "../../lib/layeredCanvas/tools/draw/renderBubble";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
   import trashIcon from '../../assets/trash.webp';
   import RenameEdit from "../../utils/RenameEdit.svelte";
@@ -15,9 +15,18 @@
 
   const dispatch = createEventDispatcher();
 
+  const texts = [
+    "さくら",
+    "すみれ",
+    "つばき",
+    "ぼたん",
+    "あやめ",
+  ];
+
   onMount(async () => {
     const opts = {...bubble.optionContext};
-    const p = bubble.shape;
+    const w = size[0] * 10;
+    const h = size[1] * 10;
 
     console.snapshot(opts);
     opts['tailTip'] = [-size[0]*0.5, size[1]*0.4];
@@ -28,11 +37,15 @@
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.translate(size[0] * 0.5, size[1] * 0.5);
-    ctx.fillStyle = bubble.fillColor;
-    ctx.strokeStyle = 0 < bubble.n_strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-    ctx.lineWidth = bubble.getPhysicalStrokeWidth(size) * 4;
-    drawBubble(ctx, "fill", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
-    drawBubble(ctx, "stroke", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    bubble.renderInfo = {} as BubbleRenderInfo;
+    bubble.renderInfo.unitedPath = null;
+    bubble.renderInfo.children = [];
+    bubble.n_p0 = [-0.05,-0.05];
+    bubble.n_p1 = [0.05,0.05];
+    bubble.text = texts[Math.floor(Math.random() * texts.length)];
+    renderBubbles(ctx, [w,h], [bubble], false);
+    // drawBubble(ctx, "fill", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    // drawBubble(ctx, "stroke", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
     ctx.restore();
   });
 
@@ -55,7 +68,7 @@
 </script>
 
 <div class="canvas-container" style="width: {size[0]}px; height: {size[1]}px;">
-  <canvas width="{size[0]}px" height="{size[1]}px" bind:this={canvas} on:click={click}/>
+  <canvas width={size[0]} height={size[1]} bind:this={canvas} on:click={click}/>
 
   <!-- svelte-ignore a11y-missing-attribute -->
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
