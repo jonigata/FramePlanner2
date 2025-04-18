@@ -4,7 +4,7 @@ import { type Book, type BookOperators, newPage } from '../lib/book/book.js';
 import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples.js";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree.js";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble.js";
-import { loadGoogleFontForCanvas } from "../lib/layeredCanvas/tools/googleFont.js";
+import { loadFonts } from "./fontLoading"
 
 export const mainBook = writable<Book | null>(null);
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
@@ -31,64 +31,27 @@ export function insertNewPageToBook(book: Book, index: number) {
   return page;
 }
 
-// font
-mainBook.subscribe(onBookChanged);
-fontLoadToken.subscribe(async (fonts) => {
-  if (!fonts) { return; }
-  for (let font of fonts) {
-    await load(font.family, font.weight);
-  }
-  resetFontCacheToken.set(true);
-});
-
+// automatic font loading
 let lastBookId = "";
 
-async function onBookChanged(book: Book | null) {
+mainBook.subscribe(async (book: Book | null) => {
   console.log("onBookChanged", book?.revision.id);
   if (!book) { return; }
   if (lastBookId === book.revision.id) { return; }
   lastBookId = book.revision.id;
 
+  const fonts = [];
   for (let page of book.pages) {
     for (let bubble of page.bubbles) {
-      try {
-        await load(bubble.fontFamily, bubble.fontWeight)
-      }
-      catch (e) {
-        console.error(`Font load failed: ${bubble.fontFamily} ${bubble.fontWeight}`, e);
-      }
+      fonts.push({family: bubble.fontFamily, weight: bubble.fontWeight});
     }
   }
+  await loadFonts(fonts);
   resetFontCacheToken.set(true);
-}
+});
 
-const localFontFiles: { [key: string]: string } = {
-  '源暎アンチック': 'GenEiAntiqueNv5-M',
-  '源暎エムゴ': 'GenEiMGothic2-Black',
-  '源暎ぽっぷる': 'GenEiPOPle-Bk',
-  '源暎ラテゴ': 'GenEiLateMinN_v2',
-  '源暎ラテミン': 'GenEiLateMinN_v2',
-  "ふい字": 'HuiFont29',
-  "まきばフォント": 'MakibaFont13',
-}
-
-const cache = new Set<string>();
-
-// キャッシュ機構(重複管理など)はFontFace APIが持っているので、基本的には余計なことはしなくてよい
-// と思いきや一瞬ちらつくようなのでキャッシュする
-async function load(family: string, weight: string): Promise<boolean> {
-  if (cache.has(`${family}:${weight}`)) { return false; }
-
-  const localFile = localFontFiles[family];
-  console.log("load font", family, weight, localFile)
-  if (localFile) {
-    const url = `/fonts/${localFile}.woff2`;
-    const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
-    await font.load();
-    document.fonts.add(font);
-  } else {
-    await loadGoogleFontForCanvas(family, [weight]);
-  }
-  cache.add(`${family}:${weight}`);
-  return true;
-}
+fontLoadToken.subscribe(async (fonts) => {
+  if (!fonts) { return; }
+  await loadFonts(fonts);
+  resetFontCacheToken.set(true);
+});
