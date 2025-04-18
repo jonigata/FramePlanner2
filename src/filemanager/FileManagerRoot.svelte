@@ -276,6 +276,7 @@
     const root = await fileSystem.getRoot();
     const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const file = await fileSystem.createFile();
+    bubble.displayName= "ふきだし";
     await saveBubbleTo(bubble, file);
     await folder.asFolder().link(getCurrentDateTime(), file.id);
     toastStore.trigger({ message: "フキダシテンプレートを登録しました<br/>シェイプと同様に使えます", timeout: 1500});
