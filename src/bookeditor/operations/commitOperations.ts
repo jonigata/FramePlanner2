@@ -1,6 +1,6 @@
 import type { HistoryTag } from '../../lib/book/book';
 import { commitBook, revertBook, undoBookHistory, redoBookHistory } from '../../lib/book/book';
-import { mainBook } from '../bookStore';
+import { mainBook } from '../workspaceStore';
 import type { ArrayLayer } from '../../lib/layeredCanvas/layers/arrayLayer';
 import { PaperRendererLayer } from '../../lib/layeredCanvas/layers/paperRendererLayer';
 import { bubbleInspectorTarget } from '../bubbleinspector/bubbleInspectorStore';

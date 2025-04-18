@@ -9,7 +9,7 @@
   import { type BookArchiveOperation, bookArchiver } from "../utils/bookArchiverStore";
   import { toolTip } from '../utils/passiveToolTipStore';
   import { developmentFlag } from '../utils/developmentFlagStore';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
 
   const buttons = [
     {icon: downloadIcon, label: "ダウンロード", onClick: download, hint: "画像としてダウンロードします\n対象ページが複数の場合はzipファイルになります"},

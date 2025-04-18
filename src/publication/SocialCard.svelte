@@ -1,7 +1,7 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import MangaView from "../mangaview/MangaView.svelte";
-  import { mainBook } from "../bookeditor/bookStore";
+  import { mainBook } from "../bookeditor/workspaceStore";
   import { draggable } from '@neodrag/svelte';
   import type { DragEventData } from '@neodrag/svelte';
   import { buildBookRenderer, BookRenderer } from "../lib/layeredCanvas/tools/bookRenderer"

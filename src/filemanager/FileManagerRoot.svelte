@@ -4,7 +4,7 @@
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book, emptyNotebook, trivialNewPageProperty } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
-  import { bookOperators, mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';

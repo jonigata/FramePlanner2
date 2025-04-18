@@ -9,7 +9,7 @@
   import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
   import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { busy, batchImagingPage } from './batchImagingStore';
-  import { mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { mainBook, redrawToken } from '../bookeditor/workspaceStore';
   import { commitBook } from '../lib/book/book';
   import FluxModes from './FluxModes.svelte';
   import "../box.css"  

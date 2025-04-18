@@ -6,7 +6,7 @@
   import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
   import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
   import { InlinePainterLayer } from '../lib/layeredCanvas/layers/inlinePainterLayer';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
   import FreehandInspector from './FreehandInspector.svelte';
   import { rectToTrapezoid } from '../lib/layeredCanvas/tools/geometry/trapezoid';
   import { dominantMode } from '../uiStore'

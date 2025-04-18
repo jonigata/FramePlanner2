@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { redrawToken } from '../bookeditor/bookStore';
+  import { redrawToken } from '../bookeditor/workspaceStore';
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
   import { canvasToBlob, computeAspectFitSize } from "../lib/layeredCanvas/tools/imageUtil";
   import MediaLoading from './MediaLoading.svelte';

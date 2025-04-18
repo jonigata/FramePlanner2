@@ -19,9 +19,9 @@
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
   import { dominantMode } from "../../uiStore";
-  import { redrawToken, fontLoadToken } from "../bookStore";
+  import { redrawToken, fontLoadToken } from "../workspaceStore";
   import Drawer from "../../utils/Drawer.svelte";
-  import { bookOperators } from "../bookStore";
+  import { bookOperators } from "../workspaceStore";
   import { selection, type SelectionInfo } from '../../utils/selection';
   import { transformText } from '../../supabase';
   import { ProgressRadial } from '@skeletonlabs/skeleton';

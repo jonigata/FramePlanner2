@@ -2,7 +2,7 @@
   import { saveAsPngZip, saveAsPsdZip, makeZip } from "./saver/saveAsZip";
   import { copyToClipboard } from "./saver/copyToClipboard";
   import { type BookArchiveOperation, bookArchiver } from "./bookArchiverStore";
-  import { mainBook, bookOperators } from "../bookeditor/bookStore";
+  import { mainBook, bookOperators } from "../bookeditor/workspaceStore";
   import { saveAsPng } from "./saver/saveAsPng";
   import { saveAsPsd } from "./saver/saveAsPsd";
   import { toastStore } from '@skeletonlabs/skeleton';

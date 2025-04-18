@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fileManagerOpen } from '../filemanager/fileManagerStore';
-  import { bookOperators } from '../bookeditor/bookStore';
+  import { bookOperators } from '../bookeditor/workspaceStore';
   import BaseRootButton from './BaseRootButton.svelte';
   import fileManagerIcon from '../assets/file-manager.webp';
   

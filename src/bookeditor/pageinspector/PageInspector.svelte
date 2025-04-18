@@ -3,7 +3,7 @@
   import Drawer from '../../utils/Drawer.svelte'
 	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { RangeSlider } from '@skeletonlabs/skeleton';
-  import { redrawToken, mainBook } from '../bookStore';
+  import { redrawToken, mainBook } from '../workspaceStore';
   import { commitBook } from '../../lib/book/book';
   import { toolTip } from '../../utils/passiveToolTipStore';
 

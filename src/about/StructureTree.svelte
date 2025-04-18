@@ -2,7 +2,7 @@
   import Drawer from '../utils/Drawer.svelte'
   import { structureTreeOpen } from './structureTreeStore';
   import TreeView from '../utils/TreeView.svelte';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
 
 /*

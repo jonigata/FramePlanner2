@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
-  import { redrawToken } from '../bookeditor/bookStore';
+  import { redrawToken } from '../bookeditor/workspaceStore';
   import { onMount, tick } from 'svelte';
 
   export let bubble: Bubble;

@@ -440,6 +440,10 @@ export class LayeredCanvas {
     this.viewport = viewport;
     this.rootPaper = new Paper([0,0], true);
 
+    document.fonts.addEventListener('loadingdone', (event) => {
+      console.tag("fonts.onloadingdone", "orange", event);
+    });
+
     const beforeHandler = () => {
       this.rebuildPageLayouts();
     }

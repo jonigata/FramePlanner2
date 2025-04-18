@@ -1,6 +1,6 @@
 <script lang="ts">
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { undoToken } from '../bookeditor/bookStore';
+  import { undoToken } from '../bookeditor/workspaceStore';
   import { onlineStatus, authStore, onlineProfile, onlineAccount, type SubscriptionPlan } from '../utils/accountStore';
   import Feathral from '../utils/Feathral.svelte';
   import AvatarIcon from './AvatarIcon.svelte';

@@ -1,5 +1,5 @@
 import type { Film } from "../../lib/layeredCanvas/dataModels/film";
-import { redrawToken, bookOperators } from "../../bookeditor/bookStore";
+import { redrawToken, bookOperators } from "../../bookeditor/workspaceStore";
 import { PubSubQueue } from "../pubsub";
 import { pollMediaStatus } from '../../supabase';
 import type { RemoteMediaReference } from "src/lib/filesystem/fileSystem";

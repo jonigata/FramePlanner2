@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { modalStore } from '@skeletonlabs/skeleton';
   import { serializeBook } from '../filemanager/fileManagerStore';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
 
   let json = '';
 

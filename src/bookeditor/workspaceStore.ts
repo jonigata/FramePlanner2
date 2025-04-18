@@ -1,10 +1,10 @@
 import { type Writable, writable, derived } from "svelte/store";
-import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
-import { type Book, type BookOperators, newPage } from '../lib/book/book';
-import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
-import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
-import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-import { loadGoogleFontForCanvas } from "../lib/layeredCanvas/tools/googleFont";
+import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas.js";
+import { type Book, type BookOperators, newPage } from '../lib/book/book.js';
+import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples.js";
+import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree.js";
+import { Bubble } from "../lib/layeredCanvas/dataModels/bubble.js";
+import { loadGoogleFontForCanvas } from "../lib/layeredCanvas/tools/googleFont.js";
 
 export const mainBook = writable<Book | null>(null);
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
@@ -84,6 +84,7 @@ async function load(family: string, weight: string): Promise<boolean> {
   if (localFile) {
     const url = `/fonts/${localFile}.woff2`;
     const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
+    await font.load();
     document.fonts.add(font);
   } else {
     await loadGoogleFontForCanvas(family, [weight]);

@@ -7,7 +7,7 @@ import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
 import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
 import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
-import { bookOperators, mainBook, redrawToken } from '../bookeditor/bookStore'
+import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore'
 import { updateToken } from "../utils/accountStore";
 import type { TextToImageRequest } from './edgeFunctions/types/imagingTypes';
 import { saveRequest } from '../filemanager/warehouse';

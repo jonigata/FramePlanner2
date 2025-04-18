@@ -4,7 +4,7 @@ import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
 import { newPage } from "../lib/book/book";
 import type * as Storyboard from '$bookTypes/storyboard';
 import { trapezoidBoundingRect } from '../lib/layeredCanvas/tools/geometry/trapezoid';
-import { mainBook } from '../bookeditor/bookStore';
+import { mainBook } from '../bookeditor/workspaceStore';
 import { get } from "svelte/store";
 import parseColor from 'color-parse';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';

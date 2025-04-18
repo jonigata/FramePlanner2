@@ -7,7 +7,7 @@
   import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
-  import { bookOperators, redrawToken } from '../bookeditor/bookStore';
+  import { bookOperators, redrawToken } from '../bookeditor/workspaceStore';
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia, VideoMedia, type Media, buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher, onMount } from 'svelte';

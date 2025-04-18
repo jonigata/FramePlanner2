@@ -9,7 +9,7 @@
   import { createCanvasFromImage } from "../lib/layeredCanvas/tools/imageUtil";
   import type { ImagingContext } from '../utils/feathralImaging';
   import { busy, batchImagingPage } from './batchImagingStore';
-  import { mainBook, redrawToken } from '../bookeditor/bookStore';
+  import { mainBook, redrawToken } from '../bookeditor/workspaceStore';
   import { commitBook } from '../lib/book/book';
   import { persistentText } from '../utils/persistentText';
   import { createPreference } from '../preferences';

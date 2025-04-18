@@ -6,7 +6,7 @@
   import FilmList from "./FilmList.svelte";
   import { dominantMode } from "../../uiStore";
   import Drawer from "../../utils/Drawer.svelte";
-  import { bookOperators } from "../bookStore";
+  import { bookOperators } from "../workspaceStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { calculateFramePadding } from '../../utils/outPaintFilm'
 

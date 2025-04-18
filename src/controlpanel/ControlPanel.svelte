@@ -1,6 +1,6 @@
 <script lang="ts">
   import writableDerived from "svelte-writable-derived";
-  import { mainBook, viewport, redrawToken } from '../bookeditor/bookStore';
+  import { mainBook, viewport, redrawToken } from '../bookeditor/workspaceStore';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import Drawer from '../utils/Drawer.svelte'
   import { controlPanelOpen } from './controlPanelStore';

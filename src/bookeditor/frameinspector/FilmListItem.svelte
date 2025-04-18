@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { Effect, OutlineEffect } from "../../lib/layeredCanvas/dataModels/effect";
-  import { redrawToken } from '../bookStore';
+  import { redrawToken } from '../workspaceStore';
   import FilmEffect from "./FilmEffect.svelte";
   import { moveInArray } from '../../utils/moveInArray';
   import { sortableList } from '../../utils/sortableList';

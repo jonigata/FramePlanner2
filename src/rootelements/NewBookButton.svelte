@@ -2,7 +2,7 @@
   import { newBookToken } from "../filemanager/fileManagerStore";
   import { newBook, newImageBook } from "../lib/book/book";
   import { hoverKey } from '../utils/hoverKeyStore';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
   import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { excludeTextFiles, handleDataTransfer } from "../lib/layeredCanvas/tools/fileUtil";
 

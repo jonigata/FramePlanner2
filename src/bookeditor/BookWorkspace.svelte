@@ -7,7 +7,7 @@
   import { setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book } from '../lib/book/book';
-  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheToken } from './bookStore';
+  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheToken } from './workspaceStore';
   import { buildBookEditor } from './operations/buildBookEditor';
   import { hint } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
@@ -141,9 +141,12 @@
     if (!token) { return; }
     if (!arrayLayer) { return; }
 
+    console.log("resetFontCache");
+
     for (const paper of arrayLayer.array.papers) {
       paper.paper?.findLayer(PaperRendererLayer)?.resetCache();
     }
+    layeredCanvas.redraw();
   }
 
   function onResizeCanvas(e: CustomEvent) {

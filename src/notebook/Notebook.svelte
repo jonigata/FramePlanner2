@@ -3,7 +3,7 @@
   import Drawer from '../utils/Drawer.svelte'
   import { notebookOpen } from './notebookStore';
   import NotebookManual from './NotebookManual.svelte';
-  import { bookOperators, mainBook } from '../bookeditor/bookStore'
+  import { bookOperators, mainBook } from '../bookeditor/workspaceStore'
 
   $: notebook = $mainBook ? $mainBook.notebook : null;
 

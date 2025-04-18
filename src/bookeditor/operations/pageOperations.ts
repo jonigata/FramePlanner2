@@ -1,5 +1,5 @@
 import type { Book, HistoryTag, Page } from '../../lib/book/book';
-import { insertNewPageToBook } from '../bookStore';
+import { insertNewPageToBook } from '../workspaceStore';
 import { triggerTemplateChoice } from "../templateChooserStore";
 import type { FocusKeeper } from "../../lib/layeredCanvas/tools/focusKeeper";
 import { clonePage } from '../../lib/book/book';

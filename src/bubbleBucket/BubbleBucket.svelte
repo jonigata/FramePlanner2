@@ -3,7 +3,7 @@
   import { bubbleBucketPage, bubbleBucketDirty } from './bubbleBucketStore';
   import BubbleBucketItem from './BubbleBucketItem.svelte';
   import { collectPageContents } from '../lib/book/book';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
   import { getHaiku } from "../lib/layeredCanvas/tools/haiku";
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import { getRectCenter } from '../lib/layeredCanvas/tools/geometry/geometry';

@@ -19,7 +19,7 @@ import { bubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
 import { batchImagingPage } from '../generator/batchImagingStore';
 import { bubbleBucketPage } from '../bubbleBucket/bubbleBucketStore';
 import { pageInspectorTarget } from './pageinspector/pageInspectorStore';
-import { redrawToken, viewport } from './bookStore';
+import { redrawToken, viewport } from './workspaceStore';
 import { analyticsEvent } from '../utils/analyticsEvent';
 import { copyToClipboard } from '../utils/saver/copyToClipboard';
 import { toolTipRequest } from '../utils/passiveToolTipStore';

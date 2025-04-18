@@ -6,7 +6,7 @@
   import '../box.css';
   import VideoPlayer from './VideoPlayer.svelte';
   import { makeDisplayProgram, reflectDisplayProgram, type DisplayProgramEntry } from './buildProgram';
-  import { mainBook } from '../bookeditor/bookStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
   import Parameter from '../utils/Parameter.svelte';
   import { buildMovie } from './generateScenes';
   import { ProgressRadial } from '@skeletonlabs/skeleton';

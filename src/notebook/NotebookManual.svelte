@@ -3,7 +3,7 @@
   import { type Storyboard } from '$bookTypes/storyboard';
   import { type Thinker } from "$protocolTypes/adviseTypes.d";
   import { commitBook, type NotebookLocal, type CharacterLocal } from '../lib/book/book';
-  import { bookOperators, mainBook, redrawToken } from '../bookeditor/bookStore'
+  import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
   import { persistentText } from '../utils/persistentText';
