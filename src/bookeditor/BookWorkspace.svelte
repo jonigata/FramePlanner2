@@ -3,10 +3,11 @@
   import { BookWorkspaceOperators } from './BookWorkspaceOperators';
   import { onDestroy } from 'svelte';
   import { type LayeredCanvas, Viewport } from '../lib/layeredCanvas/system/layeredCanvas';
+  import { PaperRendererLayer } from '../lib/layeredCanvas/layers/paperRendererLayer';
   import { setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book } from '../lib/book/book';
-  import { mainBook, bookOperators, viewport, redrawToken, undoToken } from './bookStore';
+  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheToken } from './bookStore';
   import { buildBookEditor } from './operations/buildBookEditor';
   import { hint } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
@@ -132,6 +133,17 @@
     if (!token) { return; }
     layeredCanvas?.redraw();
     $redrawToken = false;
+  }
+
+  $: onResetFontCache($resetFontCacheToken);
+  function onResetFontCache(token: boolean) {
+    $resetFontCacheToken = false;
+    if (!token) { return; }
+    if (!arrayLayer) { return; }
+
+    for (const paper of arrayLayer.array.papers) {
+      paper.paper?.findLayer(PaperRendererLayer)?.resetCache();
+    }
   }
 
   function onResizeCanvas(e: CustomEvent) {

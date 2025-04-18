@@ -38,7 +38,6 @@
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
   import FullScreenProgress from './utils/FullScreenProgress.svelte';
-  import FontLoader from './bookeditor/FontLoader.svelte';
   import SignIn from './utils/SignIn.svelte';
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
@@ -208,7 +207,6 @@
 <PassiveToolTip />
 <Toast zIndex={"z-[1001]"}/>
 <BookArchiver/>
-<FontLoader/>
 
 <!-- skeletonのModal -->
 <Modal components={modalComponentRegistry} zIndex={'z-[500]'}/>

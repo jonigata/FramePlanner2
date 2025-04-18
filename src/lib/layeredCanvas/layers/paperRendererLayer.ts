@@ -234,7 +234,7 @@ export class PaperRendererLayer extends LayerBase {
 
       if (embeddedBubbles.has(layout)) {
         const bubbles = embeddedBubbles.get(layout)!;
-        renderBubbles(ctx, this.getPaperSize(), bubbles);
+        renderBubbles(ctx, this.getPaperSize(), bubbles, true);
       }
   
       // unclip
@@ -317,7 +317,7 @@ export class PaperRendererLayer extends LayerBase {
       if (bubble.parent != null) { continue; }
       const { canvas, ctx } = makeCanvas();
       const paperSize = this.getPaperSize();
-      renderBubbleBackground(ctx, paperSize, bubble);
+      renderBubbleBackground(ctx, paperSize, bubble, true);
       renderBubbleForeground(ctx, paperSize, bubble, false);
       bubbleCanvases[bubble.uuid] = canvas;
     }

@@ -19,7 +19,7 @@
   import FilmList from "../frameinspector/FilmList.svelte";
   import ImageProvider from '../../generator/ImageProvider.svelte';
   import { dominantMode } from "../../uiStore";
-  import { redrawToken, forceFontLoadToken } from "../bookStore";
+  import { redrawToken, fontLoadToken } from "../bookStore";
   import Drawer from "../../utils/Drawer.svelte";
   import { bookOperators } from "../bookStore";
   import { selection, type SelectionInfo } from '../../utils/selection';
@@ -129,7 +129,7 @@
     if ($bubble && f && ($bubble.fontFamily !== f.fontFamily || $bubble.fontWeight !== f.fontWeight)) {
       $bubble.fontFamily = f.fontFamily;
       $bubble.fontWeight = f.fontWeight;
-      $forceFontLoadToken = true;
+      $fontLoadToken = [{ family: f.fontFamily, weight: f.fontWeight }];
     }
   }
 
@@ -140,7 +140,6 @@
         const snapshot = makeSnapshot(b);
         if (bubbleSnapshot !== snapshot) {
           bubbleSnapshot = snapshot;
-          $forceFontLoadToken = true;
           $redrawToken = true;
           $bookOperators!.commit("bubble");
         }
