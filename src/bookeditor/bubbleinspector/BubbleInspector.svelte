@@ -152,6 +152,8 @@
         textarea!.focus({preventScroll: true});
         textarea!.select();
         bubbleSnapshot = makeSnapshot(b);
+        // 新規作成じなど。ロード済みなら特に何もおきない
+        $fontLoadToken = [{ family: b.fontFamily, weight: b.fontWeight }];
       } else {
         bubbleSnapshot = null;
       }
