@@ -15,8 +15,8 @@ export const redrawToken = writable(false);
 //   console.trace('redrawToken changed:', value);
 // });
 export const undoToken: Writable<'undo' | 'redo' | null> = writable(null);
-export const fontLoadToken: Writable<{family: string, weight: string}[] | null> = writable(null);
-export const resetFontCacheToken = writable(false);
+export const fontLoadToken: Writable<{family: string, weight: string}[]> = writable([]);
+export const resetFontCacheKey = writable(0);
 
 export function insertNewPageToBook(book: Book, index: number) {
   const p = book.newPageProperty;
@@ -46,12 +46,16 @@ mainBook.subscribe(async (book: Book | null) => {
       fonts.push({family: bubble.fontFamily, weight: bubble.fontWeight});
     }
   }
-  await loadFonts(fonts);
-  resetFontCacheToken.set(true);
+  if (await loadFonts(fonts)) { 
+    resetFontCacheKey.update(value => value + 1);
+  }
 });
 
 fontLoadToken.subscribe(async (fonts) => {
-  if (!fonts) { return; }
-  await loadFonts(fonts);
-  resetFontCacheToken.set(true);
+  if (!fonts || fonts.length == 0) { return; }
+  console.log("onFontLoadToken", fonts);
+  fontLoadToken.set([]);
+  if (await loadFonts(fonts)) { 
+    resetFontCacheKey.update(value => value + 1);
+  }
 });

@@ -1,9 +1,13 @@
 import { loadGoogleFontForCanvas } from "../lib/layeredCanvas/tools/googleFont";
 
-export async function loadFonts(fonts: { family: string, weight: string }[]): Promise<void> {
+export async function loadFonts(fonts: { family: string, weight: string }[]): Promise<boolean> {
+  let result = false;
   for (let font of fonts) {
-    await loadFont(font.family, font.weight);
+    if (await loadFont(font.family, font.weight)) {
+      result = true;
+    }
   }
+  return result;
 }  
 
 const localFontFiles: { [key: string]: string } = {

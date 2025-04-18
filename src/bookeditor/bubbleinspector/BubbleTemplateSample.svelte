@@ -5,6 +5,7 @@
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
   import trashIcon from '../../assets/trash.webp';
   import RenameEdit from "../../utils/RenameEdit.svelte";
+  import { fontLoadToken, resetFontCacheKey } from "../workspaceStore";
 
   export let size: Vector = [64, 96];
   export let bubble: Bubble;
@@ -24,31 +25,16 @@
   ];
 
   onMount(async () => {
-    const opts = {...bubble.optionContext};
-    const w = size[0] * 10;
-    const h = size[1] * 10;
-
-    console.snapshot(opts);
-    opts['tailTip'] = [-size[0]*0.5, size[1]*0.4];
-    opts['tailMid'] = [0.5, 0];
-    console.snapshot(opts);
-
-    const ctx = canvas.getContext("2d")!;
-    ctx.save();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.translate(size[0] * 0.5, size[1] * 0.5);
-    bubble.renderInfo = {} as BubbleRenderInfo;
-    bubble.renderInfo.unitedPath = null;
-    bubble.renderInfo.children = [];
-    bubble.n_p0 = [-0.04,-0.04];
-    bubble.n_p1 = [0.04,0.04];
-    // bubble.text = texts[Math.floor(Math.random() * texts.length)];
-    bubble.text ='';
-    renderBubbles(ctx, [w,h], [bubble], false);
-    // drawBubble(ctx, "fill", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
-    // drawBubble(ctx, "stroke", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
-    ctx.restore();
+    console.log("onMount");
+    $fontLoadToken = $fontLoadToken.concat([{ family: bubble.fontFamily, weight: bubble.fontWeight }]);
+    await drawBubble();
   });
+
+  $: onResetFontCache($resetFontCacheKey);
+  async function onResetFontCache(key: number) {
+    console.log("resetFontCacheToken", key);
+    drawBubble();
+  }
 
   function click(e: MouseEvent) {
     console.log('click');
@@ -64,6 +50,33 @@
     console.log("submitRename", e.detail);
     dispatch('rename', { bubble, name: e.detail });
     renaming = false;
+  }
+
+  async function drawBubble() {
+    if (!canvas) { return; }
+
+    const opts = {...bubble.optionContext};
+    const w = size[0] * 10;
+    const h = size[1] * 10;
+
+    opts['tailTip'] = [-size[0]*0.5, size[1]*0.4];
+    opts['tailMid'] = [0.5, 0];
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(size[0] * 0.5, size[1] * 0.5);
+    bubble.renderInfo = {} as BubbleRenderInfo;
+    bubble.renderInfo.unitedPath = null;
+    bubble.renderInfo.children = [];
+    bubble.n_p0 = [-0.04,-0.04];
+    bubble.n_p1 = [0.04,0.04];
+    bubble.text = texts[Math.floor(Math.random() * texts.length)];
+    
+    renderBubbles(ctx, [w,h], [bubble], false);
+    // drawBubble(ctx, "fill", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    // drawBubble(ctx, "stroke", 'sample', [canvas.width - 16, canvas.height - 16], p, opts);
+    ctx.restore();
   }
 
 </script>

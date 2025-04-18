@@ -7,7 +7,7 @@
   import { setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book } from '../lib/book/book';
-  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheToken } from './workspaceStore';
+  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheKey } from './workspaceStore';
   import { buildBookEditor } from './operations/buildBookEditor';
   import { hint } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
@@ -135,10 +135,8 @@
     $redrawToken = false;
   }
 
-  $: onResetFontCache($resetFontCacheToken);
-  function onResetFontCache(token: boolean) {
-    $resetFontCacheToken = false;
-    if (!token) { return; }
+  $: onResetFontCache($resetFontCacheKey);
+  function onResetFontCache(key: number) {
     if (!arrayLayer) { return; }
 
     console.log("resetFontCache");
