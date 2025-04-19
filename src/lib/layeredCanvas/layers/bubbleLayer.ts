@@ -113,12 +113,7 @@ export class BubbleLayer extends LayerBase {
         icon.shadowColor = "#242";
       }
     }
-    for (let icon of [this.optionIcons.circle, this.optionIcons.radius]) {
-      if (icon instanceof ClickableIcon) {
-        icon.shadowColor = "#842";
-      }
-    }
-    for (let icon of [this.offsetIcon, this.optionIcons.tail, this.optionIcons.curve, this.optionIcons.unite]) {
+    for (let icon of [this.offsetIcon, this.optionIcons.tail, this.optionIcons.curve, this.optionIcons.unite, this.optionIcons.circle, this.optionIcons.radius]) {
       if (icon instanceof ClickableIcon) {
         icon.shadowColor = "#fff";
       }
