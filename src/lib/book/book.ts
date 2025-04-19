@@ -266,6 +266,7 @@ export function newBook(id: string, prefix: Prefix, exampleName: string): Book {
 
 export function newImageBook(id: string, media: (HTMLCanvasElement | HTMLVideoElement)[], prefix: Prefix): Book {
   const paperSize = mediaResourceSize(media[0])!;
+  console.log(paperSize, media[0]);
 
   const pages = [];
   for (const m of media) {
@@ -278,6 +279,9 @@ export function newImageBook(id: string, media: (HTMLCanvasElement | HTMLVideoEl
     pages.push(page);
   }
 
+  const newPageProperty = {...trivialNewPageProperty};
+  newPageProperty.paperSize = paperSize!;
+
   const book: Book = {
     revision: { id, revision:1, prefix },
     pages,
@@ -287,7 +291,7 @@ export function newImageBook(id: string, media: (HTMLCanvasElement | HTMLVideoEl
     chatLogs: [],
     notebook: emptyNotebook(),
     attributes: { publishUrl: null },
-    newPageProperty: {...trivialNewPageProperty},
+    newPageProperty,
   }
   commitBook(book, null);
   return book;
