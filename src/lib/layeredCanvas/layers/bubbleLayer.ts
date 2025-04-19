@@ -108,14 +108,19 @@ export class BubbleLayer extends LayerBase {
     this.optionIcons.circle = new ClickableIcon(["bubbleLayer/circle.webp"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
     this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.webp"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
-    for (let icon of [this.dragIcon, this.offsetIcon, this.zPlusIcon, this.zMinusIcon, this.removeIcon, this.rotateIcon, this.imageScaleLockIcon, this.scaleIcon]) {
+    for (let icon of [this.dragIcon, this.zPlusIcon, this.zMinusIcon, this.removeIcon, this.rotateIcon, this.imageScaleLockIcon, this.scaleIcon]) {
       if (icon instanceof ClickableIcon) {
         icon.shadowColor = "#242";
       }
     }
-    for (let icon of [this.optionIcons.tail, this.optionIcons.curve, this.optionIcons.unite, this.optionIcons.circle, this.optionIcons.radius]) {
+    for (let icon of [this.optionIcons.circle, this.optionIcons.radius]) {
       if (icon instanceof ClickableIcon) {
         icon.shadowColor = "#842";
+      }
+    }
+    for (let icon of [this.offsetIcon, this.optionIcons.tail, this.optionIcons.curve, this.optionIcons.unite]) {
+      if (icon instanceof ClickableIcon) {
+        icon.shadowColor = "#fff";
       }
     }
 
