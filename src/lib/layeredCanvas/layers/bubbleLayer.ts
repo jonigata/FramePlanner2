@@ -256,41 +256,54 @@ export class BubbleLayer extends LayerBase {
     const rp = (p: Vector): Vector => [bubbleCenter[0] + p[0], bubbleCenter[1] + p[1]];
     const tailMidCoord = () => tailCoordToWorldCoord(bubbleCenter, bubble.optionContext.tailTip, bubble.optionContext.tailMid);
 
+    // Define option priority order
+    const optionPriority: { [key: string]: number } = {
+      "tailTip": 2,
+      "tailMid": 1,
+      "link": 3,
+      "focalPoint": 4,
+      "focalRange": 5
+    };
+    
+    // Get all available options and sort by priority
     const optionSet = bubble.optionSet;
-    for (const option of Object.keys(optionSet)) {
+    const options = Object.keys(optionSet)
+      .filter(option => optionPriority[option] !== undefined)
+      .sort((a, b) => optionPriority[a] - optionPriority[b]);
+    
+    // Render icons in priority order
+    for (const option of options) {
       let icon;
       switch (option) {
-        case "tailTip":
-          icon = this.optionIcons[optionSet.tailTip.icon];
-          icon.position = rp(bubble.optionContext.tailTip);
-          icon.render(ctx);
-          break;
-        case "tailMid":
-          (() => {
-            icon = this.optionIcons[optionSet.tailMid.icon];
-            icon.position = tailMidCoord();
-            icon.render(ctx);
-          })();
-          break;
-        case "link":
-          icon = this.optionIcons[optionSet.link.icon];
-          icon.position = cp([0.5,1],[0,0]);
-          icon.render(ctx);
-          break;
-        case "focalPoint":
-          icon = this.optionIcons[optionSet.focalPoint.icon];
-          icon.position = rp(bubble.optionContext.focalPoint);
-          icon.render(ctx);
-          break;
-        case "focalRange":
-          (() => {
-            icon = this.optionIcons[optionSet.focalRange.icon];
-            const [px, py] = rp(bubble.optionContext.focalPoint);
-            const [rx, ry] = bubble.optionContext.focalRange;
-            icon.position = [px+rx, py+ry];
-            icon.render(ctx);
-          })();
-          break;
+      case "tailTip":
+        icon = this.optionIcons[optionSet.tailTip.icon];
+        icon.position = rp(bubble.optionContext.tailTip);
+        icon.render(ctx);
+        break;
+      case "tailMid":
+        icon = this.optionIcons[optionSet.tailMid.icon];
+        icon.position = tailMidCoord();
+        icon.render(ctx);
+        break;
+      case "link":
+        icon = this.optionIcons[optionSet.link.icon];
+        icon.position = cp([0.5, 1], [0, 0]);
+        icon.render(ctx);
+        break;
+      case "focalPoint":
+        icon = this.optionIcons[optionSet.focalPoint.icon];
+        icon.position = rp(bubble.optionContext.focalPoint);
+        icon.render(ctx);
+        break;
+      case "focalRange":
+        (() => {
+        icon = this.optionIcons[optionSet.focalRange.icon];
+        const [px, py] = rp(bubble.optionContext.focalPoint);
+        const [rx, ry] = bubble.optionContext.focalRange;
+        icon.position = [px + rx, py + ry];
+        icon.render(ctx);
+        })();
+        break;
       }
     }
   }
