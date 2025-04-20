@@ -1,12 +1,10 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Film, FilmStack } from "../../lib/layeredCanvas/dataModels/film";
-  import { ImageMedia } from '../../lib/layeredCanvas/dataModels/media';
   import { sortableList } from '../../utils/sortableList'
   import { fileDroppableList, FileDroppableContainer } from '../../utils/fileDroppableList'
   import { moveInArray } from '../../utils/moveInArray';
   import FilmListItem from "./FilmListItem.svelte";
-  import { createCanvasFromBlob } from '../../lib/layeredCanvas/tools/imageUtil';
   import { buildMedia } from '../../lib/layeredCanvas/dataModels/media';
   
   export let filmStack: FilmStack;

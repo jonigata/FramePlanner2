@@ -10,6 +10,7 @@ import { loading } from '../../utils/loadingStore';
 import { toolTipRequest } from '../../utils/passiveToolTipStore';
 import { commit, delayedCommiter } from './commitOperations';
 import { generateMovie } from '../../utils/generateMovie';
+import { makePlainCanvas } from "../../lib/layeredCanvas/tools/imageUtil";
 
 // 共通インターフェース - フィルムオペレーション対象
 export interface FilmOperationTarget {
@@ -133,6 +134,22 @@ export async function handleVideoCommand<T extends FilmOperationTarget & { bubbl
   
   await generateMovie(actualFilmStack, target.commandTargetFilm!);
   commit(null);
+}
+
+export async function handleCoverCommand<T extends FilmOperationTarget>(
+  target: T,
+  calculateSize: () => [number, number],
+  targetStore: any
+): Promise<void> {
+  const size = calculateSize();
+  console.log("handleCoverCommand", size);
+  const media = new ImageMedia(makePlainCanvas(size[0], size[1], "#ffffff00"));
+  const film = new Film(media);
+  film.setShiftedScale(target.page.paperSize, 1.0);
+  
+  target.filmStack.films.push(film);
+  
+  targetStore.set(get(targetStore));
 }
 
 // コマンド処理の共通フロー

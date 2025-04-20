@@ -157,8 +157,11 @@ function addFrameLayer(
       operators.insert(page, e);
     },
     (e: FrameElement) => {
+      operators.coverFrame(page, e);
+    },
+    (e: FrameElement) => {
       operators.scribbleFrame(page, e);
-    }
+    },
   );
   paper.addLayer(frameLayer);
   return frameLayer;
@@ -224,6 +227,9 @@ function buildPaper(
     },
     (bubble: Bubble) => {
       potentialCrossPage(layeredCanvas, book, page, bubble);
+    },
+    (bubble: Bubble) => {
+      operators.coverBubble(page, bubble);      
     },
     (bubble: Bubble) => {
       operators.scribbleBubble(page, bubble);      

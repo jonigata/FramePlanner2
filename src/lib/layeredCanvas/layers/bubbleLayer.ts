@@ -50,6 +50,7 @@ export class BubbleLayer extends LayerBase {
   rotateIcon: ClickableIcon;
   imageScaleLockIcon: ClickableIcon;
   scaleIcon: ClickableIcon;
+  coverIcon: ClickableIcon;
   scribbleIcon: ClickableIcon;
   optionIcons: Record<string, ClickableIcon>;
 
@@ -64,6 +65,7 @@ export class BubbleLayer extends LayerBase {
     private onCommit: (weak?: boolean) => void,
     private onRevert: () => void,
     private onPotentialCrossPage: (bubble: Bubble) => void,
+    private onCover: (bubble: Bubble) => void,
     private onScribble: (bubble: Bubble) => void) {
 
     super();
@@ -71,10 +73,6 @@ export class BubbleLayer extends LayerBase {
     this.focusKeeper = focusKeeper;
     this.renderLayer = renderLayer;
     this.bubbles = bubbles;
-    this.onFocus = onFocus;
-    this.onCommit = onCommit;
-    this.onRevert = onRevert;
-    this.onPotentialCrossPage = onPotentialCrossPage;
     this.defaultBubbleSlot = defaultBubbleSlot;
     this.creatingBubble = null;
     this.optionEditActive = {}
@@ -99,7 +97,8 @@ export class BubbleLayer extends LayerBase {
     this.imageScaleLockIcon.index = 0;
     this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.webp"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null && 0 < this.selected?.filmStack.films.length, mp);
 
-    this.scribbleIcon = new ClickableIcon(["bubbleLayer/scribble.webp"],unit,[0,1],"一番上のレイヤに落書き", () => this.interactable, mp);
+    this.coverIcon = new ClickableIcon(["bubbleLayer/newlayer.webp"],unit,[0,1],"透明レイヤを追加", () => this.interactable && this.selected != null, mp);
+    this.scribbleIcon = new ClickableIcon(["bubbleLayer/scribble.webp"],unit,[0,1],"一番上のレイヤに落書き", () => this.interactable && this.selected != null && 0 < this.selected?.filmStack.films.length, mp);
 
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.webp"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
@@ -172,6 +171,7 @@ export class BubbleLayer extends LayerBase {
         this.imageScaleLockIcon.render(ctx);
         this.scaleIcon.render(ctx);
 
+        this.coverIcon.render(ctx);
         this.scribbleIcon.render(ctx);
       }
       catch (e) {
@@ -387,6 +387,7 @@ export class BubbleLayer extends LayerBase {
         this.zPlusIcon.hintIfContains(p, this.hint) ||
         this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
         this.scaleIcon.hintIfContains(p, this.hint) ||
+        this.coverIcon.hintIfContains(p, this.hint) ||
         this.scribbleIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
@@ -693,6 +694,8 @@ export class BubbleLayer extends LayerBase {
         return { action: "image-scale-lock", bubble };
       } else if (this.scaleIcon.contains(point)) {
         return { action: "image-scale", bubble };
+      } else if (this.coverIcon.contains(point)) {
+        return { action: "cover", bubble };
       } else if (this.scribbleIcon.contains(point)) {
         return { action: "scribble", bubble };
       } else {
@@ -831,6 +834,8 @@ export class BubbleLayer extends LayerBase {
       yield* this.translateImage(dragStart, payload.bubble);
     } else if (payload.action === "image-scale") {
       yield* this.scaleImage(dragStart, payload.bubble);
+    } else if (payload.action === "cover") {
+      this.onCover(payload.bubble);
     } else if (payload.action === "scribble") {
       this.onScribble(payload.bubble);
     } else if (payload.action === "options-tailTip") {
@@ -948,7 +953,9 @@ export class BubbleLayer extends LayerBase {
     this.imageScaleLockIcon.index = this.selected!.scaleLock ? 1 : 0;
 
     this.scaleIcon.position = cp([1,1],[-2,0]);
-    this.scribbleIcon.position = cp([0,1], [0,0]);
+
+    this.coverIcon.position = cp([0,1], [0,0]);
+    this.scribbleIcon.position = cp([0,1], [1,0]);
   }
 
   *createBubble(dragStart: Vector, createsSurface: boolean): Generator<void, void, Vector> {

@@ -19,10 +19,11 @@ import {
   handlePunchCommand,
   handleUpscaleCommand,
   handleVideoCommand,
-  processCommand
+  processCommand,
+  handleCoverCommand
 } from '../operations/filmStackOperations';
 
-type FrameInspectorCommand = "generate" | "scribble" | "punch" | "outpainting" | "video" | "upscale";
+type FrameInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "outpainting" | "video" | "upscale";
 
 export interface FrameInspectorTarget extends FilmOperationTarget {
   frame: FrameElement;
@@ -66,6 +67,20 @@ async function onFrameCommand(fit: FrameInspectorTarget | null) {
 
   // 共通ライブラリを使用してコマンド処理
   await processCommand<FrameInspectorTarget>(fit, frameInspectorTarget, {
+    "cover": async (target) => handleCoverCommand(
+      target,
+      () => {
+        const pageLayout = calculatePhysicalLayout(target.page.frameTree, target.page.paperSize, [0,0]);
+        const leafLayout = findLayoutOf(pageLayout, target.frame);
+        const frameRect = trapezoidBoundingRect(leafLayout!.corners);
+        const targetSize: [number,number] = [
+          Math.ceil(frameRect[2] / 128) * 128,
+          Math.ceil(frameRect[3] / 128) * 128
+        ];
+        return targetSize;
+      },
+      frameInspectorTarget,
+    ),
     "scribble": async (target) => handleScribbleCommand(target, painterRunWithFrame!, target.frame),
     "generate": async (target) => handleGenerateCommand(
       target,

@@ -40,6 +40,7 @@ export class FrameLayer extends LayerBase {
   visibilityIcon: ClickableIcon;
   scaleIcon: ClickableIcon;
   rotateIcon: ClickableIcon;
+  coverIcon: ClickableIcon;  
   scribbleIcon: ClickableIcon;  
   flipHorizontalIcon: ClickableIcon;
   flipVerticalIcon: ClickableIcon;
@@ -76,6 +77,7 @@ export class FrameLayer extends LayerBase {
     private onUnshift: (element: FrameElement) => void,
     private onSwap: (element0: FrameElement, element1: FrameElement) => void,
     private onInsert: (border: Border) => void,
+    private onCover: (element: FrameElement) => void,
     private onScribble: (element: FrameElement) => void,
   ) {
     super();
@@ -119,6 +121,7 @@ export class FrameLayer extends LayerBase {
     const isImageActive = () => this.interactable && 0 < (this.selectedLayout?.element.filmStack.films.length ?? 0) && !this.pointerHandler;
     this.scaleIcon = new ClickableIcon(["frameLayer/scale.webp"],unit,[1,1],"ドラッグでスケール", isImageActiveDraggable, mp);
     this.rotateIcon = new ClickableIcon(["frameLayer/rotate.webp"],unit,[1,1],"ドラッグで回転", isImageActiveDraggable, mp);
+    this.coverIcon = new ClickableIcon(["frameLayer/newlayer.webp"],unit,[1,1],"透明レイヤを追加", () => this.interactable, mp);
     this.scribbleIcon = new ClickableIcon(["frameLayer/scribble.webp"],unit,[1,1],"一番上のレイヤに落書き", isImageActive, mp);
     this.flipHorizontalIcon = new ClickableIcon(["frameLayer/flip-horizontal.webp"],unit,[1,1],"左右反転", isImageActive, mp);
     this.flipVerticalIcon = new ClickableIcon(["frameLayer/flip-vertical.webp"],unit,[1,1],"上下反転", isImageActive, mp);
@@ -135,7 +138,7 @@ export class FrameLayer extends LayerBase {
     const isSwapVisible = () => this.interactable && this.litLayout != null && this.selectedLayout != null && this.litLayout.element !== this.selectedLayout.element && !this.pointerHandler && 0 < this.litLayout.element.visibility;
     this.swapIcon = new ClickableIcon(["frameLayer/swap.webp"],unit,[0.5,0],"選択コマと\n中身を入れ替え", isSwapVisible, mp);
 
-    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.scribbleIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
+    this.frameIcons = [this.splitHorizontalIcon, this.splitVerticalIcon, this.deleteIcon, this.duplicateIcon, this.shiftIcon, this.unshiftIcon, this.resetPaddingIcon, this.zplusIcon, this.zminusIcon, this.visibilityIcon, this.scaleIcon, this.rotateIcon, this.coverIcon, this.scribbleIcon, this.flipHorizontalIcon, this.flipVerticalIcon, this.fitIcon, this.zvalue];
     this.borderIcons = [this.slantVerticalIcon, this.expandVerticalIcon, this.slantHorizontalIcon, this.expandHorizontalIcon, this.insertHorizontalIcon, this.insertVerticalIcon];
     this.litIcons = [this.swapIcon];
 
@@ -563,6 +566,9 @@ export class FrameLayer extends LayerBase {
     if (this.visibilityIcon.contains(point)) {
       return { action: "visibility", layout: layout };
     }
+    if (this.coverIcon.contains(point)) {
+      return { action: "cover", layout: layout };
+    } 
     if (this.scribbleIcon.contains(point)) {
       return { action: "scribble", layout: layout };
     } 
@@ -744,6 +750,10 @@ export class FrameLayer extends LayerBase {
         this.redraw();
         break;
 
+      case "cover":
+        this.onCover(payload.layout.element);
+        this.redraw();
+        break;
       case "scribble":
         this.onScribble(payload.layout.element);
         this.redraw();
@@ -1146,6 +1156,7 @@ export class FrameLayer extends LayerBase {
     this.splitHorizontalIcon.position = cp([0,1],[0,0]);
     this.splitVerticalIcon.position = cp([0,1],[1,0]);
 
+    this.coverIcon.position = cp([1,1], [-6.5,0]);
     this.scribbleIcon.position = cp([1,1], [-5.5,0]);
     this.flipHorizontalIcon.position = cp([1,1], [-4.5,0]);
     this.flipVerticalIcon.position = cp([1,1], [-3.5,0]);

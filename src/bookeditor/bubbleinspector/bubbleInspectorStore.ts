@@ -8,6 +8,7 @@ import { commit } from '../operations/commitOperations';
 import type { FilmOperationTarget } from '../operations/filmStackOperations';
 import {
   setupCommandSubscription,
+  handleCoverCommand,
   handleScribbleCommand,
   handleGenerateCommand,
   handlePunchCommand,
@@ -16,7 +17,7 @@ import {
   processCommand
 } from '../operations/filmStackOperations';
 
-type BubbleInspectorCommand = "generate" | "scribble" | "punch" | "upscale" | "video" | "split";
+type BubbleInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "upscale" | "video" | "split";
 
 export interface BubbleInspectorTarget extends FilmOperationTarget {
   bubble: Bubble;
@@ -60,7 +61,22 @@ async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
   }
 
   // 共通ライブラリを使用してコマンド処理
+
   await processCommand<BubbleInspectorTarget>(bit, bubbleInspectorTarget, {
+    "cover": async (target) => handleCoverCommand(
+      target,
+      () => {
+        const paperSize = target.page.paperSize;
+        const bubbleSize = target.bubble.getPhysicalSize(paperSize);
+        console.log(bubbleSize);
+        const targetSize: [number,number] = [
+          Math.ceil(bubbleSize[0] / 128) * 128,
+          Math.ceil(bubbleSize[1] / 128) * 128
+        ];
+        return targetSize;
+      },
+      bubbleInspectorTarget,
+    ),
     "scribble": async (target) => handleScribbleCommand(target, painterRunWithBubble!, target.bubble),
     "generate": async (target) => handleGenerateCommand(
       target,
