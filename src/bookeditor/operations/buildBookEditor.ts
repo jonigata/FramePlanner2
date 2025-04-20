@@ -155,6 +155,9 @@ function addFrameLayer(
     },
     (e: Border) => {
       operators.insert(page, e);
+    },
+    (e: FrameElement) => {
+      operators.scribbleFrame(page, e);
     }
   );
   paper.addLayer(frameLayer);
@@ -221,6 +224,9 @@ function buildPaper(
     },
     (bubble: Bubble) => {
       potentialCrossPage(layeredCanvas, book, page, bubble);
+    },
+    (bubble: Bubble) => {
+      operators.scribbleBubble(page, bubble);      
     }
   );
   paper.addLayer(bubbleLayer);

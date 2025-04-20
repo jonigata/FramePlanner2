@@ -308,4 +308,30 @@ export class BookWorkspaceOperators implements BookOperators {
     const index = this.arrayLayer.array.findNearestPaperIndex(p);
     return this.book.pages[index];
   }
+
+  scribbleFrame(page: Page, frame: FrameElement): void {
+    const films = frame.filmStack.getOperationTargetFilms();
+    if (films.length === 0) {return;}
+
+    frameInspectorTarget.set({
+      frame,
+      filmStack: frame.filmStack,
+      page,
+      command: "scribble",
+      commandTargetFilm: films[films.length - 1],
+    });
+  }
+
+  scribbleBubble(page: Page, bubble: Bubble): void {
+    const films = bubble.filmStack.getOperationTargetFilms();
+    if (films.length === 0) {return;}
+
+    bubbleInspectorTarget.set({
+      bubble,
+      filmStack: bubble.filmStack,
+      page,
+      command: "scribble",
+      commandTargetFilm: films[films.length - 1],
+    });
+  }
 }

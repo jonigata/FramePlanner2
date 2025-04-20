@@ -34,10 +34,6 @@ export class BubbleLayer extends LayerBase {
   renderLayer: PaperRendererLayer;
   bubbles: Bubble[];
   fold: number = 0;
-  onFocus: (bubble: Bubble | null) => void;
-  onCommit: (weak?: boolean) => void;
-  onRevert: () => void;
-  onPotentialCrossPage: (bubble: Bubble) => void;
   defaultBubbleSlot: DefaultBubbleSlot;
   creatingBubble: Bubble | null;
   optionEditActive: Record<string, boolean>;
@@ -54,6 +50,7 @@ export class BubbleLayer extends LayerBase {
   rotateIcon: ClickableIcon;
   imageScaleLockIcon: ClickableIcon;
   scaleIcon: ClickableIcon;
+  scribbleIcon: ClickableIcon;
   optionIcons: Record<string, ClickableIcon>;
 
   constructor(
@@ -63,10 +60,11 @@ export class BubbleLayer extends LayerBase {
     defaultBubbleSlot: DefaultBubbleSlot,
     bubbles: Bubble[],
     fold: number,
-    onFocus: (bubble: Bubble | null) => void,
-    onCommit: (weak?: boolean) => void,
-    onRevert: () => void,
-    onPotentialCrossPage: (bubble: Bubble) => void) {
+    private onFocus: (bubble: Bubble | null) => void,
+    private onCommit: (weak?: boolean) => void,
+    private onRevert: () => void,
+    private onPotentialCrossPage: (bubble: Bubble) => void,
+    private onScribble: (bubble: Bubble) => void) {
 
     super();
     this.viewport = viewport;
@@ -101,6 +99,8 @@ export class BubbleLayer extends LayerBase {
     this.imageScaleLockIcon.index = 0;
     this.scaleIcon = new ClickableIcon(["bubbleLayer/bubble-scale.webp"],unit,[1,1],"ドラッグでスケール", () => this.interactable && this.selected != null && 0 < this.selected?.filmStack.films.length, mp);
 
+    this.scribbleIcon = new ClickableIcon(["bubbleLayer/scribble.webp"],unit,[0,1],"一番上のレイヤに落書き", () => this.interactable, mp);
+
     this.optionIcons = {};
     this.optionIcons.tail = new ClickableIcon(["bubbleLayer/tail-tip.webp"],unit,[0.5,0.5],"ドラッグでしっぽ", () => this.interactable && this.selected != null, mp);
     this.optionIcons.curve = new ClickableIcon(["bubbleLayer/tail-mid.webp"],unit,[0.5,0.5],"ドラッグでしっぽのカーブ", () => this.interactable && this.selected != null, mp);
@@ -108,7 +108,7 @@ export class BubbleLayer extends LayerBase {
     this.optionIcons.circle = new ClickableIcon(["bubbleLayer/circle.webp"],unit,[0.5,0.5],"ドラッグで円定義", () => this.interactable && this.selected != null, mp);
     this.optionIcons.radius = new ClickableIcon(["bubbleLayer/radius.webp"],unit,[0.5,0.5],"ドラッグで円半径", () => this.interactable && this.selected != null, mp);
 
-    for (let icon of [this.dragIcon, this.zPlusIcon, this.zMinusIcon, this.removeIcon, this.rotateIcon, this.imageScaleLockIcon, this.scaleIcon]) {
+    for (let icon of [this.dragIcon, this.zPlusIcon, this.zMinusIcon, this.removeIcon, this.rotateIcon, this.imageScaleLockIcon, this.scaleIcon, this.scribbleIcon]) {
       if (icon instanceof ClickableIcon) {
         icon.shadowColor = "#242";
       }
@@ -171,6 +171,8 @@ export class BubbleLayer extends LayerBase {
     
         this.imageScaleLockIcon.render(ctx);
         this.scaleIcon.render(ctx);
+
+        this.scribbleIcon.render(ctx);
       }
       catch (e) {
         console.log(e, this.optionEditActive, this.selected, this.selected?.optionContext);
@@ -385,6 +387,7 @@ export class BubbleLayer extends LayerBase {
         this.zPlusIcon.hintIfContains(p, this.hint) ||
         this.imageScaleLockIcon.hintIfContains(p, this.hint) ||
         this.scaleIcon.hintIfContains(p, this.hint) ||
+        this.scribbleIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
       } else if (this.selected.contains(paperSize, p)) {
@@ -690,6 +693,8 @@ export class BubbleLayer extends LayerBase {
         return { action: "image-scale-lock", bubble };
       } else if (this.scaleIcon.contains(point)) {
         return { action: "image-scale", bubble };
+      } else if (this.scribbleIcon.contains(point)) {
+        return { action: "scribble", bubble };
       } else {
         const icon = this.getOptionIconAt(bubble.shape, point);
         if (icon) {
@@ -826,6 +831,8 @@ export class BubbleLayer extends LayerBase {
       yield* this.translateImage(dragStart, payload.bubble);
     } else if (payload.action === "image-scale") {
       yield* this.scaleImage(dragStart, payload.bubble);
+    } else if (payload.action === "scribble") {
+      this.onScribble(payload.bubble);
     } else if (payload.action === "options-tailTip") {
       yield* this.optionsTailTip(dragStart, payload.bubble);
     } else if (payload.action === "options-tailMid") {
@@ -941,6 +948,7 @@ export class BubbleLayer extends LayerBase {
     this.imageScaleLockIcon.index = this.selected!.scaleLock ? 1 : 0;
 
     this.scaleIcon.position = cp([1,1],[-2,0]);
+    this.scribbleIcon.position = cp([0,1], [0,0]);
   }
 
   *createBubble(dragStart: Vector, createsSurface: boolean): Generator<void, void, Vector> {

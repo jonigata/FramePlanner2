@@ -325,6 +325,8 @@ export interface BookOperators {
   getMarks: () => boolean[];
   setMarks: (marks: boolean[]) => void;
   getFocusedPage: () => Page;
+  scribbleFrame: (page: Page, frame: FrameElement) => void;
+  scribbleBubble: (page: Page, bubble: Bubble) => void;
 }
 
 export function clonePage(page: Page): Page {
