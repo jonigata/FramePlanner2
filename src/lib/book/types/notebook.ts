@@ -5,7 +5,7 @@ export const CharacterBaseSchema = z.object({
   name: z.string(),
   personality: z.string(),
   appearance: z.string(),
-  themeColor: z.string(),
+  themeColor: z.string().describe("テーマカラー。#ffffffff形式"),
   ulid: z.string(),
 });
 export type CharacterBase = z.infer<typeof CharacterBaseSchema>;

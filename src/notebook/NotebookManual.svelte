@@ -61,7 +61,6 @@
   $: onNotebookChanged(notebook);
   function onNotebookChanged(notebook: NotebookLocal | null) {
     if (!notebook) {return;}
-    console.log("onNotebookChanged", notebook.pageNumber);
     enablePageNumber = notebook.pageNumber !== null;
     pageNumberValue = notebook.pageNumber ?? 1;
   }

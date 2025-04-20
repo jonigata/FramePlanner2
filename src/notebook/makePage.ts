@@ -58,6 +58,7 @@ export function makePagesFromStoryboard(storyboard: Storyboard.Storyboard) {
       if (index < leaves.length) {
         const leaf = leaves[index];
         leaf.prompt = panel.composition;
+        console.log(panel);
 
         const layout = findLayoutOf(paperLayout, leaf)!;
         const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);

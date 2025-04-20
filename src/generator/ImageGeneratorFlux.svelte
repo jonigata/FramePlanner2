@@ -94,7 +94,6 @@
   $: estimatedCost = batchCount * calculateCost({width,height}, mode);
 
   onMount(async () => {
-    console.log($onlineAccount!.feathral);
   });
 
 </script>

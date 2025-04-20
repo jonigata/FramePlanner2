@@ -2,7 +2,21 @@
 import { NotebookBaseSchema } from "$bookTypes/notebook"; // @deno-ts
 import { z } from "zod";
 
-export const ThinkerSchema = z.enum(["sonnet", "sonnet:think", "gpt4o", "o1", "gemini"]);
+export const ThinkerSchema = z.enum([
+  "sonnet", 
+  "sonnet:think", 
+  "gpt4o", 
+  "gpt4.1",
+  "gpt4.1-mini",
+  "gpt4.1-nano",
+  "o4-mini", 
+  "o4-mini-high", 
+  "o3", 
+  "gemini", 
+  "gemini-flash", 
+  "gemini-flash:think", 
+  "grok3-mini", 
+  "grok3"]);
 export type Thinker = z.infer<typeof ThinkerSchema>;
 
 export const NotebookRequestSchema = z.object({

@@ -35,7 +35,6 @@ export function insertNewPageToBook(book: Book, index: number) {
 let lastBookId = "";
 
 mainBook.subscribe(async (book: Book | null) => {
-  console.log("onBookChanged", book?.revision.id);
   if (!book) { return; }
   if (lastBookId === book.revision.id) { return; }
   lastBookId = book.revision.id;
