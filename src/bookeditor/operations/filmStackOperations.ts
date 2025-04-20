@@ -56,6 +56,7 @@ export async function handleScribbleCommand<T extends FilmOperationTarget>(
 // 画像生成の共通処理
 export async function handleGenerateCommand<T extends FilmOperationTarget>(
   target: T,
+  inputPrompt: string,
   runImageGenerator: (prompt: string, filmStack: any, gallery: any) => Promise<{media: any, prompt: string} | null>,
   calculateScale: (film: Film, target: T) => number,
   targetStore: any,
@@ -65,7 +66,6 @@ export async function handleGenerateCommand<T extends FilmOperationTarget>(
 
   toolTipRequest.set(null);
   
-  const inputPrompt = target.prompt || "";
   const r = await runImageGenerator(inputPrompt, target.filmStack, element.gallery);
   if (!r) { return; }
 

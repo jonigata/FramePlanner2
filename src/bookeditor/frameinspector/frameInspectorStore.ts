@@ -69,6 +69,7 @@ async function onFrameCommand(fit: FrameInspectorTarget | null) {
     "scribble": async (target) => handleScribbleCommand(target, painterRunWithFrame!, target.frame),
     "generate": async (target) => handleGenerateCommand(
       target,
+      fit.frame.prompt,
       runImageGenerator!,
       (film, target) => {
         const pageLayout = calculatePhysicalLayout(target.page.frameTree, target.page.paperSize, [0,0]);
