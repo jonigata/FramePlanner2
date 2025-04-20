@@ -64,6 +64,7 @@ async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
     "scribble": async (target) => handleScribbleCommand(target, painterRunWithBubble!, target.bubble),
     "generate": async (target) => handleGenerateCommand(
       target,
+      target.bubble.prompt,
       runImageGenerator!,
       (film, target) => {
         const paperSize = target.page.paperSize;
