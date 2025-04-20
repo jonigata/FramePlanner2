@@ -4,12 +4,12 @@
   export let thinker: Thinker;
   
   const thinkerOptions = [
-    { value: "sonnet", label: "sonnet" },
-    { value: "sonnet:think", label: "sonnet(think)" },
     { value: "gpt4o", label: "gpt4o" },
     { value: "gpt4.1", label: "gpt4.1" },
     { value: "gpt4.1-mini", label: "gpt4.1-mini" },
     { value: "o4-mini", label: "o4-mini" },
+    { value: "sonnet", label: "sonnet" },
+    { value: "sonnet:think", label: "sonnet(think)" },
     { value: "gemini", label: "gemini" },
     { value: "gemini-flash", label: "gemini-flash" },
     { value: "gemini-flash:think", label: "gemini-flash(think)" },

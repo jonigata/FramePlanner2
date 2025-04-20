@@ -30,7 +30,7 @@
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
-  let thinker: Thinker = "sonnet";
+  let thinker: Thinker = "gpt4o";
 
   let fullAutoRunning = false;
   let themeWaiting = false;
@@ -68,7 +68,6 @@
   function onPageNumberChanged(enablePageNumber: boolean, pageNumberValue: number) {
     if (notebook) {
       notebook.pageNumber = enablePageNumber ? pageNumberValue : null;
-      console.log("change notebook pageNumber", notebook.pageNumber);
     }
   }
 
@@ -395,7 +394,7 @@
     <h1>カイルちゃんの創作ノート</h1>
     <div class="flex justify-between gap-2 items-center mr-4">
       <Feathral/>
-      <ThinkerSelector bind:thinker={thinker}/>
+      <!-- <ThinkerSelector bind:thinker={thinker}/> -->
     </div>
   </div>
   <div class="body">
@@ -431,7 +430,6 @@
             on:change={() => {
               // 明示的に再代入して反応性をトリガー
               enablePageNumber = !enablePageNumber;
-              console.log("enablePageNumber:", enablePageNumber);
               
               if (enablePageNumber) {
                 notebook.pageNumber = pageNumberValue;

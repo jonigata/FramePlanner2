@@ -16,7 +16,8 @@ export const ThinkerSchema = z.enum([
   "gemini-flash", 
   "gemini-flash:think", 
   "grok3-mini", 
-  "grok3"]);
+  "grok3"
+]);
 export type Thinker = z.infer<typeof ThinkerSchema>;
 
 export const NotebookRequestSchema = z.object({
