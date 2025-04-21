@@ -391,8 +391,10 @@ export class BubbleLayer extends LayerBase {
         this.scribbleIcon.hintIfContains(p, this.hint) ||
         this.hintOptionIcon(this.selected.shape, p)) {
         this.handle = null;
+        return this;
       } else if (this.selected.contains(paperSize, p)) {
         this.hint(null, null);
+        return this;
       }
 
       if (this.handle || this.selected.contains(paperSize, p)) {
