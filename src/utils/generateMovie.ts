@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { fileSystem } from '../filemanager/fileManagerStore';
-import type { ImageToVideoRequest } from '$protocolTypes/imagingTypes';
+import type { ImageToVideoRequest, ImageToVideoModel } from '$protocolTypes/imagingTypes';
 import { Film, FilmStack } from '../lib/layeredCanvas/dataModels/film';
 import { ImageMedia, VideoMedia } from '../lib/layeredCanvas/dataModels/media';
 import { waitDialog } from '../utils/waitDialog';
@@ -30,9 +30,9 @@ export async function generateMovie(filmStack: FilmStack, film: Film) {
   loading.set(true);
   try {
     const { requestId: request_id } = await image2Video(request);
-    await saveRequest(get(fileSystem)!, "video", "kling", request_id);
+    await saveRequest(get(fileSystem)!, "video", request.model, request_id);
 
-    const newMedia = new VideoMedia({ mediaType: "video", mode: "kling", requestId: request_id });
+    const newMedia = new VideoMedia({ mediaType: "video", mode: request.model, requestId: request_id });
     const newFilm = new Film(newMedia);
     filmProcessorQueue.publish(newFilm);
 
@@ -40,7 +40,7 @@ export async function generateMovie(filmStack: FilmStack, film: Film) {
     filmStack.films.splice(index + 1, 0, newFilm);
     loading.set(false);
 
-    toastStore.trigger({ message: `ムービー生成には6分程度かかります`, timeout: 3000});
+    toastStore.trigger({ message: `ムービー生成には数分かかります`, timeout: 3000});
   }
   catch (e) {
     loading.set(false);

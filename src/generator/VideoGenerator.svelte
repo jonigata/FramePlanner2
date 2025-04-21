@@ -9,10 +9,62 @@
   import FeathralCost from '../utils/FeathralCost.svelte';
   
   let prompt = '';
-  let duration: "5" | "10" = "5";
+  let duration: "4" | "5" | "10" = "5";
   let aspectRatio: "1:1" | "16:9" | "9:16" = "1:1";
+  let model: "kling" | "FramePack" = "FramePack";
   let sourceMedia: Media;
   let promptWaiting: boolean;
+  let cost: number = 50;
+  
+  // モデルごとの利用可能なオプション
+  const modelOptions = {
+    FramePack: {
+      durations: [
+        { value: "1", label: "1秒" },
+        { value: "2", label: "2秒" },
+        { value: "3", label: "3秒" },
+        { value: "4", label: "4秒" },
+        { value: "5", label: "5秒" },
+      ],
+      aspectRatios: [
+        { value: "16:9", label: "横長 (16:9)" },
+        { value: "9:16", label: "縦長 (9:16)" }
+      ],
+      cost: (duration: string) => {
+        return parseInt(duration) * 5;
+      }
+    },
+    kling: {
+      durations: [
+        { value: "5", label: "5秒" },
+      ],
+      aspectRatios: [
+        { value: "1:1", label: "正方形 (1:1)" },
+        { value: "16:9", label: "横長 (16:9)" },
+        { value: "9:16", label: "縦長 (9:16)" },
+      ],
+      cost: () => {
+        return 50;
+      }
+    }
+  };
+  
+  // モデル変更時に互換性のあるオプションに自動調整
+  $: if (model) {
+    const availableDurations = modelOptions[model].durations.map(d => d.value);
+    const availableAspectRatios = modelOptions[model].aspectRatios.map(a => a.value);
+    
+    // 現在の値が新しいモデルで利用可能でない場合は、最初のオプションに設定
+    if (!availableDurations.includes(duration)) {
+      duration = availableDurations[0] as any;
+    }
+    
+    if (!availableAspectRatios.includes(aspectRatio)) {
+      aspectRatio = availableAspectRatios[0] as any;
+    }
+
+    cost = modelOptions[model].cost(duration);
+  }
 
   function onCancel() {
     modalStore.close();
@@ -25,7 +77,8 @@
       prompt,
       imageUrl: resizedImageUrl,
       duration,
-      aspectRatio: aspectRatio
+      aspectRatio,
+      model
     };
     
     $modalStore[0].response!(request);
@@ -41,11 +94,11 @@
       const response = await recognizeImage({
         dataUrl: resizedImageUrl,
         prompt: `
-  画像を把握して、この画像から始まる短いシーン(5秒程度の動画)を考えて、説明してください。
+  画像を把握して、この画像から始まる短いシーン(${duration}秒程度の動画)を考えて、説明してください。
   画面上の物体がよく動く様子やカメラワーク、ライティングを具体的に記述してください。
   この画像以前の動画を描くことはできないので、注意してください。
   つまり、必ずこの画像から始まる動画を生成するためのプロンプトを作成する必要があります。
-
+　簡潔に3行程度にまとめてください。
   `
       });
       console.log(response);
@@ -87,25 +140,35 @@
         />
       </div>
 
-      <!-- <label class="label">
-        <span>Duration</span>
-        <select bind:value={duration} class="select">
-          <option value="5">5 seconds</option>
-          <option value="10">10 seconds</option>
-        </select>
-      </label> -->
+      <div class="grid grid-cols-2 gap-4">
+        <label class="label">
+          <h3>モデル</h3>
+          <select bind:value={model} class="select">
+            <option value="FramePack">FramePack</option>
+            <option value="kling">kling-1.6</option>
+          </select>
+        </label>
 
-      <label class="label">
-        <h3>アスペクト比(横:縦)</h3>
-        <select bind:value={aspectRatio} class="select">
-          <option value="1:1">正方形 (1:1)</option>
-          <option value="16:9">横長 (16:9)</option>
-          <option value="9:16">縦長 (9:16)</option>
-        </select>
-      </label>
+        <label class="label">
+          <h3>時間</h3>
+          <select bind:value={duration} class="select">
+            {#each modelOptions[model].durations as option}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
+      </div>
 
-      <h3>時間</h3>
-      <p class="mx-4">5秒</p>
+      <div class="grid grid-cols-1 gap-4">
+        <label class="label">
+          <h3>アスペクト比(横:縦)</h3>
+          <select bind:value={aspectRatio} class="select">
+            {#each modelOptions[model].aspectRatios as option}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
+      </div>
     </div>
   </section>
 
@@ -115,7 +178,7 @@
       キャンセル
     </button>
     <button class="btn variant-filled-primary flex flex-row gap-2" on:click={onSubmit}>
-      <span class="generate-text">生成</span><FeathralCost cost={50}/>
+      <span class="generate-text">生成</span><FeathralCost cost={cost}/>
     </button>
   </footer>
 </div>

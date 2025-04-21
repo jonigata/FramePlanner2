@@ -155,7 +155,7 @@ export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'vi
     console.log(status);
     switch (status.status) {
       case "IN_QUEUE":
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, interval));
         break;  
       case "IN_PROGRESS":
         await new Promise(resolve => setTimeout(resolve, interval));

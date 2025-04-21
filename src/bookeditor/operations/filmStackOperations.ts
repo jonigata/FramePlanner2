@@ -11,6 +11,7 @@ import { toolTipRequest } from '../../utils/passiveToolTipStore';
 import { commit, delayedCommiter } from './commitOperations';
 import { generateMovie } from '../../utils/generateMovie';
 import { makePlainCanvas } from "../../lib/layeredCanvas/tools/imageUtil";
+import type { ImageToVideoModel } from '$protocolTypes/imagingTypes';
 
 // 共通インターフェース - フィルムオペレーション対象
 export interface FilmOperationTarget {
@@ -123,7 +124,7 @@ export async function handleUpscaleCommand<T extends FilmOperationTarget>(
 
 // 動画生成の共通処理
 export async function handleVideoCommand<T extends FilmOperationTarget & { bubble?: any, frame?: any }>(
-  target: T
+  target: T,
 ): Promise<void> {
   // frameまたはbubbleに実際のFilmStackオブジェクトが含まれている
   const actualFilmStack = target.frame?.filmStack || target.bubble?.filmStack;

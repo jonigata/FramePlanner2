@@ -62,11 +62,15 @@ export const ImagingStatusResponseSchema = z.object({
 });
 export type ImagingStatusResponse = z.infer<typeof ImagingStatusResponseSchema>;
 
+export const ImageToVideoModelSchema = z.enum(["kling", "FramePack"]);
+export type ImageToVideoModel = z.infer<typeof ImageToVideoModelSchema>;
+
 export const ImageToVideoRequestSchema = z.object({
   prompt: z.string(),
   imageUrl: z.string(),
-  duration: z.enum(["5", "10"]),
+  duration: z.enum(["1", "2", "3", "4", "5", "10"]),
   aspectRatio: z.enum(["1:1", "16:9", "9:16"]),
+  model: ImageToVideoModelSchema,
 });
 export type ImageToVideoRequest = z.infer<typeof ImageToVideoRequestSchema>;
 
