@@ -30,7 +30,7 @@
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
-  let thinker: Thinker = "gpt4o";
+  let thinker: Thinker = "gpt4.1";
 
   let fullAutoRunning = false;
   let themeWaiting = false;
@@ -464,10 +464,6 @@
       <div class="w-full">
         <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:addBlank={onAddBlank} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
       </div>
-      <div class="flex flex-row mt-2 items-center">
-        <span class="w-16">スタイル</span>
-        <input type="text" class="input portrait-style" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
-      </div>
     </div>
     <div class="section">
       <h2 class:progress={plotWaiting}>プロット
@@ -504,10 +500,15 @@
       <button class="btn variant-filled-primary" on:click={onBuildStoryboard} use:toolTip={"コマ割り、プロンプト・フキダシ作成[15]"}>ネーム作成！</button>
     </div>
     {#if notebook.storyboard}
-      <div class="flex flex-row gap-4 mb-4 items-center">
+      <div class="section">
+        <h2>画像生成</h2>
         <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
-        <span class="flex-grow"></span>
-        <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
+        <div class="flex flex-row mt-2 justify-center align-center gap-2">
+          <span class="w-18">スタイル</span>
+          <input type="text" class="input portrait-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', defaultValue: 'Japanese anime style', onLoad: (v) => postfix = v}}/>
+          <span class="flex-grow"></span>
+          <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
+        </div>
       </div>
       <div class="section">
         <h2>ネームはどう？</h2>

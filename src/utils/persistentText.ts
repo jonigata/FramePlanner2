@@ -3,6 +3,7 @@ import { createPreference } from '../preferences';
 interface PersistentOptions {
   store: string;
   key: string;
+  defaultValue?: string;
   onLoad?: (value: string) => void;
 }
 
@@ -12,16 +13,18 @@ export function persistentText(node: HTMLElement, options: PersistentOptions) {
   const preference = createPreference<string>(store, key);
 
   async function load() {
-    const value = await preference.get();
-    if (value) {
-      if (onLoad) {
-        onLoad(value);
-      }
-      if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
-        node.value = value;
-      } else {
-        node.textContent = value;
-      }
+    let value = await preference.get();
+    if (!value) {
+      value = options.defaultValue || '';
+      await preference.set(value);
+    }
+    if (onLoad) {
+      onLoad(value);
+    }
+    if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
+      node.value = value;
+    } else {
+      node.textContent = value;
     }
   }
 
