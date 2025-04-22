@@ -88,6 +88,11 @@
     $frameInspectorTarget!.command = "outpainting";
   }
 
+  function onEraser(e: CustomEvent<Film>) {
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "eraser";
+  }
+
   function calculateOutPaintingCost(film: Film) {
     const fit = $frameInspectorTarget!;
     const padding = calculateFramePadding(fit.page, fit.frame, film);
@@ -129,6 +134,7 @@
           on:video={onVideo}
           on:accept={onAccept}
           on:outpainting={onOutPainting}
+          on:eraser={onEraser}
           calculateOutPaintingCost={calculateOutPaintingCost}/>
       {/key}
     </div>

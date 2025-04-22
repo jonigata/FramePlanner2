@@ -24,6 +24,7 @@
   import videoIcon from '../../assets/video.webp';
   import upscaleIcon from '../../assets/filmlist/upscale.webp';
   import dupliateIcon from '../../assets/filmlist/duplicate.webp';
+  import eraserIcon from '../../assets/filmlist/eraser.webp';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
@@ -51,6 +52,12 @@
     ev.preventDefault();
     film!.visible = !film!.visible;
     $redrawToken = true;
+  }
+
+  function onEraser(ev: MouseEvent) {
+    console.log("onEraser");
+    popupVisible = false;
+    dispatch('eraser', film)
   }
 
   function onScribble(ev: MouseEvent) {
@@ -229,6 +236,9 @@
           <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
         </button>
       {/if}
+      <button class="transformix-item" use:toolTip={"消しゴム"} on:click={onEraser}>
+        <img draggable={false} src={eraserIcon} alt="消しゴム"/>
+      </button>
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
         <img draggable={false} src={scribbleIcon} alt="落書き"/>
       </button>

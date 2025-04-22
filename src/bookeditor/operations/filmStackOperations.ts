@@ -11,7 +11,8 @@ import { toolTipRequest } from '../../utils/passiveToolTipStore';
 import { commit, delayedCommiter } from './commitOperations';
 import { generateMovie } from '../../utils/generateMovie';
 import { makePlainCanvas } from "../../lib/layeredCanvas/tools/imageUtil";
-import type { ImageToVideoModel } from '$protocolTypes/imagingTypes';
+import { eraserFilm } from "../../utils/eraserFilm";
+
 
 // 共通インターフェース - フィルムオペレーション対象
 export interface FilmOperationTarget {
@@ -152,6 +153,15 @@ export async function handleCoverCommand<T extends FilmOperationTarget>(
   
   targetStore.set(get(targetStore));
 }
+
+export async function handleEraserCommand<T extends FilmOperationTarget>(
+  target: T
+): Promise<void> {
+  await eraserFilm(target.commandTargetFilm!);
+  commit(null);
+  loading.set(false);
+}
+
 
 // コマンド処理の共通フロー
 export function processCommand<T extends FilmOperationTarget & { command: string | null }>(

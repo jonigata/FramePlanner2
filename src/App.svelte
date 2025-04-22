@@ -60,6 +60,7 @@
   import SocialCard from './publication/SocialCard.svelte';
   import Roster from './notebook/Roster.svelte';
   import VideoGenerator from './generator/VideoGenerator.svelte';
+  import ImageMaskDialog from './utils/ImageMaskDialog.svelte';
   import Upscaler from './generator/Upscaler.svelte';
   import Dump from './transfer/Dump.svelte';
   import Undump from './transfer/Undump.svelte';
@@ -101,6 +102,9 @@
     },
     videoGenerator: {
       ref: VideoGenerator,
+    },
+    imageMask: {
+      ref: ImageMaskDialog,
     },
     upscaler: {
       ref: Upscaler,
