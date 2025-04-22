@@ -27,6 +27,7 @@
   import ThinkerSelector from './ThinkerSelector.svelte';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { createPreference } from '../preferences';
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
@@ -369,6 +370,9 @@
     rootFolder = await $fileSystem!.getRoot();
     aiFolder = (await rootFolder.getEmbodiedEntryByName('AI'))![2].asFolder()!;
     rosterFolder = (await aiFolder.getEmbodiedEntryByName('キャラクター'))![2].asFolder()!;
+
+    const preference = await createPreference<string>('imaging', 'style');
+    postfix = await preference.getOrDefault('Japanese anime style');
   });
 
 </script>
