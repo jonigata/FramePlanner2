@@ -1,5 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
+  import sprytIcon from '../assets/spryt.webp';
 
   let title = '';
   let description = '';
@@ -24,6 +25,7 @@
 
 <div class="card p-4 w-full max-w-lg">
   <h2 class="h2 mb-4">ドキュメントの公開</h2>
+  <p class="text-white">初めての公開で<img src={sprytIcon} alt="spryt" width=24 height=24 class="image-outline"/>500プレゼント！</p>
   <form on:submit|preventDefault={handleSubmit}>
     <label class="label">
       <span>タイトル*</span>
