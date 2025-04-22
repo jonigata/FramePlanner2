@@ -1,6 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
 
   // 画像ソースはcanvas一択
   let imageSource: HTMLCanvasElement;
@@ -12,6 +12,11 @@
   let lastY = 0;
   let brushSize = 48; // 初期値は仮設定、後でsrcWidthとsrcHeightに基づいて更新
   let brushColor = 'rgba(255,0,0,0.7)';
+  
+  // アンドゥ・リドゥ用の状態管理
+  let history: ImageData[] = [];
+  let historyIndex = -1;
+  const MAX_HISTORY = 20; // 履歴の最大数
   
   // ブラシサイズの範囲
   let minBrushSize = 16;
@@ -64,6 +69,9 @@
     
     // 元画像を表示
     drawImageToCanvas();
+    
+    // 初期状態を履歴に追加（空のキャンバス）
+    saveCurrentStateToHistory();
   }
 
   function drawImageToCanvas() {
@@ -127,6 +135,9 @@
     
     // パスのリセット
     currentPath = [];
+    
+    // 描画操作後の状態を履歴に保存
+    saveCurrentStateToHistory();
   }
   
   function draw(e: MouseEvent | TouchEvent) {
@@ -269,7 +280,88 @@
     
     ctx.resetTransform();
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    
+    // クリア操作後の状態を履歴に保存
+    saveCurrentStateToHistory();
   }
+  
+  // 現在のマスクキャンバスの状態を履歴に保存
+  function saveCurrentStateToHistory() {
+    const ctx = maskCanvas.getContext('2d');
+    if (!ctx) return;
+    
+    // 現在のインデックスより後の履歴を削除（アンドゥ後に新しい操作をした場合）
+    if (historyIndex < history.length - 1) {
+      history = history.slice(0, historyIndex + 1);
+    }
+    
+    // 履歴に現在の状態を追加
+    const imageData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    history.push(imageData);
+    
+    // 履歴の最大数を超えた場合、古い履歴を削除
+    if (history.length > MAX_HISTORY) {
+      history.shift();
+    }
+    
+    // 現在のインデックスを更新
+    historyIndex = history.length - 1;
+    
+    console.log(`History saved: ${historyIndex + 1}/${history.length}`);
+  }
+  
+  // アンドゥ: 1つ前の状態に戻す
+  function undo() {
+    if (historyIndex <= 0) return; // これ以上戻れない
+    
+    historyIndex--;
+    restoreState();
+    
+    console.log(`Undo: ${historyIndex + 1}/${history.length}`);
+  }
+  
+  // リドゥ: 取り消した操作をやり直す
+  function redo() {
+    if (historyIndex >= history.length - 1) return; // これ以上進めない
+    
+    historyIndex++;
+    restoreState();
+    
+    console.log(`Redo: ${historyIndex + 1}/${history.length}`);
+  }
+  
+  // 指定したインデックスの状態を復元
+  function restoreState() {
+    const ctx = maskCanvas.getContext('2d');
+    if (!ctx || historyIndex < 0 || historyIndex >= history.length) return;
+    
+    ctx.resetTransform();
+    ctx.putImageData(history[historyIndex], 0, 0);
+  }
+  
+  // キーボードショートカットの処理
+  function handleKeydown(e: KeyboardEvent) {
+    // Ctrl+Z: アンドゥ
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    }
+    
+    // Ctrl+Shift+Z または Ctrl+Y: リドゥ
+    if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+      e.preventDefault();
+      redo();
+    }
+  }
+  
+  // キーボードイベントの設定
+  onMount(() => {
+    window.addEventListener('keydown', handleKeydown);
+  });
+  
+  onDestroy(() => {
+    window.removeEventListener('keydown', handleKeydown);
+  });
 
   function onCancel() {
     modalStore.close();
@@ -345,7 +437,15 @@
         <span class="mr-2 w-32">ブラシサイズ</span>
         <input type="range" min={minBrushSize} max={maxBrushSize} bind:value={brushSize} />
       </label>
-      <button class="btn variant-ghost-surface" on:click={clearMask}>マスク消去</button>
+      <div class="flex gap-2">
+        <button class="btn variant-ghost-surface" on:click={undo} disabled={historyIndex <= 0} title="元に戻す (Ctrl+Z)">
+          <span class="text-lg">↩</span>
+        </button>
+        <button class="btn variant-ghost-surface" on:click={redo} disabled={historyIndex >= history.length - 1} title="やり直し (Ctrl+Y)">
+          <span class="text-lg">↪</span>
+        </button>
+        <button class="btn variant-ghost-surface" on:click={clearMask}>マスク消去</button>
+      </div>
     </div>
   </section>
   <footer class="card-footer flex gap-2">
