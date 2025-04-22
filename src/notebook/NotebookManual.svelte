@@ -503,17 +503,17 @@
       <span class="flex-grow"></span>
       <button class="btn variant-filled-primary" on:click={onBuildStoryboard} use:toolTip={"コマ割り、プロンプト・フキダシ作成[15]"}>ネーム作成！</button>
     </div>
-    {#if notebook.storyboard}
-      <div class="section">
-        <h2>画像生成</h2>
-        <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
-        <div class="flex flex-row mt-2 justify-center align-center gap-2">
-          <span class="w-18">スタイル</span>
-          <input type="text" class="input portrait-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', defaultValue: 'Japanese anime style', onLoad: (v) => postfix = v}}/>
-          <span class="flex-grow"></span>
-          <button class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
-        </div>
+    <div class="section">
+      <h2>画像生成</h2>
+      <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
+      <div class="flex flex-row mt-2 justify-center align-center gap-2">
+        <span class="w-18">スタイル</span>
+        <input type="text" class="input portrait-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', defaultValue: 'Japanese anime style', onLoad: (v) => postfix = v}}/>
+        <span class="flex-grow"></span>
+        <button disabled={notebook.storyboard == null} class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
       </div>
+    </div>
+    {#if notebook.storyboard}
       <div class="section">
         <h2>ネームはどう？</h2>
         <div class="w-full">
