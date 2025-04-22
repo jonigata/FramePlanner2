@@ -427,9 +427,8 @@
       
       // マスク画像データを返す
       $modalStore[0].response?.({
-        maskDataUrl: finalCanvas.toDataURL(),
-        width: srcWidth,
-        height: srcHeight
+        mask: finalCanvas,
+        image: imageSource,
       });
     }
     

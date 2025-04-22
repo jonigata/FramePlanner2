@@ -126,8 +126,6 @@
     const { title, description, related_url, is_public } = r;
 
     // const { title, description, related_url } = { title: "", description: "", related_url: "" };
-    // 直ちに実行すると自動的に閉じてしまうようなので待つ(多分svelte skeletonのアニメーション処理のバグ)
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     const r2 = await waitDialog<{socialCard: Blob}>('socialCard');
     if (!r2) {

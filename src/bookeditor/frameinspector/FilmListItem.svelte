@@ -236,7 +236,7 @@
           <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
         </button>
       {/if}
-      <button class="transformix-item" use:toolTip={"消しゴム"} on:click={onEraser}>
+      <button class="transformix-item" use:toolTip={"消しゴム[6]"} on:click={onEraser}>
         <img draggable={false} src={eraserIcon} alt="消しゴム"/>
       </button>
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>

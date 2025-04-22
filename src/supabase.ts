@@ -6,6 +6,7 @@ import {
   type TextToImageRequest, TextToImageRequestSchema, TextToImageResponseSchema,
   type OutPaintRequest, OutPaintRequestSchema, OutPaintResponseSchema,
   type RemoveBgRequest, RemoveBgRequestSchema, RemoveBgResponseSchema,
+  type EraserRequest, EraserRequestSchema, EraserResponseSchema,
   type UpscaleRequest, UpscaleRequestSchema, UpscaleResponseSchema,
   type ImagingStatusRequest, ImagingStatusRequestSchema, ImagingStatusResponseSchema,
   type VisionRequest, VisionRequestSchema, VisionResponseSchema
@@ -76,6 +77,10 @@ export async function outPaint(req: OutPaintRequest) {
 
 export async function removeBg(req: RemoveBgRequest) {
   return await invoke("charged/imaging/removebg", req, RemoveBgRequestSchema, RemoveBgResponseSchema);
+}
+
+export async function eraser(req: EraserRequest) {
+  return await invoke("charged/imaging/eraser", req, EraserRequestSchema, EraserResponseSchema);
 }
 
 export async function upscale(req: UpscaleRequest) {

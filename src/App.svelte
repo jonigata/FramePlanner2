@@ -64,6 +64,7 @@
   import Upscaler from './generator/Upscaler.svelte';
   import Dump from './transfer/Dump.svelte';
   import Undump from './transfer/Undump.svelte';
+  import CanvasBrowser from './utils/CanvasBrowser.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -114,6 +115,9 @@
     },
     undump: {
       ref: Undump
+    },
+    canvasBrowser: {
+      ref: CanvasBrowser
     }
   };
 

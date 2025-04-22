@@ -101,3 +101,14 @@ export const UpscaleResponseSchema = z.object({
   requestId: z.string().describe("request id"),
 });
 export type UpscaleResponse = z.infer<typeof UpscaleResponseSchema>;
+
+export const EraserRequestSchema = z.object({
+  maskDataUrl: z.string(),
+  imageDataUrl: z.string(),
+});
+export type EraserRequest = z.infer<typeof EraserRequestSchema>;
+
+export const EraserResponseSchema = z.object({
+  requestId: z.string().describe("request id"),
+});
+export type EraserResponse = z.infer<typeof EraserResponseSchema>;
