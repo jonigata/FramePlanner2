@@ -12,6 +12,7 @@
   let lastY = 0;
   let brushSize = 48; // 初期値は仮設定、後でsrcWidthとsrcHeightに基づいて更新
   let brushColor = 'rgba(255,0,0,0.7)';
+  let eraseMode = false; // 消去モードフラグ
   
   // アンドゥ・リドゥ用の状態管理
   let history: ImageData[] = [];
@@ -176,7 +177,16 @@
     
     // パスの描画
     ctx.save();
-    ctx.strokeStyle = brushColor;
+    
+    if (eraseMode) {
+      // 消去モードのプレビュー（緑色の点線で表示）
+      ctx.strokeStyle = "rgba(0,200,0,0.7)";
+      ctx.setLineDash([5, 5]); // 点線で表示
+    } else {
+      // 通常の描画モード
+      ctx.strokeStyle = brushColor;
+    }
+    
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -203,7 +213,16 @@
     
     // 滑らかな線を描画
     ctx.save();
-    ctx.strokeStyle = brushColor;
+    
+    if (eraseMode) {
+      // 消去モード: 既存のピクセルを消去
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.strokeStyle = "rgba(0,0,0,1)"; // 完全な不透明度で消去
+    } else {
+      // 描画モード: 通常の描画
+      ctx.strokeStyle = brushColor;
+    }
+    
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -254,8 +273,20 @@
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = brushColor;
-    ctx.fill();
+    
+    if (eraseMode) {
+      // 消去モードのプレビュー（緑色の点線で表示）
+      ctx.fillStyle = "rgba(0,200,0,0.4)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,200,0,0.7)";
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+    } else {
+      // 通常の描画モード
+      ctx.fillStyle = brushColor;
+      ctx.fill();
+    }
+    
     ctx.restore();
   }
   
@@ -267,9 +298,18 @@
     ctx.setTransform(transformMatrix);
     
     ctx.save();
+    
+    if (eraseMode) {
+      // 消去モード: 既存のピクセルを消去
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)"; // 完全な不透明度で消去
+    } else {
+      // 描画モード: 通常の描画
+      ctx.fillStyle = brushColor;
+    }
+    
     ctx.beginPath();
     ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = brushColor;
     ctx.fill();
     ctx.restore();
   }
@@ -438,6 +478,13 @@
         <input type="range" min={minBrushSize} max={maxBrushSize} bind:value={brushSize} />
       </label>
       <div class="flex gap-2">
+        <button
+          class="btn {eraseMode ? 'variant-filled-tertiary' : 'variant-ghost-surface'}"
+          on:click={() => eraseMode = !eraseMode}
+          title={eraseMode ? "描画モードに切替" : "消去モードに切替"}
+        >
+          <span class="text-lg">{eraseMode ? '🖌️' : '🧽'}</span>
+        </button>
         <button class="btn variant-ghost-surface" on:click={undo} disabled={historyIndex <= 0} title="元に戻す (Ctrl+Z)">
           <span class="text-lg">↩</span>
         </button>
