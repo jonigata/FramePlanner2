@@ -12,6 +12,7 @@
   import { clearCurrentFileInfo } from '../filemanager/currentFile';
   import { developmentFlag } from '../utils/developmentFlagStore';
   import { subscriptionPlans } from '../utils/billingData/subscriptionPlans';
+  import sprytIcon from '../assets/spryt.webp';
 
   import undoIcon from '../assets/undo.webp';
   import redoIcon from '../assets/redo.webp';
@@ -194,13 +195,13 @@
           </button>
         {/if}
       {/if}
-      
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signOut}>
         Sign out
       </button>
     </div>
   {/if}
   {#if $onlineStatus === "signed-out"}
+    <p class="text-white">サインインしてプロフィール登録で<img src={sprytIcon} alt="spryt" width=24 height=24 class="image-outline"/>500プレゼント！</p>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signIn}>
       Sign in
     </button>
@@ -216,5 +217,12 @@
   /* アイコンのシャドウを白に */
   :global(.avatar img) {
     box-shadow: 0 1px 3px rgba(255, 255, 255, 0.3) !important;
+  }
+  .image-outline {
+    display: inline;
+    filter: drop-shadow(0.5px 0 0 #fff8)
+            drop-shadow(-0.5px 0 0 #fff8)
+            drop-shadow(0 0.5px 0 #fff8)
+            drop-shadow(0 -0.5px 0 #fff8);
   }
 </style>
