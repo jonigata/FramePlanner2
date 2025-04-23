@@ -230,7 +230,7 @@
   target={popupButton}
   on:close={() => popupVisible = false}>
   <div class="card p-4 shadow-xl z-[1001]" style="z-index: 100;">
-    <div class="flex flex-row gap-2">
+    <div class="transformix-grid">
       {#if calculateOutPaintingCost != null}
         <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
           <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
@@ -239,14 +239,14 @@
       <button class="transformix-item" use:toolTip={"消しゴム[6]"} on:click={onEraser}>
         <img draggable={false} src={eraserIcon} alt="消しゴム"/>
       </button>
-      <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
-        <img draggable={false} src={scribbleIcon} alt="落書き"/>
-      </button>
       <button class="transformix-item" use:toolTip={"背景除去[3]"} on:click={onPunch}>
         <img draggable={false} src={punchIcon} alt="背景除去"/>
       </button>
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
         <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
+      </button>
+      <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
+        <img draggable={false} src={scribbleIcon} alt="落書き"/>
       </button>
       <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
         <img draggable={false} src={dupliateIcon} alt="複製"/>
@@ -342,5 +342,11 @@
   .transformix-item {
     width: 32px;
     height: 32px;
+  }
+  .transformix-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 4px;
   }
 </style>
