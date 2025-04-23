@@ -93,6 +93,11 @@
     $frameInspectorTarget!.command = "eraser";
   }
 
+  function onTextLift(e: CustomEvent<Film>) {
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "textlift";
+  }
+
   function calculateOutPaintingCost(film: Film) {
     const fit = $frameInspectorTarget!;
     const padding = calculateFramePadding(fit.page, fit.frame, film);
@@ -135,6 +140,7 @@
           on:accept={onAccept}
           on:outpainting={onOutPainting}
           on:eraser={onEraser}
+          on:textlift={onTextLift}
           calculateOutPaintingCost={calculateOutPaintingCost}/>
       {/key}
     </div>

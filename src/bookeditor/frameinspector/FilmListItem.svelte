@@ -160,6 +160,12 @@
     }
   }
 
+  function onTextLift(ev: MouseEvent) {
+    console.log("onTextLift");
+    popupVisible = false;
+    dispatch('textlift', film)
+  }
+
   function togglePopup(ev: MouseEvent) {
     popupVisible = !popupVisible;
     ev.stopPropagation();
@@ -246,7 +252,7 @@
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
         <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
       </button>
-      <button class="transformix-item" use:toolTip={"文字を読み取ってフキダシ化[1]"} on:click={onUpscale}>
+      <button class="transformix-item" use:toolTip={"文字を読み取ってフキダシ化[1]"} on:click={onTextLift}>
         <img draggable={false} src={textLiftIcon} alt="文字抽出"/>
       </button>
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>

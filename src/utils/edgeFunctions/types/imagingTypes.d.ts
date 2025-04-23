@@ -112,3 +112,21 @@ export const EraserResponseSchema = z.object({
   requestId: z.string().describe("request id"),
 });
 export type EraserResponse = z.infer<typeof EraserResponseSchema>;
+
+export const TextMaskRequestSchema = z.object({
+  dataUrl: z.string(),
+});
+export type TextMaskRequest = z.infer<typeof TextMaskRequestSchema>;
+
+export const TextMaskResponseSchema = z.object({
+  boxes:z.array(z.object({
+    box_2d: z.object({
+      x0: z.number(),
+      y0: z.number(),
+      x1: z.number(),
+      y1: z.number(),
+    }),
+    text: z.string(),
+  }))
+});
+export type TextMaskResponse = z.infer<typeof TextMaskResponseSchema>;

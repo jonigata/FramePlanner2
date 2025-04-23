@@ -153,3 +153,27 @@ export function computeAspectFitSize(r: DOMRect, [w,h]: [number, number]): { wid
     return { width: r.height * aspect, height: r.height };
   }
 }
+
+/**
+ * DataURLから画像オブジェクトを作成する
+ * @param dataUrl Data URL形式の画像データ
+ * @returns Promise<HTMLImageElement> 画像オブジェクト
+ */
+export async function createImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(new Error('画像の読み込みに失敗しました'));
+    img.src = dataUrl;
+  });
+}
+
+/**
+ * DataURLからキャンバスを作成する
+ * @param dataUrl Data URL形式の画像データ
+ * @returns Promise<HTMLCanvasElement> キャンバスオブジェクト
+ */
+export async function createCanvasFromDataUrl(dataUrl: string): Promise<HTMLCanvasElement> {
+  const image = await createImageFromDataUrl(dataUrl);
+  return createCanvasFromImage(image);
+}

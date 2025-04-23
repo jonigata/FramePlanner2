@@ -9,7 +9,8 @@ import {
   type EraserRequest, EraserRequestSchema, EraserResponseSchema,
   type UpscaleRequest, UpscaleRequestSchema, UpscaleResponseSchema,
   type ImagingStatusRequest, ImagingStatusRequestSchema, ImagingStatusResponseSchema,
-  type VisionRequest, VisionRequestSchema, VisionResponseSchema
+  type VisionRequest, VisionRequestSchema, VisionResponseSchema,
+  type TextMaskRequest, TextMaskRequestSchema, TextMaskResponseSchema,
 } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
 import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest, AdviseThemeResponseSchema, type AdviseThemeResponse } from "$protocolTypes/adviseTypes.d";
@@ -85,6 +86,10 @@ export async function eraser(req: EraserRequest) {
 
 export async function upscale(req: UpscaleRequest) {
   return await invoke("charged/imaging/upscale", req, UpscaleRequestSchema, UpscaleResponseSchema);
+}
+
+export async function textMask(req: TextMaskRequest) {
+  return await invoke("charged/imaging/textmask", req, TextMaskRequestSchema, TextMaskResponseSchema);
 }
 
 export async function adviseTheme(req: NotebookRequest) {

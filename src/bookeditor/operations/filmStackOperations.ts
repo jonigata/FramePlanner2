@@ -12,7 +12,7 @@ import { commit, delayedCommiter } from './commitOperations';
 import { generateMovie } from '../../utils/generateMovie';
 import { makePlainCanvas } from "../../lib/layeredCanvas/tools/imageUtil";
 import { eraserFilm } from "../../utils/eraserFilm";
-
+import { textLiftFilm } from "../../utils/textLiftFilm";
 
 // 共通インターフェース - フィルムオペレーション対象
 export interface FilmOperationTarget {
@@ -162,6 +162,13 @@ export async function handleEraserCommand<T extends FilmOperationTarget>(
   loading.set(false);
 }
 
+export async function handleTextLiftCommand<T extends FilmOperationTarget>(
+  target: T
+): Promise<void> {
+  await textLiftFilm(target.commandTargetFilm!);
+  commit(null);
+  loading.set(false);
+}
 
 // コマンド処理の共通フロー
 export function processCommand<T extends FilmOperationTarget & { command: string | null }>(
