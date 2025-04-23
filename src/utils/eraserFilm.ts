@@ -8,7 +8,8 @@ import { saveRequest } from '../filemanager/warehouse';
 import { fileSystem } from '../filemanager/fileManagerStore';
 import { onlineStatus } from './accountStore';
 import { waitDialog } from './waitDialog';
-import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
+import { loading } from './loadingStore';
+
 
 type ImageMaskRequest = {
   mask: HTMLCanvasElement;
@@ -30,6 +31,7 @@ export async function eraserFilm(film: Film) {
   const request = await waitDialog<ImageMaskRequest>('imageMask', { imageSource: imageMedia.drawSource });
   console.log(request);
 
+  /*
   const newCanvas = document.createElement('canvas');
   newCanvas.width = request.image.width;
   newCanvas.height = request.image.height;
@@ -38,17 +40,18 @@ export async function eraserFilm(film: Film) {
   ctx.drawImage(request.mask, 0, 0);
 
   await waitDialog<{}>('canvasBrowser', { canvas: newCanvas });
+  */
 
-  /*
+  loading.set(true);
   const maskDataUrl = request.mask.toDataURL("image/png");
   const imageDataUrl = request.image.toDataURL("image/png");
   const { requestId } = await eraser({maskDataUrl, imageDataUrl});
   await saveRequest(get(fileSystem)!, "image", "eraser", requestId);
 
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "eraser", requestId});
+  loading.set(false);
 
   film.media = new ImageMedia(mediaResources[0] as HTMLCanvasElement);
 
   analyticsEvent('eraser');
-*/
 }

@@ -408,29 +408,51 @@
   }
   
   function onSubmit() {
-    // マスク画像をオリジナルサイズで取得するための一時キャンバス
+    // 一時キャンバスの作成（マスク取得用）
+    const tempMaskCanvas = document.createElement('canvas');
+    tempMaskCanvas.width = CANVAS_SIZE;
+    tempMaskCanvas.height = CANVAS_SIZE;
+    const tempMaskCtx = tempMaskCanvas.getContext('2d');
+    
+    // 最終出力用のキャンバス（元画像と同じサイズ）
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = srcWidth;
     finalCanvas.height = srcHeight;
     const finalCtx = finalCanvas.getContext('2d');
     
-    if (finalCtx) {
-      // マスク内容を適切なサイズにレンダリング
-      const maskCtx = maskCanvas.getContext('2d');
-      if (maskCtx) {
-        // マスクからデータを取得
-        maskCtx.resetTransform();
-        maskCtx.setTransform(transformMatrix);
-        
-        finalCtx.drawImage(maskCanvas, 0, 0, srcWidth, srcHeight);
-      }
-      
-      // マスク画像データを返す
-      $modalStore[0].response?.({
-        mask: finalCanvas,
-        image: imageSource,
-      });
-    }
+    if (!tempMaskCtx || !finalCtx) return;
+    
+    // まず現在のマスクを一時キャンバスにコピー（変換なし）
+    tempMaskCtx.drawImage(maskCanvas, 0, 0);
+    
+    // 変換行列の逆変換を計算
+    const scale = Math.min(CANVAS_SIZE / srcWidth, CANVAS_SIZE / srcHeight);
+    const offsetX = (CANVAS_SIZE - srcWidth * scale) / 2;
+    const offsetY = (CANVAS_SIZE - srcHeight * scale) / 2;
+    
+    // 最終キャンバスにマスクを適切に描画
+    finalCtx.setTransform(
+      1, 0, 0, 1, 0, 0
+    );
+    
+    // マスクの描画領域を計算
+    // (プレビュー表示されている実際のマスク領域のみを抽出)
+    finalCtx.drawImage(
+      tempMaskCanvas,           // ソース
+      offsetX, offsetY,         // ソースの開始位置
+      srcWidth * scale,         // ソースの幅
+      srcHeight * scale,        // ソースの高さ
+      0, 0,                     // 出力位置
+      srcWidth, srcHeight       // 出力サイズ（元の画像と同じ）
+    );
+    
+    console.log(`Final mask size: ${finalCanvas.width}x${finalCanvas.height}`);
+    
+    // マスク画像データを返す
+    $modalStore[0].response?.({
+      mask: finalCanvas,
+      image: imageSource,
+    });
     
     modalStore.close();
   }
@@ -497,7 +519,7 @@
   <footer class="card-footer flex gap-2">
     <div class="flex-1"></div>
     <button class="btn variant-ghost-surface" on:click={onCancel}>キャンセル</button>
-    <button class="btn variant-filled-primary" on:click={onSubmit}>完了</button>
+    <button class="btn variant-filled-primary" on:click={onSubmit}>実行</button>
   </footer>
 </div>
 
