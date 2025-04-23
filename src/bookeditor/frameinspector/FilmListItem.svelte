@@ -12,7 +12,7 @@
   import { toolTip } from '../../utils/passiveToolTipStore';
   import Popup from '../../utils/Popup.svelte';
   import MediaFrame from '../../gallery/MediaFrame.svelte';
-  import MediaLoading from '../../gallery/MediaLoading.svelte';
+
 
   import visibleIcon from '../../assets/filmlist/eye.webp';
   import scribbleIcon from '../../assets/filmlist/scribble.webp';
@@ -25,6 +25,7 @@
   import upscaleIcon from '../../assets/filmlist/upscale.webp';
   import dupliateIcon from '../../assets/filmlist/duplicate.webp';
   import eraserIcon from '../../assets/filmlist/eraser.webp';
+  import textLiftIcon from '../../assets/filmlist/textlift.webp';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
@@ -244,6 +245,9 @@
       </button>
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
         <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
+      </button>
+      <button class="transformix-item" use:toolTip={"文字を読み取ってフキダシ化[1]"} on:click={onUpscale}>
+        <img draggable={false} src={textLiftIcon} alt="文字抽出"/>
       </button>
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
         <img draggable={false} src={scribbleIcon} alt="落書き"/>
