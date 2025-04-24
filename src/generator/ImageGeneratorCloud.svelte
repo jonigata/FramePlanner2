@@ -3,14 +3,13 @@
 	import Gallery from '../gallery/Gallery.svelte';
   import { onlineAccount, onlineStatus } from "../utils/accountStore";
   import { onMount } from 'svelte';
-  import { analyticsEvent } from "../utils/analyticsEvent";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import type { ImagingMode } from '$protocolTypes/imagingTypes';
-  import { type ImagingContext, calculateCost, generateImage } from '../utils/feathralImaging';
+  import type { ImagingMode, ImagingProvider, ImagingBackground } from '$protocolTypes/imagingTypes';
+  import { type ImagingContext, calculateCost, generateImage, modeOptions } from '../utils/feathralImaging';
   import { toolTip } from '../utils/passiveToolTipStore';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import FluxModes from './FluxModes.svelte';
@@ -32,9 +31,22 @@
   let width = 1024;
   let height = 1024;
   let estimatedCost = 0;
+  let uiType: ImagingProvider;
+  let sizeText = "1024x1024";
+  let background: ImagingBackground = "opaque";
 
   function onChooseImage({detail}: CustomEvent<Media>) {
     chosen = detail;
+  }
+
+  $: onChangeMode(mode, sizeText);
+  function onChangeMode(mode: ImagingMode, st: string) {
+    uiType = modeOptions.find(m => m.value === mode)?.uiType;
+    if (uiType == 'gpt-image-1') {
+      width = st == "1536x1024" ? 1536 : 1024;
+      height = st == "1024x1536" ? 1536 : 1024;
+      console.log(width, height);
+    }
   }
 
   async function generate() {
@@ -70,7 +82,7 @@
       const canvases = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, "opaque");
+          return await generateImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, background);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
       if (canvases.length === 0) {
@@ -80,8 +92,6 @@
       gallery.push(...canvases.map(c => new ImageMedia(c)));
       gallery = gallery;
       progress = 1;
-
-      analyticsEvent('generate_flux');
     }
     finally {
       clearInterval(q);
@@ -122,18 +132,9 @@
       <img src={clipboardIcon} alt="クリップボードにコピー" on:click={copyToClipboard} use:toolTip={"クリップボードにコピー"} />
     </div>
   </div>        
-<!--
-  <p>negative prompt</p>
-  <textarea bind:value={imageRequest.negative_prompt}/>
--->
 
   <div class="hbox gap-5 mt-4">
-<!--
-    <div class="vbox" style="width: 400px;">
-      <SliderEdit label="width" bind:value={imageRequest.width} min={512} max={1024} step={256}/>
-      <SliderEdit label="height" bind:value={imageRequest.height} min={512} max={1024} step={256}/>
-    </div>
--->
+    {#if uiType == 'flux'}
     <div class="hbox gap-5">
       <div class="vbox" style="width: 400px;">
         <SliderEdit label="width" bind:value={width} min={512} max={1536} step={128}/>
@@ -143,8 +144,20 @@
 
     <div class="vbox">
       <SliderEdit label="image count" bind:value={batchCount} min={1} max={4} step={1}/>
-<!--      <SliderEdit label="steps" bind:value={imageRequest.steps} min={1} max={200} step={1}/> -->
     </div>
+    {/if}
+    {#if uiType == 'gpt-image-1'}
+      <select class="select h-8 p-0 w-64" bind:value={sizeText}>
+        <option value="1024x1024">正方形(1024x1024)</option>
+        <option value="1536x1024">横長(1536x1024)</option>
+        <option value="1024x1536">縦長(1024x1536)</option>
+      </select>
+      <select class="select h-8 p-0" bind:value={background}>
+        <option value="opaque">通常背景</option>
+        <option value="transparent">透過背景</option>
+      </select>
+
+    {/if}
   </div>
 
   {#if $onlineAccount != null}   <!-- onMountの時点で明らかだがsvelteでは!が使えない -->

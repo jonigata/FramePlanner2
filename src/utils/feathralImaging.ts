@@ -10,6 +10,8 @@ import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceSto
 import { updateToken } from "../utils/accountStore";
 import type { TextToImageRequest, ImagingBackground, ImagingMode, ImagingProvider } from './edgeFunctions/types/imagingTypes';
 import { saveRequest } from '../filemanager/warehouse';
+import { analyticsEvent } from "../utils/analyticsEvent";
+import { FunctionsHttpError } from '@supabase/supabase-js'
 
 export type ImagingContext = {
   awakeWarningToken: boolean;
@@ -38,7 +40,9 @@ async function generateImage_Flux(prompt: string, image_size: {width: number, he
     const perf = performance.now();
     const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });
 
-    console.log("generateImageFromTextWithFlux", performance.now() - perf);
+    console.log("generateImage_Flux", performance.now() - perf);
+
+    analyticsEvent('generate_flux');
 
     return mediaResources as HTMLCanvasElement[];
   }
@@ -68,14 +72,26 @@ async function generateImage_Gpt1(prompt: string, image_size: {width: number, he
     const perf = performance.now();
     const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });
 
-    console.log("generateImageFromTextWithFlux", performance.now() - perf);
+    console.log("generateImage_Gpt1", performance.now() - perf);
+
+    analyticsEvent('generate_gpt1');
 
     return mediaResources as HTMLCanvasElement[];
   }
   catch(error) {
-    console.log(error);
-    toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
-    return [];
+    if (error instanceof FunctionsHttpError) {
+      console.log('Function returned an error', error.context.status);
+      if (error.context.status === 422) {
+        toastStore.trigger({ message: `画像生成エラー: ジェネレータに拒否されました。<br/>おそらくコンテントポリシー違反です。`, timeout: 5000});
+      } else {
+        toastStore.trigger({ message: `画像生成エラー: ${error.context.statusText}`, timeout: 3000});
+      }
+      return [];
+    } else {
+      console.log(error);
+      toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
+      return [];
+    }
   }
 }
 
@@ -150,7 +166,7 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
 
 async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, frame: FrameElement) {
   console.log("postfix", postfix);
-  const images = await generateImage_Flux(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1);
+  const images = await generateImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, "opaque");
   if (0 < images.length) {
     const media = new ImageMedia(images[0]);
     const film = new Film(media);
@@ -164,6 +180,7 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
 }
 
 export function calculateCost(size: {width:number,height:number}, mode: ImagingMode): number {
+  console.log("calculateCost", size, mode);
   const pixels = size.width * size.height;
   const costs: Record<ImagingMode, number> = {
     "schnell": 1,
@@ -197,9 +214,9 @@ function calculateGPTCost(mode: Mode): number {
 */
 
 export const modeOptions: Array<{value: ImagingMode, name: string, cost: number, uiType: ImagingProvider}> = [
-  { value: 'gpt-image-1/low', name: 'GPT-image-1 low', cost: 2, uiType: "gpt" },
-  { value: 'gpt-image-1/medium', name: 'GPT-image-1 medium', cost: 7, uiType: "gpt" },
-  { value: 'gpt-image-1/high', name: 'GPT-image-1 high', cost: 30, uiType: "gpt" },
+  { value: 'gpt-image-1/low', name: 'GPT-image-1 low', cost: 2, uiType: "gpt-image-1" },
+  { value: 'gpt-image-1/medium', name: 'GPT-image-1 medium', cost: 7, uiType: "gpt-image-1" },
+  { value: 'gpt-image-1/high', name: 'GPT-image-1 high', cost: 30, uiType: "gpt-image-1" },
   { value: 'schnell', name: 'FLUX Schnell', cost: 1, uiType: "flux" },
   { value: 'pro', name: 'FLUX Pro', cost: 8, uiType: "flux" },
   { value: 'chibi', name: 'FLUX ちび', cost: 7, uiType: "flux" },

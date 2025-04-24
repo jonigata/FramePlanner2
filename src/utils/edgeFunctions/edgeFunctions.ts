@@ -18,6 +18,7 @@ export async function invoke<ResSchema extends ZodSchema>(
     });
     if (error) {
       console.error("Error invoking function:", functionName, error);
+      throw error;
     }
     
     return responseSchema.parse(data);

@@ -152,7 +152,11 @@ export async function notifyShare(text: string) {
 
 export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'video', mode: string, requestId: string}) {
   const isVideo = mediaReference.mediaType === 'video';
-  const interval = isVideo ? 10000 : 1000;
+  let interval = isVideo ? 10000 : 1000;
+
+  if (mediaReference.mode.startsWith('gpt')) {
+    interval = 5000;
+  }
 
   let urls: string[] | undefined;
   while (!urls) {
