@@ -6,7 +6,8 @@
   import { onlineStatus, updateToken } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
-  import { type ImagingContext, type Mode, generateFluxImage } from '../utils/feathralImaging';
+  import type { ImagingMode } from '$protocolTypes/imagingTypes';
+  import { type ImagingContext, generateImage } from '../utils/feathralImaging';
   import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/workspaceStore';
@@ -17,7 +18,7 @@
   export let imagingContext: ImagingContext;
 
   let postfix: string = "";
-  let mode: Mode = "schnell";
+  let mode: ImagingMode = "schnell";
 
   async function execute() {
     console.log('execute');
@@ -35,7 +36,7 @@
   async function generate(paperSize: [number, number], leafLayout: Layout) {
     console.log("postfix", postfix);
     const frame = leafLayout.element;
-    const canvases = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
+    const canvases = await generateImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, "opaque");
     if (canvases != null) {
       const media = new ImageMedia(canvases[0]);
       const film = new Film(media);

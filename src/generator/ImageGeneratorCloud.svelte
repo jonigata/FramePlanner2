@@ -9,8 +9,8 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
-  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
-  import { type ImagingContext, type Mode, calculateCost, generateFluxImage } from '../utils/feathralImaging';
+  import type { ImagingMode } from '$protocolTypes/imagingTypes';
+  import { type ImagingContext, calculateCost, generateImage } from '../utils/feathralImaging';
   import { toolTip } from '../utils/passiveToolTipStore';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import FluxModes from './FluxModes.svelte';
@@ -28,7 +28,7 @@
   let refered: Media | null= null;
   let postfix: string = "";
   let batchCount = 1;
-  let mode: Mode = "schnell";
+  let mode: ImagingMode = "schnell";
   let width = 1024;
   let height = 1024;
   let estimatedCost = 0;
@@ -48,11 +48,14 @@
     try {
       progress = 0;
       let pixelRatio = width * height / 1024 / 1024;
-      const factorTable = {
+      const factorTable: {[key in ImagingMode]: number}= {
         "schnell": 5,
         "pro": 12,
         "chibi": 12,
         "manga": 12,
+        "gpt-image-1/low": 30,
+        "gpt-image-1/medium": 30,
+        "gpt-image-1/high": 30,
       }
       const delta = 1 / factorTable[mode] / pixelRatio;
       q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
@@ -67,7 +70,7 @@
       const canvases = await executeProcessAndNotify(
         5000, "画像が生成されました",
         async () => {
-          return await generateFluxImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, imagingContext);
+          return await generateImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, "opaque");
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
       if (canvases.length === 0) {
@@ -105,6 +108,7 @@
   <h2>モード</h2>
   <div class="vbox left gap-2 mode">
     <FluxModes bind:mode={mode}/>
+    <p>※GPT-1のコストは将来変更の可能性があります</p>
   </div>
 
   <h2>スタイル</h2>
@@ -203,5 +207,8 @@
   .icon-container img {
     width: 24px;
     height: 24px;
+  }
+  p {
+    font-family: '源暎アンチック';
   }
 </style>

@@ -5,7 +5,8 @@
   import { commitBook, type NotebookLocal, type CharacterLocal } from '../lib/book/book';
   import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
-  import { type ImagingContext, type Mode, generateMarkedPageImages, generateFluxImage } from '../utils/feathralImaging';
+  import type { ImagingMode } from '$protocolTypes/imagingTypes';
+  import { type ImagingContext, generateMarkedPageImages, generateImage } from '../utils/feathralImaging';
   import { persistentText } from '../utils/persistentText';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { ulid } from 'ulid';
@@ -49,7 +50,7 @@
     succeeded: 0,
     failed: 0,
   };
-  let imagingMode: Mode = "schnell";
+  let imagingMode: ImagingMode = "schnell";
   let plotInstruction: string = '';
 
   let rootFolder: Folder;
@@ -320,7 +321,7 @@
     const canvases = await executeProcessAndNotify(
       5000, "画像が生成されました",
       async () => {
-        return await generateFluxImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, imagingContext);
+        return await generateImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, "opaque");
       });
     if (canvases == null) {
       c.portrait = null;

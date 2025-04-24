@@ -4,12 +4,11 @@ import { text2Image, pollMediaStatus } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
 import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore'
 import { updateToken } from "../utils/accountStore";
-import type { TextToImageRequest } from './edgeFunctions/types/imagingTypes';
+import type { TextToImageRequest, ImagingBackground, ImagingMode, ImagingProvider } from './edgeFunctions/types/imagingTypes';
 import { saveRequest } from '../filemanager/warehouse';
 
 export type ImagingContext = {
@@ -20,16 +19,16 @@ export type ImagingContext = {
   failed: number;
 }
 
-export type Mode = "schnell" | "pro" | "chibi" | "manga";
-
-export async function generateFluxImage(prompt: string, image_size: {width: number, height: number}, mode: Mode, num_images: number, context: ImagingContext): Promise<HTMLCanvasElement[]> {
+async function generateImage_Flux(prompt: string, image_size: {width: number, height: number}, mode: ImagingMode, num_images: number): Promise<HTMLCanvasElement[]> {
   console.log("running feathral");
   try {
     let imageRequest: TextToImageRequest = {
+      provider: "flux",
       prompt, 
       imageSize: image_size,
       numImages: num_images,
       mode, 
+      background: "opaque", // 無意味
     };
     console.log(imageRequest);
     const { requestId } = await text2Image(imageRequest);
@@ -50,7 +49,45 @@ export async function generateFluxImage(prompt: string, image_size: {width: numb
   }
 }
 
-export async function generateMarkedPageImages(imagingContext: ImagingContext, postfix: string, mode: Mode, onProgress: (progress: number) => void) {
+async function generateImage_Gpt1(prompt: string, image_size: {width: number, height: number}, mode: ImagingMode, num_images: number, background: ImagingBackground): Promise<HTMLCanvasElement[]> {
+  console.log("running feathral");
+  try {
+    let imageRequest: TextToImageRequest = {
+      provider: "gpt-image-1",
+      prompt, 
+      imageSize: image_size,
+      numImages: num_images,
+      mode, 
+      background,
+    };
+    console.log(imageRequest);
+    const { requestId } = await text2Image(imageRequest);
+
+    await saveRequest(get(fileSystem)!, "image", mode, requestId);
+
+    const perf = performance.now();
+    const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });
+
+    console.log("generateImageFromTextWithFlux", performance.now() - perf);
+
+    return mediaResources as HTMLCanvasElement[];
+  }
+  catch(error) {
+    console.log(error);
+    toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
+    return [];
+  }
+}
+
+export async function generateImage(prompt: string, image_size: {width: number, height: number}, mode: ImagingMode, num_images: number, background: ImagingBackground): Promise<HTMLCanvasElement[]> {
+  if (mode.startsWith("gpt-image-1")) {
+    return generateImage_Gpt1(prompt, image_size, mode, num_images, background);
+  } else {
+    return generateImage_Flux(prompt, image_size, mode, num_images);
+  }
+}
+
+export async function generateMarkedPageImages(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, onProgress: (progress: number) => void) {
   const marks = get(bookOperators)!.getMarks();
   const newPages = get(mainBook)!.pages.filter((p, i) => marks[i]);
   if (newPages.length == 0) {
@@ -82,7 +119,7 @@ export async function generateMarkedPageImages(imagingContext: ImagingContext, p
   }
 }
 
-export async function generatePageImages(imagingContext: ImagingContext, postfix: string, mode: Mode, page: Page, onProgress: () => void) {
+export async function generatePageImages(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, page: Page, onProgress: () => void) {
   imagingContext.awakeWarningToken = true;
   imagingContext.errorToken = true;
   const leaves = collectLeaves(page.frameTree);
@@ -111,9 +148,9 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
 }
 
 
-async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: Mode, frame: FrameElement) {
+async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, frame: FrameElement) {
   console.log("postfix", postfix);
-  const images = await generateFluxImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, imagingContext);
+  const images = await generateImage_Flux(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1);
   if (0 < images.length) {
     const media = new ImageMedia(images[0]);
     const film = new Film(media);
@@ -126,16 +163,45 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
   }
 }
 
-export function calculateCost(size: {width:number,height:number}, mode: Mode): number {
+export function calculateCost(size: {width:number,height:number}, mode: ImagingMode): number {
   const pixels = size.width * size.height;
-  const costs: Record<Mode, number> = {
+  const costs: Record<ImagingMode, number> = {
     "schnell": 1,
     "pro": 8,
     "chibi": 7,
     "manga": 7,
+    "gpt-image-1/low": 2,
+    "gpt-image-1/medium": 7,
+    "gpt-image-1/high": 30,
   };
   let cost = costs[mode];
   cost = Math.ceil(cost * pixels / 1024 / 1024);
   return cost;
 }
 
+/*
+const gptTokens: Record<string, number> = {
+  "low": 272,
+  "medium": 1056,
+  "high": 4160,
+}
+const gptoutputCostPerMegaTokens = 40.0;
+
+function calculateGPTCost(mode: Mode): number {
+  if (!(mode === "gpt-image-1/low" || mode === "gpt-image-1/medium" || mode === "gpt-image-1/high")) {
+    return 0;
+  }
+  const tokens = gptTokens[mode.split("/")[1]];
+  return tokens / 1000000 * gptoutputCostPerMegaTokens;
+}
+*/
+
+export const modeOptions: Array<{value: ImagingMode, name: string, cost: number, uiType: ImagingProvider}> = [
+  { value: 'gpt-image-1/low', name: 'GPT-image-1 low', cost: 2, uiType: "gpt" },
+  { value: 'gpt-image-1/medium', name: 'GPT-image-1 medium', cost: 7, uiType: "gpt" },
+  { value: 'gpt-image-1/high', name: 'GPT-image-1 high', cost: 30, uiType: "gpt" },
+  { value: 'schnell', name: 'FLUX Schnell', cost: 1, uiType: "flux" },
+  { value: 'pro', name: 'FLUX Pro', cost: 8, uiType: "flux" },
+  { value: 'chibi', name: 'FLUX ちび', cost: 7, uiType: "flux" },
+  { value: 'manga', name: 'FLUX まんが', cost: 7, uiType: "flux" },
+];

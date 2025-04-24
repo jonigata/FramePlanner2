@@ -2,13 +2,13 @@
   import { type ImageGeneratorTarget, imageGeneratorTarget } from "./imageGeneratorStore";
   import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { tick } from "svelte";
-  import feathralIcon from '../assets/feathral.webp';
   import Drawer from '../utils/Drawer.svelte';
   import ImageGeneratorStableDiffusion from "./ImageGeneratorStableDiffusion.svelte";
   import ImageGeneratorDalle3 from "./ImageGeneratorDalle3.svelte";
-  import ImageGeneratorFlux from "./ImageGeneratorFlux.svelte";
+  import ImageGeneratorFlux from "./ImageGeneratorCloud.svelte";
   import ImageGeneratorPlain from "./ImageGeneratorPlain.svelte";
   import { type Media } from "../lib/layeredCanvas/dataModels/media";
+  import sprytIcon from '../assets/spryt.webp';
 
   let busy: boolean;
   let tabSet: number = 0;
@@ -59,7 +59,7 @@
   >
 
     <TabGroup>
-      <Tab bind:group={tabSet} name="tab3" value={0}><span class="tab"><img src={feathralIcon} alt="flux" width=24 height=24/>Flux</span></Tab>
+      <Tab bind:group={tabSet} name="tab3" value={0}><span class="tab"><img src={sprytIcon} alt="flux" width=24 height=24/>クラウド</span></Tab>
       <Tab bind:group={tabSet} name="tab1" value={1}>Dall・E 3</Tab>
       <Tab bind:group={tabSet} name="tab2" value={2}>Stable Diffusion</Tab>
       <Tab bind:group={tabSet} name="tab4" value={3}>白紙</Tab>
