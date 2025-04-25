@@ -1,16 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { UndoManager } from './UndoManager';
   
   // プロパティとして受け取る変数
   export let imageSource: HTMLCanvasElement;
-  export let transformMatrix: DOMMatrix;
-  export let srcWidth: number;
-  export let srcHeight: number;
   export let CANVAS_SIZE: number;
-  export let brushSize: number = 48;
   export let eraseMode: boolean = false;
-  export let minBrushSize: number;
-  export let maxBrushSize: number;
+
+  // 内部状態
+  let srcWidth = 0;
+  let srcHeight = 0;
+  let transformMatrix: DOMMatrix;
+  let brushSize = 48;
+  let minBrushSize = 16;
+  let maxBrushSize = 128;
   
   // イベントディスパッチを定義（親コンポーネントに通知するため）
   import { createEventDispatcher } from 'svelte';
@@ -19,6 +22,9 @@
     maskClear: void;   // マスクがクリアされたことを通知
   }>();
   
+  // UndoManager
+  let undoManager: UndoManager;
+
   // キャンバス要素
   let maskCanvas: HTMLCanvasElement;
   let imageCanvas: HTMLCanvasElement;
@@ -33,10 +39,69 @@
   // 現在のストロークのパスポイント
   let currentPath: {x: number, y: number}[] = [];
   
-  onMount(() => {
+  // imageSource/CANVAS_SIZEが変わったら初期化
+  $: if (imageSource && CANVAS_SIZE) {
+    setupCanvases();
+  }
+
+  function setupCanvases() {
+    srcWidth = imageSource.width;
+    srcHeight = imageSource.height;
+
+    // ブラシサイズを画像サイズの1/8（幅と高さの平均）に設定
+    const avgSize = (srcWidth + srcHeight) / 2;
+    brushSize = Math.floor(avgSize / 12);
+
+    // 最小・最大値の範囲内に制限
+    minBrushSize = Math.max(16, Math.floor(avgSize / 32));
+    maxBrushSize = Math.min(256, Math.floor(avgSize / 4));
+
+    // 変換行列を計算（CANVAS_SIZE x CANVAS_SIZEに収まるようにスケーリング）
+    const scale = Math.min(CANVAS_SIZE / srcWidth, CANVAS_SIZE / srcHeight);
+    const offsetX = (CANVAS_SIZE - srcWidth * scale) / 2;
+    const offsetY = (CANVAS_SIZE - srcHeight * scale) / 2;
+    transformMatrix = new DOMMatrix();
+    transformMatrix = transformMatrix.translate(offsetX, offsetY).scale(scale, scale);
+
+    // キャンバス初期化
     drawImageToCanvas();
-  });
+
+    // UndoManager初期化
+    undoManager = new UndoManager(() => maskCanvas, CANVAS_SIZE);
+    setTimeout(() => {
+      if (undoManager) undoManager.saveCurrentStateToHistory();
+    }, 0);
+  }
   
+  // 外部から呼び出せるundo/redo/save/clear
+  export function undo() {
+    if (undoManager) {
+      undoManager.undo();
+      dispatch('stateChange', { action: 'undo' });
+    }
+  }
+  export function redo() {
+    if (undoManager) {
+      undoManager.redo();
+      dispatch('stateChange', { action: 'redo' });
+    }
+  }
+  export function saveCurrentStateToHistory() {
+    if (undoManager) {
+      undoManager.saveCurrentStateToHistory();
+      dispatch('stateChange', { action: 'draw' });
+    }
+  }
+  export function clearMask() {
+    if (!maskCanvas) return;
+    if (undoManager) undoManager.saveCurrentStateToHistory(); // クリア前の状態を履歴に積む
+    const ctx = maskCanvas.getContext('2d');
+    if (!ctx) return;
+    ctx.resetTransform();
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    dispatch('maskClear');
+  }
+
   function drawImageToCanvas() {
     if (!imageSource || !imageCanvas) return;
     
@@ -89,6 +154,7 @@
     currentPath = [];
     
     // 描画操作後の状態変更を通知
+    if (undoManager) undoManager.saveCurrentStateToHistory();
     dispatch('stateChange', { action: 'draw' });
   }
   
@@ -265,20 +331,18 @@
     ctx.restore();
   }
   
-  function clearMask() {
-    const ctx = maskCanvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.resetTransform();
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    
-    // クリア操作後の通知
-    dispatch('maskClear');
-  }
   
   // 親コンポーネントから利用できるようにエクスポート
   export function getMaskCanvas(): HTMLCanvasElement {
     return maskCanvas;
+  }
+
+  export function getImageInfo() {
+    return {
+      srcWidth,
+      srcHeight,
+      transformMatrix
+    };
   }
 </script>
 
@@ -323,10 +387,10 @@
     >
       <span class="text-lg">{eraseMode ? '🖌️' : '🧽'}</span>
     </button>
-    <button class="btn variant-ghost-surface" on:click={() => dispatch('stateChange', { action: 'undo' })} title="元に戻す (Ctrl+Z)">
+    <button class="btn variant-ghost-surface" on:click={undo} title="元に戻す (Ctrl+Z)">
       <span class="text-lg">↩</span>
     </button>
-    <button class="btn variant-ghost-surface" on:click={() => dispatch('stateChange', { action: 'redo' })} title="やり直し (Ctrl+Y)">
+    <button class="btn variant-ghost-surface" on:click={redo} title="やり直し (Ctrl+Y)">
       <span class="text-lg">↪</span>
     </button>
     <button class="btn variant-ghost-surface" on:click={clearMask}>マスク消去</button>
