@@ -246,9 +246,9 @@
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
         <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
       </button>
-      <button class="transformix-item" use:toolTip={"文字を読み取ってフキダシ化[1]"} on:click={onUpscale}>
+      <!-- <button class="transformix-item" use:toolTip={"文字を読み取ってフキダシ化[1]"} on:click={onUpscale}>
         <img draggable={false} src={textLiftIcon} alt="文字抽出"/>
-      </button>
+      </button> -->
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
         <img draggable={false} src={scribbleIcon} alt="落書き"/>
       </button>

@@ -393,7 +393,10 @@
   >
     <div class="drawer-content">
       <h2>ローカル</h2>
-      <p>大事なファイルはパッケージ化<img class="package-icon" src={packageIcon} alt="rename"/>しましょう</p>
+      <p>
+        大事なファイルはパッケージ化 <img class="package-icon" src={packageIcon} alt="rename"/> しましょう。
+        パッケージファイルの読み込み失敗に関しては最優先で対応しますので、もし問題に遭遇したらぜひ<a href="https://x.com/jonigata_ai">ご連絡</a>を
+      </p>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
           <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
