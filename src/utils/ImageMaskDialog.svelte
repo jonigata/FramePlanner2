@@ -3,7 +3,7 @@
   import { onMount, onDestroy } from 'svelte';
   import ImageMaskCanvas from './ImageMaskCanvas.svelte';
 
-  // 画像ソースはcanvas一択
+  let title: string;
   let imageSource: HTMLCanvasElement;
   
   // アンドゥ・リドゥ用の状態管理
@@ -65,13 +65,18 @@
   }
 
   onMount(() => {
-    console.log('Dialog mounted, modal store:', $modalStore[0]?.meta);
-    if ($modalStore[0]?.meta?.imageSource) {
-      imageSource = $modalStore[0].meta.imageSource;
-      console.log('Image source:', imageSource);
-      setupCanvases();
-    } else {
-      console.error('No image source in modal meta');
+    const args = $modalStore[0]?.meta;
+    console.log('Dialog mounted, modal store:', args);
+
+    if (args) {
+      title = args.title;
+      if (args.imageSource) {
+        imageSource = args.imageSource;
+        console.log('Image source:', imageSource);
+        setupCanvases();
+      } else {
+        console.error('No image source in modal meta');
+      }
     }
     
     window.addEventListener('keydown', handleKeydown);
@@ -240,7 +245,7 @@
 
 <div class="card p-4 shadow-xl">
   <header class="card-header">
-    <h2>画像マスク作成</h2>
+    <h2>{title}</h2>
   </header>
   <section class="p-4">
     {#if transformMatrix}

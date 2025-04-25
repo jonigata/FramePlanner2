@@ -28,8 +28,11 @@ export async function eraserFilm(film: Film) {
   }
   const imageMedia = film.media as ImageMedia;
 
-  const request = await waitDialog<ImageMaskRequest>('imageMask', { imageSource: imageMedia.drawSource });
+  const request = await waitDialog<ImageMaskRequest>('imageMask', { title: "消しゴムツール", imageSource: imageMedia.drawSource });
   console.log(request);
+  if (!request) {
+    return;
+  }    
 
   /*
   const newCanvas = document.createElement('canvas');
