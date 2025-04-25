@@ -5,9 +5,9 @@
   // プロパティとして受け取る変数
   export let imageSource: HTMLCanvasElement;
   export let CANVAS_SIZE: number;
-  export let eraseMode: boolean = false;
 
   // 内部状態
+  let eraseMode: boolean = false;
   let srcWidth = 0;
   let srcHeight = 0;
   let transformMatrix: DOMMatrix;

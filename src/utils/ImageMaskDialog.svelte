@@ -6,17 +6,9 @@
   let title: string;
   let imageSource: HTMLCanvasElement;
   
-  // Undo/RedoはImageMaskCanvas側で管理
-  const MAX_HISTORY = 20; // 履歴の最大数
-  
-  // Canvas固定サイズ
   const CANVAS_SIZE = 800;
-  let eraseMode = false;
   
-  // ImageMaskCanvasコンポーネントへの参照
   let maskCanvasComponent: ImageMaskCanvas;
-  let maskCanvas: HTMLCanvasElement;
-
 
   onMount(() => {
     const args = $modalStore[0]?.meta;
@@ -39,21 +31,6 @@
     window.removeEventListener('keydown', handleKeydown);
   });
   
-  // マスクキャンバスコンポーネント参照を監視
-  $: if (maskCanvasComponent) {
-    maskCanvas = maskCanvasComponent.getMaskCanvas();
-  }
-  
-  // 描画状態変更イベントの処理
-  function handleStateChange(event: CustomEvent<{action?: string}>) {
-    // ここでは特に何もしない（必要ならロギング等）
-  }
-
-  // マスククリアイベントの処理
-  function handleMaskClear() {
-    // ここでは何もしない（無限ループ防止）
-  }
-
   // キーボードショートカットの処理
   function handleKeydown(e: KeyboardEvent) {
     if (!maskCanvasComponent) return;
@@ -138,9 +115,6 @@
       bind:this={maskCanvasComponent}
       {imageSource}
       {CANVAS_SIZE}
-      {eraseMode}
-      on:stateChange={handleStateChange}
-      on:maskClear={handleMaskClear}
     />
   </section>
   <footer class="card-footer flex gap-2">
