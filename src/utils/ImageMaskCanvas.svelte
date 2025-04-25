@@ -4,7 +4,8 @@
   
   // プロパティとして受け取る変数
   export let imageSource: HTMLCanvasElement;
-  export let CANVAS_SIZE: number;
+  export let width: number;
+  export let height: number;
 
   // 内部状態
   let eraseMode: boolean = false;
@@ -40,7 +41,7 @@
   let currentPath: {x: number, y: number}[] = [];
   
   // imageSource/CANVAS_SIZEが変わったら初期化
-  $: if (imageSource && CANVAS_SIZE) {
+  $: if (imageSource && width && height) {
     setupCanvases();
   }
 
@@ -56,10 +57,10 @@
     minBrushSize = Math.max(16, Math.floor(avgSize / 32));
     maxBrushSize = Math.min(256, Math.floor(avgSize / 4));
 
-    // 変換行列を計算（CANVAS_SIZE x CANVAS_SIZEに収まるようにスケーリング）
-    const scale = Math.min(CANVAS_SIZE / srcWidth, CANVAS_SIZE / srcHeight);
-    const offsetX = (CANVAS_SIZE - srcWidth * scale) / 2;
-    const offsetY = (CANVAS_SIZE - srcHeight * scale) / 2;
+    // 変換行列を計算（width x heightに収まるようにスケーリング）
+    const scale = Math.min(width / srcWidth, height / srcHeight);
+    const offsetX = (width - srcWidth * scale) / 2;
+    const offsetY = (height - srcHeight * scale) / 2;
     transformMatrix = new DOMMatrix();
     transformMatrix = transformMatrix.translate(offsetX, offsetY).scale(scale, scale);
 
@@ -67,7 +68,7 @@
     drawImageToCanvas();
 
     // UndoManager初期化
-    undoManager = new UndoManager(() => maskCanvas, CANVAS_SIZE);
+    undoManager = new UndoManager(() => maskCanvas, width, height);
     setTimeout(() => {
       if (undoManager) undoManager.saveCurrentStateToHistory();
     }, 0);
@@ -98,7 +99,7 @@
     const ctx = maskCanvas.getContext('2d');
     if (!ctx) return;
     ctx.resetTransform();
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.clearRect(0, 0, width, height);
     dispatch('maskClear');
   }
 
@@ -110,7 +111,7 @@
     
     // キャンバスをクリア
     ctx.resetTransform();
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.clearRect(0, 0, width, height);
     
     // 変換行列を適用して描画
     ctx.setTransform(transformMatrix);
@@ -177,7 +178,7 @@
     if (!ctx) return;
     
     ctx.resetTransform();
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.clearRect(0, 0, width, height);
   }
   
   function drawCurrentPathToTemp() {
@@ -347,12 +348,12 @@
 
   // Dialogから呼び出す用: 元画像サイズに合わせた最終マスクCanvasを返す
   export function getFinalMaskCanvas(): HTMLCanvasElement | null {
-    if (!maskCanvas || !srcWidth || !srcHeight || !CANVAS_SIZE) return null;
+    if (!maskCanvas || !srcWidth || !srcHeight || !width || !height) return null;
 
     // 一時キャンバス（マスク取得用）
     const tempMaskCanvas = document.createElement('canvas');
-    tempMaskCanvas.width = CANVAS_SIZE;
-    tempMaskCanvas.height = CANVAS_SIZE;
+    tempMaskCanvas.width = width;
+    tempMaskCanvas.height = height;
     const tempMaskCtx = tempMaskCanvas.getContext('2d');
 
     // 最終出力用のキャンバス（元画像と同じサイズ）
@@ -367,9 +368,9 @@
     tempMaskCtx.drawImage(maskCanvas, 0, 0);
 
     // 変換行列の逆変換を計算
-    const scale = Math.min(CANVAS_SIZE / srcWidth, CANVAS_SIZE / srcHeight);
-    const offsetX = (CANVAS_SIZE - srcWidth * scale) / 2;
-    const offsetY = (CANVAS_SIZE - srcHeight * scale) / 2;
+    const scale = Math.min(width / srcWidth, height / srcHeight);
+    const offsetX = (width - srcWidth * scale) / 2;
+    const offsetY = (height - srcHeight * scale) / 2;
 
     // 最終キャンバスにマスクを適切に描画
     finalCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -386,23 +387,23 @@
   }
 </script>
 
-<div class="canvas-container">
+<div class="canvas-container" style="width: {width}px; height: {height}px;">
   <canvas
     bind:this={imageCanvas}
-    width={CANVAS_SIZE}
-    height={CANVAS_SIZE}
+    width={width}
+    height={height}
     class="image-canvas"
   ></canvas>
   <canvas
     bind:this={maskCanvas}
-    width={CANVAS_SIZE}
-    height={CANVAS_SIZE}
+    width={width}
+    height={height}
     class="mask-canvas"
   ></canvas>
   <canvas
     bind:this={tempCanvas}
-    width={CANVAS_SIZE}
-    height={CANVAS_SIZE}
+    width={width}
+    height={height}
     class="temp-canvas"
     on:mousedown={startDraw}
     on:touchstart={startDraw}
@@ -439,8 +440,6 @@
 
 <style>
   .canvas-container {
-    width: 800px;
-    height: 800px;
     background: white;
     position: relative;
   }
@@ -449,8 +448,6 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 800px;
-    height: 800px;
   }
   
   .image-canvas {

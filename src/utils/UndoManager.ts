@@ -2,12 +2,14 @@ export class UndoManager {
   private history: ImageData[] = [];
   private historyIndex: number = -1;
   private readonly maxHistory: number;
-  private readonly canvasSize: number;
+  private readonly canvasWidth: number;
+  private readonly canvasHeight: number;
   private getCanvas: () => HTMLCanvasElement | undefined;
 
-  constructor(getCanvas: () => HTMLCanvasElement | undefined, canvasSize: number, maxHistory: number = 20) {
+  constructor(getCanvas: () => HTMLCanvasElement | undefined, canvasWidth: number, canvasHeight: number, maxHistory: number = 20) {
     this.getCanvas = getCanvas;
-    this.canvasSize = canvasSize;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
     this.maxHistory = maxHistory;
   }
 
@@ -23,7 +25,7 @@ export class UndoManager {
       this.history = this.history.slice(0, this.historyIndex + 1);
     }
 
-    const imageData = ctx.getImageData(0, 0, this.canvasSize, this.canvasSize);
+    const imageData = ctx.getImageData(0, 0, this.canvasWidth, this.canvasHeight);
     this.history.push(imageData);
 
     if (this.history.length > this.maxHistory) {

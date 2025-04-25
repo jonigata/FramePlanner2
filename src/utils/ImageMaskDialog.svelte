@@ -6,8 +6,10 @@
   let title: string;
   let imageSource: HTMLCanvasElement;
   
-  const CANVAS_SIZE = 800;
   
+  const CANVAS_WIDTH = 800;
+  const CANVAS_HEIGHT = 600;
+
   let maskCanvasComponent: ImageMaskCanvas;
 
   onMount(() => {
@@ -73,7 +75,8 @@
     <ImageMaskCanvas
       bind:this={maskCanvasComponent}
       {imageSource}
-      {CANVAS_SIZE}
+      width={CANVAS_WIDTH}
+      height={CANVAS_HEIGHT}
     />
   </section>
   <footer class="card-footer flex gap-2">
