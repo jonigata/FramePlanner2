@@ -344,6 +344,46 @@
       transformMatrix
     };
   }
+
+  // Dialogから呼び出す用: 元画像サイズに合わせた最終マスクCanvasを返す
+  export function getFinalMaskCanvas(): HTMLCanvasElement | null {
+    if (!maskCanvas || !srcWidth || !srcHeight || !CANVAS_SIZE) return null;
+
+    // 一時キャンバス（マスク取得用）
+    const tempMaskCanvas = document.createElement('canvas');
+    tempMaskCanvas.width = CANVAS_SIZE;
+    tempMaskCanvas.height = CANVAS_SIZE;
+    const tempMaskCtx = tempMaskCanvas.getContext('2d');
+
+    // 最終出力用のキャンバス（元画像と同じサイズ）
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = srcWidth;
+    finalCanvas.height = srcHeight;
+    const finalCtx = finalCanvas.getContext('2d');
+
+    if (!tempMaskCtx || !finalCtx) return null;
+
+    // まず現在のマスクを一時キャンバスにコピー（変換なし）
+    tempMaskCtx.drawImage(maskCanvas, 0, 0);
+
+    // 変換行列の逆変換を計算
+    const scale = Math.min(CANVAS_SIZE / srcWidth, CANVAS_SIZE / srcHeight);
+    const offsetX = (CANVAS_SIZE - srcWidth * scale) / 2;
+    const offsetY = (CANVAS_SIZE - srcHeight * scale) / 2;
+
+    // 最終キャンバスにマスクを適切に描画
+    finalCtx.setTransform(1, 0, 0, 1, 0, 0);
+    finalCtx.drawImage(
+      tempMaskCanvas,
+      offsetX, offsetY,
+      srcWidth * scale,
+      srcHeight * scale,
+      0, 0,
+      srcWidth, srcHeight
+    );
+
+    return finalCanvas;
+  }
 </script>
 
 <div class="canvas-container">
