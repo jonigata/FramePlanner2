@@ -3,6 +3,21 @@ import { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
 import { specialFolders } from './specialFolders';
 
 export async function buildFileSystem(): Promise<FileSystem> {
+  if (navigator.storage?.persisted && navigator.storage?.persist) {
+    const already = await navigator.storage.persisted();
+    if (already) {
+      console.log("すでにストレージは保護されています");
+    } else {
+      const granted = await navigator.storage.persist();
+      console.log(granted
+        ? "navigator.storage.persist() によりストレージ保護に成功しました"
+        : "persist() 試行 → 保護は許可されませんでした"
+      );
+    }
+  } else {
+    console.log("この環境では navigator.storage が使用できません");
+  }
+  
   const fs = new IndexedDBFileSystem();
   await fs.open();
 

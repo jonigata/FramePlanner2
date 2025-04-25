@@ -27,6 +27,8 @@
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
 
+  import packageIcon from '../assets/fileManager/package-export.webp'
+
   export let fileSystem: FileSystem;
 
   let root: Folder;
@@ -391,7 +393,7 @@
   >
     <div class="drawer-content">
       <h2>ローカル</h2>
-      <p>※https://frameplanner-e5569.web.app と https://frameplanner.online ではファイルは別管理になります。もし作ったはずのファイルが見当たらないときは、いつもと違うURLになっていないかどうかを確認してください。近日中に統合予定です。</p>
+      <p>大事なファイルはパッケージ化<img class="package-icon" src={packageIcon} alt="rename"/>しましょう</p>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
           <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
@@ -450,5 +452,11 @@
     margin-left: 12px;
     margin-right: 12px;
     margin-bottom: 12px;
+  }
+  .package-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-bottom: 4px;
   }
 </style>
