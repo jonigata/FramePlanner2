@@ -3,6 +3,7 @@ import type { Vector } from "./geometry";
 /**
  * 多角形 poly を無限直線 p0→p1 に沿って片側だけ残す。
  * keepLeft = true なら p0→p1 の左側を残す。
+ * p0 == p1でも特に問題ない。
  */
 export function clipPolygonByLine(
   poly: Vector[],

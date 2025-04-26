@@ -43,7 +43,7 @@ export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize:
   drawBubbleElement(ctx, paperSize, bubble, size, 'clip');
 
   // 画像描画
-  drawFilmStack(ctx, bubble.filmStack, paperSize);
+  drawFilmStack(ctx, bubble.filmStack, paperSize, [0,0], null); // centerはすでに上で移動しているため
 
   ctx.restore();
 }

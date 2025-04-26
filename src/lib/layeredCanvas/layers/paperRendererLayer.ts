@@ -50,9 +50,6 @@ export class PaperRendererLayer extends LayerBase {
     const { backgrounds, foregrounds, embeddedBubbles, floatingBubbles } = this.thisFrameRenderData!;
 
     if (depth === 0) {
-      for (let { layout } of backgrounds) {
-        this.renderFrameBackground(ctx, layout);
-      }
       foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
       for (let { layout, inheritanceContext } of foregrounds) {
         this.renderFrame(ctx, layout, inheritanceContext, embeddedBubbles);
@@ -193,82 +190,78 @@ export class PaperRendererLayer extends LayerBase {
     }
   }
 
+  makeFramePath(layout: Layout) {
+    const path = new Path2D();
+    const c = layout.corners;
+    path.moveTo(...c.topLeft);
+    path.lineTo(...c.topRight);
+    path.lineTo(...c.bottomRight);
+    path.lineTo(...c.bottomLeft);
+    path.lineTo(...c.topLeft);
+    path.closePath();
+    return path;
+  }
+
   renderFrame(ctx: CanvasRenderingContext2D, layout: Layout, inheritanceContext: InheritanceContext, embeddedBubbles: EmbeddedBubbles) {
+    const framePath = this.makeFramePath(layout);
+
     // ■■■ visibility 0;
-    this.renderFrameBackground(ctx, layout);
+    this.renderFrameBackground(ctx, layout, framePath);
 
     const element = layout.element;
     if (element.visibility < 1) { return; }
 
     // ■■■ visibility 1;
-    this.renderFrameContent(ctx, layout, embeddedBubbles);
+    this.renderFrameContent(ctx, layout, framePath, embeddedBubbles);
     if (element.visibility < 2) { return; }
 
     // ■■■ visility 2;
-    this.renderFrameBorder(ctx, layout, inheritanceContext);
+    this.renderFrameBorder(ctx, layout, framePath, inheritanceContext);
   }
 
-  renderFrameBackground(ctx: CanvasRenderingContext2D, layout: Layout) {
+  renderFrameBackground(ctx: CanvasRenderingContext2D, layout: Layout, framePath: Path2D) {
     if (layout.element.visibility === 0) { return; }
-
-    ctx.beginPath();
-    ctx.lineJoin = "miter";
-    trapezoidPath(ctx, layout.corners);
-  
     if (!layout.element.bgColor) { return; }
-    ctx.fillStyle = layout.element.bgColor;
-    ctx.fill();
-  }
 
-  // visibility 1
-  renderFrameContent(ctx: CanvasRenderingContext2D, layout: Layout, embeddedBubbles: EmbeddedBubbles) {
-    const element = layout.element;
-    if (0 < element.filmStack.films.length || embeddedBubbles.has(layout)) {
-      // clip
-      ctx.save();
-      if (!element.focused) {
-        ctx.clip(); // this.renderFrameBackgroundで描画したものをクリップ
-      }
-
-      this.drawFilms(ctx, layout);
-
-      if (embeddedBubbles.has(layout)) {
-        const bubbles = embeddedBubbles.get(layout)!;
-        renderBubbles(ctx, this.getPaperSize(), bubbles, true);
-      }
-  
-      // unclip
-      ctx.restore();
-    }
-  }
-
-
-  renderFrameBorder(ctx: CanvasRenderingContext2D, layout: Layout, inheritanceContext: InheritanceContext) {
-    const borderWidth = inheritanceContext.borderWidth;
-    if (0 < borderWidth) {
-      ctx.beginPath();
-      ctx.strokeStyle = inheritanceContext.borderColor;
-      ctx.lineWidth = borderWidth;
-      ctx.lineJoin = "miter";
-      trapezoidPath(ctx, layout.corners);
-      ctx.stroke();
-    }
-  }
-
-  // バブル描画関連のコードはsrc/lib/layeredCanvas/tools/draw/renderBubble.tsに移動
-
-  drawFilms(ctx: CanvasRenderingContext2D, layout: Layout) {
-    const paperSize = this.getPaperSize();
-    const element = layout.element;
-
-    const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
     ctx.save();
-    ctx.translate(x0 + w * 0.5, y0 + h * 0.5);
-    drawFilmStack(ctx, element.filmStack, paperSize);
+    ctx.lineJoin = "miter";
+    ctx.fillStyle = layout.element.bgColor;
+    ctx.fill(framePath);
     ctx.restore();
   }
 
-  // バブル描画関連のコードはsrc/lib/layeredCanvas/tools/draw/renderBubble.tsに移動
+  // visibility 1
+  renderFrameContent(ctx: CanvasRenderingContext2D, layout: Layout, framePath: Path2D, embeddedBubbles: EmbeddedBubbles) {
+    const element = layout.element;
+    if (0 < element.filmStack.films.length || embeddedBubbles.has(layout)) {
+      const paperSize = this.getPaperSize();
+      const element = layout.element;
+  
+      const [x0, y0, w, h] = trapezoidBoundingRect(layout.corners);
+      drawFilmStack(ctx, element.filmStack, paperSize, [x0 + w * 0.5, y0 + h * 0.5], layout.corners);
+
+      const bubbles = embeddedBubbles.get(layout);
+      if (bubbles) {
+        ctx.save();
+        ctx.clip(framePath);
+        renderBubbles(ctx, this.getPaperSize(), bubbles, true);
+        ctx.restore();
+      }
+    }
+  }
+
+
+  renderFrameBorder(ctx: CanvasRenderingContext2D, layout: Layout, framePath: Path2D, inheritanceContext: InheritanceContext) {
+    const borderWidth = inheritanceContext.borderWidth;
+    if (0 < borderWidth) {
+      ctx.save();
+      ctx.strokeStyle = inheritanceContext.borderColor;
+      ctx.lineWidth = borderWidth;
+      ctx.lineJoin = "miter";
+      ctx.stroke(framePath);
+      ctx.restore();
+    }
+  }
 
   setBubbles(bubbles: Bubble[]) {
     this.rawBubbles = bubbles;
@@ -298,13 +291,14 @@ export class PaperRendererLayer extends LayerBase {
       if (layout.element.visibility < 1) { continue; }
       const { canvas: border } = makeCanvas();
       const { canvas: content } = makeCanvas();
+      const framePath = this.makeFramePath(layout);
 
       const ctx = content.getContext('2d')!;
-      this.renderFrameBackground(ctx, layout);
-      this.renderFrameContent(ctx, layout, embeddedBubbles);
+      this.renderFrameBackground(ctx, layout, framePath);
+      this.renderFrameContent(ctx, layout, framePath, embeddedBubbles);
 
       const ctx2 = border.getContext('2d')!;
-      this.renderFrameBorder(ctx2, layout, inheritanceContext);
+      this.renderFrameBorder(ctx2, layout, framePath, inheritanceContext);
 
       canvases.push({ border, content });
     }

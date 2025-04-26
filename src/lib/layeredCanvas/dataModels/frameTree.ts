@@ -41,7 +41,7 @@ export class FrameElement {
 
   // 以下は揮発性
   gallery: Media[];
-  focused: boolean;
+  focused: boolean; // Painterの対象かどうか
   residenceTime: number;
 
   constructor(size: number) {
