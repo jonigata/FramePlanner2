@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { UndoManager } from './UndoManager';
   
   // プロパティとして受け取る変数
@@ -384,6 +384,23 @@
     );
 
     return finalCanvas;
+  }
+  // キーボードショートカット対応
+  onMount(() => {
+    window.addEventListener('keydown', handleKeydown);
+  });
+  onDestroy(() => {
+    window.removeEventListener('keydown', handleKeydown);
+  });
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    }
+    if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+      e.preventDefault();
+      redo();
+    }
   }
 </script>
 

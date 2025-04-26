@@ -93,6 +93,11 @@
     $frameInspectorTarget!.command = "eraser";
   }
 
+  function onInpaint(e: CustomEvent<Film>) {
+    $frameInspectorTarget!.commandTargetFilm = e.detail;
+    $frameInspectorTarget!.command = "inpaint";
+  }
+
   function calculateOutPaintingCost(film: Film) {
     const fit = $frameInspectorTarget!;
     const padding = calculateFramePadding(fit.page, fit.frame, film);
@@ -104,6 +109,18 @@
     const h = film.media.naturalHeight + padding.top + padding.bottom;
 
     // outpainting costの算出
+    // $0.05 per mega pixel (1feathral ≒ $0.01)
+    const pixels = w * h;
+    return Math.ceil(pixels / (1024 * 1024) * 8);
+  }
+
+  function calculateInPaintingCost(film: Film) {
+    const fit = $frameInspectorTarget!;
+
+    const w = film.media.naturalWidth;
+    const h = film.media.naturalHeight;
+
+    // inpainting costの算出
     // $0.05 per mega pixel (1feathral ≒ $0.01)
     const pixels = w * h;
     return Math.ceil(pixels / (1024 * 1024) * 8);
@@ -135,7 +152,9 @@
           on:accept={onAccept}
           on:outpainting={onOutPainting}
           on:eraser={onEraser}
-          calculateOutPaintingCost={calculateOutPaintingCost}/>
+          on:inpaint={onInpaint}
+          calculateOutPaintingCost={calculateOutPaintingCost}
+          calculateInPaintingCost={calculateInPaintingCost}/>
       {/key}
     </div>
   </Drawer>

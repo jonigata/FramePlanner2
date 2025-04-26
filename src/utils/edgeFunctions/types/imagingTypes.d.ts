@@ -124,6 +124,17 @@ export const EraserResponseSchema = z.object({
 });
 export type EraserResponse = z.infer<typeof EraserResponseSchema>;
 
+export const InPaintRequestSchema = z.object({
+  maskDataUrl: z.string(),
+  imageDataUrl: z.string(),
+  prompt: z.string(),
+});
+export type InPaintRequest = z.infer<typeof InPaintRequestSchema>;
+
+export const InPaintResponseSchema = z.object({
+  requestId: z.string().describe("request id"),
+});
+export type InPaintResponse = z.infer<typeof InPaintResponseSchema>;
 
 export const TextMaskRequestSchema = z.object({
   dataUrl: z.string(),

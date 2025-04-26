@@ -22,9 +22,10 @@ import {
   processCommand,
   handleCoverCommand,
   handleEraserCommand,
+  handleInpaintCommand,
 } from '../operations/filmStackOperations';
 
-type FrameInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "outpainting" | "video" | "upscale" | "eraser";
+type FrameInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "outpainting" | "video" | "upscale" | "eraser" | "inpaint";
 
 export interface FrameInspectorTarget extends FilmOperationTarget {
   frame: FrameElement;
@@ -83,6 +84,7 @@ async function onFrameCommand(fit: FrameInspectorTarget | null) {
       frameInspectorTarget,
     ),
     "eraser": handleEraserCommand,
+    "inpaint": handleInpaintCommand, 
     "scribble": async (target) => handleScribbleCommand(target, painterRunWithFrame!, target.frame),
     "generate": async (target) => handleGenerateCommand(
       target,

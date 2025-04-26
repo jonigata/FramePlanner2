@@ -9,6 +9,7 @@
   
   export let filmStack: FilmStack;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
+  export let calculateInPaintingCost: ((film: Film) => number) | null = null;
 
   const dispatch = createEventDispatcher();
 
@@ -88,8 +89,9 @@
         bind:film={film} 
         on:select={onSelectFilm} 
         on:delete={onDeleteFilm} 
-        on:scribble on:generate on:punch on:outpainting on:commit on:video on:upscale on:duplicate on:eraser
+        on:scribble on:generate on:punch on:outpainting on:commit on:video on:upscale on:duplicate on:eraser on:inpaint
         calculateOutPaintingCost={calculateOutPaintingCost}
+        calculateInPaintingCost={calculateInPaintingCost}
       />
     {/each}
     {#if isDragging && ghostIndex === filmStack.films.length}

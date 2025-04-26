@@ -2,15 +2,18 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
   import ImageMaskCanvas from './ImageMaskCanvas.svelte';
+  import AutoSizeTextarea from '../notebook/AutoSizeTextarea.svelte';
 
   let title: string;
   let imageSource: HTMLCanvasElement;
-  
-  
+
+  const minHeight = 60;
   const CANVAS_WIDTH = 800;
   const CANVAS_HEIGHT = 600;
 
   let maskCanvasComponent: ImageMaskCanvas;
+  let prompt = '';
+  let placeholder = 'マスク領域の変更後を入力してください';
 
   onMount(() => {
     const args = $modalStore[0]?.meta;
@@ -40,6 +43,7 @@
     $modalStore[0].response?.({
       mask: finalCanvas,
       image: imageSource,
+      prompt: prompt
     });
 
     modalStore.close();
@@ -59,7 +63,7 @@
     />
   </section>
   <footer class="card-footer flex gap-2">
-    <div class="flex-1"></div>
+    <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder}/>
     <button class="btn variant-ghost-surface" on:click={onCancel}>キャンセル</button>
     <button class="btn variant-filled-primary" on:click={onSubmit}>実行</button>
   </footer>

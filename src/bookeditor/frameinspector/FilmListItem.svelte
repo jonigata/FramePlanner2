@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import type { Film } from "../../lib/layeredCanvas/dataModels/film";
   import { Effect, OutlineEffect } from "../../lib/layeredCanvas/dataModels/effect";
   import { redrawToken } from '../workspaceStore';
@@ -25,13 +25,15 @@
   import upscaleIcon from '../../assets/filmlist/upscale.webp';
   import dupliateIcon from '../../assets/filmlist/duplicate.webp';
   import eraserIcon from '../../assets/filmlist/eraser.webp';
-  import textLiftIcon from '../../assets/filmlist/textlift.webp';
+  import inpaintIcon from '../../assets/filmlist/inpaint.webp';
 
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
+  export let calculateInPaintingCost: ((film: Film) => number) | null = null;
 
   let effectVisible = false;
   let outPaintingCost = 0;
+  let inPaintingCost = 0;
   let popupVisible = false;
   let popupButton: HTMLButtonElement;
 
@@ -59,6 +61,12 @@
     console.log("onEraser");
     popupVisible = false;
     dispatch('eraser', film)
+  }
+
+  function onInpaint(ev: MouseEvent) {
+    console.log("onInpaint");
+    popupVisible = false;
+    dispatch('inpaint', film)
   }
 
   function onScribble(ev: MouseEvent) {
@@ -151,22 +159,26 @@
     dispatch('commit', false);
   }
 
-  function onHover(e: MouseEvent) {
-    if (!calculateOutPaintingCost) return;
-
-    const source = film?.media.drawSource;
-    if (source) {
-      outPaintingCost = calculateOutPaintingCost(film!);
-    }
-  }
-
   function togglePopup(ev: MouseEvent) {
     popupVisible = !popupVisible;
     ev.stopPropagation();
     ev.preventDefault();
   }
 
-  $: console.log("popupVisible", popupVisible);
+  onMount(() => {
+    if (calculateOutPaintingCost) {
+      const source = film?.media.drawSource;
+      if (source) {
+        outPaintingCost = calculateOutPaintingCost!(film!);
+      }
+    }
+    if (calculateInPaintingCost) {
+      const source = film?.media.drawSource;
+      if (source) {
+        inPaintingCost = calculateInPaintingCost!(film!);
+      }
+    }
+  });
 
 </script>
 
@@ -187,7 +199,6 @@
       class="image-panel" 
       class:variant-filled-primary={film.selected}
       class:variant-soft-tertiary={!film.selected}
-      on:pointerover={onHover}
       on:click={onClick}
     >
       <div class="media-container">
@@ -246,9 +257,9 @@
       <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
         <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
       </button>
-      <!-- <button class="transformix-item" use:toolTip={"文字を読み取ってフキダシ化[1]"} on:click={onUpscale}>
-        <img draggable={false} src={textLiftIcon} alt="文字抽出"/>
-      </button> -->
+      <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
+        <img draggable={false} src={inpaintIcon} alt="インペイント"/>
+      </button>
       <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
         <img draggable={false} src={scribbleIcon} alt="落書き"/>
       </button>
