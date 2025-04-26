@@ -12,7 +12,7 @@
   import { toolTip } from '../../utils/passiveToolTipStore';
   import Popup from '../../utils/Popup.svelte';
   import MediaFrame from '../../gallery/MediaFrame.svelte';
-
+  import BarrierIcon from './BarrierIcon.svelte';
 
   import visibleIcon from '../../assets/filmlist/eye.webp';
   import scribbleIcon from '../../assets/filmlist/scribble.webp';
@@ -26,7 +26,8 @@
   import dupliateIcon from '../../assets/filmlist/duplicate.webp';
   import eraserIcon from '../../assets/filmlist/eraser.webp';
   import inpaintIcon from '../../assets/filmlist/inpaint.webp';
-
+  
+  
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
   export let calculateInPaintingCost: ((film: Film) => number) | null = null;
@@ -36,7 +37,11 @@
   let inPaintingCost = 0;
   let popupVisible = false;
   let popupButton: HTMLButtonElement;
-
+  
+  // barrier用Popupの状態管理
+  let barrierPopupVisible = false;
+  let barrierPopupTarget: HTMLDivElement | null = null;
+  
   const dispatch = createEventDispatcher();
 
   function onClick(e: MouseEvent) {
@@ -160,9 +165,15 @@
   }
 
   function togglePopup(ev: MouseEvent) {
-    popupVisible = !popupVisible;
-    ev.stopPropagation();
-    ev.preventDefault();
+      popupVisible = !popupVisible;
+      ev.stopPropagation();
+      ev.preventDefault();
+  }
+  
+  function toggleBarrierPopup(e: CustomEvent) {
+      barrierPopupVisible = !barrierPopupVisible;
+      e.stopPropagation?.();
+      e.preventDefault?.();
   }
 
   onMount(() => {
@@ -209,6 +220,18 @@
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" use:toolTip={"可視/不可視"} on:click={onToggleVisible}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <div
+        class="barrier-icon"
+        bind:this={barrierPopupTarget}
+        style="position:absolute; left:40px; top:4px; width:32px; height:32px; z-index:2; cursor:pointer;"
+      >
+        <BarrierIcon
+          barriers={film?.barriers ?? { left: false, right: false, top: false, bottom: false }}
+          toolTipText="枠の開放"
+          on:click={toggleBarrierPopup}
+        />
+      </div>
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
 
       <button 
@@ -242,36 +265,84 @@
   target={popupButton}
   on:close={() => popupVisible = false}>
   <div class="card p-4 shadow-xl z-[1001]" style="z-index: 100;">
-    <div class="transformix-grid">
-      {#if calculateOutPaintingCost != null}
-        <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
-          <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+    <div class="barrier-transformix-row">
+      <div class="transformix-grid">
+        {#if calculateOutPaintingCost != null}
+          <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
+            <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+          </button>
+        {/if}
+        <button class="transformix-item" use:toolTip={"消しゴム[6]"} on:click={onEraser}>
+          <img draggable={false} src={eraserIcon} alt="消しゴム"/>
         </button>
-      {/if}
-      <button class="transformix-item" use:toolTip={"消しゴム[6]"} on:click={onEraser}>
-        <img draggable={false} src={eraserIcon} alt="消しゴム"/>
-      </button>
-      <button class="transformix-item" use:toolTip={"背景除去[3]"} on:click={onPunch}>
-        <img draggable={false} src={punchIcon} alt="背景除去"/>
-      </button>
-      <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
-        <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
-      </button>
-      <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
-        <img draggable={false} src={inpaintIcon} alt="インペイント"/>
-      </button>
-      <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
-        <img draggable={false} src={scribbleIcon} alt="落書き"/>
-      </button>
-      <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
-        <img draggable={false} src={dupliateIcon} alt="複製"/>
-      </button>
-      <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
-        <img draggable={false} src={videoIcon} alt="ムービー作成"/>
-      </button>
+        <button class="transformix-item" use:toolTip={"背景除去[3]"} on:click={onPunch}>
+          <img draggable={false} src={punchIcon} alt="背景除去"/>
+        </button>
+        <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
+          <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
+        </button>
+        <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
+          <img draggable={false} src={inpaintIcon} alt="インペイント"/>
+        </button>
+        <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
+          <img draggable={false} src={scribbleIcon} alt="落書き"/>
+        </button>
+        <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
+          <img draggable={false} src={dupliateIcon} alt="複製"/>
+        </button>
+        <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
+          <img draggable={false} src={videoIcon} alt="ムービー作成"/>
+        </button>
+      </div>
     </div>
   </div>
 </Popup>
+
+<!-- barrier用Popup -->
+{#if barrierPopupVisible && barrierPopupTarget}
+<Popup
+  show={barrierPopupVisible}
+  target={barrierPopupTarget}
+  on:close={() => barrierPopupVisible = false}>
+  <div class="card p-4 shadow-xl z-[1001]" style="z-index: 100;">
+    <div class="barrier-toggle-area">
+      <div class="barrier-title">枠の開放</div>
+      <div class="barrier-toggle-layout">
+        <button
+          class="barrier-toggle barrier-left"
+          class:on={film?.barriers.left}
+          class:off={!film?.barriers.left}
+          use:toolTip={"左枠の開放"}
+          on:click={() => { if (film) { film.barriers.left = !film.barriers.left; $redrawToken = true; dispatch('commit', true); } }}
+        >←</button>
+        <div class="barrier-updown-group">
+          <button
+            class="barrier-toggle barrier-top"
+            class:on={film?.barriers.top}
+            class:off={!film?.barriers.top}
+            use:toolTip={"上枠の開放"}
+            on:click={() => { if (film) { film.barriers.top = !film.barriers.top; $redrawToken = true; dispatch('commit', true); } }}
+          >↑</button>
+          <button
+            class="barrier-toggle barrier-bottom"
+            class:on={film?.barriers.bottom}
+            class:off={!film?.barriers.bottom}
+            use:toolTip={"下枠の開放"}
+            on:click={() => { if (film) { film.barriers.bottom = !film.barriers.bottom; $redrawToken = true; dispatch('commit', true); } }}
+          >↓</button>
+        </div>
+        <button
+          class="barrier-toggle barrier-right"
+          class:on={film?.barriers.right}
+          class:off={!film?.barriers.right}
+          use:toolTip={"右枠の開放"}
+          on:click={() => { if (film) { film.barriers.right = !film.barriers.right; $redrawToken = true; dispatch('commit', true); } }}
+        >→</button>
+      </div>
+    </div>
+  </div>
+</Popup>
+{/if}
 
 <style lang="postcss">
   .film {
@@ -281,6 +352,84 @@
     align-items: center;
     justify-content: center;
     position: relative;
+  }
+  .barrier-icon {
+    position: absolute;
+    left: 40px;
+    top: 4px;
+    width: 32px;
+    height: 32px;
+    z-index: 2;
+    cursor: pointer;
+    /* 仮のデザイン。必要に応じて調整可 */
+    filter: opacity(0.7);
+  }
+  .barrier-transformix-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .barrier-toggle-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 8px;
+    min-width: 70px;
+  }
+  .barrier-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 4px;
+    letter-spacing: 0.1em;
+    text-align: center;
+    opacity: 0.8;
+  }
+  .barrier-toggle-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-right: 0;
+  }
+  .barrier-updown-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .barrier-toggle {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    border-radius: 6px;
+    border: 1.5px solid #888;
+    background: #eee;
+    color: #333;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: background 0.2s, opacity 0.2s;
+    margin-bottom: 2px;
+    padding: 0;
+    outline: none;
+  }
+  .barrier-toggle.on {
+    background: #1976d2;
+    color: #fff;
+    opacity: 1;
+    border-color: #1976d2;
+  }
+  .barrier-toggle.off {
+    background: #fff !important;
+    color: #bbb;
+    opacity: 1;
+    border-color: #ddd;
+    box-shadow: 0 0 0 1.5px #eee;
+  }
+  .barrier-toggle:active {
+    filter: brightness(0.9);
   }
   .image-panel {
     width: 100%;

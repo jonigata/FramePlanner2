@@ -226,7 +226,8 @@ export async function packFilms(films: Film[], saveMediaFunc: SaveMediaFunc): Pr
       reverse: [...film.reverse],
       visible: film.visible,
       prompt: film.prompt,
-      effects
+      effects,
+      barriers: film.barriers,
     }
     packedFilms.push(filmMarkUp);
   }
@@ -261,6 +262,7 @@ export async function unpackFilms(markUp: any, loadMediaFunc: LoadMediaFunc): Pr
     film.visible = filmMarkUp.visible;
     film.prompt = filmMarkUp.prompt;
     film.effects = effects;
+    film.barriers = filmMarkUp.barriers ?? { top: true, right: true, bottom: true, left: true };
     films.push(film);
   }
   return films;

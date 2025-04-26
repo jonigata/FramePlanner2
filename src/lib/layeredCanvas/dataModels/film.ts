@@ -4,6 +4,13 @@ import type { Effect } from './effect';
 import { ulid } from 'ulid';
 import { ImageMedia } from "./media";
 
+export type Barriers = {
+  top: boolean;
+  right: boolean;
+  bottom: boolean;
+  left: boolean;
+}
+
 export class Film  {
   ulid: string;
   media: Media;
@@ -14,6 +21,7 @@ export class Film  {
   visible: boolean;
   prompt: string | null;
   effects: Effect[];
+  barriers: Barriers;
   
   selected: boolean; // 揮発性
   matrix: DOMMatrix | undefined; // 揮発性
@@ -30,6 +38,7 @@ export class Film  {
     this.prompt = ["1 dog", "1 cat", "1 rabbit", "1 elephant", "1 dolphin", "1 bird"][Math.floor(Math.random() * 6)];
     this.effects = [];
     this.selected = false;
+    this.barriers = { top: true, right: true, bottom: true, left: true };
   }
 
   clone() {
@@ -41,6 +50,7 @@ export class Film  {
     f.visible = this.visible;
     f.prompt = this.prompt;
     f.effects = this.effects.map(e => e.clone());
+    f.barriers = {...this.barriers};
     return f;
   }
 
