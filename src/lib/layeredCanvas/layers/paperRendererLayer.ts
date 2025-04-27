@@ -8,6 +8,8 @@ import type { Layout } from "../dataModels/frameTree";
 import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
 import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
+import paper from 'paper';
+import { PaperOffset } from 'paperjs-offset'
 
 type InheritanceContext = {
   borderColor: string, 
@@ -190,20 +192,32 @@ export class PaperRendererLayer extends LayerBase {
     }
   }
 
-  makeFramePath(layout: Layout) {
-    const path = new Path2D();
+  makeFramePath(layout: Layout, offset: number): Path2D {
     const c = layout.corners;
-    path.moveTo(...c.topLeft);
-    path.lineTo(...c.topRight);
-    path.lineTo(...c.bottomRight);
-    path.lineTo(...c.bottomLeft);
-    path.lineTo(...c.topLeft);
-    path.closePath();
-    return path;
+    const path = new paper.Path();
+    path.moveTo(c.topLeft);
+    path.lineTo(c.topRight);
+    path.lineTo(c.bottomRight);
+    path.lineTo(c.bottomLeft);
+    path.closed = true;
+
+    if (offset == 0) {
+      return new Path2D(path.pathData);
+    } else {
+      const offsetPath = PaperOffset.offset(path, offset);
+      return new Path2D(offsetPath.pathData);
+    }
+    /*
+      const offsetPath = PaperOffset.offset(path, -borderWidth * 0.5);
+      ctx.save();
+      ctx.strokeStyle = "#FF0000";
+      ctx.stroke(new Path2D(offsetPath.pathData));
+      ctx.restore();
+  */
   }
 
   renderFrame(ctx: CanvasRenderingContext2D, layout: Layout, inheritanceContext: InheritanceContext, embeddedBubbles: EmbeddedBubbles) {
-    const framePath = this.makeFramePath(layout);
+    const framePath = this.makeFramePath(layout, -inheritanceContext.borderWidth * 0.5);
 
     // ■■■ visibility 0;
     this.renderFrameBackground(ctx, layout, framePath);
@@ -216,7 +230,7 @@ export class PaperRendererLayer extends LayerBase {
     if (element.visibility < 2) { return; }
 
     // ■■■ visility 2;
-    this.renderFrameBorder(ctx, layout, framePath, inheritanceContext);
+    this.renderFrameBorder(ctx, layout, inheritanceContext);
   }
 
   renderFrameBackground(ctx: CanvasRenderingContext2D, layout: Layout, framePath: Path2D) {
@@ -250,15 +264,15 @@ export class PaperRendererLayer extends LayerBase {
     }
   }
 
-
-  renderFrameBorder(ctx: CanvasRenderingContext2D, layout: Layout, framePath: Path2D, inheritanceContext: InheritanceContext) {
+  renderFrameBorder(ctx: CanvasRenderingContext2D, layout: Layout, inheritanceContext: InheritanceContext) {
     const borderWidth = inheritanceContext.borderWidth;
     if (0 < borderWidth) {
       ctx.save();
       ctx.strokeStyle = inheritanceContext.borderColor;
       ctx.lineWidth = borderWidth;
       ctx.lineJoin = "miter";
-      ctx.stroke(framePath);
+      const path = this.makeFramePath(layout, 0);
+      ctx.stroke(path);
       ctx.restore();
     }
   }
@@ -291,14 +305,14 @@ export class PaperRendererLayer extends LayerBase {
       if (layout.element.visibility < 1) { continue; }
       const { canvas: border } = makeCanvas();
       const { canvas: content } = makeCanvas();
-      const framePath = this.makeFramePath(layout);
+      const framePath = this.makeFramePath(layout, -inheritanceContext.borderWidth * 0.5);
 
       const ctx = content.getContext('2d')!;
       this.renderFrameBackground(ctx, layout, framePath);
       this.renderFrameContent(ctx, layout, framePath, embeddedBubbles);
 
       const ctx2 = border.getContext('2d')!;
-      this.renderFrameBorder(ctx2, layout, framePath, inheritanceContext);
+      this.renderFrameBorder(ctx2, layout, inheritanceContext);
 
       canvases.push({ border, content });
     }
