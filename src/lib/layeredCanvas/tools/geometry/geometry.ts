@@ -485,3 +485,15 @@ export function segmentIntersection(s0: [Vector, Vector], s1: [Vector, Vector]):
 export function denormalizePositionInRect(p: Vector, r: Rect): Vector {
   return [r[0] + r[2] * p[0], r[1] + r[3] * p[1]];
 }
+
+// segmentでも問題ない
+export function offsetLine(p0: Vector, p1: Vector, offset: number): [Vector, Vector] {
+  const direction = subtract2D(p1, p0);
+  const directionNormalized = normalize2D(direction);
+  const perpVector = perpendicular2D(directionNormalized, offset);
+  
+  const offsetP0 = add2D(p0, perpVector);
+  const offsetP1 = add2D(p1, perpVector);
+  
+  return [offsetP0, offsetP1];
+}

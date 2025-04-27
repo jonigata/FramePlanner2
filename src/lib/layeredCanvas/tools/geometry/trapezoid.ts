@@ -14,6 +14,10 @@ export function trapezoidPath(ctx: CanvasRenderingContext2D, corners: Trapezoid)
   ctx.closePath();
 }
 
+export function trapezoidToPolygon(corners: Trapezoid): Vector[] {
+  return [corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft];
+}
+
 export function extendTrapezoid(t: Trapezoid, x: number, y: number): Trapezoid {
   return {
     topLeft: [t.topLeft[0] - x, t.topLeft[1] - y],
