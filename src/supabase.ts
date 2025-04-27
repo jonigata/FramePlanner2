@@ -10,7 +10,8 @@ import {
   type UpscaleRequest, UpscaleRequestSchema, UpscaleResponseSchema,
   type ImagingStatusRequest, ImagingStatusRequestSchema, ImagingStatusResponseSchema,
   type VisionRequest, VisionRequestSchema, VisionResponseSchema,
-  type InPaintRequest, InPaintRequestSchema, InPaintResponseSchema
+  type InPaintRequest, InPaintRequestSchema, InPaintResponseSchema,
+  type TextEditRequest, TextEditRequestSchema, TextEditResponseSchema,
 } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
 import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest, AdviseThemeResponseSchema, type AdviseThemeResponse } from "$protocolTypes/adviseTypes.d";
@@ -78,6 +79,10 @@ export async function outPaint(req: OutPaintRequest) {
 
 export async function inPaint(req: InPaintRequest) {
   return await invoke("charged/imaging/inpaint", req, InPaintRequestSchema, InPaintResponseSchema);
+}
+
+export async function textEdit(req: InPaintRequest) {
+  return await invoke("charged/imaging/textedit", req, TextEditRequestSchema, TextEditResponseSchema);
 }
 
 export async function removeBg(req: RemoveBgRequest) {

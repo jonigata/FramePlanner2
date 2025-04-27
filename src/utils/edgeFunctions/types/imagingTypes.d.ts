@@ -154,3 +154,15 @@ export const TextMaskResponseSchema = z.object({
   }))
 });
 export type TextMaskResponse = z.infer<typeof TextMaskResponseSchema>;
+
+export const TextEditRequestSchema = z.object({
+  imageDataUrl: z.string(),
+  prompt: z.string(),
+});
+export type TextEditRequest = z.infer<typeof TextEditRequestSchema>;
+
+export const TextEditResponseSchema = z.object({
+  requestId: z.string().describe("request id"),
+});
+export type TextEditResponse = z.infer<typeof TextEditResponseSchema>;
+

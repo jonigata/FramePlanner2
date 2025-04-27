@@ -69,7 +69,7 @@ export async function inpaintFilm(film: Film) {
   const maskDataUrl = request.mask.toDataURL("image/png");
   const imageDataUrl = request.image.toDataURL("image/png");
   const { requestId } = await inPaint({maskDataUrl, imageDataUrl, prompt: request.prompt});
-  await saveRequest(get(fileSystem)!, "image", "eraser", requestId);
+  await saveRequest(get(fileSystem)!, "image", "inpaint", requestId);
 
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "inpaint", requestId});
   loading.set(false);
