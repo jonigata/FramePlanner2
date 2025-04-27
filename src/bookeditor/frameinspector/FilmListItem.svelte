@@ -28,6 +28,7 @@
   import inpaintIcon from '../../assets/filmlist/inpaint.webp';
   
   
+  export let showsBarrier: boolean;
   export let film: Film | null;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
   export let calculateInPaintingCost: ((film: Film) => number) | null = null;
@@ -220,17 +221,19 @@
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" use:toolTip={"可視/不可視"} on:click={onToggleVisible}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <div
-        class="barrier-icon"
-        bind:this={barrierPopupTarget}
-        style="position:absolute; left:40px; top:4px; width:32px; height:32px; z-index:2; cursor:pointer;"
-      >
-        <BarrierIcon
-          barriers={film?.barriers ?? { left: false, right: false, top: false, bottom: false }}
-          toolTipText="枠の開放"
-          on:click={toggleBarrierPopup}
-        />
-      </div>
+      {#if showsBarrier}
+        <div
+          class="barrier-icon"
+          bind:this={barrierPopupTarget}
+          style="position:absolute; left:40px; top:4px; width:32px; height:32px; z-index:2; cursor:pointer;"
+        >
+          <BarrierIcon
+            barriers={film?.barriers ?? { left: false, right: false, top: false, bottom: false }}
+            toolTipText="枠の開放"
+            on:click={toggleBarrierPopup}
+          />
+        </div>
+      {/if}
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
 

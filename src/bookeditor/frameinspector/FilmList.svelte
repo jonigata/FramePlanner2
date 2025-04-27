@@ -6,7 +6,8 @@
   import { moveInArray } from '../../utils/moveInArray';
   import FilmListItem from "./FilmListItem.svelte";
   import { buildMedia } from '../../lib/layeredCanvas/dataModels/media';
-  
+
+  export let showsBarrier: boolean;
   export let filmStack: FilmStack;
   export let calculateOutPaintingCost: ((film: Film) => number) | null = null;
   export let calculateInPaintingCost: ((film: Film) => number) | null = null;
@@ -75,7 +76,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="film-list-container">
-  <FilmListItem film={null} on:select={onGenerate}/>
+  <FilmListItem showsBarrier={false} film={null} on:select={onGenerate}/>
   <div 
     class="flex flex-col gap-2 mt-2 min-h-[20px]" 
     use:sortableList={{animation: 100, onUpdate: onSortableUpdate}} 
@@ -86,6 +87,7 @@
         <div data-ghost class="ghost-element"/>
       {/if}
       <FilmListItem
+        {showsBarrier}
         bind:film={film} 
         on:select={onSelectFilm} 
         on:delete={onDeleteFilm} 

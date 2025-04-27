@@ -141,7 +141,9 @@
         </RadioGroup>
       </div>
       {#key $frameInspectorRebuildToken}
-        <FilmList filmStack={filmStack} 
+        <FilmList 
+          showsBarrier={true}  
+          filmStack={filmStack}
           on:commit={onCommit}
           on:scribble={onScribble} 
           on:generate={onGenerate} 

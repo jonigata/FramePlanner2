@@ -488,7 +488,7 @@
       <h1>レイヤー</h1>
       <div class="w-full text-left mb-16">
         {#key $bubbleInspectorRebuildToken}
-          <FilmList filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept} on:video={onVideo} on:upscale={onUpscale} on:duplicate={onDuplicate}/>
+          <FilmList showsBarrier={false} filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept} on:video={onVideo} on:upscale={onUpscale} on:duplicate={onDuplicate}/>
         {/key}
       </div>
     </div>

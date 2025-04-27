@@ -441,7 +441,7 @@ export class LayeredCanvas {
     this.rootPaper = new Paper([0,0], true);
 
     document.fonts.addEventListener('loadingdone', (event) => {
-      console.tag("fonts.onloadingdone", "orange", event);
+      // console.tag("fonts.onloadingdone", "orange", event);
     });
 
     const beforeHandler = () => {
