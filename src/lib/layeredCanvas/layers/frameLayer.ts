@@ -325,6 +325,8 @@ export class FrameLayer extends LayerBase {
       this.importMedia(layoutlet.element, new ImageMedia(media));
     }
 
+    this.onFocus(layoutlet);
+    this.onCommit();
     return true;
   }
 
