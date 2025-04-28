@@ -25,3 +25,17 @@ export const SearchResponseSchema = z.object({
   limit: z.number(),
   has_more: z.boolean()
 });
+
+export const AdjacentWorkRequestSchema = z.object({
+  query: z.string().min(1).max(100),
+  workId: z.string()
+});
+
+/**
+ * nextWorkId: 指定workIdより新しい（created_atが大きい＝降順で前に並ぶ）workId
+ * prevWorkId: 指定workIdより古い（created_atが小さい＝降順で次に並ぶ）workId
+ */
+export const AdjacentWorkResponseSchema = z.object({
+  nextWorkId: z.string().nullable(), // created_at > target（新しい方、降順で前）
+  prevWorkId: z.string().nullable()  // created_at < target（古い方、降順で次）
+});
