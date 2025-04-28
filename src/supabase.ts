@@ -31,12 +31,13 @@ import {
 } from "./utils/edgeFunctions/types/snsTypes.d";
 
 
-import { type NotebookBase, NotebookBaseSchema, CharactersBaseSchema } from "$bookTypes/notebook";
+import { CharactersBaseSchema } from "$bookTypes/notebook";
 import { StoryboardSchema } from "$bookTypes/storyboard";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
 import { createCanvasFromBlob, createVideoFromBlob } from './lib/layeredCanvas/tools/imageUtil';
+import { runResilientTask } from "./utils/resilientTask";
 
 export let supabase: SupabaseClient;
 
@@ -168,22 +169,27 @@ export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'vi
     interval = 5000;
   }
 
-  let urls: string[] | undefined;
-  while (!urls) {
-    const status = await imagingStatus(mediaReference);
-    console.log(status);
-    switch (status.status) {
-      case "IN_QUEUE":
-      await new Promise(resolve => setTimeout(resolve, interval));
-        break;  
+  async function* doIt() {
+    let urls: string[] | undefined;
+    while (!urls) {
+      const status = await imagingStatus(mediaReference);
+      console.log(status);
+      switch (status.status) {
+        case "IN_QUEUE":
+        yield;
+        break;
       case "IN_PROGRESS":
-        await new Promise(resolve => setTimeout(resolve, interval));
+        yield;
         break;
       case "COMPLETED":
-        urls = status.result!;
+        urls = status.result;
         break;
-    } 
+      } 
+    }
+    return urls;
   }
+
+  const urls = await runResilientTask(doIt, {interval});
 
   const mediaResources: (HTMLCanvasElement | HTMLVideoElement)[] = await Promise.all(
     urls.map(async url => {
