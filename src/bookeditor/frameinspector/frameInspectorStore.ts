@@ -25,7 +25,7 @@ import {
   handleInpaintCommand,
 } from '../operations/filmStackOperations';
 
-type FrameInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "outpainting" | "video" | "upscale" | "eraser" | "inpaint";
+type FrameInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "outpaint" | "video" | "upscale" | "eraser" | "inpaint";
 
 export interface FrameInspectorTarget extends FilmOperationTarget {
   frame: FrameElement;
@@ -101,7 +101,7 @@ async function onFrameCommand(fit: FrameInspectorTarget | null) {
     ),
     "punch": handlePunchCommand,
     "upscale": handleUpscaleCommand,
-    "outpainting": outPaintFrameFilm,
+    "outpaint": outPaintFrameFilm,
     "video": handleVideoCommand
   });
   

@@ -301,8 +301,8 @@
     <div class="barrier-transformix-row">
       <div class="transformix-grid">
         {#if calculateOutPaintingCost != null}
-          <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペインティング(余地がないので不可)" : "アウトペインティング[" + outPaintingCost + "]"} on:click={onOutPainting}>
-            <img draggable={false} src={outPaintingIcon} alt="アウトペインティング"/>
+          <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペイント(余地がないので不可)" : "アウトペイント[" + outPaintingCost + "]"} on:click={onOutPainting}>
+            <img draggable={false} src={outPaintingIcon} alt="アウトペイント"/>
           </button>
         {/if}
         <button class="transformix-item" use:toolTip={"消しゴム[6]"} on:click={onEraser}>

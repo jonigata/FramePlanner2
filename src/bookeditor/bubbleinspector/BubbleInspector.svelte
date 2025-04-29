@@ -260,6 +260,16 @@
     $bookOperators!.commit(null);
   }
 
+  function onEraser(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "eraser";
+  }
+
+  function onInpaint(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "inpaint";
+  }
+
   function onSelectionChanged(info: SelectionInfo) {
     textSelection = info;
     textSelected = info.hasSelection;
@@ -486,9 +496,22 @@
       </details>
 
       <h1>レイヤー</h1>
-      <div class="w-full text-left mb-16">
+      <div class="w-full text-left mb-32">
         {#key $bubbleInspectorRebuildToken}
-          <FilmList showsBarrier={false} filmStack={$bubble.filmStack} on:commit={onCommit} on:scribble={onScribble} on:generate={onGenerate} on:punch={onPunch} on:accept={onAccept} on:video={onVideo} on:upscale={onUpscale} on:duplicate={onDuplicate}/>
+          <FilmList 
+            showsBarrier={false} 
+            filmStack={$bubble.filmStack} 
+            on:commit={onCommit} 
+            on:scribble={onScribble} 
+            on:generate={onGenerate} 
+            on:punch={onPunch} 
+            on:upscale={onUpscale} 
+            on:duplicate={onDuplicate}
+            on:video={onVideo} 
+            on:accept={onAccept} 
+            on:eraser={onEraser}
+            on:inpaint={onInpaint}
+            />
         {/key}
       </div>
     </div>

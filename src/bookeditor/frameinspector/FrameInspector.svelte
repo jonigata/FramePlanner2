@@ -83,9 +83,9 @@
     $bookOperators!.commit(null);
   }
 
-  function onOutPainting(e: CustomEvent<Film>) {
+  function onOutPaint(e: CustomEvent<Film>) {
     $frameInspectorTarget!.commandTargetFilm = e.detail;
-    $frameInspectorTarget!.command = "outpainting";
+    $frameInspectorTarget!.command = "outpaint";
   }
 
   function onEraser(e: CustomEvent<Film>) {
@@ -152,9 +152,9 @@
           on:duplicate={onDuplicate}
           on:video={onVideo}
           on:accept={onAccept}
-          on:outpainting={onOutPainting}
           on:eraser={onEraser}
           on:inpaint={onInpaint}
+          on:outpainting={onOutPaint}
           calculateOutPaintingCost={calculateOutPaintingCost}
           calculateInPaintingCost={calculateInPaintingCost}/>
       {/key}
