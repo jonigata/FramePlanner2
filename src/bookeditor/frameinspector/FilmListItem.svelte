@@ -13,6 +13,8 @@
   import Popup from '../../utils/Popup.svelte';
   import MediaFrame from '../../gallery/MediaFrame.svelte';
   import BarrierIcon from './BarrierIcon.svelte';
+  import { saveAs } from 'file-saver';
+  import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
 
   import visibleIcon from '../../assets/filmlist/eye.webp';
   import scribbleIcon from '../../assets/filmlist/scribble.webp';
@@ -26,7 +28,7 @@
   import dupliateIcon from '../../assets/filmlist/duplicate.webp';
   import eraserIcon from '../../assets/filmlist/eraser.webp';
   import inpaintIcon from '../../assets/filmlist/inpaint.webp';
-  
+  import downloadIcon from '../../assets/download.webp';
   
   export let showsBarrier: boolean;
   export let film: Film | null;
@@ -192,7 +194,35 @@
     }
   });
 
+  // ダウンロードボタンの処理
+  async function onDownload(ev: MouseEvent) {
+    console.log("onDownload");
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (!film || !film.media) {
+      toastStore.trigger({ message: "ダウンロードできる画像がありません", timeout: 2000 });
+      return;
+    }
+
+    const mediaResource = film.media.persistentSource;
+
+    // 画像データ取得
+    if (mediaResource instanceof HTMLCanvasElement) {
+      const blob = await canvasToBlob(mediaResource, "image/png");
+      saveAs(blob, 'layer.png');
+    } else if (mediaResource instanceof HTMLVideoElement) {
+      const blob = await fetch(mediaResource.src).then(res => res.blob());
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'layer.mp4';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
 </script>
+
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -296,9 +326,12 @@
         <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
           <img draggable={false} src={videoIcon} alt="ムービー作成"/>
         </button>
+          <button class="transformix-item" use:toolTip={"ダウンロード"} on:click={onDownload}>
+            <img draggable={false} src={downloadIcon} alt="ダウンロード"/>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 </Popup>
 
 <!-- barrier用Popup -->
