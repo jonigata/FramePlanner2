@@ -187,6 +187,7 @@ export function calculateCost(size: {width:number,height:number}, mode: ImagingM
     "pro": 8,
     "chibi": 7,
     "manga": 7,
+    "comibg": 7,
     "gpt-image-1/low": 2,
     "gpt-image-1/medium": 7,
     "gpt-image-1/high": 30,
@@ -221,4 +222,5 @@ export const modeOptions: Array<{value: ImagingMode, name: string, cost: number,
   { value: 'pro', name: 'FLUX Pro', cost: 8, uiType: "flux" },
   { value: 'chibi', name: 'FLUX ちび', cost: 7, uiType: "flux" },
   { value: 'manga', name: 'FLUX まんが', cost: 7, uiType: "flux" },
+  { value: 'comibg', name: 'シンプル背景', cost: 7, uiType: "flux" },
 ];

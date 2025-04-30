@@ -2,7 +2,7 @@ import { Bubble } from '../lib/layeredCanvas/dataModels/bubble';
 import type { Border } from '../lib/layeredCanvas/dataModels/frameTree';
 import type { Book, Page, BookOperators, HistoryTag } from '../lib/book/book';
 import { DefaultBubbleSlot } from '../lib/layeredCanvas/layers/bubbleLayer';
-import { collectBookContents, dealBookContents, swapBookContents } from '../lib/book/book';
+import { collectBookContents, dealBookContents, swapBookContents, newPage } from '../lib/book/book';
 import type { ArrayLayer } from '../lib/layeredCanvas/layers/arrayLayer';
 import type { LayeredCanvas } from '../lib/layeredCanvas/system/layeredCanvas';
 import type { Vector, Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -239,20 +239,26 @@ export class BookWorkspaceOperators implements BookOperators {
 
     if (typeof media === "string") { return; }
 
-    const page = this.book.pages[this.book.pages.length - 1];
-    const paperSize = page.paperSize;
+    const lastPage = this.book.pages[this.book.pages.length - 1];
+    const paperSize = lastPage.paperSize;
 
-    const rootFrameTree = FrameElement.compile(frameExamples[2].frameTree);
+    const rootFrameTree = FrameElement.compile(frameExamples["white-paper"].frameTree);
     const frameTree = rootFrameTree.children[0];
     const film = new Film(buildMedia(media));
     frameTree.filmStack.films = [film];
 
+    const page = newPage(rootFrameTree, []);
+    page.paperSize = [...paperSize];
+    page.paperColor = lastPage.paperColor;
+    page.frameColor = lastPage.frameColor;
+    page.frameWidth = lastPage.frameWidth;
+  
     const transformer = new FilmStackTransformer(paperSize, frameTree.filmStack.films);
     transformer.scale(0.01);
     const layout = calculatePhysicalLayout(rootFrameTree, paperSize, [0, 0]);
-    constraintLeaf(page.paperSize, findLayoutOf(layout, frameTree)!);
+    constraintLeaf(paperSize, findLayoutOf(layout, frameTree)!);
 
-    page.frameTree = rootFrameTree;
+    this.book.pages.push(page);
 
     commit(null);
   }

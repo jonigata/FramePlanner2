@@ -4,8 +4,8 @@ import { z } from "zod";
 export const ImagingBackgroundSchema = z.enum(["opaque", "transparent"]);
 export type ImagingBackground = z.infer<typeof ImagingBackgroundSchema>;
 
-export const ImagingModeSchema = z.enum(["schnell", "pro", "chibi", "manga", "gpt-image-1/low", "gpt-image-1/medium", "gpt-image-1/high"]);
-export type ImagingMode = "schnell" | "pro" | "chibi" | "manga" | "gpt-image-1/low" | "gpt-image-1/medium" | "gpt-image-1/high";
+export const ImagingModeSchema = z.enum(["schnell", "pro", "chibi", "manga", "comibg", "gpt-image-1/low", "gpt-image-1/medium", "gpt-image-1/high"]);
+export type ImagingMode = z.infer<typeof ImagingModeSchema>;
 
 export const ImagingProviderSchema = z.enum(["flux", "gpt-image-1"]);
 export type ImagingProvider = z.infer<typeof ImagingProvider>;
