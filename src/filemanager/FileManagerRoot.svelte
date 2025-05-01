@@ -4,7 +4,7 @@
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book, emptyNotebook, trivialNewPageProperty } from '../lib/book/book';
   import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
-  import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore';
+  import { bookOperators, mainBook, redrawToken, mainBookExceptionHandler } from '../bookeditor/workspaceStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -135,6 +135,7 @@
             currentRevision = {...newBook.revision};
             console.snapshot(newBook.pages[0]);
             $mainBookFileSystem = fileSystem;
+            $mainBookExceptionHandler = loadExceptionHandler; // onChangeBookが一回実行されると消去される
             $mainBook = newBook;
             $frameInspectorTarget = null;
             analyticsEvent('continue_book');
@@ -299,6 +300,7 @@
     refreshFilms(book);
     currentRevision = {...book.revision};
     $mainBookFileSystem = lt.fileSystem;
+    $mainBookExceptionHandler = loadExceptionHandler; // onChangeBookが一回実行されると消去される
     $mainBook = book;
     recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: isCloud ? 'cloud' : 'local'});
     $frameInspectorTarget = null;
@@ -308,6 +310,16 @@
     // 並列で行われている画像のロードがただちに終わったとき画像が描画されない
     // 一定以上時間がかかるときは不要なようなので、短いときだけケア
     setTimeout(() => {$redrawToken = true;}, 200);
+  }
+
+  async function loadExceptionHandler(e: any) {
+    console.log("exception handler");
+    console.error(e);
+    await clearCurrentFileInfo();
+    toastStore.trigger({ message: "ファイルの読み込みに失敗しました。リロードします", timeout: 1500});
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
   }
 
   async function displayStoredImages() {

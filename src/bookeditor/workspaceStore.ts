@@ -1,9 +1,9 @@
 import { type Writable, writable, derived } from "svelte/store";
-import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas.js";
-import { type Book, type BookOperators, newPage } from '../lib/book/book.js';
-import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples.js";
-import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree.js";
-import { Bubble } from "../lib/layeredCanvas/dataModels/bubble.js";
+import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
+import { type Book, type BookOperators, newPage } from '../lib/book/book';
+import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
+import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
+import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { loadFonts } from "./fontLoading"
 
 export const mainBook = writable<Book | null>(null);
@@ -17,6 +17,8 @@ export const redrawToken = writable(false);
 export const undoToken: Writable<'undo' | 'redo' | null> = writable(null);
 export const fontLoadToken: Writable<{family: string, weight: string}[]> = writable([]);
 export const resetFontCacheKey = writable(0);
+
+export let mainBookExceptionHandler: Writable<((e: any) => void) | null> = writable(null);
 
 export function insertNewPageToBook(book: Book, index: number) {
   const p = book.newPageProperty;

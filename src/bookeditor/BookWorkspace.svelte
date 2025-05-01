@@ -7,7 +7,7 @@
   import { setBubbleCommandTools } from './bubbleinspector/bubbleInspectorStore';
   import { setFrameCommandTools } from './frameinspector/frameInspectorStore';
   import type { Book } from '../lib/book/book';
-  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheKey } from './workspaceStore';
+  import { mainBook, bookOperators, viewport, redrawToken, undoToken, resetFontCacheKey, mainBookExceptionHandler } from './workspaceStore';
   import { buildBookEditor } from './operations/buildBookEditor';
   import { hint } from './bookEditorUtils';
   import AutoSizeCanvas from '../utils/AutoSizeCanvas.svelte';
@@ -74,7 +74,15 @@
     commit('page-size');
   }
 
-  $: onChangeBook(canvas, $mainBook);
+  $: try {
+    onChangeBook(canvas, $mainBook);
+    $mainBookExceptionHandler = null;
+  }
+  catch(e) {
+    if ($mainBookExceptionHandler) {
+      $mainBookExceptionHandler(e);
+    }
+  }
   function onChangeBook(canvas: HTMLCanvasElement | null, book: Book | null) {
     if (!canvas || !book) { return; }
 
