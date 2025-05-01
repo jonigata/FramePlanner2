@@ -78,10 +78,14 @@ export async function renderPageToPsd(page: Page) {
     ]
   };
 
-  frames.forEach((canvas, i) => {
+  frames.forEach(({content,border}, i) => {
     psd.children[0].children.push({
-      name: `コマ #${i+1}`,
-      canvas
+      name: `コマ内容 #${i+1}`,
+      canvas: content
+    });
+    psd.children[0].children.push({
+      name: `コマ枠線 #${i+1}`,
+      canvas: border
     });
   });
   bubbles.forEach((canvas, i) => {

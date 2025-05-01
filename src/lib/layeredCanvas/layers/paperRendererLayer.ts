@@ -2,7 +2,7 @@ import { reverse2D } from "../tools/geometry/geometry";
 import { LayerBase } from "../system/layeredCanvas";
 import { getPath } from "../tools/draw/bubbleGraphic";
 import { makeFrameClip } from '../tools/geometry/frameGeometry';
-import { trapezoidBoundingRect, trapezoidPath } from "../tools/geometry/trapezoid";
+import { trapezoidBoundingRect } from "../tools/geometry/trapezoid";
 import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataModels/frameTree";
 import type { Film } from "../dataModels/film";
 import { drawFilmStack } from "../tools/draw/drawFilmStack";
@@ -10,8 +10,6 @@ import type { Layout } from "../dataModels/frameTree";
 import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
 import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
-import paper from 'paper';
-import { PaperOffset } from 'paperjs-offset'
 import { polygonToPath2D } from "../tools/draw/pathTools";
 
 type InheritanceContext = {
@@ -300,15 +298,11 @@ export class PaperRendererLayer extends LayerBase {
     foregrounds.sort((a, b) => a.layout.element.z - b.layout.element.z);
     for (let { layout, inheritanceContext } of foregrounds) {
       if (layout.element.visibility < 1) { continue; }
-      const { canvas: border } = makeCanvas();
-      const { canvas: content } = makeCanvas();
-      const framePath = this.makeFramePath(layout, -inheritanceContext.borderWidth * 0.5);
-
-      const ctx = content.getContext('2d')!;
+      const { canvas: content, ctx } = makeCanvas();
       this.renderFrameBackground(ctx, layout, inheritanceContext);
       this.renderFrameContent(ctx, layout, inheritanceContext, embeddedBubbles);
 
-      const ctx2 = border.getContext('2d')!;
+      const { canvas: border, ctx: ctx2 } = makeCanvas();
       this.renderFrameBorder(ctx2, layout, inheritanceContext);
 
       canvases.push({ border, content });
