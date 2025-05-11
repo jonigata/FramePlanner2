@@ -173,7 +173,7 @@ function drawFragment(
       case /[ー…―〰]/.test(c):
         drawRotatedChar(90, -0.1, 0.1, 1, -1, c);
         break;
-      case /[～]/.test(c):
+      case /[～〜]/.test(c): // U+FF5E, U+301C
         drawRotatedChar(90, 0.1, 0.1, 1, 1, c);
         break;
       case isEmojiAt(c, 0):
