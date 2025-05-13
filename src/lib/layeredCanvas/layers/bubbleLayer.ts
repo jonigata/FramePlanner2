@@ -445,9 +445,6 @@ export class BubbleLayer extends LayerBase {
       this.copyBubble();
       return true;
     }
-    if (event.code === "KeyV" && event.ctrlKey) {
-      return await this.pasteBubble(position);
-    }
     // カーソルキー
     if (this.selected) {
       if (event.code === 'ArrowLeft') {
@@ -511,8 +508,6 @@ export class BubbleLayer extends LayerBase {
               }
             }
             return false;
-            
-            return true;
           }
         }
       }
@@ -526,6 +521,7 @@ export class BubbleLayer extends LayerBase {
   createTextBubble(text: string): Bubble[] {
     const paperSize = this.getPaperSize();
     try {
+      // jsonとして解釈できる場合は、フキダシとして作成
       const b = Bubble.compile(paperSize, JSON.parse(text));
       const bubbleSize = b.getPhysicalSize(paperSize);
       b.parent = null;
@@ -534,10 +530,10 @@ export class BubbleLayer extends LayerBase {
       const y = Math.random() * (paperSize[1] - bubbleSize[1]);
       b.setPhysicalRect(paperSize, [x, y, ...bubbleSize]);
       this.bubbles.push(b);
-      this.selectBubble(b);
       return [b];
     }
     catch (e) {
+      console.error("text is not json", e);
       let cursorX = 10;
       let cursorY = 10;
       let lineHeight = 0;
@@ -594,7 +590,6 @@ export class BubbleLayer extends LayerBase {
     bubble.filmStack.films.push(film);
     this.bubbles.push(bubble);
     this.onCommit();
-    this.selectBubble(bubble);
   }
 
   removeBubble(bubble: Bubble): void {

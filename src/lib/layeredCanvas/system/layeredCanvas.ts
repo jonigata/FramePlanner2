@@ -594,7 +594,6 @@ export class LayeredCanvas {
       
   handlePointerMove(event: PointerEvent): void {
     const p = this.eventPositionToRootPaperPosition(event);
-    console.log("handlePointerMove", p);
     this.pointerCursor = p;
     if (this.dragging) {
       this.rootPaper.handlePointerMove(p, this.dragging);
@@ -651,9 +650,23 @@ export class LayeredCanvas {
     if (event.clipboardData == null) { return; }
     if (this.pointerCursor == null) { return; }
 
+    let accepted = false;
+    const paste = event.clipboardData.getData("text");
+    if (paste != "") {
+      if (this.rootPaper.handlePaste(this.pointerCursor, paste)) {
+        accepted = true;
+      }
+    }
+
     const mediaResources = await handleDataTransfer(event.clipboardData);
     for (let media of mediaResources) {
-      this.rootPaper.handlePaste(this.pointerCursor, media);
+      if (this.rootPaper.handlePaste(this.pointerCursor, media)) {
+        accepted = true;
+      }
+    }
+    if (accepted) {
+      event.preventDefault();  // ブラウザのデフォルトの画像表示処理をOFF
+      event.stopPropagation();
     }
   }
 
