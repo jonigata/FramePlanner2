@@ -442,12 +442,10 @@ export class BubbleLayer extends LayerBase {
     }
     if (event.code === "KeyC" && event.ctrlKey) {
       if (!this.selected) {return false;}
-      console.log("copy");
       this.copyBubble();
       return true;
     }
     if (event.code === "KeyV" && event.ctrlKey) {
-      console.log("paste");
       return await this.pasteBubble(position);
     }
     // カーソルキー

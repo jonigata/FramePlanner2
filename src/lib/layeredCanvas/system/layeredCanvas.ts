@@ -1,5 +1,5 @@
 import { handleDataTransfer } from "../tools/fileUtil";
-import { convertPointFromPageToNode } from "../tools/geometry/convertPoint";
+import { convertPointFromNodeToPage, convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
 
@@ -519,12 +519,7 @@ export class LayeredCanvas {
     this.rootPaper.tearDown();
   }
 
-  eventPositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
-    const p = convertPointFromPageToNode(this.viewport.canvas, event.pageX, event.pageY);
-    const dpr = this.viewport.getDpr();
-    return [Math.floor(p.x * dpr), Math.floor(p.y * dpr)];
-  }
-
+  // event -> canvas -> viewport -> rootpaper
   viewportPositionToRootPaperPosition(p: Vector): Vector {
     const [w, h] = this.rootPaper.size;
     const [sx, sy] = p;
@@ -532,18 +527,57 @@ export class LayeredCanvas {
     return [x, y];
   }
 
+  canvasPositionToViewportPosition(p: Vector): Vector {
+    return this.viewport.canvasPositionToViewportPosition(p);
+  }
+
+  eventPositionToCanvasPosition(event: { pageX: number, pageY: number}): Vector {
+    const p = convertPointFromPageToNode(this.viewport.canvas, event.pageX, event.pageY);
+    const dpr = this.viewport.getDpr();
+    return [Math.floor(p.x * dpr), Math.floor(p.y * dpr)];
+  }
+
+  // rootpaper -> viewport -> canvas -> event
+  rootPaperPositionToViewportPosition(p: Vector): Vector {
+    const [w, h] = this.rootPaper.size;
+    const [sx, sy] = p;
+    const [x, y] = [sx - w * 0.5, sy - h * 0.5];
+    return [x, y];
+  }
+
+  viewportPositionToCanvasPosition(p: Vector): Vector {
+    return this.viewport.viewportPositionToCanvasPosition(p);
+  }
+
+  canvasPositionToEventPosition(p: Vector): Vector {
+    const q = convertPointFromNodeToPage(this.viewport.canvas, p[0], p[1]);
+    const dpr = this.viewport.getDpr();
+    return [Math.floor(q.x / dpr), Math.floor(q.y / dpr)];
+  }
+
+  // event -> rootpaper, rootpaper -> canvas
   eventPositionToRootPaperPosition(event: { pageX: number, pageY: number }): Vector {
     const p = this.eventPositionToCanvasPosition(event);
     const q = this.viewport.canvasPositionToViewportPosition(p);
     return this.viewportPositionToRootPaperPosition(q);
   }
 
-  rootPaperPositionToCanvasPosition(p: Vector): Vector {
-    const paper = this.rootPaper;
-    const [sx, sy] = [p[0] - paper.size[0] * 0.5, p[1] - paper.size[1] * 0.5];
-    return this.viewport.viewportPositionToCanvasPosition([sx, sy]);
+  rootPaperPositionToEventPosition(p: Vector): Vector {
+    const q = this.rootPaperPositionToViewportPosition(p);
+    const r = this.viewportPositionToCanvasPosition(q);
+    const s = this.canvasPositionToEventPosition(r);
+    return s;
   }
-    
+
+  isPointerOnCanvas(): boolean {
+    const m = this.pointerCursor; // pointerCursorはrootPaper座標系
+    if (m == null) { return false; }
+    const mm = this.rootPaperPositionToEventPosition(m);
+    const rect = this.viewport.canvas.getBoundingClientRect();
+    const f = 0 <= mm[0] && mm[0] <= rect.width && 0 <= mm[1] && mm[1] <= rect.height;
+    return f;
+  }
+
   handlePointerDown(event: PointerEvent): void {
     const p = this.eventPositionToRootPaperPosition(event);
 
@@ -560,6 +594,7 @@ export class LayeredCanvas {
       
   handlePointerMove(event: PointerEvent): void {
     const p = this.eventPositionToRootPaperPosition(event);
+    console.log("handlePointerMove", p);
     this.pointerCursor = p;
     if (this.dragging) {
       this.rootPaper.handlePointerMove(p, this.dragging);
@@ -617,7 +652,6 @@ export class LayeredCanvas {
     if (this.pointerCursor == null) { return; }
 
     const mediaResources = await handleDataTransfer(event.clipboardData);
-    console.log("handlePaste", mediaResources.length);
     for (let media of mediaResources) {
       this.rootPaper.handlePaste(this.pointerCursor, media);
     }
@@ -709,15 +743,6 @@ export class LayeredCanvas {
         }
       }
     }
-  }
-
-  isPointerOnCanvas(): boolean {
-    const m = this.pointerCursor
-    if (m == null) { return false; }
-    const mm = this.rootPaperPositionToCanvasPosition(m);
-    const rect = this.viewport.canvas.getBoundingClientRect();
-    const f = 0 <= mm[0] && mm[0] <= rect.width && 0 <= mm[1] && mm[1] <= rect.height;
-    return f;
   }
 
   rebuildPageLayouts(): void {

@@ -170,10 +170,6 @@ export class BookWorkspaceOperators implements BookOperators {
     if (b) {
       if (this.arrayLayer) {
         console.log("show bubble");
-        const bp = b.getPhysicalCenter(page.paperSize);
-        const pageIndex = this.book.pages.findIndex(p => p.id === page.id);
-        const rp = this.arrayLayer.array.childPositionToParentPosition(pageIndex, bp);
-        const cp = this.layeredCanvas!.rootPaperPositionToCanvasPosition(rp);
 
         bubbleInspectorTarget.set({
           bubble: b,
