@@ -150,7 +150,6 @@
       fileManagerActive = true;
     }
 
-    /*
     // Initialize the Sentry SDK here
     Sentry.init({
       dsn: "https://d1b647c536ab49979532e731e8bebaaa@o4505054668062721.ingest.sentry.io/4505054670159872",
@@ -158,10 +157,8 @@
       // If the entire session is not sampled, use the below sample rate to sample
       // sessions when an error occurs.
       replaysOnErrorSampleRate: 1.0,
-
-      integrations: [new Sentry.Replay()],
+      ignoreErrors: ['WebGPU is not supported on this browser'],
     });
-  */
   });
 </script>
 
