@@ -904,6 +904,7 @@ export class BubbleLayer extends LayerBase {
 
     for (let bubble of this.bubbles) {
       if (bubble.contains(paperSize, p)) {
+        this.selectBubble(bubble);
         const size = bubble.calculateFitSize(paperSize);
         bubble.setPhysicalSize(paperSize, size);
         this.onCommit();
