@@ -3,6 +3,7 @@ import { drawBubble as drawBubbleShape, drawPath, type DrawMethod } from "./bubb
 import { drawFilmStack } from "./drawFilmStack";
 import { drawText, measureText, type Direction } from "./drawText";
 import type { Bubble } from "../../dataModels/bubble";
+import { captureException } from "@sentry/svelte";
 
 
 /**
@@ -99,12 +100,17 @@ function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, 
   const viewScale: Vector = [transform.a * dpr, transform.d * dpr];
 
   const size = bubble.getPhysicalSize(paperSize);
-  const fontSize = bubble.getPhysicalFontSize(paperSize);
+  let fontSize = bubble.getPhysicalFontSize(paperSize);
   const offset = bubble.getPhysicalOffset(paperSize);
   const outlineWidth = bubble.getPhysicalOutlineWidth(paperSize);
 
   const [w, h] = ceil2D(multiply2D(size, viewScale));
   if (w < 1 || h < 1) { return; }
+
+  if (isNaN(fontSize)) {
+    captureException(`fontSize is NaN, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
+    fontSize = 14;
+  }
 
   const ri = bubble.renderInfo!;
   const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
@@ -123,7 +129,7 @@ function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, 
     direction: bubble.direction,
     autoNewline: bubble.autoNewline,
     fontColor: bubble.fontColor,
-    outlineWidh: outlineWidth,
+    outlineWidth: outlineWidth,
     outlineColor: bubble.outlineColor,
     fontRenderVersion: bubble.fontRenderVersion,
     fontCheck: document.fonts.check(ss),
