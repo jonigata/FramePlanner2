@@ -735,9 +735,9 @@ export class LayeredCanvas {
   }
 
   pierceIfRequired(): void {
-    if (this.rootPaper.pierceRequired) {
+    if (this.rootPaper.pierceRequired && this.pointerCursor) {
       this.rootPaper.pierceRequired = false;
-      const picked = this.rootPaper.pick(this.pointerCursor!);
+      const picked = this.rootPaper.pick(this.pointerCursor);
 
       if (0 < picked.length) {
         // 選択されたものがある場合はその次のactionを実行

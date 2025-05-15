@@ -86,6 +86,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
   
     <h2>チートシート</h2>
+    <p>※文字キー＋クリックはインスペクタを非表示にしてから</p>
 
     <h3>画面全体</h3>
     <p>Space+ドラッグ: スクロール（手のひらツール）</p>
@@ -93,8 +94,9 @@
     <p>Wheel: ズーム</p>
     <p>Undo/Redo: Ctrl+Z/Shift+Ctrl+Z</p>
 
+
     <h3>コマと画像</h3>
-    <p><b>画像をドロップ: はめこみ</b></p>
+    <p>画像をドロップ: はめこみ</p>
     <p>Q+Click: 削除</p>
     <p>W+Click: 横に分割</p> 
     <p>S+Click: 縦に分割</p> 
