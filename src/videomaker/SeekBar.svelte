@@ -42,6 +42,10 @@
   }
 
   function draw() {
+    if (!canvas) {
+      return;
+    }
+
     length = 0;
     for (const e of program) {
       length += standardWait + e.residenceTime;
