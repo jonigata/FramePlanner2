@@ -27,6 +27,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { onlineStatus } from "../../utils/accountStore";
+  import { captureException } from "@sentry/svelte";
 
   import horizontalIcon from '../../assets/horizontal.webp';
   import verticalIcon from '../../assets/vertical.webp';
@@ -57,6 +58,10 @@
   	bubbleInspectorTarget,
   	(bit) => bit?.bubble.getPhysicalFontSize(bit.page.paperSize) ?? 12,
   	(fs, bit) => {
+      if (isNaN(fs) || fs == null) {
+        console.trace();
+        captureException("bad fontSize")
+      }
       bit!.bubble.setPhysicalFontSize(bit!.page.paperSize, fs!);
       return bit;
     }
