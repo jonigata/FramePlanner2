@@ -1,6 +1,8 @@
 import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResource } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { initSqlite } from './sqlite/initSqlite';
+import { SQLiteAdapter } from './sqlite/SQLiteAdapter';
+import { BlobStore } from './sqlite/BlobStore';
 import { ulid } from 'ulid';
 import { createCanvasFromImage } from '../layeredCanvas/tools/imageUtil';
 
@@ -59,134 +61,7 @@ async function internalizeBlobsInObject(
   }
 }
 
-class SQLiteAdapter {
-  db: SqliteDB | null = null;
-  dbFileHandle: FileSystemFileHandle | null = null;
 
-  async open(dbFileHandle: FileSystemFileHandle) {
-    this.dbFileHandle = dbFileHandle;
-    const sqlite3 = await initSqlite();
-
-    let dbBuffer: Uint8Array | null = null;
-    try {
-      const file = await dbFileHandle.getFile();
-      dbBuffer = new Uint8Array(await file.arrayBuffer());
-    } catch (e) {
-      dbBuffer = null;
-    }
-    this.db = dbBuffer ? new sqlite3.oo1.DB(dbBuffer) : new sqlite3.oo1.DB();
-    this.initSchema();
-  }
-
-  initSchema() {
-    if (!this.db) return;
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS nodes(
-        id TEXT PRIMARY KEY,
-        type TEXT CHECK(type IN ('file','folder')),
-        attributes JSON DEFAULT '{}'
-      );
-      CREATE TABLE IF NOT EXISTS children(
-        parentId TEXT,
-        bindId TEXT,
-        name TEXT,
-        childId TEXT,
-        idx INTEGER,
-        PRIMARY KEY(parentId, bindId)
-      );
-      CREATE TABLE IF NOT EXISTS files(
-        id TEXT PRIMARY KEY,
-        inlineContent TEXT,
-        blobPath TEXT,
-        mediaType TEXT
-      );
-      CREATE INDEX IF NOT EXISTS children_parent_idx ON children(parentId, idx);
-    `);
-  }
-
-  async persist() {
-    if (!this.db || !this.dbFileHandle) return;
-    const buffer = this.db.export();
-    const writable = await this.dbFileHandle.createWritable();
-    await writable.write(buffer);
-    await writable.close();
-  }
-
-  run(sql: string, params: any[] = []) {
-    const stmt = this.db.prepare(sql);
-    stmt.bind(params);
-    stmt.step();
-    stmt.free();
-  }
-
-  select(sql: string, params: any[] = []) {
-    const stmt = this.db.prepare(sql);
-    stmt.bind(params);
-    const result: any[] = [];
-    while (stmt.step()) {
-      result.push(stmt.getAsObject());
-    }
-    stmt.free();
-    return result;
-  }
-
-  selectOne(sql: string, params: any[] = []) {
-    const stmt = this.db.prepare(sql);
-    stmt.bind(params);
-    let row = null;
-    if (stmt.step()) {
-      row = stmt.getAsObject();
-    }
-    stmt.free();
-    return row;
-  }
-
-  async transaction(fn: () => Promise<void>) {
-    this.db.exec('BEGIN');
-    try {
-      await fn();
-      this.db.exec('COMMIT');
-    } catch (e) {
-      this.db.exec('ROLLBACK');
-      throw e;
-    }
-  }
-}
-
-class BlobStore {
-  dirHandle: FileSystemDirectoryHandle | null = null;
-  async open(dirHandle: FileSystemDirectoryHandle) {
-    this.dirHandle = await dirHandle.getDirectoryHandle('blobs', { create: true });
-  }
-  async write(id: string, blob: Blob) {
-    if (!this.dirHandle) throw new Error('BlobStore not initialized');
-    const fileHandle = await this.dirHandle.getFileHandle(`${id}.bin`, { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-  }
-  async read(id: string): Promise<Blob> {
-    if (!this.dirHandle) throw new Error('BlobStore not initialized');
-    const fileHandle = await this.dirHandle.getFileHandle(`${id}.bin`);
-    const file = await fileHandle.getFile();
-    return file;
-  }
-  async delete(id: string) {
-    if (!this.dirHandle) throw new Error('BlobStore not initialized');
-    await this.dirHandle.removeEntry(`${id}.bin`);
-  }
-  async gc(validIds: Set<string>) {
-    if (!this.dirHandle) throw new Error('BlobStore not initialized');
-    for await (const entry of this.dirHandle.values()) {
-      if (entry.kind === 'file') {
-        const id = entry.name.replace(/\.bin$/, '');
-        if (!validIds.has(id)) {
-          await this.dirHandle.removeEntry(entry.name);
-        }
-      }
-    }
-  }
-}
 
 export class FSAFileSystem extends FileSystem {
   private sqlite: SQLiteAdapter;
