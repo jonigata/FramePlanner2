@@ -31,7 +31,6 @@
     (s, b) => {
       if (b) {
         b.newPageProperty.paperSize[0] = s!;
-        $redrawToken = true;
       }
       return b;
     }
@@ -43,7 +42,6 @@
     (s, b) => {
       if (b) {
         b.newPageProperty.paperSize[1] = s!;
-        $redrawToken = true;
       }
       return b;
     }
