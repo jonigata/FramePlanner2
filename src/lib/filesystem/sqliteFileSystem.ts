@@ -1,66 +1,11 @@
-import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResource } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { initSqlite } from './sqlite/initSqlite';
 import { SQLiteAdapter } from './sqlite/SQLiteAdapter';
-import { BlobStore } from './sqlite/BlobStore';
+import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore';
 import { ulid } from 'ulid';
-import { createCanvasFromImage } from '../layeredCanvas/tools/imageUtil';
 
 // 型定義
-type SqliteDB = any;
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
-type FileSystemFileHandle = globalThis.FileSystemFileHandle;
-
-// --- ユーティリティ: オブジェクト内のBlobを外部ファイル化し、blobPath参照に置換 ---
-async function externalizeBlobsInObject(
-  obj: any,
-  blobStore: BlobStore,
-  baseId: string,
-  path: string[] = []
-): Promise<any> {
-  if (obj instanceof Blob) {
-    const blobId = `${baseId}_${path.join('_')}`;
-    await blobStore.write(blobId, obj);
-    return { __blobPath: `blobs/${blobId}.bin` };
-  } else if (Array.isArray(obj)) {
-    return Promise.all(obj.map((v, i) => externalizeBlobsInObject(v, blobStore, baseId, [...path, String(i)])));
-  } else if (obj && typeof obj === 'object') {
-    const result: any = {};
-    for (const [k, v] of Object.entries(obj)) {
-      result[k] = await externalizeBlobsInObject(v, blobStore, baseId, [...path, k]);
-    }
-    return result;
-  } else {
-    return obj;
-  }
-}
-
-// --- ユーティリティ: blobPath参照をBlobに戻す ---
-async function internalizeBlobsInObject(
-  obj: any,
-  blobStore: BlobStore
-): Promise<any> {
-  if (obj && typeof obj === 'object') {
-    if (obj.__blobPath && typeof obj.__blobPath === 'string') {
-      const m = obj.__blobPath.match(/^blobs\/(.+)\.bin$/);
-      if (m) {
-        return await blobStore.read(m[1]);
-      }
-    }
-    if (Array.isArray(obj)) {
-      return Promise.all(obj.map((v) => internalizeBlobsInObject(v, blobStore)));
-    } else {
-      const result: any = {};
-      for (const [k, v] of Object.entries(obj)) {
-        result[k] = await internalizeBlobsInObject(v, blobStore);
-      }
-      return result;
-    }
-  } else {
-    return obj;
-  }
-}
-
 
 
 export class FSAFileSystem extends FileSystem {
@@ -156,178 +101,178 @@ export class FSAFileSystem extends FileSystem {
         try {
           const blob = await this.blobStore.read(file.id);
           total += blob.size;
-        } catch {}
+        } catch { }
       }
     }
     return total;
   }
 
-    // --- NDJSONダンプ: nodes, children, files, blobsをエクスポート ---
-    async dump(progress: (n: number) => void): Promise<Blob> {
-      progress(0);
-      // 1. 全テーブル取得
-      const nodes = this.sqlite.select("SELECT * FROM nodes");
-      const children = this.sqlite.select("SELECT * FROM children");
-      const files = this.sqlite.select("SELECT * FROM files");
-      progress(0.05);
-  
-      // 2. NDJSONエンコード
-      const encoder = new TextEncoder();
-      const chunks: Uint8Array[] = [];
-      let count = 0;
-      const total = nodes.length + children.length + files.length;
-      // nodes
-      for (const node of nodes) {
-        chunks.push(encoder.encode(JSON.stringify({ table: "nodes", ...node }) + "\n"));
-        count++;
-        if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-        progress(0.05 + 0.3 * (count / total));
-      }
-      // children
-      for (const child of children) {
-        chunks.push(encoder.encode(JSON.stringify({ table: "children", ...child }) + "\n"));
-        count++;
-        if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-        progress(0.35 + 0.3 * (count / total));
-      }
-      // files + blobs
-      for (const file of files) {
-        let fileObj = { ...file, table: "files" };
-        if (file.blobPath) {
-          try {
-            const blob = await this.blobStore.read(file.id);
-            // BlobをDataURL化
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = () => reject();
-              reader.readAsDataURL(blob);
-            });
-            fileObj = { ...fileObj, blob: dataUrl };
-          } catch {}
-        }
-        chunks.push(encoder.encode(JSON.stringify(fileObj) + "\n"));
-        count++;
-        if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-        progress(0.65 + 0.3 * (count / total));
-      }
-      // 3. Blob化して保存
-      const outBlob = new Blob(chunks, { type: "application/x-ndjson" });
-      progress(1);
-      return outBlob;
+  // --- NDJSONダンプ: nodes, children, files, blobsをエクスポート ---
+  async dump(progress: (n: number) => void): Promise<Blob> {
+    progress(0);
+    // 1. 全テーブル取得
+    const nodes = this.sqlite.select("SELECT * FROM nodes");
+    const children = this.sqlite.select("SELECT * FROM children");
+    const files = this.sqlite.select("SELECT * FROM files");
+    progress(0.05);
+
+    // 2. NDJSONエンコード
+    const encoder = new TextEncoder();
+    const chunks: Uint8Array[] = [];
+    let count = 0;
+    const total = nodes.length + children.length + files.length;
+    // nodes
+    for (const node of nodes) {
+      chunks.push(encoder.encode(JSON.stringify({ table: "nodes", ...node }) + "\n"));
+      count++;
+      if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
+      progress(0.05 + 0.3 * (count / total));
     }
-  
-    // --- NDJSONインポート: nodes, children, files, blobsをリストア ---
-    async undump(blob: Blob, progress: (n: number) => void): Promise<void> {
-      progress(0);
-      // 1. 全テーブルクリア
-      await this.sqlite.transaction(async () => {
-        this.sqlite.run("DELETE FROM nodes");
-        this.sqlite.run("DELETE FROM children");
-        this.sqlite.run("DELETE FROM files");
-      });
-      await this.sqlite.persist();
-  
-      // 2. NDJSONストリームを1行ずつ読む
-      const lineCount = await FSAFileSystem.countLines(blob.stream());
-      const stream = blob.stream();
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let count = 0;
-      let batch: any[] = [];
-      const batchSize = 1000;
-  
-      // 3. バッチで挿入
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        let start = 0, idx;
-        while ((idx = buffer.indexOf('\n', start)) !== -1) {
-          const line = buffer.slice(start, idx).trim();
-          start = idx + 1;
-          if (line) {
-            batch.push(line);
-            count++;
-            if (batch.length >= batchSize) {
-              await this._undumpBatch(batch, progress, count, lineCount);
-              batch = [];
-            }
+    // children
+    for (const child of children) {
+      chunks.push(encoder.encode(JSON.stringify({ table: "children", ...child }) + "\n"));
+      count++;
+      if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
+      progress(0.35 + 0.3 * (count / total));
+    }
+    // files + blobs
+    for (const file of files) {
+      let fileObj = { ...file, table: "files" };
+      if (file.blobPath) {
+        try {
+          const blob = await this.blobStore.read(file.id);
+          // BlobをDataURL化
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject();
+            reader.readAsDataURL(blob);
+          });
+          fileObj = { ...fileObj, blob: dataUrl };
+        } catch { }
+      }
+      chunks.push(encoder.encode(JSON.stringify(fileObj) + "\n"));
+      count++;
+      if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
+      progress(0.65 + 0.3 * (count / total));
+    }
+    // 3. Blob化して保存
+    const outBlob = new Blob(chunks, { type: "application/x-ndjson" });
+    progress(1);
+    return outBlob;
+  }
+
+  // --- NDJSONインポート: nodes, children, files, blobsをリストア ---
+  async undump(blob: Blob, progress: (n: number) => void): Promise<void> {
+    progress(0);
+    // 1. 全テーブルクリア
+    await this.sqlite.transaction(async () => {
+      this.sqlite.run("DELETE FROM nodes");
+      this.sqlite.run("DELETE FROM children");
+      this.sqlite.run("DELETE FROM files");
+    });
+    await this.sqlite.persist();
+
+    // 2. NDJSONストリームを1行ずつ読む
+    const lineCount = await FSAFileSystem.countLines(blob.stream());
+    const stream = blob.stream();
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let count = 0;
+    let batch: any[] = [];
+    const batchSize = 1000;
+
+    // 3. バッチで挿入
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let start = 0, idx;
+      while ((idx = buffer.indexOf('\n', start)) !== -1) {
+        const line = buffer.slice(start, idx).trim();
+        start = idx + 1;
+        if (line) {
+          batch.push(line);
+          count++;
+          if (batch.length >= batchSize) {
+            await this._undumpBatch(batch, progress, count, lineCount);
+            batch = [];
           }
         }
-        buffer = buffer.slice(start);
       }
-      if (batch.length > 0) {
-        await this._undumpBatch(batch, progress, count, lineCount);
-      }
-      await this.sqlite.persist();
-      progress(1);
+      buffer = buffer.slice(start);
     }
-  
-    private async _undumpBatch(lines: string[], progress: (n: number) => void, count: number, total: number) {
-      await this.sqlite.transaction(async () => {
-        for (const line of lines) {
-          const obj = JSON.parse(line);
-          if (obj.table === "nodes") {
-            this.sqlite.run(
-              "INSERT INTO nodes(id, type, attributes) VALUES (?, ?, ?)",
-              [obj.id, obj.type, obj.attributes]
-            );
-          } else if (obj.table === "children") {
-            this.sqlite.run(
-              "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
-              [obj.parentId, obj.bindId, obj.name, obj.childId, obj.idx]
-            );
-          } else if (obj.table === "files") {
-            this.sqlite.run(
-              "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, ?, ?)",
-              [obj.id, obj.inlineContent, obj.blobPath, obj.mediaType]
-            );
-            // blobがDataURLならBlobStoreへ
-            if (obj.blob) {
-              const blob = await fetch(obj.blob).then(res => res.blob());
-              await this.blobStore.write(obj.id, blob);
-            }
+    if (batch.length > 0) {
+      await this._undumpBatch(batch, progress, count, lineCount);
+    }
+    await this.sqlite.persist();
+    progress(1);
+  }
+
+  private async _undumpBatch(lines: string[], progress: (n: number) => void, count: number, total: number) {
+    await this.sqlite.transaction(async () => {
+      for (const line of lines) {
+        const obj = JSON.parse(line);
+        if (obj.table === "nodes") {
+          this.sqlite.run(
+            "INSERT INTO nodes(id, type, attributes) VALUES (?, ?, ?)",
+            [obj.id, obj.type, obj.attributes]
+          );
+        } else if (obj.table === "children") {
+          this.sqlite.run(
+            "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
+            [obj.parentId, obj.bindId, obj.name, obj.childId, obj.idx]
+          );
+        } else if (obj.table === "files") {
+          this.sqlite.run(
+            "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, ?, ?)",
+            [obj.id, obj.inlineContent, obj.blobPath, obj.mediaType]
+          );
+          // blobがDataURLならBlobStoreへ
+          if (obj.blob) {
+            const blob = await fetch(obj.blob).then(res => res.blob());
+            await this.blobStore.write(obj.id, blob);
           }
         }
-      });
-      progress(0.1 + 0.8 * (count / total));
-    }
-  
-    // --- streamToArrayBufferユーティリティ ---
-    static async streamToArrayBuffer(stream: ReadableStream<Uint8Array>): Promise<ArrayBuffer> {
-      const reader = stream.getReader();
-      const chunks: Uint8Array[] = [];
-      let total = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        total += value.length;
       }
-      const result = new Uint8Array(total);
-      let offset = 0;
-      for (const chunk of chunks) {
-        result.set(chunk, offset);
-        offset += chunk.length;
-      }
-      return result.buffer;
+    });
+    progress(0.1 + 0.8 * (count / total));
+  }
+
+  // --- streamToArrayBufferユーティリティ ---
+  static async streamToArrayBuffer(stream: ReadableStream<Uint8Array>): Promise<ArrayBuffer> {
+    const reader = stream.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      total += value.length;
     }
-  
-    // --- NDJSON行数カウント ---
-    static async countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let lineCount = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        lineCount += chunk.split('\n').length - 1;
-      }
-      return lineCount;
+    const result = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
     }
+    return result.buffer;
+  }
+
+  // --- NDJSON行数カウント ---
+  static async countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let lineCount = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      lineCount += chunk.split('\n').length - 1;
+    }
+    return lineCount;
+  }
 }
 
 export class FSAFile extends File {
@@ -372,101 +317,101 @@ export class FSAFile extends File {
     });
     await this.sqlite.persist();
   }
-    // --- 画像・動画・Blobリソースの読み書き ---
-    async readMediaResource(): Promise<MediaResource> {
-      const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
-      if (!file) throw new Error('File not found');
-      const { createCanvasFromBlob, createVideoFromBlob, createCanvasFromImage } = await import('../layeredCanvas/tools/imageUtil');
-      if (file.inlineContent) {
-        // DataURL or JSON
-        try {
-          const json = JSON.parse(file.inlineContent);
-          if (json && json.__blobPath) {
-            const blob = await this.blobStore.read(this.id);
-            if (file.mediaType === 'image' || file.mediaType === undefined) {
-              return await createCanvasFromBlob(blob);
-            }
-            if (file.mediaType === 'video') {
-              return await createVideoFromBlob(blob);
-            }
+  // --- 画像・動画・Blobリソースの読み書き ---
+  async readMediaResource(): Promise<MediaResource> {
+    const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
+    if (!file) throw new Error('File not found');
+    const { createCanvasFromBlob, createVideoFromBlob, createCanvasFromImage } = await import('../layeredCanvas/tools/imageUtil');
+    if (file.inlineContent) {
+      // DataURL or JSON
+      try {
+        const json = JSON.parse(file.inlineContent);
+        if (json && json.__blobPath) {
+          const blob = await this.blobStore.read(this.id);
+          if (file.mediaType === 'image' || file.mediaType === undefined) {
+            return await createCanvasFromBlob(blob);
           }
-        } catch {}
-        // 画像DataURL
-        if (file.mediaType === 'image' || file.mediaType === undefined) {
-          const img = new Image();
-          img.src = file.inlineContent;
-          await img.decode();
-          return await createCanvasFromImage(img);
+          if (file.mediaType === 'video') {
+            return await createVideoFromBlob(blob);
+          }
         }
-        if (file.mediaType === 'video') {
-          const video = document.createElement('video');
-          video.src = file.inlineContent;
-          await new Promise((resolve) => { video.onloadeddata = resolve; });
-          return video;
-        }
+      } catch { }
+      // 画像DataURL
+      if (file.mediaType === 'image' || file.mediaType === undefined) {
+        const img = new Image();
+        img.src = file.inlineContent;
+        await img.decode();
+        return await createCanvasFromImage(img);
       }
-      if (file.blobPath) {
-        const blob = await this.blobStore.read(this.id);
-        if (file.mediaType === 'image' || file.mediaType === undefined) {
-          return await createCanvasFromBlob(blob);
-        }
-        if (file.mediaType === 'video') {
-          return await createVideoFromBlob(blob);
-        }
+      if (file.mediaType === 'video') {
+        const video = document.createElement('video');
+        video.src = file.inlineContent;
+        await new Promise((resolve) => { video.onloadeddata = resolve; });
+        return video;
       }
-      throw new Error('Broken media data');
     }
-  
-    async writeMediaResource(mediaResource: MediaResource): Promise<void> {
-      if (mediaResource instanceof HTMLCanvasElement) {
-        const { canvasToBlob } = await import('../layeredCanvas/tools/imageUtil');
-        const blob = await canvasToBlob(mediaResource);
-        await this.sqlite.transaction(async () => {
-          this.sqlite.run(
-            "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
-            [`blobs/${this.id}.bin`, 'image', this.id]
-          );
-        });
-        await this.blobStore.write(this.id, blob);
-      } else if (mediaResource instanceof HTMLVideoElement) {
-        const blob = await fetch(mediaResource.src).then(res => res.blob());
-        await this.sqlite.transaction(async () => {
-          this.sqlite.run(
-            "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
-            [`blobs/${this.id}.bin`, 'video', this.id]
-          );
-        });
-        await this.blobStore.write(this.id, blob);
-      } else {
-        // RemoteMediaReference等
-        await this.sqlite.transaction(async () => {
-          this.sqlite.run(
-            "UPDATE files SET inlineContent = ?, blobPath = NULL, mediaType = NULL WHERE id = ?",
-            [JSON.stringify(mediaResource), this.id]
-          );
-        });
+    if (file.blobPath) {
+      const blob = await this.blobStore.read(this.id);
+      if (file.mediaType === 'image' || file.mediaType === undefined) {
+        return await createCanvasFromBlob(blob);
       }
-      await this.sqlite.persist();
-    }
-  
-    async readBlob(): Promise<Blob> {
-      const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
-      if (file && file.blobPath) {
-        return await this.blobStore.read(this.id);
+      if (file.mediaType === 'video') {
+        return await createVideoFromBlob(blob);
       }
-      throw new Error('No blob');
     }
-  
-    async writeBlob(blob: Blob): Promise<void> {
+    throw new Error('Broken media data');
+  }
+
+  async writeMediaResource(mediaResource: MediaResource): Promise<void> {
+    if (mediaResource instanceof HTMLCanvasElement) {
+      const { canvasToBlob } = await import('../layeredCanvas/tools/imageUtil');
+      const blob = await canvasToBlob(mediaResource);
       await this.sqlite.transaction(async () => {
         this.sqlite.run(
-          "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = NULL WHERE id = ?",
-          [`blobs/${this.id}.bin`, this.id]
+          "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
+          [`blobs/${this.id}.bin`, 'image', this.id]
         );
       });
       await this.blobStore.write(this.id, blob);
-      await this.sqlite.persist();
+    } else if (mediaResource instanceof HTMLVideoElement) {
+      const blob = await fetch(mediaResource.src).then(res => res.blob());
+      await this.sqlite.transaction(async () => {
+        this.sqlite.run(
+          "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
+          [`blobs/${this.id}.bin`, 'video', this.id]
+        );
+      });
+      await this.blobStore.write(this.id, blob);
+    } else {
+      // RemoteMediaReference等
+      await this.sqlite.transaction(async () => {
+        this.sqlite.run(
+          "UPDATE files SET inlineContent = ?, blobPath = NULL, mediaType = NULL WHERE id = ?",
+          [JSON.stringify(mediaResource), this.id]
+        );
+      });
     }
+    await this.sqlite.persist();
+  }
+
+  async readBlob(): Promise<Blob> {
+    const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
+    if (file && file.blobPath) {
+      return await this.blobStore.read(this.id);
+    }
+    throw new Error('No blob');
+  }
+
+  async writeBlob(blob: Blob): Promise<void> {
+    await this.sqlite.transaction(async () => {
+      this.sqlite.run(
+        "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = NULL WHERE id = ?",
+        [`blobs/${this.id}.bin`, this.id]
+      );
+    });
+    await this.blobStore.write(this.id, blob);
+    await this.sqlite.persist();
+  }
 }
 
 export class FSAFolder extends Folder {

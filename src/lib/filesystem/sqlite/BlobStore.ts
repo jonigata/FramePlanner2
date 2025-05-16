@@ -39,3 +39,55 @@ export class BlobStore {
     }
   }
 }
+
+// --- ユーティリティ: オブジェクト内のBlobを外部ファイル化し、blobPath参照に置換 ---
+export async function externalizeBlobsInObject(
+  obj: any,
+  blobStore: BlobStore,
+  baseId: string,
+  path: string[] = []
+): Promise<any> {
+  if (obj instanceof Blob) {
+    const blobId = `${baseId}_${path.join('_')}`;
+    await blobStore.write(blobId, obj);
+    return { __blobPath: `blobs/${blobId}.bin` };
+  } else if (Array.isArray(obj)) {
+    return Promise.all(obj.map((v, i) => externalizeBlobsInObject(v, blobStore, baseId, [...path, String(i)])));
+  } else if (obj && typeof obj === 'object') {
+    const result: any = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = await externalizeBlobsInObject(v, blobStore, baseId, [...path, k]);
+    }
+    return result;
+  } else {
+    return obj;
+  }
+}
+
+// --- ユーティリティ: blobPath参照をBlobに戻す ---
+export async function internalizeBlobsInObject(
+  obj: any,
+  blobStore: BlobStore
+): Promise<any> {
+  if (obj && typeof obj === 'object') {
+    if (obj.__blobPath && typeof obj.__blobPath === 'string') {
+      const m = obj.__blobPath.match(/^blobs\/(.+)\.bin$/);
+      if (m) {
+        return await blobStore.read(m[1]);
+      }
+    }
+    if (Array.isArray(obj)) {
+      return Promise.all(obj.map((v) => internalizeBlobsInObject(v, blobStore)));
+    } else {
+      const result: any = {};
+      for (const [k, v] of Object.entries(obj)) {
+        result[k] = await internalizeBlobsInObject(v, blobStore);
+      }
+      return result;
+    }
+  } else {
+    return obj;
+  }
+}
+
+
