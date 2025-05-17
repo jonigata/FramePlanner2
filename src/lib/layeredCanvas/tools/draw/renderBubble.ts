@@ -89,6 +89,8 @@ function drawBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bub
     if (ri.path) {
       drawPath(ctx, method, ri.path, bubble.optionContext);
     } else {
+      size[0] = Math.abs(size[0]);
+      size[1] = Math.abs(size[1]);
       drawBubbleShape(ctx, method, bubble.text, size, bubble.shape, bubble.optionContext);
     }
   }

@@ -36,14 +36,19 @@
 
     let f: (() => Promise<void>) | null = null;
     f = async () => {
-      const data = await getProgression(url);
-      if (busy) {
-        progress = data.progress;
-      }
+      try {
+        const data = await getProgression(url);
+        if (busy) {
+          progress = data.progress;
+        }
 
-      // getProgression呼び出しが1秒を超えると嫌なので
-      // setIntervalは使わない
-      setTimeout(() => {if (busy) {f!();}},1000);
+        // getProgression呼び出しが1秒を超えると嫌なので
+        // setIntervalは使わない
+        setTimeout(() => {if (busy) {f!();}},1000);
+      }
+      catch(e) {
+        // do nothing
+      }
     };
 
     busy = true;
@@ -55,7 +60,6 @@
       gallery = gallery;
       progress = 1;
     } catch (e) {
-      console.log(e);
       toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
       progress = 0;
     }

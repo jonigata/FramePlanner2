@@ -71,6 +71,7 @@
       modified = true;
     }
     if (!modified) { return; }
+    $mainBook = $mainBook;
     commit('page-size');
   }
 
@@ -119,7 +120,7 @@
   function makeBookSnapshot(book: Book) {
     const s = {
       bookId: book.revision.id,
-      pages: book.pages.map(p => p.id),
+      pages: book.pages.map(p => ({id:p.id, size:p.paperSize})),
       direction: book.direction,
       wrapMode: book.wrapMode,
     };

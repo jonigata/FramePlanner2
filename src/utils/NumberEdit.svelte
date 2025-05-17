@@ -21,7 +21,13 @@
     $valueText = value.toString();
   }
 
-  $: value = allowDecimal ? parseFloat($valueText) : parseInt($valueText, 10);
+  $: parseValueText($valueText);
+  function parseValueText(s: string) {
+    const v = allowDecimal ? parseFloat($valueText) : parseInt($valueText, 10);
+    if (!isNaN(v)) {
+      value = v;
+    }
+  }
 
   onMount(() => {
     original = value;

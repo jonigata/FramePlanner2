@@ -27,6 +27,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { onlineStatus } from "../../utils/accountStore";
+  import { captureException } from "@sentry/svelte";
 
   import horizontalIcon from '../../assets/horizontal.webp';
   import verticalIcon from '../../assets/vertical.webp';
@@ -149,8 +150,6 @@
       if (b) {
         $chosenShape = b.shape;
         await tick();
-        textarea!.focus({preventScroll: true});
-        textarea!.select();
         bubbleSnapshot = makeSnapshot(b);
         // 新規作成じなど。ロード済みなら特に何もおきない
         $fontLoadToken = [{ family: b.fontFamily, weight: b.fontWeight }];
@@ -273,6 +272,10 @@
   function onSelectionChanged(info: SelectionInfo) {
     textSelection = info;
     textSelected = info.hasSelection;
+  }
+
+  function onFocus() {
+    textarea?.select();    
   }
 
   function wrapRange(range: SelectionInfo, prefix: string, suffix: string) {
@@ -425,6 +428,7 @@
               bind:value={$bubble.text}
               bind:this={textarea}
               on:keypress={onKeyPress}
+              on:focus={onFocus}
               use:selection={onSelectionChanged}/>
           {/if}
           <div class="btn-group variant-filled-primary h-6">
