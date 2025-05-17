@@ -94,14 +94,12 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
           } else {
             b.hidesText = seekTime < (b.appearanceDelay ?? 0);
           }
-          console.log(b.appearanceDelay, seekTime, b.hidesText);
         }
       } else {
         for (const b of bubbles) {
           if (b.appearanceDelay == 0) {
             b.hidesText = false;
           } else {
-            console.log("+++hiding");;
             b.hidesText = true;
           }
         }
@@ -114,9 +112,7 @@ export async function renderAtTime(layeredCanvas: LayeredCanvas, arrayLayer: Arr
       await seek(index + 1, 0);
     }
   
-    console.log("movie render start");
     layeredCanvas.render();
-    console.log("movie render end");
   }
 
   const index = findEntry(timeTable, cursor);
