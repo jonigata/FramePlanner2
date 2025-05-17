@@ -1,7 +1,7 @@
-import { createPreference } from '../preferences';
+import { createPreference, type PreferenceStore } from '../preferences';
 
 interface PersistentOptions {
-  store: string;
+  store: PreferenceStore;
   key: string;
   defaultValue?: string;
   onLoad?: (value: string) => void;

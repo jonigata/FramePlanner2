@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
+export type PreferenceStore = "imaging" | "filesystem";
 const preferencesStores = ["imaging"];
 const preferencesVersion = 1;
 
@@ -19,7 +20,7 @@ export function getDBPromise() {
   return dbPromise;
 }
 
-export function createPreference<T>(storeName: string, key: string) {
+export function createPreference<T>(storeName: PreferenceStore, key: string) {
   let saved: T | undefined = undefined;
   return {
     get: async () => {

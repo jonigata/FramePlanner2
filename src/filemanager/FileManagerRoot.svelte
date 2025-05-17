@@ -44,6 +44,7 @@
 
   let usedSize: string;
 
+  let fsaapi = 'showOpenFilePicker' in window;
   let storageFolder: FileSystemDirectoryHandle | null = null;
 
   $: onBuildCloudFileSystem($onlineAccount?.subscriptionPlan ?? null);
@@ -398,29 +399,8 @@
   }
 
   async function selectStorageDirectory() {
-    try {
-      // File System Access API: ディレクトリ選択ダイアログを表示
-      // @ts-ignore
-      const handle: FileSystemDirectoryHandle | null = await window.showDirectoryPicker();
-      console.log(handle);
-      if (handle) {
-        storageFolder = handle;
-        console.log(FSAFileSystem.existsDatabase(handle));
-        if (!await FSAFileSystem.existsDatabase(handle)) {
-          const r = await waitDialog<boolean>('newStorageWizard');
-          if (r) {
-            // このディレクトリにFramePlannerファイルシステムを構築します。よろしいですか？
-
-            // open
-
-            // dump
-            // undump
-          }
-        }
-      }
-    } catch (e) {
-      // ユーザーがキャンセルした場合など
-      console.error("ディレクトリ選択エラー:", e);
+    const r = await waitDialog<boolean>('newStorageWizard');
+    if (r) {
     }
   }
 
@@ -449,7 +429,9 @@
           保存ディレクトリを指定すると、データの堅牢性が向上します。<b>強くオススメします！</b>
         </p>
         <p>
-          <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory}>保存ディレクトリを指定</button>
+          <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory} disabled={!fsaapi}>
+            保存ディレクトリを指定
+          </button>
         </p>
       {:else}
         <p>
