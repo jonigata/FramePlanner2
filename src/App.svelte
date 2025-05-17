@@ -157,7 +157,7 @@
       // If the entire session is not sampled, use the below sample rate to sample
       // sessions when an error occurs.
       replaysOnErrorSampleRate: 1.0,
-      ignoreErrors: ['WebGPU is not supported on this browser'],
+      ignoreErrors: ['WebGPU is not supported on this browser','No appropriate GPUAdapter found'],
     });
   });
 </script>
