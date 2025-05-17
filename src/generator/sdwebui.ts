@@ -40,7 +40,7 @@ export async function generateImages(url: string, imageRequest: any): Promise<HT
     }
     return canvases;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('sdwebui connection failed, generateImages:', error);
     throw error;
   }
 }
@@ -56,7 +56,7 @@ export async function getProgression(url: string) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('sdwebui connection failed, getProgression:', error);
   }
 }
 
