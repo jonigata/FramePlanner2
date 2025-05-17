@@ -27,8 +27,6 @@
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
 
-  import packageIcon from '../assets/fileManager/package-export.webp'
-
   export let fileSystem: FileSystem;
 
   let root: Folder;
@@ -43,6 +41,8 @@
   const cloudReady = writable(false);
 
   let usedSize: string;
+
+  let storageFolder: FileSystemDirectoryHandle | null = null;
 
   $: onBuildCloudFileSystem($onlineAccount?.subscriptionPlan ?? null);
   async function onBuildCloudFileSystem(plan: SubscriptionPlan | null) { 
@@ -80,7 +80,6 @@
       }
       await recordCurrentFileInfo(info);
     });
-  let undumpCounter = 0;
 
   $: onOpen($fileManagerOpen);
   async function onOpen(open: boolean) {
@@ -387,6 +386,18 @@
     }
   }
 
+  async function selectStorageDirectory() {
+    try {
+      // File System Access API: ディレクトリ選択ダイアログを表示
+      // @ts-ignore
+      const handle = await window.showDirectoryPicker();
+      storageFolder = handle;
+    } catch (e) {
+      // ユーザーがキャンセルした場合など
+      console.error("ディレクトリ選択エラー:", e);
+    }
+  }
+
   onMount(async () => {
     root = await fileSystem.getRoot();
     desktop = (await root.getEmbodiedEntryByName("デスクトップ"))!;
@@ -405,10 +416,24 @@
   >
     <div class="drawer-content">
       <h2>ローカル</h2>
-      <p>
-        大事なファイルはパッケージ化 <img class="package-icon" src={packageIcon} alt="rename"/> しましょう。
-        パッケージファイルの読み込み失敗に関しては最優先で対応しますので、もし問題に遭遇したらぜひ<a href="https://x.com/jonigata_ai">ご連絡</a>を
-      </p>
+      <h3>保存ディレクトリ</h3>
+      {#if storageFolder == null}
+        <p>
+          現在、ローカルファイルはブラウザ格納領域に保存されています。
+          保存ディレクトリを指定すると、データの堅牢性が向上します。<b>強くオススメします！</b>
+        </p>
+        <p>
+          <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory}>保存ディレクトリを指定</button>
+        </p>
+      {:else}
+        <p>
+          現在、ローカルファイルは{storageFolder.name}に保存されています。
+        </p>
+        <p>
+          <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>
+        </p>
+      {/if}
+      <div class="mb-4"></div>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
           <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
@@ -433,7 +458,7 @@
         <button class="btn-sm w-32 variant-filled"  on:click={undump}>リストア</button>
       </div>
       <h2>クラウド</h2>
-      <p>この機能はβ版です。断りなくサービス停止する可能性があります。ログインすると使えます。</p>
+      <p>この機能はβ版です。断りなくサービス停止する可能性があります。BASICプランで使えます。</p>
       {#if cloudCabinet && cloudTrash}
         <div class="cabinet variant-ghost-primary rounded-container-token">
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
@@ -457,21 +482,24 @@
     margin-right: 16px;
     margin-bottom: 8px;
   }
+  p b {
+    font-family: '源暎エムゴ';
+  }
   h2 {
     font-family: '源暎エムゴ';
     font-size: 24px;
     margin-top: 16px;
     margin-left: 8px;
   }
+  h3 {
+    font-family: '源暎エムゴ';
+    font-size: 20px;
+    margin-left: 8px;
+    margin-left: 24px;
+  }
   .cabinet {
     margin-left: 12px;
     margin-right: 12px;
     margin-bottom: 12px;
-  }
-  .package-icon {
-    width: 16px;
-    height: 16px;
-    display: inline-block;
-    margin-bottom: 4px;
   }
 </style>
