@@ -1,7 +1,7 @@
-import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem';
-import { Node, File, Folder, FileSystem } from './fileSystem';
-import { SQLiteAdapter } from './sqlite/SQLiteAdapter';
-import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore';
+import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem.js';
+import { Node, File, Folder, FileSystem } from './fileSystem.js';
+import { SQLiteAdapter } from './sqlite/SQLiteAdapter.js';
+import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
 // 型定義
@@ -273,6 +273,15 @@ export class FSAFileSystem extends FileSystem {
     }
     return lineCount;
   }
+  // --- 指定ディレクトリにfilesystem.dbが存在するか判定 ---
+  static async existsDatabase(dirHandle: FileSystemDirectoryHandle): Promise<boolean> {
+    try {
+      await dirHandle.getFileHandle('filesystem.db', { create: false });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export class FSAFile extends File {
@@ -321,7 +330,7 @@ export class FSAFile extends File {
   async readMediaResource(): Promise<MediaResource> {
     const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
     if (!file) throw new Error('File not found');
-    const { createCanvasFromBlob, createVideoFromBlob, createCanvasFromImage } = await import('../layeredCanvas/tools/imageUtil');
+    const { createCanvasFromBlob, createVideoFromBlob, createCanvasFromImage } = await import('../layeredCanvas/tools/imageUtil.js');
     if (file.inlineContent) {
       // DataURL or JSON
       try {
@@ -364,7 +373,7 @@ export class FSAFile extends File {
 
   async writeMediaResource(mediaResource: MediaResource): Promise<void> {
     if (mediaResource instanceof HTMLCanvasElement) {
-      const { canvasToBlob } = await import('../layeredCanvas/tools/imageUtil');
+      const { canvasToBlob } = await import('../layeredCanvas/tools/imageUtil.js');
       const blob = await canvasToBlob(mediaResource);
       await this.sqlite.transaction(async () => {
         this.sqlite.run(

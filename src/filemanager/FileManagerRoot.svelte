@@ -26,6 +26,7 @@
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
+  import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem';
 
   export let fileSystem: FileSystem;
 
@@ -390,8 +391,23 @@
     try {
       // File System Access API: ディレクトリ選択ダイアログを表示
       // @ts-ignore
-      const handle = await window.showDirectoryPicker();
-      storageFolder = handle;
+      const handle: FileSystemDirectoryHandle | null = await window.showDirectoryPicker();
+      console.log(handle);
+      if (handle) {
+        storageFolder = handle;
+        console.log(FSAFileSystem.existsDatabase(handle));
+        if (!await FSAFileSystem.existsDatabase(handle)) {
+          const r = await waitDialog<boolean>('newStorageWizard');
+          if (r) {
+            // このディレクトリにFramePlannerファイルシステムを構築します。よろしいですか？
+
+            // open
+
+            // dump
+            // undump
+          }
+        }
+      }
     } catch (e) {
       // ユーザーがキャンセルした場合など
       console.error("ディレクトリ選択エラー:", e);

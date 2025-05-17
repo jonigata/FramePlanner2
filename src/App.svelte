@@ -66,6 +66,7 @@
   import Dump from './transfer/Dump.svelte';
   import Undump from './transfer/Undump.svelte';
   import CanvasBrowser from './utils/CanvasBrowser.svelte';
+  import NewStorageWizard from './filemanager/NewStorageWizard.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -122,6 +123,9 @@
     },
     canvasBrowser: {
       ref: CanvasBrowser
+    },
+    newStorageWizard: {
+      ref: NewStorageWizard
     }
   };
 
