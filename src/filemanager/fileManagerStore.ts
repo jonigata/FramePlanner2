@@ -126,6 +126,17 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     ? await fetchNotebookImages(serializedBook.notebook, fileSystem) 
     : emptyNotebook();
 
+  console.log("loadBookFrom: newPageProperty", serializedBook.newPageProperty);
+  if (!serializedBook.newPageProperty) {
+    const p = serializedBook.pages[0];
+    serializedBook.newPageProperty = {
+      paperSize: [...p.paperSize],
+      paperColor: p.paperColor,
+      frameColor: p.frameColor,
+      frameWidth: p.frameWidth,
+      templateName: "standard",
+    }
+  }
   const book: Book = {
     revision: serializedBook.revision,
     pages: [],
@@ -138,7 +149,7 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     chatLogs,
     notebook: notebook,
     attributes: serializedBook.attributes ?? { publishUrl: null },
-    newPageProperty: serializedBook.newPageProperty ?? trivialNewPageProperty,
+    newPageProperty: serializedBook.newPageProperty
   };
 
   performance.mark("loadBookFrom-images-start");
