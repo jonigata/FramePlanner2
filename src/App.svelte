@@ -9,6 +9,7 @@
   import * as Sentry from "@sentry/svelte";
   import { Modals } from 'svelte-modals'
   import { bootstrap, onlineStatus } from './utils/accountStore';
+  import { developmentFlag } from "./utils/developmentFlagStore";
 			
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -155,14 +156,18 @@
     }
 
     // Initialize the Sentry SDK here
-    Sentry.init({
-      dsn: "https://d1b647c536ab49979532e731e8bebaaa@o4505054668062721.ingest.sentry.io/4505054670159872",
-      replaysSessionSampleRate: 0.1,
-      // If the entire session is not sampled, use the below sample rate to sample
-      // sessions when an error occurs.
-      replaysOnErrorSampleRate: 1.0,
-      ignoreErrors: ['WebGPU is not supported on this browser','No appropriate GPUAdapter found'],
-    });
+    if ($developmentFlag) {
+      console.log("ignore sentry because this is development mode.");
+    } else {
+      Sentry.init({
+        dsn: "https://d1b647c536ab49979532e731e8bebaaa@o4505054668062721.ingest.sentry.io/4505054670159872",
+        replaysSessionSampleRate: 0.1,
+        // If the entire session is not sampled, use the below sample rate to sample
+        // sessions when an error occurs.
+        replaysOnErrorSampleRate: 1.0,
+        ignoreErrors: ['WebGPU is not supported on this browser','No appropriate GPUAdapter found'],
+      });
+    }
   });
 </script>
 

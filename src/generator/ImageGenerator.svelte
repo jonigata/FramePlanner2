@@ -45,8 +45,11 @@
   function onClickAway() {
     if (busy) { return; }
     const t = $imageGeneratorTarget!;
-    $imageGeneratorTarget = null;
-    t.onDone(null);
+    // onChosen直後にonClickAwayが呼ばれてすでにnullになっていることがある
+    if (t != null) {
+      $imageGeneratorTarget = null;
+      t.onDone(null);
+    }
   }
 </script>
 

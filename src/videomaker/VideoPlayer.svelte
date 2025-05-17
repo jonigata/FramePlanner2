@@ -39,6 +39,7 @@
 
   let rendering = false;
   async function render() {
+    if (timeTable.length == 0) { return; }
     await tick();
     if (rendering) { return; }
     rendering = true;
