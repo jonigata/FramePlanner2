@@ -2,7 +2,6 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResource } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { saveAs } from 'file-saver';
 import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
 import streamSaver from 'streamsaver';
 
