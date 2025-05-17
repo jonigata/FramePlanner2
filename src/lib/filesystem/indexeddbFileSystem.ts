@@ -5,6 +5,59 @@ import { Node, File, Folder, FileSystem } from './fileSystem';
 import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
 import streamSaver from 'streamsaver';
 
+/**
+ * BlobをdataURLへ変換
+ */
+function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
+ */
+async function serializeBlobs(obj: any): Promise<any> {
+  if (obj instanceof Blob) {
+    return { __blob__: true, data: await blobToDataURL(obj), type: obj.type };
+  }
+  if (Array.isArray(obj)) {
+    return Promise.all(obj.map(serializeBlobs));
+  }
+  if (obj && typeof obj === "object") {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = await serializeBlobs(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
+/**
+ * dataURLラッパー({__blob__:true,data:...})をBlobに再帰的に変換
+ */
+async function deserializeBlobs(obj: any): Promise<any> {
+  if (obj && obj.__blob__ && obj.data) {
+    const res = await fetch(obj.data);
+    return await res.blob();
+  }
+  if (Array.isArray(obj)) {
+    return Promise.all(obj.map(deserializeBlobs));
+  }
+  if (obj && typeof obj === "object") {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = await deserializeBlobs(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
 async function countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
@@ -235,15 +288,8 @@ export class IndexedDBFileSystem extends FileSystem {
 
       // バッチごとに書き出し
       for (const value of batch) {
-        if (value.blob) {
-          value.blob = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject();
-            reader.readAsDataURL(value.blob);
-          });
-        }
-        await writer.write(encoder.encode(JSON.stringify(value) + "\n"));
+        const serialized = await serializeBlobs(value);
+        await writer.write(encoder.encode(JSON.stringify(serialized) + "\n"));
         read++;
       }
       // 小休止
@@ -274,12 +320,9 @@ export class IndexedDBFileSystem extends FileSystem {
     let count = 0;
   
     console.log("Start processing nodes");
-    for await (const node of nodes) {
-      // Base64からBlobを復元（トランザクション外）
-      if (node.blob) {
-        const res = await fetch(node.blob);
-        node.blob = await res.blob();
-      }
+    for await (const raw of nodes) {
+      // dataURLラッパーからBlob等を再帰的に復元
+      const node = await deserializeBlobs(raw);
       allItems.push(node);
       count++;
       progress(0.1 + 0.8 * (count / lineCount));

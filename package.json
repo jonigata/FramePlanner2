@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-https": "vite --config vite.https.config.ts",
     "build": "npm run stamp && vite build",
     "devbuild": "vite build --mode development",
     "preview": "vite preview",
