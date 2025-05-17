@@ -65,6 +65,7 @@
         "pro": 12,
         "chibi": 12,
         "manga": 12,
+        "comibg": 12,
         "gpt-image-1/low": 30,
         "gpt-image-1/medium": 30,
         "gpt-image-1/high": 30,

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import streamSaver from 'streamsaver';
   import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book, emptyNotebook, trivialNewPageProperty } from '../lib/book/book';
@@ -338,7 +339,14 @@
     console.log("dump");
     const r = await waitDialog<boolean>('dump');
     if (r) {
-      await ($mainBookFileSystem as IndexedDBFileSystem).dump((n)=>$progress = n);
+      // 新インターフェイス: optionsオブジェクトでonProgressを渡す
+      const stream = await ($mainBookFileSystem as IndexedDBFileSystem).dump({
+        onProgress: n => $progress = n
+      });
+
+      // 例: streamSaver で保存する場合
+      const fileStream = streamSaver.createWriteStream('filesystem-dump.ndjson');
+      await stream.pipeTo(fileStream);
 
       // １秒待つ
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -356,9 +364,11 @@
     if (dumpFiles) {
       console.log("undump start");
 
+      // File から ReadableStream を取得し options で onProgress を渡す
       await ($mainBookFileSystem as IndexedDBFileSystem).undump(
-        dumpFiles[0],
-        (n) => { $progress = n; });
+        dumpFiles[0].stream(),
+        { onProgress: n => $progress = n }
+      );
       await clearCurrentFileInfo();
       console.log("undump done");
       location.reload();

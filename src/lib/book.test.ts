@@ -14,7 +14,7 @@ describe('Book loading from filesystem', () => {
     // Load test data
     // const blob = await openAsBlob('filesystem-dump.ndjson');
     const blob = await openAsBlob('testdata/share.ndjson');
-    await fs.undump(blob, n => {});
+    await fs.undump(blob.stream(), { onProgress: () => {} });
   });
 
   it('should load all books from Desktop and Cabinet', async () => {

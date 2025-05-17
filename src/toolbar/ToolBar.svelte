@@ -1,5 +1,6 @@
 <script lang="ts">
   import { toolTip } from '../utils/passiveToolTipStore';
+  import streamSaver from 'streamsaver';
   import { undoToken } from '../bookeditor/workspaceStore';
   import { onlineStatus, authStore, onlineProfile, onlineAccount, type SubscriptionPlan } from '../utils/accountStore';
   import Feathral from '../utils/Feathral.svelte';
@@ -39,8 +40,17 @@
     console.log("dump");
     const r = await waitDialog<boolean>('dump');
     if (r) {
+      // 新インターフェイス: optionsオブジェクトでonProgressを渡す
       $progress = 0;
-      await ($mainBookFileSystem as IndexedDBFileSystem).dump((n)=>$progress = n);
+      const stream = await ($mainBookFileSystem as IndexedDBFileSystem).dump({
+        onProgress: n => $progress = n
+      });
+
+      // 例: streamSaver で保存する場合
+      // import streamSaver from 'streamsaver'; が必要
+      const fileStream = streamSaver.createWriteStream('filesystem-dump.ndjson');
+      await stream.pipeTo(fileStream);
+
       $progress = 1;
 
       // １秒待つ
@@ -59,9 +69,11 @@
     if (dumpFiles) {
       console.log("undump start");
 
+      // File から ReadableStream を取得し options で onProgress を渡す
       await ($mainBookFileSystem as IndexedDBFileSystem).undump(
-        dumpFiles[0],
-        (n) => { $progress = n; });
+        dumpFiles[0].stream(),
+        { onProgress: n => $progress = n }
+      );
       await clearCurrentFileInfo();
       console.log("undump done");
       location.reload();
