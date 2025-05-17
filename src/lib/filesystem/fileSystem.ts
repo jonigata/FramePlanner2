@@ -32,6 +32,21 @@ export interface FileSystem {
   collectTotalSize(): Promise<number>;
 }
 
+/** ファイルシステムのダンプ/リストア用インターフェイス */
+export type DumpProgress = (ratio: number) => void;
+export type DumpFormat = 'ndjson/v1';
+
+export interface FileSystemDumpProvider {
+  /** ファイルシステム全体を ReadableStream で書き出す */
+  dump(options?: { format?: DumpFormat; onProgress?: DumpProgress }): Promise<ReadableStream<Uint8Array>>;
+
+  /** ReadableStream から読み込んで復元する */
+  undump(
+    stream: ReadableStream<Uint8Array>,
+    options?: { format?: DumpFormat; onProgress?: DumpProgress }
+  ): Promise<void>;
+}
+
 export abstract class FileSystem {
   id: FileSystemId;
   watchers: { [key: NodeId]: Watcher[] } = {};

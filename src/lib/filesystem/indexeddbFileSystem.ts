@@ -123,7 +123,9 @@ async function* readNDJSONStream(
   }
 }
 
-export class IndexedDBFileSystem extends FileSystem {
+import type { FileSystemDumpProvider, DumpFormat, DumpProgress } from './fileSystem';
+
+export class IndexedDBFileSystem extends FileSystem implements FileSystemDumpProvider {
   private db: IDBPDatabase<unknown> | null = null;
 
   constructor() {
@@ -259,17 +261,31 @@ export class IndexedDBFileSystem extends FileSystem {
     return total;
   }
   
-  async dump(progress: (n: number)=>void): Promise<void> {
-    // StreamSaver.jsを使ったストリーム書き出し
+  /**
+   * ファイルシステム全体を ReadableStream で書き出す
+   */
+  async dump(options?: { format?: DumpFormat; onProgress?: DumpProgress }): Promise<ReadableStream<Uint8Array>> {
+    const format = options?.format ?? 'ndjson/v1';
+    const onProgress = options?.onProgress ?? (() => {});
+    if (format !== 'ndjson/v1') throw new Error(`unsupported format: ${format}`);
+
     const total = await this.db!.count('nodes');
-    progress(0);
+    onProgress(0);
 
-    const fileStream = streamSaver.createWriteStream('filesystem-dump.ndjson', {
-      size: total * 200 // 概算
-    });
-    const writer = fileStream.getWriter();
+    const { readable, writable } = new TransformStream<Uint8Array>();
+    // 非同期で書き込み
+    this._internalDump(writable.getWriter(), total, onProgress)
+      .catch(e => { console.error('dump failed', e); writable.getWriter().close(); });
+
+    return readable;
+  }
+
+  private async _internalDump(
+    writer: WritableStreamDefaultWriter<Uint8Array>,
+    total: number,
+    onProgress: DumpProgress
+  ) {
     const encoder = new TextEncoder();
-
     let read = 0;
     const batchSize = 1000;
     let tx = this.db!.transaction("nodes", "readonly");
@@ -278,62 +294,72 @@ export class IndexedDBFileSystem extends FileSystem {
 
     while (cursor) {
       const batch: any[] = [];
-      // バッチ単位で取得
       while (cursor && batch.length < batchSize) {
         batch.push(cursor.value);
         cursor = await cursor.continue();
       }
-      // 進捗
-      progress(read / total);
+      onProgress(read / total);
 
-      // バッチごとに書き出し
       for (const value of batch) {
         const serialized = await serializeBlobs(value);
         await writer.write(encoder.encode(JSON.stringify(serialized) + "\n"));
         read++;
       }
-      // 小休止
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
     await tx.done;
     await writer.close();
-    progress(1);
+    onProgress(1);
   }
-  
-  async undump(blob: Blob, progress: (n: number)=>void): Promise<void> {
-    console.log("Start undump");
-    progress(0);
-    
+
+  /**
+   * ReadableStream から復元
+   */
+  async undump(
+    stream: ReadableStream<Uint8Array>,
+    options?: { format?: DumpFormat; onProgress?: DumpProgress }
+  ): Promise<void> {
+    const format = options?.format ?? 'ndjson/v1';
+    const onProgress = options?.onProgress ?? (() => {});
+    if (format !== 'ndjson/v1') throw new Error(`unsupported format: ${format}`);
+
+    await this._internalUndump(stream, onProgress);
+  }
+
+  private async _internalUndump(
+    stream: ReadableStream<Uint8Array>,
+    onProgress: DumpProgress
+  ) {
+    onProgress(0);
+
     {
       const tx = this.db!.transaction('nodes', 'readwrite');
       const store = tx.objectStore('nodes');
       await store.clear();
-      await tx.done;  // ここでトランザクション確実に終了
+      await tx.done;
     }
-  
-    const lineCount = await countLines(blob.stream());
 
-    const stream = blob.stream();
-    const nodes = readNDJSONStream(stream); // async generator
-  
+    // tee は一度だけ呼び出して 2 つのブランチを得る
+    const [countBranch, parseBranch] = stream.tee();
+
+    // 行数カウント
+    const lineCount = await countLines(countBranch);
+    const nodes = readNDJSONStream(parseBranch); // async generator
+
     let allItems: any[] = [];
     let count = 0;
-  
-    console.log("Start processing nodes");
+
     for await (const raw of nodes) {
-      // dataURLラッパーからBlob等を再帰的に復元
       const node = await deserializeBlobs(raw);
       allItems.push(node);
       count++;
-      progress(0.1 + 0.8 * (count / lineCount));
+      onProgress(0.1 + 0.8 * (count / lineCount));
     }
-    console.log(`Loaded ${count} nodes in memory`);
-  
-    // 3) バッチ単位で write (複数のトランザクションを使う)
+
     const batchSize = 1000;
     let batch: any[] = [];
     let writtenCount = 0;
-  
+
     const saveBatch = async (itemsBatch: any[]) => {
       const tx = this.db!.transaction('nodes', 'readwrite');
       const store = tx.objectStore('nodes');
@@ -350,28 +376,22 @@ export class IndexedDBFileSystem extends FileSystem {
         await metadataStore.put({ key: item.id, type: item.type, filesize });
       }
     };
-  
+
     for (const node of allItems) {
       batch.push(node);
       if (batch.length >= batchSize) {
-        console.log(`Processing ${writtenCount + batch.length} / ${count}...`);
         await saveBatch(batch);
         writtenCount += batch.length;
         batch = [];
-        console.log("Processed batch");
       }
     }
-  
-    // 最後のバッチがあれば保存
+
     if (batch.length > 0) {
-      console.log(`Processing final ${writtenCount + batch.length} / ${count}...`);
       await saveBatch(batch);
       writtenCount += batch.length;
-      console.log("Processed final batch");
     }
-  
-    console.log(`Processed ${writtenCount} nodes in total`);
-    progress(1);
+
+    onProgress(1);
   }
 }
   
