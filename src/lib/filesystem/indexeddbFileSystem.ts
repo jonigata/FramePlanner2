@@ -4,6 +4,7 @@ import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResour
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { saveAs } from 'file-saver';
 import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
+import streamSaver from 'streamsaver';
 
 async function countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
   const reader = stream.getReader();
@@ -207,51 +208,50 @@ export class IndexedDBFileSystem extends FileSystem {
   }
   
   async dump(progress: (n: number)=>void): Promise<void> {
-    const tx = this.db!.transaction("nodes", "readonly");
-    const store = tx.store;
-    let cursor = await store.openCursor();
-    
-    const items: any[] = [];
+    // StreamSaver.jsを使ったストリーム書き出し
+    const total = await this.db!.count('nodes');
     progress(0);
-    while (cursor) {
-      items.push(cursor.value);
-      cursor = await cursor.continue();
-    }
-    progress(0.1);
-    
-    await tx.done;
-    
-    // ループ中の進捗をリアルタイムに反映させるなら
-    // await new Promise((r) => setTimeout(r, 0)) を適宜挟む
-    const chunks: Uint8Array[] = [];
+
+    const fileStream = streamSaver.createWriteStream('filesystem-dump.ndjson', {
+      size: total * 200 // 概算
+    });
+    const writer = fileStream.getWriter();
     const encoder = new TextEncoder();
-    
-    let count = 0;
-    for (const value of items) {
-      if (value.blob) {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject();
-          reader.readAsDataURL(value.blob);
-        });
-        value.blob = dataUrl;
+
+    let read = 0;
+    const batchSize = 1000;
+    let tx = this.db!.transaction("nodes", "readonly");
+    let store = tx.store;
+    let cursor = await store.openCursor();
+
+    while (cursor) {
+      const batch: any[] = [];
+      // バッチ単位で取得
+      while (cursor && batch.length < batchSize) {
+        batch.push(cursor.value);
+        cursor = await cursor.continue();
       }
-    
-      const jsonString = JSON.stringify(value) + "\n";
-      chunks.push(encoder.encode(jsonString));
-    
-      count++;
-      progress(0.1 + 0.8 * (count / items.length));
-    
-      // 適宜小休止
-      if (count % 100 === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
+      // 進捗
+      progress(read / total);
+
+      // バッチごとに書き出し
+      for (const value of batch) {
+        if (value.blob) {
+          value.blob = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject();
+            reader.readAsDataURL(value.blob);
+          });
+        }
+        await writer.write(encoder.encode(JSON.stringify(value) + "\n"));
+        read++;
       }
+      // 小休止
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    
-    const blob = new Blob(chunks, { type: "application/x-ndjson" });
-    saveAs(blob, "filesystem-dump.ndjson");
+    await tx.done;
+    await writer.close();
     progress(1);
   }
   
