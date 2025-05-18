@@ -290,8 +290,14 @@ export class IndexedDBFileSystem extends FileSystem {
         }
         let value = items[count];
         if (value.blob) {
-          // Blob→dataURL
-          value.blob = await blobToDataURL(value.blob);
+          // ゴミで{}が入ってることがある
+          if (value.blob instanceof Blob) {
+            // Blob→dataURL
+            value.blob = await blobToDataURL(value.blob);
+          } else {
+            console.log(`unknown blob type: ${JSON.stringify(value.blob)}`);
+            value.blob = null;
+          }
         }
         const jsonString = JSON.stringify(value) + "\n";
         controller.enqueue(encoder.encode(jsonString));

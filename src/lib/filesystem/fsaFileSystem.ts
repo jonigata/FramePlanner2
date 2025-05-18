@@ -128,189 +128,220 @@ export class FSAFileSystem extends FileSystem {
     return total;
   }
 
-  // --- NDJSONダンプ: nodes, children, files, blobsをエクスポート ---
+  // NDJSONストリームの各行を逐次パースするジェネレータ
+  async *readNDJSONStream(stream: ReadableStream<Uint8Array>): AsyncGenerator<any, void, unknown> {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          if (buffer.trim()) {
+            yield JSON.parse(buffer);
+          }
+          break;
+        }
+        const chunk = decoder.decode(value, { stream: true });
+        let start = 0;
+        let newlineIndex: number;
+        while ((newlineIndex = chunk.indexOf('\n', start)) !== -1) {
+          const line = buffer + chunk.slice(start, newlineIndex).trim();
+          if (line.length > 0) yield JSON.parse(line);
+          start = newlineIndex + 1;
+          buffer = '';
+        }
+        buffer += chunk.slice(start);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  // ストリームの行数をカウント
+  async countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let lineCount = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        lineCount += chunk.split('\n').length - 1;
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    return lineCount;
+  }
+
   async dump(options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }): Promise<ReadableStream<Uint8Array>> {
     const onProgress = options?.onProgress ?? (() => {});
-    onProgress(0);
-
-    // 1. 全テーブル取得
+    // 1. 全ノード取得
     const nodes = await this.sqlite.select("SELECT * FROM nodes");
-    const children = await this.sqlite.select("SELECT * FROM children");
+    // 2. ファイル情報取得
     const files = await this.sqlite.select("SELECT * FROM files");
-    onProgress(0.05);
-
-    // 2. NDJSONストリーム生成
-    const encoder = new TextEncoder();
-    let count = 0;
-    const total = nodes.length + children.length + files.length;
-
-    // ReadableStreamで逐次出力
-    const self = this;
-    return new ReadableStream<Uint8Array>({
-      async start(controller) {
-        // nodes
-        for (const node of nodes) {
-          controller.enqueue(encoder.encode(JSON.stringify({ table: "nodes", ...node }) + "\n"));
-          count++;
-          if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-          onProgress(0.05 + 0.3 * (count / total));
-        }
-        // children
-        for (const child of children) {
-          controller.enqueue(encoder.encode(JSON.stringify({ table: "children", ...child }) + "\n"));
-          count++;
-          if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-          onProgress(0.35 + 0.3 * (count / total));
-        }
-        // files + blobs
-        for (const file of files) {
-          let fileObj = { ...file, table: "files" };
-          if (file.blobPath) {
+    const fileMap = new Map<string, any>();
+    for (const file of files) {
+      fileMap.set(file.id, file);
+    }
+    // 3. ノードごとにマージ
+    const items: any[] = [];
+    for (const node of nodes) {
+      const item: any = { ...node };
+      if (node.type === 'file') {
+        const file = fileMap.get(node.id);
+        if (file) {
+          // content or blob
+          if (file.inlineContent) {
+            item.content = file.inlineContent;
+          } else if (file.blobPath) {
             try {
-              const blob = await self.blobStore.read(file.id);
-              // BlobをDataURL化
-              const dataUrl = await new Promise<string>((resolve, reject) => {
+              const blob = await this.blobStore.read(node.id);
+              // Blob→dataURL
+              item.blob = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result as string);
                 reader.onerror = () => reject();
                 reader.readAsDataURL(blob);
               });
-              fileObj = { ...fileObj, blob: dataUrl };
-            } catch { }
+              item.mediaType = file.mediaType;
+            } catch {
+              // Blobが読めない場合は無視
+            }
           }
-          controller.enqueue(encoder.encode(JSON.stringify(fileObj) + "\n"));
-          count++;
-          if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-          onProgress(0.65 + 0.3 * (count / total));
         }
-        onProgress(1);
-        controller.close();
+      } else if (node.type === 'folder') {
+        // children
+        const children = await this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [node.id]);
+        item.children = children.map((c: any) => [c.bindId, c.name, c.childId]);
+        item.attributes = node.attributes ? JSON.parse(node.attributes) : {};
+      }
+      items.push(item);
+    }
+
+    // 4. NDJSONストリームで出力
+    const encoder = new TextEncoder();
+    let count = 0;
+    const total = items.length;
+
+    const stream = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        if (count >= total) {
+          onProgress(1);
+          controller.close();
+          return;
+        }
+        const value = items[count];
+        const jsonString = JSON.stringify(value) + "\n";
+        controller.enqueue(encoder.encode(jsonString));
+        count++;
+        onProgress(0.1 + 0.8 * (count / total));
+        if (count % 100 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
       }
     });
+
+    return stream;
   }
 
-  // --- NDJSONインポート: nodes, children, files, blobsをリストア ---
   async undump(
     stream: ReadableStream<Uint8Array>,
     options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }
   ): Promise<void> {
     const onProgress = options?.onProgress ?? (() => {});
     onProgress(0);
-    // 1. 全テーブルクリア
-    await this.sqlite.transaction(async () => {
+
+    // 1. 既存データ削除
+    await this.withoutPersist(async () => {
       if (!this.sqlite.run) throw new Error('DB not initialized');
-      await this.sqlite.run("DELETE FROM nodes");
       await this.sqlite.run("DELETE FROM children");
       await this.sqlite.run("DELETE FROM files");
+      await this.sqlite.run("DELETE FROM nodes");
+      // BlobStore全削除
+      const fileIds = await this.sqlite.select("SELECT id FROM files");
+      for (const f of fileIds) {
+        await this.blobStore.delete(f.id);
+      }
     });
-    await this.sqlite.persist();
 
-    // 2. NDJSONストリームを二股に分けて
-    //    片方で行数カウント → 進捗総量を取得
-    //    もう片方で実データを処理
-    const [counterStream, processStream] = stream.tee();
-    const lineCount = await FSAFileSystem.countLines(counterStream);
-    const reader = processStream.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let count = 0;
-    let batch: any[] = [];
+    // 2. ストリームをteeして片方で行数カウント
+    const [counterStream, dataStream] = stream.tee();
+    const lineCount = await this.countLines(counterStream);
+
+    // 3. 逐次パースしながらDBへ書き込み
     const batchSize = 1000;
+    let batch: any[] = [];
+    let count = 0;
+    let writtenCount = 0;
 
-    // 3. バッチで挿入
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let start = 0, idx;
-      while ((idx = buffer.indexOf('\n', start)) !== -1) {
-        const line = buffer.slice(start, idx).trim();
-        start = idx + 1;
-        if (line) {
-          batch.push(line);
-          count++;
-          if (batch.length >= batchSize) {
-            await this._undumpBatch(batch, onProgress, count, lineCount);
-            batch = [];
+    const saveBatch = async (itemsBatch: any[]) => {
+      await this.sqlite.transaction(async () => {
+        for (const item of itemsBatch) {
+          if (!this.sqlite.run) throw new Error('DB not initialized');
+          // nodes
+          const { id, type, attributes, ...rest } = item;
+          await this.sqlite.run(
+            "INSERT INTO nodes(id, type, attributes) VALUES (?, ?, ?)",
+            [id, type, JSON.stringify(attributes ?? {})]
+          );
+          if (type === 'file') {
+            // files
+            if (item.blob) {
+              // BlobはblobStoreに保存し、filesテーブルにはblobPathを記録
+              await this.blobStore.write(id, item.blob);
+              await this.sqlite.run(
+                "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
+                [id, `blobs/${id}.bin`, item.mediaType ?? null]
+              );
+            } else {
+              await this.sqlite.run(
+                "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, NULL, ?)",
+                [id, item.content ?? '', item.mediaType ?? null]
+              );
+            }
+          } else if (type === 'folder') {
+            // children
+            if (item.children && Array.isArray(item.children)) {
+              for (let idx = 0; idx < item.children.length; idx++) {
+                const [bindId, name, childId] = item.children[idx];
+                await this.sqlite.run(
+                  "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
+                  [id, bindId, name, childId, idx]
+                );
+              }
+            }
           }
         }
+      });
+    };
+
+    for await (const node of this.readNDJSONStream(dataStream)) {
+      // blobがdataURLならBlobに戻す
+      console.log(node);
+      if (node.blob) {
+        const res = await fetch(node.blob);
+        node.blob = await res.blob();
       }
-      buffer = buffer.slice(start);
+      batch.push(node);
+      count++;
+      onProgress(0.1 + 0.8 * (count / lineCount));
+      if (batch.length >= batchSize) {
+        await saveBatch(batch);
+        writtenCount += batch.length;
+        batch = [];
+      }
     }
     if (batch.length > 0) {
-      await this._undumpBatch(batch, onProgress, count, lineCount);
+      await saveBatch(batch);
+      writtenCount += batch.length;
     }
-    await this.sqlite.persist();
+
     onProgress(1);
   }
 
-  private async _undumpBatch(lines: string[], progress: (n: number) => void, count: number, total: number) {
-    await this.sqlite.transaction(async () => {
-      for (const line of lines) {
-        const obj = JSON.parse(line);
-        if (obj.table === "nodes") {
-          if (!this.sqlite.run) throw new Error('DB not initialized');
-          await this.sqlite.run(
-            "INSERT INTO nodes(id, type, attributes) VALUES (?, ?, ?)",
-            [obj.id, obj.type, obj.attributes]
-          );
-        } else if (obj.table === "children") {
-          if (!this.sqlite.run) throw new Error('DB not initialized');
-          await this.sqlite.run(
-            "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
-            [obj.parentId, obj.bindId, obj.name, obj.childId, obj.idx]
-          );
-        } else if (obj.table === "files") {
-          if (!this.sqlite.run) throw new Error('DB not initialized');
-          await this.sqlite.run(
-            "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, ?, ?)",
-            [obj.id, obj.inlineContent, obj.blobPath, obj.mediaType]
-          );
-          // blobがDataURLならBlobStoreへ
-          if (obj.blob) {
-            const blob = await fetch(obj.blob).then(res => res.blob());
-            await this.blobStore.write(obj.id, blob);
-          }
-        }
-      }
-    });
-    progress(0.1 + 0.8 * (count / total));
-  }
-
-  // --- streamToArrayBufferユーティリティ ---
-  static async streamToArrayBuffer(stream: ReadableStream<Uint8Array>): Promise<ArrayBuffer> {
-    const reader = stream.getReader();
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      total += value.length;
-    }
-    const result = new Uint8Array(total);
-    let offset = 0;
-    for (const chunk of chunks) {
-      result.set(chunk, offset);
-      offset += chunk.length;
-    }
-    return result.buffer;
-  }
-
-  // --- NDJSON行数カウント ---
-  static async countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
-    const reader = stream.getReader();
-    const decoder = new TextDecoder();
-    let lineCount = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      lineCount += chunk.split('\n').length - 1;
-    }
-    return lineCount;
-  }
-  // --- 指定ディレクトリにfilesystem.dbが存在するか判定 ---
   static async existsDatabase(dirHandle: FileSystemDirectoryHandle): Promise<boolean> {
     try {
       await dirHandle.getFileHandle('filesystem.db', { create: false });
@@ -327,6 +358,7 @@ export class FSAFileSystem extends FileSystem {
     } finally {
       this.sqlite.persistentSuspended = false;
       await this.sqlite.persist();
+
     }
   }
 }

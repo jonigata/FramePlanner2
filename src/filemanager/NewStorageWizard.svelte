@@ -13,6 +13,7 @@
   async function makeFileSystem() {
     console.log("copyFileSystem");
     const srcFs = $mainBookFileSystem!;
+
     const fs = await buildFileSystem(storageFolder!);
 
     // dumpとundumpを直接接続する形

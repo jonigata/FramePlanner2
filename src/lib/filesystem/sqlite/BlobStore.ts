@@ -9,6 +9,7 @@ export class BlobStore {
 
   async write(id: string, blob: Blob) {
     if (!this.dirHandle) throw new Error('BlobStore not initialized');
+    console.log('Writing blob:', id);
     const fileHandle = await this.dirHandle.getFileHandle(`${id}.bin`, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
