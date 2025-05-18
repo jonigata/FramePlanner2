@@ -1,6 +1,6 @@
 import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem.js';
 import { Node, File, Folder, FileSystem } from './fileSystem.js';
-import { SQLiteAdapter } from './sqlite/SQLiteAdapter.js';
+import { SqlJsAdapter } from './sqlite/SqlJsAdapter.js';
 import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
@@ -9,23 +9,23 @@ type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
 
 export class FSAFileSystem extends FileSystem {
-  private sqlite: SQLiteAdapter;
+  private sqlite: SqlJsAdapter;
   private blobStore: BlobStore;
 
   constructor() {
     super();
-    this.sqlite = new SQLiteAdapter();
+    this.sqlite = new SqlJsAdapter();
     this.blobStore = new BlobStore();
   }
 
   async open(dirHandle: FileSystemDirectoryHandle): Promise<void> {
-    const dbFileHandle = await dirHandle.getFileHandle('filesystem.db', { create: true });
-    await this.sqlite.open(dbFileHandle);
+    await this.sqlite.open(dirHandle);
     await this.blobStore.open(dirHandle);
     // ルートノードがなければ作成
-    const root = this.sqlite.selectOne("SELECT id FROM nodes WHERE id = '/'");
+    const root = await this.sqlite.selectOne("SELECT id FROM nodes WHERE id = '/'");
     if (!root) {
-      this.sqlite.run("INSERT INTO nodes(id, type, attributes) VALUES (?, 'folder', ?)", ['/', '{}']);
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run("INSERT INTO nodes(id, type, attributes) VALUES (?, 'folder', ?)", ['/', '{}']);
     }
     await this.sqlite.persist();
   }
@@ -33,11 +33,12 @@ export class FSAFileSystem extends FileSystem {
   async createFile(_type: string = 'text'): Promise<File> {
     const id = ulid() as NodeId;
     await this.sqlite.transaction(async () => {
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "INSERT INTO nodes(id, type, attributes) VALUES (?, 'file', ?)",
         [id, '{}']
       );
-      this.sqlite.run(
+      await this.sqlite.run(
         "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, '', NULL, NULL)",
         [id]
       );
@@ -49,7 +50,8 @@ export class FSAFileSystem extends FileSystem {
   async createFolder(): Promise<Folder> {
     const id = ulid() as NodeId;
     await this.sqlite.transaction(async () => {
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "INSERT INTO nodes(id, type, attributes) VALUES (?, 'folder', ?)",
         [id, '{}']
       );
@@ -60,24 +62,27 @@ export class FSAFileSystem extends FileSystem {
 
   async destroyNode(id: NodeId): Promise<void> {
     // 子孫も再帰削除
-    const node = this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [id]);
+    const node = await this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [id]);
     if (!node) return;
     if (node.type === 'folder') {
-      const children = this.sqlite.select("SELECT childId FROM children WHERE parentId = ?", [id]);
+      const children = await this.sqlite.select("SELECT childId FROM children WHERE parentId = ?", [id]);
       for (const c of children) {
         await this.destroyNode(c.childId);
       }
-      this.sqlite.run("DELETE FROM children WHERE parentId = ?", [id]);
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run("DELETE FROM children WHERE parentId = ?", [id]);
     } else if (node.type === 'file') {
-      this.sqlite.run("DELETE FROM files WHERE id = ?", [id]);
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run("DELETE FROM files WHERE id = ?", [id]);
       await this.blobStore.delete(id);
     }
-    this.sqlite.run("DELETE FROM nodes WHERE id = ?", [id]);
+    if (!this.sqlite.run) throw new Error('DB not initialized');
+    await this.sqlite.run("DELETE FROM nodes WHERE id = ?", [id]);
     await this.sqlite.persist();
   }
 
   async getNode(id: NodeId): Promise<Node | null> {
-    const node = this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [id]);
+    const node = await this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [id]);
     if (!node) return null;
     if (node.type === 'file') {
       return new FSAFile(this, id, this.sqlite, this.blobStore);
@@ -92,7 +97,7 @@ export class FSAFileSystem extends FileSystem {
   }
 
   async collectTotalSize(): Promise<number> {
-    const files = this.sqlite.select("SELECT * FROM files");
+    const files = await this.sqlite.select("SELECT * FROM files");
     let total = 0;
     for (const file of files) {
       if (file.inlineContent) {
@@ -111,9 +116,9 @@ export class FSAFileSystem extends FileSystem {
   async dump(progress: (n: number) => void): Promise<Blob> {
     progress(0);
     // 1. 全テーブル取得
-    const nodes = this.sqlite.select("SELECT * FROM nodes");
-    const children = this.sqlite.select("SELECT * FROM children");
-    const files = this.sqlite.select("SELECT * FROM files");
+    const nodes = await this.sqlite.select("SELECT * FROM nodes");
+    const children = await this.sqlite.select("SELECT * FROM children");
+    const files = await this.sqlite.select("SELECT * FROM files");
     progress(0.05);
 
     // 2. NDJSONエンコード
@@ -167,9 +172,10 @@ export class FSAFileSystem extends FileSystem {
     progress(0);
     // 1. 全テーブルクリア
     await this.sqlite.transaction(async () => {
-      this.sqlite.run("DELETE FROM nodes");
-      this.sqlite.run("DELETE FROM children");
-      this.sqlite.run("DELETE FROM files");
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run("DELETE FROM nodes");
+      await this.sqlite.run("DELETE FROM children");
+      await this.sqlite.run("DELETE FROM files");
     });
     await this.sqlite.persist();
 
@@ -215,17 +221,20 @@ export class FSAFileSystem extends FileSystem {
       for (const line of lines) {
         const obj = JSON.parse(line);
         if (obj.table === "nodes") {
-          this.sqlite.run(
+          if (!this.sqlite.run) throw new Error('DB not initialized');
+          await this.sqlite.run(
             "INSERT INTO nodes(id, type, attributes) VALUES (?, ?, ?)",
             [obj.id, obj.type, obj.attributes]
           );
         } else if (obj.table === "children") {
-          this.sqlite.run(
+          if (!this.sqlite.run) throw new Error('DB not initialized');
+          await this.sqlite.run(
             "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
             [obj.parentId, obj.bindId, obj.name, obj.childId, obj.idx]
           );
         } else if (obj.table === "files") {
-          this.sqlite.run(
+          if (!this.sqlite.run) throw new Error('DB not initialized');
+          await this.sqlite.run(
             "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, ?, ?)",
             [obj.id, obj.inlineContent, obj.blobPath, obj.mediaType]
           );
@@ -285,15 +294,15 @@ export class FSAFileSystem extends FileSystem {
 }
 
 export class FSAFile extends File {
-  sqlite: SQLiteAdapter;
+  sqlite: SqlJsAdapter;
   blobStore: BlobStore;
-  constructor(fileSystem: FileSystem, id: NodeId, sqlite: SQLiteAdapter, blobStore: BlobStore) {
+  constructor(fileSystem: FileSystem, id: NodeId, sqlite: SqlJsAdapter, blobStore: BlobStore) {
     super(fileSystem, id);
     this.sqlite = sqlite;
     this.blobStore = blobStore;
   }
   async read(): Promise<any> {
-    const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
+    const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
     if (!file) return null;
     if (file.inlineContent) {
       try {
@@ -319,7 +328,8 @@ export class FSAFile extends File {
       toStore = String(data);
     }
     await this.sqlite.transaction(async () => {
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "UPDATE files SET inlineContent = ?, blobPath = NULL WHERE id = ?",
         [toStore, this.id]
       );
@@ -328,7 +338,7 @@ export class FSAFile extends File {
   }
   // --- 画像・動画・Blobリソースの読み書き ---
   async readMediaResource(): Promise<MediaResource> {
-    const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
+    const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
     if (!file) throw new Error('File not found');
     const { createCanvasFromBlob, createVideoFromBlob, createCanvasFromImage } = await import('../layeredCanvas/tools/imageUtil.js');
     if (file.inlineContent) {
@@ -376,7 +386,8 @@ export class FSAFile extends File {
       const { canvasToBlob } = await import('../layeredCanvas/tools/imageUtil.js');
       const blob = await canvasToBlob(mediaResource);
       await this.sqlite.transaction(async () => {
-        this.sqlite.run(
+        if (!this.sqlite.run) throw new Error('DB not initialized');
+        await this.sqlite.run(
           "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
           [`blobs/${this.id}.bin`, 'image', this.id]
         );
@@ -385,7 +396,8 @@ export class FSAFile extends File {
     } else if (mediaResource instanceof HTMLVideoElement) {
       const blob = await fetch(mediaResource.src).then(res => res.blob());
       await this.sqlite.transaction(async () => {
-        this.sqlite.run(
+        if (!this.sqlite.run) throw new Error('DB not initialized');
+        await this.sqlite.run(
           "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
           [`blobs/${this.id}.bin`, 'video', this.id]
         );
@@ -394,7 +406,8 @@ export class FSAFile extends File {
     } else {
       // RemoteMediaReference等
       await this.sqlite.transaction(async () => {
-        this.sqlite.run(
+        if (!this.sqlite.run) throw new Error('DB not initialized');
+        await this.sqlite.run(
           "UPDATE files SET inlineContent = ?, blobPath = NULL, mediaType = NULL WHERE id = ?",
           [JSON.stringify(mediaResource), this.id]
         );
@@ -404,7 +417,7 @@ export class FSAFile extends File {
   }
 
   async readBlob(): Promise<Blob> {
-    const file = this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
+    const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
     if (file && file.blobPath) {
       return await this.blobStore.read(this.id);
     }
@@ -413,7 +426,8 @@ export class FSAFile extends File {
 
   async writeBlob(blob: Blob): Promise<void> {
     await this.sqlite.transaction(async () => {
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = NULL WHERE id = ?",
         [`blobs/${this.id}.bin`, this.id]
       );
@@ -424,9 +438,9 @@ export class FSAFile extends File {
 }
 
 export class FSAFolder extends Folder {
-  sqlite: SQLiteAdapter;
+  sqlite: SqlJsAdapter;
   blobStore: BlobStore;
-  constructor(fileSystem: FileSystem, id: NodeId, sqlite: SQLiteAdapter, blobStore: BlobStore) {
+  constructor(fileSystem: FileSystem, id: NodeId, sqlite: SqlJsAdapter, blobStore: BlobStore) {
     super(fileSystem, id);
     this.sqlite = sqlite;
     this.blobStore = blobStore;
@@ -438,11 +452,12 @@ export class FSAFolder extends Folder {
     return this;
   }
   async setAttribute(key: string, value: string): Promise<void> {
-    const node = this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [this.id]);
+    const node = await this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [this.id]);
     const attrs = node && node.attributes ? JSON.parse(node.attributes) : {};
     attrs[key] = value;
     await this.sqlite.transaction(async () => {
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "UPDATE nodes SET attributes = ? WHERE id = ?",
         [JSON.stringify(attrs), this.id]
       );
@@ -450,12 +465,12 @@ export class FSAFolder extends Folder {
     await this.sqlite.persist();
   }
   async getAttribute(key: string): Promise<string | null> {
-    const node = this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [this.id]);
+    const node = await this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [this.id]);
     const attrs = node && node.attributes ? JSON.parse(node.attributes) : {};
     return attrs[key] ?? null;
   }
   async list(): Promise<Entry[]> {
-    const children = this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [this.id]);
+    const children = await this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [this.id]);
     return children.map((c: any) => [c.bindId, c.name, c.childId]);
   }
   async link(name: string, nodeId: NodeId): Promise<BindId> {
@@ -464,19 +479,20 @@ export class FSAFolder extends Folder {
   async unlink(bindId: BindId): Promise<void> {
     await this.sqlite.transaction(async () => {
       // idx再計算
-      const entry = this.sqlite.selectOne(
+      const entry = await this.sqlite.selectOne(
         "SELECT * FROM children WHERE parentId = ? AND bindId = ?",
         [this.id, bindId]
       );
       if (!entry) return;
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "DELETE FROM children WHERE parentId = ? AND bindId = ?",
         [this.id, bindId]
       );
       // idx詰め直し
-      const children = this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [this.id]);
+      const children = await this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [this.id]);
       for (let i = 0; i < children.length; i++) {
-        this.sqlite.run(
+        await this.sqlite.run(
           "UPDATE children SET idx = ? WHERE parentId = ? AND bindId = ?",
           [i, this.id, children[i].bindId]
         );
@@ -492,7 +508,8 @@ export class FSAFolder extends Folder {
   }
   async rename(bindId: BindId, newname: string): Promise<void> {
     await this.sqlite.transaction(async () => {
-      this.sqlite.run(
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
         "UPDATE children SET name = ? WHERE parentId = ? AND bindId = ?",
         [newname, this.id, bindId]
       );
@@ -503,17 +520,18 @@ export class FSAFolder extends Folder {
   async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> {
     const bindId = ulid() as BindId;
     await this.sqlite.transaction(async () => {
-      const children = this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [this.id]);
+      const children = await this.sqlite.select("SELECT * FROM children WHERE parentId = ? ORDER BY idx", [this.id]);
       let idx = index;
       if (idx < 0) idx = children.length;
       // idx繰り下げ
+      if (!this.sqlite.run) throw new Error('DB not initialized');
       for (let i = children.length - 1; i >= idx; i--) {
-        this.sqlite.run(
+        await this.sqlite.run(
           "UPDATE children SET idx = ? WHERE parentId = ? AND bindId = ?",
           [i + 1, this.id, children[i].bindId]
         );
       }
-      this.sqlite.run(
+      await this.sqlite.run(
         "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
         [this.id, bindId, name, nodeId, idx]
       );
@@ -523,21 +541,21 @@ export class FSAFolder extends Folder {
     return bindId;
   }
   async getEntry(bindId: BindId): Promise<Entry | null> {
-    const entry = this.sqlite.selectOne(
+    const entry = await this.sqlite.selectOne(
       "SELECT * FROM children WHERE parentId = ? AND bindId = ?",
       [this.id, bindId]
     );
     return entry ? [entry.bindId, entry.name, entry.childId] : null;
   }
   async getEntryByName(name: string): Promise<Entry | null> {
-    const entry = this.sqlite.selectOne(
+    const entry = await this.sqlite.selectOne(
       "SELECT * FROM children WHERE parentId = ? AND name = ?",
       [this.id, name]
     );
     return entry ? [entry.bindId, entry.name, entry.childId] : null;
   }
   async getEntriesByName(name: string): Promise<Entry[]> {
-    const entries = this.sqlite.select(
+    const entries = await this.sqlite.select(
       "SELECT * FROM children WHERE parentId = ? AND name = ?",
       [this.id, name]
     );

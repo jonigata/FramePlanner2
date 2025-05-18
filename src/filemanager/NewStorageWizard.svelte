@@ -1,12 +1,32 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem';
+  import { ProgressBar } from '@skeletonlabs/skeleton';
+  import { buildFileSystem } from "./fsaFileSystem";
 
   // 3シーン分の状態
   let step = 0;
   let storageFolder: FileSystemDirectoryHandle | null = null;
+  let copyProgress = 0;
+
+  async function makeFileSystem() {
+    console.log("copyFileSystem");
+    await buildFileSystem(storageFolder!);
+
+    copyProgress = 0;
+    const duration = 5000;
+    const steps = 50;
+    const interval = duration / steps;
+
+    for (let i = 1; i <= steps; i++) {
+      await new Promise(resolve => setTimeout(resolve, interval));
+      copyProgress = i / steps;
+    }
+    copyProgress = 1;
+  }
 
   async function handleNext() {
+    // 状態
     if (step == 0) {
       if (await FSAFileSystem.existsDatabase(storageFolder!)) {
         // skip clone
@@ -16,6 +36,11 @@
       }
     } else {
       step++;
+    }
+
+    // 遷移後処理
+    if (step == 1) {
+      makeFileSystem();
     }
     if (step == 3) {
       $modalStore[0]?.response?.(true);
@@ -51,12 +76,13 @@
           <p>
             <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory}>保存フォルダを指定</button>
           </p>
-          <p>すでにデータベース作成済みのフォルダを指定した場合、コピーはスキップします。新たにコピーしたい場合は、フォルダを空にするか別のフォルダを指定して再トライしてください。</p>
+          <p>すでにデータベース作成済みのフォルダを指定した場合、コピーをスキップします。新たにコピーしたい場合は、フォルダを空にするか別のフォルダを指定して再トライしてください。</p>
         </div>
       {:else if step === 1}
         <h3>既存ファイルのコピー</h3>
         <div class="p-2">
           <p>現在のストレージデータベース内のファイルをすべて、新しいストレージデータベースにコピーします。</p>
+          <ProgressBar label="Progress Bar" value={copyProgress} max={1} />
         </div>
       {:else if step === 2}
         <h3>完了</h3>
@@ -77,8 +103,8 @@
           作成する
         </button>
       {:else if step === 1}
-        <button type="button" class="btn variant-filled-primary" on:click={handleNext}>
-          コピー実行
+        <button type="button" class="btn variant-filled-primary" on:click={handleNext} disabled={copyProgress < 1}>
+          OK
         </button>
       {:else if step === 2}
         <button type="button" class="btn variant-filled-primary" on:click={handleNext}>
@@ -102,13 +128,11 @@
     display: flex;
     gap: 8px;
   }
-  .card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
   .btn[disabled] {
     opacity: 0.5;
     pointer-events: none;
+  }
+  p {
+    margin-bottom: 16px;
   }
 </style>
