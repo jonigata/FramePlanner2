@@ -291,6 +291,16 @@ export class FSAFileSystem extends FileSystem {
       return false;
     }
   }
+
+  async withoutPersist(f: () => Promise<void>): Promise<void> {
+    try {
+      this.sqlite.persistentSuspended = true;
+      return await f();
+    } finally {
+      this.sqlite.persistentSuspended = false;
+      await this.sqlite.persist();
+    }
+  }
 }
 
 export class FSAFile extends File {

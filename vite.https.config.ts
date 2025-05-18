@@ -46,4 +46,5 @@ export default defineConfig({
     include: ['src/**/*.{test,spec,vitest}.{js,ts}'],
     setupFiles: ['./test/setup.ts'],
   },
+  assetsInclude: ['**/*.wasm'], // .wasm を静的アセットとして処理
 })

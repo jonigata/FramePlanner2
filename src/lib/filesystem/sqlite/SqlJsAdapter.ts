@@ -1,4 +1,5 @@
 import initSqlJs from 'sql.js';
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'; // これでURLとして取得
 
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 type Database = { prepare: Function; exec: Function; export: Function; };
@@ -17,10 +18,14 @@ export class SqlJsAdapter {
   private version: number = 1;
   private schemaVersion: number = 1; // PRAGMA user_version
 
+  persistentSuspended = false; // 永続化中フラグ
+
   // open: バージョンファイルとDBファイルが揃っていなければ初期化
   async open(dirHandle: FileSystemDirectoryHandle): Promise<void> {
     this.dirHandle = dirHandle;
-    this.SQL = await initSqlJs();
+    this.SQL = await initSqlJs(
+      { locateFile: () => wasmUrl }
+    );
 
     // versionファイルを読む。なければ初期化（両方作成）
     let version: number;
@@ -169,6 +174,11 @@ export class SqlJsAdapter {
 
   // DBファイルへ永続化（アトミックな二相コミット: 新→旧削除）
   async persist(): Promise<void> {
+    if (this.persistentSuspended) {
+      return;
+    }
+    console.log("persist", this.version);
+    console.trace();
     assert(this.db, 'DB not initialized');
     assert(this.dirHandle, 'No dirHandle');
     const newVersion = this.version + 1;

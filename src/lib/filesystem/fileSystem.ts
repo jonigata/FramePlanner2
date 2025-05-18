@@ -66,6 +66,10 @@ export abstract class FileSystem {
   getWatchers(nodeId: NodeId): Watcher[] {
     return this.watchers[nodeId] ?? [];
   }
+
+  async withoutPersist(f: () => Promise<void>): Promise<void> {
+    return await f();
+  }
 }
 
 export interface Node {
