@@ -113,6 +113,9 @@ function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, 
     captureException(`fontSize is NaN, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
     fontSize = 14;
   }
+  if (fontSize < 1) {
+    captureException(`fontSize is too small, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
+  }
 
   const ri = bubble.renderInfo!;
   const ss = `${bubble.fontStyle} ${bubble.fontWeight} ${fontSize}px '${bubble.fontFamily}'`;
