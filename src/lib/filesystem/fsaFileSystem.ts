@@ -332,10 +332,12 @@ export class FSAFileSystem extends FileSystem {
         await saveBatch(batch);
         writtenCount += batch.length;
         batch = [];
+        await this.sqlite.persist();
       }
     }
     if (batch.length > 0) {
       await saveBatch(batch);
+      await this.sqlite.persist();
       writtenCount += batch.length;
     }
 
