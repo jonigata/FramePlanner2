@@ -14,6 +14,7 @@ export class BlobStore {
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
+    console.log('Writing blob done:', id);
   }
 
   async read(id: string): Promise<Blob> {

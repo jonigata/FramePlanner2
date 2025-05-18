@@ -195,7 +195,12 @@ export class FSAFileSystem extends FileSystem {
         if (file) {
           // content or blob
           if (file.inlineContent) {
-            item.content = file.inlineContent;
+            // 文字列ならそのまま、object なら blob 分離してシリアライズ
+            let contentToDump: any = file.inlineContent;
+            if (typeof file.inlineContent === 'object' && file.inlineContent !== null) {
+              contentToDump = JSON.stringify(await externalizeBlobsInObject(file.inlineContent, this.blobStore, node.id));
+            }
+            item.content = contentToDump;
           } else if (file.blobPath) {
             try {
               const blob = await this.blobStore.read(node.id);
@@ -278,6 +283,14 @@ export class FSAFileSystem extends FileSystem {
     let writtenCount = 0;
 
     const saveBatch = async (itemsBatch: any[]) => {
+      // 1. 先に Blob を全て書き込む（トランザクション外）
+      for (const item of itemsBatch) {
+        if (item.type === 'file' && item.blob) {
+          await this.blobStore.write(item.id, item.blob);
+        }
+      }
+
+      // 2. DB へのノード・ファイル・children の INSERT をトランザクションでまとめて行う
       await this.sqlite.transaction(async () => {
         for (const item of itemsBatch) {
           if (!this.sqlite.run) throw new Error('DB not initialized');
@@ -290,16 +303,22 @@ export class FSAFileSystem extends FileSystem {
           if (type === 'file') {
             // files
             if (item.blob) {
-              // BlobはblobStoreに保存し、filesテーブルにはblobPathを記録
-              await this.blobStore.write(id, item.blob);
               await this.sqlite.run(
                 "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
                 [id, `blobs/${id}.bin`, item.mediaType ?? null]
               );
             } else {
+              // contentがobjectならblobを分離してシリアライズ
+              let contentToStore: string;
+              if (typeof item.content === 'object' && item.content !== null) {
+                // Blob分離
+                contentToStore = JSON.stringify(await externalizeBlobsInObject(item.content, this.blobStore, id));
+              } else {
+                contentToStore = item.content ?? '';
+              }
               await this.sqlite.run(
                 "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, NULL, ?)",
-                [id, item.content ?? '', item.mediaType ?? null]
+                [id, contentToStore, item.mediaType ?? null]
               );
             }
           } else if (type === 'folder') {
@@ -328,18 +347,28 @@ export class FSAFileSystem extends FileSystem {
       batch.push(node);
       count++;
       onProgress(0.1 + 0.8 * (count / lineCount));
+      console.log("A");
       if (batch.length >= batchSize) {
+        console.log("B");
         await saveBatch(batch);
+        console.log("C");
         writtenCount += batch.length;
         batch = [];
         await this.sqlite.persist();
+        console.log("D");
       }
+      console.log("E");
     }
+    console.log("F");
     if (batch.length > 0) {
+      console.log("G");
       await saveBatch(batch);
+      console.log("H");
       await this.sqlite.persist();
+      console.log("I");
       writtenCount += batch.length;
     }
+    console.log("J");
 
     onProgress(1);
   }
