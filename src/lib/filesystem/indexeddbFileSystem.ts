@@ -3,7 +3,7 @@ import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResource } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
-import streamSaver from 'streamsaver';
+import type { DumpFormat, DumpProgress } from './fileSystem';
 
 /**
  * BlobをdataURLへ変換
@@ -123,9 +123,8 @@ async function* readNDJSONStream(
   }
 }
 
-import type { FileSystemDumpProvider, DumpFormat, DumpProgress } from './fileSystem';
 
-export class IndexedDBFileSystem extends FileSystem implements FileSystemDumpProvider {
+export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown> | null = null;
 
   constructor() {
@@ -292,21 +291,68 @@ export class IndexedDBFileSystem extends FileSystem implements FileSystemDumpPro
     let store = tx.store;
     let cursor = await store.openCursor();
 
+    // まず全ノードをバッファに集める
+    const nodesArr: any[] = [];
     while (cursor) {
-      const batch: any[] = [];
-      while (cursor && batch.length < batchSize) {
-        batch.push(cursor.value);
-        cursor = await cursor.continue();
-      }
-      onProgress(read / total);
-
-      for (const value of batch) {
-        const serialized = await serializeBlobs(value);
-        await writer.write(encoder.encode(JSON.stringify(serialized) + "\n"));
-        read++;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      nodesArr.push(cursor.value);
+      cursor = await cursor.continue();
     }
+
+    // 1. nodesテーブル
+    for (const node of nodesArr) {
+      const nodeRec: any = {
+        table: "nodes",
+        id: node.id,
+        type: node.type,
+        attributes: JSON.stringify(node.attributes ?? {})
+      };
+      await writer.write(encoder.encode(JSON.stringify(nodeRec) + "\n"));
+      read++;
+      onProgress(read / total);
+    }
+
+    // 2. childrenテーブル
+    for (const node of nodesArr) {
+      if (node.type === "folder" && Array.isArray(node.children)) {
+        for (let i = 0; i < node.children.length; i++) {
+          const [bindId, name, childId] = node.children[i];
+          const childRec = {
+            table: "children",
+            parentId: node.id,
+            bindId,
+            name,
+            childId,
+            idx: i
+          };
+          await writer.write(encoder.encode(JSON.stringify(childRec) + "\n"));
+          read++;
+          onProgress(read / total);
+        }
+      }
+    }
+
+    // 3. filesテーブル
+    for (const node of nodesArr) {
+      if (node.type === "file") {
+        let fileRec: any = {
+          table: "files",
+          id: node.id,
+          mediaType: node.mediaType ?? null
+        };
+        // content or blob
+        if (typeof node.content === "string" && node.content.length > 0) {
+          fileRec.inlineContent = node.content;
+        }
+        if (node.blob) {
+          // BlobをDataURL化
+          fileRec.blob = await blobToDataURL(node.blob);
+        }
+        await writer.write(encoder.encode(JSON.stringify(fileRec) + "\n"));
+        read++;
+        onProgress(read / total);
+      }
+    }
+
     await tx.done;
     await writer.close();
     onProgress(1);

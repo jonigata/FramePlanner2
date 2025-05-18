@@ -20,32 +20,9 @@ export interface Watcher {
   onRename: (bindId: BindId, newName: string) => void;
 }
 
-export interface FileSystem {
-  id: FileSystemId;
-  watchers: { [key: NodeId]: Watcher[] };
-  createFile(type?: string): Promise<File>;
-  createFileWithId(id: NodeId, type?: string): Promise<File>;
-  createFolder(): Promise<Folder>;
-  destroyNode(id: NodeId): Promise<void>;
-  getNode(id: NodeId): Promise<Node | null>;
-  getRoot(): Promise<Folder>;
-  collectTotalSize(): Promise<number>;
-}
-
 /** ファイルシステムのダンプ/リストア用インターフェイス */
 export type DumpProgress = (ratio: number) => void;
 export type DumpFormat = 'ndjson/v1';
-
-export interface FileSystemDumpProvider {
-  /** ファイルシステム全体を ReadableStream で書き出す */
-  dump(options?: { format?: DumpFormat; onProgress?: DumpProgress }): Promise<ReadableStream<Uint8Array>>;
-
-  /** ReadableStream から読み込んで復元する */
-  undump(
-    stream: ReadableStream<Uint8Array>,
-    options?: { format?: DumpFormat; onProgress?: DumpProgress }
-  ): Promise<void>;
-}
 
 export abstract class FileSystem {
   id: FileSystemId;
@@ -67,8 +44,30 @@ export abstract class FileSystem {
     return this.watchers[nodeId] ?? [];
   }
 
+  dump(options?: { format?: DumpFormat; onProgress?: DumpProgress }): Promise<ReadableStream<Uint8Array>> {
+    throw new Error('Not implemented');
+  }
+
+  undump(
+    stream: ReadableStream<Uint8Array>,
+    options?: { format?: DumpFormat; onProgress?: DumpProgress }
+  ): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
   async withoutPersist(f: () => Promise<void>): Promise<void> {
     return await f();
+  }
+
+  abstract createFile(type?: string): Promise<File>;
+  abstract createFileWithId(id: NodeId, type?: string): Promise<File>;
+  abstract createFolder(): Promise<Folder>;
+  abstract destroyNode(id: NodeId): Promise<void>;
+  abstract getNode(id: NodeId): Promise<Node | null>;
+  abstract getRoot(): Promise<Folder>;
+  
+  collectTotalSize(): Promise<number> {
+    throw new Error('Not implemented');
   }
 }
 

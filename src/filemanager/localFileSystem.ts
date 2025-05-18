@@ -1,6 +1,6 @@
-import { type FileSystem, makeFolders } from '../lib/filesystem/fileSystem';
-import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem';
-import { specialFolders } from './specialFolders';
+import { type FileSystem, makeFolders } from '../lib/filesystem/fileSystem.js';
+import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem.js';
+import { specialFolders } from './specialFolders.js';
 
 export async function buildFileSystem(handle: FileSystemDirectoryHandle): Promise<FileSystem> {
   const fs = new FSAFileSystem();

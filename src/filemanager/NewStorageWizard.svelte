@@ -2,7 +2,8 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem';
   import { ProgressBar } from '@skeletonlabs/skeleton';
-  import { buildFileSystem } from "./fsaFileSystem";
+  import { buildFileSystem } from "./localFileSystem";
+  import { mainBookFileSystem } from './fileManagerStore';
 
   // 3シーン分の状態
   let step = 0;
@@ -11,17 +12,14 @@
 
   async function makeFileSystem() {
     console.log("copyFileSystem");
-    await buildFileSystem(storageFolder!);
+    const srcFs = $mainBookFileSystem!;
+    const fs = await buildFileSystem(storageFolder!);
 
+    // dumpとundumpを直接接続する形
     copyProgress = 0;
-    const duration = 5000;
-    const steps = 50;
-    const interval = duration / steps;
+    const readable = await srcFs.dump({ onProgress: p => { console.log("dump:", p); } });
+    await fs.undump(readable, { onProgress: p => { copyProgress = p; console.log("undump:", p)} });
 
-    for (let i = 1; i <= steps; i++) {
-      await new Promise(resolve => setTimeout(resolve, interval));
-      copyProgress = i / steps;
-    }
     copyProgress = 1;
   }
 

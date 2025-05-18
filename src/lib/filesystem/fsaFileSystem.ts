@@ -47,6 +47,22 @@ export class FSAFileSystem extends FileSystem {
     return new FSAFile(this, id, this.sqlite, this.blobStore);
   }
 
+  async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
+    await this.sqlite.transaction(async () => {
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      await this.sqlite.run(
+        "INSERT INTO nodes(id, type, attributes) VALUES (?, 'file', ?)",
+        [id, '{}']
+      );
+      await this.sqlite.run(
+        "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, '', NULL, NULL)",
+        [id]
+      );
+    });
+    await this.sqlite.persist();
+    return new FSAFile(this, id, this.sqlite, this.blobStore);
+  }
+
   async createFolder(): Promise<Folder> {
     const id = ulid() as NodeId;
     await this.sqlite.transaction(async () => {
@@ -113,63 +129,73 @@ export class FSAFileSystem extends FileSystem {
   }
 
   // --- NDJSONダンプ: nodes, children, files, blobsをエクスポート ---
-  async dump(progress: (n: number) => void): Promise<Blob> {
-    progress(0);
+  async dump(options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }): Promise<ReadableStream<Uint8Array>> {
+    const onProgress = options?.onProgress ?? (() => {});
+    onProgress(0);
+
     // 1. 全テーブル取得
     const nodes = await this.sqlite.select("SELECT * FROM nodes");
     const children = await this.sqlite.select("SELECT * FROM children");
     const files = await this.sqlite.select("SELECT * FROM files");
-    progress(0.05);
+    onProgress(0.05);
 
-    // 2. NDJSONエンコード
+    // 2. NDJSONストリーム生成
     const encoder = new TextEncoder();
-    const chunks: Uint8Array[] = [];
     let count = 0;
     const total = nodes.length + children.length + files.length;
-    // nodes
-    for (const node of nodes) {
-      chunks.push(encoder.encode(JSON.stringify({ table: "nodes", ...node }) + "\n"));
-      count++;
-      if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-      progress(0.05 + 0.3 * (count / total));
-    }
-    // children
-    for (const child of children) {
-      chunks.push(encoder.encode(JSON.stringify({ table: "children", ...child }) + "\n"));
-      count++;
-      if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-      progress(0.35 + 0.3 * (count / total));
-    }
-    // files + blobs
-    for (const file of files) {
-      let fileObj = { ...file, table: "files" };
-      if (file.blobPath) {
-        try {
-          const blob = await this.blobStore.read(file.id);
-          // BlobをDataURL化
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject();
-            reader.readAsDataURL(blob);
-          });
-          fileObj = { ...fileObj, blob: dataUrl };
-        } catch { }
+
+    // ReadableStreamで逐次出力
+    const self = this;
+    return new ReadableStream<Uint8Array>({
+      async start(controller) {
+        // nodes
+        for (const node of nodes) {
+          controller.enqueue(encoder.encode(JSON.stringify({ table: "nodes", ...node }) + "\n"));
+          count++;
+          if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
+          onProgress(0.05 + 0.3 * (count / total));
+        }
+        // children
+        for (const child of children) {
+          controller.enqueue(encoder.encode(JSON.stringify({ table: "children", ...child }) + "\n"));
+          count++;
+          if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
+          onProgress(0.35 + 0.3 * (count / total));
+        }
+        // files + blobs
+        for (const file of files) {
+          let fileObj = { ...file, table: "files" };
+          if (file.blobPath) {
+            try {
+              const blob = await self.blobStore.read(file.id);
+              // BlobをDataURL化
+              const dataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = () => reject();
+                reader.readAsDataURL(blob);
+              });
+              fileObj = { ...fileObj, blob: dataUrl };
+            } catch { }
+          }
+          controller.enqueue(encoder.encode(JSON.stringify(fileObj) + "\n"));
+          count++;
+          if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
+          onProgress(0.65 + 0.3 * (count / total));
+        }
+        onProgress(1);
+        controller.close();
       }
-      chunks.push(encoder.encode(JSON.stringify(fileObj) + "\n"));
-      count++;
-      if (count % 100 === 0) await new Promise(r => setTimeout(r, 0));
-      progress(0.65 + 0.3 * (count / total));
-    }
-    // 3. Blob化して保存
-    const outBlob = new Blob(chunks, { type: "application/x-ndjson" });
-    progress(1);
-    return outBlob;
+    });
   }
 
   // --- NDJSONインポート: nodes, children, files, blobsをリストア ---
-  async undump(blob: Blob, progress: (n: number) => void): Promise<void> {
-    progress(0);
+  async undump(
+    stream: ReadableStream<Uint8Array>,
+    options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }
+  ): Promise<void> {
+    const onProgress = options?.onProgress ?? (() => {});
+    onProgress(0);
     // 1. 全テーブルクリア
     await this.sqlite.transaction(async () => {
       if (!this.sqlite.run) throw new Error('DB not initialized');
@@ -179,10 +205,12 @@ export class FSAFileSystem extends FileSystem {
     });
     await this.sqlite.persist();
 
-    // 2. NDJSONストリームを1行ずつ読む
-    const lineCount = await FSAFileSystem.countLines(blob.stream());
-    const stream = blob.stream();
-    const reader = stream.getReader();
+    // 2. NDJSONストリームを二股に分けて
+    //    片方で行数カウント → 進捗総量を取得
+    //    もう片方で実データを処理
+    const [counterStream, processStream] = stream.tee();
+    const lineCount = await FSAFileSystem.countLines(counterStream);
+    const reader = processStream.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
     let count = 0;
@@ -202,7 +230,7 @@ export class FSAFileSystem extends FileSystem {
           batch.push(line);
           count++;
           if (batch.length >= batchSize) {
-            await this._undumpBatch(batch, progress, count, lineCount);
+            await this._undumpBatch(batch, onProgress, count, lineCount);
             batch = [];
           }
         }
@@ -210,10 +238,10 @@ export class FSAFileSystem extends FileSystem {
       buffer = buffer.slice(start);
     }
     if (batch.length > 0) {
-      await this._undumpBatch(batch, progress, count, lineCount);
+      await this._undumpBatch(batch, onProgress, count, lineCount);
     }
     await this.sqlite.persist();
-    progress(1);
+    onProgress(1);
   }
 
   private async _undumpBatch(lines: string[], progress: (n: number) => void, count: number, total: number) {
