@@ -4,18 +4,7 @@ import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResour
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
 import type { DumpFormat, DumpProgress } from './fileSystem';
-
-/**
- * BlobをdataURLへ変換
- */
-function blobToDataURL(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
+import { blobToDataURL, dataURLtoBlob } from './fileSystemTools';
 
 /**
  * オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
@@ -31,27 +20,6 @@ async function serializeBlobs(obj: any): Promise<any> {
     const result: any = {};
     for (const key of Object.keys(obj)) {
       result[key] = await serializeBlobs(obj[key]);
-    }
-    return result;
-  }
-  return obj;
-}
-
-/**
- * dataURLラッパー({__blob__:true,data:...})をBlobに再帰的に変換
- */
-async function deserializeBlobs(obj: any): Promise<any> {
-  if (obj && obj.__blob__ && obj.data) {
-    const res = await fetch(obj.data);
-    return await res.blob();
-  }
-  if (Array.isArray(obj)) {
-    return Promise.all(obj.map(deserializeBlobs));
-  }
-  if (obj && typeof obj === "object") {
-    const result: any = {};
-    for (const key of Object.keys(obj)) {
-      result[key] = await deserializeBlobs(obj[key]);
     }
     return result;
   }
@@ -339,9 +307,7 @@ export class IndexedDBFileSystem extends FileSystem {
       console.log(node);
       // Base64からBlobを復元（トランザクション外）
       if (node.blob) {
-        const res = await fetch(node.blob);
-        node.blob = await res.blob();
-        console.log("undump blob", node.blob, typeof node.blob, node.blob instanceof Blob);
+        node.blob = await dataURLtoBlob(node.blob);
       }
       allItems.push(node);
       count++;

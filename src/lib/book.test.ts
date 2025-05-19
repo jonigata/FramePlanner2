@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, assert } from 'vitest';
 import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 import type { Book } from './book/book';
 import { openAsBlob } from 'fs';
@@ -84,6 +84,8 @@ describe('Book loading from filesystem', () => {
     await fs.undump(blob.stream());
 
     await checkFileSystem(fs);
+
+    assert.fail("dump/undumpが再帰的blobに対応してない");
   }, 180 * 1000);
 
   it('should obtain same hierarchy from dumped and undumped data', async () => {
