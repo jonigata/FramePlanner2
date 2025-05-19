@@ -36,3 +36,6 @@ testdata/*
 *.njsproj
 *.sln
 *.sw?
+
+frameplanner.example.local-key.pem
+frameplanner.example.local.pem
