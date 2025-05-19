@@ -291,6 +291,7 @@ export class IndexedDBFileSystem extends FileSystem {
         let value = items[count];
         if (value.blob) {
           // Blob→dataURL
+          console.log(value.blob);
           value.blob = await blobToDataURL(value.blob);
         }
         const jsonString = JSON.stringify(value) + "\n";
@@ -322,21 +323,25 @@ export class IndexedDBFileSystem extends FileSystem {
       await tx.done;  // ここでトランザクション確実に終了
     }
 
-    const lineCount = await countLines(stream);
+    const [counterStream, dataStream] = stream.tee();
+    const lineCount = await countLines(counterStream);
+    console.log(lineCount);
 
     // streamは一度しか読めないので再度取得
     // Blobのときはstreamを複製できるが、ここでは一度しか読まない前提
-    const nodes = readNDJSONStream(stream); // async generator
+    const nodes = readNDJSONStream(dataStream); // async generator
 
     let allItems: any[] = [];
     let count = 0;
 
     console.log("Start processing nodes");
     for await (const node of nodes) {
+      console.log(node);
       // Base64からBlobを復元（トランザクション外）
       if (node.blob) {
         const res = await fetch(node.blob);
         node.blob = await res.blob();
+        console.log("undump blob", node.blob, typeof node.blob, node.blob instanceof Blob);
       }
       allItems.push(node);
       count++;

@@ -8,6 +8,7 @@ import { FileSystem, Folder } from './filesystem/fileSystem';
 describe('Book loading from filesystem', () => {
   async function checkFileSystem(fs: FileSystem) {
     const root = await fs.getRoot();
+    expect(root).not.toBeNull();
     const books: Book[] = [];
 
     const titles: { [key: string]: string } = {};
@@ -85,4 +86,21 @@ describe('Book loading from filesystem', () => {
     await checkFileSystem(fs);
   }, 180 * 1000);
 
+  it('should obtain same hierarchy from dumped and undumped data', async () => {
+    const fs = new IndexedDBFileSystem();
+    await fs.open("testdb");
+
+    // Load test data
+    const blob = await openAsBlob('testdata/dump/testcase.ndjson');
+    await fs.undump(blob.stream());
+
+    await checkFileSystem(fs);
+
+    const fs2 = new IndexedDBFileSystem();
+    await fs2.open("testdb2");
+    const readable = await fs.dump({ onProgress: p => { console.log("dump:", p); } });
+    await fs2.undump(readable, { onProgress: p => { console.log("undump:", p); } });
+
+    await checkFileSystem(fs2);
+  });
 }, 180 * 1000);
