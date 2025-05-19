@@ -3,22 +3,10 @@ import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 import type { Book } from './book/book';
 import { openAsBlob } from 'fs';
 import { loadBookFrom } from '../filemanager/fileManagerStore';
-import { Folder } from './filesystem/fileSystem';
+import { FileSystem, Folder } from './filesystem/fileSystem';
 
 describe('Book loading from filesystem', () => {
-  let fs: IndexedDBFileSystem;
-
-  beforeAll(async () => {
-    fs = new IndexedDBFileSystem();
-    await fs.open("testdb");
-    
-    // Load test data
-    // const blob = await openAsBlob('filesystem-dump.ndjson');
-    const blob = await openAsBlob('testdata/dump/testcase.ndjson');
-    await fs.undump(blob, n => {});
-  });
-
-  it('should load all books from Desktop and Cabinet', async () => {
+  async function checkFileSystem(fs: FileSystem) {
     const root = await fs.getRoot();
     const books: Book[] = [];
 
@@ -68,23 +56,33 @@ describe('Book loading from filesystem', () => {
     await loadBooksFromFolder((await root.getEmbodiedEntryByName('キャビネット'))[2].asFolder(), 'キャビネット');
 
     // Verify books were found
+    expect(books.length).toBe(5);
+
+    // Verify basic book structure
+    for (const book of books) {
+      console.log(titles[book.revision.id], { revision: book.revision, pages: book.pages.length, direction: book.direction, wrapMode: book.wrapMode });
+      expect(book.revision.id).toBeDefined();
+      expect(book.pages).toBeInstanceOf(Array);
+    }
     expect(books[0].pages.length).toBe(1);
     expect(books[1].pages.length).toBe(2);
     expect(books[2].pages.length).toBe(3);
     expect(books[3].pages[0].bubbles.length).toBe(1);
     expect(books[4].pages[0].bubbles.length).toBe(2);
-    expect(books.length).toBe(5);
+    // console.log(books[3].pages[0].frameTree.children[1].children[1].filmStack.films[0]);
+    // 画像のテストは厳しい、nodeでcanvasを使うのが大変なため
+  }
+
+  it('should load all books from Desktop and Cabinet', async () => {
+    const fs = new IndexedDBFileSystem();
+    await fs.open("testdb");
     
-    // Verify basic book structure
-    for (const book of books) {
-      console.log(titles[book.revision.id], { revision: book.revision, pages: book.pages.length, direction: book.direction, wrapMode: book.wrapMode });
-      if (book.revision.id === '01J9ZQJMRY2P8ENHHB8K0XRTJB') {
-        console.log(book);
-      }
-      expect(book.revision.id).toBeDefined();
-      expect(book.pages).toBeInstanceOf(Array);
-      // expect(book.direction).toBeDefined();
-      // expect(book.wrapMode).toBeDefined();
-    }
+    // Load test data
+    // const blob = await openAsBlob('filesystem-dump.ndjson');
+    const blob = await openAsBlob('testdata/dump/testcase.ndjson');
+    await fs.undump(blob, n => {});
+
+    await checkFileSystem(fs);
   }, 180 * 1000);
+
 }, 180 * 1000);
