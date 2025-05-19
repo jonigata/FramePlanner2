@@ -3,6 +3,7 @@ import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 import type { Book } from './book/book';
 import { openAsBlob } from 'fs';
 import { loadBookFrom } from '../filemanager/fileManagerStore';
+import { Folder } from './filesystem/fileSystem';
 
 describe('Book loading from filesystem', () => {
   let fs: IndexedDBFileSystem;
@@ -23,37 +24,31 @@ describe('Book loading from filesystem', () => {
 
     const titles: { [key: string]: string } = {};
 
+    // FramePlanner FileSystemではディレクトリに同じ名前のファイルが存在しうる
+    // (特定したいならBindIdを使う)が、テストケースでは同じ名前のファイルは存在しないので
+    // 一意に特定できるものとする
     async function loadBooksFromFolder(
-      folderName: string, 
-      visited = new Set<string>(), 
-      depth = 0,
+      folder: Folder,
+      folderName: string,
+      depth: number = 0,
       totalProcessed = { count: 0 }
     ): Promise<number> {
-      const entry = await root.getEntryByName(folderName);
-      expect(entry).not.toBeNull();
-      if (!entry) return 0;
-    
-      const folder = await fs.getNode(entry[2]);
-      expect(folder).not.toBeNull();
-      if (!folder) return 0;
-    
       const entries = await folder.asFolder()!.list();
       let processedCount = 0;
       const indent = '  '.repeat(depth);
+      console.log(`${indent}folder "${folderName}" has ${entries.length} entries`);
     
       for (const [, name, id] of entries) {
-        if (visited.has(id)) continue;
-        visited.add(id);
-    
         totalProcessed.count++;
-        console.log(`${indent}${totalProcessed.count}/${entries.length} ${name}`);
         titles[id] = name;
     
         const node = await fs.getNode(id);
-        if (!node) continue;
+        expect(node).not.toBeNull();
+        console.log(`${indent}${totalProcessed.count}/${entries.length} "${name}" (${node.getType()})`);
     
         if (node.getType() === 'folder') {
-          processedCount += await loadBooksFromFolder(name, visited, depth + 1, totalProcessed);
+          console.log(`${indent}Loading child folder: "${name}"`);
+          processedCount += await loadBooksFromFolder(node.asFolder(), name, depth + 1, totalProcessed);
         } else {
           try {
             const book = await loadBookFrom(fs, node.asFile()!);
@@ -69,11 +64,16 @@ describe('Book loading from filesystem', () => {
     }
 
     // Load books from Desktop and Cabinet
-    await loadBooksFromFolder('デスクトップ');
-    await loadBooksFromFolder('キャビネット');
+    await loadBooksFromFolder((await root.getEmbodiedEntryByName('デスクトップ'))[2].asFolder(), 'デスクトップ');
+    await loadBooksFromFolder((await root.getEmbodiedEntryByName('キャビネット'))[2].asFolder(), 'キャビネット');
 
     // Verify books were found
-    expect(books.length).toBeGreaterThan(0);
+    expect(books[0].pages.length).toBe(1);
+    expect(books[1].pages.length).toBe(2);
+    expect(books[2].pages.length).toBe(3);
+    expect(books[3].pages[0].bubbles.length).toBe(1);
+    expect(books[4].pages[0].bubbles.length).toBe(2);
+    expect(books.length).toBe(5);
     
     // Verify basic book structure
     for (const book of books) {
