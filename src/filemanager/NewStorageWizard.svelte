@@ -4,6 +4,7 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import { buildFileSystem } from "./localFileSystem";
   import { mainBookFileSystem } from './fileManagerStore';
+  import { createPreference, type FileSystemPreference } from '../preferences';
 
   // 3シーン分の状態
   let step = 0;
@@ -14,12 +15,17 @@
     console.log("copyFileSystem");
     const srcFs = $mainBookFileSystem!;
 
-    const fs = await buildFileSystem(storageFolder!);
+    const fs = new FSAFileSystem();
+    await fs.open(storageFolder!);
 
-    // dumpとundumpを直接接続する形
+    // コピー
     copyProgress = 0;
     const readable = await srcFs.dump({ onProgress: p => { console.log("dump:", p); } });
     await fs.undump(readable, { onProgress: p => { copyProgress = p; console.log("undump:", p)} });
+
+    // 設定
+    const pref = createPreference<FileSystemPreference>("filesystem", "current");
+    pref.set({type: "fsa", handle: storageFolder!});
 
     copyProgress = 1;
   }

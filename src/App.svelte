@@ -10,7 +10,8 @@
   import { Modals } from 'svelte-modals'
   import { bootstrap, onlineStatus } from './utils/accountStore';
   import { developmentFlag } from "./utils/developmentFlagStore";
-			
+  import { getPreferencePromise } from './preferences';
+  
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
   import BookEditor from './bookeditor/BookWorkspace.svelte';
@@ -211,9 +212,11 @@
 <FontChooser/>
 <ShapeChooser itemSize={[64, 96]}/>
 <ImageGenerator/>
-{#if fileManagerActive}
-  <FileManager/>
-{/if}
+{#await getPreferencePromise() then p}
+  {#if fileManagerActive}
+    <FileManager/>
+  {/if}
+{/await}
 <About/>
 <BatchImaging/>
 <TemplateChooser/>

@@ -27,7 +27,6 @@
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
-  import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem';
 
   export let fileSystem: FileSystem;
 
