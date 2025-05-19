@@ -160,6 +160,9 @@
     if ($developmentFlag) {
       console.log("ignore sentry because this is development mode.");
     } else {
+      const res = await fetch("/stamp.txt");
+      const text = await res.text();
+      const stamp = text.split("\n")[0].trim();
       Sentry.init({
         dsn: "https://d1b647c536ab49979532e731e8bebaaa@o4505054668062721.ingest.sentry.io/4505054670159872",
         replaysSessionSampleRate: 0.1,
@@ -167,6 +170,7 @@
         // sessions when an error occurs.
         replaysOnErrorSampleRate: 1.0,
         ignoreErrors: ['WebGPU is not supported on this browser','No appropriate GPUAdapter found'],
+        release: stamp,
       });
     }
   });

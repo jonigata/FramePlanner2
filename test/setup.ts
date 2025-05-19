@@ -23,6 +23,7 @@ HTMLCanvasElement.prototype.getContext = function (contextId: '2d' | 'bitmaprend
     return {
       canvas: this,
       fillRect: () => {},
+      fillText: () => {},
       getContextAttributes: () => ({}),
       getImageData: () => ({ data: new Uint8ClampedArray() }),
       putImageData: () => {},
