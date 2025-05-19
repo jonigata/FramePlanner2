@@ -13,7 +13,7 @@ describe('Book loading from filesystem', () => {
     
     // Load test data
     // const blob = await openAsBlob('filesystem-dump.ndjson');
-    const blob = await openAsBlob('testdata/share.ndjson');
+    const blob = await openAsBlob('testdata/dump/testcase.ndjson');
     await fs.undump(blob, n => {});
   });
 
