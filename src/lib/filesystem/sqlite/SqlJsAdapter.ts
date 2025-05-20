@@ -1,7 +1,14 @@
 import initSqlJs from 'sql.js';
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'; // これでURLとして取得
 
-type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
+export interface FilePersistenceProvider {
+  readFile(name: string): Promise<Uint8Array | null>;
+  writeFile(name: string, data: Uint8Array): Promise<void>;
+  removeFile(name: string): Promise<void>;
+  readText(name: string): Promise<string | null>;
+  writeText(name: string, text: string): Promise<void>;
+}
+
 type Database = { prepare: Function; exec: Function; export: Function; };
 type SqlJsStatic = { Database: any; };
 
@@ -12,7 +19,7 @@ function assert<T>(v: T, msg: string): asserts v is NonNullable<T> {
 export class SqlJsAdapter {
   private db: Database | null = null;
   private SQL: SqlJsStatic | null = null;
-  private dirHandle: FileSystemDirectoryHandle | null = null;
+  private persistence: FilePersistenceProvider;
   private versionFileName = 'filesystem.version';
   private dbFilePrefix = 'filesystem.db.';
   private version: number = 1;
@@ -20,9 +27,12 @@ export class SqlJsAdapter {
 
   persistentSuspended = false; // 永続化中フラグ
 
+  constructor(persistence: FilePersistenceProvider) {
+    this.persistence = persistence;
+  }
+
   // open: バージョンファイルとDBファイルが揃っていなければ初期化
-  async open(dirHandle: FileSystemDirectoryHandle): Promise<void> {
-    this.dirHandle = dirHandle;
+  async open(): Promise<void> {
     this.SQL = await initSqlJs(
       { locateFile: () => wasmUrl }
     );
@@ -38,16 +48,15 @@ export class SqlJsAdapter {
       versionExists = false;
     }
     const dbFileName = this.dbFilePrefix + version;
-    let dbFile: File | null = null;
+    let dbFileData: Uint8Array | null = null;
     try {
-      dbFile = await dirHandle.getFileHandle(dbFileName, { create: false }).then(fh => fh.getFile());
+      dbFileData = await this.persistence.readFile(dbFileName);
     } catch {
-      dbFile = null;
+      dbFileData = null;
     }
 
-    if (versionExists && dbFile) {
-      const buf = await dbFile.arrayBuffer();
-      this.db = new (this.SQL!).Database(new Uint8Array(buf));
+    if (versionExists && dbFileData) {
+      this.db = new (this.SQL!).Database(dbFileData);
       this.version = version;
       // スキーマバージョン取得
       this.schemaVersion = this._getSchemaVersion();
@@ -61,20 +70,15 @@ export class SqlJsAdapter {
       await this._writeVersion(1);
       assert(this.db, 'DB not initialized');
       const data = this.db.export();
-      const newHandle = await this.dirHandle!.getFileHandle(this.dbFilePrefix + '1', { create: true });
-      const newWritable = await newHandle.createWritable({ keepExistingData: false });
-      await newWritable.write(data);
-      await newWritable.close();
+      await this.persistence.writeFile(this.dbFilePrefix + '1', data);
       this.version = 1;
     }
   }
 
   // バージョンファイルを読む
   private async _readVersion(): Promise<number> {
-    assert(this.dirHandle, 'No dirHandle');
-    const vh = await this.dirHandle.getFileHandle(this.versionFileName, { create: false });
-    const file = await vh.getFile();
-    const text = await file.text();
+    const text = await this.persistence.readText(this.versionFileName);
+    if (text == null) throw new Error('No version file');
     const v = parseInt(text.trim(), 10);
     if (isNaN(v)) throw new Error('Invalid version');
     return v;
@@ -82,11 +86,7 @@ export class SqlJsAdapter {
 
   // バージョンファイルを書き換える
   private async _writeVersion(version: number): Promise<void> {
-    assert(this.dirHandle, 'No dirHandle');
-    const vh = await this.dirHandle.getFileHandle(this.versionFileName, { create: true });
-    const writable = await vh.createWritable({ keepExistingData: false });
-    await writable.write(String(version));
-    await writable.close();
+    await this.persistence.writeText(this.versionFileName, String(version));
   }
 
   // スキーマ初期化
@@ -180,24 +180,20 @@ export class SqlJsAdapter {
     console.log("persist", this.version);
     console.trace();
     assert(this.db, 'DB not initialized');
-    assert(this.dirHandle, 'No dirHandle');
     const newVersion = this.version + 1;
     const newDbFileName = this.dbFilePrefix + newVersion;
     const oldDbFileName = this.dbFilePrefix + this.version;
     const data = this.db.export();
 
     // 1. 新バージョンのDBファイルを直接正式名で上書き
-    const newHandle = await this.dirHandle.getFileHandle(newDbFileName, { create: true });
-    const newWritable = await newHandle.createWritable({ keepExistingData: false });
-    await newWritable.write(data);
-    await newWritable.close();
+    await this.persistence.writeFile(newDbFileName, data);
 
     // 2. versionファイルも正式名で上書き
     await this._writeVersion(newVersion);
 
     // 3. 旧DBファイル削除（新が書き込まれてから）
     try {
-      await this.dirHandle.removeEntry(oldDbFileName, { recursive: false });
+      await this.persistence.removeFile(oldDbFileName);
     } catch (e) {
       console.warn('Failed to remove old DB file:', oldDbFileName, e);
     }

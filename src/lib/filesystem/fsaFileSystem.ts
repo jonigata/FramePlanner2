@@ -1,6 +1,6 @@
 import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem.js';
 import { Node, File, Folder, FileSystem } from './fileSystem.js';
-import { SqlJsAdapter } from './sqlite/SqlJsAdapter.js';
+import { SqlJsAdapter, FilePersistenceProvider } from './sqlite/SqlJsAdapter.js';
 import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
@@ -8,18 +8,72 @@ import { ulid } from 'ulid';
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
 
+class FSAFilePersistenceProvider implements FilePersistenceProvider {
+  private dirHandle: FileSystemDirectoryHandle | null = null;
+
+  setDirectoryHandle(dirHandle: FileSystemDirectoryHandle) {
+    this.dirHandle = dirHandle;
+  }
+
+  async readFile(name: string): Promise<Uint8Array | null> {
+    if (!this.dirHandle) throw new Error('No dirHandle');
+    try {
+      const fileHandle = await this.dirHandle.getFileHandle(name, { create: false });
+      const file = await fileHandle.getFile();
+      return new Uint8Array(await file.arrayBuffer());
+    } catch {
+      return null;
+    }
+  }
+
+  async writeFile(name: string, data: Uint8Array): Promise<void> {
+    if (!this.dirHandle) throw new Error('No dirHandle');
+    const fileHandle = await this.dirHandle.getFileHandle(name, { create: true });
+    const writable = await fileHandle.createWritable({ keepExistingData: false });
+    await writable.write(data);
+    await writable.close();
+  }
+
+  async removeFile(name: string): Promise<void> {
+    if (!this.dirHandle) throw new Error('No dirHandle');
+    await this.dirHandle.removeEntry(name, { recursive: false });
+  }
+
+  async readText(name: string): Promise<string | null> {
+    if (!this.dirHandle) throw new Error('No dirHandle');
+    try {
+      const fileHandle = await this.dirHandle.getFileHandle(name, { create: false });
+      const file = await fileHandle.getFile();
+      return await file.text();
+    } catch {
+      return null;
+    }
+  }
+
+  async writeText(name: string, text: string): Promise<void> {
+    if (!this.dirHandle) throw new Error('No dirHandle');
+    const fileHandle = await this.dirHandle.getFileHandle(name, { create: true });
+    const writable = await fileHandle.createWritable({ keepExistingData: false });
+    await writable.write(text);
+    await writable.close();
+  }
+}
+
 export class FSAFileSystem extends FileSystem {
   private sqlite: SqlJsAdapter;
   private blobStore: BlobStore;
+  private fsaProvider: FSAFilePersistenceProvider;
 
   constructor() {
     super();
-    this.sqlite = new SqlJsAdapter();
+    this.fsaProvider = new FSAFilePersistenceProvider();
+    this.sqlite = new SqlJsAdapter(this.fsaProvider);
     this.blobStore = new BlobStore();
   }
 
   async open(dirHandle: FileSystemDirectoryHandle): Promise<void> {
-    await this.sqlite.open(dirHandle);
+    this.fsaProvider.setDirectoryHandle(dirHandle);
+    await this.sqlite.open();
     await this.blobStore.open(dirHandle);
     // ルートノードがなければ作成
     const root = await this.sqlite.selectOne("SELECT id FROM nodes WHERE id = '/'");
