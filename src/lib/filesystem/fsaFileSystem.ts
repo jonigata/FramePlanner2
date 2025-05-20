@@ -4,6 +4,7 @@ import { SqlJsAdapter, FilePersistenceProvider } from './sqlite/SqlJsAdapter.js'
 import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
@@ -71,9 +72,9 @@ export class FSAFileSystem extends FileSystem {
     this.blobStore = new BlobStore();
   }
 
-  async open(dirHandle: FileSystemDirectoryHandle): Promise<void> {
+  async open(dirHandle: FileSystemDirectoryHandle, wasm: string = wasmUrl): Promise<void> {
     this.fsaProvider.setDirectoryHandle(dirHandle);
-    await this.sqlite.open();
+    await this.sqlite.open(wasm);
     await this.blobStore.open(dirHandle);
     // ルートノードがなければ作成
     const root = await this.sqlite.selectOne("SELECT id FROM nodes WHERE id = '/'");

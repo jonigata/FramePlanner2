@@ -32,7 +32,7 @@ export class SqlJsAdapter {
   }
 
   // open: バージョンファイルとDBファイルが揃っていなければ初期化
-  async open(): Promise<void> {
+  async open(wasmUrl: string): Promise<void> {
     this.SQL = await initSqlJs(
       { locateFile: () => wasmUrl }
     );
@@ -177,8 +177,6 @@ export class SqlJsAdapter {
     if (this.persistentSuspended) {
       return;
     }
-    console.log("persist", this.version);
-    console.trace();
     assert(this.db, 'DB not initialized');
     const newVersion = this.version + 1;
     const newDbFileName = this.dbFilePrefix + newVersion;
