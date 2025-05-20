@@ -115,6 +115,7 @@ function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, 
   }
   if (fontSize < 1) {
     captureException(`fontSize is too small, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
+    fontSize = 14;
   }
 
   const ri = bubble.renderInfo!;
