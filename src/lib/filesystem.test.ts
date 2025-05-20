@@ -1,9 +1,9 @@
 import { describe, it, expect, assert } from 'vitest';
-import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
-import type { Book } from './book/book';
+import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem.js';
+import type { Book } from './book/book.js';
 import { openAsBlob } from 'fs';
-import { loadBookFrom } from '../filemanager/fileManagerStore';
-import { FileSystem, Folder } from './filesystem/fileSystem';
+import { loadBookFrom } from '../filemanager/fileManagerStore.js';
+import { FileSystem, Folder } from './filesystem/fileSystem.js';
 
 describe('Book loading from filesystem', () => {
   async function checkFileSystem(fs: FileSystem) {

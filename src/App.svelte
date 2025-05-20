@@ -40,7 +40,6 @@
   import FileBrowser from './utils/FileBrowser.svelte';
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
   import FullScreenProgress from './utils/FullScreenProgress.svelte';
-  import SignIn from './utils/SignIn.svelte';
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
   import StructureTree from './about/StructureTree.svelte';
@@ -83,9 +82,6 @@
     },
     fileBrowser: {
       ref: FileBrowser,
-    },
-    signIn: {
-      ref: SignIn,
     },
     videoMaker: {
       ref: VideoMaker,

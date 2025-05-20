@@ -1,7 +1,7 @@
 import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem.js';
 import { Node, File, Folder, FileSystem } from './fileSystem.js';
-import { SqlJsAdapter, FilePersistenceProvider } from './sqlite/SqlJsAdapter.js';
-import { BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
+import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapter.js';
+import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
 // 型定義

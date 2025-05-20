@@ -31,7 +31,7 @@
   onMount(async () => {
     const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
     let fileSystemPreference = await pref.getOrDefault(null);
-    // fileSystemPreference = null;
+    fileSystemPreference = null;
 
     if (fileSystemPreference == null) {
       await buildIndexedDBFileSystem();
