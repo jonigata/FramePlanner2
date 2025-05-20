@@ -7,6 +7,30 @@ import type { DumpFormat, DumpProgress } from './fileSystem';
 import { blobToDataURL, dataURLtoBlob } from './fileSystemTools';
 
 /**
+ * {__blob__: true, data, type} を再帰的に Blob に戻す
+ */
+async function deserializeBlobs(obj: any): Promise<any> {
+  if (obj && typeof obj === "object") {
+    if (obj.__blob__ && obj.data) {
+      const blob = await dataURLtoBlob(obj.data);
+      if (obj.type && blob.type !== obj.type) {
+        return new Blob([blob], { type: obj.type });
+      }
+      return blob;
+    }
+    if (Array.isArray(obj)) {
+      return Promise.all(obj.map(deserializeBlobs));
+    }
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = await deserializeBlobs(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
+/**
  * オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
  */
 async function serializeBlobs(obj: any): Promise<any> {
@@ -257,11 +281,8 @@ export class IndexedDBFileSystem extends FileSystem {
           return;
         }
         let value = items[count];
-        if (value.blob) {
-          // Blob→dataURL
-          console.log(value.blob);
-          value.blob = await blobToDataURL(value.blob);
-        }
+        // 再帰的にBlobをdataURLラッパーに変換
+        value = await serializeBlobs(value);
         const jsonString = JSON.stringify(value) + "\n";
         controller.enqueue(encoder.encode(jsonString));
         count++;
@@ -303,12 +324,10 @@ export class IndexedDBFileSystem extends FileSystem {
     let count = 0;
 
     console.log("Start processing nodes");
-    for await (const node of nodes) {
+    for await (let node of nodes) {
       console.log(node);
-      // Base64からBlobを復元（トランザクション外）
-      if (node.blob) {
-        node.blob = await dataURLtoBlob(node.blob);
-      }
+      // 再帰的に {__blob__:...} を Blob に復元
+      node = await deserializeBlobs(node);
       allItems.push(node);
       count++;
       onProgress(0.1 + 0.8 * (count / lineCount));

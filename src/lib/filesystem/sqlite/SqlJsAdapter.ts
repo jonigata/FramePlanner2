@@ -1,5 +1,4 @@
 import initSqlJs from 'sql.js';
-import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'; // これでURLとして取得
 
 export interface FilePersistenceProvider {
   readFile(name: string): Promise<Uint8Array | null>;

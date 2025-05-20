@@ -84,8 +84,6 @@ describe('Book loading from filesystem', () => {
     await fs.undump(blob.stream());
 
     await checkFileSystem(fs);
-
-    assert.fail("dump/undumpが再帰的blobに対応してない");
   }, 180 * 1000);
 
   it('should obtain same hierarchy from dumped and undumped data', async () => {
