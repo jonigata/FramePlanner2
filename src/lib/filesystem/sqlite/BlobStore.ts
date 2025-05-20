@@ -1,6 +1,14 @@
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
-export class BlobStore {
+export interface BlobStore {
+  open(dirHandle: FileSystemDirectoryHandle): Promise<void>;
+  write(id: string, blob: Blob): Promise<void>;
+  read(id: string): Promise<Blob>;
+  delete(id: string): Promise<void>;
+  gc(validIds: Set<string>): Promise<void>;
+}
+
+export class FSABlobStore implements BlobStore {
   dirHandle: FileSystemDirectoryHandle | null = null;
 
   async open(dirHandle: FileSystemDirectoryHandle) {
@@ -37,6 +45,37 @@ export class BlobStore {
         if (!validIds.has(id)) {
           await this.dirHandle.removeEntry(entry.name);
         }
+      }
+    }
+  }
+}
+
+// メモリ上のBlobStore実装
+export class MemoryBlobStore implements BlobStore {
+  private blobs: Map<string, Blob> = new Map();
+
+  async open(_dirHandle: FileSystemDirectoryHandle): Promise<void> {
+    // メモリストアなので何もしない
+  }
+
+  async write(id: string, blob: Blob): Promise<void> {
+    this.blobs.set(id, blob);
+  }
+
+  async read(id: string): Promise<Blob> {
+    const blob = this.blobs.get(id);
+    if (!blob) throw new Error('Blob not found: ' + id);
+    return blob;
+  }
+
+  async delete(id: string): Promise<void> {
+    this.blobs.delete(id);
+  }
+
+  async gc(validIds: Set<string>): Promise<void> {
+    for (const id of Array.from(this.blobs.keys())) {
+      if (!validIds.has(id)) {
+        this.blobs.delete(id);
       }
     }
   }

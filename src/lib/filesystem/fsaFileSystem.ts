@@ -1,7 +1,7 @@
 import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem.js';
 import { Node, File, Folder, FileSystem } from './fileSystem.js';
 import { SqlJsAdapter, FilePersistenceProvider } from './sqlite/SqlJsAdapter.js';
-import { BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
+import { BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
@@ -9,15 +9,14 @@ import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
 
-class FSAFilePersistenceProvider implements FilePersistenceProvider {
-  private dirHandle: FileSystemDirectoryHandle | null = null;
+export class FSAFilePersistenceProvider implements FilePersistenceProvider {
+  private dirHandle: FileSystemDirectoryHandle;
 
-  setDirectoryHandle(dirHandle: FileSystemDirectoryHandle) {
+  constructor(dirHandle: FileSystemDirectoryHandle) {
     this.dirHandle = dirHandle;
   }
 
   async readFile(name: string): Promise<Uint8Array | null> {
-    if (!this.dirHandle) throw new Error('No dirHandle');
     try {
       const fileHandle = await this.dirHandle.getFileHandle(name, { create: false });
       const file = await fileHandle.getFile();
@@ -63,19 +62,19 @@ class FSAFilePersistenceProvider implements FilePersistenceProvider {
 export class FSAFileSystem extends FileSystem {
   private sqlite: SqlJsAdapter;
   private blobStore: BlobStore;
-  private fsaProvider: FSAFilePersistenceProvider;
+  private persistenceProvider: FilePersistenceProvider;
 
-  constructor() {
+  constructor(persistenceProvider: FilePersistenceProvider, blobStore?: BlobStore) {
     super();
-    this.fsaProvider = new FSAFilePersistenceProvider();
-    this.sqlite = new SqlJsAdapter(this.fsaProvider);
-    this.blobStore = new BlobStore();
+    this.persistenceProvider = persistenceProvider;
+    this.sqlite = new SqlJsAdapter(this.persistenceProvider);
+    this.blobStore = blobStore ?? new FSABlobStore();
   }
 
-  async open(dirHandle: FileSystemDirectoryHandle, wasm: string = wasmUrl): Promise<void> {
-    this.fsaProvider.setDirectoryHandle(dirHandle);
+  async open(wasm: string = wasmUrl): Promise<void> {
     await this.sqlite.open(wasm);
-    await this.blobStore.open(dirHandle);
+    // BlobStoreのopenが必要な場合は、外部でセット済みのものを使う前提
+    // await this.blobStore.open(...) は呼び出し側で必要に応じて行う
     // ルートノードがなければ作成
     const root = await this.sqlite.selectOne("SELECT id FROM nodes WHERE id = '/'");
     if (!root) {
@@ -428,10 +427,10 @@ export class FSAFileSystem extends FileSystem {
     onProgress(1);
   }
 
-  static async existsDatabase(dirHandle: FileSystemDirectoryHandle): Promise<boolean> {
+  static async existsDatabase(persistenceProvider: FilePersistenceProvider): Promise<boolean> {
     try {
-      await dirHandle.getFileHandle('filesystem.db', { create: false });
-      return true;
+      const data = await persistenceProvider.readFile('filesystem.db.1');
+      return !!data;
     } catch {
       return false;
     }
