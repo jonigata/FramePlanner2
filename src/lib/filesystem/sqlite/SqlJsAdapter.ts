@@ -27,14 +27,17 @@ export class SqlJsAdapter {
 
   persistentSuspended = false; // 永続化中フラグ
 
-  constructor(persistence: FilePersistenceProvider) {
+  private wasmUrl: string;
+
+  constructor(persistence: FilePersistenceProvider, wasmUrl: string) {
     this.persistence = persistence;
+    this.wasmUrl = wasmUrl;
   }
 
   // open: バージョンファイルとDBファイルが揃っていなければ初期化
-  async open(wasmUrl: string): Promise<void> {
+  async open(): Promise<void> {
     this.SQL = await initSqlJs(
-      { locateFile: () => wasmUrl }
+      { locateFile: () => this.wasmUrl }
     );
 
     // versionファイルを読む。なければ初期化（両方作成）

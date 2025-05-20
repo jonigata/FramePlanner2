@@ -4,10 +4,8 @@ import { SqlJsAdapter, FilePersistenceProvider } from './sqlite/SqlJsAdapter.js'
 import { BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 
-import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
-
 
 export class FSAFilePersistenceProvider implements FilePersistenceProvider {
   private dirHandle: FileSystemDirectoryHandle;
@@ -62,17 +60,18 @@ export class FSAFilePersistenceProvider implements FilePersistenceProvider {
 export class FSAFileSystem extends FileSystem {
   private sqlite: SqlJsAdapter;
   private blobStore: BlobStore;
-  private persistenceProvider: FilePersistenceProvider;
 
-  constructor(persistenceProvider: FilePersistenceProvider, blobStore?: BlobStore) {
+  constructor(
+    sqlite: SqlJsAdapter,
+    blobStore?: BlobStore
+  ) {
     super();
-    this.persistenceProvider = persistenceProvider;
-    this.sqlite = new SqlJsAdapter(this.persistenceProvider);
+    this.sqlite = sqlite;
     this.blobStore = blobStore ?? new FSABlobStore();
   }
 
-  async open(wasm: string = wasmUrl): Promise<void> {
-    await this.sqlite.open(wasm);
+  async open(): Promise<void> {
+    await this.sqlite.open();
     // BlobStoreのopenが必要な場合は、外部でセット済みのものを使う前提
     // await this.blobStore.open(...) は呼び出し側で必要に応じて行う
     // ルートノードがなければ作成
@@ -428,12 +427,7 @@ export class FSAFileSystem extends FileSystem {
   }
 
   static async existsDatabase(persistenceProvider: FilePersistenceProvider): Promise<boolean> {
-    try {
-      const data = await persistenceProvider.readFile('filesystem.db.1');
-      return !!data;
-    } catch {
-      return false;
-    }
+    throw new Error('Not implemented');
   }
 
   async withoutPersist(f: () => Promise<void>): Promise<void> {
