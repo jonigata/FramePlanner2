@@ -5,7 +5,7 @@ import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { eraser, pollMediaStatus } from "../supabase";
 import { analyticsEvent } from "./analyticsEvent";
 import { saveRequest } from '../filemanager/warehouse';
-import { fileSystem } from '../filemanager/fileManagerStore';
+import { mainBookFileSystem } from '../filemanager/fileManagerStore';
 import { onlineStatus } from './accountStore';
 import { waitDialog } from './waitDialog';
 import { loading } from './loadingStore';
@@ -49,7 +49,7 @@ export async function eraserFilm(film: Film) {
   const maskDataUrl = request.mask.toDataURL("image/png");
   const imageDataUrl = request.image.toDataURL("image/png");
   const { requestId } = await eraser({maskDataUrl, imageDataUrl});
-  await saveRequest(get(fileSystem)!, "image", "eraser", requestId);
+  await saveRequest(get(mainBookFileSystem)!, "image", "eraser", requestId);
 
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "eraser", requestId});
   loading.set(false);

@@ -9,7 +9,7 @@ import { type FrameElement, calculatePhysicalLayout, findLayoutOf } from '../lib
 import { trapezoidBoundingRect } from "../lib/layeredCanvas/tools/geometry/trapezoid";
 import { add2D, getRectCenter } from "../lib/layeredCanvas/tools/geometry/geometry";
 import { saveRequest } from '../filemanager/warehouse';
-import { fileSystem } from '../filemanager/fileManagerStore';
+import { mainBookFileSystem } from '../filemanager/fileManagerStore';
 
 export async function outPaintFilm(film: Film, padding: {left: number, top: number, right: number, bottom: number}) {
   const imageMedia = film.media as ImageMedia;
@@ -34,7 +34,7 @@ export async function outPaintFilm(film: Film, padding: {left: number, top: numb
   const imageUrl = imageMedia.drawSourceCanvas.toDataURL("image/png");
   const { requestId } = await outPaint({dataUrl: imageUrl, size, padding});
   console.log("outpainting result", requestId);
-  await saveRequest(get(fileSystem)!, "image", "outpaint", requestId);
+  await saveRequest(get(mainBookFileSystem)!, "image", "outpaint", requestId);
 
   const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode: "outpaint", requestId});
   const canvas = mediaResources[0] as HTMLCanvasElement;

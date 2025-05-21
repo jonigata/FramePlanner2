@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import type { CharacterBase } from "../lib/book/types/notebook";
   import type { CharacterLocal } from "../lib/book/book";
-  import { fileSystem } from "../filemanager/fileManagerStore";
+  import { mainBookFileSystem } from "../filemanager/fileManagerStore";
   import { rm } from "../lib/filesystem/fileSystem";
   import trashIcon from '../assets/trash.webp';
   import MediaFrame from "../gallery/MediaFrame.svelte";
@@ -30,7 +30,7 @@
   function remove(c: CharacterLocal) {
     console.log("remove");
     characters = characters.filter((char) => char !== c);
-    rm($fileSystem!, `AI/キャラクター/${c.ulid}`);
+    rm($mainBookFileSystem!, `AI/キャラクター/${c.ulid}`);
   }
 
   onMount(() => {
@@ -38,7 +38,7 @@
       if (newOpened) {
         if (!opened) {
           opened = true;
-          characters = await loadCharactersFromRoster($fileSystem!);
+          characters = await loadCharactersFromRoster($mainBookFileSystem!);
         }
       } else {
         opened = false;

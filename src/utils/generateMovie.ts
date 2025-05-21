@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { fileSystem } from '../filemanager/fileManagerStore';
+import { mainBookFileSystem } from '../filemanager/fileManagerStore';
 import type { ImageToVideoRequest, ImageToVideoModel } from '$protocolTypes/imagingTypes';
 import { Film, FilmStack } from '../lib/layeredCanvas/dataModels/film';
 import { ImageMedia, VideoMedia } from '../lib/layeredCanvas/dataModels/media';
@@ -30,7 +30,7 @@ export async function generateMovie(filmStack: FilmStack, film: Film) {
   loading.set(true);
   try {
     const { requestId: request_id } = await image2Video(request);
-    await saveRequest(get(fileSystem)!, "video", request.model, request_id);
+    await saveRequest(get(mainBookFileSystem)!, "video", request.model, request_id);
 
     const newMedia = new VideoMedia({ mediaType: "video", mode: request.model, requestId: request_id });
     const newFilm = new Film(newMedia);

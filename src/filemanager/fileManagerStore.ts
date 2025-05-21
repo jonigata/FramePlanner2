@@ -1,7 +1,7 @@
 import { writable, type Writable } from "svelte/store";
 import type { FileSystem, Folder, File, NodeId, BindId } from "../lib/filesystem/fileSystem.js";
-import type { Page, Book, SerializedBook, SerializedPage } from "../lib/book/book";
-import { commitBook, emptyNotebook, trivialNewPageProperty } from "../lib/book/book";
+import type { Page, Book, SerializedBook, SerializedPage, SerializedCharacter, SerializedNotebook } from "../lib/book/book";
+import { commitBook, emptyNotebook } from "../lib/book/book";
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { ulid } from 'ulid';
@@ -28,7 +28,6 @@ export const fileManagerOpen = writable(false);
 export const fileManagerDragging: Writable<Dragging | null> = writable(null);
 export const newBookToken: Writable<Book | null> = writable(null);
 export const saveBubbleToken: Writable<Bubble | null> = writable(null);
-export const fileSystem: Writable<FileSystem | null> = writable(null);
 export const fileManagerUsedSizeToken: Writable<FileSystem | null> = writable(null);
 export const loadToken: Writable<LoadToken | null> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
@@ -83,11 +82,11 @@ export function serializeBook(book: Book): SerializedBook {
     wrapMode: book.wrapMode,
     chatLogs: richChatLogToProtocolChatLog(book.chatLogs),
     notebook: {
-       ...book.notebook,
-       characters: book.notebook.characters.map(character => {
-         return { ...character, portrait: null }
-       })
-    },
+      ...book.notebook,
+      characters: book.notebook.characters.map(character => {
+        return { ...character, portrait: null } as SerializedCharacter;
+      })
+    } as SerializedNotebook,
     attributes: book.attributes,
     newPageProperty: book.newPageProperty,
   }

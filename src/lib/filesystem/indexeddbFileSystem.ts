@@ -325,9 +325,15 @@ export class IndexedDBFileSystem extends FileSystem {
 
     console.log("Start processing nodes");
     for await (let node of nodes) {
-      console.log(node);
       // 再帰的に {__blob__:...} を Blob に復元
       node = await deserializeBlobs(node);
+      console.log(node);
+      // blob:は例外的にblobに変換
+      if (node.blob) {
+        const blob = await dataURLtoBlob(node.blob);
+        node.blob = blob;
+      }
+      console.log(node);
       allItems.push(node);
       count++;
       onProgress(0.1 + 0.8 * (count / lineCount));

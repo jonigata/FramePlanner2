@@ -5,7 +5,7 @@ import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { inPaint, pollMediaStatus } from "../supabase";
 import { analyticsEvent } from "./analyticsEvent";
 import { saveRequest } from '../filemanager/warehouse';
-import { fileSystem } from '../filemanager/fileManagerStore';
+import { mainBookFileSystem } from '../filemanager/fileManagerStore';
 import { onlineStatus } from './accountStore';
 import { waitDialog } from './waitDialog';
 import { loading } from './loadingStore';
@@ -69,7 +69,7 @@ export async function inpaintFilm(film: Film) {
   const maskDataUrl = request.mask.toDataURL("image/png");
   const imageDataUrl = request.image.toDataURL("image/png");
   const { requestId } = await inPaint({maskDataUrl, imageDataUrl, prompt: request.prompt});
-  await saveRequest(get(fileSystem)!, "image", "inpaint", requestId);
+  await saveRequest(get(mainBookFileSystem)!, "image", "inpaint", requestId);
 
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "inpaint", requestId});
   loading.set(false);

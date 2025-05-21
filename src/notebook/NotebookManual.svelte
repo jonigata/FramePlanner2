@@ -20,7 +20,7 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import FluxModes from '../generator/FluxModes.svelte';
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
-  import { fileSystem } from '../filemanager/fileManagerStore';
+  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
   import { type Folder } from '../lib/filesystem/fileSystem';
   import { rosterOpen, rosterSelectedCharacter, saveCharacterToRoster } from './rosterStore';
   import { waitForChange } from '../utils/reactUtil';
@@ -343,7 +343,7 @@
 
   async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
     const ulid = e.detail.ulid!;
-    await saveCharacterToRoster($fileSystem!, e.detail);
+    await saveCharacterToRoster($mainBookFileSystem!, e.detail);
     toastStore.trigger({ message: 'キャラクターを登録しました', timeout: 1500});
   }
 
@@ -368,7 +368,7 @@
   }
 
   onMount(async () => {
-    rootFolder = await $fileSystem!.getRoot();
+    rootFolder = await $mainBookFileSystem!.getRoot();
     aiFolder = (await rootFolder.getEmbodiedEntryByName('AI'))![2].asFolder()!;
     rosterFolder = (await aiFolder.getEmbodiedEntryByName('キャラクター'))![2].asFolder()!;
 

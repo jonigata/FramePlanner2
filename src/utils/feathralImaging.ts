@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { fileSystem } from '../filemanager/fileManagerStore';
+import { mainBookFileSystem } from '../filemanager/fileManagerStore';
 import { text2Image, pollMediaStatus } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
@@ -35,7 +35,7 @@ async function generateImage_Flux(prompt: string, image_size: {width: number, he
     console.log(imageRequest);
     const { requestId } = await text2Image(imageRequest);
 
-    await saveRequest(get(fileSystem)!, "image", mode, requestId);
+    await saveRequest(get(mainBookFileSystem)!, "image", mode, requestId);
 
     const perf = performance.now();
     const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });
@@ -67,7 +67,7 @@ async function generateImage_Gpt1(prompt: string, image_size: {width: number, he
     console.log(imageRequest);
     const { requestId } = await text2Image(imageRequest);
 
-    await saveRequest(get(fileSystem)!, "image", mode, requestId);
+    await saveRequest(get(mainBookFileSystem)!, "image", mode, requestId);
 
     const perf = performance.now();
     const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });

@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { fileSystem } from '../filemanager/fileManagerStore.js';
+import { mainBookFileSystem } from '../filemanager/fileManagerStore.js';
 import type { UpscaleRequest } from '$protocolTypes/imagingTypes.d';
 import { Film } from '../lib/layeredCanvas/dataModels/film.js';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media.js';
@@ -43,7 +43,7 @@ export async function upscaleCanvas(canvas: HTMLCanvasElement, warning: string |
 
   loading.set(true);
   const { requestId } = await upscale(request);
-  await saveRequest(get(fileSystem)!, "image", "upscale", requestId);
+  await saveRequest(get(mainBookFileSystem)!, "image", "upscale", requestId);
 
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "upscale", requestId});
   loading.set(false);
@@ -65,7 +65,7 @@ export async function upscaleCanvasWithoutDialog(canvas: HTMLCanvasElement): Pro
 
   loading.set(true);
   const { requestId } = await upscale(request);
-  await saveRequest(get(fileSystem)!, "image", "upscale", requestId);
+  await saveRequest(get(mainBookFileSystem)!, "image", "upscale", requestId);
 
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "upscale", requestId});
   loading.set(false);

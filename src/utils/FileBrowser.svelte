@@ -3,7 +3,7 @@
 	import Gallery from '../gallery/Gallery.svelte';
   import { onMount } from 'svelte';
   import { collectGarbage } from '../utils/garbageCollection';
-  import { fileSystem } from '../filemanager/fileManagerStore';
+  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
   import type { NodeId, File } from '../lib/filesystem/fileSystem';
   import { buildMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
 
@@ -16,7 +16,7 @@
   }
 
   onMount(async () => {
-    const fs = $fileSystem!;
+    const fs = $mainBookFileSystem!;
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fs);
 
     usedMedias = [];

@@ -371,7 +371,7 @@
       );
       await clearCurrentFileInfo();
       console.log("undump done");
-      location.reload();
+      // location.reload();
     } else {
       console.log("undump canceled");
     }

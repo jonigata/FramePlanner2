@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Gallery from '../gallery/Gallery.svelte';
-  import { fileSystem } from '../filemanager/fileManagerStore';
+  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
   import { getEntries, saveEntity, deleteEntry } from '../filemanager/warehouse';
   import { buildMedia, type Media, type MediaType } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher } from 'svelte';
@@ -21,13 +21,13 @@
   async function onDelete(e: CustomEvent<GalleryItem>) {
     console.log("onDelete", e.detail);
     const requestId = requestIds.get(e.detail);
-    deleteEntry($fileSystem!, requestId!);
+    deleteEntry($mainBookFileSystem!, requestId!);
   }
 
   async function handleRequest(mediaType: MediaType, mode: string, request_id: string) {
     try {
       const { mediaResources, urls } = await pollMediaStatus({mediaType, mode, requestId: request_id});
-      await saveEntity($fileSystem!, mediaType, mode, request_id, urls);
+      await saveEntity($mainBookFileSystem!, mediaType, mode, request_id, urls);
       return mediaResources.map((mediaResource) => {
         const media = buildMedia(mediaResource);
         return media;
@@ -36,7 +36,7 @@
     catch (e) {
       // fal.aiは7日間しかリクエストを保存しないので、おそらくそれ
       console.log(e);
-      deleteEntry($fileSystem!, request_id);
+      deleteEntry($mainBookFileSystem!, request_id);
       return [];
     }
   }
@@ -61,11 +61,11 @@
   }
 
   async function displayWarehouseImages() {
-    console.log(await ls($fileSystem!, "倉庫"));
+    console.log(await ls($mainBookFileSystem!, "倉庫"));
 
     const newItems = [];
     const newRequestIds = new WeakMap<(Media | (() => Promise<Media[]>)), string>();
-    for (const entry of await getEntries($fileSystem!)) {
+    for (const entry of await getEntries($mainBookFileSystem!)) {
       console.log(entry);
 
       switch (entry.type) {

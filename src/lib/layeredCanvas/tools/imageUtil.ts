@@ -12,6 +12,7 @@ export function makePlainCanvas(w: number, h: number, color?: string | null): HT
 }
 
 export async function createImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
+  console.log("createImageFromBlob", blob);
   const url = URL.createObjectURL(blob);
   const image = new Image();
   image.src = url;

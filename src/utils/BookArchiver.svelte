@@ -8,7 +8,7 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import { postToAiPictors } from "./saver/postToAiPictors";
   import { writeEnvelope } from "../lib/book/envelope";
-  import { fileSystem, loadBookFrom, saveBookTo } from '../filemanager/fileManagerStore';
+  import { mainBookFileSystem, loadBookFrom, saveBookTo } from '../filemanager/fileManagerStore';
   import type { NodeId } from '../lib/filesystem/fileSystem';
   import { saveAs } from 'file-saver';
   import { exportPrompts } from "./saver/exportPrompts";
@@ -95,8 +95,8 @@
   }
 
   async function makeEnvelope(progress: (n: number) => void) {
-    const file = (await $fileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
-    const book = await loadBookFrom($fileSystem!, file);
+    const file = (await $mainBookFileSystem!.getNode($mainBook!.revision.id as NodeId))!.asFile()!;
+    const book = await loadBookFrom($mainBookFileSystem!, file);
     const blob = await writeEnvelope(book, progress);
     return {file, blob};
   }
