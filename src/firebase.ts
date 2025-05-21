@@ -5,7 +5,6 @@ import { getAuth, signInAnonymously, type UserCredential, onAuthStateChanged, ty
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type { Storyboard } from "./utils/hiruma";
 import firebase from 'firebase/compat/app';
-import * as firebaseui from 'firebaseui'
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
