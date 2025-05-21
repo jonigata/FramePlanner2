@@ -1,13 +1,12 @@
 <script lang="ts">
   import { newBookToken } from "../filemanager/fileManagerStore";
   import { newBook, newImageBook } from "../lib/book/book";
-  import { hoverKey } from '../utils/hoverKeyStore';
   import { mainBook } from '../bookeditor/workspaceStore';
   import { createCanvasFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
-  import { excludeTextFiles, handleDataTransfer } from "../lib/layeredCanvas/tools/fileUtil";
-
   import BaseRootButton from './BaseRootButton.svelte';
   import newBookIcon from '../assets/new-book.webp';
+  import { excludeTextFiles } from "../lib/layeredCanvas/tools/fileUtil";
+  import { dropDataHandler } from '../utils/dropDataHandler';
 
 
   async function createNewFile(e: CustomEvent<MouseEvent>) {
@@ -34,25 +33,11 @@
     }
   }
 
-  function onDragOver(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-  }
-
-  async function onDrop(ev: DragEvent) {
-    ev.preventDefault();
-    ev.stopPropagation();
-
-    const mediaResources = await handleDataTransfer(ev.dataTransfer!);
+  // dropDataHandler用コールバック
+  function handleDropData(mediaResources: any) {
     const filteredResources = excludeTextFiles(mediaResources);
-    const book = newImageBook("not visited", filteredResources, "drop-")
+    const book = newImageBook("not visited", filteredResources, "drop-");
     $newBookToken = book;
-  }
-
-  async function onKeyDown(e: KeyboardEvent) {
-    if (e.ctrlKey && e.key === "v") {
-      await createNewImageFileUsingClipboard();
-    }
   }
 
 </script>
@@ -62,9 +47,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="w-full h-full"
-    on:dragover={onDragOver}
-    on:drop={onDrop}
-    use:hoverKey={onKeyDown}>
+    use:dropDataHandler={handleDropData}>
   </div>
 </BaseRootButton>
 {/if}
