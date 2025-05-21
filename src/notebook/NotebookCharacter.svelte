@@ -5,6 +5,8 @@
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
 	import ColorPickerLabel from '../utils/colorpicker/ColorPickerLabel.svelte';
   import MediaFrame from "../gallery/MediaFrame.svelte";
+  import { filterImageFiles } from "../lib/layeredCanvas/tools/fileUtil";
+  import { dropDataHandler } from '../utils/dropDataHandler';
 
   import bellIcon from '../assets/bell.webp';
   import trashIcon from '../assets/trash.webp'
@@ -14,6 +16,17 @@
   export let character: CharacterLocal;
 
   $: media = character.portrait != 'loading' ? character.portrait : null;
+
+  function handleDropData(mediaResources: (HTMLCanvasElement | HTMLVideoElement | string)[]) {
+    const images = filterImageFiles(mediaResources);
+    if (0 < images.length) {
+      dispatch('setPortrait', {character, image: images[0]});
+    }
+  }
+
+  function erasePortrait() {
+    dispatch('erasePortrait', character);
+  }
 
   function portrait() {
     dispatch('portrait', character);
@@ -41,18 +54,24 @@
     </div>
     <div class="flex flex-row gap-1">
       <div class="flex flex-col gap-2">
-        <div class="portrait flex justify-center items-center">
+        <div 
+          class="portrait flex justify-center items-center"
+          use:dropDataHandler={handleDropData}
+        >
           {#if character.portrait === 'loading'}
             <div class="waiting">
               <ProgressRadial stroke={100} width="w-4"/>
             </div>
           {:else if media}
-            <MediaFrame 
+            <MediaFrame
               media={media}
             />
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={portrait}/>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+            <img class="portrait-trash" src={trashIcon} alt="削除" on:click={erasePortrait}/>
           {:else}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -118,5 +137,14 @@
     margin-left: 4px;
     margin-right: 4px;
     cursor: pointer;
+  }
+  .portrait-trash {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    cursor: pointer;
+    z-index: 2;
   }
 </style>

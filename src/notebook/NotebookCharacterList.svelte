@@ -63,7 +63,7 @@
   {:else}
     <div class="rounded-corner-token textarea p-2 flex flex-col gap-4">
       {#each characters as character (character.ulid)}
-        <NotebookCharacter bind:character={character} on:portrait on:remove on:register/>
+        <NotebookCharacter bind:character={character} on:setPortrait on:erasePortrait on:portrait on:remove on:register/>
       {/each}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-static-element-interactions -->

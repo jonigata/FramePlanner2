@@ -41,3 +41,10 @@ export function excludeTextFiles(mediaResources: (HTMLCanvasElement | HTMLVideoE
   });
   return filteredResources;
 }
+
+export function filterImageFiles(mediaResources: (HTMLCanvasElement | HTMLVideoElement | string)[]): HTMLCanvasElement[] {
+  const filteredResources = mediaResources.filter((resource) => {
+    return (resource instanceof HTMLCanvasElement);
+  });
+  return filteredResources as HTMLCanvasElement[];
+}

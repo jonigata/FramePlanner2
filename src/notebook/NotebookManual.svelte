@@ -311,13 +311,6 @@
 
     c.portrait = 'loading';
     notebook!.characters = notebook!.characters;
-    let imagingContext: ImagingContext = {
-      awakeWarningToken: false,
-      errorToken: false,
-      total: 0,
-      succeeded: 0,
-      failed: 0,
-    };
     const canvases = await executeProcessAndNotify(
       5000, "画像が生成されました",
       async () => {
@@ -332,6 +325,22 @@
     notebook!.characters = notebook!.characters;
   }
 
+  function onSetPortrait(e: CustomEvent<{ character: CharacterLocal, image: HTMLCanvasElement }>) {
+    e.detail.character.portrait = buildMedia(e.detail.image);
+    notebook!.characters = notebook!.characters;
+  }
+
+  function onErasePortrait(e: CustomEvent<CharacterLocal>) {
+    e.detail.portrait = null;
+    notebook!.characters = notebook!.characters;
+  }
+
+  async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
+    const ulid = e.detail.ulid!;
+    await saveCharacterToRoster($mainBookFileSystem!, e.detail);
+    toastStore.trigger({ message: 'キャラクターを登録しました', timeout: 1500});
+  }
+
   function onRemoveCharacter(e: CustomEvent<CharacterLocal>) {
     const c = e.detail;
     const index = notebook!.characters.findIndex((v) => v.ulid === c.ulid);
@@ -339,12 +348,6 @@
       notebook!.characters.splice(index, 1);
       notebook!.characters = notebook!.characters;
     }
-  }
-
-  async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
-    const ulid = e.detail.ulid!;
-    await saveCharacterToRoster($mainBookFileSystem!, e.detail);
-    toastStore.trigger({ message: 'キャラクターを登録しました', timeout: 1500});
   }
 
   async function onGenerateImages() {
@@ -467,7 +470,18 @@
         {/if}
       </h2>
       <div class="w-full">
-        <NotebookCharacterList bind:characters={notebook.characters} waiting={charactersWaiting} on:advise={onCharactersAdvise} on:add={onAddCharacter} on:addBlank={onAddBlank} on:portrait={onGeneratePortrait} on:remove={onRemoveCharacter} on:register={onRegisterCharacter} on:hire={onHireCharacter}/>
+        <NotebookCharacterList 
+          bind:characters={notebook.characters} 
+          waiting={charactersWaiting} 
+          on:advise={onCharactersAdvise} 
+          on:add={onAddCharacter} 
+          on:addBlank={onAddBlank} 
+          on:setPortrait={onSetPortrait}
+          on:erasePortrait={onErasePortrait}
+          on:portrait={onGeneratePortrait} 
+          on:remove={onRemoveCharacter} 
+          on:register={onRegisterCharacter} 
+          on:hire={onHireCharacter}/>
       </div>
     </div>
     <div class="section">

@@ -34,7 +34,7 @@
   }
 
   // dropDataHandler用コールバック
-  function handleDropData(mediaResources: any) {
+  function handleDropData(mediaResources: (HTMLCanvasElement | HTMLVideoElement | string)[]) {
     const filteredResources = excludeTextFiles(mediaResources);
     const book = newImageBook("not visited", filteredResources, "drop-");
     $newBookToken = book;
