@@ -1,22 +1,29 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-  import { FSAFileSystem } from '../lib/filesystem/fsaFileSystem';
+  import { FSAFileSystem, FSAFilePersistenceProvider } from '../lib/filesystem/fsaFileSystem.js';
   import { ProgressBar } from '@skeletonlabs/skeleton';
-  import { buildFileSystem } from "./localFileSystem";
+  import { FSABlobStore } from '../lib/filesystem/sqlite/BlobStore.js';
+  import { SqlJsAdapter } from '../lib/filesystem/sqlite/SqlJsAdapter.js';
   import { mainBookFileSystem } from './fileManagerStore';
   import { createPreference, type FileSystemPreference } from '../preferences';
+  import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
   // 3シーン分の状態
   let step = 0;
   let storageFolder: FileSystemDirectoryHandle | null = null;
+  let sqlite: SqlJsAdapter | null = null;
   let copyProgress = 0;
 
   async function makeFileSystem() {
     console.log("copyFileSystem");
     const srcFs = $mainBookFileSystem!;
 
-    const fs = new FSAFileSystem();
-    await fs.open(storageFolder!);
+    const persistenceProvider = new FSAFilePersistenceProvider(storageFolder!);
+    const blobStore = new FSABlobStore();
+    await blobStore.open(storageFolder!);
+    sqlite = new SqlJsAdapter(persistenceProvider, wasmUrl);
+    const fs = new FSAFileSystem(sqlite, blobStore);
+    await fs.open();
 
     // コピー
     copyProgress = 0;
@@ -33,7 +40,7 @@
   async function handleNext() {
     // 状態
     if (step == 0) {
-      if (await FSAFileSystem.existsDatabase(storageFolder!)) {
+      if (await sqlite?.exists()) {
         // skip clone
         step = 2;
       } else {

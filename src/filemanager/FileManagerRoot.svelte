@@ -46,6 +46,8 @@
   let fsaapi = 'showOpenFilePicker' in window;
   let storageFolder: FileSystemDirectoryHandle | null = null;
 
+  $: storageFolderName = (storageFolder as FileSystemDirectoryHandle | null)?.name;
+
   $: onBuildCloudFileSystem($onlineAccount?.subscriptionPlan ?? null);
   async function onBuildCloudFileSystem(plan: SubscriptionPlan | null) { 
     if (plan != 'basic' && plan != 'premium') { return; }
@@ -434,7 +436,7 @@
         </p>
       {:else}
         <p>
-          現在、ローカルファイルは{storageFolder.name}に保存されています。
+          現在、ローカルファイルは{storageFolderName}に保存されています。
         </p>
         <p>
           <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>

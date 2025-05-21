@@ -10,11 +10,11 @@ export class MockFileSystem extends FileSystem {
     super();
   }
 
-  async createFile(_type: string): Promise<File> {
-    return this.createFileWithId(ulid() as NodeId, _type);
+  async createFile(type?: string): Promise<File> {
+    return this.createFileWithId(ulid() as NodeId, type);
   }
 
-  async createFileWithId(id: NodeId, _type: string): Promise<File> {
+  async createFileWithId(id: NodeId, type?: string): Promise<File> {
     const file = new MockFile(this, id);
     await file.write('');
     this.files[id] = file;
@@ -35,45 +35,24 @@ export class MockFileSystem extends FileSystem {
     delete this.files[id];    
   }
 
-  async getNode(id: NodeId): Promise<Node> {
-    if (!this.files[id]) {
-      throw new Error(`Node ${id} not found`);
-    }
-    return this.files[id];
+  async getNode(id: NodeId): Promise<Node | null> {
+    return this.files[id] ?? null;
   }
 
   async getRoot(): Promise<Folder> {
     return this.root;
   }
   
-  async dump(): Promise<string> {
-    const json = JSON.stringify(Object.values(this.files).map((f: Node) => {
-      if (f.getType() === 'file') {
-        return (f as MockFile).dump();
-      } else {
-        return (f as MockFolder).dump();
-      }
-    }));
-
-    return json;
+  // FileSystemの抽象メソッドに合わせて未実装throw
+  dump(options?: { format?: string; onProgress?: (ratio: number) => void }): Promise<ReadableStream<Uint8Array>> {
+    throw new Error('MockFileSystem.dump: Not implemented');
   }
-  
-  async undump(json: string): Promise<void> {
-    this.files = {};
-    const files = JSON.parse(json); // array of object
-    for (const file of files) {
-      const id = file.id;
-      if (file.type === 'file') {
-        const f = new MockFile(this, id);
-        f.content = file.content;
-        this.files[id] = f;
-      } else {
-        const f = new MockFolder(this, id);
-        f.children = file.children;
-        this.files[id] = f;
-      }
-    }
-    this.root = this.files['/' as NodeId] as MockFolder;
+
+  undump(
+    stream: ReadableStream<Uint8Array>,
+    options?: { format?: string; onProgress?: (ratio: number) => void }
+  ): Promise<void> {
+    throw new Error('MockFileSystem.undump: Not implemented');
   }
 }
 
@@ -88,11 +67,25 @@ export class MockFile extends File {
   asFile() { return this; }
 
   async read(): Promise<string> {
-    return this.content
+    return this.content;
   }
 
   async write(data: string) {
     this.content = data;
+  }
+
+  // Fileインターフェイス追加分
+  async readMediaResource(): Promise<any> {
+    throw new Error('MockFile.readMediaResource: Not implemented');
+  }
+  async writeMediaResource(_mediaResource: any): Promise<void> {
+    throw new Error('MockFile.writeMediaResource: Not implemented');
+  }
+  async readBlob(): Promise<Blob> {
+    throw new Error('MockFile.readBlob: Not implemented');
+  }
+  async writeBlob(_blob: Blob): Promise<void> {
+    throw new Error('MockFile.writeBlob: Not implemented');
   }
 
   dump() {
@@ -102,12 +95,20 @@ export class MockFile extends File {
 
 export class MockFolder extends Folder {
   children: Entry[] = [];
+  private attributes: { [key: string]: string } = {};
 
   getType(): NodeType { return 'folder'; }
   asFolder() { return this; }
 
   constructor(fileSystem: FileSystem, id: NodeId) {
     super(fileSystem, id);
+  }
+
+  async setAttribute(key: string, value: string): Promise<void> {
+    this.attributes[key] = value;
+  }
+  async getAttribute(key: string): Promise<string | null> {
+    return this.attributes[key] ?? null;
   }
 
   async list(): Promise<Entry[]> {
@@ -124,28 +125,38 @@ export class MockFolder extends Folder {
     this.children = this.children.filter(([b, _, __]) => b !== bindId);
   }
 
-  async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> { 
+  async unlinkv(bindIds: BindId[]): Promise<void> {
+    for (const bindId of bindIds) {
+      await this.unlink(bindId);
+    }
+  }
+
+  async rename(bindId: BindId, newname: string): Promise<void> {
+    const entry = this.children.find(([b]) => b === bindId);
+    if (entry) {
+      entry[1] = newname;
+    }
+  }
+
+  async insert(name: string, nodeId: NodeId, index: number): Promise<BindId> {
     const bindId = ulid() as BindId;
     this.children.splice(index, 0, [bindId, name, nodeId]);
     return bindId;
   }
 
   async getEntry(bindId: BindId): Promise<Entry | null> {
-    // console.log("get", name, this.children);
     return this.children.find(([b, _, __]) => b === bindId) ?? null;
   }
 
   async getEntryByName(name: string): Promise<Entry | null> {
-    // console.log("get", name, this.children);
     return this.children.find(([_, n, __]) => n === name) ?? null;
   }
 
   async getEntriesByName(name: string): Promise<Entry[]> {
-    // console.log("get", name, this.children);
     return this.children.filter(([_, n, __]) => n === name);
   }
 
-  async getBindId(nodeId: NodeId): Promise<BindId | null> { 
+  async getBindId(nodeId: NodeId): Promise<BindId | null> {
     const entry = this.children.find(([_, __, id]) => id === nodeId);
     if (entry) {
       return entry[0];
@@ -154,6 +165,6 @@ export class MockFolder extends Folder {
   }
 
   dump() {
-    return { id: this.id, type: 'folder', children: this.children, attributes: {} };
+    return { id: this.id, type: 'folder', children: this.children, attributes: this.attributes };
   }
 }

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SqlJsAdapter, FilePersistenceProvider } from './SqlJsAdapter';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { SqlJsAdapter, type FilePersistenceProvider } from './SqlJsAdapter';
 import path from 'path';
 
 // Node.jsで絶対パスを生成

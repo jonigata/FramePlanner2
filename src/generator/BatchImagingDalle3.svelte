@@ -59,7 +59,7 @@
         response_format: 'b64_json',
       });
 
-      const imageJson = response.data[0].b64_json;
+      const imageJson = response.data![0].b64_json;
       const img = document.createElement('img');
       img.src = "data:image/png;base64," + imageJson;
       await img.decode();

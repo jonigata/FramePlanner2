@@ -1,4 +1,4 @@
-import { describe, it, expect, assert } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem.js';
 import type { Book } from './book/book.js';
 import { openAsBlob } from 'fs';
@@ -7,7 +7,7 @@ import { FileSystem, Folder } from './filesystem/fileSystem.js';
 
 describe('Book loading from filesystem', () => {
   async function checkFileSystem(fs: FileSystem) {
-    const root = await fs.getRoot();
+    const root = (await fs.getRoot())!;
     expect(root).not.toBeNull();
     const books: Book[] = [];
 
@@ -31,13 +31,13 @@ describe('Book loading from filesystem', () => {
         totalProcessed.count++;
         titles[id] = name;
     
-        const node = await fs.getNode(id);
+        const node = (await fs.getNode(id))!;
         expect(node).not.toBeNull();
         console.log(`${indent}${totalProcessed.count}/${entries.length} "${name}" (${node.getType()})`);
     
         if (node.getType() === 'folder') {
           console.log(`${indent}Loading child folder: "${name}"`);
-          processedCount += await loadBooksFromFolder(node.asFolder(), name, depth + 1, totalProcessed);
+          processedCount += await loadBooksFromFolder(node.asFolder()!, name, depth + 1, totalProcessed);
         } else {
           try {
             const book = await loadBookFrom(fs, node.asFile()!);
@@ -53,8 +53,8 @@ describe('Book loading from filesystem', () => {
     }
 
     // Load books from Desktop and Cabinet
-    await loadBooksFromFolder((await root.getEmbodiedEntryByName('デスクトップ'))[2].asFolder(), 'デスクトップ');
-    await loadBooksFromFolder((await root.getEmbodiedEntryByName('キャビネット'))[2].asFolder(), 'キャビネット');
+    await loadBooksFromFolder((await root.getEmbodiedEntryByName('デスクトップ'))![2].asFolder()!, 'デスクトップ');
+    await loadBooksFromFolder((await root.getEmbodiedEntryByName('キャビネット'))![2].asFolder()!, 'キャビネット');
 
     // Verify books were found
     expect(books.length).toBe(5);

@@ -200,4 +200,13 @@ export class SqlJsAdapter {
 
     this.version = newVersion;
   }
+
+  async exists(): Promise<boolean> {
+    try {
+      const version = await this._readVersion();
+      return version > 0;
+    } catch {
+      return false;
+    }
+  }
 }

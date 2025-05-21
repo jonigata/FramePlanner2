@@ -55,6 +55,7 @@ export class FSAFilePersistenceProvider implements FilePersistenceProvider {
     await writable.write(text);
     await writable.close();
   }
+
 }
 
 export class FSAFileSystem extends FileSystem {
@@ -424,10 +425,6 @@ export class FSAFileSystem extends FileSystem {
     console.log("J");
 
     onProgress(1);
-  }
-
-  static async existsDatabase(persistenceProvider: FilePersistenceProvider): Promise<boolean> {
-    throw new Error('Not implemented');
   }
 
   async withoutPersist(f: () => Promise<void>): Promise<void> {
