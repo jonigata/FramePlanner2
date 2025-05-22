@@ -7,8 +7,9 @@
   import type { BindId } from "../../lib/filesystem/fileSystem";
   import { mainBookFileSystem, loadBubbleFrom, saveBubbleTo } from '../../filemanager/fileManagerStore';
   import { bubbleInspectorTarget } from './bubbleInspectorStore';
-  import type { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
+  import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
+  import { captureException } from "@sentry/svelte";
 
   export let itemSize: Vector = [64,96];
 
@@ -53,6 +54,10 @@
   }
 
   function chooseTemplate(e: CustomEvent<MouseEvent>, b: Bubble) {
+    if (b.n_fontSize <= 0) {
+      captureException(`fontSize is too small, ${JSON.stringify(Bubble.decompile(b))}`);
+    }
+
     console.log(b);
     const q: Bubble = $bubble!;
     q.rotation = b.rotation;

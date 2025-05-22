@@ -4,7 +4,6 @@ import { analyticsEvent } from "./utils/analyticsEvent";
 import { getAuth, signInAnonymously, type UserCredential, onAuthStateChanged, type User } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type { Storyboard } from "./utils/hiruma";
-import firebase from 'firebase/compat/app';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";

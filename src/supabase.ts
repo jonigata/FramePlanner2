@@ -44,7 +44,7 @@ export let supabase: SupabaseClient;
 export function initializeSupabase() {
   let supabaseUrl = "http://localhost:54321";
   let supabaseAnonKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.gpZggwJtk1lUvFnttnL1yLgrXxfZbPf2mWiWUHMntLg";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
 
   if (!storeGet(developmentFlag)) {
     supabaseUrl = "https://khjwscwgloxxmpzenxln.supabase.co";
@@ -54,7 +54,11 @@ export function initializeSupabase() {
   supabase = createClient(
     supabaseUrl,
     supabaseAnonKey,
-    {realtime: {},}  
+    {
+      realtime: {
+        transport: window.WebSocket,  // ブラウザ標準のWebSocketを使わせる
+      }
+    }  
   );
 }
 
