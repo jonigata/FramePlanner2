@@ -10,13 +10,13 @@ import { captureException } from "@sentry/svelte";
  * バブルの描画処理をまとめたユーティリティ
  */
 
-export function renderBubbles(ctx: CanvasRenderingContext2D, paperSize: Vector, bubbles: Bubble[], minimumSizeWarning: boolean) {
+export function renderBubbles(ctx: CanvasRenderingContext2D, paperSize: Vector, bubbles: Bubble[], minimumSizeWarning: boolean, supportsDpr: boolean) {
   for (let bubble of bubbles) {
     renderBubbleBackground(ctx, paperSize, bubble, minimumSizeWarning);
-    renderBubbleForeground(ctx, paperSize, bubble, false);
+    renderBubbleForeground(ctx, paperSize, bubble, false, supportsDpr);
   }
   for (let bubble of bubbles) {
-    renderBubbleForeground(ctx, paperSize, bubble, true);
+    renderBubbleForeground(ctx, paperSize, bubble, true, supportsDpr);
   }
 }
 
@@ -49,7 +49,7 @@ export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize:
   ctx.restore();
 }
 
-export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, drawsUnited: boolean) {
+export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, drawsUnited: boolean, supportsDpr: boolean) {
   if (bubble.parent) {
     if (!drawsUnited) { return; }
   } else {
@@ -69,7 +69,7 @@ export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize:
 
   // テキスト描画
   if (bubble.text && !bubble.hidesText) {
-    drawBubbleText(ctx, paperSize, bubble, true);
+    drawBubbleText(ctx, paperSize, bubble, supportsDpr);
   }
   ctx.restore();
 
@@ -96,7 +96,7 @@ function drawBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bub
   }
 }
 
-function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, supportsDpr: boolean = true) {
+function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, supportsDpr: boolean) {
   const transform = targetCtx.getTransform();
   const dpr = supportsDpr ? (window.devicePixelRatio ?? 1) : 1;
   const viewScale: Vector = [transform.a * dpr, transform.d * dpr];

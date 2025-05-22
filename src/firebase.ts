@@ -4,7 +4,6 @@ import { analyticsEvent } from "./utils/analyticsEvent";
 import { getAuth, signInAnonymously, type UserCredential, onAuthStateChanged, type User } from "firebase/auth";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import type { Storyboard } from "./utils/hiruma";
-import firebase from 'firebase/compat/app';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { developmentFlag } from "./utils/developmentFlagStore";
 import { get as storeGet } from "svelte/store";
@@ -80,38 +79,6 @@ export async function getLayover(key: string): Promise<Storyboard> {
   const docRef = ref(database, `layover/${key}/data`);
   const snapshot = await get(docRef);
   return snapshot.val();
-}
-
-let ui: firebaseui.auth.AuthUI | null = null;
-let uiConfig: firebaseui.auth.Config | null = null;
-
-export function prepareAuth() {
-  uiConfig = {
-    signInSuccessUrl: './',
-    signInOptions: [
-      firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      firebase.auth.EmailAuthProvider.PROVIDER_ID,
-    ],
-    tosUrl: './termsOfService.html',
-    privacyPolicyUrl: './privacy.html',
-  };
-
-  // Initialize the FirebaseUI Widget using Firebase.
-  if (ui) {
-    ui.reset();
-  } else {
-    const auth = getAuth(app);
-    ui = new firebaseui.auth.AuthUI(auth);
-  }
-}
-
-export function isPendingRedirect() {
-  return ui!.isPendingRedirect();
-}
-
-export function startAuth(elementId: string) {
-  // The start method will wait until the DOM is loaded.
-  ui!.start(elementId, uiConfig!);  
 }
 
 export async function getFeathral(): Promise<number> {

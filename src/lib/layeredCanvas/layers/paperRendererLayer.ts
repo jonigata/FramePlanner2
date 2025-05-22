@@ -65,7 +65,7 @@ export class PaperRendererLayer extends LayerBase {
     }
 
     if (depth === 1) {
-      renderBubbles(ctx, this.getPaperSize(), floatingBubbles, true);
+      renderBubbles(ctx, this.getPaperSize(), floatingBubbles, true, this.supportsDpr);
     }
   }
 
@@ -253,7 +253,7 @@ export class PaperRendererLayer extends LayerBase {
       if (bubbles) {
         ctx.save();
         ctx.clip(framePath);
-        renderBubbles(ctx, this.getPaperSize(), bubbles, true);
+        renderBubbles(ctx, this.getPaperSize(), bubbles, true, this.supportsDpr);
         ctx.restore();
       }
     }
@@ -317,13 +317,13 @@ export class PaperRendererLayer extends LayerBase {
       const { canvas, ctx } = makeCanvas();
       const paperSize = this.getPaperSize();
       renderBubbleBackground(ctx, paperSize, bubble, true);
-      renderBubbleForeground(ctx, paperSize, bubble, false);
+      renderBubbleForeground(ctx, paperSize, bubble, false, this.supportsDpr);
       bubbleCanvases[bubble.uuid] = canvas;
     }
     for (let bubble of bubbles) {
       if (bubble.parent == null) { continue; }
       const ctx = bubbleCanvases[bubble.parent].getContext('2d')!;
-      renderBubbleForeground(ctx, this.getPaperSize(), bubble, true);
+      renderBubbleForeground(ctx, this.getPaperSize(), bubble, true, this.supportsDpr);
     }
 
     return { frames: canvases, bubbles: Object.values(bubbleCanvases) };
