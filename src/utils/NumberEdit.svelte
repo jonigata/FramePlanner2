@@ -24,7 +24,7 @@
   $: parseValueText($valueText);
   function parseValueText(s: string) {
     const v = allowDecimal ? parseFloat($valueText) : parseInt($valueText, 10);
-    if (!isNaN(v)) {
+    if (!isNaN(v) && min <= v && v <= max) {
       value = v;
     }
   }
