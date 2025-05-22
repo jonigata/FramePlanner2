@@ -1,9 +1,11 @@
 <script type="ts">
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
+  import { fileSystem } from '../filemanager/fileManagerStore';
   import BaseRootButton from './BaseRootButton.svelte';
   import stampIcon from '../assets/stamp.webp';
   
   function openMaterialBucket() {
+    if (!$fileSystem) { return; }
     $materialBucketOpen = !$materialBucketOpen;
   }
 </script>
