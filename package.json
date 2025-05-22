@@ -62,6 +62,7 @@
     "@xenova/transformers": "^2.16.0",
     "@xyflow/svelte": "^0.0.26",
     "ag-psd": "^19.0.0",
+    "canvas": "^2.11.2",
     "cbor": "^9.0.2",
     "cbor-web": "^9.0.2",
     "cbor-x": "^1.6.0",

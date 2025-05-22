@@ -1,14 +1,13 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { ulid } from 'ulid';
-import type { NodeId, NodeType, BindId, Entry, RemoteMediaReference, MediaResource } from './fileSystem';
+import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
-import { createCanvasFromBlob, createCanvasFromImage, createVideoFromBlob, canvasToBlob } from '../layeredCanvas/tools/imageUtil';
 import type { DumpFormat, DumpProgress } from './fileSystem';
 import { blobToDataURL, dataURLtoBlob } from './fileSystemTools';
+import type { MediaConverter } from './mediaConverter';
 
-/**
- * {__blob__: true, data, type} を再帰的に Blob に戻す
- */
+
+// {__blob__: true, data, type} を再帰的に Blob に戻す
 async function deserializeBlobs(obj: any): Promise<any> {
   if (obj && typeof obj === "object") {
     if (obj.__blob__ && obj.data) {
@@ -30,9 +29,8 @@ async function deserializeBlobs(obj: any): Promise<any> {
   return obj;
 }
 
-/**
- * オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
- */
+
+// オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
 async function serializeBlobs(obj: any): Promise<any> {
   if (obj instanceof Blob) {
     return { __blob__: true, data: await blobToDataURL(obj), type: obj.type };
@@ -118,9 +116,11 @@ async function* readNDJSONStream(
 
 export class IndexedDBFileSystem extends FileSystem {
   private db: IDBPDatabase<unknown> | null = null;
+  public readonly mediaConverter: MediaConverter;
 
-  constructor() {
+  constructor(mediaConverter: MediaConverter) {
     super();
+    this.mediaConverter = mediaConverter;
   }
 
   async open(dbname: string = 'FileSystemDB'): Promise<void> {
@@ -388,10 +388,13 @@ export class IndexedDBFileSystem extends FileSystem {
   
 export class IndexedDBFile extends File {
   db: IDBPDatabase;
+  private readonly mediaConverter: MediaConverter;
 
   constructor(fileSystem: FileSystem, id: NodeId, db: IDBPDatabase) {
     super(fileSystem, id);
     this.db = db;
+    // fileSystemは必ずIndexedDBFileSystem型
+    this.mediaConverter = (fileSystem as IndexedDBFileSystem).mediaConverter;
   }
 
   async read(): Promise<any> {
@@ -405,43 +408,12 @@ export class IndexedDBFile extends File {
 
   async readMediaResource(): Promise<MediaResource> {
     const data = await this.db.get('nodes', this.id)!;
-    if (data.remote) {
-      return data.remote as RemoteMediaReference;
-    }
-
-    if (data.blob) {
-      if (data.mediaType === 'image' || data.mediaType === undefined) {
-        const canvas = await createCanvasFromBlob(data.blob);
-        return canvas;
-      }
-      if (data.mediaType === 'video') {
-        const video = await createVideoFromBlob(data.blob);
-        return video;
-      }
-      throw new Error('Unknown media type');
-    } else if (data.content) {
-      const image = new Image();
-      image.src = data.content;
-      await image.decode();
-      const canvas = await createCanvasFromImage(image);
-      return canvas;      
-    } else {
-      throw new Error('Broken media data');
-    }
+    return await this.mediaConverter.fromStorable(data);
   }
 
   async writeMediaResource(mediaResource: MediaResource): Promise<void> {
-    console.log("writeMediaResource", mediaResource);
-    if (mediaResource instanceof HTMLCanvasElement) {
-      const blob = await canvasToBlob(mediaResource);
-      await this.db.put('nodes', { id: this.id, type: 'file', blob, mediaType: 'image' });
-    } else if (mediaResource instanceof HTMLVideoElement) {
-      // video.srcからblobを取得
-      const blob = await fetch(mediaResource.src).then(res => res.blob());
-      await this.db.put('nodes', { id: this.id, type: 'file', blob, mediaType: 'video' });
-    } else {
-      await this.db.put('nodes', { id: this.id, type: 'file', remote: mediaResource });
-    }
+    const record = await this.mediaConverter.toStorable(mediaResource);
+    await this.db.put('nodes', { id: this.id, type: 'file', ...record });
   }
 
   async readBlob(): Promise<Blob> {

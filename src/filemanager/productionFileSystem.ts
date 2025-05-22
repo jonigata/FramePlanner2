@@ -1,6 +1,7 @@
 import { type FileSystem, folderTree, makeFolders } from '../lib/filesystem/fileSystem';
 import { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
 import { specialFolders } from './specialFolders';
+import { BrowserMediaConverter } from '../lib/filesystem/mediaConverter';
 
 export async function buildFileSystem(): Promise<FileSystem> {
   if (navigator.storage?.persisted && navigator.storage?.persist) {
@@ -18,7 +19,7 @@ export async function buildFileSystem(): Promise<FileSystem> {
     console.log("この環境では navigator.storage が使用できません");
   }
   
-  const fs = new IndexedDBFileSystem();
+  const fs = new IndexedDBFileSystem(new BrowserMediaConverter());
   await fs.open();
 
   await makeFolders(fs, specialFolders);

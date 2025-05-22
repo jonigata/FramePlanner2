@@ -1,10 +1,55 @@
-import { openAsBlob } from 'fs';
 import { describe, it, expect } from 'vitest';
+import { openAsBlob } from 'fs';
+import type { Canvas } from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
+
 import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 import type { Book } from './book/book';
 import { loadBookFrom } from '../filemanager/fileManagerStore';
 import { FileSystem, Folder } from './filesystem/fileSystem';
 import { loadCharactersFromRoster } from '../notebook/rosterStore';
+import type { MediaConverter } from './filesystem/mediaConverter';
+import type { MediaResource, RemoteMediaReference } from './filesystem/fileSystem';
+
+class NodeCanvasMediaConverter implements MediaConverter {
+  async toStorable(
+    media: MediaResource
+  ): Promise<{ blob?: Blob; remote?: RemoteMediaReference; content?: string; mediaType?: string }> {
+    // node-canvasのCanvasの場合
+    if (this.isNodeCanvas(media)) {
+      const buffer: Buffer = (media as Canvas).toBuffer('image/png');
+      return { blob: new Blob([buffer]), mediaType: 'image' };
+    }
+    throw new Error('Unsupported media type for NodeCanvasMediaConverter');
+  }
+
+  async fromStorable(record: {
+    blob?: Blob;
+    remote?: RemoteMediaReference;
+    content?: string;
+    mediaType?: string;
+  }): Promise<MediaResource> {
+    if (record.blob && record.mediaType === 'image') {
+      const arrayBuffer = await record.blob.arrayBuffer();
+      const img = await loadImage(Buffer.from(arrayBuffer));
+      const canvas = createCanvas(img.width, img.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // node-canvasのCanvasを MediaResource として返す（テスト用途限定）
+      return canvas as unknown as MediaResource;
+    }
+    throw new Error('Unsupported storable for NodeCanvasMediaConverter');
+  }
+
+  private isNodeCanvas(obj: unknown): obj is Canvas {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      typeof (obj as Canvas).toBuffer === 'function' &&
+      typeof (obj as Canvas).getContext === 'function'
+    );
+  }
+}
 
 describe('Book loading from filesystem', () => {
   async function checkFileSystem(fs: FileSystem) {
@@ -81,7 +126,7 @@ describe('Book loading from filesystem', () => {
   }
 
   async function checkLoad(filename: string) {
-    const fs = new IndexedDBFileSystem();
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
     await fs.open("testdb");
     
     // Load test data
@@ -100,7 +145,7 @@ describe('Book loading from filesystem', () => {
   });
 
   async function checkCopy(filename: string) {
-    const fs = new IndexedDBFileSystem();
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
     await fs.open("testdb");
 
     // Load test data
@@ -109,7 +154,7 @@ describe('Book loading from filesystem', () => {
     
     await checkFileSystem(fs);
 
-    const fs2 = new IndexedDBFileSystem();
+    const fs2 = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
     await fs2.open("testdb2");
     const readable = await fs.dump({ onProgress: p => { console.log("dump:", p); } });
     await fs2.undump(readable, { onProgress: p => { console.log("undump:", p); } });
