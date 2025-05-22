@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem.js';
-import type { Book } from './book/book.js';
 import { openAsBlob } from 'fs';
-import { loadBookFrom } from '../filemanager/fileManagerStore.js';
-import { FileSystem, Folder } from './filesystem/fileSystem.js';
+import { describe, it, expect } from 'vitest';
+import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
+import type { Book } from './book/book';
+import { loadBookFrom } from '../filemanager/fileManagerStore';
+import { FileSystem, Folder } from './filesystem/fileSystem';
+import { loadCharactersFromRoster } from '../notebook/rosterStore';
 
 describe('Book loading from filesystem', () => {
   async function checkFileSystem(fs: FileSystem) {
@@ -72,28 +73,40 @@ describe('Book loading from filesystem', () => {
     expect(books[4].pages[0].bubbles.length).toBe(2);
     // console.log(books[3].pages[0].frameTree.children[1].children[1].filmStack.films[0]);
     // 画像のテストは厳しい、nodeでcanvasを使うのが大変なため
+
+    const characters = await loadCharactersFromRoster(fs);
+    expect(characters.length).toBe(1);
+    expect(characters[0].name).toBe('太郎');
+    expect(characters[0].appearance).toBe('黒毛の犬');
   }
 
-  it('should load all books from Desktop and Cabinet', async () => {
+  async function checkLoad(filename: string) {
     const fs = new IndexedDBFileSystem();
     await fs.open("testdb");
     
     // Load test data
-    // const blob = await openAsBlob('filesystem-dump.ndjson');
-    const blob = await openAsBlob('testdata/dump/testcase-v1.ndjson');
+    const blob = await openAsBlob(filename);
     await fs.undump(blob.stream());
 
     await checkFileSystem(fs);
-  }, 180 * 1000);
+  }
 
-  it('should obtain same hierarchy from dumped and undumped data', async () => {
+  it('デスクトップとキャビネットからすべてのbookをロードできる(v1)', async () => {
+    await checkLoad('testdata/dump/testcase-v1.ndjson');
+  });
+
+  it('デスクトップとキャビネットからすべてのbookをロードできる(v2)', async () => {
+    await checkLoad('testdata/dump/testcase-v2.ndjson');
+  });
+
+  async function checkCopy(filename: string) {
     const fs = new IndexedDBFileSystem();
     await fs.open("testdb");
 
     // Load test data
-    const blob = await openAsBlob('testdata/dump/testcase-v1.ndjson');
+    const blob = await openAsBlob(filename);
     await fs.undump(blob.stream());
-
+    
     await checkFileSystem(fs);
 
     const fs2 = new IndexedDBFileSystem();
@@ -102,5 +115,13 @@ describe('Book loading from filesystem', () => {
     await fs2.undump(readable, { onProgress: p => { console.log("undump:", p); } });
 
     await checkFileSystem(fs2);
+  }
+
+  it('dump->undumpで再現できる(v1)', async () => {
+    await checkCopy('testdata/dump/testcase-v1.ndjson');
+  });
+
+  it('dump->undumpで再現できる(v2)', async () => {
+    await checkCopy('testdata/dump/testcase-v2.ndjson');
   });
 }, 180 * 1000);

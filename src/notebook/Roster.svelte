@@ -9,11 +9,6 @@
   import trashIcon from '../assets/trash.webp';
   import MediaFrame from "../gallery/MediaFrame.svelte";
 
-  interface CharacterInRoster extends CharacterBase {
-    ulid: string;
-    portrait: Blob | null;
-  }
-
   let opened = false;
   let characters: CharacterLocal[] = [];
 
