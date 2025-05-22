@@ -80,7 +80,7 @@ describe('Book loading from filesystem', () => {
     
     // Load test data
     // const blob = await openAsBlob('filesystem-dump.ndjson');
-    const blob = await openAsBlob('testdata/dump/testcase.ndjson');
+    const blob = await openAsBlob('testdata/dump/testcase-v1.ndjson');
     await fs.undump(blob.stream());
 
     await checkFileSystem(fs);
@@ -91,7 +91,7 @@ describe('Book loading from filesystem', () => {
     await fs.open("testdb");
 
     // Load test data
-    const blob = await openAsBlob('testdata/dump/testcase.ndjson');
+    const blob = await openAsBlob('testdata/dump/testcase-v1.ndjson');
     await fs.undump(blob.stream());
 
     await checkFileSystem(fs);

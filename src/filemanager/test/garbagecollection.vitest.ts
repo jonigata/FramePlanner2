@@ -3,29 +3,6 @@ import type { NodeId, Folder } from "../../lib/filesystem/fileSystem";
 import { promises as fs } from 'fs';
 import { MockFileSystem } from "../../lib/filesystem/mockFileSystem";
 import { collectGarbage, purgeCollectedGarbage } from "../../utils/garbageCollection";
-// 文字列→ReadableStream<Uint8Array>
-function stringToStream(str: string): ReadableStream<Uint8Array> {
-  const encoder = new TextEncoder();
-  return new ReadableStream({
-    start(controller) {
-      controller.enqueue(encoder.encode(str));
-      controller.close();
-    }
-  });
-}
-
-// ReadableStream<Uint8Array>→文字列
-async function streamToString(stream: ReadableStream<Uint8Array>): Promise<string> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let result = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    result += decoder.decode(value, { stream: true });
-  }
-  return result;
-}
 
 // NOTICE:
 // TypeA～Cをそれぞれ削除するテストを用意しているが、
@@ -45,8 +22,8 @@ describe('ガベージコレクション', () => {
   it('dump/undump(空)', async () => {
     const fileSystem = new MockFileSystem();
     const source = '[]';
-    await fileSystem.undump(stringToStream(source));
-    const target = await streamToString(await fileSystem.dump());
+    fileSystem.undumpFromString(source);
+    const target = fileSystem.dumpToString();
     expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
   it('dump/undump(単純なファイル)', async () => {
@@ -56,22 +33,22 @@ describe('ガベージコレクション', () => {
       "type": "file",
       "content": "dummy"
     }]`;
-    await fileSystem.undump(stringToStream(source));
-    const target = await streamToString(await fileSystem.dump());
+    fileSystem.undumpFromString(source);
+    const target = fileSystem.dumpToString();
     expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
   it('dumpをそのまま', async () => {
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
-    await fileSystem.undump(stringToStream(source));
-    const target = await streamToString(await fileSystem.dump());
+    fileSystem.undumpFromString(source);
+    const target = fileSystem.dumpToString();
     expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
   it('ガベージコレクション(何も回収されないはず)', async () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
-    await fileSystem.undump(stringToStream(source));
+    fileSystem.undumpFromString(source);
 
     // ガベコレ
     const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
@@ -79,14 +56,14 @@ describe('ガベージコレクション', () => {
     await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
 
     // 正解と比較
-    const target = await streamToString(await fileSystem.dump());
+    const target = fileSystem.dumpToString();
     expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
   it('ガベージコレクション(TypeAを削除)', async () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
-    await fileSystem.undump(stringToStream(source));
+    fileSystem.undumpFromString(source);
     const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ"))!.asFolder()!;
     const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
 
@@ -99,7 +76,7 @@ describe('ガベージコレクション', () => {
     await purgeCollectedGarbage(fileSystem, pictures, strayImageFiles);
 
     // 正解と比較
-    const target = await streamToString(await fileSystem.dump());
+    const target = fileSystem.dumpToString();
     const correct = await fs.readFile('src/filemanager/test/filesystem.correct.typeA.json', 'utf8');
     expect(JSON.parse(target)).toEqual(JSON.parse(correct));
   });
@@ -107,7 +84,7 @@ describe('ガベージコレクション', () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
-    await fileSystem.undump(stringToStream(source));
+    fileSystem.undumpFromString(source);
     const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ"))!.asFolder()!;
     const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
 
@@ -120,7 +97,7 @@ describe('ガベージコレクション', () => {
     await purgeCollectedGarbage(fileSystem, pictures, strayImageFiles);
 
     // 正解と比較
-    const target = await streamToString(await fileSystem.dump());
+    const target = fileSystem.dumpToString();
     const correct = await fs.readFile('src/filemanager/test/filesystem.correct.typeB.json', 'utf8');
     expect(JSON.parse(target)).toEqual(JSON.parse(correct));
   });
@@ -128,7 +105,7 @@ describe('ガベージコレクション', () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
-    await fileSystem.undump(stringToStream(source));
+    fileSystem.undumpFromString(source);
     const desktop = (await (await fileSystem.getRoot()).getNodeByName("デスクトップ"))!.asFolder()!;
     const pictures = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
 
@@ -141,7 +118,7 @@ describe('ガベージコレクション', () => {
     await purgeCollectedGarbage(fileSystem, pictures, strayImageFiles);
 
     // 正解と比較
-    const target = await streamToString(await fileSystem.dump());
+    const target = fileSystem.dumpToString();
     const correct = await fs.readFile('src/filemanager/test/filesystem.correct.typeC.json', 'utf8');
     expect(JSON.parse(target)).toEqual(JSON.parse(correct));
   });

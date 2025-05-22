@@ -54,6 +54,37 @@ export class MockFileSystem extends FileSystem {
   ): Promise<void> {
     throw new Error('MockFileSystem.undump: Not implemented');
   }
+
+  // test用
+  dumpToString(): string {
+    const json = JSON.stringify(Object.values(this.files).map((f: Node) => {
+      if (f.getType() === 'file') {
+        return (f as MockFile).dump();
+      } else {
+        return (f as MockFolder).dump();
+      }
+    }));
+
+    return json;
+  }
+
+  undumpFromString(json: string): void {
+    this.files = {};
+    const files = JSON.parse(json); // array of object
+    for (const file of files) {
+      const id = file.id;
+      if (file.type === 'file') {
+        const f = new MockFile(this, id);
+        f.content = file.content;
+        this.files[id] = f;
+      } else {
+        const f = new MockFolder(this, id);
+        f.children = file.children;
+        this.files[id] = f;
+      }
+    }
+    this.root = this.files['/' as NodeId] as MockFolder;
+  }
 }
 
 export class MockFile extends File {
