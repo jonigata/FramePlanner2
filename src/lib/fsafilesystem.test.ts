@@ -1,21 +1,20 @@
+import { describe, it, expect } from 'vitest';
+import type { Canvas } from 'canvas';
+import { createCanvas } from 'canvas';
+import type { MediaResource } from './filesystem/fileSystem.js';
+
 import { beforeEach, afterEach, beforeAll } from 'vitest';
 import initSqlJs from 'sql.js';
 import type * as sqlJs from 'sql.js';
 import path from 'path';
 
 // FSAFileSystem 関連の import
-import { FSAFileSystem, FSAFilePersistenceProvider, FSAFile, FSAFolder } from './filesystem/fsaFileSystem';
-import { SqlJsAdapter, type FilePersistenceProvider } from './filesystem/sqlite/SqlJsAdapter.js';
-import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './filesystem/sqlite/BlobStore.js';
+import { FSAFileSystem, FSAFilePersistenceProvider, FSAFile, FSAFolder } from './filesystem/fsaFileSystem.js';
+import { SqlJsAdapter } from './filesystem/sqlite/SqlJsAdapter.js';
+import { type BlobStore } from './filesystem/sqlite/BlobStore.js';
 import type { NodeId } from './filesystem/fileSystem.js';
+import { NodeCanvasMediaConverter } from '../../test/helpers.js';
 
-// MediaConverter, MediaResource, RemoteMediaReference は既存のimportと重複する可能性があるので、必要に応じて調整
-// FileSystem, Folder, Node, File は既存のimportと重複
-
-
-// --- モックの実装 ---
-
-// Mock FileSystemFileHandle
 class MockFileHandle implements globalThis.FileSystemFileHandle {
   kind: 'file' = 'file';
   content: Uint8Array = new Uint8Array();
@@ -236,7 +235,7 @@ beforeAll(async () => {
   });
 });
 
-describe.skip('FSAFileSystem tests', () => {
+describe('FSAFileSystem tests', () => {
   let mockRootHandle: MockDirectoryHandle;
   let persistenceProvider: FSAFilePersistenceProvider;
   let sqliteAdapter: SqlJsAdapter;
@@ -410,18 +409,6 @@ describe.skip('FSAFileSystem tests', () => {
     // For now, this cleanup step is removed as dbFileName is not passed to SqlJsAdapter.
   });
 });
-import { describe, it, expect } from 'vitest';
-import { openAsBlob } from 'fs';
-import type { Canvas } from 'canvas';
-import { createCanvas, loadImage } from 'canvas';
-
-import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
-import type { Book } from './book/book';
-import { loadBookFrom } from '../filemanager/fileManagerStore';
-import { FileSystem, Folder } from './filesystem/fileSystem';
-import { loadCharactersFromRoster } from '../notebook/rosterStore';
-import type { MediaConverter } from './filesystem/mediaConverter';
-import type { MediaResource, RemoteMediaReference } from './filesystem/fileSystem';
 
 /**
  * node-canvasのCanvasから中央ピクセルのRGBA値([r,g,b,a])を取得する関数
@@ -436,194 +423,3 @@ function getCenterPixelRGBA(canvas: Canvas): [number, number, number, number] {
   const [r, g, b, a] = imageData.data;
   return [r, g, b, a];
 }
-class NodeCanvasMediaConverter implements MediaConverter {
-  async toStorable(
-    media: MediaResource
-  ): Promise<{ blob?: Blob; remote?: RemoteMediaReference; content?: string; mediaType?: string }> {
-    // node-canvasのCanvasの場合
-    if (this.isNodeCanvas(media)) {
-      const buffer: Buffer = (media as Canvas).toBuffer('image/png');
-      return { blob: new Blob([buffer]), mediaType: 'image' };
-    }
-    throw new Error('Unsupported media type for NodeCanvasMediaConverter');
-  }
-
-  async fromStorable(record: {
-    blob?: Blob;
-    remote?: RemoteMediaReference;
-    content?: string;
-    mediaType?: string;
-  }): Promise<MediaResource> {
-    if (record.blob && record.mediaType === 'image') {
-      console.log('NodeCanvasMediaConverter.fromStorable record.blob:', record.blob, typeof record.blob, Object.prototype.toString.call(record.blob), record.blob?.constructor?.name);
-      let bufferToLoad: Buffer;
-
-      if (record.blob instanceof Blob) {
-        if (typeof record.blob.arrayBuffer === 'function') {
-          const arrayBuffer = await record.blob.arrayBuffer();
-          bufferToLoad = Buffer.from(arrayBuffer);
-        } else if (typeof (record.blob as any).stream === 'function') { // Node.js Blob might have stream()
-          const stream = (record.blob as any).stream() as NodeJS.ReadableStream;
-          const chunks: Buffer[] = [];
-          for await (const chunk of stream) {
-            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-          }
-          bufferToLoad = Buffer.concat(chunks);
-        } else {
-          console.error('record.blob is a Blob but lacks arrayBuffer and stream methods:', record.blob);
-          throw new Error(`record.blob (type: ${record.blob?.constructor?.name}) is not a convertible Blob in NodeCanvasMediaConverter.fromStorable.`);
-        }
-      } else if (Buffer.isBuffer(record.blob)) {
-        bufferToLoad = record.blob;
-      } else if (record.blob && typeof record.blob === 'object' && record.blob !== null && 'byteLength' in record.blob && typeof (record.blob as any).slice === 'function') { // Check for Uint8Array-like properties first
-        // If it looks like a Uint8Array, assume it's not a standard Blob we want to call arrayBuffer() on directly
-        bufferToLoad = Buffer.from(record.blob as Uint8Array);
-      } else {
-        const blobType = record.blob ? Object.prototype.toString.call(record.blob) : String(record.blob);
-        let constructorName = 'N/A';
-        if (record.blob && typeof record.blob === 'object' && record.blob !== null && 'constructor' in record.blob && typeof (record.blob as any).constructor === 'function') {
-            constructorName = (record.blob as any).constructor.name;
-        }
-        console.error('record.blob is not a Blob or Buffer or Uint8Array-like:', record.blob);
-        throw new Error(`record.blob (type: ${constructorName}, toString: ${blobType}) is not a valid Blob, Buffer, or Uint8Array-like in NodeCanvasMediaConverter.fromStorable.`);
-      }
-
-      const img = await loadImage(bufferToLoad);
-      const canvas = createCanvas(img.width, img.height);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      // node-canvasのCanvasを MediaResource として返す（テスト用途限定）
-      return canvas as unknown as MediaResource;
-    }
-    throw new Error('Unsupported storable for NodeCanvasMediaConverter');
-  }
-
-  private isNodeCanvas(obj: unknown): obj is Canvas {
-    return (
-      typeof obj === 'object' &&
-      obj !== null &&
-      typeof (obj as Canvas).toBuffer === 'function' &&
-      typeof (obj as Canvas).getContext === 'function'
-    );
-  }
-}
-
-describe('Book loading from filesystem', () => {
-  async function checkFileSystem(fs: FileSystem) {
-    const root = (await fs.getRoot())!;
-    expect(root).not.toBeNull();
-    const books: Book[] = [];
-
-    const titles: { [key: string]: string } = {};
-
-    // FramePlanner FileSystemではディレクトリに同じ名前のファイルが存在しうる
-    // (特定したいならBindIdを使う)が、テストケースでは同じ名前のファイルは存在しないので
-    // 一意に特定できるものとする
-    async function loadBooksFromFolder(
-      folder: Folder,
-      folderName: string,
-      depth: number = 0,
-      totalProcessed = { count: 0 }
-    ): Promise<number> {
-      const entries = await folder.asFolder()!.list();
-      let processedCount = 0;
-      const indent = '  '.repeat(depth);
-      console.log(`${indent}folder "${folderName}" has ${entries.length} entries`);
-    
-      for (const [, name, id] of entries) {
-        totalProcessed.count++;
-        titles[id] = name;
-    
-        const node = (await fs.getNode(id))!;
-        expect(node).not.toBeNull();
-        console.log(`${indent}${totalProcessed.count}/${entries.length} "${name}" (${node.getType()})`);
-    
-        if (node.getType() === 'folder') {
-          console.log(`${indent}Loading child folder: "${name}"`);
-          processedCount += await loadBooksFromFolder(node.asFolder()!, name, depth + 1, totalProcessed);
-        } else {
-          try {
-            const book = await loadBookFrom(fs, node.asFile()!);
-            books.push(book);
-            processedCount++;
-          } catch (e) {
-            console.log(`${indent}Skipping non-book file: ${name}`);
-          }
-        }
-      }
-    
-      return processedCount;
-    }
-
-    // Load books from Desktop and Cabinet
-    await loadBooksFromFolder((await root.getEmbodiedEntryByName('デスクトップ'))![2].asFolder()!, 'デスクトップ');
-    await loadBooksFromFolder((await root.getEmbodiedEntryByName('キャビネット'))![2].asFolder()!, 'キャビネット');
-
-    // Verify books were found
-    expect(books.length).toBe(5);
-
-    // Verify basic book structure
-    for (const book of books) {
-      console.log(titles[book.revision.id], { revision: book.revision, pages: book.pages.length, direction: book.direction, wrapMode: book.wrapMode });
-      expect(book.revision.id).toBeDefined();
-      expect(book.pages).toBeInstanceOf(Array);
-    }
-    expect(books[0].pages.length).toBe(1);
-    expect(books[1].pages.length).toBe(2);
-    expect(books[2].pages.length).toBe(3);
-    expect(books[3].pages[0].bubbles.length).toBe(1);
-    expect(books[4].pages[0].bubbles.length).toBe(2);
-    // console.log(books[3].pages[0].frameTree.children[1].children[1].filmStack.films[0]);
-    // 画像のテストは厳しい、nodeでcanvasを使うのが大変なため
-
-    const characters = await loadCharactersFromRoster(fs);
-    expect(characters.length).toBe(1);
-    expect(characters[0].name).toBe('太郎');
-    expect(characters[0].appearance).toBe('黒毛の犬');
-  }
-
-  async function checkLoad(filename: string) {
-    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
-    await fs.open("testdb");
-    
-    // Load test data
-    const blob = await openAsBlob(filename);
-    await fs.undump(blob.stream());
-
-    await checkFileSystem(fs);
-  }
-
-  it('デスクトップとキャビネットからすべてのbookをロードできる(v1)', async () => {
-    await checkLoad('testdata/dump/testcase-v1.ndjson');
-  });
-
-  it('デスクトップとキャビネットからすべてのbookをロードできる(v2)', async () => {
-    await checkLoad('testdata/dump/testcase-v2.ndjson');
-  });
-
-  async function checkCopy(filename: string) {
-    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
-    await fs.open("testdb");
-
-    // Load test data
-    const blob = await openAsBlob(filename);
-    await fs.undump(blob.stream());
-    
-    await checkFileSystem(fs);
-
-    const fs2 = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
-    await fs2.open("testdb2");
-    const readable = await fs.dump({ onProgress: p => { console.log("dump:", p); } });
-    await fs2.undump(readable, { onProgress: p => { console.log("undump:", p); } });
-
-    await checkFileSystem(fs2);
-  }
-
-  it('dump->undumpで再現できる(v1)', async () => {
-    await checkCopy('testdata/dump/testcase-v1.ndjson');
-  });
-
-  it('dump->undumpで再現できる(v2)', async () => {
-    await checkCopy('testdata/dump/testcase-v2.ndjson');
-  });
-}, 180 * 1000);
