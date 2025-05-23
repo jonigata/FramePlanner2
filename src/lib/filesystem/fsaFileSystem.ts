@@ -458,32 +458,18 @@ export class FSAFile extends File {
     this.blobStore = blobStore;
     this.mediaConverter = mediaConverter;
   }
+
   async read(): Promise<any> {
     const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
-    if (!file) return null;
     if (file.inlineContent) {
-      try {
-        const json = JSON.parse(file.inlineContent);
-        return await internalizeBlobsInObject(json, this.blobStore);
-      } catch {
-        return file.inlineContent;
-      }
-    }
-    if (file.blobPath) {
-      const blob = await this.blobStore.read(this.id);
-      return await blob.text();
+      const json = JSON.parse(file.inlineContent);
+      return (await internalizeBlobsInObject(json, this.blobStore)).data;
     }
     return null;
   }
+
   async write(data: any) {
-    // オブジェクト内のBlobを外部ファイル化し、JSONにblobPathを埋め込む
-    let toStore: string;
-    if (typeof data === 'object' && data !== null) {
-      const ext = await externalizeBlobsInObject(data, this.blobStore, this.id);
-      toStore = JSON.stringify(ext);
-    } else {
-      toStore = String(data);
-    }
+    const toStore = JSON.stringify(await externalizeBlobsInObject({ data }, this.blobStore, this.id));
     await this.sqlite.transaction(async () => {
       if (!this.sqlite.run) throw new Error('DB not initialized');
       await this.sqlite.run(
@@ -493,7 +479,7 @@ export class FSAFile extends File {
     });
     await this.sqlite.persist();
   }
-  // --- 画像・動画・Blobリソースの読み書き ---
+
   async readMediaResource(): Promise<MediaResource> {
     const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
     if (!file) throw new Error('File not found');
