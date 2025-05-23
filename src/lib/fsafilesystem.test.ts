@@ -9,19 +9,25 @@ import type * as sqlJs from 'sql.js';
 import path from 'path';
 
 // FSAFileSystem 関連の import
-import { FSAFileSystem, FSAFile, FSAFolder } from './filesystem/fsaFileSystem'; // FSAFilePersistenceProvider is no longer used directly
+import { FSAFileSystem, FSAFile, FSAFolder } from './filesystem/fsaFileSystem';
 import { SqlJsAdapter, type FilePersistenceProvider } from './filesystem/sqlite/SqlJsAdapter';
 import { type BlobStore } from './filesystem/sqlite/BlobStore';
 import type { NodeId, MediaResource } from './filesystem/fileSystem';
-import { NodeCanvasMediaConverter, checkFileSystem, checkLoad } from '../../test/helpers';
+import { NodeCanvasMediaConverter, checkFileSystem } from '../../test/helpers'; // checkLoad は未使用なので削除
 import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 
 // Mock FilePersistenceProvider
 class MockPersistenceProvider implements FilePersistenceProvider {
   private files: Map<string, Uint8Array | string> = new Map();
+  private dbName: string;
+
+  constructor(dbName: string) {
+    this.dbName = dbName; // 特定のDB名を管理するため
+  }
 
   async readFile(name: string): Promise<Uint8Array | null> {
-    const data = this.files.get(name);
+    if (name !== this.dbName) return null; // このプロバイダが管理するDBファイルのみ対象
+    const data = this.files.get(this.dbName);
     if (data instanceof Uint8Array) {
       return data;
     }
@@ -32,15 +38,18 @@ class MockPersistenceProvider implements FilePersistenceProvider {
   }
 
   async writeFile(name: string, data: Uint8Array): Promise<void> {
-    this.files.set(name, data);
+    if (name !== this.dbName) return; // このプロバイダが管理するDBファイルのみ対象
+    this.files.set(this.dbName, data);
   }
 
   async removeFile(name: string): Promise<void> {
-    this.files.delete(name);
+    if (name !== this.dbName) return; // このプロバイダが管理するDBファイルのみ対象
+    this.files.delete(this.dbName);
   }
 
   async readText(name: string): Promise<string | null> {
-    const data = this.files.get(name);
+    if (name !== this.dbName) return null;
+    const data = this.files.get(this.dbName);
     if (typeof data === 'string') {
       return data;
     }
@@ -51,26 +60,27 @@ class MockPersistenceProvider implements FilePersistenceProvider {
   }
 
   async writeText(name: string, text: string): Promise<void> {
-    this.files.set(name, text);
+    if (name !== this.dbName) return;
+    this.files.set(this.dbName, text);
   }
 }
 
 // Mock BlobStore
 class MockBlobStore implements BlobStore {
   private blobs: Map<NodeId | string, Blob> = new Map();
-  constructor() {} // Removed dirHandle dependency
+  constructor() {}
 
-  async open(): Promise<void> { /* no-op for mock */ } // dirHandle is no longer needed
+  async open(): Promise<void> { /* no-op for mock */ }
   async read(idOrPath: NodeId | string): Promise<Blob> {
     const blob = this.blobs.get(idOrPath);
     if (!blob) throw new Error(`Blob ${idOrPath} not found in MockBlobStore`);
     return blob;
   }
-  async write(id: string, blob: Blob): Promise<string> { // Return string path
+  async write(id: string, blob: Blob): Promise<string> {
     const blobPath = `blobs/${id}.bin`;
-    this.blobs.set(id as NodeId, blob); // Cast to NodeId for internal map key if necessary
+    this.blobs.set(id as NodeId, blob);
     this.blobs.set(blobPath, blob);
-    return blobPath; // Return the mock path
+    return blobPath;
   }
   async delete(idOrPath: NodeId | string): Promise<void> {
     this.blobs.delete(idOrPath);
@@ -83,7 +93,7 @@ class MockBlobStore implements BlobStore {
   async list(): Promise<(NodeId | string)[]> {
     return Array.from(this.blobs.keys());
   }
-  async gc(): Promise<void> { /* no-op for mock */ } // Added gc method
+  async gc(): Promise<void> { /* no-op for mock */ }
 }
 
 let SQL: sqlJs.SqlJsStatic;
@@ -91,36 +101,50 @@ let wasmPath: string;
 
 beforeAll(async () => {
   wasmPath = path.resolve(`node_modules/sql.js/dist/sql-wasm.wasm`);
-  SQL = await initSqlJs({ // SQLは依然としてどこかで使われるかもしれないので残す
+  SQL = await initSqlJs({
     locateFile: () => wasmPath
   });
 });
 
 describe('FSAFileSystem tests', () => {
   let persistenceProvider: MockPersistenceProvider;
-  let sqliteAdapter: SqlJsAdapter;
-  let blobStore: MockBlobStore;
-  let mediaConverter: NodeCanvasMediaConverter; // Existing class
   let fs: FSAFileSystem;
   const dbFileName = 'test-fsa.sqlite';
 
-  beforeEach(async () => {
-    persistenceProvider = new MockPersistenceProvider();
-    
-    // SqlJsAdapter のコンストラクタ引数の順番を修正し、wasmPath を渡す
-    sqliteAdapter = new SqlJsAdapter(persistenceProvider, wasmPath);
-    blobStore = new MockBlobStore();
-    mediaConverter = new NodeCanvasMediaConverter(); // Use existing class
+  let persistenceProvider2: MockPersistenceProvider;
+  let fs2: FSAFileSystem;
+  const dbFileName2 = 'test-fsa2.sqlite';
 
-    fs = new FSAFileSystem(sqliteAdapter, blobStore as unknown as BlobStore, mediaConverter); // Cast blobStore
-    await fs.open(); // ここで SqlJsAdapter.open() が呼ばれ、内部で initSqlJs が wasmPath を使って実行される
+  let mediaConverter: NodeCanvasMediaConverter; // 共有
+
+  beforeEach(async () => {
+    mediaConverter = new NodeCanvasMediaConverter();
+
+    // fs の初期化
+    persistenceProvider = new MockPersistenceProvider(dbFileName);
+    const sqliteAdapter = new SqlJsAdapter(persistenceProvider, wasmPath);
+    const blobStore = new MockBlobStore();
+    fs = new FSAFileSystem(sqliteAdapter, blobStore as unknown as BlobStore, mediaConverter);
+    await fs.open();
+
+    // fs2 の初期化
+    persistenceProvider2 = new MockPersistenceProvider(dbFileName2);
+    const sqliteAdapter2 = new SqlJsAdapter(persistenceProvider2, wasmPath);
+    const blobStore2 = new MockBlobStore();
+    fs2 = new FSAFileSystem(sqliteAdapter2, blobStore2 as unknown as BlobStore, mediaConverter);
+    await fs2.open();
   });
 
   afterEach(async () => {
-    // The database file is now managed by MockPersistenceProvider in memory,
-    // so explicit removal from a mock directory handle is no longer needed.
-    // SqlJsAdapter will use persistenceProvider.removeFile(dbFileName) internally if needed.
-    await persistenceProvider.removeFile(dbFileName);
+    // FSAFileSystem に close メソッドがあればそれを呼ぶのが望ましい
+    // 例: await fs.close(); await fs2.close();
+    // ここでは persistenceProvider を直接操作してファイルを削除する
+    if (persistenceProvider) {
+      await persistenceProvider.removeFile(dbFileName);
+    }
+    if (persistenceProvider2) {
+      await persistenceProvider2.removeFile(dbFileName2);
+    }
   });
 
   it('should create a root folder on open', async () => {
@@ -197,29 +221,35 @@ describe('FSAFileSystem tests', () => {
     
     expect(readResource.width).toBe(10);
     expect(readResource.height).toBe(10);
-    const color = getCenterPixelRGBA(readResource); // Use existing function
+    const color = getCenterPixelRGBA(readResource);
     expect(color).toEqual([255, 0, 0, 255]);
   });
 
-  async function checkCopy(filename: string) {
-    const fs2 = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
-    await fs2.open("testdb");
+  async function checkCopy(sourceFs: FSAFileSystem, targetFs: FSAFileSystem, testfileName: string) {
+    // この関数は FSAFileSystem 同士のコピーをテストするために変更
+    // 元の checkCopy は IndexedDBFileSystem を使っていたが、
+    // ここでは beforeEach で作成された fs と fs2 (または引数で渡されたもの) を使う
 
-    // Load test data
-    const blob = await openAsBlob(filename);
-    await fs2.undump(blob.stream());
-    
-    await checkFileSystem(fs2);
+    // 1. sourceFs にテストデータをロード (undump を使用)
+    const blob = await openAsBlob(testfileName); // 'testdata/dump/testcase-v2.ndjson'
+    await sourceFs.undump(blob.stream(), { onProgress: (p: any) => { console.log("sourceFs undump:", p); } });
+    await checkFileSystem(sourceFs);
 
-    const readable = await fs2.dump({ onProgress: p => { console.log("dump:", p); } });
-    await fs.undump(readable, { onProgress: p => { console.log("undump:", p); } });
+    // 2. sourceFs からデータをダンプ
+    const readable = await sourceFs.dump({ onProgress: (p: any) => { console.log("sourceFs dump:", p); } });
 
-    await checkFileSystem(fs);
+    // 3. ダンプしたデータを targetFs にアンダンプ
+    await targetFs.undump(readable, { onProgress: (p: any) => { console.log("targetFs undump:", p); } });
+
+    // 4. targetFs の内容を検証
+    await checkFileSystem(targetFs);
+
+    // オプション: targetFs から再度ダンプして、sourceFs のダンプ結果と比較することも可能
   }
 
-
-  it('should dump and undump filesystem content', async () => {
-    await checkCopy('testdata/dump/testcase-v2.ndjson');
+  it('should dump and undump filesystem content between two FSAFileSystem instances', async () => {
+    // fs から fs2 へコピーするテスト
+    await checkCopy(fs, fs2, 'testdata/dump/testcase-v2.ndjson');
   });
 });
 
@@ -236,4 +266,3 @@ function getCenterPixelRGBA(canvas: Canvas): [number, number, number, number] {
   const [r, g, b, a] = imageData.data;
   return [r, g, b, a];
 }
-

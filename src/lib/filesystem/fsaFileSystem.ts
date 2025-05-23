@@ -470,6 +470,7 @@ export class FSAFile extends File {
 
   async write(data: any) {
     const toStore = JSON.stringify(await externalizeBlobsInObject({ data }, this.blobStore, this.id));
+    console.log('toStore', toStore);
     await this.sqlite.transaction(async () => {
       if (!this.sqlite.run) throw new Error('DB not initialized');
       await this.sqlite.run(
