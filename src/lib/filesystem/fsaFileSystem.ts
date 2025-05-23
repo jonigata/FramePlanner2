@@ -4,9 +4,50 @@ import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapte
 import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 import type { MediaConverter } from './mediaConverter.js';
+import { blobToDataURL, dataURLtoBlob } from './fileSystemTools.js';
 
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
+
+// {__blob__: true, data, type} を再帰的に Blob に戻す
+async function deserializeBlobs(obj: any): Promise<any> {
+  if (obj && typeof obj === "object") {
+    if (obj.__blob__ && obj.data) {
+      const blob = await dataURLtoBlob(obj.data);
+      if (obj.type && blob.type !== obj.type) {
+        return new Blob([blob], { type: obj.type });
+      }
+      return blob;
+    }
+    if (Array.isArray(obj)) {
+      return Promise.all(obj.map(deserializeBlobs));
+    }
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = await deserializeBlobs(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
+
+// オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
+async function serializeBlobs(obj: any): Promise<any> {
+  if (obj instanceof Blob) {
+    return { __blob__: true, data: await blobToDataURL(obj), type: obj.type };
+  }
+  if (Array.isArray(obj)) {
+    return Promise.all(obj.map(serializeBlobs));
+  }
+  if (obj && typeof obj === "object") {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = await serializeBlobs(obj[key]);
+    }
+    return result;
+  }
+  return obj;
+}
 
 export class FSAFilePersistenceProvider implements FilePersistenceProvider {
   private dirHandle: FileSystemDirectoryHandle;
@@ -296,7 +337,9 @@ export class FSAFileSystem extends FileSystem {
           controller.close();
           return;
         }
-        const value = items[count];
+        let value = items[count];
+        // 再帰的にBlobをdataURLラッパーに変換
+        value = await serializeBlobs(value);
         const jsonString = JSON.stringify(value) + "\n";
         controller.enqueue(encoder.encode(jsonString));
         count++;
@@ -355,14 +398,12 @@ export class FSAFileSystem extends FileSystem {
     const saveBatch = async (itemsBatch: any[]) => {
       // 1. 先に Blob を全て書き込む（トランザクション外）
       for (const item of itemsBatch) {
-        if (item.type === 'file' && item.blob) { // item.blob はここで dataURL 文字列のはず
+        if (item.type === 'file' && item.blob) {
           if (typeof item.blob === 'string' && item.blob.startsWith('data:')) {
             const actualBlob = dataURLToBlob(item.blob);
             await this.blobStore.write(item.id, actualBlob);
-            // item.blob を実際のBlobに置き換える必要はない。
-            // DBにはblobPathが保存され、read時にBlobStoreから読み出すため。
-          } else if (!(item.blob instanceof Blob)) {
-            console.warn(`Item ${item.id} has a non-dataURL blob that is not a Blob instance:`, item.blob);
+          } else if (item.blob instanceof Blob) {
+            await this.blobStore.write(item.id, item.blob);
           }
         }
       }
@@ -372,37 +413,54 @@ export class FSAFileSystem extends FileSystem {
         for (const item of itemsBatch) {
           if (!this.sqlite.run) throw new Error('DB not initialized');
           // nodes
-          const { id, type, attributes, ...rest } = item;
+          const { id, type, attributes, content, blob, mediaType, children, ...rest } = item;
           await this.sqlite.run(
             "INSERT INTO nodes(id, type, attributes) VALUES (?, ?, ?)",
             [id, type, JSON.stringify(attributes ?? {})]
           );
           if (type === 'file') {
             // files
-            if (item.blob) { // item.blob は dump された際の dataURL 文字列、または既に Blob の場合もある
+            if (blob) {
               await this.sqlite.run(
                 "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
-                [id, `blobs/${id}.bin`, item.mediaType ?? null]
+                [id, `blobs/${id}.bin`, mediaType ?? null]
               );
-            } else {
-              // contentがobjectならblobを分離してシリアライズ
-              let contentToStore: string;
-              if (typeof item.content === 'object' && item.content !== null) {
-                // Blob分離
-                contentToStore = JSON.stringify(await externalizeBlobsInObject(item.content, this.blobStore, id));
+            } else if (content !== undefined) {
+              // contentの種類に応じて処理
+              if (typeof content === 'string' && content.startsWith('data:')) {
+                // dataURL形式の画像データ → Blobとして保存
+                const actualBlob = dataURLToBlob(content);
+                await this.blobStore.write(id, actualBlob);
+                await this.sqlite.run(
+                  "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
+                  [id, `blobs/${id}.bin`, actualBlob.type]
+                );
               } else {
-                contentToStore = item.content ?? '';
+                // 通常のテキストデータ → {data: content}でwrap
+                let contentToStore: string;
+                if (typeof content === 'object' && content !== null) {
+                  // Blob分離
+                  contentToStore = JSON.stringify(await externalizeBlobsInObject({ data: content }, this.blobStore, id));
+                } else {
+                  contentToStore = JSON.stringify({ data: content });
+                }
+                await this.sqlite.run(
+                  "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, NULL, ?)",
+                  [id, contentToStore, mediaType ?? null]
+                );
               }
+            } else {
+              // 空のファイル
               await this.sqlite.run(
-                "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, NULL, ?)",
-                [id, contentToStore, item.mediaType ?? null]
+                "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, ?, NULL, NULL)",
+                [id, JSON.stringify({ data: '' })]
               );
             }
           } else if (type === 'folder') {
             // children
-            if (item.children && Array.isArray(item.children)) {
-              for (let idx = 0; idx < item.children.length; idx++) {
-                const [bindId, name, childId] = item.children[idx];
+            if (children && Array.isArray(children)) {
+              for (let idx = 0; idx < children.length; idx++) {
+                const [bindId, name, childId] = children[idx];
                 await this.sqlite.run(
                   "INSERT INTO children(parentId, bindId, name, childId, idx) VALUES (?, ?, ?, ?, ?)",
                   [id, bindId, name, childId, idx]
@@ -414,9 +472,16 @@ export class FSAFileSystem extends FileSystem {
       });
     };
 
-    for await (const node of this.readNDJSONStream(dataStream)) {
-      // node.blob は dump された dataURL 文字列のままのはず
-      // saveBatch の中で Blob に変換され、BlobStore に書き込まれる
+    for await (let node of this.readNDJSONStream(dataStream)) {
+      if (node.blob && typeof node.blob === 'string') {
+        // トップレベルのblob:は例外的にblobに変換
+        console.log("Blob detected", node.blob);
+        const blob = await dataURLtoBlob(node.blob);
+        node.blob = blob;
+      } else {
+        // 再帰的に {__blob__:...} を Blob に復元
+        node = await deserializeBlobs(node);
+      }
       batch.push(node);
       count++;
       onProgress(0.1 + 0.8 * (count / lineCount));
@@ -461,11 +526,15 @@ export class FSAFile extends File {
 
   async read(): Promise<any> {
     const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
+    if (!file) {
+      return undefined;
+    }
     if (file.inlineContent) {
+      // FSAFileSystemの通常の形式: JSON文字列でwrapされている
       const json = JSON.parse(file.inlineContent);
       return (await internalizeBlobsInObject(json, this.blobStore)).data;
     }
-    return null;
+    return undefined;
   }
 
   async write(data: any) {

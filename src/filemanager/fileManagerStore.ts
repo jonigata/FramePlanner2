@@ -108,6 +108,9 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
   console.tag("loadBookFrom", "cyan", file.id);
   performance.mark("loadBookFrom-start");
   const content = await file.read();
+  if (content === undefined || content === null) {
+    throw new Error(`File content is ${content} for file ${file.id}`);
+  }
   const serializedBook: SerializedBook = JSON.parse(content);
 
   // マイグレーションとして、BookではなくPageのみを保存している場合がある
