@@ -9,197 +9,57 @@ import type * as sqlJs from 'sql.js';
 import path from 'path';
 
 // FSAFileSystem 関連の import
-import { FSAFileSystem, FSAFilePersistenceProvider, FSAFile, FSAFolder } from './filesystem/fsaFileSystem.js';
-import { SqlJsAdapter } from './filesystem/sqlite/SqlJsAdapter.js';
+import { FSAFileSystem, FSAFile, FSAFolder } from './filesystem/fsaFileSystem.js'; // FSAFilePersistenceProvider is no longer used directly
+import { SqlJsAdapter, type FilePersistenceProvider } from './filesystem/sqlite/SqlJsAdapter.js';
 import { type BlobStore } from './filesystem/sqlite/BlobStore.js';
 import type { NodeId } from './filesystem/fileSystem.js';
 import { NodeCanvasMediaConverter } from '../../test/helpers.js';
 
-class MockFileHandle implements globalThis.FileSystemFileHandle {
-  kind: 'file' = 'file';
-  content: Uint8Array = new Uint8Array();
-  constructor(public name: string) {}
+// Mock FilePersistenceProvider
+class MockPersistenceProvider implements FilePersistenceProvider {
+  private files: Map<string, Uint8Array | string> = new Map();
 
-  async getFile(): Promise<globalThis.File> {
-    const self = this;
-    return {
-      arrayBuffer: async () => self.content.buffer.slice(self.content.byteOffset, self.content.byteOffset + self.content.byteLength),
-      text: async () => new TextDecoder().decode(self.content),
-      size: self.content.byteLength,
-      type: 'application/octet-stream',
-      slice: (start?: number, end?: number, contentType?: string) => new Blob([self.content.slice(start, end)], { type: contentType }),
-      stream: () => new ReadableStream({
-        start(controller) {
-          controller.enqueue(self.content);
-          controller.close();
-        }
-      }),
-      lastModified: Date.now(),
-    } as unknown as globalThis.File;
+  async readFile(name: string): Promise<Uint8Array | null> {
+    const data = this.files.get(name);
+    if (data instanceof Uint8Array) {
+      return data;
+    }
+    if (typeof data === 'string') {
+      return new TextEncoder().encode(data);
+    }
+    return null;
   }
 
-  async createWritable(options?: FileSystemCreateWritableOptions): Promise<FileSystemWritableFileStream> {
-    let currentBuffer = options?.keepExistingData ? Array.from(this.content) : [];
-    const self = this;
-    return {
-      async write(data: BufferSource | Blob | string | WriteParams) {
-        let dataArray: Uint8Array;
-        if (typeof data === 'string') {
-          dataArray = new TextEncoder().encode(data);
-        } else if (data instanceof Blob) {
-          dataArray = new Uint8Array(await data.arrayBuffer());
-        } else if (data instanceof ArrayBuffer) {
-          dataArray = new Uint8Array(data);
-        } else if ('buffer' in data && data.buffer instanceof ArrayBuffer) { 
-          dataArray = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-        } else if (typeof data === 'object' && data !== null && 'data' in data && (data as WriteParams).data != null) {
-            const writeParamsData = (data as WriteParams).data;
-            if (typeof writeParamsData === 'string') {
-                dataArray = new TextEncoder().encode(writeParamsData);
-            } else if (writeParamsData instanceof Blob) {
-                dataArray = new Uint8Array(await writeParamsData.arrayBuffer());
-            } else if (writeParamsData instanceof ArrayBuffer) {
-                dataArray = new Uint8Array(writeParamsData);
-            } else if (writeParamsData && 'buffer' in writeParamsData) {
-                dataArray = new Uint8Array(writeParamsData.buffer, writeParamsData.byteOffset, writeParamsData.byteLength);
-            } else {
-                 throw new Error("Unsupported data type for write in WriteParams");
-            }
-        } else {
-            throw new Error("Unsupported data type for write");
-        }
-        
-        const newContent = new Uint8Array(currentBuffer.length + dataArray.length);
-        newContent.set(currentBuffer);
-        newContent.set(dataArray, currentBuffer.length);
-        currentBuffer = Array.from(newContent);
-      },
-      async close() {
-        self.content = Uint8Array.from(currentBuffer);
-      },
-      async seek(position: number) { /* Not implemented for mock */ },
-      async truncate(size: number) { currentBuffer = Array.from(Uint8Array.from(currentBuffer).slice(0, size)); }
-    } as FileSystemWritableFileStream;
-  }
-  async isSameEntry(other: FileSystemHandle): Promise<boolean> { return this === other; }
-  queryPermission = async (descriptor?: any) => 'granted' as PermissionState;
-  requestPermission = async (descriptor?: any) => 'granted' as PermissionState;
-}
-
-// Mock FileSystemDirectoryHandle
-class MockDirectoryHandle implements globalThis.FileSystemDirectoryHandle {
-  kind: 'directory' = 'directory';
-  private _entries: Map<string, MockFileHandle | MockDirectoryHandle> = new Map(); // Renamed to avoid conflict
-  constructor(public name: string) {}
-
-  async getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle> {
-    if (this._entries.has(name)) {
-      const entry = this._entries.get(name);
-      if (entry instanceof MockFileHandle) return entry;
-      throw new DOMException('TypeMismatchError', 'NotFoundError');
-    }
-    if (options?.create) {
-      const newFile = new MockFileHandle(name);
-      this._entries.set(name, newFile);
-      return newFile;
-    }
-    throw new DOMException('File not found', 'NotFoundError');
+  async writeFile(name: string, data: Uint8Array): Promise<void> {
+    this.files.set(name, data);
   }
 
-  async getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FileSystemDirectoryHandle> {
-    if (this._entries.has(name)) {
-      const entry = this._entries.get(name);
-      if (entry instanceof MockDirectoryHandle) return entry as FileSystemDirectoryHandle; // Cast to satisfy return type
-      throw new DOMException('TypeMismatchError', 'NotFoundError');
-    }
-    if (options?.create) {
-      const newDir = new MockDirectoryHandle(name);
-      this._entries.set(name, newDir);
-      return newDir as FileSystemDirectoryHandle; // Cast to satisfy return type
-    }
-    throw new DOMException('Directory not found', 'NotFoundError');
+  async removeFile(name: string): Promise<void> {
+    this.files.delete(name);
   }
 
-  async removeEntry(name: string, options?: { recursive?: boolean }): Promise<void> {
-    const entry = this._entries.get(name);
-    if (!entry) throw new DOMException('Entry not found', 'NotFoundError');
-    if (entry instanceof MockDirectoryHandle && entry._entries.size > 0 && !options?.recursive) {
-      throw new DOMException('Directory not empty', 'InvalidModificationError');
+  async readText(name: string): Promise<string | null> {
+    const data = this.files.get(name);
+    if (typeof data === 'string') {
+      return data;
     }
-    this._entries.delete(name);
+    if (data instanceof Uint8Array) {
+      return new TextDecoder().decode(data);
+    }
+    return null;
   }
 
-  entries(): globalThis.FileSystemDirectoryHandleAsyncIterator<[string, globalThis.FileSystemHandle]> {
-    const self = this;
-    async function* generator(): AsyncGenerator<[string, globalThis.FileSystemHandle], void, unknown> {
-      for (const [key, value] of self._entries) {
-        yield [key, value as globalThis.FileSystemHandle];
-      }
-    }
-    const iterator = generator();
-    return {
-      next: () => iterator.next(),
-      [Symbol.asyncIterator]: () => iterator,
-      [Symbol.asyncDispose]: async () => { /* no-op for mock */ },
-    } as globalThis.FileSystemDirectoryHandleAsyncIterator<[string, globalThis.FileSystemHandle]>;
+  async writeText(name: string, text: string): Promise<void> {
+    this.files.set(name, text);
   }
-
-  keys(): globalThis.FileSystemDirectoryHandleAsyncIterator<string> {
-    const self = this;
-    async function* generator(): AsyncGenerator<string, void, unknown> {
-      for (const key of self._entries.keys()) {
-        yield key;
-      }
-    }
-    const iterator = generator();
-    return {
-      next: () => iterator.next(),
-      [Symbol.asyncIterator]: () => iterator,
-      [Symbol.asyncDispose]: async () => { /* no-op for mock */ },
-    } as globalThis.FileSystemDirectoryHandleAsyncIterator<string>;
-  }
-
-  values(): globalThis.FileSystemDirectoryHandleAsyncIterator<globalThis.FileSystemHandle> {
-    const self = this;
-    async function* generator(): AsyncGenerator<globalThis.FileSystemHandle, void, unknown> {
-      for (const value of self._entries.values()) {
-        yield value as globalThis.FileSystemHandle;
-      }
-    }
-    const iterator = generator();
-    return {
-      next: () => iterator.next(),
-      [Symbol.asyncIterator]: () => iterator,
-      [Symbol.asyncDispose]: async () => { /* no-op for mock */ },
-    } as globalThis.FileSystemDirectoryHandleAsyncIterator<globalThis.FileSystemHandle>;
-  }
-
-  [Symbol.asyncIterator](): globalThis.FileSystemDirectoryHandleAsyncIterator<[string, globalThis.FileSystemHandle]> {
-    const self = this;
-    async function* generator(): AsyncGenerator<[string, globalThis.FileSystemHandle], void, unknown> {
-      for (const [key, value] of self._entries) {
-        yield [key, value as globalThis.FileSystemHandle];
-      }
-    }
-    const iterator = generator();
-    return {
-      next: () => iterator.next(),
-      [Symbol.asyncIterator]: () => iterator,
-      [Symbol.asyncDispose]: async () => { /* no-op for mock */ },
-    } as globalThis.FileSystemDirectoryHandleAsyncIterator<[string, globalThis.FileSystemHandle]>;
-  }
-  async resolve(possibleDescendant: FileSystemHandle): Promise<string[] | null> { return null; }
-  async isSameEntry(other: FileSystemHandle): Promise<boolean> { return this === other; }
-  queryPermission = async (descriptor?: any) => 'granted' as PermissionState;
-  requestPermission = async (descriptor?: any) => 'granted' as PermissionState;
 }
 
 // Mock BlobStore
 class MockBlobStore implements BlobStore {
   private blobs: Map<NodeId | string, Blob> = new Map();
-  constructor(private dirHandle?: MockDirectoryHandle) {}
+  constructor() {} // Removed dirHandle dependency
 
-  async open(dirHandle?: FileSystemDirectoryHandle): Promise<void> { /* no-op for mock */ }
+  async open(): Promise<void> { /* no-op for mock */ } // dirHandle is no longer needed
   async read(idOrPath: NodeId | string): Promise<Blob> {
     const blob = this.blobs.get(idOrPath);
     if (!blob) throw new Error(`Blob ${idOrPath} not found in MockBlobStore`);
@@ -236,8 +96,7 @@ beforeAll(async () => {
 });
 
 describe('FSAFileSystem tests', () => {
-  let mockRootHandle: MockDirectoryHandle;
-  let persistenceProvider: FSAFilePersistenceProvider;
+  let persistenceProvider: MockPersistenceProvider;
   let sqliteAdapter: SqlJsAdapter;
   let blobStore: MockBlobStore;
   let mediaConverter: NodeCanvasMediaConverter; // Existing class
@@ -245,12 +104,11 @@ describe('FSAFileSystem tests', () => {
   const dbFileName = 'test-fsa.sqlite';
 
   beforeEach(async () => {
-    mockRootHandle = new MockDirectoryHandle('test-fsa-root');
-    persistenceProvider = new FSAFilePersistenceProvider(mockRootHandle as unknown as FileSystemDirectoryHandle);
+    persistenceProvider = new MockPersistenceProvider();
     
     // SqlJsAdapter のコンストラクタ引数の順番を修正し、wasmPath を渡す
     sqliteAdapter = new SqlJsAdapter(persistenceProvider, wasmPath);
-    blobStore = new MockBlobStore(mockRootHandle);
+    blobStore = new MockBlobStore();
     mediaConverter = new NodeCanvasMediaConverter(); // Use existing class
 
     fs = new FSAFileSystem(sqliteAdapter, blobStore as unknown as BlobStore, mediaConverter); // Cast blobStore
@@ -258,9 +116,10 @@ describe('FSAFileSystem tests', () => {
   });
 
   afterEach(async () => {
-    try {
-      await mockRootHandle.removeEntry(dbFileName);
-    } catch (e) { /* no-op if not found */ }
+    // The database file is now managed by MockPersistenceProvider in memory,
+    // so explicit removal from a mock directory handle is no longer needed.
+    // SqlJsAdapter will use persistenceProvider.removeFile(dbFileName) internally if needed.
+    await persistenceProvider.removeFile(dbFileName);
   });
 
   it('should create a root folder on open', async () => {
@@ -366,11 +225,10 @@ describe('FSAFileSystem tests', () => {
     dumpedJsonLines += decoder.decode();
     streamReader.releaseLock();
 
-    const mockRootHandle2 = new MockDirectoryHandle('test-fsa-root2');
-    const persistenceProvider2 = new FSAFilePersistenceProvider(mockRootHandle2 as unknown as FileSystemDirectoryHandle);
+    const persistenceProvider2 = new MockPersistenceProvider();
     // const dbFileName2 = 'test-fsa2.sqlite'; // dbFileName is not used in SqlJsAdapter constructor anymore
     const sqliteAdapter2 = new SqlJsAdapter(persistenceProvider2, wasmPath);
-    const blobStore2 = new MockBlobStore(mockRootHandle2);
+    const blobStore2 = new MockBlobStore();
     const fs2 = new FSAFileSystem(sqliteAdapter2, blobStore2 as unknown as BlobStore, mediaConverter); // Cast blobStore
     
     const stringStream = new ReadableStream({
@@ -404,9 +262,8 @@ describe('FSAFileSystem tests', () => {
     const imageColor = getCenterPixelRGBA(readCanvas);
     expect(imageColor).toEqual([0, 0, 255, 255]);
 
-    // await mockRootHandle2.removeEntry(dbFileName2).catch(() => {}); // dbFileName2 is not defined
-    // To clean up, we might need to remove the db file by its name if SqlJsAdapter creates it predictably
-    // For now, this cleanup step is removed as dbFileName is not passed to SqlJsAdapter.
+    // Cleanup for the second filesystem instance
+    await persistenceProvider2.removeFile(dbFileName); // Assuming dbFileName is constant or handled internally
   });
 });
 

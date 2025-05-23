@@ -10,7 +10,9 @@ export class NodeCanvasMediaConverter implements MediaConverter {
     // node-canvasのCanvasの場合
     if (this.isNodeCanvas(media)) {
       const buffer: Buffer = (media as Canvas).toBuffer('image/png');
-      return { blob: new Blob([buffer]), mediaType: 'image' };
+      const blob = new Blob([buffer], { type: 'image/png' });
+      await blob.arrayBuffer(); // BlobのarrayBufferメソッドを呼び出して、Blobを確実に読み込む
+      return { blob };
     }
     throw new Error('Unsupported media type for NodeCanvasMediaConverter');
   }
@@ -22,38 +24,18 @@ export class NodeCanvasMediaConverter implements MediaConverter {
     mediaType?: string;
   }): Promise<MediaResource> {
     if (record.blob && record.mediaType === 'image') {
-      console.log('NodeCanvasMediaConverter.fromStorable record.blob:', record.blob, typeof record.blob, Object.prototype.toString.call(record.blob), record.blob?.constructor?.name);
-      let bufferToLoad: Buffer;
-
-      if (record.blob instanceof Blob) {
-        if (typeof record.blob.arrayBuffer === 'function') {
-          const arrayBuffer = await record.blob.arrayBuffer();
-          bufferToLoad = Buffer.from(arrayBuffer);
-        } else if (typeof (record.blob as any).stream === 'function') { // Node.js Blob might have stream()
-          const stream = (record.blob as any).stream() as NodeJS.ReadableStream;
-          const chunks: Buffer[] = [];
-          for await (const chunk of stream) {
-            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-          }
-          bufferToLoad = Buffer.concat(chunks);
-        } else {
-          console.error('record.blob is a Blob but lacks arrayBuffer and stream methods:', record.blob);
-          throw new Error(`record.blob (type: ${record.blob?.constructor?.name}) is not a convertible Blob in NodeCanvasMediaConverter.fromStorable.`);
-        }
-      } else if (Buffer.isBuffer(record.blob)) {
-        bufferToLoad = record.blob;
-      } else if (record.blob && typeof record.blob === 'object' && record.blob !== null && 'byteLength' in record.blob && typeof (record.blob as any).slice === 'function') { // Check for Uint8Array-like properties first
-        // If it looks like a Uint8Array, assume it's not a standard Blob we want to call arrayBuffer() on directly
-        bufferToLoad = Buffer.from(record.blob as Uint8Array);
-      } else {
-        const blobType = record.blob ? Object.prototype.toString.call(record.blob) : String(record.blob);
-        let constructorName = 'N/A';
-        if (record.blob && typeof record.blob === 'object' && record.blob !== null && 'constructor' in record.blob && typeof (record.blob as any).constructor === 'function') {
-            constructorName = (record.blob as any).constructor.name;
-        }
-        console.error('record.blob is not a Blob or Buffer or Uint8Array-like:', record.blob);
-        throw new Error(`record.blob (type: ${constructorName}, toString: ${blobType}) is not a valid Blob, Buffer, or Uint8Array-like in NodeCanvasMediaConverter.fromStorable.`);
+      // toStorableで作成されたBlobであることを前提とする
+      // Node.jsのBlobはarrayBuffer()メソッドを持つ
+      if (!(record.blob instanceof Blob) || typeof record.blob.arrayBuffer !== 'function') {
+        throw new Error(
+          `record.blob is not a valid Blob created by toStorable. Expected Blob with arrayBuffer method, got ${
+            record.blob?.constructor?.name
+          }`
+        );
       }
+
+      const arrayBuffer = await record.blob.arrayBuffer();
+      const bufferToLoad = Buffer.from(arrayBuffer);
 
       const img = await loadImage(bufferToLoad);
       const canvas = createCanvas(img.width, img.height);
