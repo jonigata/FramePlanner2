@@ -3,6 +3,7 @@ import { Node, File, Folder, FileSystem } from './fileSystem.js';
 import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapter.js';
 import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
+import type { MediaConverter } from './mediaConverter.js';
 
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
@@ -61,14 +62,17 @@ export class FSAFilePersistenceProvider implements FilePersistenceProvider {
 export class FSAFileSystem extends FileSystem {
   private sqlite: SqlJsAdapter;
   private blobStore: BlobStore;
+  private mediaConverter: MediaConverter;
 
   constructor(
     sqlite: SqlJsAdapter,
-    blobStore?: BlobStore
+    blobStore: BlobStore,
+    mediaConverter: MediaConverter
   ) {
     super();
     this.sqlite = sqlite;
-    this.blobStore = blobStore ?? new FSABlobStore();
+    this.blobStore = blobStore;
+    this.mediaConverter = mediaConverter;
   }
 
   async open(): Promise<void> {
@@ -98,7 +102,7 @@ export class FSAFileSystem extends FileSystem {
       );
     });
     await this.sqlite.persist();
-    return new FSAFile(this, id, this.sqlite, this.blobStore);
+    return new FSAFile(this, id, this.sqlite, this.blobStore, this.mediaConverter);
   }
 
   async createFileWithId(id: NodeId, _type: string = 'text'): Promise<File> {
@@ -114,7 +118,7 @@ export class FSAFileSystem extends FileSystem {
       );
     });
     await this.sqlite.persist();
-    return new FSAFile(this, id, this.sqlite, this.blobStore);
+    return new FSAFile(this, id, this.sqlite, this.blobStore, this.mediaConverter);
   }
 
   async createFolder(): Promise<Folder> {
@@ -155,7 +159,7 @@ export class FSAFileSystem extends FileSystem {
     const node = await this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [id]);
     if (!node) return null;
     if (node.type === 'file') {
-      return new FSAFile(this, id, this.sqlite, this.blobStore);
+      return new FSAFile(this, id, this.sqlite, this.blobStore, this.mediaConverter);
     } else if (node.type === 'folder') {
       return new FSAFolder(this, id, this.sqlite, this.blobStore);
     }
@@ -265,7 +269,7 @@ export class FSAFileSystem extends FileSystem {
                 reader.onerror = () => reject();
                 reader.readAsDataURL(blob);
               });
-              item.mediaType = file.mediaType;
+              item.mediaType = file.mediaType ?? null;
             } catch {
               // Blobが読めない場合は無視
             }
@@ -336,11 +340,30 @@ export class FSAFileSystem extends FileSystem {
     let count = 0;
     let writtenCount = 0;
 
+    const dataURLToBlob = (dataURL: string): Blob => {
+      const parts = dataURL.split(',');
+      if (parts.length !== 2) throw new Error('Invalid dataURL format for Blob conversion');
+      const metaPart = parts[0].split(':')[1];
+      if (!metaPart) throw new Error('Invalid dataURL format: missing metadata part');
+      const contentType = metaPart.split(';')[0];
+      const base64Data = parts[1];
+      // Node.js環境でatobの代わりにBufferを使用
+      const buffer = Buffer.from(base64Data, 'base64');
+      return new Blob([buffer], { type: contentType });
+    };
+
     const saveBatch = async (itemsBatch: any[]) => {
       // 1. 先に Blob を全て書き込む（トランザクション外）
       for (const item of itemsBatch) {
-        if (item.type === 'file' && item.blob) {
-          await this.blobStore.write(item.id, item.blob);
+        if (item.type === 'file' && item.blob) { // item.blob はここで dataURL 文字列のはず
+          if (typeof item.blob === 'string' && item.blob.startsWith('data:')) {
+            const actualBlob = dataURLToBlob(item.blob);
+            await this.blobStore.write(item.id, actualBlob);
+            // item.blob を実際のBlobに置き換える必要はない。
+            // DBにはblobPathが保存され、read時にBlobStoreから読み出すため。
+          } else if (!(item.blob instanceof Blob)) {
+            console.warn(`Item ${item.id} has a non-dataURL blob that is not a Blob instance:`, item.blob);
+          }
         }
       }
 
@@ -356,7 +379,7 @@ export class FSAFileSystem extends FileSystem {
           );
           if (type === 'file') {
             // files
-            if (item.blob) {
+            if (item.blob) { // item.blob は dump された際の dataURL 文字列、または既に Blob の場合もある
               await this.sqlite.run(
                 "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
                 [id, `blobs/${id}.bin`, item.mediaType ?? null]
@@ -392,12 +415,8 @@ export class FSAFileSystem extends FileSystem {
     };
 
     for await (const node of this.readNDJSONStream(dataStream)) {
-      // blobがdataURLならBlobに戻す
-      console.log(node);
-      if (node.blob) {
-        const res = await fetch(node.blob);
-        node.blob = await res.blob();
-      }
+      // node.blob は dump された dataURL 文字列のままのはず
+      // saveBatch の中で Blob に変換され、BlobStore に書き込まれる
       batch.push(node);
       count++;
       onProgress(0.1 + 0.8 * (count / lineCount));
@@ -442,10 +461,12 @@ export class FSAFileSystem extends FileSystem {
 export class FSAFile extends File {
   sqlite: SqlJsAdapter;
   blobStore: BlobStore;
-  constructor(fileSystem: FileSystem, id: NodeId, sqlite: SqlJsAdapter, blobStore: BlobStore) {
+  private mediaConverter: MediaConverter;
+  constructor(fileSystem: FileSystem, id: NodeId, sqlite: SqlJsAdapter, blobStore: BlobStore, mediaConverter: MediaConverter) {
     super(fileSystem, id);
     this.sqlite = sqlite;
     this.blobStore = blobStore;
+    this.mediaConverter = mediaConverter;
   }
   async read(): Promise<any> {
     const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
@@ -486,79 +507,45 @@ export class FSAFile extends File {
   async readMediaResource(): Promise<MediaResource> {
     const file = await this.sqlite.selectOne("SELECT * FROM files WHERE id = ?", [this.id]);
     if (!file) throw new Error('File not found');
-    const { createCanvasFromBlob, createVideoFromBlob, createCanvasFromImage } = await import('../layeredCanvas/tools/imageUtil.js');
+
     if (file.inlineContent) {
-      // DataURL or JSON
-      try {
-        const json = JSON.parse(file.inlineContent);
-        if (json && json.__blobPath) {
-          const blob = await this.blobStore.read(this.id);
-          if (file.mediaType === 'image' || file.mediaType === undefined) {
-            return await createCanvasFromBlob(blob);
-          }
-          if (file.mediaType === 'video') {
-            return await createVideoFromBlob(blob);
-          }
-        }
-      } catch { }
-      // 画像DataURL
-      if (file.mediaType === 'image' || file.mediaType === undefined) {
-        const img = new Image();
-        img.src = file.inlineContent;
-        await img.decode();
-        return await createCanvasFromImage(img);
-      }
-      if (file.mediaType === 'video') {
-        const video = document.createElement('video');
-        video.src = file.inlineContent;
-        await new Promise((resolve) => { video.onloadeddata = resolve; });
-        return video;
-      }
+      return await this.mediaConverter.fromStorable({ content: file.inlineContent, mediaType: file.mediaType });
     }
     if (file.blobPath) {
       const blob = await this.blobStore.read(this.id);
-      if (file.mediaType === 'image' || file.mediaType === undefined) {
-        return await createCanvasFromBlob(blob);
-      }
-      if (file.mediaType === 'video') {
-        return await createVideoFromBlob(blob);
-      }
+      return await this.mediaConverter.fromStorable({ blob, mediaType: file.mediaType });
     }
-    throw new Error('Broken media data');
+    throw new Error('Broken media data or no media content found');
   }
 
   async writeMediaResource(mediaResource: MediaResource): Promise<void> {
-    if (mediaResource instanceof HTMLCanvasElement) {
-      const { canvasToBlob } = await import('../layeredCanvas/tools/imageUtil.js');
-      const blob = await canvasToBlob(mediaResource);
-      await this.sqlite.transaction(async () => {
-        if (!this.sqlite.run) throw new Error('DB not initialized');
+    const record = await this.mediaConverter.toStorable(mediaResource);
+
+    await this.sqlite.transaction(async () => {
+      if (!this.sqlite.run) throw new Error('DB not initialized');
+      if (record.blob) {
+        const blobPath = await this.blobStore.write(this.id, record.blob);
         await this.sqlite.run(
           "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
-          [`blobs/${this.id}.bin`, 'image', this.id]
+          [blobPath, record.mediaType ?? null, this.id]
         );
-      });
-      await this.blobStore.write(this.id, blob);
-    } else if (mediaResource instanceof HTMLVideoElement) {
-      const blob = await fetch(mediaResource.src).then(res => res.blob());
-      await this.sqlite.transaction(async () => {
-        if (!this.sqlite.run) throw new Error('DB not initialized');
+      } else if (record.content) {
         await this.sqlite.run(
-          "UPDATE files SET inlineContent = NULL, blobPath = ?, mediaType = ? WHERE id = ?",
-          [`blobs/${this.id}.bin`, 'video', this.id]
+          "UPDATE files SET inlineContent = ?, blobPath = NULL, mediaType = ? WHERE id = ?",
+          [record.content, record.mediaType ?? null, this.id]
         );
-      });
-      await this.blobStore.write(this.id, blob);
-    } else {
-      // RemoteMediaReference等
-      await this.sqlite.transaction(async () => {
-        if (!this.sqlite.run) throw new Error('DB not initialized');
+      } else if (record.remote) {
         await this.sqlite.run(
-          "UPDATE files SET inlineContent = ?, blobPath = NULL, mediaType = NULL WHERE id = ?",
-          [JSON.stringify(mediaResource), this.id]
+          "UPDATE files SET inlineContent = ?, blobPath = NULL, mediaType = ? WHERE id = ?",
+          [JSON.stringify(record.remote), record.mediaType ?? 'remote', this.id] // 'remote' は mediaType の一種として扱う
         );
-      });
-    }
+      } else {
+        await this.sqlite.run(
+          "UPDATE files SET inlineContent = NULL, blobPath = NULL, mediaType = NULL WHERE id = ?",
+          [null, null, null, this.id] // inlineContent, blobPath, mediaType を NULL にする
+        );
+      }
+    });
     await this.sqlite.persist();
   }
 

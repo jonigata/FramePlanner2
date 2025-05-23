@@ -2,7 +2,7 @@ type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
 export interface BlobStore {
   open(dirHandle: FileSystemDirectoryHandle): Promise<void>;
-  write(id: string, blob: Blob): Promise<void>;
+  write(id: string, blob: Blob): Promise<string>; // Changed to return string (path)
   read(id: string): Promise<Blob>;
   delete(id: string): Promise<void>;
   gc(validIds: Set<string>): Promise<void>;
@@ -15,14 +15,16 @@ export class FSABlobStore implements BlobStore {
     this.dirHandle = await dirHandle.getDirectoryHandle('blobs', { create: true });
   }
 
-  async write(id: string, blob: Blob) {
+  async write(id: string, blob: Blob): Promise<string> {
     if (!this.dirHandle) throw new Error('BlobStore not initialized');
     console.log('Writing blob:', id);
-    const fileHandle = await this.dirHandle.getFileHandle(`${id}.bin`, { create: true });
+    const fileName = `${id}.bin`;
+    const fileHandle = await this.dirHandle.getFileHandle(fileName, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
     console.log('Writing blob done:', id);
+    return `blobs/${fileName}`; // Return the path
   }
 
   async read(id: string): Promise<Blob> {
@@ -58,8 +60,9 @@ export class MemoryBlobStore implements BlobStore {
     // メモリストアなので何もしない
   }
 
-  async write(id: string, blob: Blob): Promise<void> {
+  async write(id: string, blob: Blob): Promise<string> {
     this.blobs.set(id, blob);
+    return `blobs/${id}.bin`; // Return a mock path
   }
 
   async read(id: string): Promise<Blob> {

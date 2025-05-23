@@ -153,6 +153,10 @@ export class SqlJsAdapter {
 
   // INSERT/UPDATE/DELETE系
   async run(sql: string, params: any[] = []): Promise<void> {
+    if (params.some(p => p === undefined)) {
+      console.error("Attempted to bind undefined parameter in SQL:", sql, params);
+      throw new Error("Attempted to bind undefined parameter in SQL");
+    }
     assert(this.db, 'DB not initialized');
     const stmt = this.db.prepare(sql);
     stmt.bind(params);

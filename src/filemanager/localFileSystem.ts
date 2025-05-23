@@ -4,6 +4,7 @@ import { FSABlobStore } from '../lib/filesystem/sqlite/BlobStore.js';
 import { SqlJsAdapter } from '../lib/filesystem/sqlite/SqlJsAdapter.js';
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { specialFolders } from './specialFolders.js';
+import { BrowserMediaConverter } from '../lib/filesystem/mediaConverter.js';
 
 export async function buildFileSystem(handle: FileSystemDirectoryHandle): Promise<FileSystem> {
   // PersistenceProviderの生成とDirectoryHandleのセット
@@ -15,7 +16,8 @@ export async function buildFileSystem(handle: FileSystemDirectoryHandle): Promis
 
   // FSAFileSystem生成
   const sqlite = new SqlJsAdapter(persistenceProvider, wasmUrl);
-  const fs = new FSAFileSystem(sqlite, blobStore);
+  const mediaConverter = new BrowserMediaConverter();
+  const fs = new FSAFileSystem(sqlite, blobStore, mediaConverter);
   await fs.open();
 
   fs.withoutPersist(async () => {
