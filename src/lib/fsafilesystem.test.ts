@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { assert, describe, it, expect } from 'vitest';
 import type { Canvas } from 'canvas';
 import { createCanvas } from 'canvas';
-import type { MediaResource } from './filesystem/fileSystem.js';
+import { openAsBlob } from 'fs';
 
 import { beforeEach, afterEach, beforeAll } from 'vitest';
 import initSqlJs from 'sql.js';
@@ -9,11 +9,12 @@ import type * as sqlJs from 'sql.js';
 import path from 'path';
 
 // FSAFileSystem 関連の import
-import { FSAFileSystem, FSAFile, FSAFolder } from './filesystem/fsaFileSystem.js'; // FSAFilePersistenceProvider is no longer used directly
-import { SqlJsAdapter, type FilePersistenceProvider } from './filesystem/sqlite/SqlJsAdapter.js';
-import { type BlobStore } from './filesystem/sqlite/BlobStore.js';
-import type { NodeId } from './filesystem/fileSystem.js';
-import { NodeCanvasMediaConverter } from '../../test/helpers.js';
+import { FSAFileSystem, FSAFile, FSAFolder } from './filesystem/fsaFileSystem'; // FSAFilePersistenceProvider is no longer used directly
+import { SqlJsAdapter, type FilePersistenceProvider } from './filesystem/sqlite/SqlJsAdapter';
+import { type BlobStore } from './filesystem/sqlite/BlobStore';
+import type { NodeId, MediaResource } from './filesystem/fileSystem';
+import { NodeCanvasMediaConverter, checkFileSystem, checkLoad } from '../../test/helpers';
+import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 
 // Mock FilePersistenceProvider
 class MockPersistenceProvider implements FilePersistenceProvider {
@@ -200,70 +201,25 @@ describe('FSAFileSystem tests', () => {
     expect(color).toEqual([255, 0, 0, 255]);
   });
 
+  async function checkCopy(filename: string) {
+    const fs2 = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
+    await fs2.open("testdb");
+
+    // Load test data
+    const blob = await openAsBlob(filename);
+    await fs2.undump(blob.stream());
+    
+    await checkFileSystem(fs2);
+
+    const readable = await fs2.dump({ onProgress: p => { console.log("dump:", p); } });
+    await fs.undump(readable, { onProgress: p => { console.log("undump:", p); } });
+
+    await checkFileSystem(fs);
+  }
+
+
   it('should dump and undump filesystem content', async () => {
-    const root = await fs.getRoot() as FSAFolder;
-    const folder1 = await fs.createFolder() as FSAFolder;
-    await root.link('MyFolder', folder1.id);
-    const file1 = await fs.createFile('text') as FSAFile;
-    await file1.write('Content of file1');
-    await folder1.link('MyFile.txt', file1.id);
-    const imageFile = await fs.createFile('image') as FSAFile;
-    const canvas = createCanvas(5,5); canvas.getContext('2d').fillStyle='blue'; canvas.getContext('2d').fillRect(0,0,5,5);
-    await imageFile.writeMediaResource(canvas as unknown as MediaResource);
-    await folder1.link('MyImage.png', imageFile.id);
-
-
-    const dumpStream = await fs.dump();
-    let dumpedJsonLines = '';
-    const streamReader = dumpStream.getReader();
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await streamReader.read();
-      if (done) break;
-      dumpedJsonLines += decoder.decode(value, {stream: true});
-    }
-    dumpedJsonLines += decoder.decode();
-    streamReader.releaseLock();
-
-    const persistenceProvider2 = new MockPersistenceProvider();
-    // const dbFileName2 = 'test-fsa2.sqlite'; // dbFileName is not used in SqlJsAdapter constructor anymore
-    const sqliteAdapter2 = new SqlJsAdapter(persistenceProvider2, wasmPath);
-    const blobStore2 = new MockBlobStore();
-    const fs2 = new FSAFileSystem(sqliteAdapter2, blobStore2 as unknown as BlobStore, mediaConverter); // Cast blobStore
-    
-    const stringStream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(dumpedJsonLines));
-        controller.close();
-      }
-    });
-
-    await fs2.undump(stringStream);
-    await fs2.open();
-
-    const newRoot = await fs2.getRoot() as FSAFolder;
-    const folder1Entry = await newRoot.getEntryByName('MyFolder');
-    expect(folder1Entry).not.toBeNull();
-    const newFolder1 = await fs2.getNode(folder1Entry![2]) as FSAFolder;
-    expect(newFolder1).toBeInstanceOf(FSAFolder);
-    
-    const file1Entry = await newFolder1.getEntryByName('MyFile.txt');
-    expect(file1Entry).not.toBeNull();
-    const newFile1 = await fs2.getNode(file1Entry![2]) as FSAFile;
-    expect(newFile1).toBeInstanceOf(FSAFile);
-    expect(await newFile1.read()).toBe('Content of file1');
-
-    const imageFileEntry = await newFolder1.getEntryByName('MyImage.png');
-    expect(imageFileEntry).not.toBeNull();
-    const newImageFile = await fs2.getNode(imageFileEntry![2]) as FSAFile;
-    expect(newImageFile).toBeInstanceOf(FSAFile);
-    const readCanvas = await newImageFile.readMediaResource() as unknown as Canvas;
-    expect(readCanvas.width).toBe(5);
-    const imageColor = getCenterPixelRGBA(readCanvas);
-    expect(imageColor).toEqual([0, 0, 255, 255]);
-
-    // Cleanup for the second filesystem instance
-    await persistenceProvider2.removeFile(dbFileName); // Assuming dbFileName is constant or handled internally
+    await checkCopy('testdata/dump/testcase-v2.ndjson');
   });
 });
 
@@ -280,3 +236,4 @@ function getCenterPixelRGBA(canvas: Canvas): [number, number, number, number] {
   const [r, g, b, a] = imageData.data;
   return [r, g, b, a];
 }
+

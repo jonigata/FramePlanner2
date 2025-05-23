@@ -420,28 +420,18 @@ export class FSAFileSystem extends FileSystem {
       batch.push(node);
       count++;
       onProgress(0.1 + 0.8 * (count / lineCount));
-      console.log("A");
       if (batch.length >= batchSize) {
-        console.log("B");
         await saveBatch(batch);
-        console.log("C");
         writtenCount += batch.length;
         batch = [];
         await this.sqlite.persist();
-        console.log("D");
       }
-      console.log("E");
     }
-    console.log("F");
     if (batch.length > 0) {
-      console.log("G");
       await saveBatch(batch);
-      console.log("H");
       await this.sqlite.persist();
-      console.log("I");
       writtenCount += batch.length;
     }
-    console.log("J");
 
     onProgress(1);
   }
