@@ -120,14 +120,10 @@ export async function checkFileSystem(fs: FileSystem) {
   expect(characters[0].appearance).toBe('黒毛の犬');
 }
 
-export async function checkLoad(filename: string) {
-  const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
-  await fs.open("testdb");
-  
+export async function checkUndump(fs: FileSystem, filename: string) {
   // Load test data
   const blob = await openAsBlob(filename);
   await fs.undump(blob.stream());
 
   await checkFileSystem(fs);
 }
-

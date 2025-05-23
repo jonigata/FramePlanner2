@@ -12,8 +12,8 @@ import path from 'path';
 import { FSAFileSystem, FSAFile, FSAFolder } from './filesystem/fsaFileSystem';
 import { SqlJsAdapter, type FilePersistenceProvider } from './filesystem/sqlite/SqlJsAdapter';
 import { type BlobStore } from './filesystem/sqlite/BlobStore';
-import type { NodeId, MediaResource } from './filesystem/fileSystem';
-import { NodeCanvasMediaConverter, checkFileSystem } from '../../test/helpers'; // checkLoad は未使用なので削除
+import type { FileSystem, NodeId, MediaResource } from './filesystem/fileSystem';
+import { NodeCanvasMediaConverter, checkFileSystem, checkUndump } from '../../test/helpers'; // checkLoad は未使用なので削除
 import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
 
 // Mock FilePersistenceProvider
@@ -225,7 +225,7 @@ describe('FSAFileSystem tests', () => {
     expect(color).toEqual([255, 0, 0, 255]);
   });
 
-  async function checkCopy(sourceFs: FSAFileSystem, targetFs: FSAFileSystem, testfileName: string) {
+  async function checkCopy(sourceFs: FileSystem, targetFs: FileSystem, testfileName: string) {
     // この関数は FSAFileSystem 同士のコピーをテストするために変更
     // 元の checkCopy は IndexedDBFileSystem を使っていたが、
     // ここでは beforeEach で作成された fs と fs2 (または引数で渡されたもの) を使う
@@ -247,8 +247,29 @@ describe('FSAFileSystem tests', () => {
     // オプション: targetFs から再度ダンプして、sourceFs のダンプ結果と比較することも可能
   }
 
-  it('should dump and undump filesystem content between two FSAFileSystem instances', async () => {
-    // fs から fs2 へコピーするテスト
+  it('デスクトップとキャビネットからすべてのbookをロードできる(v1)', async () => {
+    await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
+  });
+
+  it('デスクトップとキャビネットからすべてのbookをロードできる(v2)', async () => {
+    await checkUndump(fs, 'testdata/dump/testcase-v2.ndjson');
+  });
+
+  it('dump(indexeddb)->undumpで再現できる(v1)', async () => {
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
+    await fs.open("testdb");
+    await checkCopy(fs, fs2, 'testdata/dump/testcase-v1.ndjson');
+  });
+  it('dump(indexeddb)->undumpで再現できる(v2)', async () => {
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
+    await fs.open("testdb");
+    await checkCopy(fs, fs2, 'testdata/dump/testcase-v2.ndjson');
+  });
+
+  it('dump->undumpで再現できる(v1)', async () => {
+    await checkCopy(fs, fs2, 'testdata/dump/testcase-v1.ndjson');
+  });
+  it('dump->undumpで再現できる(v2)', async () => {
     await checkCopy(fs, fs2, 'testdata/dump/testcase-v2.ndjson');
   });
 });

@@ -2,16 +2,20 @@ import { describe, it, expect } from 'vitest';
 import { openAsBlob } from 'fs';
 
 import { IndexedDBFileSystem } from './filesystem/indexeddbFileSystem';
-import { NodeCanvasMediaConverter, checkFileSystem, checkLoad } from '../../test/helpers';
+import { NodeCanvasMediaConverter, checkFileSystem, checkUndump } from '../../test/helpers';
 
 
 describe('Book loading from filesystem', () => {
   it('デスクトップとキャビネットからすべてのbookをロードできる(v1)', async () => {
-    await checkLoad('testdata/dump/testcase-v1.ndjson');
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
+    await fs.open("testdb");
+    await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
   });
 
   it('デスクトップとキャビネットからすべてのbookをロードできる(v2)', async () => {
-    await checkLoad('testdata/dump/testcase-v2.ndjson');
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
+    await fs.open("testdb");
+    await checkUndump(fs, 'testdata/dump/testcase-v2.ndjson');
   });
 
   async function checkCopy(filename: string) {
