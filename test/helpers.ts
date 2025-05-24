@@ -1,7 +1,7 @@
 import { expect, assert } from 'vitest';
 import { openAsBlob } from 'fs';
 import type { Canvas } from 'canvas';
-import type { MediaConverter } from '../src/lib/filesystem/mediaConverter';
+import { type MediaConverter, blobToDataURL, dataURLtoBlob } from '../src/lib/filesystem/mediaConverter';
 import type { MediaResource, RemoteMediaReference } from '../src/lib/filesystem/fileSystem';
 import { IndexedDBFileSystem } from '../src/lib/filesystem/indexeddbFileSystem';
 import type { Book } from '../src/lib/book/book';
@@ -17,6 +17,7 @@ export class NodeCanvasMediaConverter implements MediaConverter {
     if (this.isNodeCanvas(media)) {
       return { blob: media as unknown as Blob, mediaType: 'image' };
     }
+    console.error("MEDIA", media);
     throw new Error('Unsupported media type for NodeCanvasMediaConverter');
   }
 
@@ -31,7 +32,7 @@ export class NodeCanvasMediaConverter implements MediaConverter {
       // Node.jsのBlobはarrayBuffer()メソッドを持つ
       return record.blob as unknown as MediaResource;
     }
-    console.log(record);
+    console.error("MEDIA", record);
     throw new Error('Unsupported storable for NodeCanvasMediaConverter');
   }
 
@@ -42,6 +43,16 @@ export class NodeCanvasMediaConverter implements MediaConverter {
       typeof (obj as Canvas).toBuffer === 'function' &&
       typeof (obj as Canvas).getContext === 'function'
     );
+  }
+
+  async blobToDataURL(blob: Blob): Promise<string> {
+    // mediaConverter.ts からインポートした関数を使用
+    return blobToDataURL(blob);
+  }
+
+  async dataURLtoBlob(dataURL: string): Promise<Blob> {
+    // mediaConverter.ts からインポートした関数を使用
+    return dataURLtoBlob(dataURL);
   }
 }
 

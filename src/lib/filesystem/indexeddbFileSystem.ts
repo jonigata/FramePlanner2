@@ -3,26 +3,25 @@ import { ulid } from 'ulid';
 import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem';
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import type { DumpFormat, DumpProgress } from './fileSystem';
-import { blobToDataURL, dataURLtoBlob } from './fileSystemTools';
 import type { MediaConverter } from './mediaConverter';
 
 
 // {__blob__: true, data, type} を再帰的に Blob に戻す
-async function deserializeBlobs(obj: any): Promise<any> {
+async function deserializeBlobs(obj: any, mediaConverter: MediaConverter): Promise<any> {
   if (obj && typeof obj === "object") {
     if (obj.__blob__ && obj.data) {
-      const blob = await dataURLtoBlob(obj.data);
+      const blob = await mediaConverter.dataURLtoBlob(obj.data);
       if (obj.type && blob.type !== obj.type) {
         return new Blob([blob], { type: obj.type });
       }
       return blob;
     }
     if (Array.isArray(obj)) {
-      return Promise.all(obj.map(deserializeBlobs));
+      return Promise.all(obj.map(item => deserializeBlobs(item, mediaConverter)));
     }
     const result: any = {};
     for (const key of Object.keys(obj)) {
-      result[key] = await deserializeBlobs(obj[key]);
+      result[key] = await deserializeBlobs(obj[key], mediaConverter);
     }
     return result;
   }
@@ -31,17 +30,17 @@ async function deserializeBlobs(obj: any): Promise<any> {
 
 
 // オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
-async function serializeBlobs(obj: any): Promise<any> {
+async function serializeBlobs(obj: any, mediaConverter: MediaConverter): Promise<any> {
   if (obj instanceof Blob) {
-    return { __blob__: true, data: await blobToDataURL(obj), type: obj.type };
+    return { __blob__: true, data: await mediaConverter.blobToDataURL(obj), type: obj.type };
   }
   if (Array.isArray(obj)) {
-    return Promise.all(obj.map(serializeBlobs));
+    return Promise.all(obj.map(item => serializeBlobs(item, mediaConverter)));
   }
   if (obj && typeof obj === "object") {
     const result: any = {};
     for (const key of Object.keys(obj)) {
-      result[key] = await serializeBlobs(obj[key]);
+      result[key] = await serializeBlobs(obj[key], mediaConverter);
     }
     return result;
   }
@@ -272,6 +271,7 @@ export class IndexedDBFileSystem extends FileSystem {
     const encoder = new TextEncoder();
     let count = 0;
     const total = items.length;
+    const mediaConverter = this.mediaConverter; // クロージャのためにmediaConverterをキャプチャ
 
     const stream = new ReadableStream<Uint8Array>({
       async pull(controller) {
@@ -282,7 +282,7 @@ export class IndexedDBFileSystem extends FileSystem {
         }
         let value = items[count];
         // 再帰的にBlobをdataURLラッパーに変換
-        value = await serializeBlobs(value);
+        value = await serializeBlobs(value, mediaConverter);
         const jsonString = JSON.stringify(value) + "\n";
         controller.enqueue(encoder.encode(jsonString));
         count++;
@@ -327,12 +327,11 @@ export class IndexedDBFileSystem extends FileSystem {
     for await (let node of nodes) {
       if (node.blob && typeof node.blob === 'string') {
         // トップレベルのblob:は例外的にblobに変換
-        console.log("Blob detected", node.blob);
-        const blob = await dataURLtoBlob(node.blob);
+        const blob = await this.mediaConverter.dataURLtoBlob(node.blob);
         node.blob = blob;
       } else {
         // 再帰的に {__blob__:...} を Blob に復元
-        node = await deserializeBlobs(node);
+        node = await deserializeBlobs(node, this.mediaConverter);
       }
       allItems.push(node);
       count++;

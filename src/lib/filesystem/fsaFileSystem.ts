@@ -4,27 +4,26 @@ import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapte
 import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 import type { MediaConverter } from './mediaConverter.js';
-import { blobToDataURL, dataURLtoBlob } from './fileSystemTools.js';
 
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
 
 // {__blob__: true, data, type} を再帰的に Blob に戻す
-async function deserializeBlobs(obj: any): Promise<any> {
+async function deserializeBlobs(obj: any, mediaConverter: MediaConverter): Promise<any> {
   if (obj && typeof obj === "object") {
     if (obj.__blob__ && obj.data) {
-      const blob = await dataURLtoBlob(obj.data);
+      const blob = await mediaConverter.dataURLtoBlob(obj.data);
       if (obj.type && blob.type !== obj.type) {
         return new Blob([blob], { type: obj.type });
       }
       return blob;
     }
     if (Array.isArray(obj)) {
-      return Promise.all(obj.map(deserializeBlobs));
+      return Promise.all(obj.map(item => deserializeBlobs(item, mediaConverter)));
     }
     const result: any = {};
     for (const key of Object.keys(obj)) {
-      result[key] = await deserializeBlobs(obj[key]);
+      result[key] = await deserializeBlobs(obj[key], mediaConverter);
     }
     return result;
   }
@@ -32,17 +31,17 @@ async function deserializeBlobs(obj: any): Promise<any> {
 }
 
 // オブジェクト内のすべてのBlobをdataURLラッパー({__blob__:true,data:...})に再帰的に変換
-async function serializeBlobs(obj: any): Promise<any> {
+async function serializeBlobs(obj: any, mediaConverter: MediaConverter): Promise<any> {
   if (obj instanceof Blob) {
-    return { __blob__: true, data: await blobToDataURL(obj), type: obj.type };
+    return { __blob__: true, data: await mediaConverter.blobToDataURL(obj), type: obj.type };
   }
   if (Array.isArray(obj)) {
-    return Promise.all(obj.map(serializeBlobs));
+    return Promise.all(obj.map(item => serializeBlobs(item, mediaConverter)));
   }
   if (obj && typeof obj === "object") {
     const result: any = {};
     for (const key of Object.keys(obj)) {
-      result[key] = await serializeBlobs(obj[key]);
+      result[key] = await serializeBlobs(obj[key], mediaConverter);
     }
     return result;
   }
@@ -252,6 +251,8 @@ export class FSAFileSystem extends FileSystem {
         }
         buffer += chunk.slice(start);
       }
+    } catch (error) {
+      throw error;
     } finally {
       reader.releaseLock();
     }
@@ -294,12 +295,8 @@ export class FSAFileSystem extends FileSystem {
         if (file) {
           // content or blob
           if (file.inlineContent) {
-            // 文字列ならそのまま、object なら blob 分離してシリアライズ
-            let contentToDump: any = file.inlineContent;
-            if (typeof file.inlineContent === 'object' && file.inlineContent !== null) {
-              contentToDump = JSON.stringify(await externalizeBlobsInObject(file.inlineContent, this.blobStore, node.id));
-            }
-            item.content = contentToDump;
+            const json = JSON.parse(file.inlineContent);
+            item.content = (await internalizeBlobsInObject(json, this.blobStore)).data;
           } else if (file.blobPath) {
             try {
               const blob = await this.blobStore.read(node.id);
@@ -330,6 +327,8 @@ export class FSAFileSystem extends FileSystem {
     let count = 0;
     const total = items.length;
 
+    const mediaConverter = this.mediaConverter; // クロージャのためにmediaConverterをキャプチャ
+
     const stream = new ReadableStream<Uint8Array>({
       async pull(controller) {
         if (count >= total) {
@@ -339,7 +338,7 @@ export class FSAFileSystem extends FileSystem {
         }
         let value = items[count];
         // 再帰的にBlobをdataURLラッパーに変換
-        value = await serializeBlobs(value);
+        value = await serializeBlobs(value, mediaConverter);
         const jsonString = JSON.stringify(value) + "\n";
         controller.enqueue(encoder.encode(jsonString));
         count++;
@@ -383,24 +382,13 @@ export class FSAFileSystem extends FileSystem {
     let count = 0;
     let writtenCount = 0;
 
-    const dataURLToBlob = (dataURL: string): Blob => {
-      const parts = dataURL.split(',');
-      if (parts.length !== 2) throw new Error('Invalid dataURL format for Blob conversion');
-      const metaPart = parts[0].split(':')[1];
-      if (!metaPart) throw new Error('Invalid dataURL format: missing metadata part');
-      const contentType = metaPart.split(';')[0];
-      const base64Data = parts[1];
-      // Node.js環境でatobの代わりにBufferを使用
-      const buffer = Buffer.from(base64Data, 'base64');
-      return new Blob([buffer], { type: contentType });
-    };
-
+    // dataURLToBlob は mediaConverter を使用するように変更
     const saveBatch = async (itemsBatch: any[]) => {
       // 1. 先に Blob を全て書き込む（トランザクション外）
       for (const item of itemsBatch) {
         if (item.type === 'file' && item.blob) {
           if (typeof item.blob === 'string' && item.blob.startsWith('data:')) {
-            const actualBlob = dataURLToBlob(item.blob);
+            const actualBlob = await this.mediaConverter.dataURLtoBlob(item.blob);
             await this.blobStore.write(item.id, actualBlob);
           } else if (item.blob instanceof Blob) {
             await this.blobStore.write(item.id, item.blob);
@@ -429,7 +417,7 @@ export class FSAFileSystem extends FileSystem {
               // contentの種類に応じて処理
               if (typeof content === 'string' && content.startsWith('data:')) {
                 // dataURL形式の画像データ → Blobとして保存
-                const actualBlob = dataURLToBlob(content);
+                const actualBlob = await this.mediaConverter.dataURLtoBlob(content);
                 await this.blobStore.write(id, actualBlob);
                 await this.sqlite.run(
                   "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
@@ -475,12 +463,11 @@ export class FSAFileSystem extends FileSystem {
     for await (let node of this.readNDJSONStream(dataStream)) {
       if (node.blob && typeof node.blob === 'string') {
         // トップレベルのblob:は例外的にblobに変換
-        console.log("Blob detected", node.blob);
-        const blob = await dataURLtoBlob(node.blob);
+        const blob = await this.mediaConverter.dataURLtoBlob(node.blob);
         node.blob = blob;
       } else {
         // 再帰的に {__blob__:...} を Blob に復元
-        node = await deserializeBlobs(node);
+        node = await deserializeBlobs(node, this.mediaConverter);
       }
       batch.push(node);
       count++;

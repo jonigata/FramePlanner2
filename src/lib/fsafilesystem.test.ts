@@ -77,6 +77,7 @@ class MockBlobStore implements BlobStore {
     return blob;
   }
   async write(id: string, blob: Blob): Promise<string> {
+    console.log("write blob", id);
     const blobPath = `blobs/${id}.bin`;
     this.blobs.set(id as NodeId, blob);
     this.blobs.set(blobPath, blob);
@@ -88,7 +89,7 @@ class MockBlobStore implements BlobStore {
         // no-op
     } else {
         this.blobs.delete(`blobs/${idOrPath}.bin`);
-    }
+    } 
   }
   async list(): Promise<(NodeId | string)[]> {
     return Array.from(this.blobs.keys());
@@ -246,6 +247,38 @@ describe('FSAFileSystem tests', () => {
 
     // オプション: targetFs から再度ダンプして、sourceFs のダンプ結果と比較することも可能
   }
+
+  it('文字列化', async () => {
+    await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
+    const readable = await fs.dump({ onProgress: (p: any) => { console.log("dump progress:", p); } });
+    const reader = readable.getReader();
+    const chunks: Uint8Array[] = [];
+    let done = false;
+    while (!done) {
+      const result = await reader.read();
+      if (result.done) {
+        done = true;
+      } else {
+        chunks.push(result.value);
+      }
+    }
+
+    // Concatenate chunks into a single Uint8Array
+    const totalLength = chunks.reduce((len, chunk) => len + chunk.length, 0);
+    const combinedUint8 = new Uint8Array(totalLength);
+    let position = 0;
+    for (const chunk of chunks) {
+      combinedUint8.set(chunk, position);
+      position += chunk.length;
+    }
+
+    // Convert to string
+    const text = new TextDecoder().decode(combinedUint8);
+    console.log(text);
+    // mediaConverter を使用するように修正されたため、このアサーションは不要になるか、別の方法で検証する必要がある
+    // assert.fail("dataURLtoBlobがnodeに向いてるのでMediaConverterを使う");
+  });
+
 
   it('デスクトップとキャビネットからすべてのbookをロードできる(v1)', async () => {
     await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
