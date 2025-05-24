@@ -1,4 +1,7 @@
 import 'fake-indexeddb/auto';
+import { Blob as NodeBlob } from 'node:buffer';
+
+global.Blob = NodeBlob as any;
 
 declare global {
   export interface Console {

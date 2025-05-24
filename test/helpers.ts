@@ -1,7 +1,8 @@
 import { expect, assert } from 'vitest';
 import { openAsBlob } from 'fs';
 import type { Canvas } from 'canvas';
-import { type MediaConverter, blobToDataURL, dataURLtoBlob } from '../src/lib/filesystem/mediaConverter';
+// Removed import of blobToDataURL and dataURLtoBlob from mediaConverter
+import type { MediaConverter } from '../src/lib/filesystem/mediaConverter';
 import type { MediaResource, RemoteMediaReference } from '../src/lib/filesystem/fileSystem';
 import { IndexedDBFileSystem } from '../src/lib/filesystem/indexeddbFileSystem';
 import type { Book } from '../src/lib/book/book';
@@ -46,14 +47,30 @@ export class NodeCanvasMediaConverter implements MediaConverter {
   }
 
   async blobToDataURL(blob: Blob): Promise<string> {
-    // mediaConverter.ts からインポートした関数を使用
-    return blobToDataURL(blob);
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
+    return `data:${blob.type};base64,${base64}`;
   }
 
   async dataURLtoBlob(dataURL: string): Promise<Blob> {
-    // mediaConverter.ts からインポートした関数を使用
-    const b = await dataURLtoBlob(dataURL);
-    return b;
+    const parts = dataURL.split(',');
+    if (parts.length !== 2) {
+      throw new Error('Invalid data URL format');
+    }
+    const meta = parts[0];
+    const base64Data = parts[1];
+    
+    const mimeMatch = meta.match(/data:([^;]+);base64/);
+    if (!mimeMatch) {
+      throw new Error('Invalid data URL format: missing MIME type or base64 specifier');
+    }
+    const mime = mimeMatch[1];
+    
+    const buffer = Buffer.from(base64Data, 'base64');
+    // Assuming Node.js global Blob is available, or it's polyfilled.
+    // For explicit import: import { Blob } from 'buffer';
+    return new globalThis.Blob([buffer], { type: mime });
   }
 }
 
