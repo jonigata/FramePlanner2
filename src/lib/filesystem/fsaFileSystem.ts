@@ -112,6 +112,8 @@ export class FSAFileSystem extends FileSystem {
     super();
     this.sqlite = sqlite;
     this.blobStore = blobStore;
+    console.log(mediaConverter);
+    console.trace();
     this.mediaConverter = mediaConverter;
   }
 
@@ -456,6 +458,7 @@ export class FSAFileSystem extends FileSystem {
         node.blob = blob;
       } else {
         // 再帰的に {__blob__:...} を Blob に復元
+        console.log(this.mediaConverter);
         node = await deserializeBlobs(node, this.mediaConverter);
       }
       batch.push(node);

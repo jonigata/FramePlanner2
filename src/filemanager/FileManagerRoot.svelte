@@ -27,6 +27,8 @@
   import { waitForChange } from '../utils/reactUtil';
   import { writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
+  import { createPreference, type FileSystemPreference } from '../preferences';
+  import { buildFileSystem as buildLocalFileSystem } from './localFileSystem';
 
   export let fileSystem: FileSystem;
 
@@ -39,7 +41,13 @@
   let cloudRoot: Folder;
   let cloudCabinet: EmbodiedEntry;
   let cloudTrash: EmbodiedEntry;
-  const cloudReady = writable(false);
+  let cloudReady = writable(false);
+
+  let fsaFileSystem: FileSystem;
+  let fsaRoot: Folder;
+  let fsaCabinet: EmbodiedEntry;
+  let fsaTrash: EmbodiedEntry;
+  const fsaReady = writable(false);
 
   let usedSize: string;
 
@@ -405,13 +413,30 @@
     }
   }
 
+  async function buildFsaFileSystem(fileSystemPreference: FileSystemPreference) {
+    fsaFileSystem = await buildLocalFileSystem(fileSystemPreference.handle);
+    fsaRoot = await fsaFileSystem.getRoot();
+    fsaCabinet = (await fsaRoot.getEmbodiedEntryByName("キャビネット"))!;
+    fsaTrash = (await fsaRoot.getEmbodiedEntryByName("ごみ箱"))!;
+    $fsaReady = true;
+  }
+
   onMount(async () => {
+    // ブラウザストレージ
     root = await fileSystem.getRoot();
     desktop = (await root.getEmbodiedEntryByName("デスクトップ"))!;
     cabinet = (await root.getEmbodiedEntryByName("キャビネット"))!;
     trash = (await root.getEmbodiedEntryByName("ごみ箱"))!;
     // const templates = await root.getEmbodiedEntryByName("テンプレート");
-  });
+
+    const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
+    let fileSystemPreference = await pref.getOrDefault(null);
+    // fileSystemPreference = null;
+
+    if (fileSystemPreference) {
+      await buildFsaFileSystem(fileSystemPreference);
+    }
+});
 </script>
 
 <div class="drawer-outer">
@@ -422,26 +447,8 @@
     on:clickAway={() => ($fileManagerOpen = false)}
   >
     <div class="drawer-content">
-      <h2>ローカル</h2>
-      <h3>保存ディレクトリ</h3>
-      {#if storageFolder == null}
-        <p>
-          現在、ローカルファイルはブラウザ格納領域に保存されています。
-          保存ディレクトリを指定すると、データの堅牢性が向上します。<b>強くオススメします！</b>
-        </p>
-        <p>
-          <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory} disabled={!fsaapi}>
-            保存ディレクトリを指定
-          </button>
-        </p>
-      {:else}
-        <p>
-          現在、ローカルファイルは{storageFolderName}に保存されています。
-        </p>
-        <p>
-          <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>
-        </p>
-      {/if}
+      <h2>ブラウザストレージ</h2>
+      <p>この領域はブラウザの「サイトデータ消去」操作などで消失する可能性があります。大事なファイルは「ローカルストレージ」や「クラウドストレージ」に退避するようにしてください。</p>
       <div class="mb-4"></div>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if desktop && trash}
@@ -466,8 +473,35 @@
         <button class="btn-sm w-32 variant-filled"  on:click={dump}>ダンプ</button>
         <button class="btn-sm w-32 variant-filled"  on:click={undump}>リストア</button>
       </div>
-      <h2>クラウド</h2>
-      <p>この機能はβ版です。断りなくサービス停止する可能性があります。BASICプランで使えます。</p>
+      <h2>ローカルストレージ</h2>
+      <p>この領域はローカルのHDD、SSDなどに保存されます。</p>
+      <h3>保存ディレクトリ</h3>
+      {#if !$fsaReady}
+        <p>
+          データを保存するディレクトリを指定してください。
+          前回指定したディレクトリが見えていない場合、同じ場所を指定すれば復活します。
+        </p>
+        <div class="flex flex-row ml-8 items-center gap-4">
+          <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory} disabled={!fsaapi}>
+            保存ディレクトリを指定
+          </button>
+          {#if !fsaapi}
+            <div>
+              この環境ではローカルストレージを利用できません
+            </div>  
+          {/if}
+        </div>
+      {:else}
+        <p>
+          現在、ローカルファイルは{storageFolderName}に保存されています。
+        </p>
+        <p>
+          <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>
+        </p>
+      {/if}
+
+      <h2>クラウドストレージ</h2>
+      <p>データをクラウドに保存します。この機能はβ版です。断りなくサービス停止する可能性があります。BASICプランで使えます。</p>
       {#if cloudCabinet && cloudTrash}
         <div class="cabinet variant-ghost-primary rounded-container-token">
           <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
