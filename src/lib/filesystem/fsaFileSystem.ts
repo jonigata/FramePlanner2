@@ -300,13 +300,8 @@ export class FSAFileSystem extends FileSystem {
           } else if (file.blobPath) {
             try {
               const blob = await this.blobStore.read(node.id);
-              // Blob→dataURL
-              item.blob = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = () => reject();
-                reader.readAsDataURL(blob);
-              });
+              // Blob→dataURL using mediaConverter
+              item.blob = await this.mediaConverter.blobToDataURL(blob);
               item.mediaType = file.mediaType ?? null;
             } catch {
               // Blobが読めない場合は無視
