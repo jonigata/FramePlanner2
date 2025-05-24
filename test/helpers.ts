@@ -52,7 +52,8 @@ export class NodeCanvasMediaConverter implements MediaConverter {
 
   async dataURLtoBlob(dataURL: string): Promise<Blob> {
     // mediaConverter.ts からインポートした関数を使用
-    return dataURLtoBlob(dataURL);
+    const b = await dataURLtoBlob(dataURL);
+    return b;
   }
 }
 
@@ -113,7 +114,6 @@ export async function checkFileSystem(fs: FileSystem) {
 
   // Verify basic book structure
   for (const book of books) {
-    console.log(titles[book.revision.id], { revision: book.revision, pages: book.pages.length, direction: book.direction, wrapMode: book.wrapMode });
     expect(book.revision.id).toBeDefined();
     expect(book.pages).toBeInstanceOf(Array);
   }

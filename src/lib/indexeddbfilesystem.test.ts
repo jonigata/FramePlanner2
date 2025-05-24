@@ -6,6 +6,37 @@ import { NodeCanvasMediaConverter, checkFileSystem, checkUndump } from '../../te
 
 
 describe('Book loading from filesystem', () => {
+  it('文字列化', async () => {
+    const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
+    await fs.open("testdb");
+    await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
+    const readable = await fs.dump({});
+    const reader = readable.getReader();
+    const chunks: Uint8Array[] = [];
+    let done = false;
+    while (!done) {
+      const result = await reader.read();
+      if (result.done) {
+        done = true;
+      } else {
+        chunks.push(result.value);
+      }
+    }
+
+    // Concatenate chunks into a single Uint8Array
+    const totalLength = chunks.reduce((len, chunk) => len + chunk.length, 0);
+    const combinedUint8 = new Uint8Array(totalLength);
+    let position = 0;
+    for (const chunk of chunks) {
+      combinedUint8.set(chunk, position);
+      position += chunk.length;
+    }
+
+    // Convert to string
+    const text = new TextDecoder().decode(combinedUint8);
+    console.log(text);
+  });
+
   it('デスクトップとキャビネットからすべてのbookをロードできる(v1)', async () => {
     const fs = new IndexedDBFileSystem(new NodeCanvasMediaConverter());
     await fs.open("testdb");

@@ -382,17 +382,11 @@ export class FSAFileSystem extends FileSystem {
     let count = 0;
     let writtenCount = 0;
 
-    // dataURLToBlob は mediaConverter を使用するように変更
     const saveBatch = async (itemsBatch: any[]) => {
       // 1. 先に Blob を全て書き込む（トランザクション外）
       for (const item of itemsBatch) {
         if (item.type === 'file' && item.blob) {
-          if (typeof item.blob === 'string' && item.blob.startsWith('data:')) {
-            const actualBlob = await this.mediaConverter.dataURLtoBlob(item.blob);
-            await this.blobStore.write(item.id, actualBlob);
-          } else if (item.blob instanceof Blob) {
-            await this.blobStore.write(item.id, item.blob);
-          }
+          await this.blobStore.write(item.id, item.blob);
         }
       }
 

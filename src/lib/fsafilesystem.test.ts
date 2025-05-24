@@ -77,7 +77,6 @@ class MockBlobStore implements BlobStore {
     return blob;
   }
   async write(id: string, blob: Blob): Promise<string> {
-    console.log("write blob", id);
     const blobPath = `blobs/${id}.bin`;
     this.blobs.set(id as NodeId, blob);
     this.blobs.set(blobPath, blob);
@@ -250,7 +249,7 @@ describe('FSAFileSystem tests', () => {
 
   it('文字列化', async () => {
     await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
-    const readable = await fs.dump({ onProgress: (p: any) => { console.log("dump progress:", p); } });
+    const readable = await fs.dump({});
     const reader = readable.getReader();
     const chunks: Uint8Array[] = [];
     let done = false;
@@ -275,8 +274,6 @@ describe('FSAFileSystem tests', () => {
     // Convert to string
     const text = new TextDecoder().decode(combinedUint8);
     console.log(text);
-    // mediaConverter を使用するように修正されたため、このアサーションは不要になるか、別の方法で検証する必要がある
-    // assert.fail("dataURLtoBlobがnodeに向いてるのでMediaConverterを使う");
   });
 
 

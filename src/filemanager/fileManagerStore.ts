@@ -128,7 +128,6 @@ export async function loadBookFrom(fileSystem: FileSystem, file: File): Promise<
     ? await fetchNotebookImages(serializedBook.notebook, fileSystem) 
     : emptyNotebook();
 
-  console.log("loadBookFrom: newPageProperty", serializedBook.newPageProperty);
   if (!serializedBook.newPageProperty) {
     const p = serializedBook.pages[0];
     serializedBook.newPageProperty = {
