@@ -36,7 +36,6 @@ export function dropDataHandler(node: HTMLElement, callback: (result: (HTMLCanva
 
   // window keydown handler (Ctrl+V)
   async function onWindowKeyDown(e: KeyboardEvent) {
-    console.log("keydown", e, isOver);
     if (!isOver) return;
     if (e.ctrlKey && e.key === "v") {
       // クリップボードから画像を取得

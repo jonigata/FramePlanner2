@@ -419,6 +419,7 @@
     fsaCabinet = (await fsaRoot.getEmbodiedEntryByName("キャビネット"))!;
     fsaTrash = (await fsaRoot.getEmbodiedEntryByName("ごみ箱"))!;
     $fsaReady = true;
+    storageFolder = fileSystemPreference.handle;
   }
 
   onMount(async () => {
@@ -475,8 +476,8 @@
       </div>
       <h2>ローカルストレージ</h2>
       <p>この領域はローカルのHDD、SSDなどに保存されます。</p>
-      <h3>保存ディレクトリ</h3>
       {#if !$fsaReady}
+        <h3>保存ディレクトリ</h3>
         <p>
           データを保存するディレクトリを指定してください。
           前回指定したディレクトリが見えていない場合、同じ場所を指定すれば復活します。
@@ -492,9 +493,34 @@
           {/if}
         </div>
       {:else}
-        <p>
-          現在、ローカルファイルは{storageFolderName}に保存されています。
-        </p>
+        {#if fsaCabinet && fsaTrash}
+          <div class="cabinet variant-ghost-tertiary rounded-container-token">
+            <FileManagerFolder
+              fileSystem={fsaFileSystem} 
+              removability={"unremovable"} 
+              spawnability={"folder-spawnable"} 
+              filename={`${storageFolderName}キャビネット`} 
+              bindId={fsaCabinet[0]} 
+              parent={fsaRoot} 
+              index={0} 
+              path={[fsaCabinet[0]]} 
+              trash={fsaTrash[2].asFolder()}
+            />
+          </div>
+          <div class="cabinet variant-ghost-tertiary rounded-container-token">
+            <FileManagerFolder
+              fileSystem={fsaFileSystem} 
+              removability={"unremovable"} 
+              spawnability={"unspawnable"} 
+              filename={`${storageFolderName}ごみ箱`} 
+              bindId={fsaTrash[0]} 
+              parent={fsaRoot} 
+              index={1} 
+              path={[fsaTrash[0]]} 
+              trash={null}
+            />
+          </div>
+        {/if}
         <p>
           <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>
         </p>

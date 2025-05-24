@@ -102,10 +102,12 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
       return mediaResource;
     }
     catch (e) {
-      console.error("loadMediaResource: ここでエラーにするとファイルが読めなくなるので仕方なく握りつぶす", e)
-      if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
-        throw e;
+      if (typeof process !== 'undefined') {
+        if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+          throw e;
+        }
       }
+      console.error("loadMediaResource: ここでエラーにするとファイルが読めなくなるので仕方なく握りつぶす", e)
       return null;
     }
   }
