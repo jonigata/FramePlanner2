@@ -8,6 +8,7 @@
   let step = 0;
   let storageFolder: FileSystemDirectoryHandle | null = null;
   let copyProgress = 0;
+  let reuse = false;
 
   async function makeFileSystem() {
     copyProgress = 0.01;
@@ -18,7 +19,7 @@
   async function handleNext() {
     // 状態
     if (step == 0) {
-      if (await fileSystemExists(storageFolder!)) {
+      if (reuse) {
         // skip clone
         step = 2;
       } else {
@@ -51,6 +52,7 @@
     if (!handle) { return; }
 
     storageFolder = handle;
+    reuse = await fileSystemExists(storageFolder);
   }
   
 </script>
@@ -95,7 +97,7 @@
     <div class="flex gap-2">
       {#if step === 0}
         <button type="button" class="btn variant-filled-primary" on:click={handleNext} disabled={storageFolder == null}>
-          作成する
+          {reuse ? "再利用する" : "作成する"}
         </button>
       {:else if step === 1}
         <button type="button" class="btn variant-filled-primary" on:click={handleNext} disabled={0 < copyProgress}>
