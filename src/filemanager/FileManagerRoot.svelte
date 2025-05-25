@@ -445,7 +445,20 @@
   async function selectStorageDirectory() {
     const r = await waitDialog<boolean>('newStorageWizard');
     if (r) {
+      const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
+      let fileSystemPreference = await pref.getOrDefault(null);
+
+      fsaFileSystem = await buildLocalFileSystem(fileSystemPreference!.handle);
+      fsaFolders = await getRootFolders(fsaFileSystem);
+      storageFolder = fileSystemPreference!.handle;
+      $fsaState = 'linked';
     }
+  }
+
+  async function unlinkStorageDirectory() {
+    const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
+    pref.set(null);
+    $fsaState = 'unlinked';
   }
 
   onMount(async () => {
@@ -567,6 +580,12 @@
             path={[fsaFolders.trash[0]]} 
             trash={null}
           />
+        </div>
+        <div class="flex flex-row ml-8 items-center gap-4">
+          <button class="btn-sm w-48 variant-filled" on:click={unlinkStorageDirectory} disabled={!fsaapi}>
+            保存ディレクトリの解除
+          </button>
+          (再び同じ場所を指定すれば再利用できます)
         </div>
       {:else}
         <p>
