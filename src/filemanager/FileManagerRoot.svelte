@@ -418,7 +418,13 @@
       // File から ReadableStream を取得し options で onProgress を渡す
       await $mainBookFileSystem!.undump(
         dumpFiles[0].stream(),
-        { onProgress: n => $progress = n }
+        {
+          onProgress: (n) => {
+            requestAnimationFrame(() => {
+              $progress = n;
+            });
+          }
+        }
       );
       await clearCurrentFileInfo();
       console.log("undump done");

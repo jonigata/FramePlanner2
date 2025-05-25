@@ -4,6 +4,7 @@ import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSyste
 import { Node, File, Folder, FileSystem } from './fileSystem';
 import type { DumpFormat, DumpProgress } from './fileSystem';
 import type { MediaConverter } from './mediaConverter';
+import { sleep } from '../layeredCanvas/tools/misc';
 
 
 // {__blob__: true, data, type} を再帰的に Blob に戻す
@@ -283,10 +284,6 @@ export class IndexedDBFileSystem extends FileSystem {
         controller.enqueue(encoder.encode(jsonString));
         count++;
         onProgress(0.1 + 0.8 * (count / total));
-        // 小休止
-        if (count % 100 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        }
       }
     });
 
