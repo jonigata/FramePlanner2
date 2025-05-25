@@ -166,6 +166,7 @@ export async function checkFileSystem(fs: FileSystem) {
   expect(books[4].pages[0].bubbles.length).toBe(2);
   // console.log(books[3].pages[0].frameTree.children[1].children[1].filmStack.films[0]);
   // 画像のテストは厳しい、nodeでcanvasを使うのが大変なため
+  // 頑張ったけどwebpに対応してないので折れた
 
   const characters = await loadCharactersFromRoster(fs);
   expect(characters.length).toBe(1);
