@@ -68,6 +68,7 @@
   import Undump from './transfer/Undump.svelte';
   import CanvasBrowser from './utils/CanvasBrowser.svelte';
   import NewStorageWizard from './filemanager/NewStorageWizard.svelte';
+  import ConfirmDialog from './utils/ConfirmDialog.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = null;
@@ -124,6 +125,9 @@
     },
     newStorageWizard: {
       ref: NewStorageWizard
+    },
+    confirm: {
+      ref: ConfirmDialog,
     }
   };
 

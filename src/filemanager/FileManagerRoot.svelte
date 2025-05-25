@@ -463,6 +463,14 @@
   }
 
   async function unlinkStorageDirectory() {
+    const r = await waitDialog<boolean>('confirm', { 
+      title: '保存ディレクトリの解除',
+      message: '保存ディレクトリを解除しますか？',
+      positiveButtonText: '解除する',
+      negativeButtonText: '解除しない',
+    });
+    if (!r) { return; }
+
     const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
     pref.set(null);
     $fsaState = 'unlinked';
