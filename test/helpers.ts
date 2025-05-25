@@ -4,7 +4,6 @@ import type { Canvas } from 'canvas';
 // Removed import of blobToDataURL and dataURLtoBlob from mediaConverter
 import type { MediaConverter } from '../src/lib/filesystem/mediaConverter';
 import type { MediaResource, RemoteMediaReference } from '../src/lib/filesystem/fileSystem';
-import { IndexedDBFileSystem } from '../src/lib/filesystem/indexeddbFileSystem';
 import type { Book } from '../src/lib/book/book';
 import { loadBookFrom } from '../src/filemanager/fileManagerStore';
 import { FileSystem, Folder } from '../src/lib/filesystem/fileSystem';
@@ -72,6 +71,32 @@ export class NodeCanvasMediaConverter implements MediaConverter {
     // For explicit import: import { Blob } from 'buffer';
     return new globalThis.Blob([buffer], { type: mime });
   }
+}
+
+/**
+ * node-canvasのCanvasから真ん中のピクセルのRGBA値を取得する
+ * @param canvas node-canvasのCanvasオブジェクト
+ * @returns 真ん中のピクセルのRGBA値 {r: number, g: number, b: number, a: number}
+ */
+export function getCenterPixel(canvas: Canvas): { r: number; g: number; b: number; a: number } {
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  // 真ん中の座標を計算（整数に丸める）
+  const centerX = Math.floor(width / 2);
+  const centerY = Math.floor(height / 2);
+  
+  // 1ピクセルのImageDataを取得
+  const imageData = ctx.getImageData(centerX, centerY, 1, 1);
+  const data = imageData.data;
+  
+  return {
+    r: data[0],  // Red
+    g: data[1],  // Green
+    b: data[2],  // Blue
+    a: data[3]   // Alpha
+  };
 }
 
 

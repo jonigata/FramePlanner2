@@ -219,10 +219,8 @@ export class FSAFileSystem extends FileSystem {
       if (file.inlineContent) {
         total += file.inlineContent.length;
       } else if (file.blobPath) {
-        try {
-          const blob = await this.blobStore.read(file.id);
-          total += blob.size;
-        } catch { }
+        const blob = await this.blobStore.read(file.id);
+        total += blob.size;
       }
     }
     return total;
@@ -283,14 +281,10 @@ export class FSAFileSystem extends FileSystem {
             const json = JSON.parse(file.inlineContent);
             item.content = (await internalizeBlobsInObject(json, this.blobStore)).data;
           } else if (file.blobPath) {
-            try {
-              const blob = await this.blobStore.read(node.id);
-              // Blob→dataURL using mediaConverter
-              item.blob = await this.mediaConverter.blobToDataURL(blob);
-              item.mediaType = file.mediaType ?? null;
-            } catch {
-              // Blobが読めない場合は無視
-            }
+            const blob = await this.blobStore.read(node.id);
+            // Blob→dataURL using mediaConverter
+            item.blob = await this.mediaConverter.blobToDataURL(blob);
+            item.mediaType = file.mediaType ?? null;
           }
         }
       } else if (node.type === 'folder') {
