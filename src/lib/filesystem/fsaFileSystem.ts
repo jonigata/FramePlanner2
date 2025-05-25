@@ -260,21 +260,65 @@ export class FSAFileSystem extends FileSystem {
   }
 
   // ストリームの行数をカウント
-  async countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
+  async countLines(stream: ReadableStream<Uint8Array>): Promise<{ lineCount: number; hasHeader: boolean; headerLineCount?: number }> {
     const reader = stream.getReader();
     const decoder = new TextDecoder();
     let lineCount = 0;
+    let buffer = '';
+    let isFirstLine = true;
+    let hasHeader = false;
+    let headerLineCount: number | undefined;
+
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          if (buffer.trim() && isFirstLine) {
+            // 最後の行がヘッダかチェック
+            try {
+              const parsed = JSON.parse(buffer.trim());
+              if (parsed.version && typeof parsed.lineCount === 'number') {
+                hasHeader = true;
+                headerLineCount = parsed.lineCount;
+              }
+            } catch {
+              // JSONパースエラーの場合はヘッダなし
+            }
+          }
+          break;
+        }
+
         const chunk = decoder.decode(value, { stream: true });
-        lineCount += chunk.split('\n').length - 1;
+        buffer += chunk;
+
+        // 改行を探して行数をカウント
+        let start = 0;
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf('\n', start)) !== -1) {
+          if (isFirstLine) {
+            // 最初の行がヘッダかチェック
+            const firstLine = buffer.slice(0, newlineIndex).trim();
+            try {
+              const parsed = JSON.parse(firstLine);
+              if (parsed.version && typeof parsed.lineCount === 'number') {
+                hasHeader = true;
+                headerLineCount = parsed.lineCount;
+              }
+            } catch {
+              // JSONパースエラーの場合はヘッダなし
+            }
+            isFirstLine = false;
+          }
+          lineCount++;
+          start = newlineIndex + 1;
+        }
+        buffer = buffer.slice(start);
       }
     } finally {
       reader.releaseLock();
     }
-    return lineCount;
+    
+    return { lineCount, hasHeader, headerLineCount };
   }
 
   async dump(options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }): Promise<ReadableStream<Uint8Array>> {
@@ -320,13 +364,22 @@ export class FSAFileSystem extends FileSystem {
 
     // 4. NDJSONストリームで出力
     const encoder = new TextEncoder();
-    let count = 0;
+    let count = -1; // ヘッダ行を含めるため-1から開始
     const total = items.length;
 
     const mediaConverter = this.mediaConverter; // クロージャのためにmediaConverterをキャプチャ
 
     const stream = new ReadableStream<Uint8Array>({
       async pull(controller) {
+        if (count === -1) {
+          // ヘッダ行を出力
+          const header = { version: "v1", lineCount: total };
+          const headerString = JSON.stringify(header) + "\n";
+          controller.enqueue(encoder.encode(headerString));
+          count = 0;
+          return;
+        }
+        
         if (count >= total) {
           onProgress(1);
           controller.close();
@@ -370,13 +423,18 @@ export class FSAFileSystem extends FileSystem {
 
     // 2. ストリームをteeして片方で行数カウント
     const [counterStream, dataStream] = stream.tee();
-    const lineCount = await this.countLines(counterStream);
+    const countResult = await this.countLines(counterStream);
+    console.log(`Count result:`, countResult);
+
+    // ヘッダがある場合はheaderLineCountを使用、ない場合は全行数を使用
+    const expectedLineCount = countResult.hasHeader ? countResult.headerLineCount! : countResult.lineCount;
 
     // 3. 逐次パースしながらDBへ書き込み
     const batchSize = 1000;
     let batch: any[] = [];
     let count = 0;
     let writtenCount = 0;
+    let isFirstLine = true;
 
     const saveBatch = async (itemsBatch: any[]) => {
       // 1. 先に Blob を全て書き込む（トランザクション外）
@@ -451,6 +509,17 @@ export class FSAFileSystem extends FileSystem {
     };
 
     for await (let node of this.readNDJSONStream(dataStream)) {
+      // 最初の行がヘッダかどうかをチェック
+      if (isFirstLine) {
+        isFirstLine = false;
+        if (countResult.hasHeader) {
+          // ヘッダ行の場合、スキップ
+          console.log(`Skipping header line`);
+          continue;
+        }
+        // ヘッダでない場合は通常のノードとして処理
+      }
+
       if (node.blob && typeof node.blob === 'string') {
         // トップレベルのblob:は例外的にblobに変換
         const blob = await this.mediaConverter.dataURLtoBlob(node.blob);
@@ -462,7 +531,7 @@ export class FSAFileSystem extends FileSystem {
       }
       batch.push(node);
       count++;
-      onProgress(0.1 + 0.8 * (count / lineCount));
+      onProgress(0.1 + 0.8 * (count / expectedLineCount));
       if (batch.length >= batchSize) {
         await saveBatch(batch);
         writtenCount += batch.length;
