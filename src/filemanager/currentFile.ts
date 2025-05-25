@@ -3,7 +3,7 @@ import type { NodeId } from '../lib/filesystem/fileSystem';
 
 export type CurrentFileInfo = {
   id: NodeId;
-  fileSystem: 'cloud' | 'local';
+  fileSystem: 'cloud' | 'local' | 'fsa';
 }
 
 export async function recordCurrentFileInfo(info: CurrentFileInfo): Promise<void> {

@@ -23,51 +23,91 @@
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
   import { saveProhibitFlag } from '../utils/developmentFlagStore';
   import { filmProcessorQueue } from '../utils/filmprocessor/filmProcessorStore';
-  import { onlineStatus, onlineAccount, type SubscriptionPlan } from '../utils/accountStore';
+  import { onlineStatus, onlineAccount, type OnlineAccount, type OnlineStatus } from '../utils/accountStore';
   import { waitForChange } from '../utils/reactUtil';
-  import { writable } from 'svelte/store';
+  import { type Writable, writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
   import { createPreference, type FileSystemPreference } from '../preferences';
   import { buildFileSystem as buildLocalFileSystem } from './localFileSystem';
 
-  export let fileSystem: FileSystem;
+  export let localFileSystem: FileSystem;
 
-  let root: Folder;
-  let desktop: EmbodiedEntry;
-  let cabinet: EmbodiedEntry;
-  let trash: EmbodiedEntry;
+  type RootFolders = {
+    root: Folder;
+    desktop: EmbodiedEntry;
+    cabinet: EmbodiedEntry;
+    trash: EmbodiedEntry;
+  }
+
+  type StorageState = 'uncertain' | 'linked' | 'unlinked';
+
+  let localFolders: RootFolders;
+  let localState: Writable<StorageState> = writable('uncertain'); // waitForChangeで使うのでWritable
 
   let cloudFileSystem: FileSystem;
-  let cloudRoot: Folder;
-  let cloudCabinet: EmbodiedEntry;
-  let cloudTrash: EmbodiedEntry;
-  let cloudReady = writable(false);
+  let cloudFolders: RootFolders;
+  let cloudState: Writable<StorageState> = writable('uncertain'); // waitForChangeで使うのでWritable
 
   let fsaFileSystem: FileSystem;
-  let fsaRoot: Folder;
-  let fsaCabinet: EmbodiedEntry;
-  let fsaTrash: EmbodiedEntry;
-  const fsaReady = writable(false);
+  let fsaFolders: RootFolders;
+  let fsaState: Writable<StorageState> = writable('uncertain'); // waitForChangeで使うのでWritable
 
   let usedSize: string;
 
   let fsaapi = 'showOpenFilePicker' in window;
   let storageFolder: FileSystemDirectoryHandle | null = null;
-
   $: storageFolderName = (storageFolder as FileSystemDirectoryHandle | null)?.name;
 
-  $: onBuildCloudFileSystem($onlineAccount?.subscriptionPlan ?? null);
-  async function onBuildCloudFileSystem(plan: SubscriptionPlan | null) { 
-    if (plan != 'basic' && plan != 'premium') { return; }
-    cloudFileSystem = await buildCloudFileSystem();
-
-    cloudRoot = await cloudFileSystem.getRoot();
-    cloudCabinet = (await cloudRoot.getEmbodiedEntryByName("キャビネット"))!;
-    cloudTrash = (await cloudRoot.getEmbodiedEntryByName("ごみ箱"))!;
-    $cloudReady = true;
+  async function getRootFolders(fs: FileSystem): Promise<RootFolders> {
+    const root = await fs.getRoot();
+    const desktop = (await root.getEmbodiedEntryByName("デスクトップ"))!;
+    const cabinet = (await root.getEmbodiedEntryByName("キャビネット"))!;
+    const trash = (await root.getEmbodiedEntryByName("ごみ箱"))!;
+    return { root, desktop, cabinet, trash };
   }
 
-  // let templates: [BindId, string, Node] = null;
+  function getFileSystemType(id: string): 'local' | 'cloud' | 'fsa' {
+    if (id === localFileSystem.id) {return 'local';}
+    if (id === cloudFileSystem?.id) {return 'cloud';}
+    if (id === fsaFileSystem?.id) {return 'fsa';}
+    return 'local';
+  }  
+  
+  function getFileSystemByType(type: 'local' | 'cloud' | 'fsa'): FileSystem {
+    if (type === 'fsa') { return fsaFileSystem; }
+    if (type === 'cloud') { return cloudFileSystem; }
+    return localFileSystem;
+  }
+
+
+  $: onBuildCloudFileSystem($onlineStatus, $onlineAccount);
+  async function onBuildCloudFileSystem(os: OnlineStatus, oa: OnlineAccount | null) { 
+    if (os == 'unknown') { $cloudState = 'uncertain'; return; }
+    if (os == 'signed-out') { $cloudState = 'unlinked'; return; }
+
+    if (oa == null) { $cloudState = 'uncertain'; return; }
+    const plan = oa.subscriptionPlan;
+    if (plan != 'basic' && plan != 'premium') { $cloudState = 'unlinked'; return; }
+
+    cloudFileSystem = await buildCloudFileSystem();
+    cloudFolders = await getRootFolders(cloudFileSystem);
+    $cloudState = 'linked';
+  }
+
+  async function buildFsaFileSystem(pref: FileSystemPreference | null) {
+    if (!pref) { $fsaState = 'unlinked'; return; } 
+    try {
+      fsaFileSystem = await buildLocalFileSystem(pref.handle);
+      fsaFolders = await getRootFolders(fsaFileSystem);
+      storageFolder = pref.handle;
+      $fsaState = 'linked';
+    }
+    catch(e) {
+      console.error(e);
+      $fsaState = 'unlinked';
+    }
+  }
+
   let currentRevision: Revision;
   let delayedCommiter = new DelayedCommiter(
     async () => {
@@ -88,7 +128,7 @@
       currentRevision = {...book.revision};
       const info: CurrentFileInfo = {
         id: book.revision.id as NodeId,
-        fileSystem: fs.id === cloudFileSystem?.id ? 'cloud' : 'local',
+        fileSystem: getFileSystemType(fs.id),
       }
       await recordCurrentFileInfo(info);
     });
@@ -97,14 +137,15 @@
   async function onOpen(open: boolean) {
     if (open) {
       $fileManagerMarkedFlag = $bookOperators!.getMarks().some((m) => m);
-      $fileManagerUsedSizeToken = fileSystem;
+      $fileManagerUsedSizeToken = localFileSystem;
       console.log("used size updated");
     }
   }
 
   $: onUsedSizeUpdate($fileManagerUsedSizeToken);
   function onUsedSizeUpdate(fs: FileSystem | null) {
-    if (fs && fs === fileSystem) {
+    // TODO: filesystemsizeなんか怪しい
+    if (fs && fs === localFileSystem) {
       fs.collectTotalSize().then((size) => {
         usedSize = formatMillions(size);
       });
@@ -114,12 +155,11 @@
   $:onUpdateBook($mainBook);
   async function onUpdateBook(book: Book | null) {
     if (book == null) {
+      // initialize
       try {
         $loading = true;
-        const now = performance.now();
-        console.log("%%%%%%%%%%%%%%%%%% initial book");
-        performance.mark('startPoint');
 
+        // TODO: sharedBookオフ中
         if (await loadSharedBook()) {
           // shared bookがある場合、内部でリダイレクトする
           return;
@@ -128,37 +168,33 @@
         const currentFileInfo = await fetchCurrentFileInfo();
         if (currentFileInfo) {
           if (currentFileInfo.fileSystem === 'cloud') {
+            // 現状ここは使われないはず(クラウドファイルの直接編集ができないので)
             toastStore.trigger({ message: "最終アクセスファイルがクラウドファイルのため、<br/>クラウドストレージの接続を待っています", timeout: 3000});
-            await waitForChange(onlineStatus, s => s != 'unknown');
-            if ($onlineStatus === 'signed-out') {
+            await waitForChange(cloudState, s => s != 'uncertain');
+            if ($cloudState === 'unlinked') {
+              // TODO: リロードしちゃうので無意味
               toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
-            } else {
-              await waitForChange(cloudReady, x => x);
             }
             toastStore.trigger({ message: "クラウドファイルの読み込みには<br/>時間がかかることがあります", timeout: 3000});
           }
+          if (currentFileInfo.fileSystem === 'fsa') {
+            await waitForChange(fsaState, s => s!= 'uncertain');
+            if ($fsaState === 'unlinked') {
+              // TODO: リロードしちゃうので無意味
+              toastStore.trigger({ message: "ローカル記憶領域との接続に失敗しました。再接続してください。", timeout: 3000 });
+            }
+          }
           try {
-            console.log($onlineStatus);
-            const fs = currentFileInfo.fileSystem === 'local' ? fileSystem : cloudFileSystem;
+            const fs = getFileSystemByType(currentFileInfo.fileSystem);
             let currentFile = (await fs.getNode(currentFileInfo.id))!.asFile()!;
             const newBook = await loadBookFrom(fs, currentFile);
             refreshFilms(newBook);
             currentRevision = {...newBook.revision};
-            console.snapshot(newBook.pages[0]);
-            $mainBookFileSystem = fileSystem;
+            $mainBookFileSystem = fs;
             $mainBookExceptionHandler = loadExceptionHandler; // onChangeBookが一回実行されると消去される
             $mainBook = newBook;
             $frameInspectorTarget = null;
             analyticsEvent('continue_book');
-            performance.mark('endPoint');
-            performance.measure(
-                'perfResult',
-                'startPoint',
-                'endPoint'
-            );
-            const result = performance.getEntriesByType('measure');
-            // console.log(result);  
-            console.log("%%%%%%%%%%%%%%%%%% initial book created", performance.now() - now);
           }
           catch (e) {
             console.error(e);
@@ -168,15 +204,16 @@
           return;
         }
 
-        // 初起動またはクラウドストレージ接続失敗の場合デスクトップにセーブ
-        const root = await fileSystem.getRoot();
-        const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
+        // 初起動またはFSA/クラウドストレージ接続失敗の場合デスクトップにセーブ
         book = newBook('not visited', "initial-", "standard");
-        await newFile(fileSystem, desktop, getCurrentDateTime(), book);
+        // localFoldersが初期化されてない可能性があるので自力
+        const root = await localFileSystem.getRoot();
+        const desktop = (await root.getEmbodiedEntryByName("デスクトップ"))![2].asFolder()!;
+        await newFile(localFileSystem, desktop, getCurrentDateTime(), book);
         await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local' });
 
         currentRevision = {...book.revision};
-        $mainBookFileSystem = fileSystem;
+        $mainBookFileSystem = localFileSystem;
         $mainBook = book;
         analyticsEvent('new_book');
       }
@@ -184,6 +221,7 @@
         $loading = false;
       }
     } else {
+      // edited
       if (revisionEqual(book.revision, currentRevision)) {
         return;
       }
@@ -199,7 +237,9 @@
   }
 
   async function loadSharedBook(): Promise<boolean> {
-    const localFileSystem = fileSystem; // ややこしいのでalias
+    // TODO: いま使ってない
+/*    
+    console.log(localFileSystem);
     const localRoot = await localFileSystem.getRoot();
     const localDesktop = (await localRoot.getNodeByName("デスクトップ"))!.asFolder()!;
 
@@ -262,19 +302,20 @@
     window.history.replaceState(null, '', urlWithoutQuery);
     window.location.href = urlWithoutQuery;
     return true;
-  }
+*/
+      return false;
+    }
 
   $:onNewBookRequest($newBookToken);
   async function onNewBookRequest(book: Book | null) {
     if (book) {
       console.tag("new book request", "green");
       $newBookToken = null;
-      const root = await fileSystem.getRoot();
-      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
-      const { file } = await newFile(fileSystem, desktop.asFolder(), getCurrentDateTime(), book);
+      const desktop = localFolders.desktop[2].asFolder()!;
+      const { file } = await newFile(localFileSystem, desktop, getCurrentDateTime(), book);
       await recordCurrentFileInfo({id: file.id as NodeId, fileSystem: 'local'});
       currentRevision = {...book.revision};
-      $mainBookFileSystem = fileSystem;
+      $mainBookFileSystem = localFileSystem;
       $mainBook = book;
       $frameInspectorTarget = null;
       analyticsEvent('new_book');
@@ -285,14 +326,14 @@
   $:onNewBubbleRequest($saveBubbleToken);
   async function onNewBubbleRequest(bubble: Bubble | null) {
     if (!bubble) { return; }
-    console.log("onNewBalloonRequest");
+    console.log("onNewBubbleRequest");
     $saveBubbleToken = null;
-    const root = await fileSystem.getRoot();
+    const root = localFolders.root;
     const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
-    const file = await fileSystem.createFile();
+    const file = await localFileSystem.createFile();
     bubble.displayName= "ふきだし";
     await saveBubbleTo(bubble, file);
-    await folder.asFolder().link(getCurrentDateTime(), file.id);
+    await folder.link(getCurrentDateTime(), file.id);
     toastStore.trigger({ message: "フキダシテンプレートを登録しました<br/>シェイプと同様に使えます", timeout: 1500});
   }
 
@@ -302,8 +343,8 @@
     $loadToken = null;
 
     $loading = true;
-    const isCloud = lt.fileSystem.id !== fileSystem.id;
-    if (isCloud) {
+    const fsType = getFileSystemType(lt.fileSystem.id);
+    if (fsType == 'cloud') {
       toastStore.trigger({ message: "クラウドファイルの読み込みには<br/>時間がかかることがあります", timeout: 3000});
     }
     const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile()!;
@@ -313,7 +354,7 @@
     $mainBookFileSystem = lt.fileSystem;
     $mainBookExceptionHandler = loadExceptionHandler; // onChangeBookが一回実行されると消去される
     $mainBook = book;
-    recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: isCloud ? 'cloud' : 'local'});
+    recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: getFileSystemType(lt.fileSystem.id)});
     $frameInspectorTarget = null;
     $loading = false;
     // NOTICE:
@@ -350,7 +391,7 @@
     const r = await waitDialog<boolean>('dump');
     if (r) {
       // 新インターフェイス: optionsオブジェクトでonProgressを渡す
-      const stream = await ($mainBookFileSystem as IndexedDBFileSystem).dump({
+      const stream = await $mainBookFileSystem!.dump({
         onProgress: n => $progress = n
       });
 
@@ -375,27 +416,15 @@
       console.log("undump start");
 
       // File から ReadableStream を取得し options で onProgress を渡す
-      await ($mainBookFileSystem as IndexedDBFileSystem).undump(
+      await $mainBookFileSystem!.undump(
         dumpFiles[0].stream(),
         { onProgress: n => $progress = n }
       );
       await clearCurrentFileInfo();
       console.log("undump done");
-      // location.reload();
+      location.reload();
     } else {
       console.log("undump canceled");
-    }
-  }
-
-  let importFiles: FileList | null;
-  $: onImportFile(importFiles!);
-  async function onImportFile(importFiles: FileList | null) {
-    if (importFiles) {
-      const root = await fileSystem.getRoot();
-      const desktop = (await root.getNodeByName("デスクトップ"))!.asFolder()!;
-      const file = await fileSystem.createFile();
-      file.write(await importFiles[0].text());
-      await desktop.link("imported file", file.id)
     }
   }
 
@@ -413,30 +442,14 @@
     }
   }
 
-  async function buildFsaFileSystem(fileSystemPreference: FileSystemPreference) {
-    fsaFileSystem = await buildLocalFileSystem(fileSystemPreference.handle);
-    fsaRoot = await fsaFileSystem.getRoot();
-    fsaCabinet = (await fsaRoot.getEmbodiedEntryByName("キャビネット"))!;
-    fsaTrash = (await fsaRoot.getEmbodiedEntryByName("ごみ箱"))!;
-    $fsaReady = true;
-    storageFolder = fileSystemPreference.handle;
-  }
-
   onMount(async () => {
-    // ブラウザストレージ
-    root = await fileSystem.getRoot();
-    desktop = (await root.getEmbodiedEntryByName("デスクトップ"))!;
-    cabinet = (await root.getEmbodiedEntryByName("キャビネット"))!;
-    trash = (await root.getEmbodiedEntryByName("ごみ箱"))!;
-    // const templates = await root.getEmbodiedEntryByName("テンプレート");
+    localFolders = await getRootFolders(localFileSystem);
+    localState.set('linked');
 
     const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
     let fileSystemPreference = await pref.getOrDefault(null);
     // fileSystemPreference = null;
-
-    if (fileSystemPreference) {
-      await buildFsaFileSystem(fileSystemPreference);
-    }
+    await buildFsaFileSystem(fileSystemPreference);
 });
 </script>
 
@@ -452,18 +465,48 @@
       <p>この領域はブラウザの「サイトデータ消去」操作などで消失する可能性があります。大事なファイルは「ローカルストレージ」や「クラウドストレージ」に退避するようにしてください。</p>
       <div class="mb-4"></div>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
-        {#if desktop && trash}
-          <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"file-spawnable"} filename={"デスクトップ"} bindId={desktop[0]} parent={root} index={0} path={[desktop[0]]} trash={trash[2].asFolder()}/>
+        {#if $localState == 'linked'}
+          <FileManagerFolder
+            fileSystem={localFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"file-spawnable"} 
+            filename={"デスクトップ"} 
+            bindId={localFolders.desktop[0]} 
+            parent={localFolders.root} 
+            index={0} 
+            path={[localFolders.desktop[0]]} 
+            trash={localFolders.trash[2].asFolder()}
+          />
         {/if}
       </div>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
-        {#if cabinet && trash}
-          <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"キャビネット"} bindId={cabinet[0]} parent={root} index={0} path={[cabinet[0]]} trash={trash[2].asFolder()}/>
+        {#if $localState == 'linked'}
+          <FileManagerFolder 
+            fileSystem={localFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"folder-spawnable"} 
+            filename={"キャビネット"} 
+            bindId={localFolders.cabinet[0]} 
+            parent={localFolders.root} 
+            index={0} 
+            path={[localFolders.cabinet[0]]} 
+            trash={localFolders.trash[2].asFolder()}
+          />
         {/if}
       </div>
       <div class="cabinet variant-ghost-secondary rounded-container-token">
-        {#if trash}
-          <FileManagerFolder fileSystem={fileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"ごみ箱"} bindId={trash[0]} parent={root} index={1} path={[trash[0]]} trash={null}/>
+        {#if $localState == 'linked'}
+          <FileManagerFolder 
+            fileSystem={localFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"unspawnable"} 
+            filename={"ごみ箱"} 
+            bindId={localFolders.trash[0]} 
+            parent={localFolders.root} 
+            index={1} 
+            path={[localFolders.trash[0]]} 
+            trash={null}
+          />
         {/if}
       </div>
       <div class="flex flex-row gap-2 items-center justify-center">
@@ -476,7 +519,7 @@
       </div>
       <h2>ローカルストレージ</h2>
       <p>この領域はローカルのHDD、SSDなどに保存されます。</p>
-      {#if !$fsaReady}
+      {#if $fsaState == 'unlinked'}
         <h3>保存ディレクトリ</h3>
         <p>
           データを保存するディレクトリを指定してください。
@@ -492,35 +535,34 @@
             </div>  
           {/if}
         </div>
+      {:else if $fsaState == 'linked'}
+        <div class="cabinet variant-ghost-tertiary rounded-container-token">
+          <FileManagerFolder
+            fileSystem={fsaFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"folder-spawnable"} 
+            filename={`${storageFolderName}キャビネット`} 
+            bindId={fsaFolders.cabinet[0]} 
+            parent={fsaFolders.root} 
+            index={0} 
+            path={[fsaFolders.cabinet[0]]} 
+            trash={fsaFolders.trash[2].asFolder()}
+          />
+        </div>
+        <div class="cabinet variant-ghost-tertiary rounded-container-token">
+          <FileManagerFolder
+            fileSystem={fsaFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"unspawnable"} 
+            filename={`${storageFolderName}ごみ箱`} 
+            bindId={fsaFolders.trash[0]} 
+            parent={fsaFolders.root} 
+            index={1} 
+            path={[fsaFolders.trash[0]]} 
+            trash={null}
+          />
+        </div>
       {:else}
-        {#if fsaCabinet && fsaTrash}
-          <div class="cabinet variant-ghost-tertiary rounded-container-token">
-            <FileManagerFolder
-              fileSystem={fsaFileSystem} 
-              removability={"unremovable"} 
-              spawnability={"folder-spawnable"} 
-              filename={`${storageFolderName}キャビネット`} 
-              bindId={fsaCabinet[0]} 
-              parent={fsaRoot} 
-              index={0} 
-              path={[fsaCabinet[0]]} 
-              trash={fsaTrash[2].asFolder()}
-            />
-          </div>
-          <div class="cabinet variant-ghost-tertiary rounded-container-token">
-            <FileManagerFolder
-              fileSystem={fsaFileSystem} 
-              removability={"unremovable"} 
-              spawnability={"unspawnable"} 
-              filename={`${storageFolderName}ごみ箱`} 
-              bindId={fsaTrash[0]} 
-              parent={fsaRoot} 
-              index={1} 
-              path={[fsaTrash[0]]} 
-              trash={null}
-            />
-          </div>
-        {/if}
         <p>
           <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>
         </p>
@@ -528,12 +570,32 @@
 
       <h2>クラウドストレージ</h2>
       <p>データをクラウドに保存します。この機能はβ版です。断りなくサービス停止する可能性があります。BASICプランで使えます。</p>
-      {#if cloudCabinet && cloudTrash}
+      {#if $cloudState == 'linked'}
         <div class="cabinet variant-ghost-primary rounded-container-token">
-          <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"folder-spawnable"} filename={"クラウドキャビネット"} bindId={cloudCabinet[0]} parent={cloudRoot} index={0} path={[cloudCabinet[0]]} trash={cloudTrash[2].asFolder()}/>
+          <FileManagerFolder 
+            fileSystem={cloudFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"folder-spawnable"} 
+            filename={"クラウドキャビネット"} 
+            bindId={cloudFolders.cabinet[0]} 
+            parent={cloudFolders.root} 
+            index={0} 
+            path={[cloudFolders.cabinet[0]]} 
+            trash={cloudFolders.trash[2].asFolder()}
+          />
         </div>
         <div class="cabinet variant-ghost-primary rounded-container-token">
-          <FileManagerFolder fileSystem={cloudFileSystem} removability={"unremovable"} spawnability={"unspawnable"} filename={"クラウドごみ箱"} bindId={cloudTrash[0]} parent={cloudRoot} index={1} path={[cloudTrash[0]]} trash={null}/>
+          <FileManagerFolder 
+            fileSystem={cloudFileSystem} 
+            removability={"unremovable"} 
+            spawnability={"unspawnable"} 
+            filename={"クラウドごみ箱"} 
+            bindId={cloudFolders.trash[0]} 
+            parent={cloudFolders.root} 
+            index={1} 
+            path={[cloudFolders.trash[0]]} 
+            trash={null}
+          />
         </div>
       {/if}
     </div>

@@ -25,6 +25,7 @@ export async function buildFileSystem(): Promise<FileSystem> {
   await makeFolders(fs, specialFolders);
   // const tree = await folderTree(fs);
   // console.log(tree);
+  console.log(fs);
 
   return fs;
 }

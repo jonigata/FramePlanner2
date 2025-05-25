@@ -48,25 +48,22 @@ async function serializeBlobs(obj: any, mediaConverter: MediaConverter): Promise
 }
 
 async function countLines(stream: ReadableStream<Uint8Array>): Promise<number> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
+  const reader = stream.getReader();        // BYOB でなくても十分速い
   let lineCount = 0;
 
   try {
     while (true) {
       const { done, value } = await reader.read();
+      if (done) break;
 
-      if (done) {
-        break;
+      // 1 チャンク内の 0x0A を数える
+      for (let i = 0; i < value.length; i++) {
+        if (value[i] === 0x0A) lineCount++;
       }
-
-      const chunk = decoder.decode(value, { stream: true });
-      lineCount += chunk.split('\n').length - 1;
     }
   } finally {
     reader.releaseLock();
   }
-
   return lineCount;
 }
 
@@ -96,7 +93,6 @@ async function* readNDJSONStream(
       while ((newlineIndex = chunk.indexOf('\n', start)) !== -1) {
         const line = buffer + chunk.slice(start, newlineIndex).trim();
         lineNumber++;
-        console.log(`Processing line ${lineNumber}`);
         yield JSON.parse(line);
         // 次の検索開始位置を更新
         start = newlineIndex + 1;

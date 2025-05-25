@@ -113,7 +113,6 @@ export class FSAFileSystem extends FileSystem {
     this.sqlite = sqlite;
     this.blobStore = blobStore;
     console.log(mediaConverter);
-    console.trace();
     this.mediaConverter = mediaConverter;
   }
 

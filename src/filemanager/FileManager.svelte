@@ -5,15 +5,9 @@
   import { buildFileSystem } from './productionFileSystem';
   import { FileSystem, folderTree } from '../lib/filesystem/fileSystem';
 
-  let fileSystemPromise: Promise<FileSystem>;
-
-  onMount(async () => {
-    fileSystemPromise = buildFileSystem();    
-  });
+  let fileSystemPromise = buildFileSystem();    
 </script>
 
-{#await fileSystemPromise}
-<div>loading...</div>
-{:then fileSystem}
-  <FileManagerRoot fileSystem={fileSystem}/>
+{#await fileSystemPromise then fileSystem}
+  <FileManagerRoot localFileSystem={fileSystem}/>
 {/await}
