@@ -5,6 +5,7 @@ import { Node, File, Folder, FileSystem } from './fileSystem';
 import type { DumpFormat, DumpProgress } from './fileSystem';
 import type { MediaConverter } from './mediaConverter';
 import { sleep } from '../layeredCanvas/tools/misc';
+import { countLines } from './fileSystemTools';
 
 
 // {__blob__: true, data, type} を再帰的に Blob に戻す
@@ -48,66 +49,6 @@ async function serializeBlobs(obj: any, mediaConverter: MediaConverter): Promise
   return obj;
 }
 
-async function countLines(stream: ReadableStream<Uint8Array>): Promise<{ lineCount: number; hasHeader: boolean; headerLineCount?: number }> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let lineCount = 0;
-  let buffer = '';
-  let isFirstLine = true;
-  let hasHeader = false;
-  let headerLineCount: number | undefined;
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        if (buffer.trim() && isFirstLine) {
-          // 最後の行がヘッダかチェック
-          try {
-            const parsed = JSON.parse(buffer.trim());
-            if (parsed.version && typeof parsed.lineCount === 'number') {
-              hasHeader = true;
-              headerLineCount = parsed.lineCount;
-            }
-          } catch {
-            // JSONパースエラーの場合はヘッダなし
-          }
-        }
-        break;
-      }
-
-      const chunk = decoder.decode(value, { stream: true });
-      buffer += chunk;
-
-      // 改行を探して行数をカウント
-      let start = 0;
-      let newlineIndex: number;
-      while ((newlineIndex = buffer.indexOf('\n', start)) !== -1) {
-        if (isFirstLine) {
-          // 最初の行がヘッダかチェック
-          const firstLine = buffer.slice(0, newlineIndex).trim();
-          try {
-            const parsed = JSON.parse(firstLine);
-            if (parsed.version && typeof parsed.lineCount === 'number') {
-              hasHeader = true;
-              headerLineCount = parsed.lineCount;
-            }
-          } catch {
-            // JSONパースエラーの場合はヘッダなし
-          }
-          isFirstLine = false;
-        }
-        lineCount++;
-        start = newlineIndex + 1;
-      }
-      buffer = buffer.slice(start);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  
-  return { lineCount, hasHeader, headerLineCount };
-}
 
 async function* readNDJSONStream(
   stream: ReadableStream<Uint8Array>

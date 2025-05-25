@@ -4,6 +4,7 @@ import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapte
 import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
 import { ulid } from 'ulid';
 import type { MediaConverter } from './mediaConverter.js';
+import { countLines } from './fileSystemTools.js';
 
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
@@ -259,67 +260,6 @@ export class FSAFileSystem extends FileSystem {
     }
   }
 
-  // ストリームの行数をカウント
-  async countLines(stream: ReadableStream<Uint8Array>): Promise<{ lineCount: number; hasHeader: boolean; headerLineCount?: number }> {
-    const reader = stream.getReader();
-    const decoder = new TextDecoder();
-    let lineCount = 0;
-    let buffer = '';
-    let isFirstLine = true;
-    let hasHeader = false;
-    let headerLineCount: number | undefined;
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          if (buffer.trim() && isFirstLine) {
-            // 最後の行がヘッダかチェック
-            try {
-              const parsed = JSON.parse(buffer.trim());
-              if (parsed.version && typeof parsed.lineCount === 'number') {
-                hasHeader = true;
-                headerLineCount = parsed.lineCount;
-              }
-            } catch {
-              // JSONパースエラーの場合はヘッダなし
-            }
-          }
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-
-        // 改行を探して行数をカウント
-        let start = 0;
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf('\n', start)) !== -1) {
-          if (isFirstLine) {
-            // 最初の行がヘッダかチェック
-            const firstLine = buffer.slice(0, newlineIndex).trim();
-            try {
-              const parsed = JSON.parse(firstLine);
-              if (parsed.version && typeof parsed.lineCount === 'number') {
-                hasHeader = true;
-                headerLineCount = parsed.lineCount;
-              }
-            } catch {
-              // JSONパースエラーの場合はヘッダなし
-            }
-            isFirstLine = false;
-          }
-          lineCount++;
-          start = newlineIndex + 1;
-        }
-        buffer = buffer.slice(start);
-      }
-    } finally {
-      reader.releaseLock();
-    }
-    
-    return { lineCount, hasHeader, headerLineCount };
-  }
 
   async dump(options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }): Promise<ReadableStream<Uint8Array>> {
     const onProgress = options?.onProgress ?? (() => {});
@@ -423,7 +363,7 @@ export class FSAFileSystem extends FileSystem {
 
     // 2. ストリームをteeして片方で行数カウント
     const [counterStream, dataStream] = stream.tee();
-    const countResult = await this.countLines(counterStream);
+    const countResult = await countLines(counterStream);
     console.log(`Count result:`, countResult);
 
     // ヘッダがある場合はheaderLineCountを使用、ない場合は全行数を使用
