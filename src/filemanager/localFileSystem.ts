@@ -26,3 +26,9 @@ export async function buildFileSystem(handle: FileSystemDirectoryHandle): Promis
 
   return fs;
 }
+
+export async function fileSystemExists(handle: FileSystemDirectoryHandle): Promise<boolean> {
+  const persistenceProvider = new FSAFilePersistenceProvider(handle);
+  const sqlite = new SqlJsAdapter(persistenceProvider, wasmUrl);
+  return await sqlite.exists();
+}

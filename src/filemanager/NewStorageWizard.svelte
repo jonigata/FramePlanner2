@@ -1,36 +1,24 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-  import { FSAFileSystem, FSAFilePersistenceProvider } from '../lib/filesystem/fsaFileSystem.js';
   import { ProgressBar } from '@skeletonlabs/skeleton';
-  import { FSABlobStore } from '../lib/filesystem/sqlite/BlobStore.js';
-  import { SqlJsAdapter } from '../lib/filesystem/sqlite/SqlJsAdapter.js';
-  import { mainBookFileSystem } from './fileManagerStore';
   import { createPreference, type FileSystemPreference } from '../preferences';
-  import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
-  import { BrowserMediaConverter } from '../lib/filesystem/mediaConverter.js';
-  import { buildFileSystem } from './localFileSystem';
+  import { buildFileSystem, fileSystemExists } from './localFileSystem';
 
   // 3シーン分の状態
   let step = 0;
   let storageFolder: FileSystemDirectoryHandle | null = null;
-  let sqlite: SqlJsAdapter | null = null;
   let copyProgress = 0;
 
   async function makeFileSystem() {
     copyProgress = 0.01;
     await buildFileSystem(storageFolder!);
-
-    // 設定
-    const pref = createPreference<FileSystemPreference>("filesystem", "current");
-    pref.set({type: "fsa", handle: storageFolder!});
-
     copyProgress = 1;
   }
 
   async function handleNext() {
     // 状態
     if (step == 0) {
-      if (await sqlite?.exists()) {
+      if (await fileSystemExists(storageFolder!)) {
         // skip clone
         step = 2;
       } else {
@@ -45,6 +33,8 @@
 
     // 遷移後処理
     if (step == 3) {
+      const pref = createPreference<FileSystemPreference>("filesystem", "current");
+      pref.set({type: "fsa", handle: storageFolder!});
       $modalStore[0]?.response?.(true);
       modalStore.close();
     }
