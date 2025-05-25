@@ -465,7 +465,7 @@
   async function unlinkStorageDirectory() {
     const r = await waitDialog<boolean>('confirm', { 
       title: '保存ディレクトリの解除',
-      message: '保存ディレクトリを解除しますか？',
+      message: '保存ディレクトリを解除しますか？\n※解除後、再び同じ場所を指定すれば再利用できます',
       positiveButtonText: '解除する',
       negativeButtonText: '解除しない',
     });
@@ -600,7 +600,6 @@
           <button class="btn-sm w-48 variant-filled" on:click={unlinkStorageDirectory} disabled={!fsaapi}>
             保存ディレクトリの解除
           </button>
-          (再び同じ場所を指定すれば再利用できます)
         </div>
         <div class="flex flex-row gap-2 items-center justify-center p-2">
           <button class="btn-sm w-32 variant-filled"  on:click={() => dump(fsaFileSystem)}>ダンプ</button>
@@ -656,9 +655,6 @@
     margin-left: 32px;
     margin-right: 16px;
     margin-bottom: 8px;
-  }
-  p b {
-    font-family: '源暎エムゴ';
   }
   h2 {
     font-family: '源暎エムゴ';
