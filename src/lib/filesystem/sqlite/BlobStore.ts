@@ -17,26 +17,51 @@ export class FSABlobStore implements BlobStore {
 
   async write(id: string, blob: Blob): Promise<string> {
     if (!this.dirHandle) throw new Error('BlobStore not initialized');
-    console.log('Writing blob:', id);
+    console.log('Writing blob:', id, 'type:', blob.type);
+    
     const fileName = `${id}.bin`;
+    const metaFileName = `${id}.meta`;
+    
+    // バイナリデータを保存
     const fileHandle = await this.dirHandle.getFileHandle(fileName, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
+    
+    // MIME type情報を保存
+    const metaHandle = await this.dirHandle.getFileHandle(metaFileName, { create: true });
+    const metaWritable = await metaHandle.createWritable();
+    await metaWritable.write(JSON.stringify({ type: blob.type }));
+    await metaWritable.close();
+    
     console.log('Writing blob done:', id);
-    return `blobs/${fileName}`; // Return the path
+    return `blobs/${fileName}`;
   }
 
   async read(id: string): Promise<Blob> {
     if (!this.dirHandle) throw new Error('BlobStore not initialized');
+    
+    // バイナリデータを読み込み
     const fileHandle = await this.dirHandle.getFileHandle(`${id}.bin`);
     const file = await fileHandle.getFile();
-    return file;
+    
+    // MIME type情報を読み込み
+    let mimeType = 'application/octet-stream';
+    const metaHandle = await this.dirHandle.getFileHandle(`${id}.meta`);
+    const metaFile = await metaHandle.getFile();
+    const metaText = await metaFile.text();
+    const meta = JSON.parse(metaText);
+    mimeType = meta.type || 'application/octet-stream';
+    
+    // 正しいMIME typeでBlobを再構築
+    const arrayBuffer = await file.arrayBuffer();
+    return new Blob([arrayBuffer], { type: mimeType });
   }
 
   async delete(id: string) {
     if (!this.dirHandle) throw new Error('BlobStore not initialized');
     await this.dirHandle.removeEntry(`${id}.bin`);
+    await this.dirHandle.removeEntry(`${id}.meta`);
   }
 
   async gc(validIds: Set<string>) {

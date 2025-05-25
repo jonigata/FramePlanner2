@@ -12,6 +12,8 @@ import {
 } from "../lib/book/imagePacking";
 import type { RemoteMediaReference } from "../lib/layeredCanvas/dataModels/media";
 import { type NotebookLocal, type SerializedNotebook } from "../lib/book/book";
+import { developmentFlag } from "../utils/developmentFlagStore";
+import { get } from "svelte/store";
 
 // キャッシュの仕組み
 // 行儀が悪いが、ファイル化済みのオンメモリのcanvas/video/remoteFileRequestオブジェクトには
@@ -107,6 +109,10 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
           throw e;
         }
       }
+      if (get(developmentFlag)) {
+          throw e;
+      }
+
       console.error("loadMediaResource: ここでエラーにするとファイルが読めなくなるので仕方なく握りつぶす", e)
       return null;
     }
