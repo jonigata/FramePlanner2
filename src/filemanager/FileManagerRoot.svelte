@@ -386,12 +386,12 @@
     return (n / 1000000000).toFixed(2) + 'GB';
   }
 
-  async function dump() {
+  async function dump(fs: FileSystem) {
     console.log("dump");
     const r = await waitDialog<boolean>('dump');
     if (r) {
       // 新インターフェイス: optionsオブジェクトでonProgressを渡す
-      const stream = await $mainBookFileSystem!.dump({
+      const stream = await fs.dump({
         onProgress: n => $progress = n
       });
 
@@ -409,14 +409,14 @@
     }
   }
 
-  async function undump() {
+  async function undump(fs: FileSystem) {
     console.log("undump");
     const dumpFiles = await waitDialog<FileList>('undump');
     if (dumpFiles) {
       console.log("undump start");
 
       // File から ReadableStream を取得し options で onProgress を渡す
-      await $mainBookFileSystem!.undump(
+      await fs.undump(
         dumpFiles[0].stream(),
         {
           onProgress: (n) => {
@@ -533,8 +533,8 @@
         <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
       </div>
       <div class="flex flex-row gap-2 items-center justify-center p-2">
-        <button class="btn-sm w-32 variant-filled"  on:click={dump}>ダンプ</button>
-        <button class="btn-sm w-32 variant-filled"  on:click={undump}>リストア</button>
+        <button class="btn-sm w-32 variant-filled"  on:click={() => dump(localFileSystem)}>ダンプ</button>
+        <button class="btn-sm w-32 variant-filled"  on:click={() => undump(localFileSystem)}>リストア</button>
       </div>
       <h2>ローカルストレージ</h2>
       <p>この領域はローカルのHDD、SSDなどに保存されます。</p>
@@ -586,6 +586,10 @@
             保存ディレクトリの解除
           </button>
           (再び同じ場所を指定すれば再利用できます)
+        </div>
+        <div class="flex flex-row gap-2 items-center justify-center p-2">
+          <button class="btn-sm w-32 variant-filled"  on:click={() => dump(fsaFileSystem)}>ダンプ</button>
+          <button class="btn-sm w-32 variant-filled"  on:click={() => undump(fsaFileSystem)}>リストア</button>
         </div>
       {:else}
         <p>
