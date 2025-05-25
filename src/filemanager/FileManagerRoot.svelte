@@ -3,21 +3,18 @@
   import streamSaver from 'streamsaver';
   import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
-  import { type Book, emptyNotebook, trivialNewPageProperty } from '../lib/book/book';
-  import { newBook, revisionEqual, commitBook, getHistoryWeight, collectAllFilms } from '../lib/book/book';
+  import { type Book } from '../lib/book/book';
+  import { newBook, revisionEqual, getHistoryWeight, collectAllFilms } from '../lib/book/book';
   import { bookOperators, mainBook, redrawToken, mainBookExceptionHandler } from '../bookeditor/workspaceStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
   import type { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-  import { buildShareFileSystem, buildCloudFileSystem } from './shareFileSystem';
+  import { buildCloudFileSystem } from './shareFileSystem';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { analyticsEvent } from "../utils/analyticsEvent";
-  import { getLayover } from "../firebase";
-  import { createPage } from '../utils/fromHiruma';
   import Drawer from '../utils/Drawer.svelte'
   import FileManagerFolder from './FileManagerFolder.svelte';
-  import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { DelayedCommiter } from '../utils/delayedCommiter';
   import { loading, progress } from '../utils/loadingStore'
   import { frameInspectorTarget } from '../bookeditor/frameinspector/frameInspectorStore';
@@ -79,6 +76,16 @@
     return localFileSystem;
   }
 
+  function getFileSystemName(id: string) {
+    switch (getFileSystemType(id)) {
+      case 'cloud':
+        return 'クラウドストレージ';
+      case 'fsa':
+        return 'ローカルストレージ';
+      case 'local':
+        return 'ブラウザストレージ';
+    }
+  }
 
   $: onBuildCloudFileSystem($onlineStatus, $onlineAccount);
   async function onBuildCloudFileSystem(os: OnlineStatus, oa: OnlineAccount | null) { 
@@ -388,7 +395,7 @@
 
   async function dump(fs: FileSystem) {
     console.log("dump");
-    const r = await waitDialog<boolean>('dump');
+    const r = await waitDialog<boolean>('dump', {sourceTitle: getFileSystemName(fs.id)});
     if (r) {
       // 新インターフェイス: optionsオブジェクトでonProgressを渡す
       const stream = await fs.dump({
@@ -411,7 +418,7 @@
 
   async function undump(fs: FileSystem) {
     console.log("undump");
-    const dumpFiles = await waitDialog<FileList>('undump');
+    const dumpFiles = await waitDialog<FileList>('undump', {sourceTitle: getFileSystemName(fs.id)});
     if (dumpFiles) {
       console.log("undump start");
 

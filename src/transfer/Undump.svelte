@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { modalStore } from '@skeletonlabs/skeleton';
   import { toolTip } from '../utils/passiveToolTipStore';
   import dumpRestorePicture from '../assets/dump-restore.webp';
 
-  let filesize: number | null = null;
-  let overwrite = '';
   let dumpFiles: FileList | null;
   let undumpCounter = 5;
+  let sourceTitle: string = '';  
 
   function handleCancel() {
     modalStore.close();
@@ -19,9 +19,14 @@
     }
   }
 
+  onMount(() => {
+    const args = $modalStore[0]?.meta;
+    console.log('Dialog mounted, modal store:', args);
+    sourceTitle = args.sourceTitle;
+  });
 </script>
 
-<div class="card p-4 w-full max-w-lg">
+<div class="card p-4 w-full max-w-2xl">
   <h2 class="h2">データ引き継ぎ</h2>
 
   <div class="variant-ghost-primary p-1 pt-2 m-2 mb-4 rounded">
@@ -45,7 +50,8 @@
   <div class="px-4">
     <h3>リストア</h3>
     <div class="p-2">
-      <p>既存のFramePlannerでダンプしたデータファイルを、まんがファームのFramePlanner(ここ)で<b>リストア</b>します。</p>
+      <p>既存のFramePlannerでダンプしたデータファイルを、まんがファームのFramePlanner(ここ)の<b>{sourceTitle}</b>に<b>リストア</b>します。</p>
+      <p>まんがファームのFramePlannerでダンプしたデータファイルもリストア可能です。</p>
     </div>
     <div class="p-2">
       <p>
