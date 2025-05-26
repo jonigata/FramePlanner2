@@ -25,7 +25,8 @@ public/banners/*
 # npmのサイズとか出すやつ
 stats.html
 # ダンプ用の巨大なテストデータやenvelope
-testdata/*
+testdata/envelope/*
+testdata/largedump/*
 
 # Editor directories and files
 .vscode/*
