@@ -1,0 +1,156 @@
+[
+  {
+    "id": "/",
+    "type": "folder",
+    "children": [
+      [
+        "01JW5RYX9ZWKCX0XC27TAAMEJ3",
+        "デスクトップ",
+        "01JW5RYX9ZY6RDDDYBB7850NMP"
+      ],
+      [
+        "01JW5RYXA1Z04AZ2SS02KKF724",
+        "キャビネット",
+        "01JW5RYXA073P7F6P7J5RBR2DW"
+      ],
+      ["01JW5RYXAA7VFCXFA4J09CCMDR", "ごみ箱", "01JW5RYXA2R1FPHT4R6F2GBMFP"],
+      [
+        "01JW5RYXACZCQ4CGEA5ZVBZMYW",
+        "テンプレート",
+        "01JW5RYXABSRGCKM2SAARET89H"
+      ],
+      ["01JW5RYXAD83YX256890F8R90X", "画像", "01JW5RYXACA637NPSRVV6JEC70"],
+      ["01JW5RYXAEFA4M24PYRM94JDWW", "動画", "01JW5RYXADSAMDF5X7J73NZC9P"],
+      [
+        "01JW5RYXAFER9S6X6HN2KFH3F3",
+        "プリファレンス",
+        "01JW5RYXAFXBTG1SGCAA9198X4"
+      ],
+      ["01JW5RYXAG36S8DMBYXJDYPJ90", "素材", "01JW5RYXAGT7B11ETVKYPP69BC"],
+      ["01JW5RYXAJ6TKEQ8SMSRCYFCB6", "AI", "01JW5RYXAHV223HBKVPY66N766"],
+      ["01JW5RYXANGETDDPTBTAHNPAG8", "倉庫", "01JW5RYXAM69MMD92961NFEHW9"]
+    ],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYX9ZY6RDDDYBB7850NMP",
+    "type": "folder",
+    "children": [
+      [
+        "01JW5RYYFHBKDDZ9KX9PJV0D76",
+        "キャラクター",
+        "01JW5RYYF8X0XE89D221NA09KS"
+      ]
+    ],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXA073P7F6P7J5RBR2DW",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXA2R1FPHT4R6F2GBMFP",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXABSRGCKM2SAARET89H",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXACA637NPSRVV6JEC70",
+    "type": "folder",
+    "children": [
+      [
+        "01JW5S1J1BFF4ZMYQYVXA6JP1P",
+        "01JW5S1J13PWFJS41X9ZP6512D",
+        "01JW5S1J13PWFJS41X9ZP6512D"
+      ]
+    ],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXADSAMDF5X7J73NZC9P",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXAFXBTG1SGCAA9198X4",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXAGT7B11ETVKYPP69BC",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXAHV223HBKVPY66N766",
+    "type": "folder",
+    "children": [
+      [
+        "01JW5RYXAM26H4Z4HQX9609YM9",
+        "キャラクター",
+        "01JW5RYXAKJPSJR0CGKAK98WCA"
+      ]
+    ],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXAKJPSJR0CGKAK98WCA",
+    "type": "folder",
+    "children": [
+      [
+        "01JW5S0VWQ1MDA3ZBDZFY1G6WF",
+        "01JW5RZX3G5S81XZKAFBP9GZN4",
+        "01JW5S0VWPRR350YV7KZ8C0T0F"
+      ]
+    ],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYXAM69MMD92961NFEHW9",
+    "type": "folder",
+    "children": [],
+    "attributes": {}
+  },
+  {
+    "id": "01JW5RYYF8X0XE89D221NA09KS",
+    "type": "file",
+    "content": "{\"revision\":{\"id\":\"01JW5RYYF8X0XE89D221NA09KS\",\"revision\":5,\"prefix\":\"initial-\"},\"pages\":[{\"id\":\"01JW5RZMR3YE085BEA4NSW7KDC\",\"frameTree\":{\"bgColor\":\"#FFFFFF\",\"borderColor\":\"#000000\",\"borderWidth\":2,\"prompt\":\"1 dolphin\",\"column\":[{\"visibility\":1,\"prompt\":\"1 cat\",\"cornerOffsets\":{},\"height\":100,\"films\":[]}],\"cornerOffsets\":{},\"height\":100,\"films\":[]},\"bubbles\":[],\"paperSize\":[840,1188],\"paperColor\":\"#FFFFFF\",\"frameColor\":\"#000000\",\"frameWidth\":2}],\"direction\":\"right-to-left\",\"wrapMode\":\"two-pages\",\"chatLogs\":[],\"notebook\":{\"theme\":\"\",\"characters\":[{\"name\":\"\",\"personality\":\"\",\"appearance\":\"\",\"themeColor\":\"#000000\",\"ulid\":\"01JW5RZX3G5S81XZKAFBP9GZN4\",\"portrait\":\"01JW5S1J13PWFJS41X9ZP6512D\"}],\"plot\":\"\",\"scenario\":\"\",\"critique\":\"\",\"storyboard\":null,\"pageNumber\":null,\"format\":\"standard\"},\"attributes\":{\"publishUrl\":null},\"newPageProperty\":{\"paperSize\":[840,1188],\"paperColor\":\"#FFFFFF\",\"frameColor\":\"#000000\",\"frameWidth\":2,\"templateName\":\"white-paper\"}}"
+  },
+  {
+    "id": "01JW5S0VWPRR350YV7KZ8C0T0F",
+    "type": "file",
+    "content": {
+      "name": "",
+      "personality": "",
+      "appearance": "",
+      "ulid": "01JW5RZX3G5S81XZKAFBP9GZN4",
+      "portrait": {
+        "__blob__": true,
+        "data": "data:image/webp;base64,UklGRv4BAABXRUJQVlA4WAoAAAAgAAAA/wEA/wEASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDhMEAAAAC//wX8AB9D//kf/AxHR/wA=",
+        "type": "image/webp"
+      },
+      "themeColor": "#000000"
+    }
+  },
+  {
+    "id": "01JW5S1J13PWFJS41X9ZP6512D",
+    "type": "file",
+    "blob": {
+      "__blob__": true,
+      "data": "data:image/webp;base64,UklGRgACAABXRUJQVlA4WAoAAAAgAAAA/wEA/wEASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDhMEQAAAC//wX8AB9D6cvS//4GI6H8AAA==",
+      "type": "image/webp"
+    },
+    "mediaType": "image"
+  }
+]

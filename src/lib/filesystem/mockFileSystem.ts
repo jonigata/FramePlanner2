@@ -75,7 +75,7 @@ export class MockFileSystem extends FileSystem {
       const id = file.id;
       if (file.type === 'file') {
         const f = new MockFile(this, id);
-        f.content = file.content;
+        f.undump(file);
         this.files[id] = f;
       } else {
         const f = new MockFolder(this, id);
@@ -88,7 +88,7 @@ export class MockFileSystem extends FileSystem {
 }
 
 export class MockFile extends File {
-  content: string = '';
+  data: any;
 
   constructor(fileSystem: FileSystem, id: NodeId) {
     super(fileSystem, id);
@@ -98,11 +98,11 @@ export class MockFile extends File {
   asFile() { return this; }
 
   async read(): Promise<string> {
-    return this.content;
+    return this.data.content;
   }
 
   async write(data: string) {
-    this.content = data;
+    this.data.content = data;
   }
 
   // Fileインターフェイス追加分
@@ -120,7 +120,11 @@ export class MockFile extends File {
   }
 
   dump() {
-    return { id: this.id, type: 'file', content: this.content };
+    return { ...this.data, id: this.id, type: 'file' }; // 念の為idとtypeは上書き
+  }
+
+  undump(data: any) {
+    this.data = data;
   }
 }
 

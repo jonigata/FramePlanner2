@@ -43,6 +43,15 @@ export async function dryUnpackBubbleMedias(paperSize: Vector, markUps: any[], l
   await unpackBubbleMedias(paperSize, markUps, dryLoadMediaResource);
 }
 
+export async function dryUnpackNotebookMedias(serializedNotebook: SerializedNotebook, loadedImageList: string[]): Promise<void> {
+  const dryLoadMediaResource: LoadMediaFunc = async (imageId: string): Promise<MediaResource> => {
+    loadedImageList.push(imageId);
+    return null;
+  };
+
+  await unpackNotebookMedias(serializedNotebook, dryLoadMediaResource);
+}
+
 export async function packFrameMedias(frameTree: FrameElement, parentDirection: 'h' | 'v', saveMediaFunc: SaveMediaFunc): Promise<any> {
   const markUp = FrameElement.decompileNode(frameTree, parentDirection);
   markUp.films = await packFilms(frameTree.filmStack.films, saveMediaFunc);

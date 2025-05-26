@@ -44,7 +44,7 @@ describe('ガベージコレクション', () => {
     const target = fileSystem.dumpToString();
     expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
-  it('ガベージコレクション(何も回収されないはず)', async () => {
+  it('何も回収されないはず', async () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
@@ -59,7 +59,7 @@ describe('ガベージコレクション', () => {
     const target = fileSystem.dumpToString();
     expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
-  it('ガベージコレクション(TypeAを削除)', async () => {
+  it('TypeAを削除', async () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
@@ -80,7 +80,7 @@ describe('ガベージコレクション', () => {
     const correct = await fs.readFile('src/filemanager/test/filesystem.correct.typeA.json', 'utf8');
     expect(JSON.parse(target)).toEqual(JSON.parse(correct));
   });
-  it('ガベージコレクション(TypeBを削除)', async () => {
+  it('TypeBを削除', async () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
@@ -101,7 +101,7 @@ describe('ガベージコレクション', () => {
     const correct = await fs.readFile('src/filemanager/test/filesystem.correct.typeB.json', 'utf8');
     expect(JSON.parse(target)).toEqual(JSON.parse(correct));
   });
-  it('ガベージコレクション(TypeCを削除)', async () => {
+  it('TypeCを削除', async () => {
     // 読み込み
     const fileSystem = new MockFileSystem();
     const source = await fs.readFile('src/filemanager/test/filesystem.initial.json', 'utf8');
@@ -121,5 +121,20 @@ describe('ガベージコレクション', () => {
     const target = fileSystem.dumpToString();
     const correct = await fs.readFile('src/filemanager/test/filesystem.correct.typeC.json', 'utf8');
     expect(JSON.parse(target)).toEqual(JSON.parse(correct));
+  });
+  it('キャラ画像、役者画像が残る', async () => {
+    // 読み込み
+    const fileSystem = new MockFileSystem();
+    const source = await fs.readFile('src/filemanager/test/filesystem.roster.json', 'utf8');
+    fileSystem.undumpFromString(source);
+
+    // ガベコレ
+    const { usedImageFiles, strayImageFiles } = await collectGarbage(fileSystem);
+    const imageFolder = (await (await fileSystem.getRoot()).getNodeByName("画像"))!.asFolder()!;
+    await purgeCollectedGarbage(fileSystem, imageFolder, strayImageFiles);
+
+    // 正解と比較
+    const target = fileSystem.dumpToString();
+    expect(JSON.parse(target)).toEqual(JSON.parse(source));
   });
 });
