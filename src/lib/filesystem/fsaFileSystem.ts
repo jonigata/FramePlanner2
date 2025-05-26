@@ -366,7 +366,7 @@ export class FSAFileSystem extends FileSystem {
     const expectedLineCount = countResult.hasHeader ? countResult.headerLineCount! : countResult.lineCount;
 
     // 3. 逐次パースしながらDBへ書き込み
-    const batchSize = 1000;
+    const batchSize = 100;
     let batch: any[] = [];
     let count = 0;
     let writtenCount = 0;
@@ -405,7 +405,7 @@ export class FSAFileSystem extends FileSystem {
                 await this.blobStore.write(id, actualBlob);
                 await this.sqlite.run(
                   "INSERT INTO files(id, inlineContent, blobPath, mediaType) VALUES (?, NULL, ?, ?)",
-                  [id, `blobs/${id}.bin`, actualBlob.type]
+                  [id, `blobs/${id}.bin`, "image"]
                 );
               } else {
                 // 通常のテキストデータ → {data: content}でwrap

@@ -78,7 +78,7 @@ export class BrowserMediaConverter implements MediaConverter {
       if (record.mediaType === 'video') {
         return await createVideoFromBlob(record.blob);
       }
-      throw new Error('Unknown mediaType for blob');
+      throw new Error(`Unknown mediaType for blob ${JSON.stringify(record)}`);
     }
     if (record.content) {
       const image = new Image();
