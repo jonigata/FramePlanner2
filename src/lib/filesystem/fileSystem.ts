@@ -22,7 +22,7 @@ export interface Watcher {
 
 /** ファイルシステムのダンプ/リストア用インターフェイス */
 export type DumpProgress = (ratio: number) => void;
-export type DumpFormat = 'ndjson/v1';
+export type DumpFormat = 'ndjson/v2';
 
 export abstract class FileSystem {
   id: FileSystemId;

@@ -1,10 +1,10 @@
-import type { NodeId, NodeType, BindId, Entry, MediaResource } from './fileSystem.js';
-import { Node, File, Folder, FileSystem } from './fileSystem.js';
-import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapter.js';
-import { type BlobStore, FSABlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore.js';
+import type { NodeId, NodeType, BindId, Entry, MediaResource, DumpFormat, DumpProgress } from './fileSystem';
+import { Node, File, Folder, FileSystem } from './fileSystem';
+import { SqlJsAdapter, type FilePersistenceProvider } from './sqlite/SqlJsAdapter';
+import { type BlobStore, externalizeBlobsInObject, internalizeBlobsInObject } from './sqlite/BlobStore';
 import { ulid } from 'ulid';
-import type { MediaConverter } from './mediaConverter.js';
-import { countLines } from './fileSystemTools.js';
+import type { MediaConverter } from './mediaConverter';
+import { countLines } from './fileSystemTools';
 
 // 型定義
 type FileSystemDirectoryHandle = globalThis.FileSystemDirectoryHandle;
@@ -198,7 +198,10 @@ export class FSAFileSystem extends FileSystem {
 
   async getNode(id: NodeId): Promise<Node | null> {
     const node = await this.sqlite.selectOne("SELECT * FROM nodes WHERE id = ?", [id]);
-    if (!node) return null;
+    if (!node) {
+      console.error(`Node not found: ${id}`);
+      return null;
+    }
     if (node.type === 'file') {
       return new FSAFile(this, id, this.sqlite, this.blobStore, this.mediaConverter);
     } else if (node.type === 'folder') {
@@ -258,7 +261,7 @@ export class FSAFileSystem extends FileSystem {
   }
 
 
-  async dump(options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }): Promise<ReadableStream<Uint8Array>> {
+  async dump(options?: { format?: DumpFormat; onProgress?: DumpProgress }): Promise<ReadableStream<Uint8Array>> {
     const onProgress = options?.onProgress ?? (() => {});
     // 1. 全ノード取得
     const nodes = await this.sqlite.select("SELECT * FROM nodes");
@@ -281,8 +284,8 @@ export class FSAFileSystem extends FileSystem {
             item.content = (await internalizeBlobsInObject(json, this.blobStore)).data;
           } else if (file.blobPath) {
             const blob = await this.blobStore.read(node.id);
-            // Blob→dataURL using mediaConverter
-            item.blob = await this.mediaConverter.blobToDataURL(blob);
+            // Blobオブジェクトをそのまま設定（serializeBlobsで適切に変換される）
+            item.blob = blob;
             item.mediaType = file.mediaType ?? null;
           }
         }
@@ -306,7 +309,7 @@ export class FSAFileSystem extends FileSystem {
       async pull(controller) {
         if (count === -1) {
           // ヘッダ行を出力
-          const header = { version: "v1", lineCount: total };
+          const header = { version: "v2", lineCount: total };
           const headerString = JSON.stringify(header) + "\n";
           controller.enqueue(encoder.encode(headerString));
           count = 0;
@@ -336,7 +339,7 @@ export class FSAFileSystem extends FileSystem {
 
   async undump(
     stream: ReadableStream<Uint8Array>,
-    options?: { format?: "ndjson/v1"; onProgress?: (n: number) => void }
+    options?: { format?: DumpFormat; onProgress?: DumpProgress }
   ): Promise<void> {
     const onProgress = options?.onProgress ?? (() => {});
     onProgress(0);

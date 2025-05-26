@@ -44,7 +44,13 @@ export async function loadCharactersFromRoster(fs: FileSystem): Promise<Characte
   const characters = [];
   for (const entry of entries) {
     const c = await entry[2].asFile()!.read() as CharacterInRoster;
-    const portrait = c.portrait ? await createCanvasFromBlob(c.portrait) : null;
+    let portrait = null;
+    try {
+      portrait = c.portrait ? await createCanvasFromBlob(c.portrait) : null;
+    }
+    catch(e) {
+      // 過去のバグの互換性で、空オブジェクトになっていることがある
+    }
     characters.push({
       ...c,
       portrait: buildNullableMedia(portrait)

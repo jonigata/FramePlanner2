@@ -248,7 +248,7 @@ describe('FSAFileSystem tests', () => {
   }
 
   it('文字列化', async () => {
-    await checkUndump(fs, 'testdata/dump/testcase-v1.ndjson');
+    await checkUndump(fs, 'testdata/dump/testcase-v2.ndjson');
     const readable = await fs.dump({});
     const reader = readable.getReader();
     const chunks: Uint8Array[] = [];

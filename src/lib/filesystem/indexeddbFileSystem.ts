@@ -256,7 +256,7 @@ export class IndexedDBFileSystem extends FileSystem {
       async pull(controller) {
         if (count === -1) {
           // ヘッダ行を出力
-          const header = { version: "v1", lineCount: total };
+          const header = { version: "v2", lineCount: total };
           const headerString = JSON.stringify(header) + "\n";
           controller.enqueue(encoder.encode(headerString));
           count = 0;
