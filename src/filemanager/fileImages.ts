@@ -145,7 +145,7 @@ async function saveMediaResource(fileSystem: FileSystem, imageFolder: Folder, vi
     throw new Error("saveMediaResource: fileId is not null but canvas is not in cache");
   } else {
     const file = await fileSystem.createFile();
-    file.writeMediaResource(r);
+    await file.writeMediaResource(r);
     r["fileId"][fileSystem.id] = file.id;
     r["clean"][fileSystem.id] = true;
     mediaResourceCache[fileSystem.id][file.id] = mediaResource;
