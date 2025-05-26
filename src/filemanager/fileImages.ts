@@ -110,7 +110,8 @@ async function loadMediaResource(fileSystem: FileSystem, mediaResourceId: NodeId
         }
       }
       if (get(developmentFlag)) {
-          throw e;
+        console.error("loadMediaResource: 画像読み込みでエラーが発生しました。productionでは無視します", e);
+        throw e;
       }
 
       console.error("loadMediaResource: ここでエラーにするとファイルが読めなくなるので仕方なく握りつぶす", e)

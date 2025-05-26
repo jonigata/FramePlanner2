@@ -290,7 +290,11 @@ export async function deleteMaterial(fileSystem: FileSystem, materialBindId: Bin
 }
 
 export async function copyBookOrFolderInterFileSystem(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId): Promise<NodeId> {
-  return copyBookOrFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceNodeId, {});
+  let nodeId: NodeId | null = null;
+  await targetFileSystem.withoutPersist(async () => {
+    nodeId = await copyBookOrFolderInterFileSystemInternal(sourceFileSystem, targetFileSystem, sourceNodeId, {});
+  });
+  return nodeId!;
 }
 
 async function copyBookOrFolderInterFileSystemInternal(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId, copied: { [NodeId: string]: NodeId }): Promise<NodeId> {

@@ -22,19 +22,20 @@ export class FSABlobStore implements BlobStore {
     const fileName = `${id}.bin`;
     const metaFileName = `${id}.meta`;
     
-    // バイナリデータを保存
-    const fileHandle = await this.dirHandle.getFileHandle(fileName, { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+    await Promise.all([
+      (async () => {
+        const fileHandle = await this.dirHandle!.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable({ keepExistingData: false });
+        await blob.stream().pipeTo(writable);
+      })(),
+      (async () => {
+        const metaHandle = await this.dirHandle!.getFileHandle(metaFileName, { create: true });
+        const metaWritable = await metaHandle.createWritable({ keepExistingData: false });
+        await metaWritable.write(JSON.stringify({ type: blob.type }));
+        await metaWritable.close();
+      })()
+    ]);
     
-    // MIME type情報を保存
-    const metaHandle = await this.dirHandle.getFileHandle(metaFileName, { create: true });
-    const metaWritable = await metaHandle.createWritable();
-    await metaWritable.write(JSON.stringify({ type: blob.type }));
-    await metaWritable.close();
-    
-    console.log('Writing blob done:', id);
     return `blobs/${fileName}`;
   }
 
