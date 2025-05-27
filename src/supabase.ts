@@ -56,7 +56,6 @@ export function initializeSupabase() {
     supabaseAnonKey,
     {
       realtime: {
-        transport: window.WebSocket,  // ブラウザ標準のWebSocketを使わせる
       }
     }  
   );

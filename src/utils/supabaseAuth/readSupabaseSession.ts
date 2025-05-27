@@ -49,7 +49,6 @@ function readSplitAndDecodeCookie(projectRef: string): any | null {
         chunkedCookie.substring(BASE64_PREFIX.length),
       );
     }
-    console.log("decoded", decoded);
     return JSON.parse(decoded);
   } catch (err) {
     console.warn('Cookie decode/parse error', err);

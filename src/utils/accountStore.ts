@@ -39,7 +39,7 @@ function createAuthStore(): AuthStore {
     const accessTokenCookie = session?.access_token;
     const refreshTokenCookie = session?.refresh_token;    
     
-    console.log("INITIALIZE", accessTokenCookie, refreshTokenCookie);
+    // console.log("INITIALIZE", accessTokenCookie, refreshTokenCookie);
     if (accessTokenCookie && refreshTokenCookie) {
       // accessTokenCookie![1] = `adfas-${accessTokenCookie}`;
       const { data, error } = await supabase.auth.setSession({
