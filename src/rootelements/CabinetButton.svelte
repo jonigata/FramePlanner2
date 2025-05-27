@@ -5,7 +5,11 @@
   import fileManagerIcon from '../assets/file-manager.webp';
   
   function openFileManager() {
-    $bookOperators!.forceDelayedCommit();
+    if (!$bookOperators) {
+      // 無視できる気もするが、焦る必要もないので
+      return;
+    }
+    $bookOperators.forceDelayedCommit();
     $fileManagerOpen = !$fileManagerOpen;
   }
 </script>

@@ -48,8 +48,16 @@
 
   async function selectStorageDirectory() {
     // @ts-ignore
-    const handle: FileSystemDirectoryHandle | null = await window.showDirectoryPicker();
-    if (!handle) { return; }
+    let handle: FileSystemDirectoryHandle;
+    try {
+      handle = await (window as any).showDirectoryPicker();
+    }
+    catch(e) {
+      // perhaps cancel
+      console.log("canceled");
+      return;
+    }
+
 
     storageFolder = handle;
     reuse = await fileSystemExists(storageFolder);
