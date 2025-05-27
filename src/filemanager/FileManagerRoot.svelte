@@ -464,8 +464,8 @@
 
   async function unlinkStorageDirectory() {
     const r = await waitDialog<boolean>('confirm', { 
-      title: '保存ディレクトリの解除',
-      message: '保存ディレクトリを解除しますか？\n※解除後、再び同じ場所を指定すれば再利用できます',
+      title: '保存フォルダの解除',
+      message: '保存フォルダを解除しますか？\n※解除後、再び同じ場所を指定すれば再利用できます',
       positiveButtonText: '解除する',
       negativeButtonText: '解除しない',
     });
@@ -556,14 +556,14 @@
       <h2>ローカルストレージ</h2>
       <p>この領域はローカルのHDD、SSDなどに保存されます。</p>
       {#if $fsaState == 'unlinked'}
-        <h3>保存ディレクトリ</h3>
+        <h3>保存フォルダ</h3>
         <p>
-          データを保存するディレクトリを指定してください。
-          前回指定したディレクトリが見えていない場合、同じ場所を指定すれば復活します。
+          データを保存するフォルダを指定してください。
+          前回指定したフォルダが見えていない場合、同じ場所を指定すれば復活します。
         </p>
         <div class="flex flex-row ml-8 items-center gap-4">
           <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory} disabled={!fsaapi}>
-            保存ディレクトリを指定
+            保存フォルダを指定
           </button>
           {#if !fsaapi}
             <div>
