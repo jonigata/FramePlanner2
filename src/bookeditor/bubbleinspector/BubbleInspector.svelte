@@ -279,6 +279,9 @@
   }
 
   function wrapRange(range: SelectionInfo, prefix: string, suffix: string) {
+    if (!textarea) {
+      return;
+    }
     const start = range.start;
     const end = range.end;
     const text = textarea!.value;
