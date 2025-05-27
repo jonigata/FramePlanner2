@@ -477,11 +477,13 @@
   }
 
   onMount(async () => {
+    console.log("###### FileManagerRoot.onMount");
     localFolders = await getRootFolders(localFileSystem);
     localState.set('linked');
 
     const pref = createPreference<FileSystemPreference | null>("filesystem", "current");
     let fileSystemPreference = await pref.getOrDefault(null);
+    console.log("###### fileSystemPreference", fileSystemPreference);
     // fileSystemPreference = null;
     await buildFsaFileSystem(fileSystemPreference);
 });

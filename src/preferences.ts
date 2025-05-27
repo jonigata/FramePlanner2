@@ -1,7 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
 export type PreferenceStore = "imaging" | "filesystem";
-const preferencesStores = ["imaging", "filesystem"];
 const preferencesVersion = 2;
 
 export type FileSystemPreference = {
@@ -14,10 +13,22 @@ let dbPromise: Promise<IDBPDatabase<unknown>>;
 export function assurePreferences() {
   console.log("assurePreferences");
   dbPromise = openDB("preferences", preferencesVersion, {
-    upgrade(db) {
-      for (const store of preferencesStores) {
-        if (!db.objectStoreNames.contains(store)) {
-          db.createObjectStore(store);
+    upgrade(db, oldVersion, newVersion) {
+      console.log(`Upgrading preferences DB from version ${oldVersion} to ${newVersion}`);
+      
+      // バージョン1: imagingストアを作成
+      if (oldVersion < 1) {
+        if (!db.objectStoreNames.contains("imaging")) {
+          db.createObjectStore("imaging");
+          console.log("Created imaging store");
+        }
+      }
+
+      // バージョン2: filesystemストアを作成
+      if (oldVersion < 2) {
+        if (!db.objectStoreNames.contains("filesystem")) {
+          db.createObjectStore("filesystem");
+          console.log("Created filesystem store");
         }
       }
     }
