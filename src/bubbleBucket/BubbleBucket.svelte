@@ -6,7 +6,8 @@
   import { mainBook } from '../bookeditor/workspaceStore';
   import { getHaiku } from "../lib/layeredCanvas/tools/haiku";
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
-  import { getRectCenter } from '../lib/layeredCanvas/tools/geometry/geometry';
+  import { getRectCenter, sizeToRect } from '../lib/layeredCanvas/tools/geometry/geometry';
+
 
   let bubbles: Bubble[] = [];
 
@@ -28,16 +29,23 @@
     const frameSeq = collectPageContents(page, 0, dir)
     const contents = frameSeq.contents;
 
-    // 一番番号が若くてbubblesが少ないマスを探す
-    let min = 0;
-    for (let i = 0; i < contents.length; i++) {
-      if (contents[i].bubbles.length < contents[min].bubbles.length) {
-        min = i;
+    let rect;
+
+    if (contents.length == 0) {
+      rect = sizeToRect(page.paperSize);
+    } else {
+      // 一番番号が若くてbubblesが少ないマスを探す
+      let min = 0;
+      for (let i = 0; i < contents.length; i++) {
+        if (contents[i].bubbles.length < contents[min].bubbles.length) {
+          min = i;
+        }
       }
+      rect = contents[min].sourceRect;
     }
 
     const paperSize = page.paperSize;
-    const center = getRectCenter(contents[min].sourceRect);
+    const center = getRectCenter(rect);
 
     const bubble = new Bubble();
     bubble.text = getHaiku();

@@ -497,3 +497,7 @@ export function offsetLine(p0: Vector, p1: Vector, offset: number): [Vector, Vec
   
   return [offsetP0, offsetP1];
 }
+
+export function sizeToRect(size: Vector): Rect {
+  return [0, 0, size[0], size[1]];
+}
