@@ -65,6 +65,10 @@
 
   async function undump() {
     console.log("undump");
+    if (!$mainBookFileSystem) {
+      // 慌てて押す人がいるっぽい
+      return;
+    }
     const dumpFiles = await waitDialog<FileList>('undump');
     if (dumpFiles) {
       console.log("undump start");
