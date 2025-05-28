@@ -15,6 +15,7 @@ import {
 } from "./utils/edgeFunctions/types/imagingTypes.d";
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
 import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest, AdviseThemeResponseSchema, type AdviseThemeResponse } from "$protocolTypes/adviseTypes.d";
+import { FunctionsHttpError } from '@supabase/supabase-js'
 
 // リクエストスキーマの定義
 const GetUploadUrlRequestSchema = z.object({ filename: z.string() });
@@ -178,7 +179,7 @@ export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'vi
       const status = await imagingStatus(mediaReference);
       console.log(status);
       switch (status.status) {
-        case "IN_QUEUE":
+      case "IN_QUEUE":
         yield;
         break;
       case "IN_PROGRESS":
@@ -192,7 +193,17 @@ export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'vi
     return urls;
   }
 
-  const urls = await runResilientTask(doIt, {interval});
+  const urls = await runResilientTask(
+    doIt, 
+    (error) => { 
+      if (error instanceof FunctionsHttpError) {
+        if (error.context.status === 422) {
+          throw error;
+        }
+      }
+      return true;
+    }, 
+    {interval});
 
   const mediaResources: (HTMLCanvasElement | HTMLVideoElement)[] = await Promise.all(
     urls.map(async url => {

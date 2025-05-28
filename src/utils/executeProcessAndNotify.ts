@@ -6,18 +6,14 @@ export async function executeProcessAndNotify<T>(
   asyncProcess: () => Promise<T>
 ): Promise<T> {
   const granted = await requestNotificationPermission();
-  try {
-    const start = new Date();
-    const result = await asyncProcess();
-    const timeouts = thresholdMillisecs < (new Date().getTime() - start.getTime());
-    if (granted) {
-      sendNotification(notificationMessage, timeouts);
-    }
-    return result;
-  } catch (error) {
-    console.error("プロセス実行中にエラーが発生しました: ", error);
-    throw error;
+
+  const start = new Date();
+  const result = await asyncProcess();
+  const timeouts = thresholdMillisecs < (new Date().getTime() - start.getTime());
+  if (granted) {
+    sendNotification(notificationMessage, timeouts);
   }
+  return result;
 }
 
 async function requestNotificationPermission(): Promise<boolean> {

@@ -277,7 +277,7 @@
   }
 
   function startRename() {
-    console.log("renameFile");
+    console.log("renameFolder");
     renameEdit.setFocus();
   }
 

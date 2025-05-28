@@ -10,6 +10,7 @@
     { value: "o4-mini", label: "o4-mini" },
     // { value: "sonnet", label: "sonnet" },
     // { value: "sonnet:think", label: "sonnet(think)" },
+    { value: "sonnet", label: "sonnet-4.0" },
     // { value: "gemini", label: "gemini" },
     { value: "gemini-flash", label: "gemini-flash" },
     // { value: "gemini-flash:think", label: "gemini-flash(think)" },

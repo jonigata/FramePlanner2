@@ -6,7 +6,7 @@
   import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore'
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import type { ImagingMode } from '$protocolTypes/imagingTypes';
-  import { type ImagingContext, generateMarkedPageImages, generateImage } from '../utils/feathralImaging';
+  import { type ImagingContext, generateMarkedPageImages, generateImage, isContentsPolicyViolationError } from '../utils/feathralImaging';
   import { persistentText } from '../utils/persistentText';
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { ulid } from 'ulid';
@@ -311,18 +311,21 @@
 
     c.portrait = 'loading';
     notebook!.characters = notebook!.characters;
-    const canvases = await executeProcessAndNotify(
-      5000, "画像が生成されました",
-      async () => {
-        return await generateImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, "opaque");
-      });
-    if (canvases == null) {
-      c.portrait = null;
-      return;
-    }
+    try {
+      const canvases = await executeProcessAndNotify(
+        5000, "画像が生成されました",
+        async () => {
+          return await generateImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, "opaque");
+        });
 
-    c.portrait = buildMedia(canvases[0]); // HTMLImageElement
-    notebook!.characters = notebook!.characters;
+      c.portrait = buildMedia(canvases[0]); // HTMLImageElement
+      notebook!.characters = notebook!.characters;
+    }
+    catch (e) {
+      if (!isContentsPolicyViolationError(e)) {
+        throw e;
+      }
+    }
   }
 
   function onSetPortrait(e: CustomEvent<{ character: CharacterLocal, image: HTMLCanvasElement }>) {

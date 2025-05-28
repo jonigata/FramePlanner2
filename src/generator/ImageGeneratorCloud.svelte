@@ -86,13 +86,15 @@
           return await generateImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, background);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         });
-      if (canvases.length === 0) {
-        return;
-      }
-
       gallery.push(...canvases.map(c => new ImageMedia(c)));
       gallery = gallery;
+
       progress = 1;
+    }
+    catch (e) {
+      if (!isContentsPolicyViolationError(e)) {
+        throw e;
+      }
     }
     finally {
       clearInterval(q);

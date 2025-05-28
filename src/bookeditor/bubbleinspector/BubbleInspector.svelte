@@ -27,7 +27,6 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import { toastStore } from '@skeletonlabs/skeleton';
   import { onlineStatus } from "../../utils/accountStore";
-  import { captureException } from "@sentry/svelte";
 
   import horizontalIcon from '../../assets/horizontal.webp';
   import verticalIcon from '../../assets/vertical.webp';

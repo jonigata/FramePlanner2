@@ -4,7 +4,8 @@ import { text2Image, pollMediaStatus } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import type { Page } from '../lib/book/book';
 import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-import { FrameElement, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+import type { Vector } from '../lib/layeredCanvas/tools/geometry/geometry';
+import { type Layout, collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
 import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
 import { bookOperators, mainBook, redrawToken } from '../bookeditor/workspaceStore'
 import { updateToken } from "../utils/accountStore";
@@ -12,6 +13,7 @@ import type { TextToImageRequest, ImagingBackground, ImagingMode, ImagingProvide
 import { saveRequest } from '../filemanager/warehouse';
 import { analyticsEvent } from "../utils/analyticsEvent";
 import { FunctionsHttpError } from '@supabase/supabase-js'
+import { captureConsoleIntegration } from '@sentry/svelte';
 
 export type ImagingContext = {
   awakeWarningToken: boolean;
@@ -19,6 +21,13 @@ export type ImagingContext = {
   total: number;
   succeeded: number;
   failed: number;
+}
+
+export function isContentsPolicyViolationError(error: any): boolean {
+  if (error instanceof FunctionsHttpError) {
+    return error.context.status === 422;
+  }
+  return false;
 }
 
 async function generateImage_Flux(prompt: string, image_size: {width: number, height: number}, mode: ImagingMode, num_images: number): Promise<HTMLCanvasElement[]> {
@@ -46,10 +55,13 @@ async function generateImage_Flux(prompt: string, image_size: {width: number, he
 
     return mediaResources as HTMLCanvasElement[];
   }
-  catch(error) {
-    console.log(error);
-    toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
-    return [];
+  catch(error: any) {
+    if (isContentsPolicyViolationError(error)) {
+      toastStore.trigger({ message: `画像生成エラー: ジェネレータに拒否されました。<br/>おそらくコンテントポリシー違反です。`, timeout: 5000});
+    } else {
+      toastStore.trigger({ message: `画像生成エラー: ${error.context.statusText}`, timeout: 3000});
+    }
+    throw error;
   }
 }
 
@@ -78,20 +90,13 @@ async function generateImage_Gpt1(prompt: string, image_size: {width: number, he
 
     return mediaResources as HTMLCanvasElement[];
   }
-  catch(error) {
-    if (error instanceof FunctionsHttpError) {
-      console.log('Function returned an error', error.context.status);
-      if (error.context.status === 422) {
-        toastStore.trigger({ message: `画像生成エラー: ジェネレータに拒否されました。<br/>おそらくコンテントポリシー違反です。`, timeout: 5000});
-      } else {
-        toastStore.trigger({ message: `画像生成エラー: ${error.context.statusText}`, timeout: 3000});
-      }
-      return [];
+  catch(error: any) {
+    if (isContentsPolicyViolationError(error)) {
+      toastStore.trigger({ message: `画像生成エラー: ジェネレータに拒否されました。<br/>おそらくコンテントポリシー違反です。`, timeout: 5000});
     } else {
-      console.log(error);
-      toastStore.trigger({ message: `画像生成エラー: ${error}`, timeout: 3000});
-      return [];
+      toastStore.trigger({ message: `画像生成エラー: ${error.context.statusText}`, timeout: 3000});
     }
+    throw error;
   }
 }
 
@@ -131,19 +136,26 @@ export async function generateMarkedPageImages(imagingContext: ImagingContext, p
     imagingContext.succeeded = 0;
     imagingContext.failed = 0;
     onProgress(progress / sum);
-    await generatePageImages(imagingContext, postfix, mode, page, onProgress2);
+    await generatePageImages(imagingContext, postfix, mode, page, false, onProgress2);
   }
 }
 
-export async function generatePageImages(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, page: Page, onProgress: () => void) {
+export async function generatePageImages(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, page: Page, skipFilledFrame: boolean, onProgress: () => void) {
   imagingContext.awakeWarningToken = true;
   imagingContext.errorToken = true;
   const leaves = collectLeaves(page.frameTree);
+  const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
   const promises: Promise<void>[] = [];
   for (const leaf of leaves) {
+    if (skipFilledFrame && leaf.filmStack.films.length > 0) {continue;}
     promises.push(
       (async (): Promise<void> => {
-        await generateFrameImage(imagingContext, postfix, mode, leaf);
+        await generateFrameImage(imagingContext, postfix, mode, findLayoutOf(pageLayout, leaf)!, page.paperSize);
+        const leafLayout = findLayoutOf(pageLayout, leaf);
+        const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
+        transformer.scale(0.01);
+        console.log("scaled");
+        constraintLeaf(page.paperSize, leafLayout!);
         onProgress();
       })());
   }
@@ -152,30 +164,31 @@ export async function generatePageImages(imagingContext: ImagingContext, postfix
   imagingContext.failed = 0;
   await Promise.all(promises);
 
-  const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-  for (const leaf of leaves) {
-    const leafLayout = findLayoutOf(pageLayout, leaf);
-    const transformer = new FilmStackTransformer(page.paperSize, leaf.filmStack.films);
-    transformer.scale(0.01);
-    console.log("scaled");
-    constraintLeaf(page.paperSize, leafLayout!);
-  }
   updateToken.set(true);
 }
 
 
-async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, frame: FrameElement) {
-  console.log("postfix", postfix);
-  const images = await generateImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, "opaque");
-  if (0 < images.length) {
-    const media = new ImageMedia(images[0]);
+async function generateFrameImage(imagingContext: ImagingContext, postfix: string, mode: ImagingMode, leafLayout: Layout, paperSize: Vector) {
+  try {
+    const frame = leafLayout.element;
+    const canvases = await generateImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, "opaque");
+
+    const media = new ImageMedia(canvases[0]);
     const film = new Film(media);
     frame.filmStack.films.push(film);
     frame.gallery.push(media);
-    imagingContext.succeeded++;
+
+    const transformer = new FilmStackTransformer(paperSize, frame.filmStack.films);
+    transformer.scale(0.01);
+    console.log("scaled");
+    constraintLeaf(paperSize, leafLayout);
     redrawToken.set(true);
-  } else {
+
+    imagingContext.succeeded++;
+  } 
+  catch(error) {
     imagingContext.failed++;
+    throw error;
   }
 }
 

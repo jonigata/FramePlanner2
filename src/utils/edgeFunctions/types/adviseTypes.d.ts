@@ -5,6 +5,7 @@ import { z } from "zod";
 export const ThinkerSchema = z.enum([
   "sonnet", 
   "sonnet:think", 
+  "sonnet-4.0",
   "gpt4o", 
   "gpt4.1",
   "gpt4.1-mini",

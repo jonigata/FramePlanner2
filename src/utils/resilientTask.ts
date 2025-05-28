@@ -18,6 +18,7 @@
 
 export async function runResilientTask<R>(
   taskFn: () => AsyncGenerator<unknown, R, unknown>,
+  errorFilter: (error: unknown) => boolean,
   options: { interval?: number } = {}
 ): Promise<R> {
   console.log('runResilientTask');
@@ -74,9 +75,11 @@ export async function runResilientTask<R>(
         await waitVisibleOrTimeout(interval);
       }
     } catch (err) {
-      console.warn('Task error, restarting...', err);
-      await sleep(interval); // 少し待ってリトライ
-      continue;
+      if (errorFilter(err)) {
+        console.warn('Task error, restarting...', JSON.stringify(err));
+        await sleep(interval); // 少し待ってリトライ
+        continue;
+      }
     } finally {
       if (gen?.return) {
         await gen.return(undefined as any);

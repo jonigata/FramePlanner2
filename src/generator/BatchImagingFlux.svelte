@@ -1,14 +1,9 @@
 <script lang="ts">
-  import { collectLeaves, calculatePhysicalLayout, findLayoutOf, constraintLeaf, type Layout } from '../lib/layeredCanvas/dataModels/frameTree';
-  import { Film, FilmStackTransformer } from '../lib/layeredCanvas/dataModels/film';
-  import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
-  import type { Page } from '../lib/book/book';
-  import { onlineStatus, updateToken } from "../utils/accountStore";
+  import { onlineStatus } from "../utils/accountStore";
   import Feathral from '../utils/Feathral.svelte';
   import { persistentText } from '../utils/persistentText';
   import type { ImagingMode } from '$protocolTypes/imagingTypes';
-  import { type ImagingContext, generateImage } from '../utils/feathralImaging';
-  import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
+  import { type ImagingContext, generatePageImages } from '../utils/feathralImaging';
   import { busy, batchImagingPage } from './batchImagingStore';
   import { mainBook, redrawToken } from '../bookeditor/workspaceStore';
   import { commitBook } from '../lib/book/book';
@@ -23,7 +18,8 @@
   async function execute() {
     console.log('execute');
     $busy = true;
-    await generateAll($batchImagingPage!);
+    await generatePageImages(
+      imagingContext, postfix, mode, $batchImagingPage!, true, () => {imagingContext = imagingContext;});
     $busy = false;
     console.log('execute done');
 
@@ -33,48 +29,6 @@
     $batchImagingPage = null;
   }
 
-  async function generate(paperSize: [number, number], leafLayout: Layout) {
-    console.log("postfix", postfix);
-    const frame = leafLayout.element;
-    const canvases = await generateImage(`${postfix}\n${frame.prompt}`, {width:1024,height:1024}, mode, 1, "opaque");
-    if (canvases != null) {
-      const media = new ImageMedia(canvases[0]);
-      const film = new Film(media);
-      frame.filmStack.films.push(film);
-      frame.gallery.push(media);
-
-      const transformer = new FilmStackTransformer(paperSize, frame.filmStack.films);
-      transformer.scale(0.01);
-      console.log("scaled");
-      constraintLeaf(paperSize, leafLayout);
-      $redrawToken = true;
-
-      imagingContext.succeeded++;
-    } else {
-      imagingContext.failed++;
-    }
-  }
-
-  async function generateAll(page: Page) {
-    imagingContext.awakeWarningToken = true;
-    imagingContext.errorToken = true;
-
-    const pageLayout = calculatePhysicalLayout(page.frameTree, page.paperSize, [0,0]);
-    const leaves = collectLeaves(page.frameTree).filter(
-      (leaf) => 0 == leaf.filmStack.films.length);
-    const promises = [];
-    for (const leaf of leaves) {
-      if (0 < leaf.filmStack.films.length) { continue; }
-      const leafLayout = findLayoutOf(pageLayout, leaf);
-      promises.push(generate(page.paperSize, leafLayout!));
-    }
-    imagingContext.total = promises.length;
-    imagingContext.succeeded = 0;
-    imagingContext.failed = 0;
-    await Promise.all(promises);
-
-    $updateToken = true;
-  }
 </script>
 
 <div class="flex flex-col gap-2 mt-2 w-full h-full">

@@ -42,7 +42,7 @@
   }
 
   function startRename() {
-    console.log("renameFile");
+    console.log("renameBubble");
     renameEdit.setFocus();
   }
 
