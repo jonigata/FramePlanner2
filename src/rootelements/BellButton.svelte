@@ -4,8 +4,13 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import BaseRootButton from './BaseRootButton.svelte';
   import bellIcon from '../assets/bell.webp';
+  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
   
   function callFairy() {
+    if (!$mainBookFileSystem) {
+      return;
+    }
+
     if ($onlineStatus !== "signed-in") {
       toastStore.trigger({ message: `AI機能の利用にはサインインが必要です`, timeout: 3000});
       return;
