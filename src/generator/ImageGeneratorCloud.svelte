@@ -9,7 +9,7 @@
   import { executeProcessAndNotify } from "../utils/executeProcessAndNotify";
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import type { ImagingMode, ImagingProvider, ImagingBackground } from '$protocolTypes/imagingTypes';
-  import { type ImagingContext, calculateCost, generateImage, modeOptions } from '../utils/feathralImaging';
+  import { type ImagingContext, calculateCost, generateImage, modeOptions, isContentsPolicyViolationError } from '../utils/feathralImaging';
   import { toolTip } from '../utils/passiveToolTipStore';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import FluxModes from './FluxModes.svelte';

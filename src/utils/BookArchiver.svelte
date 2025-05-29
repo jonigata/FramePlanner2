@@ -25,6 +25,8 @@
   $: onTask($bookArchiver);
   async function onTask(ba: BookArchiveOperation[]) {
     if (ba == null || ba.length === 0) { return; }
+    if (!$bookOperators) { return; }
+    
     console.log("onTask", ba);
     const marks: boolean[] = $bookOperators!.getMarks();
     const pages = $mainBook!.pages;
