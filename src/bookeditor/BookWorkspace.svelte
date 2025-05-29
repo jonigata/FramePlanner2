@@ -39,17 +39,17 @@
   }
 
   function undo() {
-    if (painter.isPainting()) {
+    if (painter && painter.isPainting()) {
       painter.undo();
-    } else {
+    } else if (operators) {
       operators.undo();
     }
   }
 
   function redo() {
-    if (painter.isPainting()) {
+    if (painter && painter.isPainting()) {
       painter.redo();
-    } else {
+    } else if (operators) {
       operators.redo();
     }
   }
