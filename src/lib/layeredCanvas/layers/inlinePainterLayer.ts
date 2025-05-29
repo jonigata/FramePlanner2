@@ -23,7 +23,7 @@ export class InlinePainterLayer extends LayerBase {
 
   drawsBackground: boolean;
   path: Path2D | null = null;
-  strokeOptions: any; // perfect-freehandのオプション
+  strokeOptions: any = {}; // perfect-freehandのオプション
 
   constructor(frameLayer: FrameLayer, onAutoGenerate: () => void) {
     super();
