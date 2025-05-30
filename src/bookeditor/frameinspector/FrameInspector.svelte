@@ -9,6 +9,7 @@
   import { bookOperators } from "../workspaceStore";
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { calculateFramePadding } from '../../utils/outPaintFilm'
+  import type { FilmTool } from '../../utils/filmTools';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -31,44 +32,9 @@
     $bookOperators!.commit(e.detail ? null : "effect");
   }
 
-  function onScribble(e: CustomEvent<Film>) {
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
-    $frameInspectorTarget!.command = "scribble";
-  }
-
   function onGenerate(e: CustomEvent<Film>) {
     $frameInspectorTarget!.commandTargetFilm = e.detail;
     $frameInspectorTarget!.command = "generate";
-  }
-
-  function onPunch(e: CustomEvent<Film>) {
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
-    $frameInspectorTarget!.command = "punch";
-  }
-
-  function onVideo(e: CustomEvent<Film>) {
-    console.log("FrameInspector.onVideo",)
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
-    $frameInspectorTarget!.command = "video";
-  }
-
-  function onUpscale(e: CustomEvent<Film>) {
-    console.log("FrameInspector.onUpscale")
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
-    $frameInspectorTarget!.command = "upscale";
-  }
-
-  function onDuplicate(e: CustomEvent<Film>) {
-    console.log("FrameInspector.onDuplicate", e.detail);
-    const film = e.detail;
-    const index = filmStack.films.indexOf(film);
-    const page = $frameInspectorTarget!.page;
-    const element = $frameInspectorTarget!.frame;
-    const paperSize = page.paperSize;
-    const newFilm = film.clone();
-    insertFrameLayers(page.frameTree, paperSize, element, index, [newFilm]);
-    filmStack = filmStack;
-    $bookOperators!.commit(null);
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
@@ -83,18 +49,74 @@
     $bookOperators!.commit(null);
   }
 
-  function onOutPaint(e: CustomEvent<Film>) {
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
+  function onTool(e: CustomEvent<{tool:FilmTool, film:Film}>) {
+    const { tool, film } = e.detail;
+    switch(tool) {
+      case "punch":
+        onPunch(film);
+        break;
+      case "video":
+        onVideo(film);
+        break;
+      case "upscale":
+        onUpscale(film);
+        break;
+      case "duplicate":
+        onDuplicate(film);
+        break;
+      case "outpaint":
+        onOutPaint(film);
+        break;
+      case "eraser":
+        onEraser(film);
+        break;
+      case "inpaint":
+        onInpaint(film);
+        break;
+    }
+  }
+
+  function onPunch(film: Film) {
+    $frameInspectorTarget!.commandTargetFilm = film;
+    $frameInspectorTarget!.command = "punch";
+  }
+
+  function onVideo(film: Film) {
+    console.log("FrameInspector.onVideo",)
+    $frameInspectorTarget!.commandTargetFilm = film;
+    $frameInspectorTarget!.command = "video";
+  }
+
+  function onUpscale(film: Film) {
+    console.log("FrameInspector.onUpscale")
+    $frameInspectorTarget!.commandTargetFilm = film;
+    $frameInspectorTarget!.command = "upscale";
+  }
+
+  function onDuplicate(film: Film) {
+    console.log("FrameInspector.onDuplicate", film);
+    const index = filmStack.films.indexOf(film);
+    const page = $frameInspectorTarget!.page;
+    const element = $frameInspectorTarget!.frame;
+    const paperSize = page.paperSize;
+    const newFilm = film.clone();
+    insertFrameLayers(page.frameTree, paperSize, element, index, [newFilm]);
+    filmStack = filmStack;
+    $bookOperators!.commit(null);
+  }
+
+  function onOutPaint(film: Film) {
+    $frameInspectorTarget!.commandTargetFilm = film;
     $frameInspectorTarget!.command = "outpaint";
   }
 
-  function onEraser(e: CustomEvent<Film>) {
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
+  function onEraser(film: Film) {
+    $frameInspectorTarget!.commandTargetFilm = film;
     $frameInspectorTarget!.command = "eraser";
   }
 
-  function onInpaint(e: CustomEvent<Film>) {
-    $frameInspectorTarget!.commandTargetFilm = e.detail;
+  function onInpaint(film: Film) {
+    $frameInspectorTarget!.commandTargetFilm = film;
     $frameInspectorTarget!.command = "inpaint";
   }
 
@@ -145,16 +167,9 @@
           showsBarrier={true}  
           filmStack={filmStack}
           on:commit={onCommit}
-          on:scribble={onScribble} 
           on:generate={onGenerate} 
-          on:punch={onPunch} 
-          on:upscale={onUpscale}
-          on:duplicate={onDuplicate}
-          on:video={onVideo}
           on:accept={onAccept}
-          on:eraser={onEraser}
-          on:inpaint={onInpaint}
-          on:outpainting={onOutPaint}
+          on:tool={onTool}
           calculateOutPaintingCost={calculateOutPaintingCost}
           calculateInPaintingCost={calculateInPaintingCost}/>
       {/key}

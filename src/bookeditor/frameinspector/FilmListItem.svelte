@@ -15,9 +15,9 @@
   import BarrierIcon from './BarrierIcon.svelte';
   import { saveAs } from 'file-saver';
   import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
+  import type { FilmTool } from '../../utils/filmTools';
 
   import visibleIcon from '../../assets/filmlist/eye.webp';
-  import scribbleIcon from '../../assets/filmlist/scribble.webp';
   import trashIcon from '../../assets/filmlist/trash.webp';
   import punchIcon from '../../assets/filmlist/punch.webp';
   import effectIcon from '../../assets/filmlist/effect.webp';
@@ -65,57 +65,42 @@
     $redrawToken = true;
   }
 
-  function onEraser(ev: MouseEvent) {
-    console.log("onEraser");
+  function dispatchFilmTool(tool: FilmTool) {
+    console.log("filmtool", tool);
     popupVisible = false;
-    dispatch('eraser', film)
+    dispatch('tool', {film, tool});
+  }
+
+  function onEraser(ev: MouseEvent) {
+    dispatchFilmTool('eraser');
   }
 
   function onInpaint(ev: MouseEvent) {
-    console.log("onInpaint");
-    popupVisible = false;
-    dispatch('inpaint', film)
-  }
-
-  function onScribble(ev: MouseEvent) {
-    console.log("onScribble");
-    popupVisible = false;
-    dispatch('scribble', film)
+    dispatchFilmTool('inpaint');
   }
 
   function onPunch(ev: MouseEvent) {
-    console.log("onPunch");
-    popupVisible = false;
-    dispatch('punch', film)
+    dispatchFilmTool('punch');
   }
 
   function onUpscale(ev: MouseEvent) {
-    console.log("onUpscale");
-    popupVisible = false;
-    dispatch('upscale', film)
+    dispatchFilmTool('upscale');
   }
 
   function onDuplicate(ev: MouseEvent) {
-    console.log("onDuplicate");
-    popupVisible = false;
-    dispatch('duplicate', film)
+    dispatchFilmTool('duplicate');
   }
 
   function onOutPainting(ev: MouseEvent) {
-    console.log("onOutPainting");
-    popupVisible = false;
-
     if (outPaintingCost === 0) {
       toastStore.trigger({ message: "アウトペインティング余地がありません", timeout: 3000 });
       return;
     }
-    dispatch('outpainting', film)
+    dispatchFilmTool('outpaint');
   }
 
   function onVideo(ev: MouseEvent) {
-    console.log("FilmListItem.onVideo");
-    popupVisible = false;
-    dispatch('video', film)
+    dispatchFilmTool('video');
   }
 
   function onToggleeffectVisible(ev: MouseEvent) {
@@ -316,9 +301,6 @@
         </button>
         <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
           <img draggable={false} src={inpaintIcon} alt="インペイント"/>
-        </button>
-        <button class="transformix-item" use:toolTip={"落書き"} on:click={onScribble}>
-          <img draggable={false} src={scribbleIcon} alt="落書き"/>
         </button>
         <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
           <img draggable={false} src={dupliateIcon} alt="複製"/>

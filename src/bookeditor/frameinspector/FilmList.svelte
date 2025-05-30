@@ -91,7 +91,8 @@
         bind:film={film} 
         on:select={onSelectFilm} 
         on:delete={onDeleteFilm} 
-        on:scribble on:generate on:punch on:outpainting on:commit on:video on:upscale on:duplicate on:eraser on:inpaint
+        on:tool
+        on:commit
         calculateOutPaintingCost={calculateOutPaintingCost}
         calculateInPaintingCost={calculateInPaintingCost}
       />
