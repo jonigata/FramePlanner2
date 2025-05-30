@@ -13,6 +13,7 @@ import { generateMovie } from '../../utils/generateMovie';
 import { makePlainCanvas } from "../../lib/layeredCanvas/tools/imageUtil";
 import { eraserFilm } from "../../utils/eraserFilm";
 import { inpaintFilm } from "../../utils/inpaintFilm";
+import { textEditFilm } from "../../utils/textEditFilm";
 
 // 共通インターフェース - フィルムオペレーション対象
 export interface FilmOperationTarget {
@@ -166,6 +167,14 @@ export async function handleInpaintCommand<T extends FilmOperationTarget>(
   target: T
 ): Promise<void> {
   await inpaintFilm(target.commandTargetFilm!);
+  commit(null);
+  loading.set(false);
+}
+
+export async function handleTextEditCommand<T extends FilmOperationTarget>(
+  target: T
+): Promise<void> {
+  await textEditFilm(target.commandTargetFilm!);
   commit(null);
   loading.set(false);
 }

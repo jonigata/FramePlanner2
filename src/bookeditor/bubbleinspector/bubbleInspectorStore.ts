@@ -11,6 +11,7 @@ import {
   handleCoverCommand,
   handleEraserCommand,
   handleInpaintCommand,
+  handleTextEditCommand,
   handleScribbleCommand,
   handleGenerateCommand,
   handlePunchCommand,
@@ -19,7 +20,7 @@ import {
   processCommand
 } from '../operations/filmStackOperations';
 
-type BubbleInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "upscale" | "video" | "split" | "inpaint" | "eraser";
+type BubbleInspectorCommand = "generate" | "cover" | "scribble" | "punch" | "upscale" | "video" | "split" | "inpaint" | "eraser" | "textedit";
 
 export interface BubbleInspectorTarget extends FilmOperationTarget {
   bubble: Bubble;
@@ -80,7 +81,8 @@ async function onBubbleCommand(bit: BubbleInspectorTarget | null) {
       bubbleInspectorTarget,
     ),
     "eraser": handleEraserCommand,
-    "inpaint": handleInpaintCommand, 
+    "inpaint": handleInpaintCommand,
+    "textedit": handleTextEditCommand,
     "scribble": async (target) => handleScribbleCommand(target, painterRunWithBubble!, target.bubble),
     "generate": async (target) => handleGenerateCommand(
       target,

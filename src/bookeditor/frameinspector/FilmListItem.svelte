@@ -28,6 +28,7 @@
   import dupliateIcon from '../../assets/filmlist/duplicate.webp';
   import eraserIcon from '../../assets/filmlist/eraser.webp';
   import inpaintIcon from '../../assets/filmlist/inpaint.webp';
+  import texteditIcon from '../../assets/filmlist/textedit.webp';
   import downloadIcon from '../../assets/download.webp';
   
   export let showsBarrier: boolean;
@@ -77,6 +78,10 @@
 
   function onInpaint(ev: MouseEvent) {
     dispatchFilmTool('inpaint');
+  }
+
+  function onTextEdit(ev: MouseEvent) {
+    dispatchFilmTool('textedit');
   }
 
   function onPunch(ev: MouseEvent) {
@@ -301,6 +306,9 @@
         </button>
         <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
           <img draggable={false} src={inpaintIcon} alt="インペイント"/>
+        </button>
+        <button class="transformix-item" use:toolTip={"テキスト編集[13]"} on:click={onTextEdit}>
+          <img draggable={false} src={texteditIcon} alt="テキスト編集"/>
         </button>
         <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
           <img draggable={false} src={dupliateIcon} alt="複製"/>

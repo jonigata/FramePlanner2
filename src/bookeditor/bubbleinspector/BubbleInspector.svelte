@@ -268,6 +268,38 @@
     $bubbleInspectorTarget!.command = "inpaint";
   }
 
+  function onTextEdit(e: CustomEvent<Film>) {
+    $bubbleInspectorTarget!.commandTargetFilm = e.detail;
+    $bubbleInspectorTarget!.command = "textedit";
+  }
+
+  function onTool(e: CustomEvent<{tool: string, film: Film}>) {
+    const { tool, film } = e.detail;
+    switch(tool) {
+      case "punch":
+        onPunch({ detail: film } as CustomEvent<Film>);
+        break;
+      case "upscale":
+        onUpscale({ detail: film } as CustomEvent<Film>);
+        break;
+      case "video":
+        onVideo({ detail: film } as CustomEvent<Film>);
+        break;
+      case "eraser":
+        onEraser({ detail: film } as CustomEvent<Film>);
+        break;
+      case "inpaint":
+        onInpaint({ detail: film } as CustomEvent<Film>);
+        break;
+      case "textedit":
+        onTextEdit({ detail: film } as CustomEvent<Film>);
+        break;
+      case "duplicate":
+        onDuplicate({ detail: film } as CustomEvent<Film>);
+        break;
+    }
+  }
+
   function onSelectionChanged(info: SelectionInfo) {
     textSelection = info;
     textSelected = info.hasSelection;
@@ -504,19 +536,13 @@
       <h1>レイヤー</h1>
       <div class="w-full text-left mb-32">
         {#key $bubbleInspectorRebuildToken}
-          <FilmList 
-            showsBarrier={false} 
-            filmStack={$bubble.filmStack} 
-            on:commit={onCommit} 
-            on:scribble={onScribble} 
-            on:generate={onGenerate} 
-            on:punch={onPunch} 
-            on:upscale={onUpscale} 
-            on:duplicate={onDuplicate}
-            on:video={onVideo} 
-            on:accept={onAccept} 
-            on:eraser={onEraser}
-            on:inpaint={onInpaint}
+          <FilmList
+            showsBarrier={false}
+            filmStack={$bubble.filmStack}
+            on:commit={onCommit}
+            on:generate={onGenerate}
+            on:accept={onAccept}
+            on:tool={onTool}
             />
         {/key}
       </div>

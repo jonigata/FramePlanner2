@@ -73,6 +73,9 @@
       case "inpaint":
         onInpaint(film);
         break;
+      case "textedit":
+        onTextEdit(film);
+        break;
     }
   }
 
@@ -118,6 +121,11 @@
   function onInpaint(film: Film) {
     $frameInspectorTarget!.commandTargetFilm = film;
     $frameInspectorTarget!.command = "inpaint";
+  }
+
+  function onTextEdit(film: Film) {
+    $frameInspectorTarget!.commandTargetFilm = film;
+    $frameInspectorTarget!.command = "textedit";
   }
 
   function calculateOutPaintingCost(film: Film) {

@@ -86,7 +86,7 @@ export async function inPaint(req: InPaintRequest) {
   return await invoke("charged/imaging/inpaint", req, InPaintRequestSchema, InPaintResponseSchema);
 }
 
-export async function textEdit(req: InPaintRequest) {
+export async function textEdit(req: TextEditRequest) {
   return await invoke("charged/imaging/textedit", req, TextEditRequestSchema, TextEditResponseSchema);
 }
 
