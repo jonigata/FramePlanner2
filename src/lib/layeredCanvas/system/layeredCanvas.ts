@@ -775,7 +775,11 @@ export class LayeredCanvas {
   }
 
   doPointerHover(p: Vector) {
-    const depths = this.rootPaper.acceptDepths().toReversed(); // inputなのでrenderの逆順
+    const rawDepths = this.rootPaper.acceptDepths();
+    if (!(rawDepths instanceof Array)) {
+      console.error("acceptDepths must return an array", JSON.stringify(rawDepths));
+    }
+    const depths = rawDepths.toReversed(); // inputなのでrenderの逆順
     let litLayer: Layer  | null = null;
     for (let depth of depths) {
       litLayer = this.rootPaper.handlePointerHover(p, depth);
