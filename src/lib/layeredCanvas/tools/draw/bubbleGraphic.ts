@@ -406,6 +406,7 @@ export function getPath(shape: string, size: Vector, opts: any, seed: string): p
         return getRoundedMindPath(size, opts, seed);
     }
 
+    console.error(`Unknown bubble shape: ${shape}`);
     return null;
   }
   finally {
