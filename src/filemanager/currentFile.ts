@@ -4,6 +4,7 @@ import type { NodeId } from '../lib/filesystem/fileSystem';
 export type CurrentFileInfo = {
   id: NodeId;
   fileSystem: 'cloud' | 'local' | 'fsa';
+  title: string;
 }
 
 export async function recordCurrentFileInfo(info: CurrentFileInfo): Promise<void> {
@@ -21,7 +22,7 @@ export async function fetchCurrentFileInfo(): Promise<CurrentFileInfo | null> {
   }
   catch {
     // 互換性
-    return {id: info as NodeId, fileSystem: 'local'};
+    return {id: info as NodeId, fileSystem: 'local', title: ''};
   }
 }
 

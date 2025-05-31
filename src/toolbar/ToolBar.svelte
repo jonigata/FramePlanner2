@@ -13,6 +13,7 @@
   import { clearCurrentFileInfo } from '../filemanager/currentFile';
   import { developmentFlag } from '../utils/developmentFlagStore';
   import { subscriptionPlans } from '../utils/billingData/subscriptionPlans';
+  import { mainBookTitle } from '../bookeditor/workspaceStore';
   import sprytIcon from '../assets/spryt.webp';
 
   import undoIcon from '../assets/undo.webp';
@@ -163,7 +164,7 @@
   const defaultAvatar = "https://api.dicebear.com/7.x/initials/svg?seed=User";
 </script>
 
-<div class="w-screen h-8 bg-surface-900 text-slate-100 gap-2 flex items-center pl-4 pr-2 pt-2 pb-2">
+<div class="w-screen min-h-8 bg-surface-900 text-slate-100 gap-2 flex items-center pl-4 pr-2 pt-2 pb-2">
   <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={undo} use:toolTip={"アンドゥ"}>
     <img src={undoIcon} alt="undo" class="h-6 w-auto"/>
   </button>
@@ -171,14 +172,15 @@
     <img src={redoIcon} alt="redo" class="h-6 w-auto"/>
   </button>
   
-  <div class="flex-grow"></div>
-  
-  <ul class="flex space-x-6">
+  <ul class="flex space-x-6 ml-8">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <li class="hover:text-yellow-500 cursor-pointer"><button on:click={openMangaFarm}>まんがファーム!へ</button></li>
     <li class="hover:text-yellow-500 cursor-pointer"><button on:click={undump}>旧FramePlannerからのデータ移行</button></li>
   </ul>
+
+  <div class="flex-grow"></div>
+  <div class="rounded variant-filled-tertiary px-2 text-white">{$mainBookTitle}</div>
 
   <div class="flex-grow"></div>
   {#if $onlineStatus === "signed-in"}

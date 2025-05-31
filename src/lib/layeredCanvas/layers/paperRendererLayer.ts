@@ -188,6 +188,7 @@ export class PaperRendererLayer extends LayerBase {
         ri.unitedPath.translate(center);
         for (let child of ri.children) {
           const ri2 = child.renderInfo!;
+          if (ri2.path == null) { continue; }
           const path2 = ri2.path!.clone();
           path2.translate(child.getPhysicalCenter(paperSize));
           ri.unitedPath = ri.unitedPath.unite(path2);

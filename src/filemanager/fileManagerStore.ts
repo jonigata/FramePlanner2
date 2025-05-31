@@ -22,6 +22,8 @@ export type Dragging = {
 export type LoadToken = {
   fileSystem: FileSystem;
   nodeId: NodeId;
+  parent: Folder;
+  bindId: BindId;
 }
 
 export const fileManagerOpen = writable(false);

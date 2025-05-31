@@ -94,7 +94,7 @@
         toastStore.trigger({ message: `クラウドファイルを直接開くことはできません<br/>ローカルにコピーしてから開いてください`, timeout: 3000});
         return;
       }
-      $loadToken = { fileSystem, nodeId };
+      $loadToken = { fileSystem, nodeId, parent, bindId };
     } else {
       $selectedFile = nodeId;
     }

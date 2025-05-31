@@ -7,6 +7,7 @@ import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { loadFonts } from "./fontLoading"
 
 export const mainBook = writable<Book | null>(null);
+export const mainBookTitle = writable('');
 export const mainPage = derived(mainBook, $mainBook => $mainBook?.pages[0]);
 export const viewport: Writable<Viewport | null> = writable(null);
 export const bookOperators: Writable<BookOperators | null> = writable(null);

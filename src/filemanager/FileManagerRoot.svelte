@@ -5,7 +5,7 @@
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book } from '../lib/book/book';
   import { newBook, revisionEqual, getHistoryWeight, collectAllFilms } from '../lib/book/book';
-  import { bookOperators, mainBook, redrawToken, mainBookExceptionHandler } from '../bookeditor/workspaceStore';
+  import { bookOperators, mainBook, mainBookTitle, redrawToken, mainBookExceptionHandler } from '../bookeditor/workspaceStore';
   import type { Revision } from "../lib/book/book";
   import { recordCurrentFileInfo, fetchCurrentFileInfo, type CurrentFileInfo, clearCurrentFileInfo } from './currentFile';
   import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
@@ -136,6 +136,7 @@
       const info: CurrentFileInfo = {
         id: book.revision.id as NodeId,
         fileSystem: getFileSystemType(fs.id),
+        title: $mainBookTitle
       }
       await recordCurrentFileInfo(info);
     });
@@ -200,6 +201,7 @@
             $mainBookFileSystem = fs;
             $mainBookExceptionHandler = loadExceptionHandler; // onChangeBookが一回実行されると消去される
             $mainBook = newBook;
+            $mainBookTitle = currentFileInfo.title ?? '';
             $frameInspectorTarget = null;
             analyticsEvent('continue_book');
           }
@@ -216,12 +218,14 @@
         // localFoldersが初期化されてない可能性があるので自力
         const root = await localFileSystem.getRoot();
         const desktop = (await root.getEmbodiedEntryByName("デスクトップ"))![2].asFolder()!;
-        await newFile(localFileSystem, desktop, getCurrentDateTime(), book);
-        await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local' });
+        const title = getCurrentDateTime();
+        await newFile(localFileSystem, desktop, title, book);
+        await recordCurrentFileInfo({ id: book.revision.id as NodeId, fileSystem: 'local', title });
 
         currentRevision = {...book.revision};
         $mainBookFileSystem = localFileSystem;
         $mainBook = book;
+        $mainBookTitle = title;
         analyticsEvent('new_book');
       }
       finally {
@@ -319,11 +323,13 @@
       console.tag("new book request", "green");
       $newBookToken = null;
       const desktop = localFolders.desktop[2].asFolder()!;
-      const { file } = await newFile(localFileSystem, desktop, getCurrentDateTime(), book);
-      await recordCurrentFileInfo({id: file.id as NodeId, fileSystem: 'local'});
+      const title = getCurrentDateTime();
+      const { file } = await newFile(localFileSystem, desktop, title, book);
+      await recordCurrentFileInfo({id: file.id as NodeId, fileSystem: 'local', title});
       currentRevision = {...book.revision};
       $mainBookFileSystem = localFileSystem;
       $mainBook = book;
+      $mainBookTitle = title;
       $frameInspectorTarget = null;
       analyticsEvent('new_book');
       toastStore.trigger({ message: "新規ファイルを作成しました", timeout: 1500});
@@ -356,12 +362,15 @@
     }
     const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile()!;
     const book = await loadBookFrom(lt.fileSystem, file);
+    const title = (await lt.parent.getEmbodiedEntry(lt.bindId))![1]
+    console.log(title);
     refreshFilms(book);
     currentRevision = {...book.revision};
     $mainBookFileSystem = lt.fileSystem;
     $mainBookExceptionHandler = loadExceptionHandler; // onChangeBookが一回実行されると消去される
     $mainBook = book;
-    recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: getFileSystemType(lt.fileSystem.id)});
+    $mainBookTitle = title;
+    recordCurrentFileInfo({id: book.revision.id as NodeId, fileSystem: getFileSystemType(lt.fileSystem.id), title});
     $frameInspectorTarget = null;
     $loading = false;
     // NOTICE:

@@ -404,6 +404,8 @@ export function getPath(shape: string, size: Vector, opts: any, seed: string): p
         return getSoftMindPath(size, opts, seed);
       case 'rounded-mind':
         return getRoundedMindPath(size, opts, seed);
+      case 'none':
+        return null;
     }
 
     console.error(`Unknown bubble shape: ${shape}`);
