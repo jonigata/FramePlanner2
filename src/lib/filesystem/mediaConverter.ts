@@ -45,18 +45,20 @@ export class BrowserMediaConverter implements MediaConverter {
     content?: string;
     mediaType?: string;
   }> {
+    console.log(media);
     if (media instanceof HTMLCanvasElement) {
       const blob = await canvasToBlob(media);
       return { blob, mediaType: 'image' };
     } else if (media instanceof HTMLVideoElement) {
       const blob = await fetch(media.src).then(res => res.blob());
       return { blob, mediaType: 'video' };
-    } else if (typeof media === 'object' && media !== null && 'url' in media) {
+    } else if (typeof media === 'object') {
       return { remote: media as RemoteMediaReference };
     } else {
-      // fallback: dataURL
-      if (media instanceof Image) {
-        return { content: media.src, mediaType: 'image' };
+      // TODO: ここAIが勝手に実装したけど多分不要
+      // 見逃してしまったがテストが厄介なので一旦残す      
+      if ((media as any) instanceof Image) {
+        return { content: (media as any).src, mediaType: 'image' };
       }
       throw new Error('Unknown media type for toStorable');
     }
@@ -81,10 +83,12 @@ export class BrowserMediaConverter implements MediaConverter {
       throw new Error(`Unknown mediaType for blob ${JSON.stringify(record)}`);
     }
     if (record.content) {
+      // TODO: ここAIが勝手に実装したけど多分不要
+      // 見逃してしまったがテストが厄介なので一旦残す      
       const image = new Image();
       image.src = record.content;
       await image.decode();
-      return await createCanvasFromImage(image);
+      return createCanvasFromImage(image);
     }
     throw new Error('Broken media data');
   }
