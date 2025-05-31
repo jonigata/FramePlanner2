@@ -5,7 +5,7 @@
   import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip, importEnvelopeZipToFolder } from "./fileManagerStore";
   import { readEnvelope, readOldEnvelope } from "../lib/book/envelope";
   import { newBook } from "../lib/book/book";
-  import { mainBook } from '../bookeditor/workspaceStore';
+  import { mainBook, mainBookTitle } from '../bookeditor/workspaceStore';
   import FileManagerFolderTail from "./FileManagerFolderTail.svelte";
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
@@ -274,6 +274,11 @@
     const { bindId, name } = e.detail;
     await node.rename(bindId, name);
     node = node;
+
+    const childNode = (await node.getEmbodiedEntry(bindId))![2];
+    if ($mainBook?.revision.id === childNode.id) {
+      $mainBookTitle = name;
+    }
   }
 
   function startRename() {
