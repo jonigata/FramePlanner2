@@ -44,7 +44,7 @@
         { value: "9:16", label: "縦長 (9:16)" },
       ],
       cost: () => {
-        return 50;
+        return 125;
       }
     }
   };
@@ -145,7 +145,7 @@
           <h3>モデル</h3>
           <select bind:value={model} class="select">
             <option value="FramePack">FramePack</option>
-            <option value="kling">kling-1.6</option>
+            <option value="kling">kling-2.1</option>
           </select>
         </label>
 
