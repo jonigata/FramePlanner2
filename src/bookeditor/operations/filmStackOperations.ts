@@ -174,7 +174,11 @@ export async function handleInpaintCommand<T extends FilmOperationTarget>(
 export async function handleTextEditCommand<T extends FilmOperationTarget>(
   target: T
 ): Promise<void> {
-  await textEditFilm(target.commandTargetFilm!);
+  const newFilm = await textEditFilm(target.commandTargetFilm!);
+  if (newFilm) {
+    const index = target.filmStack.films.indexOf(target.commandTargetFilm!);
+    target.filmStack.films.splice(index + 1, 0, newFilm);
+  }
   commit(null);
   loading.set(false);
 }

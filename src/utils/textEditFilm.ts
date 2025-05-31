@@ -41,7 +41,9 @@ export async function textEditFilm(film: Film) {
   const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "textedit", requestId});
   loading.set(false);
 
-  film.media = new ImageMedia(mediaResources[0] as HTMLCanvasElement);
+  const newFilm = film.clone();
+  newFilm.media = new ImageMedia(mediaResources[0] as HTMLCanvasElement);
 
   analyticsEvent('textedit');
+  return newFilm;
 }
