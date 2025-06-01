@@ -11,6 +11,7 @@
   import { bootstrap, onlineStatus } from './utils/accountStore';
   import { developmentFlag } from "./utils/developmentFlagStore";
   import { getPreferencePromise } from './preferences';
+  import { dominantMode } from './uiStore'
   
   //import '../app.postcss';  
   import ControlPanel from './controlpanel/ControlPanel.svelte';
@@ -186,18 +187,20 @@
     <BookEditor />
 
     <!-- root items -->
-    <MaterialBucketButton />
-    <NewBookButton  />
-    <CabinetButton />
-    <BellButton />
-    <RulerButton/>
-    <AboutButton/>
-    <DownloadButton />
-    <VideoButton />
-    <PostButton />
-    <DebugOnly>
-      <SaveOffButton/>
-    </DebugOnly>
+    {#if $dominantMode === "standard"}
+      <MaterialBucketButton />
+      <NewBookButton  />
+      <CabinetButton />
+      <BellButton />
+      <RulerButton/>
+      <AboutButton/>
+      <DownloadButton />
+      <VideoButton />
+      <PostButton />
+      <DebugOnly>
+        <SaveOffButton/>
+      </DebugOnly>
+    {/if}
   </div>
 </div>
 
