@@ -13,6 +13,7 @@ import { loading } from './loadingStore';
 type TextEditDialogResult = {
   image: HTMLCanvasElement;
   prompt: string;
+  model: string;
 }
 
 export async function textEditFilm(film: Film) {
@@ -35,10 +36,11 @@ export async function textEditFilm(film: Film) {
 
   loading.set(true);
   const imageDataUrl = request.image.toDataURL("image/png");
-  const { requestId } = await textEdit({imageDataUrl, prompt: request.prompt});
-  await saveRequest(get(mainBookFileSystem)!, "image", "textedit", requestId);
+  const { requestId } = await textEdit({imageDataUrl, prompt: request.prompt, model: request.model});
+  const mode = `textedit:${request.model}`;
+  await saveRequest(get(mainBookFileSystem)!, "image", mode, requestId);
 
-  const { mediaResources } = await pollMediaStatus({mediaType: "image", mode: "textedit", requestId});
+  const { mediaResources } = await pollMediaStatus({mediaType: "image", mode, requestId});
   loading.set(false);
 
   const newFilm = film.clone();

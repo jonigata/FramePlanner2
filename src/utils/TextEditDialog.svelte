@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { modalStore } from '@skeletonlabs/skeleton';
+  import { modalStore, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
+  import { createPreference } from '../preferences';
   import AutoSizeTextarea from '../notebook/AutoSizeTextarea.svelte';
 
   import MangaBlackPicture from '../assets/kontext/manga-black.webp';
   import MangaGrayPicture from '../assets/kontext/manga-gray.webp';
+  import FeathralCost from './FeathralCost.svelte';
 
   let title: string;
   let imageSource: HTMLCanvasElement;
@@ -16,13 +18,18 @@
   let canvasElement: HTMLCanvasElement;
   let prompt = '';
   let placeholder = '画像の変更内容を入力してください';
+
+  type TextEditMode = 'kontext/pro' | 'kontext/max';
+  let selectedModel: TextEditMode = 'kontext/pro';
+  const pref = createPreference<TextEditMode>("imaging", "textEditMode");
   
   // 画像リスト用のサンプルデータ
   let imageList: Array<{id: string, url: string, name: string, prompt: string}> = [];
 
-  onMount(() => {
+  onMount(async () => {
     const args = $modalStore[0]?.meta;
     console.log('TextEdit Dialog mounted, modal store:', args);
+    selectedModel = await pref.getOrDefault('kontext/pro');
 
     if (args) {
       title = args.title;
@@ -89,7 +96,8 @@
 
     $modalStore[0].response?.({
       image: imageSource,
-      prompt: prompt
+      prompt: prompt,
+      model: selectedModel,
     });
 
     modalStore.close();
@@ -114,14 +122,29 @@
       </div>
       <div class="right-pane">
         <div class="right-pane-content">
-          <h3>指示テンプレート</h3>
-          <div class="image-list">
-            {#each imageList as image (image.id)}
-              <div class="image-item" on:click={() => onImageSelect(image)} on:keydown={(e) => e.key === 'Enter' && onImageSelect(image)} tabindex="0" role="button">
-                <img src={image.url} alt={image.name} class="image-thumbnail" />
-                <div class="image-name">{image.name}</div>
+          <div class="setting-section">
+            <h3>モデル</h3>
+            <div class="flex flex-row items-center gap-4">
+              <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+                <RadioItem bind:group={selectedModel} name="model" value={'kontext/pro'}><span class="radio-text">Pro</span></RadioItem>
+                <RadioItem bind:group={selectedModel} name="model" value={'kontext/max'}><span class="radio-text">Max</span></RadioItem>
+              </RadioGroup>
+              <div class="feathral-cost-container">
+                <FeathralCost cost={selectedModel == 'kontext/pro' ? 6 : 13}/>
               </div>
-            {/each}
+            </div>
+          </div>
+          
+          <div class="setting-section">
+            <h3>指示テンプレート</h3>
+            <div class="image-list">
+              {#each imageList as image (image.id)}
+                <div class="image-item" on:click={() => onImageSelect(image)} on:keydown={(e) => e.key === 'Enter' && onImageSelect(image)} tabindex="0" role="button">
+                  <img src={image.url} alt={image.name} class="image-thumbnail" />
+                  <div class="image-name">{image.name}</div>
+                </div>
+              {/each}
+            </div>
           </div>
         </div>
       </div>
@@ -155,6 +178,7 @@
   
   .right-pane {
     flex: 1;
+    min-width: 0;
     border-left: 1px solid rgb(var(--color-surface-300));
     padding-left: 16px;
     overflow-y: auto;
@@ -167,23 +191,21 @@
     gap: 16px;
   }
   
+  .setting-section {
+    margin-bottom: 24px;
+  }
+  
+  .feathral-cost-container {
+    width: 80px;
+    display: flex;
+    justify-content: center;
+  }
+  
   .right-pane h3 {
     font-family: '源暎エムゴ';
     font-size: 18px;
     margin: 0 0 8px 0;
     color: rgb(var(--color-primary-500));
-  }
-  
-  .setting-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .setting-item label {
-    font-weight: 600;
-    font-size: 14px;
-    color: rgb(var(--color-surface-700));
   }
   
   .image-list {

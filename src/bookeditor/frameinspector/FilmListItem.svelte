@@ -307,7 +307,7 @@
         <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
           <img draggable={false} src={inpaintIcon} alt="インペイント"/>
         </button>
-        <button class="transformix-item" use:toolTip={"テキスト編集[13]"} on:click={onTextEdit}>
+        <button class="transformix-item" use:toolTip={"テキスト編集[6]"} on:click={onTextEdit}>
           <img draggable={false} src={texteditIcon} alt="テキスト編集"/>
         </button>
         <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
