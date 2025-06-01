@@ -12,6 +12,7 @@ import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import { Film } from '../lib/layeredCanvas/dataModels/film';
 import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
 import { FrameElement, calculatePhysicalLayout, findLayoutOf, constraintLeaf } from '../lib/layeredCanvas/dataModels/frameTree';
+import { get } from 'svelte/store';
 
 // ストアを直接インポート
 import { frameInspectorTarget } from './frameinspector/frameInspectorStore';
@@ -34,6 +35,9 @@ import {
   commit, revert, undoBookState, redoBookState,
   delayedCommiter
 } from './operations/commitOperations';
+import { dominantMode } from '../uiStore';
+import { toastStore } from '@skeletonlabs/skeleton';
+
 
 export class BookWorkspaceOperators implements BookOperators {
   private canvas: HTMLCanvasElement;
@@ -233,6 +237,10 @@ export class BookWorkspaceOperators implements BookOperators {
   rescueResidual(media: HTMLCanvasElement | HTMLVideoElement | string): void {
     console.log("rescueResidual", media);
 
+    if (get(dominantMode) !== "standard") { 
+      toastStore.trigger({ message: 'この操作は落書きモードでは使えません。', timeout: 1500});
+      return; 
+    }
     if (typeof media === "string") { return; }
 
     const lastPage = this.book.pages[this.book.pages.length - 1];
