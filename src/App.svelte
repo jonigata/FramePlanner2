@@ -50,6 +50,7 @@
   //  import JsonReader from './utils/JsonReader.svelte';
   import VideoMaker from './videomaker/VideoMaker.svelte';
   import ToolBar from './toolbar/ToolBar.svelte'
+  import Footer from './Footer.svelte';
   import AdContainer from './utils/ads/AdContainer.svelte';
   import Downloader from './downloader/Downloader.svelte';
   import TemplateChooser from './bookeditor/TemplateChooser.svelte';
@@ -163,6 +164,7 @@
     <DownloadButton />
     <VideoButton />
   </div>
+  <Footer/>
 </div>
 
 <!-- dialogs -->
