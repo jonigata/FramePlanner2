@@ -168,6 +168,7 @@ function drawConcentrationBubble(context: CanvasRenderingContext2D, method: stri
 function drawThoughtBubble(context: CanvasRenderingContext2D, method: string, seed: string, size: [number,number], opts: any) {
   const rng = seedrandom(seed);
   const [w, h] = size;
+  const radius = Math.min(w, h) * 0.5;
 
   if (method === "fill") {
     context.save();
@@ -178,22 +179,27 @@ function drawThoughtBubble(context: CanvasRenderingContext2D, method: string, se
     context.ellipse(0, 0, 1, 1, 0, 0, 2 * Math.PI);
     context.fill();
 
-    context.lineWidth = 1 / Math.min(w, h);
+    context.lineWidth = 1;
     // draw n radial line
     const n = opts.lineCount;
     context.save();
     const gradient = context.createRadialGradient(0, 0, 1, 0, 0, opts.lineLength);
     const color = context.strokeStyle;
     context.fillStyle = color;
+    const length = opts.lineLength;
+    const halfLength = length * 0.5;
+    const innerLength = (1.0 - halfLength);
+    const outerLength = (1.0 + halfLength);
     for (let i = 0; i < n; i++) {
       const angle = (i * 2 * Math.PI) / n;
       const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
-      const [lx, ly] = [dx * opts.lineLength, dy * opts.lineLength];
+      const [ix, iy] = scale2D([dx, dy], innerLength);
+      const [ox, oy] = scale2D([dx, dy], outerLength);
       const jitter0 = rng() * opts.jitter;
       const jitter1 = rng() * opts.jitter;
       const wave = 1.0 + (Math.sin(angle * opts.waveFrequency) * opts.waveAmplitude);
-      const p0 = scale2D([dx, dy], (1.0 - jitter0) * wave);
-      const p1 = scale2D([lx, ly], (1.0 + jitter1) * wave);
+      const p0 = scale2D([ix, iy], (1.0 - jitter0) * wave);
+      const p1 = scale2D([ox, oy], (1.0 + jitter1) * wave);
       drawRhombus(context, p0, p1, opts.lineWidth);
     }
     context.restore();
