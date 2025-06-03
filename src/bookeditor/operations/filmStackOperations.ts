@@ -151,8 +151,7 @@ export async function handleCoverCommand<T extends FilmOperationTarget>(
   film.setShiftedScale(target.page.paperSize, 1.0);
   
   target.filmStack.films.push(film);
-  
-  targetStore.set(get(targetStore));
+  commit(null);
 }
 
 export async function handleEraserCommand<T extends FilmOperationTarget>(
