@@ -32,6 +32,7 @@
     "shout",
     "ellipse",
     "concentration",
+    "thought",
     "polygon",
     "strokes",
     "double-strokes",

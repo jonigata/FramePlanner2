@@ -3,7 +3,7 @@ import { QuickHull } from "../geometry/quickHull"
 import paper from 'paper';
 import { tailCoordToWorldCoord, jitterDistances } from "../geometry/bubbleGeometry";
 import { color2string, generateRandomAngles, generateSuperEllipsePoints, subdividePointsWithBump } from "../geometry/bubbleGeometry";
-import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, projectionScalingFactor2D } from "../geometry/geometry";
+import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, scale2D, projectionScalingFactor2D } from "../geometry/geometry";
 import { PaperOffset } from 'paperjs-offset'
 import type { Vector, Rect } from "../geometry/geometry";
 import rough from 'roughjs';
@@ -27,6 +27,7 @@ export function getBubbleName(shape: string) {
     case "square":  return "四角形";
     case "ellipse": return "楕円";
     case "concentration": return "意識";
+    case "thought": return "思考";
     case "polygon": return "多角形";
     case "strokes": return "線";
     case "double-strokes":  return "二重線";
@@ -65,6 +66,9 @@ export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod
       break;
     case "concentration":
       drawConcentrationBubble(context, method, seed, size, opts);
+      break;
+    case "thought":
+      drawThoughtBubble(context, method, seed, size, opts);
       break;
     case "polygon":
       drawPolygonBubble(context, method, seed, size, opts);
@@ -108,6 +112,8 @@ export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod
     case "rounded-mind":
       drawRoundedMindBubble(context, method, seed, size, opts);
       break;
+    case "concentration":
+    case "thought":
     case "none":
       break;
     default:
@@ -149,9 +155,6 @@ function drawConcentrationBubble(context: CanvasRenderingContext2D, method: stri
     context.stroke();
     context.restore();
 
-    context.beginPath();
-    context.ellipse(0, 0, 1, 1, 0, 0, 2 * Math.PI);
-    context.fill();
     context.restore();
   } else if (method === "clip") {
     context.beginPath();
@@ -160,6 +163,65 @@ function drawConcentrationBubble(context: CanvasRenderingContext2D, method: stri
   } else {  // stroke
     // do nothing;
   }
+}
+
+function drawThoughtBubble(context: CanvasRenderingContext2D, method: string, seed: string, size: [number,number], opts: any) {
+  const rng = seedrandom(seed);
+  const [w, h] = size;
+
+  if (method === "fill") {
+    context.save();
+    context.translate(0, 0);
+    context.scale(w / 2, h / 2);
+
+    context.beginPath();
+    context.ellipse(0, 0, 1, 1, 0, 0, 2 * Math.PI);
+    context.fill();
+
+    context.lineWidth = 1 / Math.min(w, h);
+    // draw n radial line
+    const n = opts.lineCount;
+    context.save();
+    const gradient = context.createRadialGradient(0, 0, 1, 0, 0, opts.lineLength);
+    const color = context.strokeStyle;
+    context.fillStyle = color;
+    for (let i = 0; i < n; i++) {
+      const angle = (i * 2 * Math.PI) / n;
+      const [dx, dy] = [Math.cos(angle), Math.sin(angle)];
+      const [lx, ly] = [dx * opts.lineLength, dy * opts.lineLength];
+      const jitter0 = rng() * opts.jitter;
+      const jitter1 = rng() * opts.jitter;
+      const wave = 1.0 + (Math.sin(angle * opts.waveFrequency) * opts.waveAmplitude);
+      const p0 = scale2D([dx, dy], (1.0 - jitter0) * wave);
+      const p1 = scale2D([lx, ly], (1.0 + jitter1) * wave);
+      drawRhombus(context, p0, p1, opts.lineWidth);
+    }
+    context.restore();
+
+    context.restore();
+  } else if (method === "clip") {
+    context.beginPath();
+    context.ellipse(0, 0, w*0.5, h*0.5, 0, 0, 2 * Math.PI);
+    context.clip();
+  } else {  // stroke
+    // do nothing;
+  }
+}
+
+function drawRhombus(ctx: CanvasRenderingContext2D, p0: Vector, p1: Vector, width: number) {
+  // p0とp1を結ぶ線分の中点の左右にwidthの半分だけ平行移動した点を求める
+  const [dx, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
+  const [mx, my] = [dx / 2, dy / 2];
+  const [nx, ny] = [-my, mx]; // 垂直ベクトル
+  const [qx, qy] = [mx + nx * width / 2, my + ny * width / 2];
+  const [rx, ry] = [mx - nx * width / 2, my - ny * width / 2];
+  ctx.beginPath();
+  ctx.moveTo(p0[0], p0[1]);
+  ctx.lineTo(p0[0] + qx, p0[1] + qy);
+  ctx.lineTo(p1[0], p1[1]);
+  ctx.lineTo(p0[0] + rx, p0[1] + ry);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawStrokesBubble(context: CanvasRenderingContext2D, method: string, seed: string, size: [number,number], opts: any) {
@@ -404,6 +466,8 @@ export function getPath(shape: string, size: Vector, opts: any, seed: string): p
         return getSoftMindPath(size, opts, seed);
       case 'rounded-mind':
         return getRoundedMindPath(size, opts, seed);
+      case "concentration":
+      case "thought":
       case 'none':
         return null;
     }

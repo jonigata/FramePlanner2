@@ -543,6 +543,14 @@ export const bubbleOptionSets: { [key: string]: any } = {
     lineCount: { label: "線の本数", type: "number", min: 100, max: 300, step: 1, init: (b: Bubble) => 200 },
     lineLength: { label: "線の長さ", type: "number", min: 1.05, max: 1.50, step: 0.01, init: (b: Bubble) => 1.3 },
   },
+  "thought": {
+    lineCount: { label: "線の本数", type: "number", min: 100, max: 600, step: 1, init: (b: Bubble) => 400 },
+    lineLength: { label: "線の長さ", type: "number", min: 1.05, max: 1.50, step: 0.01, init: (b: Bubble) => 1.3 },
+    lineWidth: { label: "線の太さ", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.14 },
+    jitter: { label: "ジッター", type: "number", min: 0, max: 0.5, step: 0.001, init: (b: Bubble) => 0.08 },
+    waveFrequency: { label: "ウェーブ周期", type: "number", min: 8, max: 64, step: 1, init: (b: Bubble) => 8 },
+    waveAmplitude: { label: "ウェーブ振幅", type: "number", min: 0, max: 0.1, step: 0.001, init: (b: Bubble) => 0 },
+  },
   "polygon": {
     link: {hint:"結合", icon:"unite"}, 
     tailTip: {hint: "しっぽの先端",icon:"tail", init: (b: Bubble) => [0,0]}, 
