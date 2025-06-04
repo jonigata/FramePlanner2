@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import streamSaver from 'streamsaver';
+  import { _ } from 'svelte-i18n';
   import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book } from '../lib/book/book';
@@ -79,11 +80,11 @@
   function getFileSystemName(id: string) {
     switch (getFileSystemType(id)) {
       case 'cloud':
-        return 'クラウドストレージ';
+        return $_('storage.cloudStorage');
       case 'fsa':
-        return 'ローカルストレージ';
+        return $_('storage.localStorage');
       case 'local':
-        return 'ブラウザストレージ';
+        return $_('storage.browserStorage');
     }
   }
 
@@ -128,7 +129,7 @@
         catch (e) {
           console.error(e);
           if (e instanceof DOMException && e.name === "QuotaExceededError") {
-            toastStore.trigger({ message: "記憶領域が不足しています。早めに領域を空けたのち、ダンプを取るなどの対応を行ってください。放置した場合、FramePlannerのデータがすべて消滅することがあります。", autohide: false });
+            toastStore.trigger({ message: $_('messages.memoryInsufficient'), autohide: false });
           }
         }
       }
@@ -177,19 +178,19 @@
         if (currentFileInfo) {
           if (currentFileInfo.fileSystem === 'cloud') {
             // 現状ここは使われないはず(クラウドファイルの直接編集ができないので)
-            toastStore.trigger({ message: "最終アクセスファイルがクラウドファイルのため、<br/>クラウドストレージの接続を待っています", timeout: 3000});
+            toastStore.trigger({ message: $_('fileManager.lastAccessFileIsCloud'), timeout: 3000});
             await waitForChange(cloudState, s => s != 'uncertain');
             if ($cloudState === 'unlinked') {
               // TODO: リロードしちゃうので無意味
-              toastStore.trigger({ message: "クラウドストレージに接続できませんでした", timeout: 3000});
+              toastStore.trigger({ message: $_('fileManager.cloudConnectionFailed'), timeout: 3000});
             }
-            toastStore.trigger({ message: "クラウドファイルの読み込みには<br/>時間がかかることがあります", timeout: 3000});
+            toastStore.trigger({ message: $_('fileManager.cloudFileLoadingMessage'), timeout: 3000});
           }
           if (currentFileInfo.fileSystem === 'fsa') {
             await waitForChange(fsaState, s => s!= 'uncertain');
             if ($fsaState === 'unlinked') {
               // TODO: リロードしちゃうので無意味
-              toastStore.trigger({ message: "ローカル記憶領域との接続に失敗しました。再接続してください。", timeout: 3000 });
+              toastStore.trigger({ message: $_('fileManager.localStorageConnectionFailed'), timeout: 3000 });
             }
           }
           try {
@@ -332,7 +333,7 @@
       $mainBookTitle = title;
       $frameInspectorTarget = null;
       analyticsEvent('new_book');
-      toastStore.trigger({ message: "新規ファイルを作成しました", timeout: 1500});
+      toastStore.trigger({ message: $_('fileManager.newFileCreated'), timeout: 1500});
     }
   }
 
@@ -347,7 +348,7 @@
     bubble.displayName= "ふきだし";
     await saveBubbleTo(bubble, file);
     await folder.link(getCurrentDateTime(), file.id);
-    toastStore.trigger({ message: "フキダシテンプレートを登録しました<br/>シェイプと同様に使えます", timeout: 1500});
+    toastStore.trigger({ message: $_('fileManager.registeredBubbleTemplate'), timeout: 1500});
   }
 
   $:onLoadRequest($loadToken);
@@ -358,7 +359,7 @@
     $loading = true;
     const fsType = getFileSystemType(lt.fileSystem.id);
     if (fsType == 'cloud') {
-      toastStore.trigger({ message: "クラウドファイルの読み込みには<br/>時間がかかることがあります", timeout: 3000});
+      toastStore.trigger({ message: $_('fileManager.cloudFileLoadingMessage'), timeout: 3000});
     }
     const file = (await lt.fileSystem.getNode(lt.nodeId))!.asFile()!;
     const book = await loadBookFrom(lt.fileSystem, file);
@@ -384,7 +385,7 @@
     console.log("exception handler");
     console.error(e);
     await clearCurrentFileInfo();
-    toastStore.trigger({ message: "ファイルの読み込みに失敗しました。リロードします", timeout: 1500});
+    toastStore.trigger({ message: $_('fileManager.fileLoadFailed'), timeout: 1500});
     setTimeout(() => {
       location.reload();
     }, 1500);
@@ -473,10 +474,10 @@
 
   async function unlinkStorageDirectory() {
     const r = await waitDialog<boolean>('confirm', { 
-      title: '保存フォルダの解除',
-      message: '保存フォルダを解除しますか？\n※解除後、再び同じ場所を指定すれば再利用できます',
-      positiveButtonText: '解除する',
-      negativeButtonText: '解除しない',
+      title: $_('storage.unlinkStorageConfirm'),
+      message: $_('storage.unlinkStorageMessage'),
+      positiveButtonText: $_('storage.unlinkButton'),
+      negativeButtonText: $_('storage.notUnlinkButton'),
     });
     if (!r) { return; }
 
@@ -506,8 +507,8 @@
     on:clickAway={() => ($fileManagerOpen = false)}
   >
     <div class="drawer-content">
-      <h2>ブラウザストレージ</h2>
-      <p>この領域はブラウザの「サイトデータ消去」操作などで消失する可能性があります。大事なファイルは「ローカルストレージ」や「クラウドストレージ」に退避するようにしてください。</p>
+      <h2>{$_('storage.browserStorage')}</h2>
+      <p>{$_('messages.dataLossWarning')}</p>
       <div class="mb-4"></div>
       <div class="cabinet variant-ghost-tertiary rounded-container-token">
         {#if $localState == 'linked'}
@@ -515,7 +516,7 @@
             fileSystem={localFileSystem} 
             removability={"unremovable"} 
             spawnability={"file-spawnable"} 
-            filename={"デスクトップ"} 
+            filename={$_('storage.desktop')} 
             bindId={localFolders.desktop[0]} 
             parent={localFolders.root} 
             index={0} 
@@ -530,7 +531,7 @@
             fileSystem={localFileSystem} 
             removability={"unremovable"} 
             spawnability={"folder-spawnable"} 
-            filename={"キャビネット"} 
+            filename={$_('storage.cabinet')} 
             bindId={localFolders.cabinet[0]} 
             parent={localFolders.root} 
             index={0} 
@@ -545,7 +546,7 @@
             fileSystem={localFileSystem} 
             removability={"unremovable"} 
             spawnability={"unspawnable"} 
-            filename={"ごみ箱"} 
+            filename={$_('storage.trash')} 
             bindId={localFolders.trash[0]} 
             parent={localFolders.root} 
             index={1} 
@@ -555,28 +556,27 @@
         {/if}
       </div>
       <div class="flex flex-row gap-2 items-center justify-center">
-        <p>ファイルシステム使用量: {usedSize ?? '計算中'}</p>
-        <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>画像一覧</button>
+        <p>{$_('storage.fileSystemUsage')}: {usedSize ?? $_('storage.calculating')}</p>
+        <button class="btn-sm w-32 variant-filled" on:click={displayStoredImages}>{$_('storage.imageList')}</button>
       </div>
       <div class="flex flex-row gap-2 items-center justify-center p-2">
-        <button class="btn-sm w-32 variant-filled"  on:click={() => dump(localFileSystem)}>ダンプ</button>
-        <button class="btn-sm w-32 variant-filled"  on:click={() => undump(localFileSystem)}>リストア</button>
+        <button class="btn-sm w-32 variant-filled"  on:click={() => dump(localFileSystem)}>{$_('storage.dump')}</button>
+        <button class="btn-sm w-32 variant-filled"  on:click={() => undump(localFileSystem)}>{$_('storage.restore')}</button>
       </div>
-      <h2>ローカルストレージ</h2>
-      <p>この領域はローカルのHDD、SSDなどに保存されます。</p>
+      <h2>{$_('storage.localStorage')}</h2>
+      <p>{$_('storage.localStorageDescription')}</p>
       {#if $fsaState == 'unlinked'}
-        <h3>保存フォルダ</h3>
+        <h3>{$_('storage.saveFolder')}</h3>
         <p>
-          データを保存するフォルダを指定してください。
-          前回指定したフォルダが見えていない場合、同じ場所を指定すれば復活します。
+          {$_('storage.selectFolderDescription')}
         </p>
         <div class="flex flex-row ml-8 items-center gap-4">
           <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory} disabled={!fsaapi}>
-            保存フォルダを指定
+            {$_('storage.selectSaveFolder')}
           </button>
           {#if !fsaapi}
             <div>
-              この環境ではローカルストレージを利用できません
+              {$_('messages.localStorageNotAvailable')}
             </div>  
           {/if}
         </div>
@@ -586,7 +586,7 @@
             fileSystem={fsaFileSystem} 
             removability={"unremovable"} 
             spawnability={"folder-spawnable"} 
-            filename={`${storageFolderName}キャビネット`} 
+            filename={`${storageFolderName}${$_('storage.cabinet')}`} 
             bindId={fsaFolders.cabinet[0]} 
             parent={fsaFolders.root} 
             index={0} 
@@ -599,7 +599,7 @@
             fileSystem={fsaFileSystem} 
             removability={"unremovable"} 
             spawnability={"unspawnable"} 
-            filename={`${storageFolderName}ごみ箱`} 
+            filename={`${storageFolderName}${$_('storage.trash')}`} 
             bindId={fsaFolders.trash[0]} 
             parent={fsaFolders.root} 
             index={1} 
@@ -609,28 +609,28 @@
         </div>
         <div class="flex flex-row ml-8 items-center gap-4">
           <button class="btn-sm w-48 variant-filled" on:click={unlinkStorageDirectory} disabled={!fsaapi}>
-            保存ディレクトリの解除
+            {$_('storage.unlinkStorageDirectory')}
           </button>
         </div>
         <div class="flex flex-row gap-2 items-center justify-center p-2">
-          <button class="btn-sm w-32 variant-filled"  on:click={() => dump(fsaFileSystem)}>ダンプ</button>
-          <button class="btn-sm w-32 variant-filled"  on:click={() => undump(fsaFileSystem)}>リストア</button>
+          <button class="btn-sm w-32 variant-filled"  on:click={() => dump(fsaFileSystem)}>{$_('storage.dump')}</button>
+          <button class="btn-sm w-32 variant-filled"  on:click={() => undump(fsaFileSystem)}>{$_('storage.restore')}</button>
         </div>
       {:else}
         <p>
-          <button class="btn-sm w-48 variant-filled">保存ディレクトリを解除</button>
+          <button class="btn-sm w-48 variant-filled">{$_('storage.unlinkStorageDirectory')}</button>
         </p>
       {/if}
 
-      <h2>クラウドストレージ</h2>
-      <p>データをクラウドに保存します。この機能はβ版です。断りなくサービス停止する可能性があります。BASICプランで使えます。</p>
+      <h2>{$_('storage.cloudStorage')}</h2>
+      <p>{$_('storage.cloudStorageDescription')}</p>
       {#if $cloudState == 'linked'}
         <div class="cabinet variant-ghost-primary rounded-container-token">
           <FileManagerFolder 
             fileSystem={cloudFileSystem} 
             removability={"unremovable"} 
             spawnability={"folder-spawnable"} 
-            filename={"クラウドキャビネット"} 
+            filename={$_('storage.cloudCabinet')} 
             bindId={cloudFolders.cabinet[0]} 
             parent={cloudFolders.root} 
             index={0} 
@@ -643,7 +643,7 @@
             fileSystem={cloudFileSystem} 
             removability={"unremovable"} 
             spawnability={"unspawnable"} 
-            filename={"クラウドごみ箱"} 
+            filename={$_('storage.cloudTrash')} 
             bindId={cloudFolders.trash[0]} 
             parent={cloudFolders.root} 
             index={1} 

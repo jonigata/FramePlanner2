@@ -1,6 +1,7 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
 
   let filesize: string | null = null;
   let sourceTitle: string = '';  
@@ -23,24 +24,24 @@
 
 <div class="card p-4 w-full max-w-lg">
   <div class="px-4">
-    <h3>ダンプ</h3>
+    <h3>{$_('dump.title')}</h3>
     <div class="p-2">
-      <p>FramePlannerの<b>{sourceTitle}</b>データを、HDDやSSDにアーカイブファイルとして<b>ダウンロード</b>します。</p>
-      <p class="mt-2">ローカルストレージの残り容量には十分注意してください。ストレージ容量が不足していると、元のファイルを損傷するおそれがあります。</p>
+      <p>{@html $_('dump.description').replace(/\\n/g, '<br>')}</p>
+      <p class="mt-2">{$_('dump.warning')}</p>
       <!-- <p class="mt-2">推定ファイルサイズ： <b>{filesize ?? '計算中'}</b></p> -->
     </div>
   </div>
 
   <div class="flex justify-end gap-2 mt-4">
     <button type="button" class="btn variant-ghost" on:click={handleCancel}>
-      今はやらない
+      {$_('dump.cancel')}
     </button>
     <button 
       type="button" 
       class="btn variant-filled-primary"
       on:click={handleSubmit}
     >
-      ダンプを実行する
+      {$_('dump.startDump')}
     </button>
   </div>
 </div>

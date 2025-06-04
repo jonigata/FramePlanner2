@@ -3,6 +3,7 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import { createPreference, type FileSystemPreference } from '../preferences';
   import { buildFileSystem, fileSystemExists } from './localFileSystem';
+  import { _ } from 'svelte-i18n';
 
   // 3シーン分の状態
   let step = 0;
@@ -66,33 +67,33 @@
 </script>
 
 <div class="card p-4 w-full max-w-lg">
-  <h2 class="h2">新規ローカルストレージの作成</h2>
+  <h2 class="h2">{$_('fileManager.newLocalStorageCreation')}</h2>
 
   <div class="variant-ghost-primary p-1 pt-2 m-2 mb-4 rounded">
     <div class="px-4">
       {#if step === 0}
-        <h3>フォルダの指定</h3>
+        <h3>{$_('fileManager.folderSpecification')}</h3>
         <div class="p-2">
-          <p>OS(Windows, Macなど)のフォルダ上にFramePlannerのストレージデータベースを作成します。</p>
-          <p>ストレージデータベースを保存する空(カラ)のフォルダを指定してください。</p>
+          <p>{$_('fileManager.folderSpecificationDescription')}</p>
+          <p>{$_('fileManager.selectEmptyFolder')}</p>
           <p>
-            <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory}>保存フォルダを指定</button>
+            <button class="btn-sm w-48 variant-filled" on:click={selectStorageDirectory}>{$_('storage.selectSaveFolder')}</button>
           </p>
-          <p>すでにデータベース作成済みのフォルダを指定した場合、初期化をスキップして以前のまま利用します。</p>
+          <p>{$_('fileManager.reuseExistingDatabase')}</p>
         </div>
       {:else if step === 1}
-        <h3>初期化</h3>
+        <h3>{$_('fileManager.initialization')}</h3>
         <div class="p-2">
-          <p>指定されたフォルダにデータベースが見つからないため、初期化を実行します。</p>
+          <p>{$_('fileManager.initializationDescription')}</p>
           <p class="warning">
-            この操作はフォルダの中身を削除します。この操作はキャンセルできません。既存のデータベースを接続したかった場合、間違った階層を指定していないかどうかなど十分に注意してください。
+            {$_('fileManager.initializationWarning')}
           </p>
-          <ProgressBar label="Progress Bar" value={copyProgress} max={1} />
+          <ProgressBar label={$_('fileManager.progressBar')} value={copyProgress} max={1} />
         </div>
       {:else if step === 2}
-        <h3>完了</h3>
+        <h3>{$_('fileManager.complete')}</h3>
         <div class="p-2">
-          <p>準備が完了しました。「完了」を押すと新しいストレージデータベースをデフォルトのデスクトップ・キャビネット領域として設定します。</p>
+          <p>{$_('fileManager.completeDescription')}</p>
         </div>
       {/if}
     </div>
@@ -100,20 +101,20 @@
 
   <div class="flex justify-between items-center mt-4 px-4">
     <button type="button" class="btn variant-ghost" on:click={handleCancel}>
-      キャンセル
+      {$_('fileManager.cancel')}
     </button>
     <div class="flex gap-2">
       {#if step === 0}
         <button type="button" class="btn variant-filled-primary" on:click={handleNext} disabled={storageFolder == null}>
-          {reuse ? "再利用する" : "作成する"}
+          {reuse ? $_('fileManager.reuse') : $_('fileManager.create')}
         </button>
       {:else if step === 1}
         <button type="button" class="btn variant-filled-primary" on:click={handleNext} disabled={0 < copyProgress}>
-          OK
+          {$_('fileManager.ok')}
         </button>
       {:else if step === 2}
         <button type="button" class="btn variant-filled-primary" on:click={handleNext}>
-          完了
+          {$_('fileManager.complete')}
         </button>
       {/if}
     </div>

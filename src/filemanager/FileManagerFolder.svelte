@@ -2,6 +2,7 @@
   import type { FileSystem, Folder, NodeId, BindId, Node, EmbodiedEntry } from "../lib/filesystem/fileSystem";
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip, importEnvelopeZipToFolder } from "./fileManagerStore";
   import { readEnvelope, readOldEnvelope } from "../lib/book/envelope";
   import { newBook } from "../lib/book/book";
@@ -105,7 +106,7 @@
             console.log("importing envelope done")
             await node.link(basename, newFile.id);
             node = node;
-            toastStore.trigger({ message: "envelopeファイルをインポートしました", timeout: 2000});
+            toastStore.trigger({ message: $_('fileManager.envelopeImported'), timeout: 2000});
           }
           finally {
             $progress = null;
@@ -130,11 +131,11 @@
             
             // 更新を反映
             node = node;
-            toastStore.trigger({ message: "フォルダ構造をインポートしました", timeout: 2000});
+            toastStore.trigger({ message: $_('fileManager.folderImported'), timeout: 2000});
           }
           catch (error) {
             console.error('ZIPファイルのインポート中にエラーが発生しました:', error);
-            toastStore.trigger({ message: "ZIPファイルのインポートに失敗しました", timeout: 3000});
+            toastStore.trigger({ message: $_('fileManager.zipImportFailed'), timeout: 3000});
           }
           finally {
             $progress = null;
@@ -373,10 +374,10 @@
       document.body.removeChild(a);
       
       // 成功メッセージ
-      toastStore.trigger({ message: "ZIPファイルとしてエクスポートしました", timeout: 2000});
+      toastStore.trigger({ message: $_('fileManager.exportedAsZip'), timeout: 2000});
     } catch (error) {
       console.error('エクスポート中にエラーが発生しました:', error);
-      toastStore.trigger({ message: "エクスポート中にエラーが発生しました", timeout: 3000});
+      toastStore.trigger({ message: $_('fileManager.exportError'), timeout: 3000});
     } finally {
       // プログレスバーの非表示
       $progress = null;
@@ -399,23 +400,23 @@
     draggable={removability === "removable"}
   >
     <div class="folder-title">
-      <div class="foldername" use:toolTip={"ドラッグで移動"}>
+      <div class="foldername" use:toolTip={$_('fileManager.moveByDrag')}>
         <img class="button" src={folderIcon} alt="symbol"/>
         <RenameEdit bind:this={renameEdit} bind:editing={renaming} value={filename} on:submit={submitRename}/>
       </div>
       {#if isRootTrash}
-        <button class="btn btn-sm variant-filled recycle-button px-1 py-0" on:click={recycle}>空にする</button>
+        <button class="btn btn-sm variant-filled recycle-button px-1 py-0" on:click={recycle}>{$_('storage.emptyTrash')}</button>
       {/if}
       <div class="button-container">
         {#if spawnability === "file-spawnable"}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="button" src={newFileIcon} alt="new file" on:click={addFile} use:toolTip={"ページ作成"}/>
+          <img class="button" src={newFileIcon} alt="new file" on:click={addFile} use:toolTip={$_('fileManager.createPage')}/>
         {/if}
         {#if spawnability === "folder-spawnable"}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} use:toolTip={"フォルダ作成"}/>
+          <img class="button" src={newFolderIcon} alt="new folder" on:click={addFolder} use:toolTip={$_('fileManager.createFolder')}/>
         {/if}
       </div> 
     </div>
@@ -425,21 +426,21 @@
           <!-- アーカイブボタン - フォルダのエクスポート用 -->
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="button" src={packageExportIcon} alt="archive" on:click={exportAsZip} use:toolTip={"フォルダをZIPに保存"}/>
+          <img class="button" src={packageExportIcon} alt="archive" on:click={exportAsZip} use:toolTip={$_('storage.archiveToZip')}/>
         {/if}
       </div>
       <div class="button-container">
         {#if isDiscardable}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"フォルダ名変更"}/>
+          <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={$_('fileManager.changeFolderName')}/>
         {/if}
       </div>
       <div class="button-container">
         {#if isDiscardable}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-          <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} use:toolTip={"捨てる"}/>
+          <img class="button" src={trashIcon} alt="trash" on:click={removeFolder} use:toolTip={$_('fileManager.discard')}/>
         {/if}
       </div>
     </div>

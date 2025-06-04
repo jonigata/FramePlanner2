@@ -2,7 +2,8 @@
   import { fileManagerDragging, fileManagerMarkedFlag, loadBookFrom, loadToken, saveBookTo, selectedFile, type Dragging } from "./fileManagerStore";
   import type { NodeId, BindId, FileSystem, Folder } from "../lib/filesystem/fileSystem";
   import { mainBook, bookOperators } from '../bookeditor/workspaceStore';
-  import { createEventDispatcher, onMount } from 'svelte'
+  import { createEventDispatcher, onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import FileManagerInsertZone from "./FileManagerInsertZone.svelte";
   import RenameEdit from "../utils/RenameEdit.svelte";
   import { toolTip } from '../utils/passiveToolTipStore';
@@ -91,7 +92,7 @@
   async function onClick(e: MouseEvent) {
     if ($selectedFile === nodeId) {
       if (fileSystem.isVault) {
-        toastStore.trigger({ message: `クラウドファイルを直接開くことはできません<br/>ローカルにコピーしてから開いてください`, timeout: 3000});
+        toastStore.trigger({ message: $_('fileManager.cloudFileCannotOpenDirectly'), timeout: 3000});
         return;
       }
       $loadToken = { fileSystem, nodeId, parent, bindId };
@@ -109,7 +110,7 @@
     const targetBook = await loadBookFrom(fileSystem, file);
     targetBook.pages.push(...markedPages);
     await saveBookTo(targetBook, fileSystem, file);
-    toastStore.trigger({ message: 'マークされたページを<br/>コピーしました', timeout: 1500});
+    toastStore.trigger({ message: $_('fileManager.markedPagesCopied'), timeout: 1500});
   }
 
   async function makePackage() {
@@ -130,7 +131,7 @@
 <div class="file" class:selected={nodeId === $selectedFile}>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="file-title" class:loaded={loaded} use:toolTip={"ドラッグで移動、ダブルクリックで編集"}
+  <div class="file-title" class:loaded={loaded} use:toolTip={$_('fileManager.moveByDragEditByDoubleClick')}
     draggable={true} on:click={onClick} on:dragstart={onDragStart} on:dragend={onDragEnd}>
     <img class="button" src={fileIcon} alt="symbol"/>
     {#if isDiscardable}
@@ -145,24 +146,24 @@
     <div class="button-container">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="button" src={pasteIcon} alt="rename" on:click={copyMarkedPages} use:toolTip={"選択ページを\nこのファイルにコピー"}/>
+      <img class="button" src={pasteIcon} alt="rename" on:click={copyMarkedPages} use:toolTip={$_('fileManager.selectPagesCopy')}/>
     </div>  
   {/if}
   <div class="button-container">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img class="button" src={packageIcon} alt="rename" on:click={makePackage} use:toolTip={"パッケージ作成"}/>
+    <img class="button" src={packageIcon} alt="rename" on:click={makePackage} use:toolTip={$_('fileManager.createPackage')}/>
   </div>  
   <div class="button-container">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={"ページ名変更"}/>
+    <img class="button" src={renameIcon} alt="rename" on:click={startRename} use:toolTip={$_('fileManager.changeFileName')}/>
   </div>  
   <div class="button-container">
     {#if isDiscardable}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} use:toolTip={"捨てる"}/>
+      <img class="button" src={trashIcon} alt="trash" on:click={removeFile} use:toolTip={$_('fileManager.discard')}/>
     {/if}
   </div>
   <FileManagerInsertZone on:drop={onDrop} bind:acceptable={acceptable} depth={path.length}/>
