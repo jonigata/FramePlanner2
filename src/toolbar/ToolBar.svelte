@@ -15,6 +15,8 @@
   import { subscriptionPlans } from '../utils/billingData/subscriptionPlans';
   import { mainBookTitle } from '../bookeditor/workspaceStore';
   import sprytIcon from '../assets/spryt.webp';
+  import LanguageSwitcher from './LanguageSwitcher.svelte';
+  import { _ } from 'svelte-i18n';
 
   import undoIcon from '../assets/undo.webp';
   import redoIcon from '../assets/redo.webp';
@@ -165,30 +167,32 @@
 </script>
 
 <div class="w-screen min-h-8 bg-surface-900 text-slate-100 gap-2 flex items-center pl-4 pr-2 pt-2 pb-2">
-  <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={undo} use:toolTip={"アンドゥ"}>
+  <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={undo} use:toolTip={$_('ui.undo')}>
     <img src={undoIcon} alt="undo" class="h-6 w-auto"/>
   </button>
-  <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={redo} use:toolTip={"リドゥ"}>
+  <button class="btn btn-sm bg-primary-400 undo-redo-button" on:click={redo} use:toolTip={$_('ui.redo')}>
     <img src={redoIcon} alt="redo" class="h-6 w-auto"/>
   </button>
   
   <ul class="flex space-x-6 ml-8">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <li class="hover:text-yellow-500 cursor-pointer"><button on:click={openMangaFarm}>まんがファーム!へ</button></li>
-    <li class="hover:text-yellow-500 cursor-pointer"><button on:click={undump}>旧FramePlannerからのデータ移行</button></li>
+    <li class="hover:text-yellow-500 cursor-pointer"><button on:click={openMangaFarm}>{$_('toolbar.toMangaFarm')}</button></li>
+    <li class="hover:text-yellow-500 cursor-pointer"><button on:click={undump}>{$_('toolbar.dataImport')}</button></li>
   </ul>
 
   <div class="flex-grow"></div>
   <div class="rounded variant-filled-tertiary px-2 text-white">{$mainBookTitle}</div>
 
   <div class="flex-grow"></div>
+  
+  <LanguageSwitcher />
   {#if $onlineStatus === "signed-in"}
     <div class="flex items-center gap-2">
       {#if $onlineAccount !== null}
         <AvatarIcon on:click={editUserProfile} avatarUrl={$onlineAccount.avatar} username={$onlineProfile?.display_name ?? null}/>
       {/if}
-      <span class="text-white">{$onlineProfile?.display_name ?? 'プロフィール未登録'}</span>
+      <span class="text-white">{$onlineProfile?.display_name ?? $_('toolbar.profileNotRegistered')}</span>
       
       {#if $onlineAccount}
         {@const planId = $onlineAccount.subscriptionPlan}
@@ -209,19 +213,19 @@
         
         {#if canBuySpryt}
           <button class="bg-green-600 text-white hover:bg-green-700 rounded ml-2 flex items-center justify-center w-16" on:click={onBuySpryt}>
-            購入
+            {$_('toolbar.purchase')}
           </button>
         {/if}
       {/if}
       <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signOut}>
-        Sign out
+        {$_('ui.signOut')}
       </button>
     </div>
   {/if}
   {#if $onlineStatus === "signed-out"}
-    <p class="text-white">サインインしてプロフィール登録で<img src={sprytIcon} alt="spryt" width=24 height=24 class="image-outline"/>500プレゼント！</p>
+    <p class="text-white">{$_('toolbar.signInBonus')}<img src={sprytIcon} alt="spryt" width=24 height=24 class="image-outline"/>{$_('toolbar.sprytBonus')}</p>
     <button class="bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 hbox w-24" on:click={signIn}>
-      Sign in
+      {$_('ui.signIn')}
     </button>
   {/if}
 </div>

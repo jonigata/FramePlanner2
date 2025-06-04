@@ -1,0 +1,55 @@
+{
+  "ui": {
+    "newDocument": "新規ドキュメント",
+    "cabinet": "キャビネット", 
+    "download": "ダウンロード",
+    "about": "アバウト",
+    "video": "ビデオ撮影",
+    "post": "まんがファーム！に投稿",
+    "materialBucket": "素材集",
+    "bell": "創作ノート",
+    "ruler": "版形",
+    "fileManager": "ファイルマネージャー",
+    "undo": "アンドゥ",
+    "redo": "リドゥ",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "toolbar": {
+    "toMangaFarm": "まんがファーム!へ",
+    "dataImport": "旧FramePlannerからのデータ移行",
+    "profileNotRegistered": "プロフィール未登録",
+    "signInBonus": "サインインしてプロフィール登録で",
+    "sprytBonus": "500プレゼント！",
+    "purchase": "購入"
+  },
+  "settings": {
+    "paperSize": "紙のサイズ",
+    "scale": "拡大率",
+    "custom": "カスタム",
+    "square": "正方形",
+    "portrait": "縦長",
+    "landscape": "横長",
+    "direction": "進行方向",
+    "wrap": "折返し",
+    "none": "なし"
+  },
+  "storage": {
+    "browserStorage": "ブラウザストレージ",
+    "localStorage": "ローカルストレージ",
+    "cloudStorage": "クラウドストレージ",
+    "desktop": "デスクトップ",
+    "trash": "ごみ箱",
+    "selectSaveFolder": "保存フォルダを指定"
+  },
+  "messages": {
+    "copiedToClipboard": "クリップボードにコピーしました",
+    "dataLossWarning": "この領域はブラウザの「サイトデータ消去」操作などで消失する可能性があります。大事なファイルは「ローカルストレージ」や「クラウドストレージ」に退避するようにしてください。",
+    "localStorageNotAvailable": "この環境ではローカルストレージを利用できません",
+    "aiSignInRequired": "AI機能の利用にはサインインが必要です",
+    "videoNotSupported": "この環境ではご利用になれません"
+  },
+  "tooltips": {
+    "newDocumentHint": "新規ドキュメント\n画像ドロップで一枚絵ドキュメント\nCtrl+クリックで画像ペースト"
+  }
+}

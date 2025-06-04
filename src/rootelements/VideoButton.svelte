@@ -2,6 +2,7 @@
   import { type ModalSettings, modalStore, toastStore } from '@skeletonlabs/skeleton';
   import BaseRootButton from './BaseRootButton.svelte';
   import videoIcon from '../assets/video.webp';
+  import { _ } from 'svelte-i18n';
 
   function isSharedArrayBufferUsable() {
     try {
@@ -19,7 +20,7 @@
 
   function openVideoMaker() {
     if (!isSharedArrayBufferUsable()) {
-      toastStore.trigger({ message: 'この環境ではご利用になれません', timeout: 1500});
+      toastStore.trigger({ message: $_('messages.videoNotSupported'), timeout: 1500});
       return;
     }
 
@@ -31,4 +32,4 @@
   }
 </script>
 
-<BaseRootButton icon={videoIcon} alt={"video"} hint={"ビデオ撮影"} origin={"topright"} location={[0,2]} on:click={openVideoMaker}/>
+<BaseRootButton icon={videoIcon} alt={"video"} hint={$_('ui.video')} origin={"topright"} location={[0,2]} on:click={openVideoMaker}/>

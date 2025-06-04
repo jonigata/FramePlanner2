@@ -2,6 +2,7 @@
   import BaseRootButton from './BaseRootButton.svelte';
   import { analyticsEvent } from "../utils/analyticsEvent";
   import { bookArchiver } from "../utils/bookArchiverStore";
+  import { _ } from 'svelte-i18n';
 
   import postIcon from '../assets/post.webp';
 
@@ -12,4 +13,4 @@
   }
 </script>
 
-<BaseRootButton icon={postIcon} alt={"post"} hint={"まんがファーム！に投稿"} origin={"topright"} location={[0,1]} on:click={postBook}/>
+<BaseRootButton icon={postIcon} alt={"post"} hint={$_('ui.post')} origin={"topright"} location={[0,1]} on:click={postBook}/>

@@ -5,6 +5,8 @@ import { get as storeGet } from "svelte/store";
 import { initializeApp } from "./firebase";
 import { initializeSupabase } from "./supabase";
 import { initPaperJs } from "./lib/layeredCanvas/tools/draw/bubbleGraphic"
+import { initI18n } from './locales';
+import { setInitialLocale } from './stores/i18n';
 
 import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   
@@ -19,6 +21,10 @@ console.log("================ developmentFlag", storeGet(developmentFlag));
 window.name = "frameplanner";
 
 initPaperJs();
+
+// Initialize i18n before creating the App
+initI18n();
+// setInitialLocale() is now called inside initI18n()
 
 function getDomainFromCurrentUrl(): string {
   const currentUrl = window.location.href;

@@ -3,6 +3,7 @@
   import { bookOperators } from '../bookeditor/workspaceStore';
   import BaseRootButton from './BaseRootButton.svelte';
   import fileManagerIcon from '../assets/file-manager.webp';
+  import { _ } from 'svelte-i18n';
   
   function openFileManager() {
     if (!$bookOperators) {
@@ -14,4 +15,4 @@
   }
 </script>
 
-<BaseRootButton icon={fileManagerIcon} alt={"file manager"} hint={"ファイルマネージャー"} origin={"bottomleft"} location={[0,0]} on:click={openFileManager}/>
+<BaseRootButton icon={fileManagerIcon} alt={"file manager"} hint={$_('ui.cabinet')} origin={"bottomleft"} location={[0,0]} on:click={openFileManager}/>

@@ -7,6 +7,7 @@
   import newBookIcon from '../assets/new-book.webp';
   import { excludeTextFiles } from "../lib/layeredCanvas/tools/fileUtil";
   import { dropDataHandler } from '../utils/dropDataHandler';
+  import { _ } from 'svelte-i18n';
 
 
   async function createNewFile(e: CustomEvent<MouseEvent>) {
@@ -43,7 +44,7 @@
 </script>
 
 {#if $mainBook}
-<BaseRootButton icon={newBookIcon} alt={"new book"} hint={`新規ドキュメント\n画像ドロップで一枚絵ドキュメント\nCtrl+クリックで画像ペースト`} origin={"bottomleft"} location={[0,1]} on:click={createNewFile}>
+<BaseRootButton icon={newBookIcon} alt={"new book"} hint={$_('tooltips.newDocumentHint')} origin={"bottomleft"} location={[0,1]} on:click={createNewFile}>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="w-full h-full"

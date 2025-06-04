@@ -1,0 +1,55 @@
+{
+  "ui": {
+    "newDocument": "New Document",
+    "cabinet": "Cabinet",
+    "download": "Download", 
+    "about": "About",
+    "video": "Video Recording",
+    "post": "Post to Manga Farm!",
+    "materialBucket": "Material Collection",
+    "bell": "Creative Notebook",
+    "ruler": "Format",
+    "fileManager": "File Manager",
+    "undo": "Undo",
+    "redo": "Redo",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "toolbar": {
+    "toMangaFarm": "To Manga Farm!",
+    "dataImport": "Import data from old FramePlanner",
+    "profileNotRegistered": "Profile not registered",
+    "signInBonus": "Sign in and register profile for",
+    "sprytBonus": "500 bonus!",
+    "purchase": "Purchase"
+  },
+  "settings": {
+    "paperSize": "Paper Size",
+    "scale": "Scale",
+    "custom": "Custom",
+    "square": "Square",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "direction": "Direction",
+    "wrap": "Wrap",
+    "none": "None"
+  },
+  "storage": {
+    "browserStorage": "Browser Storage",
+    "localStorage": "Local Storage",
+    "cloudStorage": "Cloud Storage",
+    "desktop": "Desktop",
+    "trash": "Trash",
+    "selectSaveFolder": "Select Save Folder"
+  },
+  "messages": {
+    "copiedToClipboard": "Copied to clipboard",
+    "dataLossWarning": "This area may be lost due to browser \"Clear Site Data\" operations. Please backup important files to \"Local Storage\" or \"Cloud Storage\".",
+    "localStorageNotAvailable": "Local storage is not available in this environment",
+    "aiSignInRequired": "Sign-in required to use AI features",
+    "videoNotSupported": "Not available in this environment"
+  },
+  "tooltips": {
+    "newDocumentHint": "New Document\nDrop image for single image document\nCtrl+Click to paste image"
+  }
+}

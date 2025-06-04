@@ -5,6 +5,7 @@
   import BaseRootButton from './BaseRootButton.svelte';
   import bellIcon from '../assets/bell.webp';
   import { mainBookFileSystem } from '../filemanager/fileManagerStore';
+  import { _ } from 'svelte-i18n';
   
   function callFairy() {
     if (!$mainBookFileSystem) {
@@ -12,7 +13,7 @@
     }
 
     if ($onlineStatus !== "signed-in") {
-      toastStore.trigger({ message: `AI機能の利用にはサインインが必要です`, timeout: 3000});
+      toastStore.trigger({ message: $_('messages.aiSignInRequired'), timeout: 3000});
       return;
     }
 
@@ -20,4 +21,4 @@
   }
 </script>
 
-<BaseRootButton icon={bellIcon} alt={"creative notebook"} hint={"創作ノート"} origin={"bottomright"} location={[0,0]} on:click={callFairy}/>
+<BaseRootButton icon={bellIcon} alt={"creative notebook"} hint={$_('ui.bell')} origin={"bottomright"} location={[0,0]} on:click={callFairy}/>
