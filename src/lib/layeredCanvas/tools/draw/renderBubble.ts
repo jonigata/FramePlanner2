@@ -3,7 +3,7 @@ import { drawBubble as drawBubbleShape, drawPath, type DrawMethod } from "./bubb
 import { drawFilmStack } from "./drawFilmStack";
 import { drawText, measureText, type Direction } from "./drawText";
 import type { Bubble } from "../../dataModels/bubble";
-import { captureException } from "@sentry/svelte";
+// import { captureException } from "@sentry/svelte";
 
 
 /**
@@ -110,11 +110,11 @@ function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, 
   if (w < 1 || h < 1) { return; }
 
   if (isNaN(fontSize)) {
-    captureException(`fontSize is NaN, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
+    // captureException(`fontSize is NaN, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
     fontSize = 14;
   }
   if (fontSize < 1) {
-    captureException(`fontSize is too small, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
+    // captureException(`fontSize is too small, paperSize = ${paperSize}, bubble.n_p0 = ${bubble.n_p0}, bubble.n_p1 = ${bubble.n_p1}, bubble.n_fontSize = ${bubble.n_fontSize}`);
     fontSize = 14;
   }
 
