@@ -96,20 +96,18 @@
   - [x] **AboutContentEn** - 英語版コンテンツ (100+ strings)
 - [x] **StructureTree** - 構造ツリー表示 (2 strings)
 
-### Phase 6 Viewer/Utils系 (進行中) 🚧
+### Phase 6 Viewer/Utils系 (完了) ✅
 
 #### **Viewer系** ✅
 - [x] **VideoMaker** (`src/videomaker/`) - 動画作成 (6 strings)
 - [x] **MangaView** (`src/mangaview/`) - マンガビューア (1 string)
 
-#### **Utils** (`src/utils/`) 🚧
+#### **Utils** (`src/utils/`) ✅
 - [x] **ConfirmDialog** - 確認ダイアログ (5 strings)
-- [ ] **TextEditDialog** - テキスト編集ダイアログ
-- [ ] **InpaintDialog** - インペイントダイアログ  
-- [ ] **ImageMaskDialog** - マスクダイアログ
-- [ ] **AuthForm** - 認証フォーム
-- [ ] **FileBrowser** - ファイルブラウザ
-- [ ] その他のユーティリティコンポーネント
+- [x] **TextEditDialog** - テキスト編集ダイアログ (7 strings)
+- [x] **InpaintDialog** - インペイントダイアログ (3 strings)  
+- [x] **ImageMaskDialog** - マスクダイアログ (2 strings)
+- [x] **FileBrowser** - ファイルブラウザ (2 strings)
 
 ---
 

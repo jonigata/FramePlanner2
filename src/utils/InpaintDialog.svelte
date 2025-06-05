@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import ImageMaskCanvas from './ImageMaskCanvas.svelte';
   import AutoSizeTextarea from '../notebook/AutoSizeTextarea.svelte';
+  import { _ } from 'svelte-i18n';
 
   let title: string;
   let imageSource: HTMLCanvasElement;
@@ -13,7 +14,7 @@
 
   let maskCanvasComponent: ImageMaskCanvas;
   let prompt = '';
-  let placeholder = 'マスク領域の変更後を入力してください';
+  let placeholder = $_('dialogs.inpaint.placeholder');
 
   onMount(() => {
     const args = $modalStore[0]?.meta;
@@ -64,8 +65,8 @@
   </section>
   <footer class="card-footer flex gap-2">
     <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder}/>
-    <button class="btn variant-ghost-surface" on:click={onCancel}>キャンセル</button>
-    <button class="btn variant-filled-primary" on:click={onSubmit}>実行</button>
+    <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('dialogs.cancel')}</button>
+    <button class="btn variant-filled-primary" on:click={onSubmit}>{$_('dialogs.execute')}</button>
   </footer>
 </div>
 

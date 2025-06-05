@@ -7,6 +7,7 @@
   import MangaBlackPicture from '../assets/kontext/manga-black.webp';
   import MangaGrayPicture from '../assets/kontext/manga-gray.webp';
   import FeathralCost from './FeathralCost.svelte';
+  import { _ } from 'svelte-i18n';
 
   let title: string;
   let imageSource: HTMLCanvasElement;
@@ -17,7 +18,7 @@
 
   let canvasElement: HTMLCanvasElement;
   let prompt = '';
-  let placeholder = '画像の変更内容を入力してください';
+  let placeholder = $_('dialogs.textEdit.placeholder');
 
   type TextEditMode = 'kontext/pro' | 'kontext/max';
   let selectedModel: TextEditMode = 'kontext/pro';
@@ -44,8 +45,8 @@
     
     // サンプル画像データを追加
     imageList = [
-      { id: '1', url: MangaBlackPicture, name: 'まんがブラック', prompt: 'Convert to sharp monochrome contour line art, frontal lighting, flat discrete cel shading' },
-      { id: '2', url: MangaGrayPicture, name: 'まんがグレー', prompt: 'Convert to sharp monochrome contour line art, flat shading using gray' },
+      { id: '1', url: MangaBlackPicture, name: $_('dialogs.textEdit.mangaBlack'), prompt: 'Convert to sharp monochrome contour line art, frontal lighting, flat discrete cel shading' },
+      { id: '2', url: MangaGrayPicture, name: $_('dialogs.textEdit.mangaGray'), prompt: 'Convert to sharp monochrome contour line art, flat shading using gray' },
     ];
   });
 
@@ -123,7 +124,7 @@
       <div class="right-pane">
         <div class="right-pane-content">
           <div class="setting-section">
-            <h3>モデル</h3>
+            <h3>{$_('dialogs.textEdit.model')}</h3>
             <div class="flex flex-row items-center gap-4">
               <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
                 <RadioItem bind:group={selectedModel} name="model" value={'kontext/pro'}><span class="radio-text">Pro</span></RadioItem>
@@ -136,7 +137,7 @@
           </div>
           
           <div class="setting-section">
-            <h3>指示テンプレート</h3>
+            <h3>{$_('dialogs.textEdit.instructionTemplate')}</h3>
             <div class="image-list">
               {#each imageList as image (image.id)}
                 <div class="image-item" on:click={() => onImageSelect(image)} on:keydown={(e) => e.key === 'Enter' && onImageSelect(image)} tabindex="0" role="button">
@@ -152,8 +153,8 @@
   </section>
   <footer class="card-footer flex gap-2">
     <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder}/>
-    <button class="btn variant-ghost-surface" on:click={onCancel}>キャンセル</button>
-    <button class="btn variant-filled-primary" on:click={onSubmit} disabled={!prompt.trim()}>実行</button>
+    <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('dialogs.cancel')}</button>
+    <button class="btn variant-filled-primary" on:click={onSubmit} disabled={!prompt.trim()}>{$_('dialogs.execute')}</button>
   </footer>
 </div>
 

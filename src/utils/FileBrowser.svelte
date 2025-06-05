@@ -6,6 +6,7 @@
   import { mainBookFileSystem } from '../filemanager/fileManagerStore';
   import type { NodeId, File } from '../lib/filesystem/fileSystem';
   import { buildMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
+  import { _ } from 'svelte-i18n';
 
   let usedMedias: (() => Promise<Media[]>)[] = [];
   let strayMedias: (() => Promise<Media[]>)[] = [];
@@ -46,9 +47,9 @@
 
 <div class="page-container">
   <div class="box">
-    <h2>使用中</h2>
+    <h2>{$_('dialogs.fileBrowser.inUse')}</h2>
     <Gallery columnWidth={220} bind:items={usedMedias} accessable={false}/>
-    <h2>リンク切れ</h2>
+    <h2>{$_('dialogs.fileBrowser.brokenLink')}</h2>
     <Gallery columnWidth={220} bind:items={strayMedias} accessable={false}/>
   </div>
 

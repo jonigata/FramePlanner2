@@ -393,6 +393,21 @@
     "yes": "Yes",
     "no": "No",
     "ok": "OK",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "execute": "Execute",
+    "textEdit": {
+      "placeholder": "Enter image modification instructions",
+      "model": "Model",
+      "instructionTemplate": "Instruction Template",
+      "mangaBlack": "Manga Black",
+      "mangaGray": "Manga Gray"
+    },
+    "inpaint": {
+      "placeholder": "Enter what to replace the masked area with"
+    },
+    "fileBrowser": {
+      "inUse": "In Use",
+      "brokenLink": "Broken Link"
+    }
   }
 }

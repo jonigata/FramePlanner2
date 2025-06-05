@@ -2,6 +2,7 @@
   import { modalStore } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
   import ImageMaskCanvas from './ImageMaskCanvas.svelte';
+  import { _ } from 'svelte-i18n';
 
   let title: string;
   let imageSource: HTMLCanvasElement;
@@ -60,8 +61,8 @@
   </section>
   <footer class="card-footer flex gap-2">
     <div class="flex-1"></div>
-    <button class="btn variant-ghost-surface" on:click={onCancel}>キャンセル</button>
-    <button class="btn variant-filled-primary" on:click={onSubmit}>実行</button>
+    <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('dialogs.cancel')}</button>
+    <button class="btn variant-filled-primary" on:click={onSubmit}>{$_('dialogs.execute')}</button>
   </footer>
 </div>
 

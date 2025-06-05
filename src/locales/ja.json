@@ -393,6 +393,21 @@
     "yes": "はい",
     "no": "いいえ",
     "ok": "OK",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "execute": "実行",
+    "textEdit": {
+      "placeholder": "画像の変更内容を入力してください",
+      "model": "モデル",
+      "instructionTemplate": "指示テンプレート",
+      "mangaBlack": "まんがブラック",
+      "mangaGray": "まんがグレー"
+    },
+    "inpaint": {
+      "placeholder": "マスク領域の変更後を入力してください"
+    },
+    "fileBrowser": {
+      "inUse": "使用中",
+      "brokenLink": "リンク切れ"
+    }
   }
 }
