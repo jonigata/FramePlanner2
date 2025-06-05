@@ -2,12 +2,12 @@
   import { loadCharactersFromRoster, rosterOpen, rosterSelectedCharacter } from "./rosterStore";
   import Drawer from "../utils/Drawer.svelte";
   import { onMount } from "svelte";
-  import type { CharacterBase } from "../lib/book/types/notebook";
   import type { CharacterLocal } from "../lib/book/book";
   import { mainBookFileSystem } from "../filemanager/fileManagerStore";
   import { rm } from "../lib/filesystem/fileSystem";
   import trashIcon from '../assets/trash.webp';
   import MediaFrame from "../gallery/MediaFrame.svelte";
+  import { _ } from 'svelte-i18n';
 
   let opened = false;
   let characters: CharacterLocal[] = [];
@@ -50,7 +50,7 @@
     on:clickAway={onClickAway}
   >
     <div class="drawer-content">
-      <h2 class="roster-title">キャラクター名簿</h2>
+      <h2 class="roster-title">{$_('notebook.characterRoster')}</h2>
       <div class="character-list">
         {#each characters as character (character.ulid)}
           <div class="character-card">
@@ -63,7 +63,7 @@
                 ></div>
               </div>
               <button class="delete-btn" on:click={() => remove(character)}>
-                <img src={trashIcon} alt="削除" class="trash-icon" />
+                <img src={trashIcon} alt={$_('notebook.delete')} class="trash-icon" />
               </button>
             </div>
             <div class="character-content">
@@ -74,18 +74,18 @@
                       media={character.portrait}
                     />
                   {:else}
-                    <div class="no-portrait">容姿未登録</div>
+                    <div class="no-portrait">{$_('notebook.noPortrait')}</div>
                   {/if}
                 </div>
-                <button class="offer-btn" on:click={() => offer(character)}>オファー</button>
+                <button class="offer-btn" on:click={() => offer(character)}>{$_('notebook.offer')}</button>
               </div>
               <div class="character-details">
                 <div class="detail-section">
-                  <div class="detail-label">性格</div>
+                  <div class="detail-label">{$_('notebook.personality')}</div>
                   <div class="textarea-display">{character.personality}</div>
                 </div>
                 <div class="detail-section">
-                  <div class="detail-label">外見</div>
+                  <div class="detail-label">{$_('notebook.appearance2')}</div>
                   <div class="textarea-display">{character.appearance}</div>
                 </div>
               </div>

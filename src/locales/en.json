@@ -311,5 +311,49 @@
     "delete": "Delete",
     "view": "View",
     "i2iReference": "i2i Reference"
+  },
+  "notebook": {
+    "copiedToClipboard": "Copied to clipboard",
+    "kyleChanThink": "Kyle-chan, think!",
+    "copyToClipboard": "Copy to clipboard",
+    "delete": "Delete",
+    "appearance": "Appearance",
+    "registerToRoster": "Register to Character Roster",
+    "addCharacter": "Add Character",
+    "addCharacterQuestion": "Add Character?",
+    "addFrameOnly": "Add Frame Only",
+    "castFromRoster": "Cast from Roster",
+    "characterRoster": "Character Roster",
+    "noPortrait": "No Portrait Registered",
+    "offer": "Offer",
+    "personality": "Personality",
+    "appearance2": "Appearance",
+    "manual": {
+      "title": "Kyle-chan's Creative Notebook",
+      "theme": "Theme",
+      "characters": "Characters",
+      "plot": "Plot",
+      "scenario": "Scenario",
+      "imageGeneration": "Image Generation",
+      "howAboutStoryboard": "How about a storyboard?",
+      "format": "Format:",
+      "fourPanel": "4-Panel",
+      "standard": "Standard",
+      "pageCount": "Page Count:",
+      "specify": "Specify",
+      "fullAuto": "Full Auto",
+      "changeInstruction": "Change Instruction",
+      "reset": "Reset",
+      "createStoryboard": "Create Storyboard!",
+      "style": "Style",
+      "generateImage": "Generate Image",
+      "creatingStoryboard": "Creating Storyboard",
+      "generatingImage": "Generating Image"
+    },
+    "errors": {
+      "aiError": "AI Error",
+      "alreadyRegistered": "Already registered",
+      "characterRegistered": "Character registered"
+    }
   }
 }

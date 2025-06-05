@@ -7,6 +7,7 @@
   import MediaFrame from "../gallery/MediaFrame.svelte";
   import { filterImageFiles } from "../lib/layeredCanvas/tools/fileUtil";
   import { dropDataHandler } from '../utils/dropDataHandler';
+  import { _ } from 'svelte-i18n';
 
   import bellIcon from '../assets/bell.webp';
   import trashIcon from '../assets/trash.webp'
@@ -47,7 +48,7 @@
       <input type="text" bind:value={character.name} class="input character-name"/>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img class="trash" src={trashIcon} alt="削除" on:click={remove}/>
+      <img class="trash" src={trashIcon} alt={$_('notebook.delete')} on:click={remove}/>
       <div class="color-label">
         <ColorPickerLabel bind:hex={character.themeColor}/>
       </div>
@@ -68,17 +69,17 @@
             />
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-            <img class="portrait-bell" src={bellIcon} alt="見た目" on:click={portrait}/>
+            <img class="portrait-bell" src={bellIcon} alt={$_('notebook.appearance')} on:click={portrait}/>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-            <img class="portrait-trash" src={trashIcon} alt="削除" on:click={erasePortrait}/>
+            <img class="portrait-trash" src={trashIcon} alt={$_('notebook.delete')} on:click={erasePortrait}/>
           {:else}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-            <img class="no-portrait" src={bellIcon} alt="見た目" on:click={portrait}/>
+            <img class="no-portrait" src={bellIcon} alt={$_('notebook.appearance')} on:click={portrait}/>
           {/if}
         </div>
-        <button class="btn btn-sm bg-secondary-400" on:click={register}>キャラ名簿に登録</button>
+        <button class="btn btn-sm bg-secondary-400" on:click={register}>{$_('notebook.registerToRoster')}</button>
       </div>
       <div class="flex flex-col flex-grow gap-1">
         <AutoSizeTextarea bind:value={character.personality} minHeight={24}/>

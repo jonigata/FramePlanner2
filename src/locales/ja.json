@@ -311,5 +311,49 @@
     "delete": "削除",
     "view": "見る",
     "i2iReference": "i2i参照"
+  },
+  "notebook": {
+    "copiedToClipboard": "クリップボードにコピーしました",
+    "kyleChanThink": "カイルちゃん考えて！",
+    "copyToClipboard": "クリップボードにコピー",
+    "delete": "削除",
+    "appearance": "見た目",
+    "registerToRoster": "キャラ名簿に登録",
+    "addCharacter": "キャラクター追加",
+    "addCharacterQuestion": "キャラクター追加？",
+    "addFrameOnly": "枠だけ追加",
+    "castFromRoster": "名簿から配役",
+    "characterRoster": "キャラクター名簿",
+    "noPortrait": "容姿未登録",
+    "offer": "オファー",
+    "personality": "性格",
+    "appearance2": "外見",
+    "manual": {
+      "title": "カイルちゃんの創作ノート",
+      "theme": "テーマ",
+      "characters": "登場人物",
+      "plot": "プロット",
+      "scenario": "シナリオ",
+      "imageGeneration": "画像生成",
+      "howAboutStoryboard": "ネームはどう？",
+      "format": "フォーマット：",
+      "fourPanel": "4コマ",
+      "standard": "標準",
+      "pageCount": "ページ数：",
+      "specify": "指定",
+      "fullAuto": "全自動",
+      "changeInstruction": "変更指示",
+      "reset": "リセット",
+      "createStoryboard": "ネーム作成！",
+      "style": "スタイル",
+      "generateImage": "画像生成",
+      "creatingStoryboard": "ネーム作成中",
+      "generatingImage": "画像生成中"
+    },
+    "errors": {
+      "aiError": "AIエラー",
+      "alreadyRegistered": "既に登録されています",
+      "characterRegistered": "キャラクターを登録しました"
+    }
   }
 }

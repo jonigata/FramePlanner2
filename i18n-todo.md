@@ -4,8 +4,8 @@
 
 ## 進捗サマリー
 - Phase 1 (編集系): ✅ 完了 (2025-01-06)
-- Phase 2 (生成系): 🚧 進行中 (2025-01-06)
-- Phase 3 (拡張機能): 📅 予定
+- Phase 2 (生成系): ✅ 完了 (2025-01-06)
+- Phase 3 (拡張機能): ✅ 完了 (2025-01-06)
 
 ## 完了済みコンポーネント ✅
 
@@ -35,7 +35,7 @@
 - [x] **FrameInspector** - フレーム編集パネル (全機能)
   - FrameInspector.svelte, FilmEffect.svelte, FilmListItem.svelte, frameInspectorStore.ts
 
-### Phase 2 生成系 (進行中)
+### Phase 2 生成系 (完了) ✅
 
 ---
 
@@ -70,17 +70,19 @@
 - [x] **ImageMaskDialog** - マスク作成ダイアログ
 - [x] **ImagingProgressBar** - 進捗表示
 
-#### **素材管理系**
-- **MaterialBucket** (`src/materialBucket/`) - 素材バケット
-- **BubbleBucket** (`src/bubbleBucket/`) - フキダシバケット
-- **Gallery** (`src/gallery/`) - ギャラリー表示
+#### **素材管理系** ✅  
+- [x] **MaterialBucket** (`src/materialBucket/`) - 素材バケット
+- [x] **BubbleBucket** (`src/bubbleBucket/`) - フキダシバケット (翻訳不要)
+- [x] **Gallery** (`src/gallery/`) - ギャラリー表示
 
-### 3. ノート・出版系 (中優先度)
+### Phase 3 拡張機能 (完了) ✅
 
-#### **Notebook系** (`src/notebook/`)
-- **Notebook** - 創作ノートメイン
-- **NotebookCharacter** - キャラクター管理
-- **Roster** - 名簿機能
+#### **Notebook系** (`src/notebook/`) ✅
+- [x] **NotebookTextarea** - ノート入力エリア (4 strings)
+- [x] **NotebookCharacter** - キャラクター管理 (5 strings)
+- [x] **NotebookCharacterList** - キャラクターリスト (5 strings)
+- [x] **Roster** - 名簿機能 (6 strings)
+- [x] **NotebookManual** - 創作ノートメイン (50+ strings)
 
 #### **Publication系** (`src/publication/`)
 - **Publication** - 出版設定

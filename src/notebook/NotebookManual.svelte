@@ -13,7 +13,6 @@
   import { onMount, tick } from 'svelte';
   import {makePagesFromStoryboard} from './makePage';
   import { toastStore } from '@skeletonlabs/skeleton';
-  import { toolTip } from '../utils/passiveToolTipStore';
   import NotebookTextarea from './NotebookTextarea.svelte';
   import NotebookCharacterList from './NotebookCharacterList.svelte';
   import Feathral from '../utils/Feathral.svelte';
@@ -25,10 +24,10 @@
   import { rosterOpen, rosterSelectedCharacter, saveCharacterToRoster } from './rosterStore';
   import { waitForChange } from '../utils/reactUtil';
   import { buildMedia } from '../lib/layeredCanvas/dataModels/media';
-  import ThinkerSelector from './ThinkerSelector.svelte';
   import NumberEdit from '../utils/NumberEdit.svelte';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { createPreference } from '../preferences';
+  import { _ } from 'svelte-i18n';
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
@@ -55,10 +54,15 @@
 
   let rootFolder: Folder;
   let aiFolder: Folder;
-  let rosterFolder: Folder;
   
   let enablePageNumber: boolean = false;
   let pageNumberValue: number = 1;
+
+  // Reactive translations for non-component contexts
+  $: aiErrorMessage = $_('notebook.errors.aiError');
+  $: alreadyRegisteredMessage = $_('notebook.errors.alreadyRegistered');
+  $: imageGeneratedMessage = $_('generator.imageGenerated');
+  $: characterRegisteredMessage = $_('notebook.errors.characterRegistered');
 
   $: onNotebookChanged(notebook);
   function onNotebookChanged(notebook: NotebookLocal | null) {
@@ -121,7 +125,7 @@
       commit();
     }
     catch(e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     }
     finally {
@@ -144,7 +148,7 @@
       commit();
     }
     catch(e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     }
     finally {
@@ -172,7 +176,7 @@
       commit();
     }
     catch(e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     }
     finally {
@@ -202,7 +206,7 @@
         if (c) {
           // 重複してたら
           if (notebook!.characters.find((v) => v.ulid === c.ulid)) {
-            toastStore.trigger({ message: '既に登録されています', timeout: 1500});
+            toastStore.trigger({ message: alreadyRegisteredMessage, timeout: 1500});
           } else {
             c.ulid = ulid();
             notebook!.characters.push(c);
@@ -214,7 +218,7 @@
       await waitForChange(rosterOpen, (v) => !v);
     }
     catch(e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     }
     finally {
@@ -230,7 +234,7 @@
       commit();
     }
     catch(e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     }
     finally {
@@ -245,7 +249,7 @@
       commit();
     }
     catch(e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     }
     finally {
@@ -271,7 +275,7 @@
       console.log(result);
       const receivedPages = makePagesFromStoryboard(result as Storyboard);
       let marks = $bookOperators!.getMarks();
-      const newPages = $mainBook!.pages.filter((p, i) => !marks[i]);
+      const newPages = $mainBook!.pages.filter((_p, i) => !marks[i]);
       const oldLength = newPages.length;
       newPages.push(...receivedPages);
       $mainBook!.pages = newPages;
@@ -279,13 +283,13 @@
 
       await tick();
       marks = $bookOperators!.getMarks();
-      newPages.forEach((p, i) => {
+      newPages.forEach((_p, i) => {
         if (oldLength <= i) marks[i] = true;
       });
       $bookOperators!.setMarks(marks);
       $redrawToken = true;
     } catch (e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
       storyboardWaiting = false;
     }
@@ -299,7 +303,7 @@
       console.log(result);
       notebook!.critique = result;
     } catch (e) {
-      toastStore.trigger({ message: 'AIエラー', timeout: 1500});
+      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
       console.error(e);
     } finally {
       critiqueWaiting = false;
@@ -313,7 +317,7 @@
     notebook!.characters = notebook!.characters;
     try {
       const canvases = await executeProcessAndNotify(
-        5000, "画像が生成されました",
+        5000, imageGeneratedMessage,
         async () => {
           return await generateImage(`${postfix}\n${c.appearance}, white background`, {width:512,height:512}, imagingMode, 1, "opaque");
         });
@@ -339,9 +343,8 @@
   }
 
   async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
-    const ulid = e.detail.ulid!;
     await saveCharacterToRoster($mainBookFileSystem!, e.detail);
-    toastStore.trigger({ message: 'キャラクターを登録しました', timeout: 1500});
+    toastStore.trigger({ message: characterRegisteredMessage, timeout: 1500});
   }
 
   function onRemoveCharacter(e: CustomEvent<CharacterLocal>) {
@@ -376,9 +379,8 @@
   onMount(async () => {
     rootFolder = await $mainBookFileSystem!.getRoot();
     aiFolder = (await rootFolder.getEmbodiedEntryByName('AI'))![2].asFolder()!;
-    rosterFolder = (await aiFolder.getEmbodiedEntryByName('キャラクター'))![2].asFolder()!;
 
-    const preference = await createPreference<string>('imaging', 'style');
+    const preference = createPreference<string>('imaging', 'style');
     postfix = await preference.getOrDefault('Japanese anime style');
   });
 
@@ -386,12 +388,12 @@
 
 {#if storyboardWaiting}
 <div class="h-full flex flex-col justify-center items-center">
-  <h2>ネーム作成中</h2>
+  <h2>{$_('notebook.manual.creatingStoryboard')}</h2>
   <ProgressRadial width="w-48"/>
 </div>
 {:else if 0 < imageProgress && imageProgress < 1}
 <div class="h-full flex flex-col justify-center items-center">
-  <h2>画像生成中</h2>
+  <h2>{$_('notebook.manual.generatingImage')}</h2>
   <div class="w-full pl-4 items-center mb-2">
     <ProgressBar label="Progress Bar" value={imagingContext.succeeded + imagingContext.failed} max={imagingContext.total || 1} />
   </div>
@@ -402,7 +404,7 @@
 {:else if notebook} <!-- 絶対に真だがsvelteで!演算子が使えないため -->
 <div class="drawer-content">
   <div class="header">
-    <h1>カイルちゃんの創作ノート</h1>
+    <h1>{$_('notebook.manual.title')}</h1>
     <div class="flex justify-between gap-2 items-center mr-4">
       <Feathral/>
       <!-- <ThinkerSelector bind:thinker={thinker}/> -->
@@ -410,29 +412,29 @@
   </div>
   <div class="body">
     <div class="section">
-    <h2 class:progress={themeWaiting}>テーマ
+    <h2 class:progress={themeWaiting}>{$_('notebook.manual.theme')}
       {#if themeWaiting}
         <ProgressRadial stroke={200} width="w-5"/>
       {/if}
     </h2>
     <div class="w-full">
-      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise} placeholder={"テーマを入力するか、ベルを押してください"}/>
+      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise}/>
     </div>
     <div class="flex flex-row gap-4 items-center mt-2 mb-2">
       <div class="flex items-center gap-2">
-        <span class="text-sm">フォーマット：</span>
+        <span class="text-sm">{$_('notebook.manual.format')}</span>
         <RadioGroup class="flex">
           <RadioItem bind:group={notebook.format} name="format" value="4koma">
-            <span class="text-sm">4コマ</span>
+            <span class="text-sm">{$_('notebook.manual.fourPanel')}</span>
           </RadioItem>
           <RadioItem bind:group={notebook.format} name="format" value="standard">
-            <span class="text-sm">標準</span>
+            <span class="text-sm">{$_('notebook.manual.standard')}</span>
           </RadioItem>
         </RadioGroup>
       </div>
       
       <div class="flex items-center gap-2 ml-2">
-        <span class="text-sm">ページ数：</span>
+        <span class="text-sm">{$_('notebook.manual.pageCount')}</span>
         <div class="flex items-center gap-1">
           <input
             type="checkbox"
@@ -449,7 +451,7 @@
               }
             }}
           />
-          指定
+          {$_('notebook.manual.specify')}
         </div>
         {#if enablePageNumber}
           <div class="number-box ml-1" style="width: 50px; min-width: 50px; height: 24px;" dir="rtl">
@@ -463,11 +465,11 @@
       </div>
     </div>
     {#if !fullAutoRunning}
-      <button class="btn variant-filled-primary" on:click={onStartFullAuto} use:toolTip={"テーマ・キャラ・プロット・シナリオが\nなければ埋め、ネームを作成して画像を生成"}>全自動</button>
+      <button class="btn variant-filled-primary" on:click={onStartFullAuto}>{$_('notebook.manual.fullAuto')}</button>
     {/if}
   </div>
     <div class="section">
-      <h2 class:progress={charactersWaiting}>登場人物
+      <h2 class:progress={charactersWaiting}>{$_('notebook.manual.characters')}
         {#if charactersWaiting}
           <ProgressRadial stroke={200} width="w-5"/>
         {/if}
@@ -488,7 +490,7 @@
       </div>
     </div>
     <div class="section">
-      <h2 class:progress={plotWaiting}>プロット
+      <h2 class:progress={plotWaiting}>{$_('notebook.manual.plot')}
         {#if plotWaiting}
           <ProgressRadial stroke={200} width="w-5"/>
         {/if}
@@ -497,14 +499,14 @@
         <NotebookTextarea bind:value={notebook.plot} cost={2} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
         {#if notebook.plot}
           <div class="flex flex-row items-center">
-            <span class="w-24">変更指示</span>
+            <span class="w-24">{$_('notebook.manual.changeInstruction')}</span>
             <input type="text" bind:value={plotInstruction} class="input portrait-style"/>
           </div>
         {/if}
       </div>
     </div>
     <div class="section">
-      <h2 class:progress={scenarioWaiting}>シナリオ
+      <h2 class:progress={scenarioWaiting}>{$_('notebook.manual.scenario')}
         {#if scenarioWaiting}
           <ProgressRadial stroke={200} width="w-5"/>
         {/if}
@@ -514,26 +516,26 @@
       </div>
     </div>
     <!-- <div class="section">
-      <h2 class="warning">ごめんなさい、ネーム作成はAIの調子が悪く調整中です</h2>
+      <h2 class="warning">Sorry, storyboard creation is under adjustment due to AI issues</h2>
     </div> -->
     <div class="flex flex-row gap-4 mb-4">
-      <button class="btn variant-filled-warning" on:click={reset}>リセット</button>
+      <button class="btn variant-filled-warning" on:click={reset}>{$_('notebook.manual.reset')}</button>
       <span class="flex-grow"></span>
-      <button class="btn variant-filled-primary" on:click={onBuildStoryboard} use:toolTip={"コマ割り、プロンプト・フキダシ作成[15]"}>ネーム作成！</button>
+      <button class="btn variant-filled-primary" on:click={onBuildStoryboard}>{$_('notebook.manual.createStoryboard')}</button>
     </div>
     <div class="section">
-      <h2>画像生成</h2>
-      <FluxModes bind:mode={imagingMode} comment={"1コマあたり"}/>
+      <h2>{$_('notebook.manual.imageGeneration')}</h2>
+      <FluxModes bind:mode={imagingMode} comment={$_('generator.perPanel')}/>
       <div class="flex flex-row mt-2 justify-center align-center gap-2">
-        <span class="w-18">スタイル</span>
+        <span class="w-18">{$_('notebook.manual.style')}</span>
         <input type="text" class="input portrait-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', defaultValue: 'Japanese anime style', onLoad: (v) => postfix = v}}/>
         <span class="flex-grow"></span>
-        <button disabled={notebook.storyboard == null} class="btn variant-filled-primary" on:click={onGenerateImages}>画像生成</button>
+        <button disabled={notebook.storyboard == null} class="btn variant-filled-primary" on:click={onGenerateImages}>{$_('notebook.manual.generateImage')}</button>
       </div>
     </div>
     {#if notebook.storyboard}
       <div class="section">
-        <h2>ネームはどう？</h2>
+        <h2>{$_('notebook.manual.howAboutStoryboard')}</h2>
         <div class="w-full">
           <NotebookTextarea bind:value={notebook.critique} cost={2} waiting={critiqueWaiting} on:advise={onCritiqueAdvise} minHeight={240}/>
         </div>

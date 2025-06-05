@@ -4,6 +4,7 @@
   import type { CharacterLocal } from '../lib/book/book';
   import { toolTip } from '../utils/passiveToolTipStore';
   import NotebookCharacter from './NotebookCharacter.svelte';
+  import { _ } from 'svelte-i18n';
 
   import bellIcon from '../assets/bell.webp';
 
@@ -37,7 +38,7 @@
   <div class="icon-container">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <img class="advise" src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={"カイルちゃん考えて！[2]"}/>
+    <img class="advise" src={bellIcon} alt={$_('notebook.kyleChanThink')} on:click={() => dispatch('advise', value)} use:toolTip={`${$_('notebook.kyleChanThink')}[2]`}/>
   </div>
   {#if waiting}
     <div class="h-24 waiting rounded-corner-token textarea">
@@ -49,14 +50,14 @@
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="flex gap-2 mt-2 w-full">
         <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={add}>
-          <img class="advise" src={bellIcon} alt="キャラクター追加"/>
-          <span class="add-character">キャラクター追加？</span>
+          <img class="advise" src={bellIcon} alt={$_('notebook.addCharacter')}/>
+          <span class="add-character">{$_('notebook.addCharacterQuestion')}</span>
         </button>
         <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={addBlank}>
-          <span class="add-character">枠だけ追加</span>
+          <span class="add-character">{$_('notebook.addFrameOnly')}</span>
         </button>
         <button class="btn variant-filled-secondary flex items-center gap-2 flex-1 rounded" on:click={hire}>
-          <span class="add-character">名簿から配役</span>
+          <span class="add-character">{$_('notebook.castFromRoster')}</span>
         </button>
       </div>
     </div>
@@ -69,14 +70,14 @@
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="flex gap-2 mt-2 w-full">
         <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={add}>
-          <img class="advise" src={bellIcon} alt="キャラクター追加"/>
-          <span class="add-character">キャラクター追加</span>
+          <img class="advise" src={bellIcon} alt={$_('notebook.addCharacter')}/>
+          <span class="add-character">{$_('notebook.addCharacter')}</span>
         </button>
         <button class="btn variant-filled-primary flex items-center gap-2 flex-1 rounded" on:click={addBlank}>
-          <span class="add-character">枠だけ追加</span>
+          <span class="add-character">{$_('notebook.addFrameOnly')}</span>
         </button>
           <button class="btn variant-filled-secondary flex items-center gap-2 flex-1 rounded" on:click={hire}>
-          <span class="add-character">名簿から配役</span>
+          <span class="add-character">{$_('notebook.castFromRoster')}</span>
         </button>
       </div>
     </div>

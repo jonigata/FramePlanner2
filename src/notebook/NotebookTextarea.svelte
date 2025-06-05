@@ -4,6 +4,7 @@
   import AutoSizeTextarea from './AutoSizeTextarea.svelte';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { toastStore } from '@skeletonlabs/skeleton';
+  import { _ } from 'svelte-i18n';
 
   import bellIcon from '../assets/bell.webp';
   import clipboardIcon from '../assets/clipboard.webp';
@@ -19,7 +20,7 @@
 
   function copyToClipboard() {
     navigator.clipboard.writeText(value);
-    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+    toastStore.trigger({ message: $_('notebook.copiedToClipboard'), timeout: 1500});
   }
 
   function erase() {
@@ -37,13 +38,13 @@
     <div class="icon-container flex flex-row-reverse gap-2">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={bellIcon} alt="カイルちゃん考えて！" on:click={() => dispatch('advise', value)} use:toolTip={`カイルちゃん考えて！[${cost}]`} />
+      <img src={bellIcon} alt={$_('notebook.kyleChanThink')} on:click={() => dispatch('advise', value)} use:toolTip={`${$_('notebook.kyleChanThink')}[${cost}]`} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={clipboardIcon} alt="クリップボードにコピー" on:click={copyToClipboard} use:toolTip={"クリップボードにコピー"} />
+      <img src={clipboardIcon} alt={$_('notebook.copyToClipboard')} on:click={copyToClipboard} use:toolTip={$_('notebook.copyToClipboard')} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={trashIcon} alt="削除" on:click={erase} use:toolTip={"削除"} />
+      <img src={trashIcon} alt={$_('notebook.delete')} on:click={erase} use:toolTip={$_('notebook.delete')} />
     </div>
   {/if}
 </div>        
