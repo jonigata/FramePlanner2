@@ -1,11 +1,12 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
 
   let message: string = '';
-  let positiveButtonText: string = 'はい';
-  let negativeButtonText: string = 'いいえ';
-  let title: string = '確認';
+  let positiveButtonText: string = $_('dialogs.yes');
+  let negativeButtonText: string = $_('dialogs.no');
+  let title: string = $_('dialogs.confirm');
 
   onMount(() => {
     const args = $modalStore[0]?.meta;
@@ -13,9 +14,9 @@
 
     if (args) {
       message = args.message || '';
-      positiveButtonText = args.positiveButtonText || 'はい';
-      negativeButtonText = args.negativeButtonText || 'いいえ';
-      title = args.title || '確認';
+      positiveButtonText = args.positiveButtonText || $_('dialogs.yes');
+      negativeButtonText = args.negativeButtonText || $_('dialogs.no');
+      title = args.title || $_('dialogs.confirm');
     }
   });
 

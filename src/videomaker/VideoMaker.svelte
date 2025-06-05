@@ -17,6 +17,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { writable, type Writable } from 'svelte/store';
   import { initFFmpeg } from './generateMovieFile';
+  import { _ } from 'svelte-i18n';
 
   const video: Writable<VideoSettings> = writable({
     width: 1920,
@@ -31,6 +32,10 @@
   let chunkedProgram: DisplayProgramEntry[][] = [];
   let progress = 0;
 
+  // Reactive translations for toast messages
+  $: encodingSuccessMessage = $_('videoMaker.encodingSuccess');
+  $: encodingFailedMessage = $_('videoMaker.encodingFailed');
+
   function onWaitChanged() {
     program = program;
   }
@@ -41,14 +46,14 @@
     try {
       progress = 0;
       const url = await buildMovie(program!, $video, book, (n) => progress = n);
-      toastStore.trigger({ message: 'エンコードに成功しました', timeout: 3000});
+      toastStore.trigger({ message: encodingSuccessMessage, timeout: 3000});
       analyticsEvent('build_movie');
       download(url);
       URL.revokeObjectURL(url);
     }
     catch (e) {
       console.error(e);
-      toastStore.trigger({ message: 'エンコードに失敗しました', timeout: 3000});
+      toastStore.trigger({ message: encodingFailedMessage, timeout: 3000});
     }
     building = false;
   }
@@ -124,13 +129,13 @@
       </div>
     </div>
     <div class="parameter-box">
-      <Parameter label="移動時間" bind:value={$video.moveDuration}/>
+      <Parameter label={$_('videoMaker.moveDuration')} bind:value={$video.moveDuration}/>
     </div>
     <div class="parameter-box">
-      <Parameter label="標準滞留時間" bind:value={$video.standardWait}/>
+      <Parameter label={$_('videoMaker.standardWait')} bind:value={$video.standardWait}/>
     </div>
     <div class="parameter-box">
-      <Parameter label="標準スケール" bind:value={$video.standardScale} min={0.5} max={1.5} step={0.01}/>
+      <Parameter label={$_('videoMaker.standardScale')} bind:value={$video.standardScale} min={0.5} max={1.5} step={0.01}/>
     </div>
   </div>
 
@@ -159,7 +164,7 @@
           <ProgressBar label="Progress Bar" value={progress} max={1} />
         {:else}
           <button type="button" class="btn btn-sm variant-filled" on:click={doBuildMovie}>
-            ムービー作成
+            {$_('videoMaker.createMovie')}
           </button>
         {/if}
       </div>  

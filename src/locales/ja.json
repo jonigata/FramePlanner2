@@ -376,5 +376,23 @@
   "about": {
     "page": "ページ",
     "book": "ブック"
+  },
+  "videoMaker": {
+    "encodingSuccess": "エンコードに成功しました",
+    "encodingFailed": "エンコードに失敗しました", 
+    "moveDuration": "移動時間",
+    "standardWait": "標準滞留時間",
+    "standardScale": "標準スケール",
+    "createMovie": "ムービー作成"
+  },
+  "mangaView": {
+    "page": "ページ"
+  },
+  "dialogs": {
+    "confirm": "確認",
+    "yes": "はい",
+    "no": "いいえ",
+    "ok": "OK",
+    "cancel": "キャンセル"
   }
 }

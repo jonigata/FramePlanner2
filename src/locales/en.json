@@ -376,5 +376,23 @@
   "about": {
     "page": "Page",
     "book": "Book"
+  },
+  "videoMaker": {
+    "encodingSuccess": "Encoding successful",
+    "encodingFailed": "Encoding failed",
+    "moveDuration": "Move Duration",
+    "standardWait": "Standard Wait Time",
+    "standardScale": "Standard Scale",
+    "createMovie": "Create Movie"
+  },
+  "mangaView": {
+    "page": "Page"
+  },
+  "dialogs": {
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "cancel": "Cancel"
   }
 }

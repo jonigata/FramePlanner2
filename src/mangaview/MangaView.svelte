@@ -7,6 +7,7 @@
   import rightIcon from "../assets/viewer/right.webp";
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../utils/NumberEdit.svelte';
+  import { _ } from 'svelte-i18n';
 
   const dispatch = createEventDispatcher();
 
@@ -105,7 +106,7 @@
     {/if}
   </div>
   <div class="pager w-full p-4 flex flex-row gap-2">
-    <div class="font-bold">ページ</div>
+    <div class="font-bold">{$_('mangaView.page')}</div>
     <div class="grow" dir="rtl">
       <RangeSlider name="batch-count" bind:value={pageIndex} min={min} max={max} step={1}/>
     </div>
