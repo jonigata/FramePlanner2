@@ -88,11 +88,13 @@
 - [x] **Publication** - 出版設定 (10 strings)
 - [x] **SocialCard** - SNS投稿カード (4 strings)
 
-### 4. ユーティリティ系 (低優先度)
+### Phase 5 About系 (完了) ✅
 
-#### **About系** (`src/about/`)
-- **About** - アバウトダイアログ
-- **StructureTree** - 構造ツリー表示
+#### **About系** (`src/about/`) ✅
+- [x] **About** - アバウトダイアログ (コンポーネント分離方式)
+  - [x] **AboutContentJa** - 日本語版コンテンツ (100+ strings)
+  - [x] **AboutContentEn** - 英語版コンテンツ (100+ strings)
+- [x] **StructureTree** - 構造ツリー表示 (2 strings)
 
 #### **Viewer系**
 - **VideoMaker** (`src/videomaker/`) - 動画作成
@@ -101,68 +103,6 @@
 #### **Utils** (`src/utils/`)
 - 各種ダイアログ、ユーティリティコンポーネント
 - エラーメッセージ、確認ダイアログ
-
----
-
-## 翻訳ファイル拡張予定
-
-### 追加済みセクション ✅
-
-```json
-{
-  "editor": {
-    "paperSize": "紙のサイズ",
-    "custom": "カスタム",
-    "square": "正方形",
-    "portrait": "縦長",
-    "landscape": "横長",
-    "direction": "進行方向",
-    "wrap": "折返し",
-    "scale": "拡大率"
-  },
-  "bubble": {
-    "text": "テキスト",
-    "fontSize": "フォントサイズ",
-    "fontColor": "フォント色",
-    "outlineWidth": "フチの太さ",
-    "backgroundColor": "フキダシ背景色"
-  },
-  "frame": {
-    "visibility": "表示",
-    "visible": "表示",
-    "hidden": "非表示"
-  }
-}
-```
-
-### 追加予定セクション
-
-```json
-{
-  "generator": {
-    "generateImage": "画像生成",
-    "batchGeneration": "バッチ生成",
-    "prompt": "プロンプト",
-    "negativePrompt": "ネガティブプロンプト",
-    "steps": "ステップ数",
-    "cfg": "CFGスケール"
-  },
-  "notebook": {
-    "character": "キャラクター",
-    "story": "ストーリー",
-    "memo": "メモ",
-    "addCharacter": "キャラクター追加"
-  },
-  "dialogs": {
-    "confirm": "確認",
-    "cancel": "キャンセル",
-    "ok": "OK",
-    "error": "エラー",
-    "warning": "警告",
-    "success": "成功"
-  }
-}
-```
 
 ---
 
@@ -200,25 +140,6 @@ import { _ } from 'svelte-i18n';
   <span>{$_('status.offline')}</span>
 {/if}
 ```
-
----
-
-## 優先順位付け戦略
-
-### Phase 1: 編集系 (即座に影響大) ✅ 完了
-1. ControlPanel - 基本設定 ✅
-2. BubbleInspector - フキダシ編集 ✅
-3. FrameInspector - フレーム編集 ✅
-
-### Phase 2: 生成系 (使用頻度高)
-1. ImageGenerator - AI画像生成
-2. MaterialBucket - 素材管理
-3. Gallery - ギャラリー
-
-### Phase 3: 拡張機能 (完成度向上)
-1. Notebook - 創作ノート
-2. Publication - 出版機能
-3. About/Help - 情報系
 
 ---
 

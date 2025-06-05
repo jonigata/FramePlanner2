@@ -372,5 +372,9 @@
     "socialCardDescription": "Displayed when posting to X(Twitter)",
     "skip": "Skip",
     "ok": "OK"
+  },
+  "about": {
+    "page": "Page",
+    "book": "Book"
   }
 }

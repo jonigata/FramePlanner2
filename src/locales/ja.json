@@ -372,5 +372,9 @@
     "socialCardDescription": "X(Twitter)に投稿したときに表示されます",
     "skip": "スキップ",
     "ok": "OK"
+  },
+  "about": {
+    "page": "ページ",
+    "book": "ブック"
   }
 }

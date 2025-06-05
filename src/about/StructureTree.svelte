@@ -4,6 +4,7 @@
   import TreeView from '../utils/TreeView.svelte';
   import { mainBook } from '../bookeditor/workspaceStore';
   import type { FrameElement } from '../lib/layeredCanvas/dataModels/frameTree';
+  import { _ } from 'svelte-i18n';
 
 /*
 	const tree = {
@@ -57,11 +58,11 @@
     for (const page of book.pages) {
       const item = makePageItem(page.frameTree);
       console.log("item", item);
-      children.push({label: `ページ${++pageIndex}`, children: [item]});
+      children.push({label: `${$_('about.page')}${++pageIndex}`, children: [item]});
     }
 
     tree = {
-      label: 'ブック',
+      label: $_('about.book'),
       children: children
     }
     console.log(tree);
