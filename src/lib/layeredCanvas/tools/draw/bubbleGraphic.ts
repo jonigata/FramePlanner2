@@ -112,8 +112,6 @@ export function drawBubble(context: CanvasRenderingContext2D, method: DrawMethod
     case "rounded-mind":
       drawRoundedMindBubble(context, method, seed, size, opts);
       break;
-    case "concentration":
-    case "thought":
     case "none":
       break;
     default:
