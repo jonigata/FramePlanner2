@@ -128,12 +128,18 @@
   });
 </script>
 
-<div bind:this={containerRef} class="w-screen h-72 bg-surface-900 gap-8 flex flex-row items-center justify-center pl-4 pr-2 pt-2 pb-2 overflow-hidden">
-  {#each ads.slice(0, visibleCount) as adContent}
-  <div class="ad">
-    {@html adContent}
+<div class="w-screen bg-surface-900 pl-4 pr-2 pt-2 pb-2">
+  <div class="text-center text-white mb-2">
+    <!-- ここに1行文を入力してください -->
+    <a href="https://frameplanner.manga-farm.online" target="_blank">まんがファーム</a>ならこの広告は表示されませんので、ぜひ移行をお願いします
   </div>
-  {/each}
+  <div bind:this={containerRef} class="h-72 gap-8 flex flex-row items-center justify-center overflow-hidden">
+    {#each ads.slice(0, visibleCount) as adContent}
+    <div class="ad">
+      {@html adContent}
+    </div>
+    {/each}
+  </div>
 </div>
 
 <style>
