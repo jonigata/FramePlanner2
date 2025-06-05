@@ -7,6 +7,7 @@
   import { onMount } from 'svelte';
   import { resizeCanvasIfNeeded } from '../lib/layeredCanvas/tools/imageUtil';
   import FeathralCost from '../utils/FeathralCost.svelte';
+  import { _ } from 'svelte-i18n';
   
   let prompt = '';
   let duration: "4" | "5" | "10" = "5";
@@ -17,18 +18,18 @@
   let cost: number = 50;
   
   // モデルごとの利用可能なオプション
-  const modelOptions = {
+  $: modelOptions = {
     FramePack: {
       durations: [
-        { value: "1", label: "1秒" },
-        { value: "2", label: "2秒" },
-        { value: "3", label: "3秒" },
-        { value: "4", label: "4秒" },
-        { value: "5", label: "5秒" },
+        { value: "1", label: $_('generator.oneSecond') },
+        { value: "2", label: $_('generator.twoSeconds') },
+        { value: "3", label: $_('generator.threeSeconds') },
+        { value: "4", label: $_('generator.fourSeconds') },
+        { value: "5", label: $_('generator.fiveSeconds') },
       ],
       aspectRatios: [
-        { value: "16:9", label: "横長 (16:9)" },
-        { value: "9:16", label: "縦長 (9:16)" }
+        { value: "16:9", label: $_('generator.landscapeRatio') },
+        { value: "9:16", label: $_('generator.portraitRatio') }
       ],
       cost: (duration: string) => {
         return parseInt(duration) * 5;
@@ -36,12 +37,12 @@
     },
     kling: {
       durations: [
-        { value: "5", label: "5秒" },
+        { value: "5", label: $_('generator.fiveSeconds') },
       ],
       aspectRatios: [
-        { value: "1:1", label: "正方形 (1:1)" },
-        { value: "16:9", label: "横長 (16:9)" },
-        { value: "9:16", label: "縦長 (9:16)" },
+        { value: "1:1", label: $_('generator.squareRatio') },
+        { value: "16:9", label: $_('generator.landscapeRatio') },
+        { value: "9:16", label: $_('generator.portraitRatio') },
       ],
       cost: () => {
         return 125;
@@ -115,7 +116,7 @@
 
 <div class="card p-4 w-modal shadow-xl">
   <header class="card-header">
-    <h2>動画生成</h2>
+    <h2>{$_('generator.videoGeneration')}</h2>
   </header>
   
   <section class="p-4">
@@ -129,7 +130,7 @@
       </div>
 
       <div>
-        <h3>プロンプト</h3>
+        <h3>{$_('generator.prompt')}</h3>
         <NotebookTextarea
           bind:value={prompt}
           minHeight={90}
@@ -142,7 +143,7 @@
 
       <div class="grid grid-cols-2 gap-4">
         <label class="label">
-          <h3>モデル</h3>
+          <h3>{$_('generator.model')}</h3>
           <select bind:value={model} class="select">
             <option value="FramePack">FramePack</option>
             <option value="kling">kling-2.1</option>
@@ -150,7 +151,7 @@
         </label>
 
         <label class="label">
-          <h3>時間</h3>
+          <h3>{$_('generator.time')}</h3>
           <select bind:value={duration} class="select">
             {#each modelOptions[model].durations as option}
               <option value={option.value}>{option.label}</option>
@@ -161,7 +162,7 @@
 
       <div class="grid grid-cols-1 gap-4">
         <label class="label">
-          <h3>アスペクト比(横:縦)</h3>
+          <h3>{$_('generator.aspectRatio')}</h3>
           <select bind:value={aspectRatio} class="select">
             {#each modelOptions[model].aspectRatios as option}
               <option value={option.value}>{option.label}</option>
@@ -175,10 +176,10 @@
   <footer class="card-footer flex gap-2">
     <div class="flex-1"></div>
     <button class="btn variant-ghost-surface" on:click={onCancel}>
-      キャンセル
+      {$_('generator.cancel')}
     </button>
     <button class="btn variant-filled-primary flex flex-row gap-2" on:click={onSubmit}>
-      <span class="generate-text">生成</span><FeathralCost cost={cost}/>
+      <span class="generate-text">{$_('generator.generate')}</span><FeathralCost cost={cost}/>
     </button>
   </footer>
 </div>

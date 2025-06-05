@@ -10,6 +10,8 @@ import { outPaintFilm, calculateFramePadding } from '../../utils/outPaintFilm';
 import { loading } from '../../utils/loadingStore';
 import { toastStore } from '@skeletonlabs/skeleton';
 import { onlineStatus } from "../../utils/accountStore";
+import { get as getStore } from 'svelte/store';
+import { _ } from 'svelte-i18n';
 import { commit } from '../operations/commitOperations';
 import type { FilmOperationTarget } from '../operations/filmStackOperations';
 import {
@@ -113,7 +115,7 @@ async function onFrameCommand(fit: FrameInspectorTarget | null) {
 // アウトペインティング処理（フレーム特有の機能）
 async function outPaintFrameFilm(fit: FrameInspectorTarget) {
   if (get(onlineStatus) !== 'signed-in') {
-    toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+    toastStore.trigger({ message: getStore(_)('frame.errors.notLoggedIn'), timeout: 3000});
     return;
   }
 
@@ -129,7 +131,7 @@ async function outPaintFrameFilm(fit: FrameInspectorTarget) {
     commit(null);
   } catch (e) {
     console.error(e);
-    toastStore.trigger({ message: `アウトペインティングに失敗しました`, timeout: 3000});
+    toastStore.trigger({ message: getStore(_)('frame.errors.outpaintFailed'), timeout: 3000});
   } finally {
     loading.set(false);
   }

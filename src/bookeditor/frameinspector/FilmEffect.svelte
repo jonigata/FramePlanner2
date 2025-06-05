@@ -5,6 +5,7 @@
   import NumberEdit from '../../utils/NumberEdit.svelte';
 	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { onMount } from "svelte";
+  import { _ } from 'svelte-i18n';
 
   import deleteIcon from '../../assets/filmlist/delete.webp';
 
@@ -14,16 +15,16 @@
     name: string;
   }
 
-  const parameterLists: { [key: string]: (Parameter & any)[] } = {
+  $: parameterLists = {
     "OutlineEffect": [
-      { name: "color", label: "色", type: "color" },
-      { name: "width", label: "幅", type: "number", min: 0, max: 0.1, step: 0.001 },
-      { name: "sharp", label: "シャープ", type: "number", min: 0, max: 1, step: 0.01 },
+      { name: "color", label: $_('frame.effects.color'), type: "color" },
+      { name: "width", label: $_('frame.effects.width'), type: "number", min: 0, max: 0.1, step: 0.001 },
+      { name: "sharp", label: $_('frame.effects.sharp'), type: "number", min: 0, max: 1, step: 0.01 },
     ],
   }
   
-  const titles: { [key: string]: string } = {
-    "OutlineEffect": "アウトライン",
+  $: titles = {
+    "OutlineEffect": $_('frame.effects.outline'),
   }
   export let effect: Effect;
   $: effectAny = effect as any;

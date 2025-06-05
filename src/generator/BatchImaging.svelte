@@ -9,6 +9,7 @@
   import { ProgressRadial } from '@skeletonlabs/skeleton';
   import type { ImagingContext } from '../utils/feathralImaging';
   import ImagingProgressBar from './ImagingProgressBar.svelte';
+  import { _ } from 'svelte-i18n';
 
   import "../box.css"  
   import feathralIcon from '../assets/feathral.webp';
@@ -54,7 +55,7 @@
       {:else}
         <div class="hbox h-full">
           <div class="common w-64 h-full flex flex-col justify-center gap-2">
-            <div>画像一括生成</div>
+            <div>{$_('generator.batchImageGeneration')}</div>
             <div>{imagingContext.succeeded}/{imagingContext.total}</div>
           </div>
           <div class="content h-full flex flex-col justify-center gap-2">

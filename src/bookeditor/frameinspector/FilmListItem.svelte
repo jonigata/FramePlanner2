@@ -16,6 +16,7 @@
   import { saveAs } from 'file-saver';
   import { canvasToBlob } from '../../lib/layeredCanvas/tools/imageUtil';
   import type { FilmTool } from '../../utils/filmTools';
+  import { _ } from 'svelte-i18n';
 
   import visibleIcon from '../../assets/filmlist/eye.webp';
   import trashIcon from '../../assets/filmlist/trash.webp';
@@ -190,7 +191,7 @@
     ev.stopPropagation();
     ev.preventDefault();
     if (!film || !film.media) {
-      toastStore.trigger({ message: "ダウンロードできる画像がありません", timeout: 2000 });
+      toastStore.trigger({ message: $_('frame.errors.noDownloadableImage'), timeout: 2000 });
       return;
     }
 
@@ -222,7 +223,7 @@
 >
   {#if !film}
     <div class="w-full h-full variant-soft-tertiary" on:click={onClick}>
-      <div class="new-film" use:toolTip={"新規画像"} >
+      <div class="new-film" use:toolTip={$_('frame.actions.newImage')} >
         ＋
       </div>
     </div>
@@ -237,9 +238,9 @@
           <MediaFrame media={film.media} showControls={false} useCanvas={true}/>
       </div>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="trash-icon" src={trashIcon} alt="削除" use:toolTip={"削除"} on:click={onDelete}/>
+      <img draggable={false} class="trash-icon" src={trashIcon} alt={$_('frame.actions.delete')} use:toolTip={$_('frame.actions.delete')} on:click={onDelete}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt="可視/不可視" use:toolTip={"可視/不可視"} on:click={onToggleVisible}/>
+      <img draggable={false} class="visible-icon" class:off={!film.visible} src={visibleIcon} alt={$_('frame.actions.visibilityToggle')} use:toolTip={$_('frame.actions.visibilityToggle')} on:click={onToggleVisible}/>
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       {#if showsBarrier}
         <div
@@ -249,13 +250,13 @@
         >
           <BarrierIcon
             barriers={film?.barriers ?? { left: false, right: false, top: false, bottom: false }}
-            toolTipText="枠の開放"
+            toolTipText={$_('frame.barrier.opening')}
             on:click={toggleBarrierPopup}
           />
         </div>
       {/if}
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt="エフェクト" use:toolTip={"エフェクト"} on:click={onToggleeffectVisible}/>
+      <img draggable={false} class="effect-icon" class:active={effectVisible} src={effectIcon} alt={$_('frame.actions.effects')} use:toolTip={$_('frame.actions.effects')} on:click={onToggleeffectVisible}/>
 
       <button 
         class="transformix-icon"
@@ -275,7 +276,7 @@
           {/each}
         </div>
         <!-- centering -->
-        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl" on:click={onNewEffect} use:toolTip={"エフェクト追加"} >
+        <div class="effect-item variant-ghost-primary mt-1 flex flex-col items-center text-4xl" on:click={onNewEffect} use:toolTip={$_('frame.actions.addEffect')} >
           +
         </div>
       </div>
@@ -291,32 +292,32 @@
     <div class="barrier-transformix-row">
       <div class="transformix-grid">
         {#if calculateOutPaintingCost != null}
-          <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? "アウトペイント(余地がないので不可)" : "アウトペイント[" + outPaintingCost + "]"} on:click={onOutPainting}>
-            <img draggable={false} src={outPaintingIcon} alt="アウトペイント"/>
+          <button class="transformix-item" use:toolTip={outPaintingCost == 0 ? `${$_('frame.actions.outpaint')}(余地がないので不可)` : `${$_('frame.actions.outpaint')}[${outPaintingCost}]`} on:click={onOutPainting}>
+            <img draggable={false} src={outPaintingIcon} alt={$_('frame.actions.outpaint')}/>
           </button>
         {/if}
-        <button class="transformix-item" use:toolTip={"消しゴム[6]"} on:click={onEraser}>
-          <img draggable={false} src={eraserIcon} alt="消しゴム"/>
+        <button class="transformix-item" use:toolTip={`${$_('frame.actions.eraser')}[6]`} on:click={onEraser}>
+          <img draggable={false} src={eraserIcon} alt={$_('frame.actions.eraser')}/>
         </button>
-        <button class="transformix-item" use:toolTip={"背景除去[3]"} on:click={onPunch}>
-          <img draggable={false} src={punchIcon} alt="背景除去"/>
+        <button class="transformix-item" use:toolTip={`${$_('frame.actions.backgroundRemoval')}[3]`} on:click={onPunch}>
+          <img draggable={false} src={punchIcon} alt={$_('frame.actions.backgroundRemoval')}/>
         </button>
-        <button class="transformix-item" use:toolTip={"アップスケール[1]"} on:click={onUpscale}>
-          <img draggable={false} src={upscaleIcon} alt="アップスケール"/>
+        <button class="transformix-item" use:toolTip={`${$_('frame.actions.upscale')}[1]`} on:click={onUpscale}>
+          <img draggable={false} src={upscaleIcon} alt={$_('frame.actions.upscale')}/>
         </button>
-        <button class="transformix-item" use:toolTip={`インペイント[${inPaintingCost}]`} on:click={onInpaint}>
-          <img draggable={false} src={inpaintIcon} alt="インペイント"/>
+        <button class="transformix-item" use:toolTip={`${$_('frame.actions.inpaint')}[${inPaintingCost}]`} on:click={onInpaint}>
+          <img draggable={false} src={inpaintIcon} alt={$_('frame.actions.inpaint')}/>
         </button>
-        <button class="transformix-item" use:toolTip={"テキスト編集[6]"} on:click={onTextEdit}>
-          <img draggable={false} src={texteditIcon} alt="テキスト編集"/>
+        <button class="transformix-item" use:toolTip={`${$_('frame.actions.textEdit')}[6]`} on:click={onTextEdit}>
+          <img draggable={false} src={texteditIcon} alt={$_('frame.actions.textEdit')}/>
         </button>
-        <button class="transformix-item" use:toolTip={"複製"} on:click={onDuplicate}>
-          <img draggable={false} src={dupliateIcon} alt="複製"/>
+        <button class="transformix-item" use:toolTip={$_('frame.actions.duplicate')} on:click={onDuplicate}>
+          <img draggable={false} src={dupliateIcon} alt={$_('frame.actions.duplicate')}/>
         </button>
-        <button class="transformix-item" use:toolTip={"ムービー作成..."} on:click={onVideo}>
-          <img draggable={false} src={videoIcon} alt="ムービー作成"/>
+        <button class="transformix-item" use:toolTip={`${$_('frame.actions.movieCreation')}...`} on:click={onVideo}>
+          <img draggable={false} src={videoIcon} alt={$_('frame.actions.movieCreation')}/>
         </button>
-          <button class="transformix-item" use:toolTip={"ダウンロード"} on:click={onDownload}>
+          <button class="transformix-item" use:toolTip={$_('frame.actions.download')} on:click={onDownload}>
             <img draggable={false} src={downloadIcon} alt="ダウンロード"/>
           </button>
         </div>
@@ -332,13 +333,13 @@
   on:close={() => barrierPopupVisible = false}>
   <div class="card p-4 shadow-xl z-[1001]" style="z-index: 100;">
     <div class="barrier-toggle-area">
-      <div class="barrier-title">枠の開放</div>
+      <div class="barrier-title">{$_('frame.barrier.opening')}</div>
       <div class="barrier-toggle-layout">
         <button
           class="barrier-toggle barrier-left"
           class:on={film?.barriers.left}
           class:off={!film?.barriers.left}
-          use:toolTip={"左枠の開放"}
+          use:toolTip={$_('frame.barrier.left')}
           on:click={() => { if (film) { film.barriers.left = !film.barriers.left; $redrawToken = true; dispatch('commit', true); } }}
         >←</button>
         <div class="barrier-updown-group">
@@ -346,14 +347,14 @@
             class="barrier-toggle barrier-top"
             class:on={film?.barriers.top}
             class:off={!film?.barriers.top}
-            use:toolTip={"上枠の開放"}
+            use:toolTip={$_('frame.barrier.top')}
             on:click={() => { if (film) { film.barriers.top = !film.barriers.top; $redrawToken = true; dispatch('commit', true); } }}
           >↑</button>
           <button
             class="barrier-toggle barrier-bottom"
             class:on={film?.barriers.bottom}
             class:off={!film?.barriers.bottom}
-            use:toolTip={"下枠の開放"}
+            use:toolTip={$_('frame.barrier.bottom')}
             on:click={() => { if (film) { film.barriers.bottom = !film.barriers.bottom; $redrawToken = true; dispatch('commit', true); } }}
           >↓</button>
         </div>
@@ -361,7 +362,7 @@
           class="barrier-toggle barrier-right"
           class:on={film?.barriers.right}
           class:off={!film?.barriers.right}
-          use:toolTip={"右枠の開放"}
+          use:toolTip={$_('frame.barrier.right')}
           on:click={() => { if (film) { film.barriers.right = !film.barriers.right; $redrawToken = true; dispatch('commit', true); } }}
         >→</button>
       </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
 
   // 画像ソースはcanvas一択
   let imageSource: HTMLCanvasElement;
@@ -144,7 +145,7 @@
 
 <div class="card p-4 w-modal shadow-xl">
   <header class="card-header">
-    <h2>画像マスク作成</h2>
+    <h2>{$_('generator.createImageMask')}</h2>
   </header>
   <section class="p-4">
     <div class="flex flex-col items-center gap-2">
@@ -176,17 +177,17 @@
       </div>
       <div class="flex gap-2 mt-2">
         <label>
-          ブラシサイズ
+          {$_('generator.brushSize')}
           <input type="range" min="4" max="64" bind:value={brushSize} />
         </label>
-        <button class="btn variant-ghost-surface" on:click={clearMask}>マスク消去</button>
+        <button class="btn variant-ghost-surface" on:click={clearMask}>{$_('generator.clearMask')}</button>
       </div>
     </div>
   </section>
   <footer class="card-footer flex gap-2">
     <div class="flex-1"></div>
-    <button class="btn variant-ghost-surface" on:click={onCancel}>キャンセル</button>
-    <button class="btn variant-filled-primary" on:click={onSubmit}>完了</button>
+    <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('generator.cancel')}</button>
+    <button class="btn variant-filled-primary" on:click={onSubmit}>{$_('generator.complete')}</button>
   </footer>
 </div>
 

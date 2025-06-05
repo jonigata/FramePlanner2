@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { resizeCanvasIfNeeded } from '../lib/layeredCanvas/tools/imageUtil';
   import FeathralCost from '../utils/FeathralCost.svelte';
+  import { _ } from 'svelte-i18n';
   
   let canvas: HTMLCanvasElement;
   let scale: "2x" | "4x" = "2x";
@@ -47,7 +48,7 @@
 
 <div class="card p-4 w-modal shadow-xl">
   <header class="card-header">
-    <h2>画像アップスケール</h2>
+    <h2>{$_('generator.imageUpscale')}</h2>
   </header>
   
   <section class="p-4">
@@ -62,11 +63,11 @@
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <h3>現在のサイズ</h3>
+          <h3>{$_('generator.currentSize')}</h3>
           <p class="mx-4">{canvas?.width || 0} x {canvas?.height || 0}</p>
         </div>
         <div>
-          <h3>変換後のサイズ</h3>
+          <h3>{$_('generator.sizeAfterConversion')}</h3>
           <p class="mx-4">{targetWidth} x {targetHeight}</p>
         </div>
       </div>
@@ -76,10 +77,10 @@
   <footer class="card-footer flex gap-2">
     <div class="flex-1"></div>
     <button class="btn variant-ghost-surface" on:click={onCancel}>
-      キャンセル
+      {$_('generator.cancel')}
     </button>
     <button class="btn variant-filled-primary flex flex-row gap-2" on:click={onSubmit}>
-      <span class="generate-text">実行</span><FeathralCost cost={scale === "2x" ? 1 : 4}/>
+      <span class="generate-text">{$_('generator.execute')}</span><FeathralCost cost={scale === "2x" ? 1 : 4}/>
     </button>
   </footer>
 </div>

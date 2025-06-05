@@ -1,13 +1,14 @@
 <script lang="ts">
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import type { ImagingContext } from '../utils/feathralImaging';
+  import { _ } from 'svelte-i18n';
 
   export let imagingContext: ImagingContext;
   export let imageProgress: number | null = null;
 </script>
 
 <div class="w-hull h-full flex flex-col justify-center items-center">
-  <h2>画像生成中</h2>
+  <h2>{$_('generator.generatingImages')}</h2>
   <!-- per page --> 
   <div class="w-full pl-4 items-center mb-2">
     <ProgressBar label="Progress Bar" value={imagingContext.succeeded + imagingContext.failed} max={imagingContext.total || 1} />

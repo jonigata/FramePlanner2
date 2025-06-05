@@ -7,6 +7,7 @@
   import ExponentialSliderEdit from '../utils/ExponentialSliderEdit.svelte';
   import SliderEdit from '../utils/SliderEdit.svelte';
   import type { Book } from '../lib/book/book';
+  import { _ } from 'svelte-i18n';
 
   let min = 256;
   let exponentialMin = 4096;
@@ -72,24 +73,24 @@
   <Drawer placement="left" open={$controlPanelOpen} size="350px" on:clickAway={() => $controlPanelOpen = false}>
     <div class="drawer-content">
       <details open>
-        <summary>紙のサイズ</summary>
+        <summary>{$_('editor.paperSize')}</summary>
         <div class="section">
-          <h2>カスタム</h2>
+          <h2>{$_('editor.custom')}</h2>
           <ExponentialSliderEdit label="W" labelWidth={"20px"} bind:value={$paperWidth} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
           <ExponentialSliderEdit label="H" labelWidth={"20px"} bind:value={$paperHeight} min={min} max={max} exponentialMin={exponentialMin} exponentialRegion={1000} powPerStep={0.0001} step={1}/>
-          <h2>正方形</h2>
+          <h2>{$_('editor.square')}</h2>
           <div class="hbox gap-0.5">
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1024, 1024)}>S2</button>
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(512, 512)}>S1</button>
           </div>
-          <h2>縦長</h2>
+          <h2>{$_('editor.portrait')}</h2>
           <div class="hbox gap-0.5">
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1680, 2376)}>A3</button>
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(1456, 2056)}>B4</button>
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(840, 1188)}>A4</button>
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(728, 1028)}>B5</button>
           </div>
-          <h2>横長</h2>
+          <h2>{$_('editor.landscape')}</h2>
           <div class="hbox gap-0.5">
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(2376, 1680)}>A3</button>
             <button class="btn btn-sm variant-filled paper-size" on:click={() => setDimensions(2056, 1456)}>B4</button>
@@ -100,19 +101,19 @@
       </details>
 
       <details open>
-        <summary>進行方向・折り返し</summary>
+        <summary>{$_('editor.directionAndWrap')}</summary>
         <div class="section">
-          <h2>進行方向</h2>
+          <h2>{$_('editor.direction')}</h2>
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
               <RadioItem bind:group={book.direction} name="direction" value={'right-to-left'}><span class="radio-text">◀</span></RadioItem>
               <RadioItem bind:group={book.direction} name="direction" value={'left-to-right'}><span class="radio-text">▶</span></RadioItem>
             </RadioGroup>
           </div>
-          <h2>折返し</h2>
+          <h2>{$_('editor.wrap')}</h2>
           <div class="radio-box hbox">
             <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-              <RadioItem bind:group={book.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">なし</span></RadioItem>
+              <RadioItem bind:group={book.wrapMode} name="wrap-mode" value={'none'}><span class="radio-text">{$_('editor.none')}</span></RadioItem>
               <RadioItem bind:group={book.wrapMode} name="wrap-mode" value={'two-pages'}><span class="radio-text">2p</span></RadioItem>
               <RadioItem bind:group={book.wrapMode} name="wrap-omde" value={'one-page'}><span class="radio-text">1p</span></RadioItem>
             </RadioGroup>
@@ -121,7 +122,7 @@
       </details>
 
       <details open>
-        <summary>拡大率</summary>
+        <summary>{$_('editor.scale')}</summary>
         <div class="section">
           <div class="flex flex-row w-full gap-1 items-center">
             <SliderEdit bind:value={$scale} min={10} max={400} step={1}/>％

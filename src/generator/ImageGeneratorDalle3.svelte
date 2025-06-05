@@ -7,6 +7,7 @@
   import { createCanvasFromImage } from '../lib/layeredCanvas/tools/imageUtil';
   import { createPreference } from '../preferences';
   import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
+  import { _ } from 'svelte-i18n';
 
   export let busy: boolean;
   export let prompt: string;
@@ -57,7 +58,7 @@
       clearInterval(q);
     } catch (e) {
       console.log(e);
-      toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
+      toastStore.trigger({ message: `${$_('generator.imageGenerationError')}${e}`, timeout: 3000});
       progress = 0;
     }
     busy = false;

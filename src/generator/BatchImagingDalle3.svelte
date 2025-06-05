@@ -13,6 +13,7 @@
   import { commitBook } from '../lib/book/book';
   import { persistentText } from '../utils/persistentText';
   import { createPreference } from '../preferences';
+  import { _ } from 'svelte-i18n';
   import "../box.css"  
 
   export let imagingContext: ImagingContext;
@@ -79,7 +80,7 @@
       imagingContext.succeeded++;
     } catch (e) {
       console.log(e);
-      toastStore.trigger({ message: `画像生成エラー: ${e}`, timeout: 3000});
+      toastStore.trigger({ message: `${$_('generator.imageGenerationError')}${e}`, timeout: 3000});
       imagingContext.failed++;
     }
   }
@@ -113,10 +114,10 @@
     <input class="input" type="password" autocomplete="off" bind:value={apiKey}/>
   </div>
   <div class="flex flex-row gap-2 items-center">
-    <h3>スタイル</h3>
+    <h3>{$_('generator.style')}</h3>
     <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
   </div>
-  <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
+  <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>{$_('generator.start')}</button>
 </div>
 
 <style>

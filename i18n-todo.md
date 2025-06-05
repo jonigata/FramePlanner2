@@ -1,5 +1,12 @@
 # FramePlanner i18n対応 残作業覚書
 
+最終更新: 2025-01-06
+
+## 進捗サマリー
+- Phase 1 (編集系): ✅ 完了 (2025-01-06)
+- Phase 2 (生成系): 🚧 次の作業対象
+- Phase 3 (拡張機能): 📅 予定
+
 ## 完了済みコンポーネント ✅
 
 ### 基盤システム
@@ -26,20 +33,20 @@
 
 ## 未対応コンポーネント 🚧
 
-### 1. 編集系コンポーネント (高優先度)
+### 1. 編集系コンポーネント (高優先度) ✅
 
-#### **ControlPanel** (`src/controlpanel/ControlPanel.svelte`)
-- 紙のサイズ設定
-- 拡大率、進行方向設定
-- カスタムサイズ入力
+#### **ControlPanel** (`src/controlpanel/ControlPanel.svelte`) ✅
+- [x] 紙のサイズ設定
+- [x] 拡大率、進行方向設定
+- [x] カスタムサイズ入力
 
 #### **BookEditor系** (`src/bookeditor/`)
-- **BubbleInspector** - フキダシ編集パネル
-  - フォント選択、サイズ、色設定
-  - シェイプ選択、テンプレート
-- **FrameInspector** - フレーム編集パネル
-  - フィルム効果、レイヤー操作
-  - フレーム分割、配置調整
+- **BubbleInspector** - フキダシ編集パネル ✅
+  - [x] フォント選択、サイズ、色設定
+  - [x] シェイプ選択、テンプレート
+- **FrameInspector** - フレーム編集パネル ✅
+  - [x] フィルム効果、レイヤー操作
+  - [x] フレーム分割、配置調整
 - **PageInspector** - ページ設定パネル
   - ページサイズ、色設定
 - **TemplateChooser** - テンプレート選択
@@ -86,18 +93,39 @@
 
 ## 翻訳ファイル拡張予定
 
-### 追加予定セクション
+### 追加済みセクション ✅
 
 ```json
 {
   "editor": {
-    "bubbleEditor": "フキダシ編集",
-    "frameEditor": "フレーム編集", 
-    "pageEditor": "ページ編集",
-    "fontSize": "フォントサイズ",
-    "fontColor": "文字色",
-    "backgroundColor": "背景色"
+    "paperSize": "紙のサイズ",
+    "custom": "カスタム",
+    "square": "正方形",
+    "portrait": "縦長",
+    "landscape": "横長",
+    "direction": "進行方向",
+    "wrap": "折返し",
+    "scale": "拡大率"
   },
+  "bubble": {
+    "text": "テキスト",
+    "fontSize": "フォントサイズ",
+    "fontColor": "フォント色",
+    "outlineWidth": "フチの太さ",
+    "backgroundColor": "フキダシ背景色"
+  },
+  "frame": {
+    "visibility": "表示",
+    "visible": "表示",
+    "hidden": "非表示"
+  }
+}
+```
+
+### 追加予定セクション
+
+```json
+{
   "generator": {
     "generateImage": "画像生成",
     "batchGeneration": "バッチ生成",
@@ -164,10 +192,10 @@ import { _ } from 'svelte-i18n';
 
 ## 優先順位付け戦略
 
-### Phase 1: 編集系 (即座に影響大)
-1. ControlPanel - 基本設定
-2. BubbleInspector - フキダシ編集
-3. FrameInspector - フレーム編集
+### Phase 1: 編集系 (即座に影響大) ✅ 完了
+1. ControlPanel - 基本設定 ✅
+2. BubbleInspector - フキダシ編集 ✅
+3. FrameInspector - フレーム編集 ✅
 
 ### Phase 2: 生成系 (使用頻度高)
 1. ImageGenerator - AI画像生成

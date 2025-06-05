@@ -6,6 +6,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import ExponentialRangeSlider from '../../utils/ExponentialRangeSlider.svelte';
+  import { _ } from 'svelte-i18n';
 	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
   import { tick } from 'svelte';
   import { toolTip } from '../../utils/passiveToolTipStore';
@@ -294,6 +295,9 @@
       case "textedit":
         onTextEdit({ detail: film } as CustomEvent<Film>);
         break;
+      case "scribble":
+        onScribble({ detail: film } as CustomEvent<Film>);
+        break;
       case "duplicate":
         onDuplicate({ detail: film } as CustomEvent<Film>);
         break;
@@ -340,7 +344,7 @@
 
   async function onTransformText() {
     if ($onlineStatus !== 'signed-in') {
-      toastStore.trigger({ message: `ログインしていないと使えません`, timeout: 3000});
+      toastStore.trigger({ message: $_('bubble.notLoggedIn'), timeout: 3000});
       return;
     }
     console.log("onTransformText", transformTextMethod, $bubble!.text);
@@ -362,96 +366,96 @@
     {#if $bubble}
     <div class="drawer-content" bind:this={drawerContent}>
       <details open>
-        <summary>全体</summary>
+        <summary>{$_('bubble.overall')}</summary>
         <div class="section">
           <div class="flex flex-row items-center gap-1">
-            <div class="label">コマへの埋め込み</div>
-            <div class="embed hbox" use:toolTip={"フキダシ埋め込み"}>
+            <div class="label">{$_('bubble.embedToFrame')}</div>
+            <div class="embed hbox" use:toolTip={$_('bubble.embedded')}>
               <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
                 <RadioItem bind:group={$bubble.embedded} name="embed" value={false}><img class="embed-item" src={unembeddedIcon} alt="embedded" width="12" height="12"/></RadioItem>
                 <RadioItem bind:group={$bubble.embedded} name="embed" value={true}><img class="embed-item" src={embeddedIcon} alt="unembedded" width="12" height="12"/></RadioItem>
               </RadioGroup>
             </div> 
             <div class="ml-2">
-              <button class="btn btn-sm bg-warning-500 h-6" on:click={reset}>リセット</button>
+              <button class="btn btn-sm bg-warning-500 h-6" on:click={reset}>{$_('bubble.reset')}</button>
             </div>
           </div>
         </div>
       </details>
 
       <details open>
-        <summary>テキスト</summary>
+        <summary>{$_('bubble.text')}</summary>
         <div class="section">
-          <h2>スタイル</h2>
+          <h2>{$_('bubble.style')}</h2>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div class="self-stretch selected-font variant-ghost-primary rounded-container-token text-center" on:click={() => $fontChooserOpen = true}>
             <span style="font-family: {$bubble.fontFamily};">{$bubble.fontFamily}</span>
           </div>
           <div class="flex gap-2 items-center">
-            <div class="label">縦書き/横書き</div>
-            <div class="direction hbox" use:toolTip={"縦書き/横書き"}>
+            <div class="label">{$_('bubble.verticalHorizontal')}</div>
+            <div class="direction hbox" use:toolTip={$_('bubble.verticalHorizontal')}>
               <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
                 <RadioItem bind:group={$bubble.direction} name="justify" value={'v'}><img class="direction-item" src={verticalIcon} alt="title" width="12" height="12"/></RadioItem>
                 <RadioItem bind:group={$bubble.direction} name="justify" value={'h'}><img class="direction-item" src={horizontalIcon} alt="title" width="12" height="12"/></RadioItem>
               </RadioGroup>
             </div>
-            <div class="label">自動改行</div>
-            <input class="checkbox" type="checkbox" use:toolTip={"自動改行"} bind:checked={$bubble.autoNewline}/>
+            <div class="label">{$_('bubble.autoNewline')}</div>
+            <input class="checkbox" type="checkbox" use:toolTip={$_('bubble.autoNewline')} bind:checked={$bubble.autoNewline}/>
           </div>
-          <div class="flex items-center gap-1" use:toolTip={"フォントサイズ"}>
-            <div class="label">フォントサイズ</div>
+          <div class="flex items-center gap-1" use:toolTip={$_('bubble.fontSize')}>
+            <div class="label">{$_('bubble.fontSize')}</div>
               <ExponentialRangeSlider name="fontsize" bind:value={fontSize} exponentialMin={100} step={1}/>
               <div class="text-xs slider-value-text">
                 <div class="number-box"><NumberEdit bind:value={fontSize} min={1} max={999}/></div>
               </div>  
           </div>
-          <h2>カラー</h2>
+          <h2>{$_('bubble.color')}</h2>
           <div class="flex items-center">
-            <div class="label">塗りつぶし</div>
-            <div class="color-label" use:toolTip={"フォント色"}>
+            <div class="label">{$_('bubble.fill')}</div>
+            <div class="color-label" use:toolTip={$_('bubble.fontColor')}>
               <ColorPickerLabel bind:hex={$bubble.fontColor}/>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <div class="label">フチの太さ</div>
+            <div class="label">{$_('bubble.outlineWidth')}</div>
             <RangeSlider name="outlinewidth" bind:value={$outlineWidth} max={20} step={1} style="width:80px;"/>
-            <div class="label">フチの色</div>
-            <div class="color-label" use:toolTip={"フチの色"}>
+            <div class="label">{$_('bubble.outlineColor')}</div>
+            <div class="color-label" use:toolTip={$_('bubble.outlineColor')}>
               <ColorPickerLabel bind:hex={$bubble.outlineColor}/>
             </div>
           </div>
-          <h2>レイアウト</h2>
-          <div class="flex items-center gap-1" use:toolTip={"行間"}>
-            <div class="label">行間</div>
+          <h2>{$_('bubble.layout')}</h2>
+          <div class="flex items-center gap-1" use:toolTip={$_('bubble.lineSpacing')}>
+            <div class="label">{$_('bubble.lineSpacing')}</div>
               <RangeSlider name="lineskip" bind:value={$bubble.lineSkip} min={-1} max={5} step={0.1}/>
               <div class="text-xs slider-value-text">
                 <div class="number-box"><NumberEdit bind:value={$bubble.lineSkip} min={-1} max={5} allowDecimal={true}/></div>
               </div>  
           </div>
-          <div class="flex items-center gap-1" use:toolTip={"字間(現在は縦書きのみ有効)"}>
-            <div class="label">字間</div>
+          <div class="flex items-center gap-1" use:toolTip={$_('bubble.charSpacingTooltip')}>
+            <div class="label">{$_('bubble.charSpacing')}</div>
             <RangeSlider name="charskip" bind:value={$bubble.charSkip} min={-1} max={5} step={0.1}/>
             <div class="text-xs slider-value-text">
                 <div class="number-box"><NumberEdit bind:value={$bubble.charSkip} min={-1} max={5} allowDecimal={true}/></div>
               </div>  
           </div>
-          <h2>ルビ</h2>
-          <div class="flex items-center gap-1" use:toolTip={"行間"}>
-            <div class="label">ルビ サイズ</div>
+          <h2>{$_('bubble.ruby')}</h2>
+          <div class="flex items-center gap-1" use:toolTip={$_('bubble.lineSpacing')}>
+            <div class="label">{$_('bubble.rubySize')}</div>
               <RangeSlider name="lineskip" bind:value={$bubble.rubySize} min={0} max={1} step={0.05}/>
               <div class="text-xs slider-value-text">
                 <div class="number-box"><NumberEdit bind:value={$bubble.rubySize} min={0} max={1} allowDecimal={true}/></div>
               </div>  
           </div>
-          <div class="flex items-center gap-1" use:toolTip={"字間(現在は縦書きのみ有効)"}>
-            <div class="label">ルビ 間隔</div>
+          <div class="flex items-center gap-1" use:toolTip={$_('bubble.charSpacingTooltip')}>
+            <div class="label">{$_('bubble.rubySpacing')}</div>
             <RangeSlider name="charskip" bind:value={$bubble.rubyDistance} min={0} max={1} step={0.05}/>
             <div class="text-xs slider-value-text">
                 <div class="number-box"><NumberEdit bind:value={$bubble.rubyDistance} min={0} max={1} allowDecimal={true}/></div>
               </div>  
           </div>
-          <h2>内容</h2>
+          <h2>{$_('bubble.content')}</h2>
           {#if transforming}
             <div class="textarea flex items-center justify-center">
               <ProgressRadial stroke={100} width="w-10"/>
@@ -466,43 +470,43 @@
               use:selection={onSelectionChanged}/>
           {/if}
           <div class="btn-group variant-filled-primary h-6">
-            <button disabled={!textSelected} on:click={onWrapColor}><span class="text-sm text-white">色</span></button>
-            <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">ルビ</span></button>
-            <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">縦中横</span></button>
+            <button disabled={!textSelected} on:click={onWrapColor}><span class="text-sm text-white">{$_('bubble.colorButton')}</span></button>
+            <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">{$_('bubble.rubyButton')}</span></button>
+            <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">{$_('bubble.rotationButton')}</span></button>
           </div>
           <div class="flex flex-row w-full gap-2">
             <select class="select h-8 p-0 w-full" bind:value={transformTextMethod}>
-              <option value="translateToEnglish">英訳</option>
-              <option value="addFurigana">ふりがな</option>
-              <option value="simplifySpeech">シンプル化</option>
+              <option value="translateToEnglish">{$_('bubble.translateToEnglish')}</option>
+              <option value="addFurigana">{$_('bubble.addFurigana')}</option>
+              <option value="simplifySpeech">{$_('bubble.simplifySpeech')}</option>
             </select>
-            <button type="button" class="btn btn-sm variant-filled" on:click={onTransformText}><span class="text-sm text-white" use:toolTip={"AIテキスト編集の実行[1]"}>適用</span></button>
+            <button type="button" class="btn btn-sm variant-filled" on:click={onTransformText}><span class="text-sm text-white" use:toolTip={$_('bubble.aiTextEditTooltip')}>{$_('bubble.applyTransform')}</span></button>
           </div>          
         </div>
       </details>
 
       <details open>
-        <summary>シェイプ</summary>
+        <summary>{$_('bubble.shape')}</summary>
         <div class="section">
           <div class="flex gap-2">
             <div>
               <BubbleSample size={[64,96]} bind:shape={$chosenShape} on:click={chooseShape}/>
-              <button class="btn btn-sm variant-filled paper-size h-6 mt-2" on:click={saveTemplate}>テンプレートに登録</button>
+              <button class="btn btn-sm variant-filled paper-size h-6 mt-2" on:click={saveTemplate}>{$_('bubble.saveTemplate')}</button>
             </div>
             <div class="flex flex-col gap-2">
               <div class="flex items-center">
-                <div class="label w-16">塗りつぶし</div>
-                <div class="color-label" use:toolTip={"フキダシ背景色"}>
+                <div class="label w-16">{$_('bubble.fill')}</div>
+                <div class="color-label" use:toolTip={$_('bubble.backgroundColor')}>
                   <ColorPickerLabel bind:hex={$bubble.fillColor}/>
                 </div>
               </div>
               <div class="flex items-center">
-                <div class="label w-16">線の太さ</div>
+                <div class="label w-16">{$_('bubble.strokeWidth')}</div>
                 <RangeSlider name="outlinewidth" bind:value={$strokeWidth} max={20} step={1} style="width:80px;"/>
               </div>
               <div class="flex items-center">
-                <div class="label w-16">線の色</div>
-                <div class="color-label" use:toolTip={"フキダシのフチの色"}>
+                <div class="label w-16">{$_('bubble.lineColor')}</div>
+                <div class="color-label" use:toolTip={$_('bubble.strokeColor')}>
                   <ColorPickerLabel bind:hex={$bubble.strokeColor}/>
                 </div>
               </div>
@@ -512,18 +516,18 @@
       </details>
 
       <details>
-        <summary>シェイプパラメータ</summary>
+        <summary>{$_('bubble.shapeParameters')}</summary>
         <div class="section">
           <BubbleInspectorAppendix/>
         </div>
       </details>
 
       <details>
-        <summary>ビデオパラメータ</summary>
+        <summary>{$_('bubble.videoParameters')}</summary>
         <div class="section">
           <div class="self-stretch variant-ghost-tertiary rounded-container-token pl-2">
-            <div class="hbox gap-2 grow left" use:toolTip={"ビデオ作成時のディレイ"}>
-              <span class="w-24 text-left">出現ディレイ</span>
+            <div class="hbox gap-2 grow left" use:toolTip={$_('bubble.videoDelay')}>
+              <span class="w-24 text-left">{$_('bubble.appearanceDelay')}</span>
               <div style="width: 140px;">
                 <RangeSlider name="delay" bind:value={$appearanceDelay} min={0} max={10} step={0.1}/>
               </div>
@@ -533,7 +537,7 @@
         </div>
       </details>
 
-      <h1>レイヤー</h1>
+      <h1>{$_('bubble.layer')}</h1>
       <div class="w-full text-left mb-32">
         {#key $bubbleInspectorRebuildToken}
           <FilmList

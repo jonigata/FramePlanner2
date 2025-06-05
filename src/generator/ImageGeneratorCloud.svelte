@@ -14,6 +14,7 @@
   import SliderEdit from '../utils/SliderEdit.svelte';
   import FluxModes from './FluxModes.svelte';
   import { ImageMedia, type Media } from "../lib/layeredCanvas/dataModels/media";
+  import { _ } from 'svelte-i18n';
 
   import clipboardIcon from '../assets/clipboard.webp';
   import FeathralCost from '../utils/FeathralCost.svelte';
@@ -51,7 +52,7 @@
 
   async function generate() {
     if (mode == 'pro' && 1 < batchCount ) {
-      toastStore.trigger({ message: 'Proモードでは現在複数枚指定できません', timeout: 2000 });
+      toastStore.trigger({ message: $_('generator.proModeMultipleImagesNotSupported'), timeout: 2000 });
       batchCount = 1;
     }
 
@@ -81,7 +82,7 @@
       };
 
       const canvases = await executeProcessAndNotify(
-        5000, "画像が生成されました",
+        5000, $_('generator.imageGenerated'),
         async () => {
           return await generateImage(`${postfix}\n${prompt}`, {width,height}, mode, batchCount, background);
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
@@ -104,7 +105,7 @@
 
   function copyToClipboard() {
     navigator.clipboard.writeText(prompt);
-    toastStore.trigger({ message: 'クリップボードにコピーしました', timeout: 1500});
+    toastStore.trigger({ message: $_('generator.copiedToClipboard'), timeout: 1500});
   }
 
   $: estimatedCost = batchCount * calculateCost({width,height}, mode);
@@ -118,21 +119,21 @@
   {#if $onlineStatus === 'signed-in'}
   <p><Feathral/></p>
 
-  <h2>モード</h2>
+  <h2>{$_('generator.mode')}</h2>
   <div class="vbox left gap-2 mode">
     <FluxModes bind:mode={mode}/>
-    <p>※GPT-1のコストは将来変更の可能性があります</p>
+    <p>{$_('generator.costDisclaimer')}</p>
   </div>
 
-  <h2>スタイル</h2>
+  <h2>{$_('generator.style')}</h2>
   <textarea class="w-96 textarea" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
-  <h2>プロンプト</h2>
+  <h2>{$_('generator.prompt')}</h2>
   <div class="textarea-container">
     <textarea class="textarea h-32" bind:value={prompt}/>
     <div class="icon-container flex flex-row-reverse gap-2">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <img src={clipboardIcon} alt="クリップボードにコピー" on:click={copyToClipboard} use:toolTip={"クリップボードにコピー"} />
+      <img src={clipboardIcon} alt={$_('generator.copyToClipboard')} on:click={copyToClipboard} use:toolTip={$_('generator.copyToClipboard')} />
     </div>
   </div>        
 
@@ -151,13 +152,13 @@
     {/if}
     {#if uiType == 'gpt-image-1'}
       <select class="select h-8 p-0 w-64" bind:value={sizeText}>
-        <option value="1024x1024">正方形(1024x1024)</option>
-        <option value="1536x1024">横長(1536x1024)</option>
-        <option value="1024x1536">縦長(1024x1536)</option>
+        <option value="1024x1024">{$_('generator.square')}</option>
+        <option value="1536x1024">{$_('generator.landscape')}</option>
+        <option value="1024x1536">{$_('generator.portrait')}</option>
       </select>
       <select class="select h-8 p-0" bind:value={background}>
-        <option value="opaque">通常背景</option>
-        <option value="transparent">透過背景</option>
+        <option value="opaque">{$_('generator.normalBackground')}</option>
+        <option value="transparent">{$_('generator.transparentBackground')}</option>
       </select>
 
     {/if}
@@ -170,13 +171,13 @@
         {#if busy}
           <ProgressRadial stroke={220} meter="stroke-success-200" track="stroke-success-400" width="w-4"/>
         {:else}
-          生成
+          {$_('generator.generate')}
           <FeathralCost showsLabel={false} cost={estimatedCost} />
         {/if}
         </div>
     </button>
     {#if $onlineAccount.feathral < 1}
-    <div class="warning">Feathralが足りません</div>
+    <div class="warning">{$_('generator.notEnoughFeathral')}</div>
     {/if}
 
     <ProgressBar label="Progress Bar" value={progress} max={1} />
@@ -184,7 +185,7 @@
   {/if}
   <Gallery columnWidth={220} bind:items={gallery} on:commit={onChooseImage} bind:refered={refered}/>
   {:else}
-    <p>サインインしてください</p>
+    <p>{$_('generator.pleaseSignIn')}</p>
   {/if}
 </div>
 

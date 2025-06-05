@@ -10,6 +10,7 @@
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { calculateFramePadding } from '../../utils/outPaintFilm'
   import type { FilmTool } from '../../utils/filmTools';
+  import { _ } from 'svelte-i18n';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -163,11 +164,11 @@
   <Drawer placement={"left"} open={opened} overlay={false} size={"350px"} on:clickAway={close}>
     <div class="drawer-content">
       <div class="h-full flex items-center justify-center gap-4 mb-4">
-        <h2>表示</h2>
+        <h2>{$_('frame.visibility')}</h2>
         <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-          <RadioItem bind:group={$visibility} name="embed" value={0}>非表示</RadioItem>
-          <RadioItem bind:group={$visibility} name="embed" value={1}>枠なし</RadioItem>
-          <RadioItem bind:group={$visibility} name="embed" value={2}>すべて</RadioItem>
+          <RadioItem bind:group={$visibility} name="embed" value={0}>{$_('frame.hidden')}</RadioItem>
+          <RadioItem bind:group={$visibility} name="embed" value={1}>{$_('frame.frameOnly')}</RadioItem>
+          <RadioItem bind:group={$visibility} name="embed" value={2}>{$_('frame.all')}</RadioItem>
         </RadioGroup>
       </div>
       {#key $frameInspectorRebuildToken}

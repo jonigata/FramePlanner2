@@ -8,6 +8,7 @@
   import { mainBook, redrawToken } from '../bookeditor/workspaceStore';
   import { commitBook } from '../lib/book/book';
   import FluxModes from './FluxModes.svelte';
+  import { _ } from 'svelte-i18n';
   import "../box.css"  
 
   export let imagingContext: ImagingContext;
@@ -33,16 +34,16 @@
 
 <div class="flex flex-col gap-2 mt-2 w-full h-full">
   {#if $onlineStatus !== 'signed-in'}
-    <p>ログインしてください</p>
+    <p>{$_('generator.pleaseLogIn')}</p>
   {:else}
     <p><Feathral/></p>
     <div class="flex flex-row gap-2 items-center">
-      <h3>モード</h3>
-      <FluxModes bind:mode={mode} comment={"1コマあたり"}/>
-      <h3>スタイル</h3>
+      <h3>{$_('generator.mode')}</h3>
+      <FluxModes bind:mode={mode} comment={$_('generator.perPanel')}/>
+      <h3>{$_('generator.style')}</h3>
       <textarea class="textarea textarea-style w-96" bind:value={postfix} use:persistentText={{store:'imaging', key:'style', onLoad: (v) => postfix = v}}/>
       </div>
-    <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>開始</button>
+    <button class="btn btn-sm variant-filled w-32" disabled={imagingContext.total === imagingContext.succeeded} on:click={execute}>{$_('generator.start')}</button>
   {/if}
 </div>
 
