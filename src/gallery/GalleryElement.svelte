@@ -6,6 +6,7 @@
   import type { Media } from "../lib/layeredCanvas/dataModels/media";
   import { formatDuration } from '../utils/timeFormat';
   import MediaFrame from './MediaFrame.svelte';
+  import { _ } from 'svelte-i18n';
 
   import drop from '../assets/drop.webp';
   import reference from '../assets/reference.webp';
@@ -89,14 +90,14 @@
     <MediaFrame {media} showControls={false}/>
   </div>
   {#if accessable}
-    <div class="delete-button" on:click={e => onDelete(e)} use:toolTip={"削除"}>
+    <div class="delete-button" on:click={e => onDelete(e)} use:toolTip={$_('gallery.delete')}>
       <img src={drop} alt="delete"/>
     </div>
-    <div class="telescope-button" on:click={e => onView(e)} use:toolTip={"見る"}>
+    <div class="telescope-button" on:click={e => onView(e)} use:toolTip={$_('gallery.view')}>
       <img src={telescope} alt="view" />
     </div>
     {#if referable}
-      <div class="reference-button" on:click={e => onRefer(e)} use:toolTip={"i2i参照"}>
+      <div class="reference-button" on:click={e => onRefer(e)} use:toolTip={$_('gallery.i2iReference')}>
         {#if refered === media}
           <img src={referenceSelected} alt="reference"/>
         {:else}

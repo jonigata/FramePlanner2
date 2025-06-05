@@ -302,5 +302,14 @@
     "landscapeRatio": "Landscape (16:9)",
     "portraitRatio": "Portrait (9:16)",
     "squareRatio": "Square (1:1)"
+  },
+  "materialBucket": {
+    "materialCollection": "Material Collection",
+    "generationHistory": "Generation History"
+  },
+  "gallery": {
+    "delete": "Delete",
+    "view": "View",
+    "i2iReference": "i2i Reference"
   }
 }

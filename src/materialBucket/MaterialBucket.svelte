@@ -4,6 +4,7 @@
   import MaterialGallery from './MaterialGallery.svelte';
   import WarehouseGallery from './WarehouseGallery.svelte';
   import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+  import { _ } from 'svelte-i18n';
 
   function onDragStart() {
     setTimeout(() => {
@@ -19,14 +20,14 @@
     {#if $materialBucketOpen}
       <div class="content-container">
         <div class="material-section">
-          <h2>素材集</h2>
+          <h2>{$_('materialBucket.materialCollection')}</h2>
           <MaterialGallery on:dragstart={onDragStart} />
         </div>
         
         <Accordion>
           <AccordionItem bind:open={warehouseOpen}>
             <svelte:fragment slot="summary">
-              <h2>生成履歴</h2>
+              <h2>{$_('materialBucket.generationHistory')}</h2>
             </svelte:fragment>
             <svelte:fragment slot="content">
               <WarehouseGallery on:dragstart={onDragStart} />

@@ -302,5 +302,14 @@
     "landscapeRatio": "横長 (16:9)",
     "portraitRatio": "縦長 (9:16)",
     "squareRatio": "正方形 (1:1)"
+  },
+  "materialBucket": {
+    "materialCollection": "素材集",
+    "generationHistory": "生成履歴"
+  },
+  "gallery": {
+    "delete": "削除",
+    "view": "見る",
+    "i2iReference": "i2i参照"
   }
 }

@@ -4,7 +4,7 @@
 
 ## 進捗サマリー
 - Phase 1 (編集系): ✅ 完了 (2025-01-06)
-- Phase 2 (生成系): 🚧 次の作業対象
+- Phase 2 (生成系): 🚧 進行中 (2025-01-06)
 - Phase 3 (拡張機能): 📅 予定
 
 ## 完了済みコンポーネント ✅
@@ -28,6 +28,14 @@
   - NewStorageWizard
 - [x] **Transfer** - データエクスポート/インポート
   - Dump.svelte, Undump.svelte
+
+### Phase 1 編集系 (完了)
+- [x] **ControlPanel** - 紙サイズ、拡大率設定
+- [x] **BubbleInspector** - フキダシ編集パネル (全機能)
+- [x] **FrameInspector** - フレーム編集パネル (全機能)
+  - FrameInspector.svelte, FilmEffect.svelte, FilmListItem.svelte, frameInspectorStore.ts
+
+### Phase 2 生成系 (進行中)
 
 ---
 
@@ -53,11 +61,14 @@
 
 ### 2. 生成系コンポーネント (中優先度)
 
-#### **ImageGenerator系** (`src/generator/`)
-- **ImageGenerator** - AI画像生成メイン
-- **BatchImaging** - バッチ生成
-- **VideoGenerator** - 動画生成
-- **Upscaler** - 画像アップスケール
+#### **ImageGenerator系** (`src/generator/`) ✅
+- [x] **ImageGenerator** - AI画像生成メイン
+- [x] **BatchImaging** - バッチ生成  
+- [x] **VideoGenerator** - 動画生成
+- [x] **Upscaler** - 画像アップスケール
+- [x] **ImageGeneratorCloud** - クラウド画像生成
+- [x] **ImageMaskDialog** - マスク作成ダイアログ
+- [x] **ImagingProgressBar** - 進捗表示
 
 #### **素材管理系**
 - **MaterialBucket** (`src/materialBucket/`) - 素材バケット
