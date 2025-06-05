@@ -1,6 +1,7 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
   import sprytIcon from '../assets/spryt.webp';
+  import { _ } from 'svelte-i18n';
 
   let title = '';
   let description = '';
@@ -24,11 +25,11 @@
 </script>
 
 <div class="card p-4 w-full max-w-lg">
-  <h2 class="h2 mb-4">ドキュメントの公開</h2>
-  <p class="text-white">初めての公開で<img src={sprytIcon} alt="spryt" width=24 height=24 class="image-outline"/>500プレゼント！</p>
+  <h2 class="h2 mb-4">{$_('publication.documentPublication')}</h2>
+  <p class="inline-flex items-center gap-1">{$_('publication.firstPublicationBonus')}<img src={sprytIcon} alt="spryt" width=24 height=24 class="image-outline"/>{$_('publication.bonusAmount')}</p>
   <form on:submit|preventDefault={handleSubmit}>
     <label class="label">
-      <span>タイトル*</span>
+      <span>{$_('publication.title')}</span>
       <input
         class="input p-2 pl-4 w-full"
         type="text"
@@ -39,12 +40,12 @@
     </label>
 
     <label class="label">
-      <span>公開</span>
+      <span>{$_('publication.public')}</span>
       <input type="checkbox" id="is_public" bind:checked={is_public} class="mr-2" />
     </label>
 
     <label class="label">
-      <span>説明</span>
+      <span>{$_('publication.description')}</span>
       <textarea
         class="textarea p-2 pl-4 w-full"
         bind:value={description}
@@ -54,7 +55,7 @@
     </label>
 
     <label class="label">
-      <span>関連URL</span>
+      <span>{$_('publication.relatedUrl')}</span>
       <input
         class="input p-2 pl-4 w-full"
         type="text"
@@ -63,22 +64,22 @@
       />
     </label>
 
-    <span>※ページ1が表紙になります</span>
+    <span>{$_('publication.coverNote')}</span>
 
     <div class="flex gap-2 mt-4">
       <button type="button" class="btn variant-filled-secondary" on:click={showGuideline}>
-        投稿ガイドライン
+        {$_('publication.postingGuideline')}
       </button>
       <div class="flex-grow"></div>
       <button type="button" class="btn variant-ghost" on:click={handleCancel}>
-        キャンセル
+        {$_('publication.cancel')}
       </button>
       <button 
         type="submit" 
         class="btn variant-filled-primary"
         disabled={!title}
       >
-        公開
+        {$_('publication.publish')}
       </button>
     </div>
   </form>

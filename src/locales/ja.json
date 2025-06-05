@@ -355,5 +355,22 @@
       "alreadyRegistered": "既に登録されています",
       "characterRegistered": "キャラクターを登録しました"
     }
+  },
+  "publication": {
+    "documentPublication": "ドキュメントの公開",
+    "firstPublicationBonus": "初めての公開で",
+    "bonusAmount": "500プレゼント！",
+    "title": "タイトル*",
+    "public": "公開",
+    "description": "説明",
+    "relatedUrl": "関連URL",
+    "coverNote": "※ページ1が表紙になります",
+    "postingGuideline": "投稿ガイドライン",
+    "cancel": "キャンセル",
+    "publish": "公開",
+    "socialCardEdit": "ソーシャルカード編集",
+    "socialCardDescription": "X(Twitter)に投稿したときに表示されます",
+    "skip": "スキップ",
+    "ok": "OK"
   }
 }

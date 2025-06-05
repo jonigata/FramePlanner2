@@ -355,5 +355,22 @@
       "alreadyRegistered": "Already registered",
       "characterRegistered": "Character registered"
     }
+  },
+  "publication": {
+    "documentPublication": "Document Publication",
+    "firstPublicationBonus": "First publication bonus:",
+    "bonusAmount": "500 points!",
+    "title": "Title*",
+    "public": "Public",
+    "description": "Description",
+    "relatedUrl": "Related URL",
+    "coverNote": "※ Page 1 will be the cover",
+    "postingGuideline": "Posting Guidelines",
+    "cancel": "Cancel",
+    "publish": "Publish",
+    "socialCardEdit": "Social Card Edit",
+    "socialCardDescription": "Displayed when posting to X(Twitter)",
+    "skip": "Skip",
+    "ok": "OK"
   }
 }

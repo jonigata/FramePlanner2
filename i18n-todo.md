@@ -84,9 +84,9 @@
 - [x] **Roster** - 名簿機能 (6 strings)
 - [x] **NotebookManual** - 創作ノートメイン (50+ strings)
 
-#### **Publication系** (`src/publication/`)
-- **Publication** - 出版設定
-- **SocialCard** - SNS投稿カード
+#### **Publication系** (`src/publication/`) ✅
+- [x] **Publication** - 出版設定 (10 strings)
+- [x] **SocialCard** - SNS投稿カード (4 strings)
 
 ### 4. ユーティリティ系 (低優先度)
 

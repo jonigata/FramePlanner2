@@ -6,6 +6,7 @@
   import type { DragEventData } from '@neodrag/svelte';
   import { buildBookRenderer, BookRenderer } from "../lib/layeredCanvas/tools/bookRenderer"
   import { canvasToBlob } from "../lib/layeredCanvas/tools/imageUtil";
+  import { _ } from 'svelte-i18n';
 
   $: book = $mainBook!;
 
@@ -120,8 +121,8 @@
 </script>
 
 <div class="card p-4 w-full max-w-lg flex flex-col items-center">
-  <h2>ソーシャルカード編集</h2>
-  <p>X(Twitter)に投稿したときに表示されます</p>
+  <h2>{$_('publication.socialCardEdit')}</h2>
+  <p>{$_('publication.socialCardDescription')}</p>
   <div class="social-card-view relative">
     <MangaView book={book} pageScale={1} on:canvasChanged={onCanvasChanged} showsPageButtons={false}/>
     <div class="clipping-box" bind:this={clippingBox}>
@@ -162,11 +163,11 @@
   </div>
   <div class="flex gap-2 mt-4 w-full">
     <button class="btn variant-ghost" on:click={handleSkip}>
-      スキップ
+      {$_('publication.skip')}
     </button>
     <div class="flex-grow"></div>
     <button class="btn variant-filled-primary" on:click={handleSubmit}>
-      OK
+      {$_('publication.ok')}
     </button>
   </div>
 </div>
