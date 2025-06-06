@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { modalStore } from '@skeletonlabs/skeleton';
+  import { modalStore, toastStore } from '@skeletonlabs/skeleton';
   import { toolTip } from '../utils/passiveToolTipStore';
   import dumpRestorePicture from '../assets/dump-restore.webp';
   import { _ } from 'svelte-i18n';
@@ -25,6 +25,26 @@
     console.log('Dialog mounted, modal store:', args);
     sourceTitle = args.sourceTitle;
   });
+
+  // ファイル選択時の検証
+  $: if (dumpFiles && dumpFiles.length > 0) {
+    const file = dumpFiles[0];
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.envelope')) {
+      toastStore.trigger({
+        message: $_('undump.envelopeNotSupported'),
+        timeout: 5000
+      });
+      dumpFiles = null;
+    } else if (!fileName.endsWith('.ndjson')) {
+      toastStore.trigger({
+        message: $_('undump.invalidFileType'),
+        timeout: 3000
+      });
+      dumpFiles = null;
+    }
+  }
 </script>
 
 <div class="card p-4 w-full max-w-2xl">

@@ -151,7 +151,9 @@
     "altText": "データ引き継ぎ",
     "tooltipExecute": "0で実行",
     "chooseFile": "ファイルを選択",
-    "noFileSelected": "ファイルが選択されていません"
+    "noFileSelected": "ファイルが選択されていません",
+    "invalidFileType": ".ndjsonファイルを選択してください",
+    "envelopeNotSupported": ".envelopeをリストアすることはできません。.envelopeを読み込むには、ファイルマネージャにドロップしてください"
   },
   "editor": {
     "paperSize": "紙のサイズ",

@@ -151,7 +151,9 @@
     "altText": "Data Migration",
     "tooltipExecute": "Execute at 0",
     "chooseFile": "Choose File",
-    "noFileSelected": "No file selected"
+    "noFileSelected": "No file selected",
+    "invalidFileType": "Please select a .ndjson file",
+    "envelopeNotSupported": "Cannot restore .envelope files. To load .envelope files, please drop them in the file manager"
   },
   "editor": {
     "paperSize": "Paper Size",
