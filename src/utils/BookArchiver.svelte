@@ -58,6 +58,7 @@
             console.log("envelope", $mainBook!.revision);
             const {blob} = await makeEnvelope();
             saveAs(blob, "manga.envelope");
+            toastStore.trigger({ message: 'パッケージをダウンロードしました。ファイルマネージャにドロップすると読み込むことができます。', timeout: 3000});
             break;
           case 'export-prompts':
             await exportPrompts(targetPages);
