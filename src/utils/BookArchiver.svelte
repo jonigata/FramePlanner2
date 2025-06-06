@@ -74,6 +74,7 @@
             $progress = 1;
             saveAs(blob, "manga.envelope");
             $progress = null;
+            toastStore.trigger({ message: 'パッケージをダウンロードしました。ファイルマネージャにドロップすると読み込むことができます。', timeout: 3000});
             break;
           case 'export-prompts':
             await exportPrompts(targetPages);

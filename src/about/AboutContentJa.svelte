@@ -150,6 +150,8 @@
     <dd>A.ブラウザの設定のサイトごとのセキュリティで「許可」してください。ブラウザのURL欄の鍵アイコンでできるみたいです。</dd>
     <dt>Q.フキダシの透明度を変えたい</dt>
     <dd>A.フキダシインスペクタの下の方に色設定があるので、そこをクリックしてカラーピッカーを開いたら右端の透明度スライダーを操作してください</dd>
+    <dt>Q.ダウンロードしたパッケージを読み込むには？</dt>
+    <dd>A.ファイルマネージャにドロップしてください</dd>
   </dl>
 
   <h2>注意</h2>
@@ -165,11 +167,16 @@
   </p>
 
   {#if $onlineAccount}
-  <h2>要望(Contact)</h2>
-  <div class="hbox mx-2" style="margin-top: 4px;">
-    <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
-    <button class="btn btn-sm variant-filled paper-size"  on:click={doContact}>送信</button>
-  </div>
+    <h2>要望(Contact)</h2>
+    <p>回答はX(<a href="https://x.com/jonigata_ai" target="_blank" rel="noopener noreferrer">https://x.com/jonigata_ai</a>)で行うことがあります</p>
+    <div class="hbox mx-2" style="margin-top: 4px;">
+      <textarea class="mx-2 my-2 rounded-container-token grow textarea" bind:value={contactText}></textarea>
+      <button class="btn btn-sm variant-filled paper-size"  on:click={doContact}>送信</button>
+    </div>
+  {:else}
+    <h2>要望(Contact)</h2>
+    <p>ログインすると匿名の要望を送ることができます。</p>
+    <p>回答はX(<a href="https://x.com/jonigata_ai" target="_blank" rel="noopener noreferrer">https://x.com/jonigata_ai</a>)で行うことがあります</p>
   {/if}
 </div>
 

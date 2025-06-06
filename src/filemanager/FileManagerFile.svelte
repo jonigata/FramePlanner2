@@ -119,6 +119,7 @@
     const book = await loadBookFrom(fileSystem, file);
     const blob = await writeEnvelope(book, n => $progress = n);
     saveAs(blob, `${filename}.envelope`);
+    toastStore.trigger({ message: 'パッケージをダウンロードしました。ファイルマネージャにドロップすると読み込むことができます。', timeout: 3000});
     $progress = null;
   }
 
