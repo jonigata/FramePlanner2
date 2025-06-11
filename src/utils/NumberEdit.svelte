@@ -14,7 +14,7 @@
 
   let key = 0; // undo防止
 
-  let valueText = writable(value.toString());
+  let valueText = writable(value?.toString() ?? '');
 
   $: onValueChanged(value);
   function onValueChanged(value: number) {
