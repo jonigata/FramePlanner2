@@ -6,7 +6,7 @@ import { measureHorizontalText, measureVerticalText } from "../tools/draw/drawTe
 import { type Film, FilmStack, insertFilms } from "./film";
 import type { Media } from "./media";
 
-const minimumBubbleSize = 72;
+const minimumBubbleSize = 48;
 const threshold = 10;
 
 export interface BubbleRenderInfo { // serializeしない
