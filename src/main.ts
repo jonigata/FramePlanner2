@@ -35,6 +35,13 @@ initializeApp(getDomainFromCurrentUrl())
 
 initializeSupabase();
 
+// polyfill for Array.prototype.toReversed
+if (!Array.prototype.toReversed) {
+  Array.prototype.toReversed = function () {
+    return [...this].reverse();
+  };
+}
+
 const app = new App({
   target: document.getElementById("app")!,
 });
