@@ -52,7 +52,8 @@ export function* kinsokuGenerator<T>(
   }
   function countOidashi(): number {
     for (let back = 0; back < maxOidashiDepth; back++) {
-      if (!isLeader(buffer[cursor-1-back])) { return back; }
+      const index = cursor - 1 - back;
+      if (index < 0 || !isLeader(buffer[index])) { return back; }
     }
     return maxOidashiDepth;
   }
@@ -78,6 +79,10 @@ export function* kinsokuGenerator<T>(
       }
     } else {
       cursor -= back;
+      // 最低でも1文字は出力する（無限ループ防止）
+      if (cursor === 0) {
+        cursor = 1;
+      }
     }
     const buffer2 = buffer.splice(0, cursor);
     yield { index, buffer: buffer2, size: lineSize!, wrap: true };

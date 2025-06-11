@@ -234,8 +234,8 @@ export function measureVerticalText(
       maxHeight,
       richIterator,
       0,
-      (c: RichFragment) => c.chars.length == 1 && leaderChars.has(c.chars[0]),
-      (c: RichFragment) => c.chars.length == 1 && trailerChars.has(c.chars[0]));
+      (c: RichFragment) => c && c.chars && c.chars.length == 1 && leaderChars.has(c.chars[0]),
+      (c: RichFragment) => c && c.chars && c.chars.length == 1 && trailerChars.has(c.chars[0]));
     
     for (const result of iterator) {
       a.push({ size: result.size, text: result.buffer });
