@@ -85,6 +85,10 @@ export class MockFileSystem extends FileSystem {
     }
     this.root = this.files['/' as NodeId] as MockFolder;
   }
+
+  getFileSystemName(): string {
+    return 'MockFileSystem';
+  }
 }
 
 export class MockFile extends File {

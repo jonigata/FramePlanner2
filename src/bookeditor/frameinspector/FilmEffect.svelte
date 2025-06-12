@@ -28,6 +28,7 @@
   }
   export let effect: Effect;
   $: effectAny = effect as any;
+  $: effectTag = effect.tag as keyof typeof parameterLists;
 
   function onDelete() {
     dispatch("delete", effect);
@@ -41,14 +42,16 @@
   // 以下スライダーのドラッグがsortable listで誤動作しないようにするためのhack
   // https://stackoverflow.com/questions/64853147/draggable-div-getting-dragged-when-input-range-slider-is-used
   onMount(() => {
-    for (const e of parameterLists[effect.tag]) {
-      if (e.type !== "number") continue;
-      console.log(`${effect.ulid}:${e.name}`);
-      const elem = document.getElementById(`${effect.ulid}:${e.name}`)!;
-      elem.setAttribute("draggable", "true");
-      elem.addEventListener("dragstart", (ev) => {
-        ev.preventDefault();
-      });
+    if (parameterLists[effectTag]) {
+      for (const e of parameterLists[effectTag]) {
+        if (e.type !== "number") continue;
+        console.log(`${effect.ulid}:${e.name}`);
+        const elem = document.getElementById(`${effect.ulid}:${e.name}`)!;
+        elem.setAttribute("draggable", "true");
+        elem.addEventListener("dragstart", (ev) => {
+          ev.preventDefault();
+        });
+      }
     }
   });
 </script>
@@ -56,12 +59,12 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="list" on:click={e => e.stopPropagation()}>
-  <h1>{titles[effect.tag]}</h1>
+  <h1>{titles[effectTag]}</h1>
   <div class="delete-icon">
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img src={deleteIcon} alt="delete" on:click={onDelete}/>
   </div>
-  {#each parameterLists[effect.tag] as e}
+  {#each parameterLists[effectTag] as e}
     <div class="list-item">
       {#if e.type === "number"}
         <div class="row">

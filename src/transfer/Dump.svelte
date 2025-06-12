@@ -53,7 +53,4 @@
     display: flex;
     gap: 8px;
   }
-  b {
-    font-family: '源暎エムゴ';
-  }
 </style>

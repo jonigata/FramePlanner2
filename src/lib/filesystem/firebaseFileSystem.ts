@@ -100,6 +100,10 @@ export class FirebaseFileSystem extends FileSystem {
     await set(child(this.nodesRef!, rootId), { type: 'folder' });
     return await this.getNode(rootId) as Folder;
   }
+
+  getFileSystemName(): string {
+    return 'FirebaseFileSystem';
+  }
 }
 
 export class FirebaseFile extends File {
