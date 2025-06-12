@@ -4,11 +4,11 @@
   import { toastStore } from '@skeletonlabs/skeleton';
   import BaseRootButton from './BaseRootButton.svelte';
   import bellIcon from '../assets/bell.webp';
-  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
+  import { gadgetFileSystem } from '../filemanager/fileManagerStore';
   import { _ } from 'svelte-i18n';
   
   function callFairy() {
-    if (!$mainBookFileSystem) {
+    if (!$gadgetFileSystem) {
       return;
     }
 

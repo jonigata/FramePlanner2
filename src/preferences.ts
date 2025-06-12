@@ -1,12 +1,16 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
-export type PreferenceStore = "imaging" | "filesystem";
-const preferencesVersion = 2;
+export type PreferenceStore = "imaging" | "filesystem" | "gadgetStore";
+const preferencesVersion = 3;
 
 export type FileSystemPreference = {
   type: "fsa",
   handle: FileSystemDirectoryHandle;
 };
+
+export type GadgetStorePreference = {
+  store: "local" | "fsa";
+}
 
 let dbPromise: Promise<IDBPDatabase<unknown>>;
 
@@ -24,6 +28,13 @@ export function assurePreferences() {
       if (oldVersion < 2) {
         if (!db.objectStoreNames.contains("filesystem")) {
           db.createObjectStore("filesystem");
+        }
+      }
+
+      // バージョン3: gadgetストアを作成
+      if (oldVersion < 3) {
+        if (!db.objectStoreNames.contains("gadgetStore")) {
+          db.createObjectStore("gadgetStore");
         }
       }
     }

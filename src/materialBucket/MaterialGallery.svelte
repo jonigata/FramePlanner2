@@ -2,7 +2,7 @@
   import Gallery from '../gallery/Gallery.svelte';
   import type { GalleryItem } from "../gallery/gallery";
   import { loading } from '../utils/loadingStore'
-  import { deleteMaterial, mainBookFileSystem, saveMaterial } from '../filemanager/fileManagerStore';
+  import { deleteMaterial, gadgetFileSystem, saveMaterial } from '../filemanager/fileManagerStore';
   import { dropzone } from '../utils/dropzone';
   import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
@@ -11,7 +11,9 @@
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia, VideoMedia, type Media, buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher, onMount } from 'svelte';
-  import type { BindId } from '../lib/filesystem/fileSystem';
+  import type { FileSystem, BindId } from '../lib/filesystem/fileSystem';
+
+  $: displayMaterialImages($gadgetFileSystem);
 
   const dispatch = createEventDispatcher();
   let gallery: Media[] | null = null;
@@ -43,7 +45,7 @@
 
   function onDelete(e: CustomEvent<GalleryItem>) {
     const bindId = bindIds.get(e.detail as Media);
-    deleteMaterial($mainBookFileSystem!, bindId!);
+    deleteMaterial($gadgetFileSystem!, bindId!);
   }
 
   async function onFileDrop(files: FileList) {
@@ -55,14 +57,14 @@
       if (file.type.startsWith('image/')) {
         const canvas = await createCanvasFromBlob(file);
         const media = new ImageMedia(canvas);
-        const bindId = await saveMaterial($mainBookFileSystem!, media);
+        const bindId = await saveMaterial($gadgetFileSystem!, media);
         bindIds.set(media, bindId);
         gallery.push(media);
       }
       if (file.type.startsWith('video/')) {
         const video = await createVideoFromBlob(file);
         const media = new VideoMedia(video);
-        const bindId = await saveMaterial($mainBookFileSystem!, media);
+        const bindId = await saveMaterial($gadgetFileSystem!, media);
         bindIds.set(media, bindId);
         gallery.push(media);
       }
@@ -70,9 +72,11 @@
     gallery = gallery;
   }
 
-  async function displayMaterialImages() {
+  async function displayMaterialImages(fs: FileSystem | null) {
+    if (fs == null) { return; }
+    console.log(fs.getFileSystemName());
     $loading = true;
-    const root = await $mainBookFileSystem!.getRoot();
+    const root = await fs.getRoot();
     const materialFolder = (await root.getNodesByName('素材'))[0].asFolder()!;
     const materials = await materialFolder.listEmbodied();
     const newBindIds = new WeakMap<Media, BindId>();
@@ -89,7 +93,9 @@
     $loading = false;
   }
 
-  onMount(displayMaterialImages);
+  onMount(() => {
+    displayMaterialImages($gadgetFileSystem);
+  });
 </script>
 
 <div class="dropzone" use:dropzone={onFileDrop}>

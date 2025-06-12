@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import streamSaver from 'streamsaver';
   import { _ } from 'svelte-i18n';
-  import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem } from "./fileManagerStore";
+  import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem, gadgetFileSystem } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book } from '../lib/book/book';
   import { newBook, revisionEqual, getHistoryWeight, collectAllFilms } from '../lib/book/book';
@@ -25,8 +25,9 @@
   import { waitForChange } from '../utils/reactUtil';
   import { type Writable, writable } from 'svelte/store';
   import { waitDialog } from "../utils/waitDialog";
-  import { createPreference, type FileSystemPreference } from '../preferences';
+  import { createPreference, type FileSystemPreference, type GadgetStorePreference } from '../preferences';
   import { buildFileSystem as buildLocalFileSystem } from './localFileSystem';
+  import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 
   export let localFileSystem: FileSystem;
 
@@ -55,6 +56,17 @@
   let fsaapi = 'showOpenFilePicker' in window;
   let storageFolder: FileSystemDirectoryHandle | null = null;
   $: storageFolderName = (storageFolder as FileSystemDirectoryHandle | null)?.name;
+
+  let gadgetStorage: 'local' | 'fsa' | null = null;
+  $: onGadgetStorageChanged(gadgetStorage);
+  async function onGadgetStorageChanged(gs: 'local' | 'fsa' | null) {
+    console.log("gadgetStorage changed", gs);
+    $gadgetFileSystem = gs == 'fsa' ? fsaFileSystem : localFileSystem;
+    if (gs == null) { return; }
+    const pref = createPreference<GadgetStorePreference | null>("gadgetStore", "current");
+    await pref.set({ store: gs });
+  }
+
 
   async function getRootFolders(fs: FileSystem): Promise<RootFolders> {
     const root = await fs.getRoot();
@@ -496,7 +508,13 @@
     console.log("###### fileSystemPreference", fileSystemPreference);
     // fileSystemPreference = null;
     await buildFsaFileSystem(fileSystemPreference);
-});
+
+    const pref2 = createPreference<GadgetStorePreference | null>("gadgetStore", "current");
+    const gadgetStore = await pref2.getOrDefault(null);
+    gadgetStorage = gadgetStore?.store ?? 'local';
+    console.log("###### gadgetStorage", gadgetStore);
+  });
+
 </script>
 
 <div class="drawer-outer">
@@ -652,6 +670,19 @@
           />
         </div>
       {/if}
+
+      {#if $fsaState == 'linked'}
+        <h2>補助データの保存場所</h2>
+        <p>フキダシシェイプ、素材ギャラリー、役者名簿などの保存場所を指定してください。</p>
+        <div class="radio-box hbox">
+          <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+            <RadioItem bind:group={gadgetStorage} name="gadget-storage" value={'local'}><span class="radio-text">ブラウザ</span></RadioItem>
+            <RadioItem bind:group={gadgetStorage} name="gadget-storage" value={'fsa'}><span class="radio-text">ローカル</span></RadioItem>
+          </RadioGroup>
+        </div>
+      {/if}
+
+      <div class="h-24"></div>
     </div>
   </Drawer>
 </div>

@@ -108,6 +108,10 @@ export class SupabaseFileSystem extends FileSystem {
       .insert([{ id: rootId, type: 'folder', owner_id: this.userId }]);
     return await this.getNode(rootId) as Folder;
   }
+
+  getFileSystemName(): string {
+    return 'SupabaseFileSystem';
+  }
 }
 
 export class SupabaseFile extends File {

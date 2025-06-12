@@ -1,12 +1,12 @@
 <script type="ts">
   import { materialBucketOpen } from '../materialBucket/materialBucketStore';
-  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
+  import { gadgetFileSystem } from '../filemanager/fileManagerStore';
   import BaseRootButton from './BaseRootButton.svelte';
   import stampIcon from '../assets/stamp.webp';
   import { _ } from 'svelte-i18n';
   
   function openMaterialBucket() {
-    if (!$mainBookFileSystem) { return; }
+    if (!$gadgetFileSystem) { return; }
     $materialBucketOpen = !$materialBucketOpen;
   }
 </script>

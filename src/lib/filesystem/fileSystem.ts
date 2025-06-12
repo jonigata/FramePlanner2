@@ -69,6 +69,8 @@ export abstract class FileSystem {
   collectTotalSize(): Promise<number> {
     throw new Error('Not implemented');
   }
+
+  abstract getFileSystemName(): string;
 }
 
 export interface Node {

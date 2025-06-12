@@ -19,7 +19,7 @@
   import { ProgressBar } from '@skeletonlabs/skeleton';
   import FluxModes from '../generator/FluxModes.svelte';
   import { adviseTheme, adviseCharacters, advisePlot, adviseScenario, adviseStoryboard, adviseCritique } from '../supabase';
-  import { mainBookFileSystem } from '../filemanager/fileManagerStore';
+  import { gadgetFileSystem } from '../filemanager/fileManagerStore';
   import { type Folder } from '../lib/filesystem/fileSystem';
   import { rosterOpen, rosterSelectedCharacter, saveCharacterToRoster } from './rosterStore';
   import { waitForChange } from '../utils/reactUtil';
@@ -343,7 +343,7 @@
   }
 
   async function onRegisterCharacter(e: CustomEvent<CharacterLocal>) {
-    await saveCharacterToRoster($mainBookFileSystem!, e.detail);
+    await saveCharacterToRoster($gadgetFileSystem!, e.detail);
     toastStore.trigger({ message: characterRegisteredMessage, timeout: 1500});
   }
 
@@ -377,7 +377,7 @@
   }
 
   onMount(async () => {
-    rootFolder = await $mainBookFileSystem!.getRoot();
+    rootFolder = await $gadgetFileSystem!.getRoot();
     aiFolder = (await rootFolder.getEmbodiedEntryByName('AI'))![2].asFolder()!;
 
     const preference = createPreference<string>('imaging', 'style');

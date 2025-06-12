@@ -5,7 +5,7 @@
   import BubbleSample from "./BubbleSample.svelte";
   import BubbleTemplateSample from './BubbleTemplateSample.svelte';
   import type { BindId } from "../../lib/filesystem/fileSystem";
-  import { mainBookFileSystem, loadBubbleFrom, saveBubbleTo } from '../../filemanager/fileManagerStore';
+  import { gadgetFileSystem, loadBubbleFrom, saveBubbleTo } from '../../filemanager/fileManagerStore';
   import { bubbleInspectorTarget } from './bubbleInspectorStore';
   import { Bubble } from "../../lib/layeredCanvas/dataModels/bubble";
   import type { Vector } from "../../lib/layeredCanvas/tools/geometry/geometry";
@@ -85,7 +85,7 @@
   }
 
   async function deleteTemplate(e: CustomEvent<MouseEvent>, bindId: BindId) {
-    const root = await $mainBookFileSystem!.getRoot();
+    const root = await $gadgetFileSystem!.getRoot();
     const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const entry = await folder.getEntry(bindId);
     await folder.unlink(bindId);
@@ -104,7 +104,7 @@
     templateBubbles = [];
     const paperSize = $bubbleInspectorTarget?.page?.paperSize;
     if (paperSize == null) return;
-    const root = await $mainBookFileSystem!.getRoot();
+    const root = await $gadgetFileSystem!.getRoot();
     const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const entries = await folder.listEmbodied();
     for (const entry of entries) {
@@ -121,7 +121,7 @@
     const bindId = templateBubbles.find(([b]) => b === bubble)?.[1];
     if (bindId == null) return;
 
-    const root = await $mainBookFileSystem!.getRoot();
+    const root = await $gadgetFileSystem!.getRoot();
     const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
     const file = (await folder.getEmbodiedEntry(bindId))![2].asFile()!;
     await saveBubbleTo(bubble, file);

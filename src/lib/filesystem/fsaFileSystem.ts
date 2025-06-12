@@ -493,6 +493,10 @@ export class FSAFileSystem extends FileSystem {
 
     }
   }
+
+  getFileSystemName(): string {
+    return 'FSAFileSystem';
+  }
 }
 
 export class FSAFile extends File {

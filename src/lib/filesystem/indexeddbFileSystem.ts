@@ -382,6 +382,10 @@ export class IndexedDBFileSystem extends FileSystem {
     console.log(`Processed ${writtenCount} nodes in total`);
     onProgress(1);
   }
+
+  getFileSystemName(): string {
+    return 'IndexedDBFileSystem';
+  }
 }
   
 export class IndexedDBFile extends File {
