@@ -18,6 +18,12 @@
     autoResize(); // 自動リサイズ機能を呼び出し
   }
 
+  function onPaste(event: ClipboardEvent) {
+    // ペーストイベントの伝播を停止（親要素のペーストハンドラーが実行されないようにする）
+    event.stopPropagation();
+    // デフォルトのペースト動作はそのまま実行される
+  }
+
   onMount(async () => {
     text = bubble.text;
     await tick();
@@ -26,7 +32,7 @@
 </script>
 
 <div class="bubblet-container">
-  <textarea class="bubblet variant-soft-surface rounded-container-token" bind:value={text} on:input={onInput} bind:this={textarea}></textarea>
+  <textarea class="bubblet variant-soft-surface rounded-container-token" bind:value={text} on:input={onInput} on:paste={onPaste} bind:this={textarea}></textarea>
 </div>
 
 <style>
