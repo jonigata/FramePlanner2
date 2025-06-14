@@ -3,7 +3,7 @@
   import FileManagerFile from "./FileManagerFile.svelte";
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
-  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip, importEnvelopeZipToFolder } from "./fileManagerStore";
+  import { fileManagerDragging, newFile, type Dragging, getCurrentDateTime, fileManagerUsedSizeToken, copyBookOrFolderInterFileSystem, saveBookTo, exportFolderAsEnvelopeZip, importEnvelopeZipToFolder, loadBookFrom } from "./fileManagerStore";
   import { readEnvelope, readOldEnvelope } from "../lib/book/envelope";
   import { newBook } from "../lib/book/book";
   import { mainBook, mainBookTitle } from '../bookeditor/workspaceStore';
@@ -282,6 +282,42 @@
     }
   }
 
+  async function duplicateChild(e: CustomEvent<{ bindId: BindId, nodeId: NodeId, filename: string }>) {
+    console.log("duplicate child", e.detail);
+    const { bindId, nodeId, filename } = e.detail;
+    
+    try {
+      $loading = true;
+      
+      // 元のファイルを読み込み
+      const sourceFile = (await fileSystem.getNode(nodeId))!.asFile()!;
+      const book = await loadBookFrom(fileSystem, sourceFile);
+      
+      // 新しいファイルを作成
+      const newFile = await fileSystem.createFile();
+      book.revision.id = newFile.id;
+      
+      // 保存
+      await saveBookTo(book, fileSystem, newFile);
+      
+      // 複製したファイル名を生成
+      const duplicatedName = `${filename} - ${getCurrentDateTime()}`;
+      
+      // フォルダにリンク
+      await node.link(duplicatedName, newFile.id);
+      
+      // UIを更新
+      node = node;
+      
+      toastStore.trigger({ message: $_('fileManager.duplicated'), timeout: 2000});
+    } catch (error) {
+      console.error("複製中にエラーが発生しました:", error);
+      toastStore.trigger({ message: $_('fileManager.duplicateFailed'), timeout: 3000});
+    } finally {
+      $loading = false;
+    }
+  }
+
   function startRename() {
     console.log("renameFolder");
     renameEdit.setFocus();
@@ -455,7 +491,7 @@
       {#if childNode.getType() === 'folder'}
         <svelte:self fileSystem={fileSystem} removability={"removable"} spawnability={spawnability} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} on:remove={removeChild} path={[...path, bindId]} on:rename={renameChild} trash={trash}/>
       {:else if childNode.getType() === 'file'}
-        <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild} trash={trash}/>
+        <FileManagerFile fileSystem={fileSystem} removability={"removable"} nodeId={childNode.id} filename={filename} bindId={bindId} parent={node} index={index} on:insert={onInsert} path={[...path, bindId]} on:remove={removeChild} on:rename={renameChild} on:duplicate={duplicateChild} trash={trash}/>
       {/if}
     {/each}
     <FileManagerFolderTail index={embodiedEntries.length} on:insert={onInsert} path={[...path, 'tail']}/>

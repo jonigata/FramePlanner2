@@ -17,6 +17,7 @@
   import fileIcon from '../assets/fileManager/file.webp';
   import pasteIcon from '../assets/fileManager/paste.webp'
   import packageIcon from '../assets/fileManager/package-export.webp'
+  import duplicateIcon from '../assets/fileManager/duplicate.webp'
 
   const dispatch = createEventDispatcher();
 
@@ -68,6 +69,10 @@
 
   function removeFile() {
     dispatch('remove', bindId);
+  }
+
+  function duplicateFile() {
+    dispatch('duplicate', { bindId, nodeId, filename });
   }
 
   function startRename() {
@@ -155,6 +160,11 @@
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <img class="button" src={packageIcon} alt="rename" on:click={makePackage} use:toolTip={$_('fileManager.createPackage')}/>
   </div>  
+  <div class="button-container">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <img class="button" src={duplicateIcon} alt="duplicate" on:click={duplicateFile} use:toolTip={$_('fileManager.duplicate')}/>
+  </div>
   <div class="button-container">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
