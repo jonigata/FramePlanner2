@@ -325,6 +325,7 @@ export interface BookOperators {
   getMarks: () => boolean[];
   setMarks: (marks: boolean[]) => void;
   getFocusedPage: () => Page;
+  focusToPage: (index: number, pageScale?: number, keepScale?: boolean) => void;
   scribbleFrame: (page: Page, frame: FrameElement) => void;
   scribbleBubble: (page: Page, bubble: Bubble) => void;
   coverFrame: (page: Page, frame: FrameElement) => void;

@@ -42,6 +42,7 @@
   import FullScreenLoading from './utils/FullScreenLoading.svelte';
   import FullScreenProgress from './utils/FullScreenProgress.svelte';
   import SaveOffButton from './rootelements/SaveOffButton.svelte';
+  import JumpButton from './rootelements/JumpButton.svelte';
   import DebugOnly from './utils/DebugOnly.svelte';
   import StructureTree from './about/StructureTree.svelte';
   import MaterialBucket from './materialBucket/MaterialBucket.svelte';
@@ -191,6 +192,7 @@
       <MaterialBucketButton />
       <NewBookButton  />
       <CabinetButton />
+      <JumpButton />
       <BellButton />
       <RulerButton/>
       <AboutButton/>

@@ -91,7 +91,7 @@
     if (bookSnapshot === newBookSnapshot) { return; }
     bookSnapshot = newBookSnapshot;
 
-    if (!$viewport || editingBookId !== book.revision.id) {
+    if (!$viewport) {
       console.log("================ viewport remake");
       const v = new Viewport(canvas, (p,s) => hint(canvas, p, s));
       v.translate = [150, 0];

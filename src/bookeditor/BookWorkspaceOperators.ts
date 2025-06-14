@@ -319,6 +319,42 @@ export class BookWorkspaceOperators implements BookOperators {
     return this.book.pages[index];
   }
 
+  focusToPage(index: number, pageScale: number = 1, keepScale: boolean = false): void {
+    if (!this.layeredCanvas || !this.arrayLayer) {
+      console.warn("BookWorkspaceOperators not properly initialized");
+      return;
+    }
+
+    // インデックスの範囲チェック
+    if (index < 0 || index >= this.arrayLayer.array.papers.length) {
+      console.warn(`Page index ${index} is out of range`);
+      return;
+    }
+
+    const viewport = this.layeredCanvas.viewport;
+    const paper = this.arrayLayer.array.papers[index];
+    const p = paper.center;
+    
+    if (keepScale) {
+      // Keep current scale, only change position
+      const currentScale = viewport.scale;
+      viewport.translate = [-p[0] * currentScale, -p[1] * currentScale];
+    } else {
+      // Original behavior: calculate new scale
+      const [cw, ch] = viewport.getCanvasSize();
+      const [pw, ph] = paper.paper.size;
+      const scale = Math.min(Math.max(1, cw) / pw, Math.max(1, ch) / ph) * pageScale;
+      viewport.scale = scale;
+      viewport.translate = [-p[0] * scale, -p[1] * scale];
+    }
+    
+    viewport.dirty = true;
+    this.layeredCanvas.redraw();
+    
+    // viewportの変更を通知
+    this.viewportChanged();
+  }
+
   scribbleFrame(page: Page, frame: FrameElement): void {
     const films = frame.filmStack.getOperationTargetFilms();
     if (films.length === 0) {return;}
