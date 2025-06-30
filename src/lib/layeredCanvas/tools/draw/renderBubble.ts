@@ -3,6 +3,7 @@ import { drawBubble as drawBubbleShape, drawPath, type DrawMethod } from "./bubb
 import { drawFilmStack } from "./drawFilmStack";
 import { drawText, measureText, type Direction } from "./drawText";
 import type { Bubble } from "../../dataModels/bubble";
+import { set } from "firebase/database";
 // import { captureException } from "@sentry/svelte";
 
 
@@ -30,23 +31,22 @@ export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize:
   ctx.translate(...bubble.getPhysicalCenter(paperSize));
   ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
-  // fill/stroke設定
-  if (minimumSizeWarning) {
-    ctx.fillStyle = bubble.hasEnoughSize(paperSize) ? bubble.fillColor : "rgba(255, 128, 0, 0.9)";;
-  } else {
-    ctx.fillStyle = bubble.fillColor;
-  }
-  ctx.strokeStyle = 0 < strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
-  ctx.lineWidth = strokeWidth;
-  
   // shape背景描画
-  drawBubbleElement(ctx, paperSize, bubble, size, 'fill');
-  drawBubbleElement(ctx, paperSize, bubble, size, 'clip');
+  fillBubbleElement(ctx, paperSize, bubble, size, minimumSizeWarning);
+  fillBubbleElement(ctx, paperSize, bubble, size, minimumSizeWarning);
 
   // 画像描画
   drawFilmStack(ctx, bubble.filmStack, paperSize, [0,0], null); // centerはすでに上で移動しているため
 
   ctx.restore();
+}
+
+function setBubbleStyle(ctx: CanvasRenderingContext2D, bubble: Bubble, paperSize: Vector, fillColor: string, minimumSizeWarning: boolean) {
+  if (minimumSizeWarning) {
+    ctx.fillStyle = bubble.hasEnoughSize(paperSize) ? fillColor : "rgba(255, 128, 0, 0.9)";;
+  } else {
+    ctx.fillStyle = fillColor;
+  }
 }
 
 export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, drawsUnited: boolean, supportsDpr: boolean) {
@@ -65,7 +65,7 @@ export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize:
   ctx.rotate((-bubble.rotation * Math.PI) / 180);
 
   ctx.save();
-  drawBubbleElement(ctx, paperSize, bubble, size, 'clip');
+  clipBubbleElement(ctx, bubble, size);
 
   // テキスト描画
   if (bubble.text && !bubble.hidesText) {
@@ -76,22 +76,63 @@ export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize:
   // shape枠描画
   ctx.strokeStyle = 0 < strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
   ctx.lineWidth = strokeWidth;
-  drawBubbleElement(ctx, paperSize, bubble, size, 'stroke');
+  strokeBubbleElement(ctx, paperSize, bubble, size);
 
   ctx.restore();
 }
 
-function drawBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, size: Vector, method: DrawMethod) {
+function fillBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, size: Vector, minimumSizeWarning: boolean) {
   const ri = bubble.renderInfo!;
-  if (ri.unitedPath) {
-    drawPath(ctx, method, ri.unitedPath, bubble.optionContext);
+  if (ri.unitedOuterPath) {
+    setBubbleStyle(ctx, bubble, paperSize, bubble.optionContext['shapeOutlineColor'] ?? 'white', minimumSizeWarning);
+    drawPath(ctx, 'fill', ri.unitedOuterPath, bubble.optionContext);
+    setBubbleStyle(ctx, bubble, paperSize, bubble.fillColor, minimumSizeWarning);
+    drawPath(ctx, 'fill', ri.unitedInnerPath!, bubble.optionContext);
   } else if (!bubble.parent) {
-    if (ri.path) {
-      drawPath(ctx, method, ri.path, bubble.optionContext);
+    if (ri.outerPath) {
+      setBubbleStyle(ctx, bubble, paperSize, bubble.optionContext['shapeOutlineColor'] ?? 'white', minimumSizeWarning);
+      drawPath(ctx, 'fill', ri.outerPath, bubble.optionContext);
+      setBubbleStyle(ctx, bubble, paperSize, bubble.fillColor, minimumSizeWarning);
+      drawPath(ctx, 'fill', ri.innerPath!, bubble.optionContext);
     } else {
       size[0] = Math.abs(size[0]);
       size[1] = Math.abs(size[1]);
-      drawBubbleShape(ctx, method, bubble.text, size, bubble.shape, bubble.optionContext);
+      setBubbleStyle(ctx, bubble, paperSize, bubble.fillColor, minimumSizeWarning);
+      drawBubbleShape(ctx, 'fill', bubble.text, size, bubble.shape, bubble.optionContext);
+    }
+  }
+}
+
+function clipBubbleElement(ctx: CanvasRenderingContext2D, bubble: Bubble, size: Vector) {
+  const ri = bubble.renderInfo!;
+  if (ri.unitedStrokePath) {
+    drawPath(ctx, 'clip', ri.unitedStrokePath, bubble.optionContext);
+  } else if (!bubble.parent) {
+    if (ri.strokePath) {
+      drawPath(ctx, 'clip', ri.strokePath, bubble.optionContext);
+    } else {
+      size[0] = Math.abs(size[0]);
+      size[1] = Math.abs(size[1]);
+      drawBubbleShape(ctx, 'clip', bubble.text, size, bubble.shape, bubble.optionContext);
+    }
+  }
+}
+
+function strokeBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, size: Vector) {
+  const strokeWidth = bubble.getPhysicalStrokeWidth(paperSize);
+  ctx.strokeStyle = 0 < strokeWidth ? bubble.strokeColor : "rgba(0, 0, 0, 0)";
+  ctx.lineWidth = strokeWidth;
+
+  const ri = bubble.renderInfo!;
+  if (ri.unitedStrokePath) {
+    drawPath(ctx, 'stroke', ri.unitedStrokePath, bubble.optionContext);
+  } else if (!bubble.parent) {
+    if (ri.strokePath) {
+      drawPath(ctx, 'stroke', ri.strokePath, bubble.optionContext);
+    } else {
+      size[0] = Math.abs(size[0]);
+      size[1] = Math.abs(size[1]);
+      drawBubbleShape(ctx, 'stroke', bubble.text, size, bubble.shape, bubble.optionContext);
     }
   }
 }

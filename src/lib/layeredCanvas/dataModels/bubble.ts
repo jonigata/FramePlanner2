@@ -11,8 +11,12 @@ const threshold = 10;
 
 export interface BubbleRenderInfo { // serializeしない
   pathJson: string;
-  path: paper.PathItem | null;
-  unitedPath: paper.PathItem | null;
+  innerPath: paper.PathItem | null;
+  outerPath: paper.PathItem | null;
+  strokePath: paper.PathItem | null;
+  unitedInnerPath: paper.PathItem | null;
+  unitedOuterPath: paper.PathItem | null;
+  unitedStrokePath: paper.PathItem | null;
   children: Bubble[];
 
   textJson: string;
@@ -514,6 +518,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -525,6 +531,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -536,6 +544,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0.1 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -563,6 +573,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -573,6 +585,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.5 },
     overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: (b: Bubble) => 1.2 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
   },
   "double-strokes": {
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
@@ -582,6 +596,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: (b: Bubble) => 1.25 },
     interval: { label: "間隔", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.04 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
   },
   "harsh": {
     link: {hint:"結合", icon:"unite"}, 
@@ -593,6 +609,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 15 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.1 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -608,6 +626,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.5, sampleInit: (b: Bubble) => 0.2 },
     depthJitter: { label: "鋭さジッター", type: "number", min: 0, max: 1.5, step: 0.01, init: (b: Bubble) => 0.5, sampleInit: (b: Bubble) => 0.1  },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -624,6 +644,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     smoothing: { label: "スムース", type: "boolean", init: (b: Bubble) => true },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
@@ -631,12 +653,16 @@ export const bubbleOptionSets: { [key: string]: any } = {
   "heart" : {
     link: {hint:"結合", icon:"unite"},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
   "diamond": {
     link: {hint:"結合", icon:"unite"},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -645,6 +671,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     shaftWidth: { label: "軸の太さ", type: "number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.5 },
     headLength: { label: "矢じりの長さ", type: "number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.5 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -672,6 +700,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     tailMid: {hint: "しっぽの途中",icon:"curve", init: (b: Bubble) => [0.5,0]},
     tailWidth: {label: "しっぽの幅", type: "number", min: 0.2, max: 2.0, step: 0.01, init: (b: Bubble) => 1.0},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },
@@ -686,6 +716,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     bumpCount: { label: "でこぼこの数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 5 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.4 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     smoothing: { label: "スムース", type: "boolean", init: (b: Bubble) => true },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
@@ -698,6 +730,8 @@ export const bubbleOptionSets: { [key: string]: any } = {
     xStraight: { label: "横線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: (b: Bubble) => 0.6 },
     yStraight: { label: "縦線の長さ", type: "number", min: 0, max: 0.9, step: 0.01, init: (b: Bubble) => 0.7 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
+    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
     roughness: { label: "ラフさ", type: "number", min: 0, max: 5, step: 0.1, init: (b: Bubble) => 0 },
     // freehand: {label: "手書き風", type:"boolean", init: (b: Bubble) => false},
   },

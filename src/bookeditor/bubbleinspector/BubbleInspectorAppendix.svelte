@@ -3,6 +3,7 @@
   import { RangeSlider } from '@skeletonlabs/skeleton';
   import NumberEdit from '../../utils/NumberEdit.svelte';
   import { bubbleInspectorTarget } from './bubbleInspectorStore';
+	import ColorPickerLabel from '../../utils/colorpicker/ColorPickerLabel.svelte';
 
   const bubble = writableDerived(
     bubbleInspectorTarget,
@@ -42,6 +43,14 @@
         <input type="checkbox" name={key} bind:checked={$bubble.optionContext[key]}/>
       </div>
     {/if}
+    {#if value["type"] === "color"}
+      <div class="row">
+        <div class="label">{value["label"]}</div>
+          <div class="color-label">
+            <ColorPickerLabel bind:hex={$bubble.optionContext[key]}/>
+          </div>
+      </div>
+    {/if}
   {/each}
 </div>
 {/if}
@@ -69,7 +78,10 @@
     text-align: right;
     font-size: 12px;
   }
+  .color-label {
+    width: 30px;
+    height: 16px;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
 </style>
-
-
-

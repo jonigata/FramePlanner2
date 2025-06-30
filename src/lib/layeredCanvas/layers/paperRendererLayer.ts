@@ -11,6 +11,8 @@ import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
 import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
 import { polygonToPath2D } from "../tools/draw/pathTools";
+import { PaperOffset } from 'paperjs-offset'
+import { PathItem } from "paper/dist/paper-core";
 
 type InheritanceContext = {
   borderColor: string, 
@@ -138,7 +140,9 @@ export class PaperRendererLayer extends LayerBase {
     const bubbleDic: {[key: string]: Bubble} = {};
     for (let bubble of bubbles) {
       bubble.renderInfo ??= {} as BubbleRenderInfo;
-      bubble.renderInfo.unitedPath = null;
+      bubble.renderInfo.unitedOuterPath = null;
+      bubble.renderInfo.unitedInnerPath = null;
+      bubble.renderInfo.unitedStrokePath = null;
       bubble.renderInfo.children = [];
       // pathJson, pathは持ち越す
       bubbleDic[bubble.uuid] = bubble;
@@ -173,28 +177,60 @@ export class PaperRendererLayer extends LayerBase {
         // const startTime = performance.now();
         const size = bubble.getPhysicalSize(paperSize);
         ri.pathJson = json;
-        ri.path = getPath(bubble.shape, size, bubble.optionContext, bubble.text);
-        ri.path?.rotate(-bubble.rotation);
+        ri.outerPath = getPath(bubble.shape, size, bubble.optionContext, bubble.text);
+        ri.outerPath?.rotate(-bubble.rotation);
+        ri.innerPath = null;
+        ri.strokePath = null;
+        if (ri.outerPath) { 
+          const offset = bubble.optionContext['shapeOutline'] ?? 0;
+          const expansion = Math.min(ri.outerPath.bounds.width, ri.outerPath.bounds.height) * offset;
+          ri.innerPath = PaperOffset.offset(ri.outerPath as any, -expansion);
+          ri.strokePath = ri.outerPath.clone();
+          ri.outerPath = ri.outerPath.subtract(ri.innerPath);
+        }
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
       }
     }
 
     // 結合
+    // unitedOuterPathがあるならunitedInnerPathもある
     for (let bubble of bubbles) {
       const ri = bubble.renderInfo!;
-      if (bubble.parent == null && ri.path) {
+      if (bubble.parent == null && ri.outerPath) {
         const center = bubble.getPhysicalCenter(paperSize);
-        ri.unitedPath = ri.path.clone();
-        ri.unitedPath.translate(center);
+        ri.unitedOuterPath = ri.outerPath.clone();
+        ri.unitedInnerPath = ri.innerPath?.clone() ?? null;
+        ri.unitedStrokePath = ri.strokePath?.clone() ?? null;
+        ri.unitedOuterPath.translate(center);
+        ri.unitedInnerPath?.translate(center);
+        ri.unitedStrokePath?.translate(center);
         for (let child of ri.children) {
           const ri2 = child.renderInfo!;
-          if (ri2.path == null) { continue; }
-          const path2 = ri2.path!.clone();
+          if (ri2.outerPath == null) { continue; }
+          const path2 = ri2.outerPath.clone();
           path2.translate(child.getPhysicalCenter(paperSize));
-          ri.unitedPath = ri.unitedPath.unite(path2);
+          ri.unitedOuterPath = ri.unitedOuterPath.unite(path2);
+          const innerPath2 = ri2.innerPath!.clone();
+          innerPath2.translate(child.getPhysicalCenter(paperSize));
+          if (ri.unitedInnerPath) {
+            ri.unitedInnerPath = ri.unitedInnerPath.unite(innerPath2);
+          } else {
+            ri.unitedInnerPath = innerPath2;
+          }
+          const strokePath2 = ri2.strokePath!.clone();
+          strokePath2?.translate(child.getPhysicalCenter(paperSize));
+          if (ri.unitedStrokePath) {
+            ri.unitedStrokePath = ri.unitedStrokePath.unite(strokePath2!);
+          } else {
+            ri.unitedStrokePath = strokePath2;
+          }
         }
-        ri.unitedPath.rotate(bubble.rotation, center);
-        ri.unitedPath.translate(reverse2D(center));
+        ri.unitedOuterPath.rotate(bubble.rotation, center);
+        ri.unitedOuterPath.translate(reverse2D(center));
+        ri.unitedInnerPath!.rotate(bubble.rotation, center);
+        ri.unitedInnerPath!.translate(reverse2D(center));
+        ri.unitedStrokePath!.rotate(bubble.rotation, center);
+        ri.unitedStrokePath!.translate(reverse2D(center));
       }
     }
   }
