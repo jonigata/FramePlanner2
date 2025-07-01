@@ -585,8 +585,6 @@ export const bubbleOptionSets: { [key: string]: any } = {
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.5 },
     overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: (b: Bubble) => 1.2 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
-    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
-    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
   },
   "double-strokes": {
     randomSeed: { label: "乱数調整", type: "number", min: 0, max: 100, step: 1, init: (b: Bubble) => 0 },
@@ -596,8 +594,6 @@ export const bubbleOptionSets: { [key: string]: any } = {
     overRun: { label: "オーバーラン", type: "number", min: 1.01, max: 1.4, step: 0.01, init: (b: Bubble) => 1.25 },
     interval: { label: "間隔", type: "number", min: 0.01, max: 0.2, step: 0.01, init: (b: Bubble) => 0.04 },
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
-    shapeOutline: {label: "フチ", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},
-    shapeOutlineColor:  { label: "フチの色", type: "color", init: (b: Bubble) => "#ffffffff" },
   },
   "harsh": {
     link: {hint:"結合", icon:"unite"}, 
