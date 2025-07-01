@@ -12,7 +12,6 @@ import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
 import { polygonToPath2D } from "../tools/draw/pathTools";
 import { PaperOffset } from 'paperjs-offset'
-import { PathItem } from "paper/dist/paper-core";
 
 type InheritanceContext = {
   borderColor: string, 
@@ -161,13 +160,14 @@ export class PaperRendererLayer extends LayerBase {
 
     // パス作成
     for (let bubble of bubbles) {
+      const opts = bubble.optionContext;
       const n_size = [bubble.n_p1[0] - bubble.n_p0[0], bubble.n_p1[1] - bubble.n_p0[1]];
       const ri = bubble.renderInfo!;
       const c = {
         paperSize: paperSize,
         shape: bubble.shape,
         size: n_size,
-        optionContext: bubble.optionContext,
+        optionContext: opts,
         rotation: bubble.rotation,
       }
       const json = JSON.stringify(c);
@@ -177,16 +177,15 @@ export class PaperRendererLayer extends LayerBase {
         // const startTime = performance.now();
         const size = bubble.getPhysicalSize(paperSize);
         ri.pathJson = json;
-        ri.outerPath = getPath(bubble.shape, size, bubble.optionContext, bubble.text);
-        ri.outerPath?.rotate(-bubble.rotation);
+        ri.strokePath = getPath(bubble.shape, size, opts, bubble.text);
+        ri.strokePath?.rotate(-bubble.rotation);
         ri.innerPath = null;
-        ri.strokePath = null;
-        if (ri.outerPath) { 
-          const offset = bubble.optionContext['shapeOutline'] ?? 0;
-          const expansion = Math.min(ri.outerPath.bounds.width, ri.outerPath.bounds.height) * offset;
-          ri.innerPath = PaperOffset.offset(ri.outerPath as any, -expansion);
-          ri.strokePath = ri.outerPath.clone();
-          ri.outerPath = ri.outerPath.subtract(ri.innerPath);
+        ri.outerPath = null;
+        if (ri.strokePath) { 
+          const expansion = Math.min(ri.strokePath.bounds.width, ri.strokePath.bounds.height) * (opts.shapeExpand ?? 0);
+          ri.outerPath = PaperOffset.offset(ri.strokePath as any, expansion);
+          const shrinkage = Math.min(ri.outerPath.bounds.width, ri.outerPath.bounds.height) * (opts.shapeOutline ?? 0);
+          ri.innerPath = PaperOffset.offset(ri.outerPath as any, -shrinkage);
         }
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
       }
@@ -225,6 +224,7 @@ export class PaperRendererLayer extends LayerBase {
             ri.unitedStrokePath = strokePath2;
           }
         }
+        ri.unitedOuterPath = ri.unitedOuterPath.subtract(ri.unitedInnerPath!);
         ri.unitedOuterPath.rotate(bubble.rotation, center);
         ri.unitedOuterPath.translate(reverse2D(center));
         ri.unitedInnerPath!.rotate(bubble.rotation, center);

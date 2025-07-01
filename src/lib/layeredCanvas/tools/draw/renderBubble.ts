@@ -33,7 +33,6 @@ export function renderBubbleBackground(ctx: CanvasRenderingContext2D, paperSize:
 
   // shape背景描画
   fillBubbleElement(ctx, paperSize, bubble, size, minimumSizeWarning);
-  fillBubbleElement(ctx, paperSize, bubble, size, minimumSizeWarning);
 
   // 画像描画
   drawFilmStack(ctx, bubble.filmStack, paperSize, [0,0], null); // centerはすでに上で移動しているため

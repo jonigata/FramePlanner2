@@ -838,13 +838,7 @@ export function drawPath(context: CanvasRenderingContext2D, method: string, unif
   context.beginPath();
   switch(method) {
     case 'fill':
-      if (opts?.shapeExpand && 0 < opts?.shapeExpand) {
-        let expansion = Math.min(unified.bounds.width, unified.bounds.height) * opts.shapeExpand;
-        let path = PaperOffset.offset(unified as any, expansion);
-        context.fill(new Path2D(path.pathData));
-      } else {
-        context.fill(new Path2D(unified.pathData));
-      }
+      context.fill(new Path2D(unified.pathData));
       break;
     case 'stroke':
       const roughness = opts.roughness ?? 0;
