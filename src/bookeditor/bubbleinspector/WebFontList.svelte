@@ -160,6 +160,13 @@
       isLocal: true,
     },
     {
+      family: '源暎きわみゴ',
+      variants: ["700" as GoogleFontVariant],
+      isGothic: true,
+      isBold: true,
+      isLocal: true,
+    },
+    {
       family: 'ふい字',
       variants: ["400" as GoogleFontVariant],
       isGothic: false,
