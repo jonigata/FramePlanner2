@@ -7,11 +7,12 @@ import { findLayoutAt, calculatePhysicalLayout, FrameElement } from "../dataMode
 import type { Film } from "../dataModels/film";
 import { drawFilmStack } from "../tools/draw/drawFilmStack";
 import type { Layout } from "../dataModels/frameTree";
-import type { Bubble, BubbleRenderInfo } from "../dataModels/bubble";
+import { Bubble, type BubbleRenderInfo } from "../dataModels/bubble";
 import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
 import { polygonToPath2D } from "../tools/draw/pathTools";
 import { PaperOffset } from 'paperjs-offset'
+  import * as Sentry from "@sentry/svelte";
 
 type InheritanceContext = {
   borderColor: string, 
@@ -183,9 +184,25 @@ export class PaperRendererLayer extends LayerBase {
         ri.outerPath = null;
         if (ri.strokePath) { 
           const expansion = Math.min(ri.strokePath.bounds.width, ri.strokePath.bounds.height) * (opts.shapeExpand ?? 0);
-          ri.outerPath = PaperOffset.offset(ri.strokePath as any, expansion);
+          try {
+            ri.outerPath = PaperOffset.offset(ri.strokePath as any, expansion);
+          }
+          catch(e) {
+            // sentryの報告がうまく解決できないので、PaperOffsetがうまく動かない場合はstrokePathをそのまま使う
+            console.error("PaperOffset failed, using strokePath as outerPath", Bubble.decompile(bubble));
+            ri.outerPath = ri.strokePath.clone();
+            Sentry.captureException(e);            
+          }
           const shrinkage = Math.min(ri.outerPath.bounds.width, ri.outerPath.bounds.height) * (opts.shapeOutline ?? 0);
-          ri.innerPath = PaperOffset.offset(ri.outerPath as any, -shrinkage);
+          try {
+            ri.innerPath = PaperOffset.offset(ri.outerPath as any, -shrinkage);
+          }
+          catch(e) {
+            // sentryの報告がうまく解決できないので、PaperOffsetがうまく動かない場合はouterPathをそのまま使う
+            console.error("PaperOffset failed, using outerPath as innerPath", Bubble.decompile(bubble));
+            ri.innerPath = ri.outerPath.clone();
+            Sentry.captureException(e);            
+          }
         }
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
       }
