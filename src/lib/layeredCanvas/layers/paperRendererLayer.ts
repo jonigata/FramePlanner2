@@ -185,7 +185,11 @@ export class PaperRendererLayer extends LayerBase {
         if (ri.strokePath) { 
           const expansion = Math.min(ri.strokePath.bounds.width, ri.strokePath.bounds.height) * (opts.shapeExpand ?? 0);
           try {
-            ri.outerPath = PaperOffset.offset(ri.strokePath as any, expansion);
+            if (expansion == 0) {
+              ri.outerPath = ri.strokePath.clone();
+            } else {
+              ri.outerPath = PaperOffset.offset(ri.strokePath as any, expansion);
+            }
           }
           catch(e) {
             // sentryの報告がうまく解決できないので、PaperOffsetがうまく動かない場合はstrokePathをそのまま使う
@@ -195,7 +199,11 @@ export class PaperRendererLayer extends LayerBase {
           }
           const shrinkage = Math.min(ri.outerPath.bounds.width, ri.outerPath.bounds.height) * (opts.shapeOutline ?? 0);
           try {
-            ri.innerPath = PaperOffset.offset(ri.outerPath as any, -shrinkage);
+            if (shrinkage == 0) {
+              ri.innerPath = ri.outerPath.clone();
+            } else {
+              ri.innerPath = PaperOffset.offset(ri.outerPath as any, -shrinkage);
+            }
           }
           catch(e) {
             // sentryの報告がうまく解決できないので、PaperOffsetがうまく動かない場合はouterPathをそのまま使う
