@@ -171,7 +171,7 @@ export type OnlineProfile = {
 };
 
 export type OnlineStatus = "unknown" | "signed-in" | "signed-out";
-export type SubscriptionPlan = "free" | "basic" | "premium";
+export type SubscriptionPlan = "free" | "basic" | "basic/en" | "premium";
 
 export const updateToken: Writable<boolean> = writable(false);
 export const onlineStatus: Writable<OnlineStatus> = writable("unknown");

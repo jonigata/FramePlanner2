@@ -12,7 +12,7 @@
   import type { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
   import { clearCurrentFileInfo } from '../filemanager/currentFile';
   import { developmentFlag } from '../utils/developmentFlagStore';
-  import { subscriptionPlans } from '../utils/billingData/subscriptionPlans';
+  import { subscriptionPlans, subscriptionPlansEn } from '../utils/billingData/subscriptionPlans';
   import { mainBookTitle } from '../bookeditor/workspaceStore';
   import sprytIcon from '../assets/spryt.webp';
   import LanguageSwitcher from './LanguageSwitcher.svelte';
@@ -31,6 +31,12 @@
     return `https://${parentDomain}`;
   }
   
+  function getCurrentPlanName(planId: string | null | undefined): string {
+    console.log("************* getCurrentPlanName", planId);
+    const allPlans = [...subscriptionPlans, ...subscriptionPlansEn];
+    return allPlans.find((p) => p.id === (planId ?? 'free'))?.name ?? '';
+  }
+
   function undo() {
     $undoToken = 'undo';
   }
@@ -196,12 +202,11 @@
       
       {#if $onlineAccount}
         {@const planId = $onlineAccount.subscriptionPlan}
-        {@const planInfo = subscriptionPlans.find(plan => plan.id === planId) || subscriptionPlans[0]}
         <button
           class="px-2 rounded ml-2 cursor-pointer flex items-center justify-center w-24 {planId === 'free' ? 'bg-gray-300 text-black' : 'bg-blue-500 text-white'}"
           on:click={onChangePlan}
         >
-          {planInfo.name}
+          {getCurrentPlanName(planId)}
         </button>
       {/if}
       

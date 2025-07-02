@@ -3,7 +3,6 @@ import { drawBubble as drawBubbleShape, drawPath, type DrawMethod } from "./bubb
 import { drawFilmStack } from "./drawFilmStack";
 import { drawText, measureText, type Direction } from "./drawText";
 import type { Bubble } from "../../dataModels/bubble";
-import { set } from "firebase/database";
 // import { captureException } from "@sentry/svelte";
 
 
