@@ -180,8 +180,9 @@ export class PaperRendererLayer extends LayerBase {
         ri.pathJson = json;
         ri.strokePath = getPath(bubble.shape, size, opts, bubble.text);
         ri.strokePath?.rotate(-bubble.rotation);
-        ri.innerPath = null;
         ri.outerPath = null;
+        ri.innerPath = null;
+        ri.innerPathIsSameWithOuterPath = false;
         if (ri.strokePath) { 
           const expansion = Math.min(ri.strokePath.bounds.width, ri.strokePath.bounds.height) * (opts.shapeExpand ?? 0);
           try {
@@ -201,6 +202,7 @@ export class PaperRendererLayer extends LayerBase {
           try {
             if (shrinkage == 0) {
               ri.innerPath = ri.outerPath.clone();
+              ri.innerPathIsSameWithOuterPath = true;
             } else {
               ri.innerPath = PaperOffset.offset(ri.outerPath as any, -shrinkage);
             }
@@ -209,6 +211,7 @@ export class PaperRendererLayer extends LayerBase {
             // sentryの報告がうまく解決できないので、PaperOffsetがうまく動かない場合はouterPathをそのまま使う
             console.error("PaperOffset failed, using outerPath as innerPath", Bubble.decompile(bubble));
             ri.innerPath = ri.outerPath.clone();
+            ri.innerPathIsSameWithOuterPath = true;
             Sentry.captureException(e);            
           }
         }
@@ -217,41 +220,39 @@ export class PaperRendererLayer extends LayerBase {
     }
 
     // 結合
-    // unitedOuterPathがあるならunitedInnerPathもある
+    // strokePathがあるならouterPathもinnerPathもあるはず
     for (let bubble of bubbles) {
       const ri = bubble.renderInfo!;
-      if (bubble.parent == null && ri.outerPath) {
+      if (bubble.parent == null && ri.strokePath) {
         const center = bubble.getPhysicalCenter(paperSize);
-        ri.unitedOuterPath = ri.outerPath.clone();
-        ri.unitedInnerPath = ri.innerPath?.clone() ?? null;
-        ri.unitedStrokePath = ri.strokePath?.clone() ?? null;
+        ri.unitedStrokePath = ri.strokePath.clone();
+        ri.unitedOuterPath = ri.outerPath!.clone();
+        ri.unitedInnerPath = ri.innerPath!.clone();
         ri.unitedOuterPath.translate(center);
-        ri.unitedInnerPath?.translate(center);
-        ri.unitedStrokePath?.translate(center);
+        ri.unitedInnerPath.translate(center);
+        ri.unitedStrokePath.translate(center);
         for (let child of ri.children) {
+          const childCenter = child.getPhysicalCenter(paperSize);
           const ri2 = child.renderInfo!;
-          if (ri2.outerPath == null) { continue; }
-          const path2 = ri2.outerPath.clone();
-          path2.translate(child.getPhysicalCenter(paperSize));
-          ri.unitedOuterPath = ri.unitedOuterPath.unite(path2);
-          const innerPath2 = ri2.innerPath!.clone();
-          innerPath2.translate(child.getPhysicalCenter(paperSize));
-          if (ri.unitedInnerPath) {
-            ri.unitedInnerPath = ri.unitedInnerPath.unite(innerPath2);
-          } else {
-            ri.unitedInnerPath = innerPath2;
-          }
+          if (ri2.strokePath == null) { continue; }
+
           const strokePath2 = ri2.strokePath!.clone();
           strokePath2?.translate(child.getPhysicalCenter(paperSize));
-          if (ri.unitedStrokePath) {
-            ri.unitedStrokePath = ri.unitedStrokePath.unite(strokePath2!);
-          } else {
-            ri.unitedStrokePath = strokePath2;
-          }
+          ri.unitedStrokePath = ri.unitedStrokePath.unite(strokePath2!);
+
+          const outerPath2 = ri2.outerPath!.clone();
+          outerPath2.translate(childCenter);
+          ri.unitedOuterPath = ri.unitedOuterPath.unite(outerPath2);
+
+          const innerPath2 = ri2.innerPath!.clone();
+          innerPath2.translate(childCenter);
+          ri.unitedInnerPath = ri.unitedInnerPath.unite(innerPath2);
         }
-        // TODO: subtractは重い
-        // unitedInnerPathがunitedOuterPathと等しいことを証明できればスキップできる
-        ri.unitedOuterPath = ri.unitedOuterPath.subtract(ri.unitedInnerPath!);
+        if (ri.children.length === 0 && ri.innerPathIsSameWithOuterPath) {
+          ri.unitedInnerPath = ri.unitedOuterPath.clone();
+        } else {
+          ri.unitedOuterPath = ri.unitedOuterPath.subtract(ri.unitedInnerPath!);
+        }
         ri.unitedOuterPath.rotate(bubble.rotation, center);
         ri.unitedOuterPath.translate(reverse2D(center));
         ri.unitedInnerPath!.rotate(bubble.rotation, center);

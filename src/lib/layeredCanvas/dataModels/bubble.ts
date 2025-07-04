@@ -11,13 +11,14 @@ const threshold = 10;
 
 export interface BubbleRenderInfo { // serializeしない
   pathJson: string;
-  innerPath: paper.PathItem | null;
-  outerPath: paper.PathItem | null;
   strokePath: paper.PathItem | null;
-  unitedInnerPath: paper.PathItem | null;
-  unitedOuterPath: paper.PathItem | null;
+  outerPath: paper.PathItem | null;
+  innerPath: paper.PathItem | null;
   unitedStrokePath: paper.PathItem | null;
+  unitedOuterPath: paper.PathItem | null;
+  unitedInnerPath: paper.PathItem | null;
   children: Bubble[];
+  innerPathIsSameWithOuterPath: boolean;
 
   textJson: string;
   textCanvas: HTMLCanvasElement;
