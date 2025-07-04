@@ -249,6 +249,8 @@ export class PaperRendererLayer extends LayerBase {
             ri.unitedStrokePath = strokePath2;
           }
         }
+        // TODO: subtractは重い
+        // unitedInnerPathがunitedOuterPathと等しいことを証明できればスキップできる
         ri.unitedOuterPath = ri.unitedOuterPath.subtract(ri.unitedInnerPath!);
         ri.unitedOuterPath.rotate(bubble.rotation, center);
         ri.unitedOuterPath.translate(reverse2D(center));

@@ -154,7 +154,28 @@ export class VideoMedia extends MediaBase {
     return {
       play: () => this.video?.play(),
       pause: () => this.video?.pause(),
-      seek: async (time: number) => { this.video!.currentTime = time; }
+      seek: async (time: number) => { 
+        const video = this.video;
+        if (!video) {
+          throw new Error('Video element is not set');
+        }
+        return new Promise((resolve, reject) => {
+          const onSeeked = () => {
+            video.removeEventListener('seeked', onSeeked);
+            resolve();
+          };
+
+          const onError = () => {
+            video.removeEventListener('seeked', onSeeked);
+            reject(new Error('Seek failed'));
+          };
+
+          video.addEventListener('seeked', onSeeked, { once: true });
+          video.addEventListener('error', onError, { once: true });
+
+          video.currentTime = time;
+        });        this.video!.currentTime = time; 
+      }
     };
   }
   get drawSource(): MaterializedType { return this.video ?? this.getLoadingCanvas(); }
