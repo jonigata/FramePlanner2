@@ -1,3 +1,5 @@
+import { makeFolders } from '../lib/filesystem/fileSystem';
+
 export const specialFolders = [
   "デスクトップ", 
   "キャビネット", 
@@ -11,3 +13,7 @@ export const specialFolders = [
   "AI/キャラクター",
   "倉庫"
 ];
+
+export async function makeSpecialFolders(fs: any) {
+  return await makeFolders(fs, specialFolders);
+}

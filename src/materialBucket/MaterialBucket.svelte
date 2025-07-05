@@ -13,24 +13,33 @@
   }
 
   let warehouseOpen = false;
+  let materialOpen = true;
 </script>
 
 <div class="drawer-outer">
   <Drawer open={$materialBucketOpen} size="800px" on:clickAway={() => $materialBucketOpen = false}>
     {#if $materialBucketOpen}
       <div class="content-container">
-        <div class="material-section">
-          <h2>{$_('materialBucket.materialCollection')}</h2>
-          <MaterialGallery on:dragstart={onDragStart} />
-        </div>
-        
         <Accordion>
+          <AccordionItem bind:open={materialOpen}>
+            <svelte:fragment slot="summary">
+              <h2>{$_('materialBucket.materialCollection')}</h2>
+            </svelte:fragment>
+            <svelte:fragment slot="content">
+              <div class="accordion-content">
+                <MaterialGallery on:dragstart={onDragStart} />
+              </div>
+            </svelte:fragment>
+          </AccordionItem>
+          
           <AccordionItem bind:open={warehouseOpen}>
             <svelte:fragment slot="summary">
               <h2>{$_('materialBucket.generationHistory')}</h2>
             </svelte:fragment>
             <svelte:fragment slot="content">
-              <WarehouseGallery on:dragstart={onDragStart} />
+              <div class="accordion-content">
+                <WarehouseGallery on:dragstart={onDragStart} />
+              </div>
             </svelte:fragment>
           </AccordionItem>
         </Accordion>
@@ -52,7 +61,6 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    gap: 24px;
     padding: 16px;
   }
 
@@ -60,10 +68,8 @@
     margin-top: -8px;
   }
 
-  .material-section {
-    flex: 1;
-    min-height: 0;
-    max-height: calc(100% - 60px); /* アコーディオンの高さ分を引く */
+  .accordion-content {
+    height: 400px;
     overflow: hidden;
   }
 

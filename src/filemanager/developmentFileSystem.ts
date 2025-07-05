@@ -1,11 +1,11 @@
-import { type FileSystem, makeFolders } from '../lib/filesystem/fileSystem';
+import { type FileSystem } from '../lib/filesystem/fileSystem';
 import { MockFileSystem } from '../lib/filesystem/mockFileSystem';
-import { specialFolders } from './specialFolders';
+import { makeSpecialFolders } from './specialFolders';
 
 export async function buildFileSystem(): Promise<FileSystem> {
   const fs = new MockFileSystem();
 
-  await makeFolders(fs, specialFolders);
+  await makeSpecialFolders(fs);
 
   return fs;
 }

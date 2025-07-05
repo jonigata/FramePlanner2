@@ -1,6 +1,6 @@
-import { type FileSystem, folderTree, makeFolders } from '../lib/filesystem/fileSystem';
+import { type FileSystem, folderTree } from '../lib/filesystem/fileSystem';
 import { IndexedDBFileSystem } from '../lib/filesystem/indexeddbFileSystem';
-import { specialFolders } from './specialFolders';
+import { makeSpecialFolders } from './specialFolders';
 import { BrowserMediaConverter } from '../lib/filesystem/mediaConverter';
 
 export async function buildFileSystem(): Promise<FileSystem> {
@@ -22,7 +22,7 @@ export async function buildFileSystem(): Promise<FileSystem> {
   const fs = new IndexedDBFileSystem(new BrowserMediaConverter());
   await fs.open();
 
-  await makeFolders(fs, specialFolders);
+  await makeSpecialFolders(fs);
   // const tree = await folderTree(fs);
   // console.log(tree);
   console.log(fs);

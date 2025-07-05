@@ -1,9 +1,9 @@
-import { type FileSystem, makeFolders } from '../lib/filesystem/fileSystem.js';
+import { type FileSystem } from '../lib/filesystem/fileSystem.js';
 import { FSAFileSystem, FSAFilePersistenceProvider } from '../lib/filesystem/fsaFileSystem.js';
 import { FSABlobStore } from '../lib/filesystem/sqlite/BlobStore.js';
 import { SqlJsAdapter } from '../lib/filesystem/sqlite/SqlJsAdapter.js';
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
-import { specialFolders } from './specialFolders.js';
+import { makeSpecialFolders } from './specialFolders.js';
 import { BrowserMediaConverter } from '../lib/filesystem/mediaConverter.js';
 
 export async function buildFileSystem(handle: FileSystemDirectoryHandle): Promise<FileSystem> {
@@ -21,7 +21,7 @@ export async function buildFileSystem(handle: FileSystemDirectoryHandle): Promis
   await fs.open();
 
   fs.withoutPersist(async () => {
-    await makeFolders(fs, specialFolders);
+    await makeSpecialFolders(fs);
   });
 
   return fs;
