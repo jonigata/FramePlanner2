@@ -47,6 +47,7 @@ FramePlanner is a manga creation tool that allows users to define manga frame st
 - **Content Storage**: Separate image storage backends (Backblaze, Firebase)
 - **Versioning**: Revision-based file tracking with ULIDs and prefixes
 - Key files: `fileSystem.ts`, `contentStorage/`
+- **AIクイックリファレンス**: [ファイルシステム概要](./documents/filesystem-summary.md)
 
 **Component Architecture**
 - **BookEditor**: Main editing workspace (`src/bookeditor/BookWorkspace.svelte`)
