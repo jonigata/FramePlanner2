@@ -279,17 +279,26 @@ export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images
 export async function saveMaterial(fileSystem: FileSystem, media: Media): Promise<BindId> {
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
-  const file = await fileSystem.createFile();
+  return await saveMaterialToFolder(materialFolder, media);
+}
+
+export async function saveMaterialToFolder(folder: Folder, media: Media, fileName?: string): Promise<BindId> {
+  const file = await folder.fileSystem.createFile();
   await file.writeMediaResource(media.persistentSource);
-  return await materialFolder.link(file.id, file.id);
+  const name = fileName || file.id;
+  return await folder.link(name, file.id);
 }
 
 export async function deleteMaterial(fileSystem: FileSystem, materialBindId: BindId): Promise<void> {
   const root = await fileSystem.getRoot();
   const materialFolder = (await root.getNodesByName('素材'))[0] as Folder;
-  const nodeId = (await materialFolder.getEntry(materialBindId))![2];
-  await materialFolder.unlink(materialBindId);
-  await fileSystem.destroyNode(nodeId);
+  await deleteMaterialFromFolder(materialFolder, materialBindId);
+}
+
+export async function deleteMaterialFromFolder(folder: Folder, materialBindId: BindId): Promise<void> {
+  const nodeId = (await folder.getEntry(materialBindId))![2];
+  await folder.unlink(materialBindId);
+  await folder.fileSystem.destroyNode(nodeId);
 }
 
 export async function copyBookOrFolderInterFileSystem(sourceFileSystem: FileSystem, targetFileSystem: FileSystem, sourceNodeId: NodeId): Promise<NodeId> {

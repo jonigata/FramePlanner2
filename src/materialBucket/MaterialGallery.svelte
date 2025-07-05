@@ -2,8 +2,8 @@
   import Gallery from '../gallery/Gallery.svelte';
   import type { GalleryItem } from "../gallery/gallery";
   import { loading } from '../utils/loadingStore'
-  import { deleteMaterial, gadgetFileSystem, saveMaterial } from '../filemanager/fileManagerStore';
   import { dropzone } from '../utils/dropzone';
+  import { saveMaterialToFolder, deleteMaterialFromFolder } from '../filemanager/fileManagerStore';
   import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -11,9 +11,11 @@
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia, VideoMedia, type Media, buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher, onMount } from 'svelte';
-  import type { FileSystem, BindId } from '../lib/filesystem/fileSystem';
+  import type { FileSystem, BindId, Node } from '../lib/filesystem/fileSystem';
 
-  $: displayMaterialImages($gadgetFileSystem);
+  export let targetNode: Node | null = null;
+
+  $: displayMaterialImages(targetNode);
 
   const dispatch = createEventDispatcher();
   let gallery: Media[] | null = null;
@@ -43,28 +45,34 @@
     dispatch('dragstart', e.detail);
   }
 
-  function onDelete(e: CustomEvent<GalleryItem>) {
+  async function onDelete(e: CustomEvent<GalleryItem>) {
+    if (targetNode == null) return;
     const bindId = bindIds.get(e.detail as Media);
-    deleteMaterial($gadgetFileSystem!, bindId!);
+    if (bindId == null) return;
+    const folder = targetNode.asFolder()!;
+    await deleteMaterialFromFolder(folder, bindId);
+    // ギャラリーから削除
+    gallery = gallery!.filter(item => item !== e.detail);
   }
 
   async function onFileDrop(files: FileList) {
-    if (gallery == null) { return; }
+    if (gallery == null || targetNode == null) { return; }
+    const folder = targetNode.asFolder()!;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.type.startsWith('image/svg')) { return; } // 念の為
+      if (file.type.startsWith('image/svg')) { continue; } // 念の為
       if (file.type.startsWith('image/')) {
         const canvas = await createCanvasFromBlob(file);
         const media = new ImageMedia(canvas);
-        const bindId = await saveMaterial($gadgetFileSystem!, media);
+        const bindId = await saveMaterialToFolder(folder, media, file.name);
         bindIds.set(media, bindId);
         gallery.push(media);
       }
       if (file.type.startsWith('video/')) {
         const video = await createVideoFromBlob(file);
         const media = new VideoMedia(video);
-        const bindId = await saveMaterial($gadgetFileSystem!, media);
+        const bindId = await saveMaterialToFolder(folder, media, file.name);
         bindIds.set(media, bindId);
         gallery.push(media);
       }
@@ -72,18 +80,19 @@
     gallery = gallery;
   }
 
-  async function displayMaterialImages(fs: FileSystem | null) {
-    if (fs == null) { return; }
-    console.log(fs.getFileSystemName());
+  async function displayMaterialImages(node: Node | null) {
+    if (node == null) { return; }
+    const folder = node.asFolder()!;
+    
     $loading = true;
-    const root = await fs.getRoot();
-    const materialFolder = (await root.getNodesByName('素材'))[0].asFolder()!;
-    const materials = await materialFolder.listEmbodied();
+    const materials = await folder.listEmbodied();
     const newBindIds = new WeakMap<Media, BindId>();
     const mediaResources = [];
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
-      const mediaResource = await material.asFile()!.readMediaResource();
+      const file = material.asFile()!;
+      
+      const mediaResource = await file.readMediaResource();
       const media = buildMedia(mediaResource);
       newBindIds.set(media, materials[i][0]);
       mediaResources.push(media);
@@ -94,7 +103,7 @@
   }
 
   onMount(() => {
-    displayMaterialImages($gadgetFileSystem);
+    displayMaterialImages(targetNode);
   });
 </script>
 
