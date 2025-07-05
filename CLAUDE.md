@@ -97,6 +97,33 @@ Based on the README instructions:
 - **Asset Management**: WebP conversion pipeline for optimized images
 - **Deployment**: Cloudflare Pages with branch-based deployment protection
 
+## Dialog Components
+
+### ConfirmDialog Usage
+確認ダイアログを表示するには `waitDialog` 関数を使用します：
+
+```typescript
+import { waitDialog } from '../utils/waitDialog';
+
+// 基本的な使用方法
+const confirmed = await waitDialog<boolean>('confirm', {
+  title: 'タイトル',
+  message: 'メッセージ内容',
+  positiveButtonText: 'OK',
+  negativeButtonText: 'キャンセル'
+});
+
+if (confirmed) {
+  // ユーザーがOKを選択した場合の処理
+}
+```
+
+- `title`: ダイアログのタイトル
+- `message`: 確認メッセージ（`\n` で改行可能）
+- `positiveButtonText`: 確認ボタンのテキスト
+- `negativeButtonText`: キャンセルボタンのテキスト
+- 戻り値: `true` (確認) または `false` (キャンセル)
+
 ## File System Structure
 
 - `/public/` - Static assets (fonts, favicons, banners)

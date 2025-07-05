@@ -1,9 +1,7 @@
 <script lang="ts">
   import Gallery from '../gallery/Gallery.svelte';
   import type { GalleryItem } from "../gallery/gallery";
-  import { loading } from '../utils/loadingStore'
   import { dropzone } from '../utils/dropzone';
-  import { saveMaterialToFolder, deleteMaterialFromFolder } from '../filemanager/fileManagerStore';
   import { createCanvasFromBlob, createVideoFromBlob } from '../lib/layeredCanvas/tools/imageUtil';
   import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
   import type { Rect } from "../lib/layeredCanvas/tools/geometry/geometry";
@@ -11,15 +9,16 @@
   import { Film } from '../lib/layeredCanvas/dataModels/film';
   import { ImageMedia, VideoMedia, type Media, buildMedia } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher, onMount } from 'svelte';
-  import type { FileSystem, BindId, Node } from '../lib/filesystem/fileSystem';
+  import type { Node, BindId } from '../lib/filesystem/fileSystem';
+  import { saveMaterialToFolder, deleteMaterialFromFolder } from '../filemanager/fileManagerStore';
 
   export let targetNode: Node | null = null;
 
   $: displayMaterialImages(targetNode);
 
   const dispatch = createEventDispatcher();
-  let gallery: Media[] | null = null;
-  let bindIds = new WeakMap<Media, BindId>();
+  let items: (() => Promise<Media[]>)[] = [];
+  let bindIds = new WeakMap<(() => Promise<Media[]>) | Media, BindId>();
 
   function onChooseImage(e: CustomEvent<Media>) {
     const page = $bookOperators!.getFocusedPage();
@@ -46,60 +45,70 @@
   }
 
   async function onDelete(e: CustomEvent<GalleryItem>) {
-    if (targetNode == null) return;
-    const bindId = bindIds.get(e.detail as Media);
-    if (bindId == null) return;
+    const bindId = bindIds.get(e.detail);
+    if (targetNode == null || bindId == null) return;
     const folder = targetNode.asFolder()!;
     await deleteMaterialFromFolder(folder, bindId);
-    // ギャラリーから削除
-    gallery = gallery!.filter(item => item !== e.detail);
   }
 
   async function onFileDrop(files: FileList) {
-    if (gallery == null || targetNode == null) { return; }
+    if (targetNode == null) return;
     const folder = targetNode.asFolder()!;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.type.startsWith('image/svg')) { continue; } // 念の為
-      if (file.type.startsWith('image/')) {
-        const canvas = await createCanvasFromBlob(file);
-        const media = new ImageMedia(canvas);
-        const bindId = await saveMaterialToFolder(folder, media, file.name);
-        bindIds.set(media, bindId);
-        gallery.push(media);
-      }
-      if (file.type.startsWith('video/')) {
-        const video = await createVideoFromBlob(file);
-        const media = new VideoMedia(video);
-        const bindId = await saveMaterialToFolder(folder, media, file.name);
-        bindIds.set(media, bindId);
-        gallery.push(media);
+      if (file.type.startsWith('image/svg')) continue;
+      
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+        // 非同期関数を作成してitemsに追加
+        const loadMedia = async (): Promise<Media[]> => {
+          let media: Media;
+          if (file.type.startsWith('image/')) {
+            const canvas = await createCanvasFromBlob(file);
+            media = new ImageMedia(canvas);
+          } else {
+            const video = await createVideoFromBlob(file);
+            media = new VideoMedia(video);
+          }
+          
+          const bindId = await saveMaterialToFolder(folder, media, file.name);
+          bindIds.set(media, bindId);
+          return [media];
+        };
+        
+        items.push(loadMedia);
       }
     }
-    gallery = gallery;
+    items = items; // リアクティブ更新をトリガー
   }
 
   async function displayMaterialImages(node: Node | null) {
-    if (node == null) { return; }
+    if (node == null) return;
     const folder = node.asFolder()!;
     
-    $loading = true;
     const materials = await folder.listEmbodied();
-    const newBindIds = new WeakMap<Media, BindId>();
-    const mediaResources = [];
+    const newItems: (() => Promise<Media[]>)[] = [];
+    const newBindIds = new WeakMap<(() => Promise<Media[]>) | Media, BindId>();
+    
     for (let i = 0; i < materials.length; i++) {
       const material = materials[i][2];
       const file = material.asFile()!;
+      const bindId = materials[i][0];
       
-      const mediaResource = await file.readMediaResource();
-      const media = buildMedia(mediaResource);
-      newBindIds.set(media, materials[i][0]);
-      mediaResources.push(media);
+      // 非同期関数を作成
+      const loadMedia = async (): Promise<Media[]> => {
+        const mediaResource = await file.readMediaResource();
+        const media = buildMedia(mediaResource);
+        newBindIds.set(media, bindId);
+        return [media];
+      };
+      
+      newItems.push(loadMedia);
+      newBindIds.set(loadMedia, bindId);
     }
-    gallery = mediaResources;
+    
+    items = newItems;
     bindIds = newBindIds;
-    $loading = false;
   }
 
   onMount(() => {
@@ -108,9 +117,7 @@
 </script>
 
 <div class="dropzone" use:dropzone={onFileDrop}>
-  {#if gallery != null}
-    <Gallery columnWidth={220} referable={false} bind:items={gallery} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
-  {/if}
+  <Gallery columnWidth={220} referable={false} bind:items={items} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
 </div>
 
 <style>

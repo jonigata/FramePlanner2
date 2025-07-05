@@ -8,6 +8,12 @@
   import { gadgetFileSystem } from '../filemanager/fileManagerStore';
   import type { Node, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { onMount } from 'svelte';
+  import { waitDialog } from '../utils/waitDialog';
+  import { toolTip } from '../utils/passiveToolTipStore';
+  
+  import trashIcon from '../assets/fileManager/trash.webp';
+  import renameIcon from '../assets/fileManager/rename.webp';
+  import newFolderIcon from '../assets/fileManager/new-folder.webp';
 
   let materialCollectionFolders: EmbodiedEntry[] = [];
   let openStates: { [key: string]: boolean } = {};
@@ -56,10 +62,20 @@
     const collectionFolder = collectionFolderNode.asFolder()!;
     const entry = await collectionFolder.getEntry(bindId as any);
     if (entry) {
-      await collectionFolder.unlink(bindId as any);
-      await $gadgetFileSystem.destroyNode(entry[2]);
-      delete openStates[entry[1]];
-      await loadMaterialCollections();
+      // 削除確認ダイアログを表示
+      const confirmed = await waitDialog<boolean>('confirm', {
+        title: 'コレクションの削除',
+        message: `「${entry[1]}」を削除しますか？\n\nこのコレクション内のすべてのファイルが削除されます。\nこの操作は元に戻すことができません。`,
+        positiveButtonText: '削除',
+        negativeButtonText: 'キャンセル'
+      });
+      
+      if (confirmed) {
+        await collectionFolder.unlink(bindId as any);
+        await $gadgetFileSystem.destroyNode(entry[2]);
+        delete openStates[entry[1]];
+        await loadMaterialCollections();
+      }
     }
   }
 
@@ -101,8 +117,13 @@
       <div class="content-container">
         <div class="collection-header">
           <h3>素材集</h3>
-          <button class="btn btn-sm variant-filled-primary" on:click={addMaterialCollection}>
-            <span>➕</span> 新しいコレクション
+          <button 
+            class="btn btn-sm variant-filled-primary collection-add-button" 
+            on:click={addMaterialCollection}
+            use:toolTip={'新しいコレクションを作成'}
+          >
+            <img src={newFolderIcon} alt="new collection" class="button-icon" />
+            新しいコレクション
           </button>
         </div>
         <Accordion>
@@ -131,18 +152,18 @@
                   {/if}
                   <div class="folder-actions">
                     <button 
-                      class="btn btn-sm variant-ghost"
+                      class="icon-button"
                       on:click|stopPropagation={() => startEditingFolder(folder[0], folder[1])}
-                      title="名前を編集"
+                      use:toolTip={'名前を編集'}
                     >
-                      ✏️
+                      <img src={renameIcon} alt="rename" class="icon" />
                     </button>
                     <button 
-                      class="btn btn-sm variant-ghost-error"
+                      class="icon-button"
                       on:click|stopPropagation={() => deleteMaterialCollection(folder[0])}
-                      title="コレクションを削除"
+                      use:toolTip={'コレクションを削除'}
                     >
-                      🗑️
+                      <img src={trashIcon} alt="trash" class="icon" />
                     </button>
                   </div>
                 </div>
@@ -192,8 +213,8 @@
   }
 
   .accordion-content {
-    height: 400px;
-    overflow: hidden;
+    min-height: 200px;
+    overflow: visible;
   }
 
   h2 {
@@ -264,5 +285,40 @@
 
   .folder-name-input:focus {
     border-color: #007bff;
+  }
+
+  .icon-button {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  .collection-add-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: '源映エムゴ';
+    font-size: 14px;
+  }
+
+  .button-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
   }
 </style>
