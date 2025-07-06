@@ -197,7 +197,8 @@ export async function pollMediaStatus(mediaReference: { mediaType: 'image' | 'vi
     doIt, 
     (error) => { 
       if (error instanceof FunctionsHttpError) {
-        if (error.context.status === 422 || error.context.status === 404) {
+        const code = error.context?.status;
+        if (code === 422 || code === 404 || code === 401 || code === 500) {
           throw error;
         }
       }
