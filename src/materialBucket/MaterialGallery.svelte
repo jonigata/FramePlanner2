@@ -117,7 +117,13 @@
 </script>
 
 <div class="dropzone" use:dropzone={onFileDrop}>
-  <Gallery columnWidth={220} referable={false} bind:items={items} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+  {#if items.length > 0}
+    <Gallery columnWidth={220} referable={false} bind:items={items} on:commit={onChooseImage} on:dragstart={onChildDragStart} on:delete={onDelete}/>
+  {:else}
+    <div class="empty-state">
+      <p class="empty-message">ここに画像や動画をドロップしてください</p>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -134,5 +140,22 @@
     outline: 3px dashed rgba(0, 123, 255, 0.6) !important;
     outline-offset: -3px !important;
     z-index: 10 !important;
+  }
+  
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .empty-message {
+    color: rgb(var(--color-surface-600));
+    font-size: 16px;
+    font-family: '源暎エムゴ';
+    text-align: center;
+    padding: 20px;
   }
 </style>
