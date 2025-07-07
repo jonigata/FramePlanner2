@@ -82,14 +82,18 @@ export function renderBubbleForeground(ctx: CanvasRenderingContext2D, paperSize:
 function fillBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bubble: Bubble, size: Vector, minimumSizeWarning: boolean) {
   const ri = bubble.renderInfo!;
   if (ri.unitedOuterPath) {
-    setBubbleStyle(ctx, bubble, paperSize, bubble.optionContext['shapeOutlineColor'] ?? 'white', minimumSizeWarning);
-    drawPath(ctx, 'fill', ri.unitedOuterPath, bubble.optionContext);
+    if (!ri.innerPathIsSameWithOuterPath) {
+      setBubbleStyle(ctx, bubble, paperSize, bubble.optionContext['shapeOutlineColor'] ?? 'white', minimumSizeWarning);
+      drawPath(ctx, 'fill', ri.unitedOuterPath, bubble.optionContext);
+    }
     setBubbleStyle(ctx, bubble, paperSize, bubble.fillColor, minimumSizeWarning);
     drawPath(ctx, 'fill', ri.unitedInnerPath!, bubble.optionContext);
   } else if (!bubble.parent) {
     if (ri.outerPath) {
-      setBubbleStyle(ctx, bubble, paperSize, bubble.optionContext['shapeOutlineColor'] ?? 'white', minimumSizeWarning);
-      drawPath(ctx, 'fill', ri.outerPath, bubble.optionContext);
+      if (!ri.innerPathIsSameWithOuterPath) {
+        setBubbleStyle(ctx, bubble, paperSize, bubble.optionContext['shapeOutlineColor'] ?? 'white', minimumSizeWarning);
+        drawPath(ctx, 'fill', ri.outerPath, bubble.optionContext);
+      }
       setBubbleStyle(ctx, bubble, paperSize, bubble.fillColor, minimumSizeWarning);
       drawPath(ctx, 'fill', ri.innerPath!, bubble.optionContext);
     } else {
