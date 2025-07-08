@@ -183,6 +183,8 @@ function drawBubbleText(targetCtx: CanvasRenderingContext2D, paperSize: Vector, 
     outlineColor: bubble.outlineColor,
     fontRenderVersion: bubble.fontRenderVersion,
     fontCheck: document.fonts.check(ss),
+    rubySize: bubble.rubySize,
+    rubyDistance: bubble.rubyDistance,
   };
   const json = JSON.stringify(c);
   

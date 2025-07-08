@@ -74,6 +74,7 @@ function drawFragment(
   justify: boolean,
   prev: string | null): { lineH: number, prev: string | null, startH: number, endH: number } {
 
+  const scaledCharSkip = charSkip * (justify ? 1 : charScale);
   let startH: number | null = null;
   let endH: number | null = null;
 
@@ -102,7 +103,7 @@ function drawFragment(
     return {lineH: lineH + cw, prev, startH, endH};
   }
 
-  function drawRotatedChar(angle: number, ax: number, ay: number, xscale: number, yscale: number, s: string): void {
+  function drawRotatedChar(angle: number, ax: number, ay: number, xflip: number, yflip: number, s: string): void {
     const tm: TextMetrics = context.measureText(s);
     const cw = tm.width;
     const ch = tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
@@ -113,23 +114,23 @@ function drawFragment(
     endH = lineH + charSkip + tm.actualBoundingBoxDescent;
 
     const pivotX = cursorX;
-    // TODO: ヒューリスティックとして、charScaleが大きいほどすこし上にずらしたい
-    const heightOffset = (1 - charScale) * charSkip * 0.15; // charScaleが1のときは中央
-    const pivotY = r.y + lineH + charSkip * charScale * 0.5 + heightOffset; // 空間の中央
+    // ヒューリスティックとして、charScaleが大きいほどすこし上にずらす
+    const heightOffset = 0; // (1 - charScale) * charSkip * 0.15;
+    const pivotY = r.y + lineH + scaledCharSkip * 0.5 + heightOffset; // 空間の中央
 
     context.save();
     context.translate(pivotX, pivotY);
 
-    // drawLine(context, -charSkip * charScale * 0.5, 0, charSkip * charScale, "blue"); // 空間の中心
-    // drawLine(context, -charSkip * charScale * 0.5, charSkip * charScale * 0.5, charSkip * charScale, "green");
+    // drawLine(context, -scaledCharSkip * 0.5, 0, scaledCharSkip, "blue"); // 空間の中心
+    // drawLine(context, -scaledCharSkip * 0.5, scaledCharSkip * 0.5, scaledCharSkip, "green");
 
-    context.scale(charScale, charScale);
+    context.scale(charScale, charScale); // 以下charSkip,cwにはcharScaleが掛かっている
     context.translate(ax * charSkip, ay * charSkip); // オフセット
     context.rotate(angle * Math.PI / 180);
-    context.scale(xscale, yscale);
+    context.scale(xflip, yflip);
 
     // フォントAPIは左下から始まるので、文字の中心に合わせるために調整
-    context.translate(- cw * 0.5, charSkip * 0.5);
+    context.translate(- cw * 0.5, ch * 0.5);
     if (method === "fill") {
       if (frag.color) { context.fillStyle = frag.color; }
       context.fillText(s,0,0);
@@ -147,7 +148,7 @@ function drawFragment(
   for (const c of frag.chars) {
     // ヒューリスティック、源暎アンチックを基準にしているが、
     // 源暎エムゴなどでは合わないこともあるので若干緩和している
-    lineH += limitedKerning(prev, c) * charSkip;
+    lineH += limitedKerning(prev, c) * charSkip * charScale;
     switch (true) {
       case /[、。]/.test(c):
         drawChar(0.6, -0.6, c);
@@ -182,11 +183,14 @@ function drawFragment(
       case isEmojiAt(c, 0):
         drawChar(0, 0, c);
         break;
+      case /一/.test(c): // 漢数字の1
+        drawChar(0, 0.4, c);
+        break;
       default:
         drawChar(0, 0, c);
         break;
     }
-    lineH += charSkip * charScale;
+    lineH += scaledCharSkip;
     prev = c;
   }
 
