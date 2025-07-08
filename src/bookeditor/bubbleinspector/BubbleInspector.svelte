@@ -342,6 +342,10 @@
     wrapRange(textSelection!, "<<", ">>");
   }
 
+  function onWrapSize() {
+    wrapRange(textSelection!, "{", "|,1.5}");
+  }
+
   async function onTransformText() {
     if ($onlineStatus !== 'signed-in') {
       toastStore.trigger({ message: $_('bubble.notLoggedIn'), timeout: 3000});
@@ -473,6 +477,7 @@
             <button disabled={!textSelected} on:click={onWrapColor}><span class="text-sm text-white">{$_('bubble.colorButton')}</span></button>
             <button disabled={!textSelected} on:click={onWrapRuby}><span class="text-sm text-white">{$_('bubble.rubyButton')}</span></button>
             <button disabled={!textSelected} on:click={onWrapRotation}><span class="text-sm text-white">{$_('bubble.rotationButton')}</span></button>
+            <button disabled={!textSelected} on:click={onWrapSize}><span class="text-sm text-white">{$_('bubble.sizeButton')}</span></button>
           </div>
           <div class="flex flex-row w-full gap-2">
             <select class="select h-8 p-0 w-full" bind:value={transformTextMethod}>

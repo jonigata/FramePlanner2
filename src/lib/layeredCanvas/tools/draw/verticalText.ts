@@ -24,7 +24,8 @@ export function drawVerticalText(
     let prev = null;
     for (const frag of line) {
       let startH: number, endH: number;
-      ({lineH, prev, startH, endH} = drawFragment(context, r, cursorX, lineH, charSkip, method, frag, 1, false, prev));
+      const charScale = frag.size ?? 1;
+      ({lineH, prev, startH, endH} = drawFragment(context, r, cursorX, lineH, charSkip, method, frag, charScale, false, prev));
       if (frag.ruby) {
         /*
         context.strokeStyle = "red";
@@ -112,14 +113,16 @@ function drawFragment(
     endH = lineH + charSkip + tm.actualBoundingBoxDescent;
 
     const pivotX = cursorX;
-    const pivotY = r.y + lineH + charSkip * 0.5; // 空間の中央
+    // TODO: ヒューリスティックとして、charScaleが大きいほどすこし上にずらしたい
+    const heightOffset = (1 - charScale) * charSkip * 0.15; // charScaleが1のときは中央
+    const pivotY = r.y + lineH + charSkip * charScale * 0.5 + heightOffset; // 空間の中央
 
     context.save();
     context.translate(pivotX, pivotY);
-    /*
-    drawLine(context, -charSkip * 0.5, 0, charSkip, "blue"); // 空間の中心
-    drawLine(context, -charSkip * 0.5, charSkip * 0.5, charSkip, "green");
-    */
+
+    // drawLine(context, -charSkip * charScale * 0.5, 0, charSkip * charScale, "blue"); // 空間の中心
+    // drawLine(context, -charSkip * charScale * 0.5, charSkip * charScale * 0.5, charSkip * charScale, "green");
+
     context.scale(charScale, charScale);
     context.translate(ax * charSkip, ay * charSkip); // オフセット
     context.rotate(angle * Math.PI / 180);
@@ -183,7 +186,7 @@ function drawFragment(
         drawChar(0, 0, c);
         break;
     }
-    lineH += charSkip;
+    lineH += charSkip * charScale;
     prev = c;
   }
 
@@ -210,7 +213,8 @@ export function measureVerticalText(
       } else {
         for (const c of frag.chars) {
           h += limitedKerning(prev, c);
-          h += charSkip;
+          const charScale = frag.size ?? 1;
+          h += charSkip * charScale;
           prev = c;
         }
       }

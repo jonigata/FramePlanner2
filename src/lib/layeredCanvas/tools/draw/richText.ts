@@ -1,6 +1,7 @@
 interface Segment {
   content: string;
   color?: string;
+  size?: number;
   ruby?: string;
   romanHanging?: boolean;
 }
@@ -10,7 +11,7 @@ export function parseMarkdownToJson(sourceText: string): Segment[] {
   const rubyPattern = /\[([^\[\]]+)\]\(([^\(\)]+)\)/;
   const romanHangingPattern = /\<\<([^<>]+)\>\>/;
 
-  function parse(text: string, color?: string, ruby?: string): Segment[] {
+  function parse(text: string, color?: string, size?: number, ruby?: string): Segment[] {
     const result: Segment[] = [];
     let remainingText = text;
 
@@ -31,24 +32,28 @@ export function parseMarkdownToJson(sourceText: string): Segment[] {
         const index = match!.index!;
 
         if (index > 0) {
-          result.push({ content: remainingText.slice(0, index), color, ruby });
+          result.push({ content: remainingText.slice(0, index), color, size, ruby });
         }
 
         switch (type) {
           case 'color':
-            result.push(...parse(content, param, ruby));
+            // パラメータをコンマで分割して色とサイズを取得
+            const params = param.split(',').map(p => p.trim());
+            const newColor = params[0] || undefined;
+            const newSize = params[1] ? parseFloat(params[1]) : undefined;
+            result.push(...parse(content, newColor || color, newSize || size, ruby));
             break;
           case 'ruby':
-            result.push(...parse(content, color, param));
+            result.push(...parse(content, color, size, param));
             break;
           case 'romanHanging':
-            result.push({ content, color, ruby, romanHanging: true });
+            result.push({ content, color, size, ruby, romanHanging: true });
             break;
         }
 
         remainingText = remainingText.slice(index + fullMatch.length);
       } else {
-        result.push({ content: remainingText, color, ruby });
+        result.push({ content: remainingText, color, size, ruby });
         remainingText = '';
       }
     }
@@ -62,6 +67,7 @@ export function parseMarkdownToJson(sourceText: string): Segment[] {
 export interface RichFragment {
   chars: string[];
   color?: string;
+  size?: number;
   ruby?: string[];
   romanHanging?: boolean;
 }
@@ -140,6 +146,7 @@ export function* richTextIterator(segments: Segment[]): Generator<RichFragment, 
       yield {
         chars: chars,
         color: segment.color,
+        size: segment.size,
         ruby: [...characterGroupIterator(segment.ruby)],
         romanHanging: segment.romanHanging
       };
@@ -147,6 +154,7 @@ export function* richTextIterator(segments: Segment[]): Generator<RichFragment, 
       yield {
         chars: [segment.content],
         color: segment.color,
+        size: segment.size,
         romanHanging: segment.romanHanging
       };
     } else {
@@ -154,6 +162,7 @@ export function* richTextIterator(segments: Segment[]): Generator<RichFragment, 
         yield {
           chars: [char],
           color: segment.color,
+          size: segment.size,
           romanHanging: segment.romanHanging
         };
       }
