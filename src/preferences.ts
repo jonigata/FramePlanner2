@@ -16,6 +16,9 @@ export type GadgetStorePreference = {
 let dbPromise: Promise<IDBPDatabase<unknown>>;
 
 export function assurePreferences() {
+  if (dbPromise !== undefined) {
+    return;
+  }
   dbPromise = openDB("preferences", preferencesVersion, {
     upgrade(db, oldVersion, newVersion) {
       // バージョン1: imagingストアを作成
