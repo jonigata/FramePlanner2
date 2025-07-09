@@ -130,10 +130,12 @@
   .dropzone {
     width: 100%;
     height: 100%;
+    min-height: 200px;
     overflow: auto;
     transition: all 0.2s;
     border-radius: 4px;
     position: relative;
+    flex: 1;
   }
   :global(.dropzone.drag-over) {
     background-color: rgba(0, 123, 255, 0.15) !important;

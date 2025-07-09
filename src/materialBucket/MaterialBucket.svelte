@@ -231,6 +231,8 @@
   .accordion-content {
     min-height: 200px;
     overflow: visible;
+    display: flex;
+    flex-direction: column;
   }
 
   h2 {
