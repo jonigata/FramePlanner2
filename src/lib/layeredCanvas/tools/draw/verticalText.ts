@@ -114,9 +114,9 @@ function drawFragment(
     endH = lineH + charSkip + tm.actualBoundingBoxDescent;
 
     const pivotX = cursorX;
-    // ヒューリスティックとして、charScaleが大きいほどすこし上にずらす
-    const heightOffset = 0; // (1 - charScale) * charSkip * 0.15;
-    const pivotY = r.y + lineH + scaledCharSkip * 0.5 + heightOffset; // 空間の中央
+    // ヒューリスティックとして、charScaleが大きいほどすこし上にずらす(charScale==1なら0)
+    const scaleOffset = (1 - charScale) * charSkip * 0.15;
+    const pivotY = r.y + lineH + scaledCharSkip * 0.5 + scaleOffset; // 空間の中央
 
     context.save();
     context.translate(pivotX, pivotY);
@@ -130,7 +130,7 @@ function drawFragment(
     context.scale(xflip, yflip);
 
     // フォントAPIは左下から始まるので、文字の中心に合わせるために調整
-    context.translate(- cw * 0.5, ch * 0.5);
+    context.translate(- cw * 0.5, charSkip * 0.5);
     if (method === "fill") {
       if (frag.color) { context.fillStyle = frag.color; }
       context.fillText(s,0,0);
@@ -182,9 +182,6 @@ function drawFragment(
         break;
       case isEmojiAt(c, 0):
         drawChar(0, 0, c);
-        break;
-      case /一/.test(c): // 漢数字の1
-        drawChar(0, 0.4, c);
         break;
       default:
         drawChar(0, 0, c);
