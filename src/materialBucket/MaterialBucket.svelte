@@ -114,7 +114,12 @@
 </script>
 
 <div class="drawer-outer">
-  <Drawer open={$materialBucketOpen} size="800px" on:clickAway={() => $materialBucketOpen = false}>
+  <Drawer 
+    open={$materialBucketOpen} 
+    size="800px" 
+    on:clickAway={() => $materialBucketOpen = false} 
+    overlay={$MaterialBucket_closeOnDragStore}
+  >
     {#if $materialBucketOpen}
       <div class="content-container">
         <div class="collection-header">
