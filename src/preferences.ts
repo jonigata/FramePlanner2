@@ -1,7 +1,8 @@
 import { openDB, type IDBPDatabase } from 'idb';
+import { writable, type Writable } from 'svelte/store';
 
-export type PreferenceStore = "imaging" | "filesystem" | "gadgetStore";
-const preferencesVersion = 3;
+export type PreferenceStore = "imaging" | "filesystem" | "gadgetStore" | "tweakUi";
+const preferencesVersion = 4;
 
 export type FileSystemPreference = {
   type: "fsa",
@@ -37,6 +38,13 @@ export function assurePreferences() {
           db.createObjectStore("gadgetStore");
         }
       }
+
+      // バージョン4: tweakUiストアを作成
+      if (oldVersion < 4) {
+        if (!db.objectStoreNames.contains("tweakUi")) {
+          db.createObjectStore("tweakUi");
+        }
+      }
     }
   });
 }
@@ -67,5 +75,32 @@ export function createPreference<T>(storeName: PreferenceStore, key: string) {
       }
     }
   };
+}
+
+export function createPreferenceStore<T>(storeName: PreferenceStore, key: string, defaultValue: T): Writable<T> {
+  const store = writable<T>(defaultValue);
+  let isInitialized = false;
+  
+  // 初期値をDBから読み込む
+  dbPromise.then(async (db) => {
+    const saved = await db.get(storeName, key);
+    if (saved !== undefined) {
+      store.set(saved);
+    } else {
+      // デフォルト値を保存
+      await db.put(storeName, defaultValue, key);
+    }
+    isInitialized = true;
+  });
+  
+  // ストアの変更を監視してDBに保存
+  store.subscribe(async (value) => {
+    if (isInitialized) {
+      const db = await dbPromise;
+      await db.put(storeName, value, key);
+    }
+  });
+  
+  return store;
 }
 

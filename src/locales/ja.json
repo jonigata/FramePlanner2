@@ -312,7 +312,8 @@
   },
   "materialBucket": {
     "materialCollection": "素材集",
-    "generationHistory": "生成履歴"
+    "generationHistory": "生成履歴",
+    "closeOnDrag": "ドラッグ時にウィンドウを閉じる"
   },
   "gallery": {
     "delete": "削除",

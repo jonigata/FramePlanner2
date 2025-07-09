@@ -312,7 +312,8 @@
   },
   "materialBucket": {
     "materialCollection": "Material Collection",
-    "generationHistory": "Generation History"
+    "generationHistory": "Generation History",
+    "closeOnDrag": "Close window when dragging"
   },
   "gallery": {
     "delete": "Delete",

@@ -3,13 +3,13 @@
   import { materialBucketOpen } from './materialBucketStore';
   import MaterialGallery from './MaterialGallery.svelte';
   import WarehouseGallery from './WarehouseGallery.svelte';
-  import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+  import { Accordion, AccordionItem, SlideToggle } from '@skeletonlabs/skeleton';
   import { _ } from 'svelte-i18n';
   import { gadgetFileSystem } from '../filemanager/fileManagerStore';
   import type { Node, EmbodiedEntry } from '../lib/filesystem/fileSystem';
-  import { onMount } from 'svelte';
   import { waitDialog } from '../utils/waitDialog';
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { MaterialBucket_closeOnDragStore } from './tweakUiStore';
   
   import trashIcon from '../assets/fileManager/trash.webp';
   import renameIcon from '../assets/fileManager/rename.webp';
@@ -22,9 +22,11 @@
   let editingFolderName: string = '';
 
   function onDragStart() {
-    setTimeout(() => {
-      $materialBucketOpen = false;
-    }, 0);
+    if ($MaterialBucket_closeOnDragStore) {
+      setTimeout(() => {
+        $materialBucketOpen = false;
+      }, 0);
+    }
   }
 
   let warehouseOpen = false;
@@ -117,14 +119,23 @@
       <div class="content-container">
         <div class="collection-header">
           <h3>素材集</h3>
-          <button 
-            class="btn btn-sm variant-filled-primary collection-add-button" 
-            on:click={addMaterialCollection}
-            use:toolTip={'新しいコレクションを作成'}
-          >
-            <img src={newFolderIcon} alt="new collection" class="button-icon" />
-            新しいコレクション
-          </button>
+          <div class="header-controls">
+            <div use:toolTip={$_('materialBucket.closeOnDrag')}>
+              <SlideToggle
+                name="closeOnDrag"
+                bind:checked={$MaterialBucket_closeOnDragStore}
+                size="sm"
+              />
+            </div>
+            <button 
+              class="btn btn-sm variant-filled-primary collection-add-button" 
+              on:click={addMaterialCollection}
+              use:toolTip={'新しいコレクションを作成'}
+            >
+              <img src={newFolderIcon} alt="new collection" class="button-icon" />
+              新しいコレクション
+            </button>
+          </div>
         </div>
         <Accordion>
           {#each materialCollectionFolders as folder}
@@ -320,5 +331,21 @@
     width: 16px;
     height: 16px;
     display: block;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-controls :global(.slide-toggle) {
+    margin: 0;
+  }
+
+  .header-controls :global(.slide-toggle label) {
+    font-family: '源映エムゴ';
+    font-size: 14px;
+    color: #666;
   }
 </style>
