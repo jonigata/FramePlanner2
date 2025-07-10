@@ -19,18 +19,21 @@
   }
 
   function handleDragStart() {
+    console.log("Drag started");
     if (hideOverlayOnDrag) {
       isDragging = true;
     }
   }
 
   function handleDragEnd() {
+    console.log("Drag ended");
     if (hideOverlayOnDrag) {
       isDragging = false;
     }
   }
 
   function handleDrop() {
+    console.log("Dropped");
     if (hideOverlayOnDrag) {
       isDragging = false;
     }
