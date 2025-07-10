@@ -1,25 +1,62 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount, onDestroy } from "svelte";
 
   export let open = false;
   export let duration = 0.2;
   export let placement = "left";
   export let size: string | null = null;
   export let overlay = true;
+  export let hideOverlayOnDrag = false;
 
   const dispatch = createEventDispatcher();
+  let isDragging = false;
 
   $: style = `--duration: ${duration}s; --size: ${size};`;
+  $: shouldShowOverlay = overlay && (!hideOverlayOnDrag || !isDragging);
 
   function handleClickAway() {
     dispatch("clickAway");
   }
+
+  function handleDragStart() {
+    if (hideOverlayOnDrag) {
+      isDragging = true;
+    }
+  }
+
+  function handleDragEnd() {
+    if (hideOverlayOnDrag) {
+      isDragging = false;
+    }
+  }
+
+  function handleDrop() {
+    if (hideOverlayOnDrag) {
+      isDragging = false;
+    }
+  }
+
+  onMount(() => {
+    if (hideOverlayOnDrag) {
+      window.addEventListener("dragstart", handleDragStart);
+      window.addEventListener("dragend", handleDragEnd);
+      window.addEventListener("drop", handleDrop);
+    }
+  });
+
+  onDestroy(() => {
+    if (hideOverlayOnDrag) {
+      window.removeEventListener("dragstart", handleDragStart);
+      window.removeEventListener("dragend", handleDragEnd);
+      window.removeEventListener("drop", handleDrop);
+    }
+  });
 </script>
 
 <aside class="drawer" class:open {style}>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  {#if overlay}
+  {#if shouldShowOverlay}
     <div class="overlay" on:click={handleClickAway} />
   {/if}
   <div class="panel {placement}" class:size>

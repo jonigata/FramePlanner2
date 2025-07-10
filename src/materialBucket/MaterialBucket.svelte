@@ -118,7 +118,7 @@
     open={$materialBucketOpen} 
     size="800px" 
     on:clickAway={() => $materialBucketOpen = false} 
-    overlay={$MaterialBucket_closeOnDragStore}
+    hideOverlayOnDrag={!$MaterialBucket_closeOnDragStore}
   >
     {#if $materialBucketOpen}
       <div class="content-container">
