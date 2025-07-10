@@ -9,50 +9,47 @@
   export let hideOverlayOnDrag = false;
 
   const dispatch = createEventDispatcher();
-  let isDragging = false;
+  let dragCounter = 0;
 
   $: style = `--duration: ${duration}s; --size: ${size};`;
+  $: isDragging = dragCounter > 0;
   $: shouldShowOverlay = overlay && (!hideOverlayOnDrag || !isDragging);
 
   function handleClickAway() {
     dispatch("clickAway");
   }
 
-  function handleDragStart() {
-    console.log("Drag started");
-    if (hideOverlayOnDrag) {
-      isDragging = true;
-    }
+  function handleDragEnter(e: DragEvent) {
+    e.preventDefault();
+    dragCounter++;
   }
 
-  function handleDragEnd() {
-    console.log("Drag ended");
-    if (hideOverlayOnDrag) {
-      isDragging = false;
-    }
+  function handleDragLeave() {
+    dragCounter--;
+    if (dragCounter < 0) dragCounter = 0;
   }
 
-  function handleDrop() {
-    console.log("Dropped");
-    if (hideOverlayOnDrag) {
-      isDragging = false;
-    }
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault();
+  }
+
+  function handleDrop(e: DragEvent) {
+    e.preventDefault();
+    dragCounter = 0;
   }
 
   onMount(() => {
-    if (hideOverlayOnDrag) {
-      window.addEventListener("dragstart", handleDragStart);
-      window.addEventListener("dragend", handleDragEnd);
-      window.addEventListener("drop", handleDrop);
-    }
+    document.addEventListener("dragenter", handleDragEnter);
+    document.addEventListener("dragleave", handleDragLeave);
+    document.addEventListener("dragover", handleDragOver);
+    document.addEventListener("drop", handleDrop);
   });
 
   onDestroy(() => {
-    if (hideOverlayOnDrag) {
-      window.removeEventListener("dragstart", handleDragStart);
-      window.removeEventListener("dragend", handleDragEnd);
-      window.removeEventListener("drop", handleDrop);
-    }
+    document.removeEventListener("dragenter", handleDragEnter);
+    document.removeEventListener("dragleave", handleDragLeave);
+    document.removeEventListener("dragover", handleDragOver);
+    document.removeEventListener("drop", handleDrop);
   });
 </script>
 
