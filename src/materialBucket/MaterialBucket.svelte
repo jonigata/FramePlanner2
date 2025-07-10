@@ -122,7 +122,6 @@
   >
     {#if $materialBucketOpen}
       <div class="content-container">
-        <h1>テスト</h1>
         <div class="collection-header">
           <h3>素材集</h3>
           <div class="header-controls">
