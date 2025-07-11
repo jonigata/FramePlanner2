@@ -363,9 +363,9 @@
     if (!bubble) { return; }
     console.log("onNewBubbleRequest");
     $saveBubbleToken = null;
-    const root = localFolders.root;
-    const folder = (await root.getNodeByName("テンプレート"))!.asFolder()!;
-    const file = await localFileSystem.createFile();
+    const root = await $gadgetFileSystem!.getRoot();
+    const folder = (await root!.getNodeByName("テンプレート"))!.asFolder()!;
+    const file = await $gadgetFileSystem!.createFile();
     bubble.displayName= "ふきだし";
     await saveBubbleTo(bubble, file);
     await folder.link(getCurrentDateTime(), file.id);
