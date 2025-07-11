@@ -101,6 +101,7 @@ function fillBubbleElement(ctx: CanvasRenderingContext2D, paperSize: Vector, bub
       size[0] = Math.abs(size[0]);
       size[1] = Math.abs(size[1]);
       setBubbleStyle(ctx, bubble, paperSize, bubble.fillColor, minimumSizeWarning);
+      ctx.strokeStyle = bubble.strokeColor;
       drawBubbleShape(ctx, 'fill', bubble.text, size, bubble.shape, bubble.optionContext);
     }
   }
