@@ -61,8 +61,18 @@
   $: onGadgetStorageChanged(gadgetStorage);
   async function onGadgetStorageChanged(gs: 'local' | 'fsa' | null) {
     console.log("gadgetStorage changed", gs);
-    $gadgetFileSystem = gs == 'fsa' ? fsaFileSystem : localFileSystem;
     if (gs == null) { return; }
+    if (gs === 'fsa') {
+      if (fsaFileSystem) {
+        $gadgetFileSystem = fsaFileSystem;
+      } else {
+        console.warn("fsaFileSystem is lost");
+        $gadgetFileSystem = localFileSystem;
+        gs = 'local'; // ここでfsaFileSystemがない場合はlocalに戻す
+      }
+    } else {
+      $gadgetFileSystem = localFileSystem;
+    }
     const pref = createPreference<GadgetStorePreference | null>("gadgetStore", "current");
     await pref.set({ store: gs });
   }
