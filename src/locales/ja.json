@@ -408,7 +408,8 @@
       "model": "モデル",
       "instructionTemplate": "指示テンプレート",
       "mangaBlack": "まんがブラック",
-      "mangaGray": "まんがグレー"
+      "mangaGray": "まんがグレー",
+      "historyHint": "Ctrl + ↑↓ で履歴を表示"
     },
     "inpaint": {
       "placeholder": "マスク領域の変更後を入力してください"

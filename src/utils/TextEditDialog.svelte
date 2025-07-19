@@ -12,7 +12,7 @@
   let title: string;
   let imageSource: HTMLCanvasElement;
 
-  const minHeight = 60;
+  const minHeight = 100;
   const CANVAS_WIDTH = 800;
   const CANVAS_HEIGHT = 600;
 
@@ -223,10 +223,17 @@
       </div>
     </div>
   </section>
-  <footer class="card-footer flex gap-2">
-    <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder} on:keydown={handleKeyDown}/>
-    <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('dialogs.cancel')}</button>
-    <button class="btn variant-filled-primary" on:click={onSubmit} disabled={!prompt.trim()}>{$_('dialogs.execute')}</button>
+  <footer class="card-footer">
+    <div class="footer-content">
+      <div class="history-hint">{$_('dialogs.textEdit.historyHint')}</div>
+      <div class="flex gap-2 items-end">
+        <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder} on:keydown={handleKeyDown}/>
+        <div class="flex gap-2">
+          <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('dialogs.cancel')}</button>
+          <button class="btn variant-filled-primary" on:click={onSubmit} disabled={!prompt.trim()}>{$_('dialogs.execute')}</button>
+        </div>
+      </div>
+    </div>
   </footer>
 </div>
 
@@ -339,5 +346,18 @@
   canvas {
     max-width: 100%;
     max-height: 100%;
+  }
+  
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .history-hint {
+    font-size: 12px;
+    color: rgb(var(--color-surface-500));
+    padding-left: 4px;
   }
 </style>

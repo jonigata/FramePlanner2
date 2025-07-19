@@ -408,7 +408,8 @@
       "model": "Model",
       "instructionTemplate": "Instruction Template",
       "mangaBlack": "Manga Black",
-      "mangaGray": "Manga Gray"
+      "mangaGray": "Manga Gray",
+      "historyHint": "Ctrl + ↑↓ to browse history"
     },
     "inpaint": {
       "placeholder": "Enter what to replace the masked area with"
