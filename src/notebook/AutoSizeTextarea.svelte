@@ -25,7 +25,14 @@
 
 </script>
 
-<textarea class="rounded-corner-token textarea" style="min-height: {minHeight}px" bind:value={internalValue} bind:this={textarea} placeholder={placeholder}></textarea>
+<textarea 
+  class="rounded-corner-token textarea" 
+  style="min-height: {minHeight}px" 
+  bind:value={internalValue} 
+  bind:this={textarea} 
+  placeholder={placeholder}
+  on:keydown
+></textarea>
 
 <style>
   textarea {

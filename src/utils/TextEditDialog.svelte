@@ -1,7 +1,7 @@
 <script lang="ts">
   import { modalStore, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
-  import { createPreference } from '../preferences';
+  import { createPreference, createPreferenceStore } from '../preferences';
   import AutoSizeTextarea from '../notebook/AutoSizeTextarea.svelte';
 
   import MangaBlackPicture from '../assets/kontext/manga-black.webp';
@@ -24,6 +24,13 @@
   let selectedModel: TextEditMode = 'kontext/pro';
   const pref = createPreference<TextEditMode>("imaging", "textEditMode");
   
+  // プロンプト履歴
+  const MAX_HISTORY_SIZE = 50;
+  const promptHistoryStore = createPreferenceStore<string[]>("tweakUi", "textEditPromptHistory", []);
+  let promptHistory: string[] = [];
+  let historyIndex = -1;
+  let temporaryPrompt = '';
+  
   // 画像リスト用のサンプルデータ
   let imageList: Array<{id: string, url: string, name: string, prompt: string}> = [];
 
@@ -31,6 +38,11 @@
     const args = $modalStore[0]?.meta;
     console.log('TextEdit Dialog mounted, modal store:', args);
     selectedModel = await pref.getOrDefault('kontext/pro');
+    
+    // 履歴を購読
+    promptHistoryStore.subscribe(value => {
+      promptHistory = value;
+    });
 
     if (args) {
       title = args.title;
@@ -90,10 +102,16 @@
     console.log('Selected image:', selectedImage);
     // 選択された画像のプロンプトをテキストエリアに設定
     prompt = selectedImage.prompt;
+    // 履歴ナビゲーションをリセット
+    historyIndex = -1;
+    temporaryPrompt = '';
   }
 
   function onSubmit() {
     if (!imageSource || !prompt.trim()) return;
+
+    // 履歴に追加
+    addToHistory(prompt);
 
     $modalStore[0].response?.({
       image: imageSource,
@@ -102,6 +120,60 @@
     });
 
     modalStore.close();
+  }
+  
+  function addToHistory(newPrompt: string) {
+    if (!newPrompt.trim()) return;
+    
+    // 重複を削除
+    const filteredHistory = promptHistory.filter(item => item !== newPrompt);
+    
+    // 新しいプロンプトを先頭に追加
+    const newHistory = [newPrompt, ...filteredHistory];
+    
+    // 最大履歴数を超えた場合は古いものを削除
+    if (newHistory.length > MAX_HISTORY_SIZE) {
+      newHistory.splice(MAX_HISTORY_SIZE);
+    }
+    
+    promptHistoryStore.set(newHistory);
+  }
+  
+  function handleKeyDown(event: KeyboardEvent) {
+    if (!event.ctrlKey) return;
+    
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      navigateHistory('up');
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      navigateHistory('down');
+    }
+  }
+  
+  function navigateHistory(direction: 'up' | 'down') {
+    if (promptHistory.length === 0) return;
+    
+    // 初めて履歴をナビゲートする場合、現在のプロンプトを保存
+    if (historyIndex === -1 && prompt.trim()) {
+      temporaryPrompt = prompt;
+    }
+    
+    if (direction === 'up') {
+      if (historyIndex < promptHistory.length - 1) {
+        historyIndex++;
+        prompt = promptHistory[historyIndex];
+      }
+    } else {
+      if (historyIndex > -1) {
+        historyIndex--;
+        if (historyIndex === -1) {
+          prompt = temporaryPrompt;
+        } else {
+          prompt = promptHistory[historyIndex];
+        }
+      }
+    }
   }
 </script>
 
@@ -152,7 +224,7 @@
     </div>
   </section>
   <footer class="card-footer flex gap-2">
-    <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder}/>
+    <AutoSizeTextarea minHeight={minHeight} bind:value={prompt} placeholder={placeholder} on:keydown={handleKeyDown}/>
     <button class="btn variant-ghost-surface" on:click={onCancel}>{$_('dialogs.cancel')}</button>
     <button class="btn variant-filled-primary" on:click={onSubmit} disabled={!prompt.trim()}>{$_('dialogs.execute')}</button>
   </footer>
