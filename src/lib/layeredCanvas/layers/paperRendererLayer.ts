@@ -12,7 +12,7 @@ import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
 import { polygonToPath2D } from "../tools/draw/pathTools";
 import { PaperOffset } from 'paperjs-offset'
-import * as Sentry from "@sentry/svelte";
+// import * as Sentry from "@sentry/svelte";
 
 type InheritanceContext = {
   borderColor: string, 
@@ -196,7 +196,7 @@ export class PaperRendererLayer extends LayerBase {
             // sentryの報告がうまく解決できないので、PaperOffsetがうまく動かない場合はstrokePathをそのまま使う
             console.error("PaperOffset failed, using strokePath as outerPath", Bubble.decompile(bubble));
             ri.outerPath = ri.strokePath.clone();
-            Sentry.captureException(e, { extra: { bubble: Bubble.decompile(bubble) } });            
+            // Sentry.captureException(e, { extra: { bubble: Bubble.decompile(bubble) } });            
           }
           const shrinkage = Math.min(ri.outerPath.bounds.width, ri.outerPath.bounds.height) * (opts.shapeOutline ?? 0);
           try {
@@ -212,7 +212,7 @@ export class PaperRendererLayer extends LayerBase {
             console.error("PaperOffset failed, using outerPath as innerPath", Bubble.decompile(bubble));
             ri.innerPath = ri.outerPath.clone();
             ri.innerPathIsSameWithOuterPath = true;
-            Sentry.captureException(e, { extra: { bubble: Bubble.decompile(bubble) } });            
+            // Sentry.captureException(e, { extra: { bubble: Bubble.decompile(bubble) } });            
           }
         }
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);

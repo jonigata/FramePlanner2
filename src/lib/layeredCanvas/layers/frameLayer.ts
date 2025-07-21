@@ -17,7 +17,7 @@ import type { FocusKeeper } from "../tools/focusKeeper";
 import { Grid } from "../tools/grid";
 import paper from 'paper';
 import { PaperOffset } from "paperjs-offset";
-import * as Sentry from "@sentry/svelte";
+// import * as Sentry from "@sentry/svelte";
 
 const SHEET_Y_MARGIN = 48;
 
@@ -1378,11 +1378,13 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
       return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
     }
     catch(e) {
+/*
       Sentry.captureException(e, {
         extra: {
           A, B, C, D, margin, ignoresInverted,
         },
       });
+*/
       return new Path2D(path.pathData);
     }
   }
@@ -1400,11 +1402,13 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
       return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
     }
     catch (e) {
+/*
       Sentry.captureException(e, {
         extra: {
           A, B, C, D, margin, ignoresInverted,
         },
       });
+*/
       return new Path2D(path.pathData);
     }
   }
@@ -1419,11 +1423,13 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
       return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
     }
     catch (e) {
+/*
       Sentry.captureException(e, {
         extra: {
           A, B, C, D, margin, ignoresInverted,
         },
       });
+*/
       return new Path2D(path.pathData);
     }
   }
