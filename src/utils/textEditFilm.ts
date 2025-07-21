@@ -9,26 +9,27 @@ import { mainBookFileSystem } from '../filemanager/fileManagerStore';
 import { onlineStatus } from './accountStore';
 import { waitDialog } from './waitDialog';
 import { loading } from './loadingStore';
+import type { TextEditModel } from '$protocolTypes/imagingTypes';
 
 type TextEditDialogResult = {
   image: HTMLCanvasElement;
   prompt: string;
-  model: string;
+  model: TextEditModel;
 }
 
 export async function textEditFilm(film: Film) {
   if (get(onlineStatus) !== "signed-in") {
-    toastStore.trigger({ message: `テキスト編集はサインインしてないと使えません`, timeout: 3000});
+    toastStore.trigger({ message: `対話編集はサインインしてないと使えません`, timeout: 3000});
     return;
   }
 
   if (!(film.media instanceof ImageMedia)) { 
-    toastStore.trigger({ message: `テキスト編集は画像のみ使えます`, timeout: 3000});
+    toastStore.trigger({ message: `対話編集は画像のみ使えます`, timeout: 3000});
     return; 
   }
   const imageMedia = film.media as ImageMedia;
 
-  const request = await waitDialog<TextEditDialogResult>('textedit', { title: "テキスト編集", imageSource: imageMedia.drawSource });
+  const request = await waitDialog<TextEditDialogResult>('textedit', { title: "対話編集", imageSource: imageMedia.drawSource });
   console.log(request);
   if (!request) {
     return;

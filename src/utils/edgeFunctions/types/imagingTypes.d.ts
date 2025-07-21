@@ -10,6 +10,9 @@ export type ImagingMode = z.infer<typeof ImagingModeSchema>;
 export const ImagingProviderSchema = z.enum(["flux", "gpt-image-1"]);
 export type ImagingProvider = z.infer<typeof ImagingProvider>;
 
+export const TextEditModelSchema = z.enum(["kontext/pro", "kontext/max", "kontext/inscene", "gpt-image-1/low", "gpt-image-1/medium", "gpt-image-1/high"])
+export type TextEditModel = z.infer<typeof TextEditModelSchema>;
+
 export const TextToImageRequestSchema = z.object({
   provider: ImagingProviderSchema,
   prompt: z.string(),
@@ -158,7 +161,7 @@ export type TextMaskResponse = z.infer<typeof TextMaskResponseSchema>;
 export const TextEditRequestSchema = z.object({
   imageDataUrl: z.string(),
   prompt: z.string(),
-  model: z.string(),
+  model: TextEditModelSchema,
 });
 export type TextEditRequest = z.infer<typeof TextEditRequestSchema>;
 

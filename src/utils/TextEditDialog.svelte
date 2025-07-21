@@ -1,16 +1,18 @@
 <script lang="ts">
-  import { modalStore, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { modalStore } from '@skeletonlabs/skeleton';
   import { onMount } from 'svelte';
-  import { createPreference, createPreferenceStore } from '../preferences';
+  import { createPreferenceStore } from '../preferences';
   import AutoSizeTextarea from '../notebook/AutoSizeTextarea.svelte';
+  import TextEditModels from '../generator/TextEditModels.svelte';
+  import type { TextEditModel } from '$protocolTypes/imagingTypes';
 
   import MangaBlackPicture from '../assets/kontext/manga-black.webp';
   import MangaGrayPicture from '../assets/kontext/manga-gray.webp';
-  import FeathralCost from './FeathralCost.svelte';
   import { _ } from 'svelte-i18n';
 
   let title: string;
   let imageSource: HTMLCanvasElement;
+  let imageSize: { width: number; height: number } = { width: 0, height: 0 };
 
   const minHeight = 100;
   const CANVAS_WIDTH = 800;
@@ -20,9 +22,7 @@
   let prompt = '';
   let placeholder = $_('dialogs.textEdit.placeholder');
 
-  type TextEditMode = 'kontext/pro' | 'kontext/max';
-  let selectedModel: TextEditMode = 'kontext/pro';
-  const pref = createPreference<TextEditMode>("imaging", "textEditMode");
+  let selectedModel: TextEditModel = 'kontext/inscene';
   
   // プロンプト履歴
   const MAX_HISTORY_SIZE = 50;
@@ -37,7 +37,6 @@
   onMount(async () => {
     const args = $modalStore[0]?.meta;
     console.log('TextEdit Dialog mounted, modal store:', args);
-    selectedModel = await pref.getOrDefault('kontext/pro');
     
     // 履歴を購読
     promptHistoryStore.subscribe(value => {
@@ -48,7 +47,8 @@
       title = args.title;
       if (args.imageSource) {
         imageSource = args.imageSource;
-        console.log('Image source:', imageSource);
+        imageSize = { width: imageSource.width, height: imageSource.height };
+        console.log('Image source:', imageSource, 'size:', imageSize);
         drawImageOnCanvas();
       } else {
         console.error('No image source in modal meta');
@@ -197,15 +197,7 @@
         <div class="right-pane-content">
           <div class="setting-section">
             <h3>{$_('dialogs.textEdit.model')}</h3>
-            <div class="flex flex-row items-center gap-4">
-              <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
-                <RadioItem bind:group={selectedModel} name="model" value={'kontext/pro'}><span class="radio-text">Pro</span></RadioItem>
-                <RadioItem bind:group={selectedModel} name="model" value={'kontext/max'}><span class="radio-text">Max</span></RadioItem>
-              </RadioGroup>
-              <div class="feathral-cost-container">
-                <FeathralCost cost={selectedModel == 'kontext/pro' ? 6 : 13}/>
-              </div>
-            </div>
+            <TextEditModels bind:model={selectedModel} {imageSize} />
           </div>
           
           <div class="setting-section">
@@ -273,12 +265,6 @@
   
   .setting-section {
     margin-bottom: 24px;
-  }
-  
-  .feathral-cost-container {
-    width: 80px;
-    display: flex;
-    justify-content: center;
   }
   
   .right-pane h3 {
