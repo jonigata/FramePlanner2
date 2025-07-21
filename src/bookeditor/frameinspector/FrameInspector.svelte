@@ -11,6 +11,7 @@
   import { calculateFramePadding } from '../../utils/outPaintFilm'
   import type { FilmTool } from '../../utils/filmTools';
   import { _ } from 'svelte-i18n';
+  import { calculateOutPaintingCost as calcOutPaintCost, calculateInPaintingCost as calcInPaintCost } from '../../utils/edgeFunctions/calculateCost';
 
   let innerWidth = window.innerWidth;
   let innerHeight = window.innerHeight;
@@ -132,29 +133,22 @@
   function calculateOutPaintingCost(film: Film) {
     const fit = $frameInspectorTarget!;
     const padding = calculateFramePadding(fit.page, fit.frame, film);
-    if (padding.left === 0 && padding.right === 0 && padding.top === 0 && padding.bottom === 0) {
-      return 0;
-    }
-
-    const w = film.media.naturalWidth + padding.left + padding.right;
-    const h = film.media.naturalHeight + padding.top + padding.bottom;
-
-    // outpainting costの算出
-    // $0.05 per mega pixel (1feathral ≒ $0.01)
-    const pixels = w * h;
-    return Math.ceil(pixels / (1024 * 1024) * 8);
+    
+    const size = {
+      width: film.media.naturalWidth,
+      height: film.media.naturalHeight
+    };
+    
+    return calcOutPaintCost(size, padding);
   }
 
   function calculateInPaintingCost(film: Film) {
-    const fit = $frameInspectorTarget!;
-
-    const w = film.media.naturalWidth;
-    const h = film.media.naturalHeight;
-
-    // inpainting costの算出
-    // $0.05 per mega pixel (1feathral ≒ $0.01)
-    const pixels = w * h;
-    return Math.ceil(pixels / (1024 * 1024) * 8);
+    const size = {
+      width: film.media.naturalWidth,
+      height: film.media.naturalHeight
+    };
+    
+    return calcInPaintCost(size);
   }
 </script>
 

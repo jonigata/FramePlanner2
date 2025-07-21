@@ -14,6 +14,7 @@ import { saveRequest } from '../filemanager/warehouse';
 import { analyticsEvent } from "../utils/analyticsEvent";
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { captureConsoleIntegration } from '@sentry/svelte';
+import { calculateT2iCost } from './edgeFunctions/calculateCost';
 
 export type ImagingContext = {
   awakeWarningToken: boolean;
@@ -194,20 +195,7 @@ async function generateFrameImage(imagingContext: ImagingContext, postfix: strin
 
 export function calculateCost(size: {width:number,height:number}, mode: ImagingMode): number {
   console.log("calculateCost", size, mode);
-  const pixels = size.width * size.height;
-  const costs: Record<ImagingMode, number> = {
-    "schnell": 1,
-    "pro": 8,
-    "chibi": 7,
-    "manga": 7,
-    "comibg": 7,
-    "gpt-image-1/low": 2,
-    "gpt-image-1/medium": 7,
-    "gpt-image-1/high": 30,
-  };
-  let cost = costs[mode];
-  cost = Math.ceil(cost * pixels / 1024 / 1024);
-  return cost;
+  return calculateT2iCost(mode, size);
 }
 
 /*

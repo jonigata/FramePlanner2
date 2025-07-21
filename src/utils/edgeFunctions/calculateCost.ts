@@ -3,8 +3,18 @@
 
 import type { ImagingMode, ImageToVideoModel, Padding, TextEditModel } from "$protocolTypes/imagingTypes";
 
+/**
+ * 画像サイズからメガピクセル単位でのコストを計算する
+ * @param size 画像サイズ
+ * @param costPerMegapixel メガピクセルあたりのコスト
+ * @returns 計算されたコスト
+ */
+function calculateCostFromMegapixels(size: { width: number; height: number }, costPerMegapixel: number): number {
+    const pixels = size.width * size.height;
+    return Math.ceil(pixels / (1024 * 1024) * costPerMegapixel);
+}
+
 export function calculateT2iCost(mode: ImagingMode, imageSize: { width: number; height: number }): number {
-    const pixels = imageSize.width * imageSize.height;
     // 1Charge = $0.01として
     // fal.aiの160%くらい
     const costs: { [key: string]: number } = {
@@ -17,9 +27,8 @@ export function calculateT2iCost(mode: ImagingMode, imageSize: { width: number; 
         "gpt-image-1/medium": 7,
         "gpt-image-1/high": 30,
     };
-    let cost = costs[mode];
-    cost = Math.ceil(cost * pixels / (1024 * 1024));
-    return cost;
+    const costPerMegapixel = costs[mode];
+    return calculateCostFromMegapixels(imageSize, costPerMegapixel);
 }
 
 export function culculateI2vCost(model: ImageToVideoModel, duration: string): number {
@@ -37,20 +46,20 @@ export function calculateOutPaintingCost(size: { width: number; height: number }
         return 0;
     }
 
-    const w = size.width + padding.left + padding.right;
-    const h = size.height + padding.top + padding.bottom;
+    const expandedSize = {
+        width: size.width + padding.left + padding.right,
+        height: size.height + padding.top + padding.bottom
+    };
 
     // outpainting costの算出
     // $0.05 per mega pixel (1feathral ≒ $0.01)
-    const pixels = w * h;
-    return Math.ceil(pixels / (1024 * 1024) * 8);
+    return calculateCostFromMegapixels(expandedSize, 8);
 }
 
 export function calculateInPaintingCost(size: { width: number; height: number }) {
     // inpainting costの算出
     // $0.05 per mega pixel (1feathral ≒ $0.01)
-    const pixels = size.width * size.height;
-    return Math.ceil(pixels / (1024 * 1024) * 8);
+    return calculateCostFromMegapixels(size, 8);
 }
 
 export function calculateTextEditCost(model: TextEditModel, imageSize: { width: number; height: number }): number {
@@ -63,8 +72,6 @@ export function calculateTextEditCost(model: TextEditModel, imageSize: { width: 
     }
 
     // 画像サイズから計算
-    const pixels = imageSize.width * imageSize.height;
-
     let costPerMegapixel = 0;
     switch (model) {
         case 'kontext/inscene':
@@ -83,5 +90,5 @@ export function calculateTextEditCost(model: TextEditModel, imageSize: { width: 
             throw new Error("Invalid model for text edit cost calculation");
     }
 
-    return Math.ceil(pixels / (1024 * 1024) * costPerMegapixel);
+    return calculateCostFromMegapixels(imageSize, costPerMegapixel);
 }
