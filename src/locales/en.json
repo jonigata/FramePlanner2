@@ -308,7 +308,8 @@
     "fiveSeconds": "5 seconds",
     "landscapeRatio": "Landscape (16:9)",
     "portraitRatio": "Portrait (9:16)",
-    "squareRatio": "Square (1:1)"
+    "squareRatio": "Square (1:1)",
+    "resolution": "Resolution"
   },
   "materialBucket": {
     "materialCollection": "Material Collection",

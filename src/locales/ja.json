@@ -308,7 +308,8 @@
     "fiveSeconds": "5秒",
     "landscapeRatio": "横長 (16:9)",
     "portraitRatio": "縦長 (9:16)",
-    "squareRatio": "正方形 (1:1)"
+    "squareRatio": "正方形 (1:1)",
+    "resolution": "解像度"
   },
   "materialBucket": {
     "materialCollection": "素材集",
