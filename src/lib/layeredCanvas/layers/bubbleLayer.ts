@@ -656,9 +656,6 @@ export class BubbleLayer extends LayerBase {
     if (keyDownFlags["KeyG"]) {
       return { action: "create-surface" };
     }
-    if (this.createBubbleIcon.contains(point)) {
-      return { action: "create" };
-    }
 
     if (depth == 2) {
       return this.acceptsForeground(point, _button);
@@ -724,6 +721,10 @@ export class BubbleLayer extends LayerBase {
   } 
   
   acceptsBackground(point: Vector, _button: number): any {
+    if (this.createBubbleIcon.contains(point)) {
+      return { action: "create" };
+    }
+
     const paperSize = this.getPaperSize();
 
     if (keyDownFlags["KeyQ"] || keyDownFlags["AltLeft"] || keyDownFlags["AltRight"] || keyDownFlags["KeyS"]) {
