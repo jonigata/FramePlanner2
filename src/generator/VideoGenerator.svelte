@@ -1,6 +1,6 @@
 <script lang="ts">
   import { modalStore } from '@skeletonlabs/skeleton';
-  import type { ImageToVideoRequest } from '../utils/edgeFunctions/types/imagingTypes';
+  import type { ImageToVideoRequest, ImageToVideoModel, ImageToVideoResolution } from '../utils/edgeFunctions/types/imagingTypes';
   import NotebookTextarea from '../notebook/NotebookTextarea.svelte';
   import { recognizeImage } from '../supabase';
   import type { Media } from '../lib/layeredCanvas/dataModels/media';
@@ -8,15 +8,17 @@
   import { resizeCanvasIfNeeded } from '../lib/layeredCanvas/tools/imageUtil';
   import FeathralCost from '../utils/FeathralCost.svelte';
   import { _ } from 'svelte-i18n';
+  import { calculateSeedanceCost } from '../utils/edgeFunctions/calculateCost';
   
   let prompt = '';
-  let duration: "4" | "5" | "10" = "5";
+  let duration: "1" | "2" | "3" | "4" | "5" | "10" = "5";
   let aspectRatio: "1:1" | "16:9" | "9:16" = "1:1";
-  let model: "kling" | "FramePack" = "FramePack";
+  let resolution: ImageToVideoResolution = "720p";
+  let model: ImageToVideoModel = "FramePack";
   let sourceMedia: Media;
   let promptWaiting: boolean;
   let cost: number = 50;
-  
+
   // モデルごとの利用可能なオプション
   $: modelOptions = {
     FramePack: {
@@ -31,8 +33,12 @@
         { value: "16:9", label: $_('generator.landscapeRatio') },
         { value: "9:16", label: $_('generator.portraitRatio') }
       ],
-      cost: (duration: string) => {
-        return parseInt(duration) * 5;
+      resolution: [
+        { value: "480p", label: "480p" },
+        { value: "720p", label: "720p" },
+      ],
+      cost: (duration: number, pixels: number) => {
+        return duration * 5;
       }
     },
     kling: {
@@ -44,8 +50,46 @@
         { value: "16:9", label: $_('generator.landscapeRatio') },
         { value: "9:16", label: $_('generator.portraitRatio') },
       ],
-      cost: () => {
+      resolution: [
+        { value: "720p", label: "720p" },
+      ],
+      cost: (duration: number, pixels: number) => {
         return 125;
+      }
+    },
+    "seedance/lite": {
+      durations: [
+        { value: "3", label: $_('generator.threeSeconds') },
+        { value: "4", label: $_('generator.fourSeconds') },
+        { value: "5", label: $_('generator.fiveSeconds') },
+      ],
+      aspectRatios: [
+        { value: "16:9", label: $_('generator.landscapeRatio') },
+      ],
+      resolution: [
+        { value: "480p", label: "480p" },
+        { value: "720p", label: "720p" },
+        { value: "1080p", label: "1080p" },
+      ],
+      cost: (duration: number, pixels: number) => {
+        return calculateSeedanceCost(1.8, duration, pixels);
+      }
+    },
+    "seedance/pro": {
+      durations: [
+        { value: "3", label: $_('generator.threeSeconds') },
+        { value: "4", label: $_('generator.fourSeconds') },
+        { value: "5", label: $_('generator.fiveSeconds') },
+      ],
+      aspectRatios: [
+        { value: "16:9", label: $_('generator.landscapeRatio') },
+      ],
+      resolution: [
+        { value: "480p", label: "480p" },
+        { value: "1080p", label: "1080p" },
+      ],
+      cost: (duration: number, pixels: number) => {
+        return calculateSeedanceCost(2.5, duration, pixels);
       }
     }
   };
@@ -54,6 +98,7 @@
   $: if (model) {
     const availableDurations = modelOptions[model].durations.map(d => d.value);
     const availableAspectRatios = modelOptions[model].aspectRatios.map(a => a.value);
+    const availableResolutions = modelOptions[model].resolution.map(r => r.value);
     
     // 現在の値が新しいモデルで利用可能でない場合は、最初のオプションに設定
     if (!availableDurations.includes(duration)) {
@@ -64,7 +109,16 @@
       aspectRatio = availableAspectRatios[0] as any;
     }
 
-    cost = modelOptions[model].cost(duration);
+    if (!availableResolutions.includes(resolution)) {
+      resolution = availableResolutions[0] as any;
+    }
+
+    // 解像度に基づいてピクセル数を計算
+    const height = parseInt(resolution.replace('p', '')) || 720;
+    const width = height * (16 / 9);     // seedanceしか使ってないので固定
+    const pixels = width * height;
+    cost = modelOptions[model].cost(parseInt(duration), pixels);
+    console.log(`Model: ${model}, Duration: ${duration}, Resolution: ${resolution}, Cost: ${cost}`);
   }
 
   function onCancel() {
@@ -79,6 +133,7 @@
       imageUrl: resizedImageUrl,
       duration,
       aspectRatio,
+      resolution,
       model
     };
     
@@ -147,6 +202,8 @@
           <select bind:value={model} class="select">
             <option value="FramePack">FramePack</option>
             <option value="kling">kling-2.1</option>
+            <option value="seedance/lite">Seedance Lite</option>
+            <option value="seedance/pro">Seedance Pro</option>
           </select>
         </label>
 
@@ -160,11 +217,20 @@
         </label>
       </div>
 
-      <div class="grid grid-cols-1 gap-4">
+      <div class="grid grid-cols-2 gap-4">
         <label class="label">
           <h3>{$_('generator.aspectRatio')}</h3>
           <select bind:value={aspectRatio} class="select">
             {#each modelOptions[model].aspectRatios as option}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
+
+        <label class="label">
+          <h3>{$_('generator.resolution')}</h3>
+          <select bind:value={resolution} class="select">
+            {#each modelOptions[model].resolution as option}
               <option value={option.value}>{option.label}</option>
             {/each}
           </select>

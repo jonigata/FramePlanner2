@@ -92,3 +92,13 @@ export function calculateTextEditCost(model: TextEditModel, imageSize: { width: 
 
     return calculateCostFromMegapixels(imageSize, costPerMegapixel);
 }
+
+export function calculateSeedanceCost(baseCost: number, duration: number, pixels: number): number {
+    console.log(`Calculating Seedance cost: baseCost=${baseCost}, duration=${duration}, pixels=${pixels}`);
+    const tokens = pixels * 24 /*fps*/ * duration / 1024;
+    // costs $baseCost per 1 million tokens
+    const doller = tokens / 1_000_000 * baseCost;
+    console.log(`Calculated cost: ${doller}, tokens: ${tokens}`);
+    return Math.ceil(doller * 100 * 1.5); // 通常1.6倍にしているが、ピクセル数が微妙に少ないようなので1.5倍に調整
+}
+  
