@@ -182,15 +182,9 @@ export class PaperRendererLayer extends LayerBase {
         ri.strokePath?.remove();
         ri.outerPath?.remove();
         ri.innerPath?.remove();
-        ri.unitedStrokePath?.remove();
-        ri.unitedOuterPath?.remove();
-        ri.unitedInnerPath?.remove();
         ri.strokePath = null;
         ri.outerPath = null;
         ri.innerPath = null;
-        ri.unitedStrokePath = null;
-        ri.unitedOuterPath = null;
-        ri.unitedInnerPath = null;
 
         const size = bubble.getPhysicalSize(paperSize);
         ri.pathJson = json;
@@ -239,9 +233,6 @@ export class PaperRendererLayer extends LayerBase {
       const ri = bubble.renderInfo!;
       if (bubble.parent == null && ri.strokePath) {
         const center = bubble.getPhysicalCenter(paperSize);
-        ri.unitedStrokePath?.remove();
-        ri.unitedOuterPath?.remove();
-        ri.unitedInnerPath?.remove();
         ri.unitedStrokePath = ri.strokePath.clone();
         ri.unitedOuterPath = ri.outerPath!.clone();
         ri.unitedInnerPath = ri.innerPath!.clone();
@@ -276,7 +267,7 @@ export class PaperRendererLayer extends LayerBase {
           ri.unitedInnerPath = ri.unitedOuterPath.clone();
         } else {
           ri.unitedOuterPath?.remove();
-          ri.unitedOuterPath = ri.outerPath!.subtract(ri.unitedInnerPath!);
+          ri.unitedOuterPath = ri.unitedOuterPath!.subtract(ri.unitedInnerPath!);
         }
         ri.unitedOuterPath.rotate(bubble.rotation, center);
         ri.unitedOuterPath.translate(reverse2D(center));
