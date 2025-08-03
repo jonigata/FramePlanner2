@@ -12,6 +12,7 @@
   let targetHeight = 0;
   
   function onCancel() {
+    $modalStore[0].response!(null);
     modalStore.close();
   }
 

@@ -89,11 +89,13 @@
             break;
         }
       }
-      $bookArchiver = [];      
     }
     catch(e: any) {
       console.log(e);
       toastStore.trigger({ message: e, timeout: 1500});
+    }
+    finally {
+      $bookArchiver = [];
     }
   }
 
