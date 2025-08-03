@@ -19,6 +19,23 @@ export function initPaperJs() {
   // https://github.com/paperjs/paper.js/issues/1889
   paper.setup([1,1]); // creates a virtual canvas
   paper.view.autoUpdate = false; // disables drawing any shape automatically
+/*
+  // ① _setProject をフックして「登録された瞬間」を捕捉
+  (function injectStackTraceOnAttach(paper) {
+    const orig = paper.Item.prototype._setProject;
+
+    paper.Item.prototype._setProject = function (project, ...rest) {
+      // Project に非 null が入る＝シーンに加わった瞬間
+      if (project && this instanceof paper.PathItem) {
+        // ② スタックトレースを出力（折り畳み表示にすると見やすい）
+        console.groupCollapsed('[PathItem attached]', this);
+        console.trace();                 // DevTools でクリック展開可
+        console.groupEnd();
+      }
+      return orig.call(this, project, ...rest);
+    };
+  })(paper);        // ← PaperScope を差し替えている場合は該当 scope を渡す
+*/
 }
 
 export function getBubbleName(shape: string) {

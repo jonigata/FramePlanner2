@@ -140,8 +140,11 @@ export class PaperRendererLayer extends LayerBase {
     const bubbleDic: {[key: string]: Bubble} = {};
     for (let bubble of bubbles) {
       bubble.renderInfo ??= {} as BubbleRenderInfo;
+      bubble.renderInfo.unitedOuterPath?.remove();
       bubble.renderInfo.unitedOuterPath = null;
+      bubble.renderInfo.unitedInnerPath?.remove();
       bubble.renderInfo.unitedInnerPath = null;
+      bubble.renderInfo.unitedStrokePath?.remove();
       bubble.renderInfo.unitedStrokePath = null;
       bubble.renderInfo.children = [];
       // pathJson, pathは持ち越す
@@ -254,23 +257,26 @@ export class PaperRendererLayer extends LayerBase {
           strokePath2?.translate(child.getPhysicalCenter(paperSize));
           ri.unitedStrokePath?.remove();
           ri.unitedStrokePath = ri.unitedStrokePath.unite(strokePath2!);
+          strokePath2.remove();
 
           const outerPath2 = ri2.outerPath!.clone();
           outerPath2.translate(childCenter);
           ri.unitedOuterPath?.remove();
           ri.unitedOuterPath = ri.unitedOuterPath.unite(outerPath2);
+          outerPath2.remove();
 
           const innerPath2 = ri2.innerPath!.clone();
           innerPath2.translate(childCenter);
           ri.unitedInnerPath?.remove();
           ri.unitedInnerPath = ri.unitedInnerPath.unite(innerPath2);
+          innerPath2.remove();
         }
         if (ri.children.length === 0 && ri.innerPathIsSameWithOuterPath) {
           ri.unitedInnerPath?.remove();
           ri.unitedInnerPath = ri.unitedOuterPath.clone();
         } else {
-          ri.unitedOuterPath = ri.outerPath!.clone();
-          ri.unitedOuterPath = ri.unitedOuterPath.subtract(ri.unitedInnerPath!);
+          ri.unitedOuterPath?.remove();
+          ri.unitedOuterPath = ri.outerPath!.subtract(ri.unitedInnerPath!);
         }
         ri.unitedOuterPath.rotate(bubble.rotation, center);
         ri.unitedOuterPath.translate(reverse2D(center));
@@ -414,6 +420,7 @@ export class PaperRendererLayer extends LayerBase {
   }
 
   resetCache(){
+    console.log("PaperRendererLayer resetCache called");
     for (let bubble of this.rawBubbles!) {
       bubble.renderInfo = undefined;
     }
