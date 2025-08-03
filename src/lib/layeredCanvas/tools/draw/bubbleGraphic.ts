@@ -254,6 +254,7 @@ function drawStrokesBubbleAux(context: CanvasRenderingContext2D, method: string,
     path.closed = true;
 
     drawPath(context, method, path, opts);
+    path.remove();
   } else {
     const color = context.strokeStyle;
     for (let i = 0; i < points.length; i++) {
@@ -705,9 +706,17 @@ function addTrivialTail(path: paper.Path, size: Vector, opts: any): paper.PathIt
       // do nothing
     } else {
       if (!opts?.extract) {
-        return path.unite(makeTrivialTailPath(size, m, v, opts.tailWidth));
+        const tail = makeTrivialTailPath(size, m, v, opts.tailWidth);
+        const result = path.unite(tail);
+        path.remove();
+        tail.remove();
+        return result;
       } else {
-        return path.subtract(makeExtractTailPath(size, m, v, opts.extractWidth));
+        const tail = makeExtractTailPath(size, m, v, opts.extractWidth);
+        const result = path.subtract(tail);
+        path.remove();
+        tail.remove();
+        return result;
       }
     }
   }

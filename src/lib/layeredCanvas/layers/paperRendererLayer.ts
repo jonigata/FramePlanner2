@@ -176,12 +176,23 @@ export class PaperRendererLayer extends LayerBase {
       if (ri.pathJson != json) {
         // 変更が起きたときのみ
         // const startTime = performance.now();
+        ri.strokePath?.remove();
+        ri.outerPath?.remove();
+        ri.innerPath?.remove();
+        ri.unitedStrokePath?.remove();
+        ri.unitedOuterPath?.remove();
+        ri.unitedInnerPath?.remove();
+        ri.strokePath = null;
+        ri.outerPath = null;
+        ri.innerPath = null;
+        ri.unitedStrokePath = null;
+        ri.unitedOuterPath = null;
+        ri.unitedInnerPath = null;
+
         const size = bubble.getPhysicalSize(paperSize);
         ri.pathJson = json;
         ri.strokePath = getPath(bubble.shape, size, opts, bubble.text);
         ri.strokePath?.rotate(-bubble.rotation);
-        ri.outerPath = null;
-        ri.innerPath = null;
         ri.innerPathIsSameWithOuterPath = false;
         if (ri.strokePath) { 
           const expansion = Math.min(ri.strokePath.bounds.width, ri.strokePath.bounds.height) * (opts.shapeExpand ?? 0);
@@ -225,6 +236,9 @@ export class PaperRendererLayer extends LayerBase {
       const ri = bubble.renderInfo!;
       if (bubble.parent == null && ri.strokePath) {
         const center = bubble.getPhysicalCenter(paperSize);
+        ri.unitedStrokePath?.remove();
+        ri.unitedOuterPath?.remove();
+        ri.unitedInnerPath?.remove();
         ri.unitedStrokePath = ri.strokePath.clone();
         ri.unitedOuterPath = ri.outerPath!.clone();
         ri.unitedInnerPath = ri.innerPath!.clone();
@@ -238,19 +252,24 @@ export class PaperRendererLayer extends LayerBase {
 
           const strokePath2 = ri2.strokePath!.clone();
           strokePath2?.translate(child.getPhysicalCenter(paperSize));
+          ri.unitedStrokePath?.remove();
           ri.unitedStrokePath = ri.unitedStrokePath.unite(strokePath2!);
 
           const outerPath2 = ri2.outerPath!.clone();
           outerPath2.translate(childCenter);
+          ri.unitedOuterPath?.remove();
           ri.unitedOuterPath = ri.unitedOuterPath.unite(outerPath2);
 
           const innerPath2 = ri2.innerPath!.clone();
           innerPath2.translate(childCenter);
+          ri.unitedInnerPath?.remove();
           ri.unitedInnerPath = ri.unitedInnerPath.unite(innerPath2);
         }
         if (ri.children.length === 0 && ri.innerPathIsSameWithOuterPath) {
+          ri.unitedInnerPath?.remove();
           ri.unitedInnerPath = ri.unitedOuterPath.clone();
         } else {
+          ri.unitedOuterPath = ri.outerPath!.clone();
           ri.unitedOuterPath = ri.unitedOuterPath.subtract(ri.unitedInnerPath!);
         }
         ri.unitedOuterPath.rotate(bubble.rotation, center);

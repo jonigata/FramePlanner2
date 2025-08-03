@@ -3,7 +3,7 @@
   import '@skeletonlabs/skeleton/styles/all.css';
 
   import { Toast } from '@skeletonlabs/skeleton';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { Modal, type ModalComponent } from '@skeletonlabs/skeleton';   
   import { copyIndexedDB } from './utils/backUpIndexedDB';
   import * as Sentry from "@sentry/svelte";
@@ -139,8 +139,19 @@
 
   let fileManagerActive = false;
 
+  // ブラウザのクライアント領域のサイズ変更を検知
+  const handleResize = () => {
+    console.log(`クライアント領域がリサイズされました: ${window.innerWidth} x ${window.innerHeight}`);
+  };
+
   onMount(async () => {
     document.body.style.overflow = 'hidden'; // HACK
+
+    // リサイズイベントリスナーを登録
+    window.addEventListener('resize', handleResize);
+    
+    // 初回ログ
+    console.log(`初期クライアント領域サイズ: ${window.innerWidth} x ${window.innerHeight}`);
 
     bootstrap();
 
@@ -179,6 +190,11 @@
         release: stamp,
       });
     }
+  });
+
+  // コンポーネント破棄時のクリーンアップ
+  onDestroy(() => {
+    window.removeEventListener('resize', handleResize);
   });
 </script>
 
