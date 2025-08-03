@@ -1356,83 +1356,88 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
   const path = new paper.Path();
   const join = "round";
 
-  function addTriangle(a: Vector, b: Vector, c: Vector) {
-    if (!ignoresInverted || isTriangleClockwise([a, b, c])) {
-      path.add(a, b, c);
+  try {
+    function addTriangle(a: Vector, b: Vector, c: Vector) {
+      if (!ignoresInverted || isTriangleClockwise([a, b, c])) {
+        path.add(a, b, c);
+        path.closed = true;
+        return 1;
+      }
+      return 0;
+    }
+
+    // A C
+    // |X|
+    // D B
+    const q = segmentIntersection([A, B], [C, D]);
+    if (q) {
+      let n = 0;
+      n += addTriangle(A, q, D);
+      n += addTriangle(C, q, B);
+      if (n == 0) { return new Path2D(); }
+      try {
+        return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+      }
+      catch(e) {
+  /*
+        Sentry.captureException(e, {
+          extra: {
+            A, B, C, D, margin, ignoresInverted,
+          },
+        });
+  */
+        return new Path2D(path.pathData);
+      }
+    }
+
+    // A-B
+    //  X
+    // C-D
+    const q2 = segmentIntersection([A, D], [B, C]);
+    if (q2) {
+      let n = 0;
+      n += addTriangle(A, B, q2);
+      n += addTriangle(q2, C, D);
+      if (n == 0) { return new Path2D(); }
+      try {
+        return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+      }
+      catch (e) {
+  /*
+        Sentry.captureException(e, {
+          extra: {
+            A, B, C, D, margin, ignoresInverted,
+          },
+        });
+  */
+        return new Path2D(path.pathData);
+      }
+    }
+
+    // A-B
+    // | |
+    // D-C
+    if (ignoresInverted || isTriangleClockwise([A, B, C])) {
+      path.add(A, B, C, D);
       path.closed = true;
-      return 1;
+      try {
+        return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+      }
+      catch (e) {
+  /*
+        Sentry.captureException(e, {
+          extra: {
+            A, B, C, D, margin, ignoresInverted,
+          },
+        });
+  */
+        return new Path2D(path.pathData);
+      }
     }
-    return 0;
-  }
 
-  // A C
-  // |X|
-  // D B
-  const q = segmentIntersection([A, B], [C, D]);
-  if (q) {
-    let n = 0;
-    n += addTriangle(A, q, D);
-    n += addTriangle(C, q, B);
-    if (n == 0) { return new Path2D(); }
-    try {
-      return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
-    }
-    catch(e) {
-/*
-      Sentry.captureException(e, {
-        extra: {
-          A, B, C, D, margin, ignoresInverted,
-        },
-      });
-*/
-      return new Path2D(path.pathData);
-    }
+    return new Path2D();
   }
-
-  // A-B
-  //  X
-  // C-D
-  const q2 = segmentIntersection([A, D], [B, C]);
-  if (q2) {
-    let n = 0;
-    n += addTriangle(A, B, q2);
-    n += addTriangle(q2, C, D);
-    if (n == 0) { return new Path2D(); }
-    try {
-      return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
-    }
-    catch (e) {
-/*
-      Sentry.captureException(e, {
-        extra: {
-          A, B, C, D, margin, ignoresInverted,
-        },
-      });
-*/
-      return new Path2D(path.pathData);
-    }
+  finally {
+    path.remove();
   }
-
-  // A-B
-  // | |
-  // D-C
-  if (ignoresInverted || isTriangleClockwise([A, B, C])) {
-    path.add(A, B, C, D);
-    path.closed = true;
-    try {
-      return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
-    }
-    catch (e) {
-/*
-      Sentry.captureException(e, {
-        extra: {
-          A, B, C, D, margin, ignoresInverted,
-        },
-      });
-*/
-      return new Path2D(path.pathData);
-    }
-  }
-
-  return new Path2D();
 }

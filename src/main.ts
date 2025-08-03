@@ -58,6 +58,9 @@ declare global {
     tag(tag: string, ...args: any[]): void;
     snapshot(obj: any): void;
   }
+  export interface Window {
+    countPaths(): void;
+  }
 }
 
 console.tag = function(tag, color, ...args) {
@@ -85,3 +88,41 @@ register();
 
 import { assurePreferences } from "./preferences";
 assurePreferences();
+
+// Paper.jsのパス数を数える関数をグローバルに追加
+import paper from 'paper';
+
+window.countPaths = function() {
+  try {
+    const project = paper.project;
+    
+    if (!project) {
+      console.log('%cPaper.js', 'color:white; background-color:#dc2626; padding:2px 4px; border-radius:4px;', 'プロジェクトが初期化されていません');
+      return;
+    }
+    
+    // Path だけ数える
+    const pathCount = project.getItems({
+      class: paper.Path
+    }).length;
+    
+    // PathItem で数えると CompoundPath も含めた「パス系」すべて
+    const pathItemCount = project.getItems({
+      class: paper.PathItem
+    }).length;
+    
+    // CompoundPath だけ数える
+    const compoundPathCount = project.getItems({
+      class: paper.CompoundPath
+    }).length;
+    
+    console.log('%cPath統計', 'color:white; background-color:#2563eb; padding:2px 4px; border-radius:4px;');
+    console.log('Path 個数:', pathCount);
+    console.log('CompoundPath 個数:', compoundPathCount);
+    console.log('PathItem 個数 (Path + CompoundPath):', pathItemCount);
+    console.log('その他アイテム 個数:', project.activeLayer.children.length - pathItemCount);
+    console.log('総アイテム 個数:', project.activeLayer.children.length);
+  } catch (error) {
+    console.log('%cPaper.js Error', 'color:white; background-color:#dc2626; padding:2px 4px; border-radius:4px;', error);
+  }
+};

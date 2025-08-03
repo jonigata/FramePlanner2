@@ -70,4 +70,8 @@ export function drawSheet(ctx: CanvasRenderingContext2D, corners: Trapezoid, r: 
   
   ctx.fillStyle = fillStyle;
   ctx.fill(new Path2D(path3.pathData));
+
+  path1.remove();
+  path2.remove();
+  path3.remove();
 }
