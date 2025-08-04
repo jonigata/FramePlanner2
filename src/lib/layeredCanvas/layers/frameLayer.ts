@@ -1376,7 +1376,10 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
       n += addTriangle(C, q, B);
       if (n == 0) { return new Path2D(); }
       try {
-        return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+        const offsetPath = PaperOffset.offset(path, margin, { join });
+        const result = new Path2D(offsetPath.pathData);
+        offsetPath.remove();
+        return result;
       }
       catch(e) {
   /*
@@ -1400,7 +1403,10 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
       n += addTriangle(q2, C, D);
       if (n == 0) { return new Path2D(); }
       try {
-        return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+        const offsetPath = PaperOffset.offset(path, margin, { join });
+        const result = new Path2D(offsetPath.pathData);
+        offsetPath.remove();
+        return result;
       }
       catch (e) {
   /*
@@ -1421,7 +1427,10 @@ export function getTrapezoidPath(t: Trapezoid, margin: number, ignoresInverted: 
       path.add(A, B, C, D);
       path.closed = true;
       try {
-        return new Path2D(PaperOffset.offset(path, margin, { join }).pathData);
+        const offsetPath = PaperOffset.offset(path, margin, { join });
+        const result = new Path2D(offsetPath.pathData);
+        offsetPath.remove();
+        return result;
       }
       catch (e) {
   /*
