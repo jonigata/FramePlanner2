@@ -34,8 +34,8 @@
   
   function updateSliderFromViewport() {
     try {
-      const currentPage = $bookOperators.getFocusedPage();
-      const pageIndex = $mainBook.pages.indexOf(currentPage);
+      const currentPage = $bookOperators!.getFocusedPage();
+      const pageIndex = $mainBook!.pages.indexOf(currentPage);
       if (pageIndex >= 0) {
         let autoValue: number;
         if (isRightToLeft) {

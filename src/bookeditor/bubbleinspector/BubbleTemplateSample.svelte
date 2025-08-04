@@ -67,7 +67,6 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.translate(size[0] * 0.5, size[1] * 0.5);
     bubble.renderInfo = {} as BubbleRenderInfo;
-    bubble.renderInfo.unitedPath = null;
     bubble.renderInfo.children = [];
     bubble.n_p0 = [-0.04,-0.04];
     bubble.n_p1 = [0.04,0.04];
