@@ -12,6 +12,7 @@ import { makePlainCanvas } from "../tools/imageUtil";
 import { renderBubbles, renderBubbleBackground, renderBubbleForeground } from "../tools/draw/renderBubble";
 import { polygonToPath2D } from "../tools/draw/pathTools";
 import { PaperOffset } from 'paperjs-offset'
+// import paper from 'paper';
 // import * as Sentry from "@sentry/svelte";
 
 type InheritanceContext = {
@@ -179,6 +180,7 @@ export class PaperRendererLayer extends LayerBase {
       if (ri.pathJson != json) {
         // 変更が起きたときのみ
         // const startTime = performance.now();
+        // console.warn(`PaperRendererLayer: bubble path changed: ${paper.project.getItems({class: paper.PathItem}).length}`);
         ri.strokePath?.remove();
         ri.outerPath?.remove();
         ri.innerPath?.remove();
@@ -224,6 +226,7 @@ export class PaperRendererLayer extends LayerBase {
           }
         }
         // console.log(`${json} took ${performance.now() - startTime} ms, ${json.length} bytes`);
+        // console.warn(`PaperRendererLayer: bubble path changed done: ${paper.project.getItems({class: paper.PathItem}).length}`);
       }
     }
 
@@ -413,6 +416,15 @@ export class PaperRendererLayer extends LayerBase {
   resetCache(){
     console.log("PaperRendererLayer resetCache called");
     for (let bubble of this.rawBubbles!) {
+      const ri = bubble.renderInfo;
+      if (ri) {
+        ri.strokePath?.remove();
+        ri.outerPath?.remove();
+        ri.innerPath?.remove();
+        ri.unitedStrokePath?.remove();
+        ri.unitedOuterPath?.remove();
+        ri.unitedInnerPath?.remove();
+      }
       bubble.renderInfo = undefined;
     }
   }

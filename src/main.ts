@@ -6,7 +6,6 @@ import { initializeApp } from "./firebase";
 import { initializeSupabase } from "./supabase";
 import { initPaperJs } from "./lib/layeredCanvas/tools/draw/bubbleGraphic"
 import { initI18n } from './locales';
-import { setInitialLocale } from './stores/i18n';
 
 import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   
