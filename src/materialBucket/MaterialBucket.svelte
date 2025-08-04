@@ -10,6 +10,7 @@
   import { waitDialog } from '../utils/waitDialog';
   import { toolTip } from '../utils/passiveToolTipStore';
   import { MaterialBucket_closeOnDragStore } from './tweakUiStore';
+  import { tick } from 'svelte';
   
   import trashIcon from '../assets/fileManager/trash.webp';
   import renameIcon from '../assets/fileManager/rename.webp';
@@ -20,6 +21,7 @@
   let collectionFolderNode: Node | null = null;
   let editingFolderId: string | null = null;
   let editingFolderName: string = '';
+  let editingInput: HTMLInputElement | null = null;
 
   function onDragStart() {
     if ($MaterialBucket_closeOnDragStore) {
@@ -84,6 +86,11 @@
   async function startEditingFolder(bindId: string, currentName: string) {
     editingFolderId = bindId;
     editingFolderName = currentName;
+    await tick();
+    if (editingInput) {
+      editingInput.focus();
+      editingInput.select();
+    }
   }
 
   async function saveEditingFolder() {
@@ -152,10 +159,10 @@
                       type="text" 
                       class="folder-name-input"
                       bind:value={editingFolderName}
+                      bind:this={editingInput}
                       on:keydown={handleKeydown}
                       on:blur={saveEditingFolder}
                       on:click|stopPropagation
-                      autofocus
                     />
                   {:else}
                     <h2 

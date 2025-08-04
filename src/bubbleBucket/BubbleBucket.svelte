@@ -131,7 +131,9 @@
       class="drawer-content"
       bind:this={drawerElement}
       on:paste={handlePaste}
-      tabindex="0"
+      tabindex="-1"
+      role="region"
+      aria-label="バブルバケット"
     >
       {#each bubbles as bubble}
         <BubbleBucketItem bubble={bubble} />
