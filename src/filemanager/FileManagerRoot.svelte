@@ -28,6 +28,7 @@
   import { createPreference, type FileSystemPreference, type GadgetStorePreference } from '../preferences';
   import { buildFileSystem as buildLocalFileSystem } from './localFileSystem';
   import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { createCoalescingWork } from '../utils/coalescingWork';
 
   export let localFileSystem: FileSystem;
 
@@ -147,22 +148,14 @@
     }
   }
 
-  let currentRevision: Revision;
-  let delayedCommiter = new DelayedCommiter(
+  const coalescingSaveWork = createCoalescingWork(
     async () => {
+      // await new Promise(resolve => setTimeout(resolve, 2000));
       const book = $mainBook!;
       const fs = $mainBookFileSystem!;
       if (!$saveProhibitFlag) {
         const file = (await fs.getNode(book.revision.id as NodeId))!.asFile()!;
-        try {
-          await saveBookTo(book, fs, file);
-        }
-        catch (e) {
-          console.error(e);
-          if (e instanceof DOMException && e.name === "QuotaExceededError") {
-            toastStore.trigger({ message: $_('messages.memoryInsufficient'), autohide: false });
-          }
-        }
+        await saveBookTo(book, fs, file);
       }
       currentRevision = {...book.revision};
       const info: CurrentFileInfo = {
@@ -171,6 +164,21 @@
         title: $mainBookTitle
       }
       await recordCurrentFileInfo(info);
+    },
+    (e) => {
+        console.error(e);
+        if (e instanceof DOMException && e.name === "QuotaExceededError") {
+          toastStore.trigger({ message: $_('messages.memoryInsufficient'), autohide: false });
+        }
+    }
+  )
+
+
+  let currentRevision: Revision;
+  let delayedCommiter = new DelayedCommiter(
+    () => {
+      console.log("delayedCommiter: commit");
+      coalescingSaveWork();
     });
 
   $: onOpen($fileManagerOpen);
