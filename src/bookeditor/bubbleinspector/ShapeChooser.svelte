@@ -67,6 +67,8 @@
     q.fontStyle = b.fontStyle;
     q.fontWeight = b.fontWeight;
     q.n_fontSize = b.n_fontSize;
+    q.charSkip = b.charSkip;
+    q.lineSkip = b.lineSkip;
     q.fontFamily = b.fontFamily;
     q.direction = b.direction;
     q.fontColor = b.fontColor;
@@ -77,6 +79,8 @@
     q.outlineColor = b.outlineColor;
     q.autoNewline = b.autoNewline;
     q.optionContext = b.optionContext;
+    q.rubySize = b.rubySize;
+    q.rubyDistance = b.rubyDistance;
     $bubble = q;
 
     if (!e.detail.ctrlKey) {
