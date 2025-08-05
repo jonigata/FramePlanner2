@@ -17,7 +17,7 @@ function calculateCostFromMegapixels(size: { width: number; height: number }, co
 export function calculateT2iCost(mode: ImagingMode, imageSize: { width: number; height: number }): number {
     // 1Charge = $0.01として
     // fal.aiの160%くらい
-    const costs: { [key: string]: number } = {
+    const costs: { [key in ImagingMode]: number } = {
         "schnell": 1,
         "pro": 8,
         "chibi": 7,
@@ -26,6 +26,7 @@ export function calculateT2iCost(mode: ImagingMode, imageSize: { width: number; 
         "gpt-image-1/low": 2,
         "gpt-image-1/medium": 7,
         "gpt-image-1/high": 30,
+        "qwen-image": 10,
     };
     const costPerMegapixel = costs[mode];
     return calculateCostFromMegapixels(imageSize, costPerMegapixel);

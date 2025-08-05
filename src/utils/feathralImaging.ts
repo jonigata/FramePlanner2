@@ -13,7 +13,7 @@ import type { TextToImageRequest, ImagingBackground, ImagingMode, ImagingProvide
 import { saveRequest } from '../filemanager/warehouse';
 import { analyticsEvent } from "../utils/analyticsEvent";
 import { FunctionsHttpError } from '@supabase/supabase-js'
-import { captureConsoleIntegration } from '@sentry/svelte';
+// import { captureConsoleIntegration } from '@sentry/svelte';
 import { calculateT2iCost } from './edgeFunctions/calculateCost';
 
 export type ImagingContext = {
@@ -101,9 +101,46 @@ async function generateImage_Gpt1(prompt: string, image_size: {width: number, he
   }
 }
 
+async function generateImage_Qwen(prompt: string, image_size: {width: number, height: number}, mode: ImagingMode, num_images: number): Promise<HTMLCanvasElement[]> {
+  console.log("running feathral");
+  try {
+    let imageRequest: TextToImageRequest = {
+      provider: "qwen",
+      prompt, 
+      imageSize: image_size,
+      numImages: num_images,
+      mode, 
+      background: "opaque", // 無意味
+    };
+    console.log(imageRequest);
+    const { requestId } = await text2Image(imageRequest);
+
+    await saveRequest(get(mainBookFileSystem)!, "image", mode, requestId);
+
+    const perf = performance.now();
+    const { mediaResources } = await pollMediaStatus({ mediaType: "image", mode, requestId });
+
+    console.log("generateImage_Qwen", performance.now() - perf);
+
+    analyticsEvent('generate_qwen');
+
+    return mediaResources as HTMLCanvasElement[];
+  }
+  catch(error: any) {
+    if (isContentsPolicyViolationError(error)) {
+      toastStore.trigger({ message: `画像生成エラー: ジェネレータに拒否されました。<br/>おそらくコンテントポリシー違反です。`, timeout: 5000});
+    } else {
+      toastStore.trigger({ message: `画像生成エラー: ${error.context.statusText}`, timeout: 3000});
+    }
+    throw error;
+  }
+}
+
 export async function generateImage(prompt: string, image_size: {width: number, height: number}, mode: ImagingMode, num_images: number, background: ImagingBackground): Promise<HTMLCanvasElement[]> {
   if (mode.startsWith("gpt-image-1")) {
     return generateImage_Gpt1(prompt, image_size, mode, num_images, background);
+  } else if (mode === "qwen-image") {
+    return generateImage_Qwen(prompt, image_size, mode, num_images);
   } else {
     return generateImage_Flux(prompt, image_size, mode, num_images);
   }
@@ -216,6 +253,7 @@ function calculateGPTCost(mode: Mode): number {
 */
 
 export const modeOptions: Array<{value: ImagingMode, name: string, cost: number, uiType: ImagingProvider}> = [
+  { value: 'qwen-image', name: 'Qwen Image', cost: 10, uiType: "flux" },
   { value: 'gpt-image-1/low', name: 'GPT-image-1 low', cost: 2, uiType: "gpt-image-1" },
   { value: 'gpt-image-1/medium', name: 'GPT-image-1 medium', cost: 7, uiType: "gpt-image-1" },
   { value: 'gpt-image-1/high', name: 'GPT-image-1 high', cost: 30, uiType: "gpt-image-1" },

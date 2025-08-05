@@ -70,6 +70,7 @@
         "gpt-image-1/low": 30,
         "gpt-image-1/medium": 30,
         "gpt-image-1/high": 30,
+        "qwen-image": 12,
       }
       const delta = 1 / factorTable[mode] / pixelRatio;
       q = setInterval(() => {progress = Math.min(1.0, progress+delta);}, 1000);
