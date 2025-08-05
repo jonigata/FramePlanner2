@@ -26,7 +26,7 @@ export function calculateT2iCost(mode: ImagingMode, imageSize: { width: number; 
         "gpt-image-1/low": 2,
         "gpt-image-1/medium": 7,
         "gpt-image-1/high": 30,
-        "qwen-image": 10,
+        "qwen-image": 4,
     };
     const costPerMegapixel = costs[mode];
     return calculateCostFromMegapixels(imageSize, costPerMegapixel);
