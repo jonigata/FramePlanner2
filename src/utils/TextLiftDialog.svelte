@@ -43,8 +43,9 @@
     corner: CornerType | null;
     startMouse: Vector;
     startBox: { x: number; y: number; width: number; height: number };
+    startCharHeight: number;
   };
-  let dragState: DragState = { mode: 'none', corner: null, startMouse: [0, 0], startBox: { x: 0, y: 0, width: 0, height: 0 } };
+  let dragState: DragState = { mode: 'none', corner: null, startMouse: [0, 0], startBox: { x: 0, y: 0, width: 0, height: 0 }, startCharHeight: 0 };
   const CORNER_HIT_RADIUS = 12; // コーナーのヒット判定半径（キャンバス座標）
 
   type DrawInfo = {
@@ -366,7 +367,8 @@
             mode: 'corner',
             corner,
             startMouse: [canvasX, canvasY],
-            startBox: { ...selectedLayer.displayBox }
+            startBox: { ...selectedLayer.displayBox },
+            startCharHeight: selectedLayer.charHeight,
           };
           return;
         }
@@ -383,7 +385,8 @@
             mode: 'move',
             corner: null,
             startMouse: [canvasX, canvasY],
-            startBox: { ...layer.displayBox }
+            startBox: { ...layer.displayBox },
+            startCharHeight: layer.charHeight,
           };
         } else {
           // 新しいレイヤーを選択
@@ -479,6 +482,12 @@
         x1: newX + newWidth,
         y1: newY + newHeight
       };
+
+      // 枠サイズの変化に応じてcharHeightもスケール
+      const scaleX = newWidth / dragState.startBox.width;
+      const scaleY = newHeight / dragState.startBox.height;
+      const boxScale = Math.sqrt(scaleX * scaleY);
+      layer.charHeight = dragState.startCharHeight * boxScale;
     }
 
     maskLayers = [...maskLayers]; // リアクティブ更新
@@ -487,7 +496,7 @@
 
   function handleMouseUp(_event: MouseEvent) {
     if (dragState.mode !== 'none') {
-      dragState = { mode: 'none', corner: null, startMouse: [0, 0], startBox: { x: 0, y: 0, width: 0, height: 0 } };
+      dragState = { mode: 'none', corner: null, startMouse: [0, 0], startBox: { x: 0, y: 0, width: 0, height: 0 }, startCharHeight: 0 };
     }
   }
 
