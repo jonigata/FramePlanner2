@@ -9,7 +9,6 @@
 
   let searchOptions: SearchOptions = { filterString: '', mincho: true, gothic: true, normal: true, bold: true };
   let drawerPage = 0;
-  let fontList: WebFontList | null = null;
   let localFontName: string;
   let localFonts: string[] = [];
   let historyStorage: HistoryStorage;
@@ -41,12 +40,6 @@
     localFonts = localFonts.filter((f) => f !== fontFamily);
   }
 
-  $:onChangeSearchOptions(searchOptions);
-  function onChangeSearchOptions(options: SearchOptions) {
-    if (fontList) {
-      fontList.searchOptions = options;
-    }
-  }
 
   function allOff() {
     searchOptions.mincho = false;
@@ -83,7 +76,7 @@
       <button class="px-2 bg-secondary-500 text-white hover:bg-secondary-700 focus:bg-secondary-700 active:bg-secondary-900 download-button" on:click={allOff}>すべてオフ</button>
     </div>
     <hr/>
-    <WebFontList on:choose={onChangeFont} bind:this={fontList}/>
+    <WebFontList on:choose={onChangeFont} searchOptions={searchOptions}/>
     {/if}
     {#if drawerPage === 1}
     <div class="custom-font-panel">
