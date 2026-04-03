@@ -35,6 +35,7 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
   import { _ } from 'svelte-i18n';
   import ThinkerSelector from './ThinkerSelector.svelte';
   import { toolTip } from '../utils/passiveToolTipStore';
+  import { themeWaiting, plotWaiting, scenarioWaiting, runAdviseTheme, runAdvisePlot, runAdviseScenario } from './notebookStore';
   import bellIcon from '../assets/bell.webp';
   import { type BubbleStyleTemplate, DEFAULT_BUBBLE_STYLE_TEMPLATES } from '../lib/layeredCanvas/dataModels/bubbleStyleTemplate';
   import { waitDialog } from '../utils/waitDialog';
@@ -45,10 +46,7 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
   // let thinker: Thinker = "gpt-5-mini"; // Default to the latest model
 
   let fullAutoRunning = false;
-  let themeWaiting = false;
   let charactersWaiting = false;
-  let plotWaiting = false;
-  let scenarioWaiting = false;
   let storyboardWaiting = false;
   let critiqueWaiting = false;
   let postfix: string = "";
@@ -142,21 +140,8 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
 
   async function onThemeAdvise() {
     try {
-      themeWaiting = true;
-      console.log('advise theme', notebook);
-      const r = await adviseTheme(makeRequest());
-      notebook!.theme = r.theme;
-      notebook!.pageNumber = r.pageNumber;
-      notebook!.format = r.format;
-      commit();
-    }
-    catch(e) {
-      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
-      console.error(e);
-    }
-    finally {
-      themeWaiting = false;
-    }
+      await runAdviseTheme(notebook!, thinker);
+    } catch (_) {}
   }
 
   async function onCharactersAdvise() {
@@ -255,32 +240,14 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
 
   async function onPlotAdvise() {
     try {
-      plotWaiting = true;
-      notebook!.plot = await advisePlot({...makeRequest(), instruction:plotInstruction});
-      commit();
-    }
-    catch(e) {
-      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
-      console.error(e);
-    }
-    finally {
-      plotWaiting = false;
-    }
+      await runAdvisePlot(notebook!, thinker, plotInstruction);
+    } catch (_) {}
   }
 
   async function onScenarioAdvise() {
     try {
-      scenarioWaiting = true;
-      notebook!.scenario = await adviseScenario(makeRequest());
-      commit();
-    }
-    catch(e) {
-      toastStore.trigger({ message: aiErrorMessage, timeout: 1500});
-      console.error(e);
-    }
-    finally {
-      scenarioWaiting = false;
-    }
+      await runAdviseScenario(notebook!, thinker);
+    } catch (_) {}
   }
 
   function reset() {
@@ -613,13 +580,13 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
   </div>
   <div class="body">
     <div class="section">
-    <h2 class:progress={themeWaiting}>{$_('notebook.manual.theme')}
-      {#if themeWaiting}
+    <h2 class:progress={$themeWaiting}>{$_('notebook.manual.theme')}
+      {#if $themeWaiting}
         <ProgressRadial stroke={200} width="w-5"/>
       {/if}
     </h2>
     <div class="w-full">
-      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={themeWaiting} on:advise={onThemeAdvise}/>
+      <NotebookTextarea bind:value={notebook.theme} cost={1} waiting={$themeWaiting} on:advise={onThemeAdvise}/>
     </div>
     <div class="flex flex-row gap-4 items-center mt-2 mb-2">
       <div class="flex items-center gap-2">
@@ -695,13 +662,13 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
       </div>
     </div>
     <div class="section">
-      <h2 class:progress={plotWaiting}>{$_('notebook.manual.plot')}
-        {#if plotWaiting}
+      <h2 class:progress={$plotWaiting}>{$_('notebook.manual.plot')}
+        {#if $plotWaiting}
           <ProgressRadial stroke={200} width="w-5"/>
         {/if}
       </h2>
       <div class="w-full">
-        <NotebookTextarea bind:value={notebook.plot} cost={2} waiting={plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
+        <NotebookTextarea bind:value={notebook.plot} cost={2} waiting={$plotWaiting} on:advise={onPlotAdvise} minHeight={180}/>
         {#if notebook.plot}
           <div class="flex flex-row items-center">
             <span class="w-24">{$_('notebook.manual.changeInstruction')}</span>
@@ -711,13 +678,13 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
       </div>
     </div>
     <div class="section">
-      <h2 class:progress={scenarioWaiting}>{$_('notebook.manual.scenario')}
-        {#if scenarioWaiting}
+      <h2 class:progress={$scenarioWaiting}>{$_('notebook.manual.scenario')}
+        {#if $scenarioWaiting}
           <ProgressRadial stroke={200} width="w-5"/>
         {/if}
       </h2>
       <div class="w-full">
-        <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
+        <NotebookTextarea bind:value={notebook.scenario} cost={2} waiting={$scenarioWaiting} on:advise={onScenarioAdvise} minHeight={240}/>
       </div>
     </div>
     <div class="drawing-mode-selector">

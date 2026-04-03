@@ -79,15 +79,30 @@
   }
 
   function executeCommand() {
-    const defs = commandTable;
-    const parts = inputValue.trim().split(/\s+/);
-    const commandName = parts[0] || '';
-    const args = parts.slice(1);
-    const def = defs.find(d => d.name === commandName);
+    const trimmed = inputValue.trim();
+    const spaceIdx = trimmed.indexOf(' ');
+    const commandName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx);
+    const rest = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1);
+    const def = commandTable.find(d => d.name === commandName);
     if (def) {
+      // FreeText引数がある場合は残り全体を1引数として渡す
+      const hasFreeText = def.args.some(a => a.type.tag === 'FreeText');
+      const args = hasFreeText ? [stripQuotes(rest)] : rest.split(/\s+/).filter(s => s);
       def.action(args);
     }
     close();
+  }
+
+  function stripQuotes(s: string): string {
+    const t = s.trim();
+    if (t.length >= 2) {
+      const first = t[0];
+      const last = t[t.length - 1];
+      if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+        return t.slice(1, -1);
+      }
+    }
+    return t;
   }
 
   function longestCommonPrefix(strings: string[]): string {

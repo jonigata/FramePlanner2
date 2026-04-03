@@ -1,21 +1,27 @@
 import { get } from 'svelte/store';
 import { bookOperators, mainBook } from '../bookeditor/workspaceStore';
 import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
-import { newBook, type NotebookOptions } from '../lib/book/book';
+import { commitBook, newBook, type NotebookOptions } from '../lib/book/book';
 import { newBookToken } from '../filemanager/fileManagerStore';
 import { createPreference } from '../preferences';
+import { onlineStatus } from '../utils/accountStore';
+import { toastStore } from '@skeletonlabs/skeleton';
+import { notebookOpen, runAdviseTheme, runAdvisePlot, runAdviseScenario } from '../notebook/notebookStore';
 import type { BookWorkspaceOperators } from '../bookeditor/BookWorkspaceOperators';
 
 // ── 引数型(ADT) ──────────────────────────────────
 
 export type ArgType =
   | { tag: 'PageTemplateName' }
+  | { tag: 'FreeText'; label: string }
   ;
 
 export function argTypeCandidates(t: ArgType): string[] {
   switch (t.tag) {
     case 'PageTemplateName':
       return Object.keys(frameExamples);
+    case 'FreeText':
+      return [];
   }
 }
 
@@ -23,6 +29,8 @@ export function argTypeLabel(t: ArgType): string {
   switch (t.tag) {
     case 'PageTemplateName':
       return 'template-name';
+    case 'FreeText':
+      return t.label;
   }
 }
 
@@ -48,6 +56,23 @@ export function buildUsage(def: CommandDef): string {
     return a.required ? `<${label}>` : `[${label}]`;
   });
   return [def.name, ...argParts].join(' ');
+}
+
+// ── ヘルパー ────────────────────────────────────
+
+function requireSignedIn(): boolean {
+  if (get(onlineStatus) !== 'signed-in') {
+    toastStore.trigger({ message: 'ログインが必要です', timeout: 1500 });
+    return false;
+  }
+  return true;
+}
+
+function notebookCommit(): void {
+  const book = get(mainBook);
+  if (!book) return;
+  commitBook(book, null);
+  mainBook.set(book);
 }
 
 // ── アクション ───────────────────────────────────
@@ -77,6 +102,55 @@ async function newBookAction(_args: string[]): Promise<void> {
   newBookToken.set(newBook("not visited", "shortcut-", "standard", options));
 }
 
+async function genaiThemeAction(args: string[]): Promise<void> {
+  if (!requireSignedIn()) return;
+  const book = get(mainBook);
+  if (!book) return;
+
+  const text = args.join(' ').trim();
+  if (text) {
+    book.notebook.theme = text;
+    notebookCommit();
+  } else {
+    notebookOpen.set(true);
+    try { await runAdviseTheme(book.notebook, "gpt4.1"); } catch (_) {}
+  }
+}
+
+async function genaiPlotAction(args: string[]): Promise<void> {
+  if (!requireSignedIn()) return;
+  const book = get(mainBook);
+  if (!book) return;
+
+  const text = args.join(' ').trim();
+  if (text) {
+    book.notebook.plot = text;
+    notebookCommit();
+  } else {
+    notebookOpen.set(true);
+    try { await runAdvisePlot(book.notebook, "gpt4.1", ''); } catch (_) {}
+  }
+}
+
+async function genaiScenarioAction(args: string[]): Promise<void> {
+  if (!requireSignedIn()) return;
+  const book = get(mainBook);
+  if (!book) return;
+
+  const text = args.join(' ').trim();
+  if (text) {
+    book.notebook.scenario = text;
+    notebookCommit();
+  } else {
+    notebookOpen.set(true);
+    try { await runAdviseScenario(book.notebook, "gpt4.1"); } catch (_) {}
+  }
+}
+
+function genaiOpenAction(_args: string[]): void {
+  notebookOpen.set(true);
+}
+
 // ── コマンドテーブル ─────────────────────────────
 
 export const commandTable: CommandDef[] = [
@@ -91,5 +165,29 @@ export const commandTable: CommandDef[] = [
     description: '新しいブックを作成',
     args: [],
     action: newBookAction,
+  },
+  {
+    name: 'genai-open',
+    description: 'ノートブックを開く',
+    args: [],
+    action: genaiOpenAction,
+  },
+  {
+    name: 'genai-theme',
+    description: 'テーマを設定/AI生成',
+    args: [{ type: { tag: 'FreeText', label: 'text' }, required: false }],
+    action: genaiThemeAction,
+  },
+  {
+    name: 'genai-plot',
+    description: 'プロットを設定/AI生成',
+    args: [{ type: { tag: 'FreeText', label: 'text' }, required: false }],
+    action: genaiPlotAction,
+  },
+  {
+    name: 'genai-scenario',
+    description: 'シナリオを設定/AI生成',
+    args: [{ type: { tag: 'FreeText', label: 'text' }, required: false }],
+    action: genaiScenarioAction,
   },
 ];
