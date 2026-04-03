@@ -104,9 +104,10 @@ export async function hireCharacterByName(
   const found = rosterCharacters.find(c => c.name === name);
   if (!found) return null;
 
+  // ポートレートはRosterのulidで検索するので、ulid振り直し前にロード
+  await loadCharacterPortraits(fs, [found], onUpdate);
   found.ulid = ulid();
   notebook.characters.push(found);
-  loadCharacterPortraits(fs, [found], onUpdate);
   return found;
 }
 
