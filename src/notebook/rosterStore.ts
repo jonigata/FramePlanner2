@@ -1,6 +1,6 @@
 import { type Writable, writable, get } from "svelte/store";
 import { gadgetFileSystem } from '../filemanager/fileManagerStore';
-import type { CharacterLocal } from '../lib/book/book';
+import type { CharacterLocal, NotebookLocal } from '../lib/book/book';
 import type { CharacterBase } from "../lib/book/types/notebook";
 import { type FileSystem, getNodeByPath, type File } from "../lib/filesystem/fileSystem";
 import { canvasToBlob, createCanvasFromBlob } from "../lib/layeredCanvas/tools/imageUtil";
@@ -86,6 +86,28 @@ export async function loadCharacterPortraits(
       // 過去のバグの互換性で、空オブジェクトになっていることがある
     }
   }
+}
+
+/**
+ * 名前指定でRosterからキャラクターを取得してnotebookに追加する。
+ * ポートレートも非同期でロードする。
+ * @returns 追加されたキャラクター、または失敗時はnull
+ */
+export async function hireCharacterByName(
+  fs: FileSystem,
+  notebook: NotebookLocal,
+  name: string,
+  onUpdate: () => void,
+): Promise<CharacterLocal | null> {
+  const { ulid } = await import('ulid');
+  const rosterCharacters = await loadCharactersFromRoster(fs);
+  const found = rosterCharacters.find(c => c.name === name);
+  if (!found) return null;
+
+  found.ulid = ulid();
+  notebook.characters.push(found);
+  loadCharacterPortraits(fs, [found], onUpdate);
+  return found;
 }
 
 /**

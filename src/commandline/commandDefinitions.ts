@@ -10,7 +10,7 @@ import { adviseCharacters } from '../supabase';
 import { toastStore } from '@skeletonlabs/skeleton';
 import { ulid } from 'ulid';
 import { notebookOpen, runAdviseTheme, runAdvisePlot, runAdviseScenario, charactersWaiting } from '../notebook/notebookStore';
-import { rosterOpen, loadCharactersFromRoster, saveCharacterToRoster, rosterNamesCache, prefetchRosterNames } from '../notebook/rosterStore';
+import { rosterOpen, hireCharacterByName, saveCharacterToRoster, rosterNamesCache, prefetchRosterNames } from '../notebook/rosterStore';
 import type { BookWorkspaceOperators } from '../bookeditor/BookWorkspaceOperators';
 
 // ── 引数型(ADT) ──────────────────────────────────
@@ -49,16 +49,6 @@ export function argTypeLabel(t: ArgType): string {
       return 'name';
     case 'RosterCharacterName':
       return 'name';
-  }
-}
-
-export function argTypeNeedsQuote(t: ArgType): boolean {
-  switch (t.tag) {
-    case 'CharacterName':
-    case 'RosterCharacterName':
-      return true;
-    default:
-      return false;
   }
 }
 
@@ -279,20 +269,12 @@ async function genaiCharactersHireAction(args: string[]): Promise<void> {
 
   const name = args.join(' ').trim();
   if (name) {
-    // 名前指定: Rosterから直接取得
     try {
-      const rosterCharacters = await loadCharactersFromRoster(fs);
-      const found = rosterCharacters.find(c => c.name === name);
-      if (!found) {
+      const hired = await hireCharacterByName(fs, book.notebook, name, () => { mainBook.set(get(mainBook)); });
+      if (!hired) {
         toastStore.trigger({ message: `Rosterに "${name}" が見つかりません`, timeout: 1500 });
         return;
       }
-      if (book.notebook.characters.find(c => c.ulid === found.ulid)) {
-        toastStore.trigger({ message: `"${name}" は既に登録されています`, timeout: 1500 });
-        return;
-      }
-      found.ulid = ulid();
-      book.notebook.characters.push(found);
       notebookCommit();
     } catch (e) {
       toastStore.trigger({ message: 'Rosterの読み込みに失敗しました', timeout: 1500 });

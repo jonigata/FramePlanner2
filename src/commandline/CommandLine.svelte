@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { commandLineVisible } from './commandLineStore';
-  import { commandTable, buildUsage, argTypeCandidates, argTypeNeedsQuote } from './commandDefinitions';
+  import { commandTable, buildUsage, argTypeCandidates } from './commandDefinitions';
   import { rosterNamesCache } from '../notebook/rosterStore';
   import { mainBook } from '../bookeditor/workspaceStore';
 
@@ -16,40 +16,63 @@
     text: string;
     kind: 'command' | 'arg';
     description: string;
-    quote: boolean;
+  }
+
+  // 入力途中のtokenize（閉じていない引用符も最後のトークンとして返す）
+  function tokenizePartial(input: string): string[] {
+    const tokens: string[] = [];
+    let current = '';
+    let quote: string | null = null;
+
+    for (const ch of input) {
+      if (quote) {
+        if (ch === quote) {
+          quote = null;
+        } else {
+          current += ch;
+        }
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === ' ' || ch === '\t') {
+        tokens.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    tokens.push(current); // 最後のトークン（入力中の部分）
+    return tokens;
   }
 
   function getCandidates(input: string, cursor: number): Candidate[] {
     const defs = commandTable;
     const upToCursor = input.slice(0, cursor);
-    const parts = upToCursor.split(/\s+/);
-    const commandPart = parts[0] || '';
-    const hasSpace = upToCursor.includes(' ');
+    const tokens = tokenizePartial(upToCursor);
+    const commandPart = tokens[0] || '';
 
-    if (!hasSpace) {
+    if (tokens.length <= 1) {
       return defs
         .filter(d => d.name.includes(commandPart))
-        .map(d => ({ text: d.name, kind: 'command' as const, description: d.description, quote: false }));
+        .map(d => ({ text: d.name, kind: 'command' as const, description: d.description }));
     }
 
     const matchedDef = defs.find(d => d.name === commandPart);
     if (!matchedDef) return [];
 
-    const argIndex = parts.length - 2;
+    const argIndex = tokens.length - 2;
     const argSpec = matchedDef.args[argIndex];
     if (!argSpec) return [];
 
-    const quote = argTypeNeedsQuote(argSpec.type);
-    const argPart = parts[parts.length - 1]?.replace(/^["']/, '') || '';
+    const argPart = tokens[tokens.length - 1];
     return argTypeCandidates(argSpec.type)
       .filter(a => a.includes(argPart))
-      .map(a => ({ text: a, kind: 'arg' as const, description: '', quote }));
+      .map(a => ({ text: a, kind: 'arg' as const, description: '' }));
   }
 
   function resolveUsage(input: string, cands: Candidate[], selIdx: number): string | null {
     const defs = commandTable;
-    const parts = input.split(/\s+/);
-    const commandPart = parts[0] || '';
+    const tokens = tokenizePartial(input);
+    const commandPart = tokens[0] || '';
     const exact = defs.find(d => d.name === commandPart);
     if (exact) return buildUsage(exact);
     if (cands.length > 0 && cands[0].kind === 'command') {
@@ -86,17 +109,42 @@
     }
   }
 
+  // コマンドラインに挿入する際、スペースを含む値は引用符で囲む
+  function shellEscape(s: string): string {
+    return s.includes(' ') ? `"${s}"` : s;
+  }
+
+  // カーソル位置までの文字列から最後のトークン開始位置を求め、そこを差し替える
+  function replaceLastToken(upToCursor: string, replacement: string): string {
+    // 末尾から遡って最後のトークンの開始位置を見つける
+    let i = upToCursor.length - 1;
+    let inQuote: string | null = null;
+    // 末尾の引用符を検出
+    if (i >= 0 && (upToCursor[i] === '"' || upToCursor[i] === "'")) {
+      inQuote = upToCursor[i];
+      i--;
+      while (i >= 0 && upToCursor[i] !== inQuote) i--;
+      if (i > 0) i--; // 開き引用符の前
+    } else {
+      while (i >= 0 && upToCursor[i] !== ' ' && upToCursor[i] !== '\t') i--;
+    }
+    const prefix = upToCursor.slice(0, i + 1);
+    // prefixの末尾がスペースでなければスペースを挟む
+    if (prefix && !prefix.endsWith(' ') && !prefix.endsWith('\t')) {
+      return prefix + ' ' + replacement;
+    }
+    return prefix + replacement;
+  }
+
   // ↑↓で候補選択したとき、inputValueに反映
   function applySelection(index: number) {
     if (candidates.length === 0) return;
     const c = candidates[index];
-    const quoted = c.quote ? `"${c.text}"` : c.text;
     if (c.kind === 'command') {
-      inputValue = quoted;
+      inputValue = c.text;
     } else {
-      const parts = userQuery.split(/\s+/);
-      parts[parts.length - 1] = quoted;
-      inputValue = parts.join(' ');
+      const upToCursor = userQuery.slice(0, cursorPos);
+      inputValue = replaceLastToken(upToCursor, shellEscape(c.text));
     }
   }
 
@@ -118,30 +166,46 @@
     }
   }
 
+  // シェルライクな字句解析: 引用符内のスペースを保持し、引用符を除去
+  function tokenize(input: string): string[] {
+    const tokens: string[] = [];
+    let current = '';
+    let quote: string | null = null;
+
+    for (const ch of input) {
+      if (quote) {
+        if (ch === quote) {
+          quote = null;
+        } else {
+          current += ch;
+        }
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === ' ' || ch === '\t') {
+        if (current) {
+          tokens.push(current);
+          current = '';
+        }
+      } else {
+        current += ch;
+      }
+    }
+    if (current) tokens.push(current);
+    return tokens;
+  }
+
   function executeCommand() {
-    const trimmed = inputValue.trim();
-    const spaceIdx = trimmed.indexOf(' ');
-    const commandName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx);
-    const rest = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1);
+    const tokens = tokenize(inputValue.trim());
+    if (tokens.length === 0) { close(); return; }
+
+    const commandName = tokens[0];
     const def = commandTable.find(d => d.name === commandName);
     if (def) {
       const hasFreeText = def.args.some(a => a.type.tag === 'FreeText');
-      const args = hasFreeText ? [stripQuotes(rest)] : rest.split(/\s+/).filter(s => s);
+      const args = hasFreeText ? [tokens.slice(1).join(' ')] : tokens.slice(1);
       def.action(args);
     }
     close();
-  }
-
-  function stripQuotes(s: string): string {
-    const t = s.trim();
-    if (t.length >= 2) {
-      const first = t[0];
-      const last = t[t.length - 1];
-      if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
-        return t.slice(1, -1);
-      }
-    }
-    return t;
   }
 
   function longestCommonPrefix(strings: string[]): string {
@@ -157,13 +221,11 @@
   }
 
   function confirmCandidate(c: Candidate) {
-    const quoted = c.quote ? `"${c.text}"` : c.text;
     if (c.kind === 'command') {
-      inputValue = quoted + ' ';
+      inputValue = c.text + ' ';
     } else {
-      const parts = userQuery.split(/\s+/);
-      parts[parts.length - 1] = quoted;
-      inputValue = parts.join(' ') + ' ';
+      const upToCursor = userQuery.slice(0, cursorPos);
+      inputValue = replaceLastToken(upToCursor, shellEscape(c.text)) + ' ';
     }
     userQuery = inputValue;
     cursorPos = inputValue.length;
@@ -186,9 +248,8 @@
     if (candidates[0].kind === 'command') {
       inputValue = lcp;
     } else {
-      const parts = userQuery.split(/\s+/);
-      parts[parts.length - 1] = lcp;
-      inputValue = parts.join(' ');
+      const upToCursor = userQuery.slice(0, cursorPos);
+      inputValue = replaceLastToken(upToCursor, lcp);
     }
     userQuery = inputValue;
     cursorPos = inputValue.length;
