@@ -1,42 +1,49 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { commandLineVisible } from './commandLineStore';
-  import { commandTable, buildUsage, argTypeCandidates } from './commandDefinitions';
+  import { commandTable, buildUsage, argTypeCandidates, argTypeNeedsQuote } from './commandDefinitions';
+  import { rosterNamesCache } from '../notebook/rosterStore';
+  import { mainBook } from '../bookeditor/workspaceStore';
 
   let inputElement: HTMLInputElement;
   let inputValue = '';
+  let userQuery = '';  // フィルタリング用のユーザー入力
+  let cursorPos = 0;   // カーソル位置
   let selectedIndex = 0;
+  let selectionApplied = false;
 
   interface Candidate {
     text: string;
     kind: 'command' | 'arg';
     description: string;
+    quote: boolean;
   }
 
-  function getCandidates(input: string): Candidate[] {
+  function getCandidates(input: string, cursor: number): Candidate[] {
     const defs = commandTable;
-    const parts = input.split(/\s+/);
+    const upToCursor = input.slice(0, cursor);
+    const parts = upToCursor.split(/\s+/);
     const commandPart = parts[0] || '';
-    const hasSpace = input.includes(' ');
+    const hasSpace = upToCursor.includes(' ');
 
     if (!hasSpace) {
       return defs
         .filter(d => d.name.includes(commandPart))
-        .map(d => ({ text: d.name, kind: 'command' as const, description: d.description }));
+        .map(d => ({ text: d.name, kind: 'command' as const, description: d.description, quote: false }));
     }
 
     const matchedDef = defs.find(d => d.name === commandPart);
     if (!matchedDef) return [];
 
-    // 現在入力中の引数のインデックス
     const argIndex = parts.length - 2;
     const argSpec = matchedDef.args[argIndex];
     if (!argSpec) return [];
 
-    const argPart = parts[parts.length - 1] || '';
+    const quote = argTypeNeedsQuote(argSpec.type);
+    const argPart = parts[parts.length - 1]?.replace(/^["']/, '') || '';
     return argTypeCandidates(argSpec.type)
       .filter(a => a.includes(argPart))
-      .map(a => ({ text: a, kind: 'arg' as const, description: '' }));
+      .map(a => ({ text: a, kind: 'arg' as const, description: '', quote }));
   }
 
   function resolveUsage(input: string, cands: Candidate[], selIdx: number): string | null {
@@ -63,18 +70,51 @@
     return `${before}<span class="highlight">${match}</span>${after}`;
   }
 
-  function getQueryForHighlight(input: string, kind: string): string {
-    const parts = input.split(/\s+/);
+  function getQueryForHighlight(kind: string): string {
+    const parts = userQuery.split(/\s+/);
     if (kind === 'command') return parts[0] || '';
     return parts[parts.length - 1] || '';
   }
 
-  $: candidates = getCandidates(inputValue);
+  // 候補はuserQuery+カーソル位置ベースでフィルタリング
+  $: candidates = (void $rosterNamesCache, void $mainBook, getCandidates(userQuery, cursorPos));
   $: currentUsage = resolveUsage(inputValue, candidates, selectedIndex);
 
   $: {
     if (selectedIndex >= candidates.length) {
       selectedIndex = Math.max(0, candidates.length - 1);
+    }
+  }
+
+  // ↑↓で候補選択したとき、inputValueに反映
+  function applySelection(index: number) {
+    if (candidates.length === 0) return;
+    const c = candidates[index];
+    const quoted = c.quote ? `"${c.text}"` : c.text;
+    if (c.kind === 'command') {
+      inputValue = quoted;
+    } else {
+      const parts = userQuery.split(/\s+/);
+      parts[parts.length - 1] = quoted;
+      inputValue = parts.join(' ');
+    }
+  }
+
+  function handleInput() {
+    // ユーザーがキーボードで入力した場合、userQueryを同期
+    userQuery = inputValue;
+    cursorPos = inputElement?.selectionStart ?? inputValue.length;
+    selectedIndex = 0;
+    selectionApplied = false;
+  }
+
+  function handleCursorMove() {
+    const newPos = inputElement?.selectionStart ?? inputValue.length;
+    if (newPos !== cursorPos) {
+      cursorPos = newPos;
+      userQuery = inputValue;
+      selectedIndex = 0;
+      selectionApplied = false;
     }
   }
 
@@ -85,7 +125,6 @@
     const rest = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1);
     const def = commandTable.find(d => d.name === commandName);
     if (def) {
-      // FreeText引数がある場合は残り全体を1引数として渡す
       const hasFreeText = def.args.some(a => a.type.tag === 'FreeText');
       const args = hasFreeText ? [stripQuotes(rest)] : rest.split(/\s+/).filter(s => s);
       def.action(args);
@@ -117,35 +156,50 @@
     return prefix;
   }
 
+  function confirmCandidate(c: Candidate) {
+    const quoted = c.quote ? `"${c.text}"` : c.text;
+    if (c.kind === 'command') {
+      inputValue = quoted + ' ';
+    } else {
+      const parts = userQuery.split(/\s+/);
+      parts[parts.length - 1] = quoted;
+      inputValue = parts.join(' ') + ' ';
+    }
+    userQuery = inputValue;
+    cursorPos = inputValue.length;
+    selectedIndex = 0;
+    selectionApplied = false;
+  }
+
   function completeSelected() {
     if (candidates.length === 0) return;
 
+    // 選択済み or 候補1つ → その候補で確定
+    if (selectionApplied || candidates.length === 1) {
+      confirmCandidate(candidates[selectionApplied ? selectedIndex : 0]);
+      return;
+    }
+
+    // 複数候補: LCPまで進める
     const texts = candidates.map(c => c.text);
     const lcp = longestCommonPrefix(texts);
-
-    if (candidates.length === 1) {
-      // 候補が1つなら確定してスペース
-      const c = candidates[0];
-      if (c.kind === 'command') {
-        inputValue = c.text + ' ';
-      } else {
-        const parts = inputValue.split(/\s+/);
-        parts[parts.length - 1] = c.text;
-        inputValue = parts.join(' ') + ' ';
-      }
-      selectedIndex = 0;
-    } else if (candidates[0].kind === 'command') {
+    if (candidates[0].kind === 'command') {
       inputValue = lcp;
     } else {
-      const parts = inputValue.split(/\s+/);
+      const parts = userQuery.split(/\s+/);
       parts[parts.length - 1] = lcp;
       inputValue = parts.join(' ');
     }
+    userQuery = inputValue;
+    cursorPos = inputValue.length;
   }
 
   function close() {
     inputValue = '';
+    userQuery = '';
+    cursorPos = 0;
     selectedIndex = 0;
+    selectionApplied = false;
     commandLineVisible.set(false);
   }
 
@@ -158,7 +212,7 @@
       e.preventDefault();
       e.stopPropagation();
       if (candidates.length > 0 && candidates[0].kind === 'command' && !inputValue.includes(' ')) {
-        completeSelected();
+        confirmCandidate(candidates[selectedIndex]);
       } else {
         executeCommand();
       }
@@ -168,15 +222,42 @@
       completeSelected();
     } else if (e.key === 'ArrowDown' || (e.key === 'n' && e.ctrlKey)) {
       e.preventDefault();
-      selectedIndex = Math.min(selectedIndex + 1, candidates.length - 1);
+      if (!selectionApplied) {
+        selectedIndex = 0;
+        selectionApplied = true;
+        applySelection(selectedIndex);
+      } else if (selectedIndex < candidates.length - 1) {
+        selectedIndex++;
+        applySelection(selectedIndex);
+      } else {
+        // 下端を超えたら無選択に戻す
+        selectionApplied = false;
+        inputValue = userQuery;
+      }
     } else if (e.key === 'ArrowUp' || (e.key === 'p' && e.ctrlKey)) {
       e.preventDefault();
-      selectedIndex = Math.max(selectedIndex - 1, 0);
+      if (!selectionApplied) {
+        selectedIndex = candidates.length - 1;
+        selectionApplied = true;
+        applySelection(selectedIndex);
+      } else if (selectedIndex > 0) {
+        selectedIndex--;
+        applySelection(selectedIndex);
+      } else {
+        // 上端を超えたら無選択に戻す
+        selectionApplied = false;
+        inputValue = userQuery;
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // カーソル移動はデフォルト動作に任せ、次tickでカーソル位置を反映
+      tick().then(handleCursorMove);
+      return;
     } else if (e.key === 'u' && e.ctrlKey) {
       e.preventDefault();
       e.stopPropagation();
       const pos = inputElement.selectionStart ?? inputValue.length;
       inputValue = inputValue.slice(pos);
+      userQuery = inputValue;
       tick().then(() => { inputElement.selectionStart = inputElement.selectionEnd = 0; });
     }
   }
@@ -230,10 +311,10 @@
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
               class="command-item"
-              class:selected={i === selectedIndex}
-              on:click={() => { selectedIndex = i; completeSelected(); }}
+              class:selected={selectionApplied && i === selectedIndex}
+              on:click={() => { confirmCandidate(c); }}
             >
-              <span class="command-name">{@html highlightMatch(c.text, getQueryForHighlight(inputValue, c.kind))}</span>
+              <span class="command-name">{@html highlightMatch(c.text, getQueryForHighlight(c.kind))}</span>
               {#if c.description}
                 <span class="command-desc">{c.description}</span>
               {/if}
@@ -252,7 +333,9 @@
         <input
           bind:this={inputElement}
           bind:value={inputValue}
+          on:input={handleInput}
           on:keydown={handleKeydown}
+          on:click={handleCursorMove}
           placeholder="コマンドを入力..."
           spellcheck="false"
         />

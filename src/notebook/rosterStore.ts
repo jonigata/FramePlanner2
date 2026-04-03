@@ -1,4 +1,5 @@
-import { type Writable, writable } from "svelte/store";
+import { type Writable, writable, get } from "svelte/store";
+import { gadgetFileSystem } from '../filemanager/fileManagerStore';
 import type { CharacterLocal } from '../lib/book/book';
 import type { CharacterBase } from "../lib/book/types/notebook";
 import { type FileSystem, getNodeByPath, type File } from "../lib/filesystem/fileSystem";
@@ -7,6 +8,20 @@ import { buildNullableMedia } from "../lib/layeredCanvas/dataModels/media";
 
 export const rosterOpen: Writable<boolean> = writable(false);
 export const rosterSelectedCharacter: Writable<CharacterLocal | null>  = writable(null);
+export const rosterNamesCache: Writable<string[]> = writable([]);
+
+let rosterNamesFetching = false;
+export function prefetchRosterNames(): void {
+  if (rosterNamesFetching) return;
+  const fs = get(gadgetFileSystem);
+  if (!fs) return;
+  rosterNamesFetching = true;
+  loadCharactersFromRoster(fs).then(chars => {
+    rosterNamesCache.set(chars.map(c => c.name).filter(n => n));
+  }).catch(() => {}).finally(() => {
+    rosterNamesFetching = false;
+  });
+}
 
 export interface CharacterInRoster extends CharacterBase {
   portrait: Blob | null;

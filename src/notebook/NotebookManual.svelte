@@ -35,7 +35,7 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
   import { _ } from 'svelte-i18n';
   import ThinkerSelector from './ThinkerSelector.svelte';
   import { toolTip } from '../utils/passiveToolTipStore';
-  import { themeWaiting, plotWaiting, scenarioWaiting, runAdviseTheme, runAdvisePlot, runAdviseScenario } from './notebookStore';
+  import { themeWaiting, plotWaiting, scenarioWaiting, charactersWaiting, runAdviseTheme, runAdvisePlot, runAdviseScenario } from './notebookStore';
   import bellIcon from '../assets/bell.webp';
   import { type BubbleStyleTemplate, DEFAULT_BUBBLE_STYLE_TEMPLATES } from '../lib/layeredCanvas/dataModels/bubbleStyleTemplate';
   import { waitDialog } from '../utils/waitDialog';
@@ -46,7 +46,6 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
   // let thinker: Thinker = "gpt-5-mini"; // Default to the latest model
 
   let fullAutoRunning = false;
-  let charactersWaiting = false;
   let storyboardWaiting = false;
   let critiqueWaiting = false;
   let postfix: string = "";
@@ -146,7 +145,7 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
 
   async function onCharactersAdvise() {
     try {
-      charactersWaiting = true;
+      $charactersWaiting = true;
       notebook!.characters = [];
       const newCharacters: CharactersBase = await adviseCharacters(makeRequest()) as CharactersBase;
       newCharacters.forEach((c: CharacterBase) => {
@@ -163,13 +162,13 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
       console.error(e);
     }
     finally {
-      charactersWaiting = false;
+      $charactersWaiting = false;
     }
   }
 
   async function onAddCharacter() {
     try {
-      charactersWaiting = true;
+      $charactersWaiting = true;
       const newCharacters = await adviseCharacters(makeRequest()) as CharactersBase;
 
       for (const c of newCharacters) {
@@ -191,7 +190,7 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
       console.error(e);
     }
     finally {
-      charactersWaiting = false;
+      $charactersWaiting = false;
     }
   }
 
@@ -641,15 +640,15 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
     {/if}
   </div>
     <div class="section">
-      <h2 class:progress={charactersWaiting}>{$_('notebook.manual.characters')}
-        {#if charactersWaiting}
+      <h2 class:progress={$charactersWaiting}>{$_('notebook.manual.characters')}
+        {#if $charactersWaiting}
           <ProgressRadial stroke={200} width="w-5"/>
         {/if}
       </h2>
       <div class="w-full">
         <NotebookCharacterList 
           bind:characters={notebook.characters} 
-          waiting={charactersWaiting} 
+          waiting={$charactersWaiting} 
           on:advise={onCharactersAdvise} 
           on:add={onAddCharacter} 
           on:addBlank={onAddBlank} 

@@ -10,6 +10,7 @@ export const notebookOpen = writable(false);
 export const themeWaiting = writable(false);
 export const plotWaiting = writable(false);
 export const scenarioWaiting = writable(false);
+export const charactersWaiting = writable(false);
 
 function notebookCommit(): void {
   const book = get(mainBook);
