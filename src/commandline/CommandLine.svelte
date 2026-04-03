@@ -90,18 +90,42 @@
     close();
   }
 
-  function completeSelected() {
-    if (candidates.length === 0 || selectedIndex >= candidates.length) return;
-    const c = candidates[selectedIndex];
-    if (c.kind === 'command') {
-      inputValue = c.text + ' ';
-    } else {
-      // 現在の引数部分だけ置き換え
-      const parts = inputValue.split(/\s+/);
-      parts[parts.length - 1] = c.text;
-      inputValue = parts.join(' ') + ' ';
+  function longestCommonPrefix(strings: string[]): string {
+    if (strings.length === 0) return '';
+    let prefix = strings[0];
+    for (let i = 1; i < strings.length; i++) {
+      while (!strings[i].startsWith(prefix)) {
+        prefix = prefix.slice(0, -1);
+        if (prefix === '') return '';
+      }
     }
-    selectedIndex = 0;
+    return prefix;
+  }
+
+  function completeSelected() {
+    if (candidates.length === 0) return;
+
+    const texts = candidates.map(c => c.text);
+    const lcp = longestCommonPrefix(texts);
+
+    if (candidates.length === 1) {
+      // 候補が1つなら確定してスペース
+      const c = candidates[0];
+      if (c.kind === 'command') {
+        inputValue = c.text + ' ';
+      } else {
+        const parts = inputValue.split(/\s+/);
+        parts[parts.length - 1] = c.text;
+        inputValue = parts.join(' ') + ' ';
+      }
+      selectedIndex = 0;
+    } else if (candidates[0].kind === 'command') {
+      inputValue = lcp;
+    } else {
+      const parts = inputValue.split(/\s+/);
+      parts[parts.length - 1] = lcp;
+      inputValue = parts.join(' ');
+    }
   }
 
   function close() {
@@ -133,6 +157,12 @@
     } else if (e.key === 'ArrowUp' || (e.key === 'p' && e.ctrlKey)) {
       e.preventDefault();
       selectedIndex = Math.max(selectedIndex - 1, 0);
+    } else if (e.key === 'u' && e.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pos = inputElement.selectionStart ?? inputValue.length;
+      inputValue = inputValue.slice(pos);
+      tick().then(() => { inputElement.selectionStart = inputElement.selectionEnd = 0; });
     }
   }
 
