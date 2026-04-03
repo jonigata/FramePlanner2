@@ -238,7 +238,7 @@ function placeBubbleBySelection(
   console.log('physicalCharHeight:', physicalCharHeight);
   physicalCharHeight = Math.max(10, physicalCharHeight); // 最低限のサイズ補正
   console.log('physicalCharHeight:', physicalCharHeight);
-  const physicalFontSize = physicalCharHeight * 0.8; // 0.8はヒューリスティック
+  const physicalFontSize = physicalCharHeight * 1.0; // Cloud Vision矩形は文字にぴったりなので等倍
   bubble.setPhysicalFontSize(paperSize, physicalFontSize);
   bubble.setPhysicalCenter(paperSize, center);
   // OCR矩形のサイズをページ座標系で使用（calculateFitSizeはフォント依存で大きくなりすぎるため）
