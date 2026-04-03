@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { loadCharactersFromRoster, rosterOpen, rosterSelectedCharacter, saveCharacterToRoster, reorderRoster } from "./rosterStore";
+  import { loadCharactersFromRoster, loadCharacterPortraits, rosterOpen, rosterSelectedCharacter, saveCharacterToRoster, reorderRoster } from "./rosterStore";
   import Drawer from "../utils/Drawer.svelte";
   import { onMount } from "svelte";
   import type { CharacterLocal } from "../lib/book/book";
@@ -53,6 +53,9 @@
   // みんなの役者からダウンロード完了時にローカルを再読み込み
   async function onActorDownloaded() {
     characters = await loadCharactersFromRoster($gadgetFileSystem!);
+    loadCharacterPortraits($gadgetFileSystem!, characters, () => {
+      characters = characters;
+    });
   }
   
   async function onSortUpdate(e: { oldIndex: number | undefined; newIndex: number | undefined }) {
@@ -100,6 +103,9 @@
       if (character) {
         await saveCharacterToRoster($gadgetFileSystem!, character);
         characters = await loadCharactersFromRoster($gadgetFileSystem!);
+        loadCharacterPortraits($gadgetFileSystem!, characters, () => {
+          characters = characters;
+        });
         toastStore.trigger({ message: `キャラクター「${character.name}」をインポートしました`, timeout: 3000 });
       }
     } catch (error) {
@@ -119,6 +125,10 @@
         if (!opened) {
           opened = true;
           characters = await loadCharactersFromRoster($gadgetFileSystem!);
+          // ポートレートをバックグラウンドで読み込み、読み込み完了ごとに反映
+          loadCharacterPortraits($gadgetFileSystem!, characters, () => {
+            characters = characters;
+          });
         }
       } else {
         opened = false;
@@ -327,7 +337,7 @@
     font-weight: 600;
     color: rgb(var(--color-primary-700));
   }
-  
+
   .header-buttons {
     display: flex;
     gap: 0.5rem;

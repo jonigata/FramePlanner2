@@ -44,19 +44,33 @@ export async function loadCharactersFromRoster(fs: FileSystem): Promise<Characte
   const characters = [];
   for (const entry of entries) {
     const c = await entry[2].asFile()!.read() as CharacterInRoster;
-    let portrait = null;
-    try {
-      portrait = c.portrait ? await createCanvasFromBlob(c.portrait) : null;
-    }
-    catch(e) {
-      // 過去のバグの互換性で、空オブジェクトになっていることがある
-    }
     characters.push({
       ...c,
-      portrait: buildNullableMedia(portrait)
+      portrait: buildNullableMedia(null)
     });
   }
   return characters;
+}
+
+export async function loadCharacterPortraits(
+  fs: FileSystem,
+  characters: CharacterLocal[],
+  onUpdate: () => void
+): Promise<void> {
+  const folder = (await getNodeByPath(fs, "AI/キャラクター")).asFolder()!;
+  for (const character of characters) {
+    const entry = await folder.getEmbodiedEntryByName(character.ulid);
+    if (!entry) continue;
+    const c = await entry[2].asFile()!.read() as CharacterInRoster;
+    if (!c.portrait) continue;
+    try {
+      const canvas = await createCanvasFromBlob(c.portrait);
+      character.portrait = buildNullableMedia(canvas);
+      onUpdate();
+    } catch(e) {
+      // 過去のバグの互換性で、空オブジェクトになっていることがある
+    }
+  }
 }
 
 /**
