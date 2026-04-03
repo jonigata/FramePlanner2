@@ -20,7 +20,7 @@ import { bubbleInspectorTarget } from './bubbleinspector/bubbleInspectorStore';
 import { batchImagingPage } from '../generator/batchImagingStore';
 import { bubbleBucketPage } from '../bubbleBucket/bubbleBucketStore';
 import { pageInspectorTarget } from './pageinspector/pageInspectorStore';
-import { redrawToken, viewport } from './workspaceStore';
+import { redrawToken, viewport, insertNewPageToBook } from './workspaceStore';
 import { analyticsEvent } from '../utils/analyticsEvent';
 import { copyToClipboard } from '../utils/saver/copyToClipboard';
 import { toolTipRequest } from '../utils/passiveToolTipStore';
@@ -199,12 +199,20 @@ export class BookWorkspaceOperators implements BookOperators {
   insertPage(index: number): void {
     console.log("this", this);
     insertPage(
-      this.book, 
+      this.book,
       index,
       (tag: HistoryTag) => commit(tag),
       this.focusKeeper!,
       v => redrawToken.set(v)
     );
+  }
+
+  insertPageWithTemplate(index: number, templateName: string): void {
+    this.focusKeeper!.setFocus(null);
+    redrawToken.set(true);
+    this.book.newPageProperty.templateName = templateName;
+    insertNewPageToBook(this.book, index);
+    commit(null);
   }
 
   deletePage(index: number): void {

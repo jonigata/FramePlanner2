@@ -82,6 +82,7 @@
   import BubbleStyleTemplateEditor from './notebook/BubbleStyleTemplateEditor.svelte';
   import BulkRenameDialog from './filemanager/BulkRenameDialog.svelte';
   import SignInPromptDialog from './utils/SignInPromptDialog.svelte';
+  import CommandLine from './commandline/CommandLine.svelte';
 
   //const advertiser = "thumbnail_stories";
   const advertiser = "jonigata";
@@ -319,6 +320,9 @@
 </Modals>
 <FullScreenLoading/>
 <FullScreenProgress/>
+
+<!-- command line -->
+<CommandLine/>
 
   <!-- ads -->
 {#if advertiser != null}
