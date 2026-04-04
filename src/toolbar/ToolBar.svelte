@@ -27,6 +27,7 @@
   import { _ } from 'svelte-i18n';
   import { derived } from 'svelte/store';
   import { saveStatusStore } from '../filemanager/saveStatusStore';
+  import { remoteSessionId, remoteConnectionStatus } from '../remoteControl/remoteSessionStore';
 
   import undoIcon from '../assets/undo.webp';
   import redoIcon from '../assets/redo.webp';
@@ -179,6 +180,14 @@
     }
   }
 
+  function copySessionId() {
+    const id = $remoteSessionId;
+    if (id) {
+      navigator.clipboard.writeText(id);
+      toastStore.trigger({ message: `Session ID をコピーしました: ${id}`, timeout: 2000 });
+    }
+  }
+
   // プレースホルダーアバター画像
   const defaultAvatar = "https://api.dicebear.com/7.x/initials/svg?seed=User";
 
@@ -211,6 +220,26 @@
     <li class="hover:text-yellow-500 cursor-pointer"><button on:click={openMangaFarm}>{$_('toolbar.toMangaFarm')}</button></li>
     <li class="hover:text-yellow-500 cursor-pointer"><button on:click={undump}>{$_('toolbar.dataImport')}</button></li>
   </ul>
+
+  {#if $remoteSessionId}
+    <button
+      class="remote-session-badge flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono cursor-pointer"
+      class:bg-green-700={$remoteConnectionStatus === 'connected'}
+      class:bg-yellow-700={$remoteConnectionStatus === 'connecting'}
+      class:bg-red-700={$remoteConnectionStatus === 'error'}
+      class:bg-surface-600={$remoteConnectionStatus === 'disconnected'}
+      on:click={copySessionId}
+      use:toolTip={'Session ID (click to copy)'}
+    >
+      <span class="remote-status-dot"
+        class:bg-green-400={$remoteConnectionStatus === 'connected'}
+        class:bg-yellow-400={$remoteConnectionStatus === 'connecting'}
+        class:bg-red-400={$remoteConnectionStatus === 'error'}
+        class:bg-gray-400={$remoteConnectionStatus === 'disconnected'}
+      ></span>
+      <span class="text-white">{$remoteSessionId.slice(0, 8)}</span>
+    </button>
+  {/if}
 
   <div class="flex-grow"></div>
   <div class="rounded px-2 text-white transition-colors duration-300 {$titleBgClass}">{$mainBookTitle}</div>
@@ -292,5 +321,11 @@
             drop-shadow(-0.5px 0 0 #fff8)
             drop-shadow(0 0.5px 0 #fff8)
             drop-shadow(0 -0.5px 0 #fff8);
+  }
+  .remote-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
   }
 </style>

@@ -10,6 +10,7 @@
   import { Modals } from 'svelte-modals'
   import { bootstrap, onlineStatus } from './utils/accountStore';
   import { developmentFlag } from "./utils/developmentFlagStore";
+  import { initRemoteControl, destroyRemoteControl } from './remoteControl/remoteControlClient';
   import { getPreferencePromise } from './preferences';
   import { dominantMode } from './uiStore'
   
@@ -189,6 +190,7 @@
     console.log(`初期クライアント領域サイズ: ${window.innerWidth} x ${window.innerHeight}`);
 
     bootstrap();
+    initRemoteControl();
 
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -246,6 +248,7 @@
   // コンポーネント破棄時のクリーンアップ
   onDestroy(() => {
     window.removeEventListener('resize', handleResize);
+    destroyRemoteControl();
   });
 </script>
 

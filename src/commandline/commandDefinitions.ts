@@ -59,12 +59,50 @@ export interface ArgSpec {
   required: boolean;
 }
 
+// ── 返り値型(ADT) ────────────────────────────────
+
+export type ResultType =
+  | { tag: 'None' }
+  | { tag: 'Theme' }
+  | { tag: 'Plot' }
+  | { tag: 'Scenario' }
+  | { tag: 'Characters' }
+  ;
+
+export function resultTypeLabel(t: ResultType): string {
+  switch (t.tag) {
+    case 'None': return '';
+    case 'Theme': return '{ theme: string }';
+    case 'Plot': return '{ plot: string }';
+    case 'Scenario': return '{ scenario: string }';
+    case 'Characters': return '{ characters: { name, personality, appearance }[] }';
+  }
+}
+
+export function collectResult(t: ResultType): unknown {
+  if (t.tag === 'None') return undefined;
+  const book = get(mainBook);
+  if (!book) return undefined;
+  const nb = book.notebook;
+  switch (t.tag) {
+    case 'Theme':
+      return { theme: nb.theme };
+    case 'Plot':
+      return { plot: nb.plot };
+    case 'Scenario':
+      return { scenario: nb.scenario };
+    case 'Characters':
+      return { characters: nb.characters.map(c => ({ name: c.name, personality: c.personality, appearance: c.appearance })) };
+  }
+}
+
 // ── コマンド定義 ──────────────────────────────────
 
 export interface CommandDef {
   name: string;
   description: string;
   args: ArgSpec[];
+  result: ResultType;
   action: (args: string[]) => void;
 }
 
@@ -322,72 +360,84 @@ export const commandTable: CommandDef[] = [
     name: 'new-page',
     description: '新しいページを追加',
     args: [{ type: { tag: 'PageTemplateName' }, required: false }],
+    result: { tag: 'None' },
     action: newPageAction,
   },
   {
     name: 'new-book',
     description: '新しいブックを作成',
     args: [],
+    result: { tag: 'None' },
     action: newBookAction,
   },
   {
     name: 'genai-open',
     description: 'ノートブックを開く',
     args: [],
+    result: { tag: 'None' },
     action: genaiOpenAction,
   },
   {
     name: 'genai-theme',
     description: 'テーマを設定/AI生成',
     args: [{ type: { tag: 'FreeText', label: 'text' }, required: false }],
+    result: { tag: 'Theme' },
     action: genaiThemeAction,
   },
   {
     name: 'genai-plot',
     description: 'プロットを設定/AI生成',
     args: [{ type: { tag: 'FreeText', label: 'text' }, required: false }],
+    result: { tag: 'Plot' },
     action: genaiPlotAction,
   },
   {
     name: 'genai-scenario',
     description: 'シナリオを設定/AI生成',
     args: [{ type: { tag: 'FreeText', label: 'text' }, required: false }],
+    result: { tag: 'Scenario' },
     action: genaiScenarioAction,
   },
   {
     name: 'genai-characters',
     description: 'キャラクターをAI生成(全置換)',
     args: [],
+    result: { tag: 'Characters' },
     action: genaiCharactersAction,
   },
   {
     name: 'genai-characters-add',
     description: 'キャラクターをAI生成(マージ)',
     args: [],
+    result: { tag: 'Characters' },
     action: genaiCharactersAddAction,
   },
   {
     name: 'genai-characters-blank',
     description: '空キャラクターを追加',
     args: [{ type: { tag: 'FreeText', label: 'name' }, required: false }],
+    result: { tag: 'None' },
     action: genaiCharactersBlankAction,
   },
   {
     name: 'genai-characters-remove',
     description: 'キャラクターを削除',
     args: [{ type: { tag: 'CharacterName' }, required: true }],
+    result: { tag: 'None' },
     action: genaiCharactersRemoveAction,
   },
   {
     name: 'genai-characters-hire',
     description: 'Rosterからキャラクターを雇用',
     args: [{ type: { tag: 'RosterCharacterName' }, required: false }],
+    result: { tag: 'None' },
     action: genaiCharactersHireAction,
   },
   {
     name: 'genai-characters-register',
     description: 'キャラクターをRosterに登録',
     args: [{ type: { tag: 'CharacterName' }, required: true }],
+    result: { tag: 'None' },
     action: genaiCharactersRegisterAction,
   },
 ];
