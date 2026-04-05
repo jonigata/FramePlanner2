@@ -17,7 +17,13 @@ export type DrawMethod = "fill" | "stroke" | "clip";
 
 export function initPaperJs() {
   // https://github.com/paperjs/paper.js/issues/1889
-  paper.setup([1,1]); // creates a virtual canvas
+  // paper.setup([1,1]) だと内部で _element=null になり、
+  // scrollイベント時に DomElement.getBounds(null) でクラッシュするため、
+  // 実際のcanvas要素を渡す
+  const offscreen = document.createElement('canvas');
+  offscreen.width = 1;
+  offscreen.height = 1;
+  paper.setup(offscreen);
   paper.view.autoUpdate = false; // disables drawing any shape automatically
 /*
   // ① _setProject をフックして「登録された瞬間」を捕捉
