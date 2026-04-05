@@ -28,6 +28,7 @@
   import { derived } from 'svelte/store';
   import { saveStatusStore } from '../filemanager/saveStatusStore';
   import { remoteSessionId, remoteConnectionStatus } from '../remoteControl/remoteSessionStore';
+  import { getWorkerUrl } from '../remoteControl/remoteControlClient';
 
   import undoIcon from '../assets/undo.webp';
   import redoIcon from '../assets/redo.webp';
@@ -180,12 +181,25 @@
     }
   }
 
-  function copySessionId() {
+  function copySessionPrompt() {
     const id = $remoteSessionId;
-    if (id) {
-      navigator.clipboard.writeText(id);
-      toastStore.trigger({ message: `Session ID をコピーしました: ${id}`, timeout: 2000 });
+    if (!id) return;
+    const mcpUrl = `${getWorkerUrl()}/mcp`;
+    const prompt = `FramePlannerに接続してください。
+
+MCP serverが未登録なら、.mcp.json に以下を追加してください：
+{
+  "mcpServers": {
+    "frameplanner": {
+      "type": "http",
+      "url": "${mcpUrl}"
     }
+  }
+}
+
+セッションID: ${id}`;
+    navigator.clipboard.writeText(prompt);
+    toastStore.trigger({ message: '接続プロンプトをコピーしました', timeout: 2000 });
   }
 
   // プレースホルダーアバター画像
@@ -228,7 +242,7 @@
       class:bg-yellow-700={$remoteConnectionStatus === 'connecting'}
       class:bg-red-700={$remoteConnectionStatus === 'error'}
       class:bg-surface-600={$remoteConnectionStatus === 'disconnected'}
-      on:click={copySessionId}
+      on:click={copySessionPrompt}
       use:toolTip={'Session ID (click to copy)'}
     >
       <span class="remote-status-dot"

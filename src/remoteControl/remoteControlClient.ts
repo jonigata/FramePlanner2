@@ -3,14 +3,14 @@ import { remoteSessionId, remoteConnectionStatus } from './remoteSessionStore';
 import { commandTable, collectResult, resultTypeLabel, argTypeLabel } from '../commandline/commandDefinitions';
 import type { InboundMessage, CommandMessage, QueryCommandsMessage, ClientUpdateMessage, CommandCatalogMessage } from './types';
 
-const WORKER_URL_PROD = 'https://frameplanner-remote-control.mangafarm.workers.dev';
+const WORKER_URL_PROD = 'https://frameplanner-remote-control.naoyuki-hirayama.workers.dev';
 const WORKER_URL_DEV_DEFAULT = 'http://localhost:8686';
 
 let ws: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 const RECONNECT_INTERVAL_MS = 5000;
 
-function getWorkerUrl(): string {
+export function getWorkerUrl(): string {
   const host = window.location.hostname;
   if (host === 'localhost' || host === '127.0.0.1' || host === 'frameplanner.example.local' || host === 'example.local') {
     // ?rcPort=8686 のようにURLパラメータでポートを指定可能
