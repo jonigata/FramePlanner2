@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { buildMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
   import { gadgetFileSystem } from '../filemanager/fileManagerStore';
-  import { loadCharactersFromRoster } from '../notebook/rosterStore';
+  import { loadCharactersFromRoster, loadCharacterPortraits } from '../notebook/rosterStore';
   import type { CharacterLocal } from '../lib/book/book';
   import MediaFrame from '../gallery/MediaFrame.svelte';
   import { createEventDispatcher } from 'svelte';
@@ -15,6 +15,9 @@
     const fs = $gadgetFileSystem;
     if (!fs) return;
     characters = await loadCharactersFromRoster(fs);
+    loadCharacterPortraits(fs, characters, () => {
+      characters = characters;
+    });
   });
 
   function onClick(character: CharacterLocal) {
