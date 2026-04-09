@@ -1,13 +1,10 @@
 <script lang="ts">
   import type { GoogleFontDefinition } from "@svelte-web-fonts/google";
-  import { onMount } from "svelte";
   import { createEventDispatcher } from 'svelte';
 
   type FontDefinition = GoogleFontDefinition & { isGothic: boolean, isBold: boolean, isLocal: boolean };
 
   export let font: FontDefinition;
-
-  let url: string;
 
   const dispatch = createEventDispatcher();
 
@@ -15,10 +12,7 @@
     dispatch('choose', { mouseEvent, font });
   }
 
-  onMount(async () => {
-    const family = font.family.replace(/ /g, "-");
-    url = new URL(`../../assets/fonts/labels/${family}.webp`, import.meta.url).href;
-  });
+  $: url = new URL(`../../assets/fonts/labels/${font.family.replace(/ /g, "-")}.webp`, import.meta.url).href;
 
 </script>
 

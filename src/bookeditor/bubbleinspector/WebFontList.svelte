@@ -218,8 +218,8 @@
 </div>
 -->
 
-{#each filteredFonts as font}
-  {#each font.variants as variant}
+{#each filteredFonts as font (font.family + ':' + font.variants[0])}
+  {#each font.variants as variant (variant)}
     <WebFontListItem font={font} on:choose={chooseFont}/>
   {/each}
 {/each}
