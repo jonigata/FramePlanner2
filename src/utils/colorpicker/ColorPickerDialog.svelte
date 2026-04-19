@@ -2,6 +2,7 @@
 	import ColorPicker from 'svelte-awesome-color-picker';
   import { colorPickerStore } from './colorPickerStore';
   import { onMount } from 'svelte';
+  import EyeDropperWrapper from './EyeDropperWrapper.svelte';
 
   let dialogElement: HTMLDivElement;
   let adjustedPosition = { x: 0, y: 0 };
@@ -66,7 +67,11 @@
       class="color-picker-dialog" 
       style="left: {adjustedPosition.x}px; top: {adjustedPosition.y}px; opacity: {dialogVisible ? 1 : 0};"
     >
-      <ColorPicker bind:hex={$colorPickerStore.color} isDialog={false}/>
+      <ColorPicker
+        bind:hex={$colorPickerStore.color}
+        isDialog={false}
+        components={{ wrapper: EyeDropperWrapper }}
+      />
     </div>
   </div>
 {/if}
