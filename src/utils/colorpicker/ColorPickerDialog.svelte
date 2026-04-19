@@ -61,11 +61,11 @@
 {#if $colorPickerStore}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="overlay" on:click={onClose}>
-    <div 
+  <div class="overlay" class:picking={$colorPickerStore.picking} on:click={onClose}>
+    <div
       bind:this={dialogElement}
-      class="color-picker-dialog" 
-      style="left: {adjustedPosition.x}px; top: {adjustedPosition.y}px; opacity: {dialogVisible ? 1 : 0};"
+      class="color-picker-dialog"
+      style="left: {adjustedPosition.x}px; top: {adjustedPosition.y}px; opacity: {dialogVisible && !$colorPickerStore.picking ? 1 : 0};"
     >
       <ColorPicker
         bind:hex={$colorPickerStore.color}
@@ -84,6 +84,9 @@
     width: 100%;
     height: 100%;
     z-index: 1000;
+  }
+  .overlay.picking {
+    pointer-events: none;
   }
   .color-picker-dialog {
     position: absolute;

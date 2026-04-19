@@ -4,6 +4,7 @@ export type ColorPickerCall = {
   position: {x: number, y: number};
   color: string;
   onUpdate: (color: string) => void;
+  picking?: boolean;
 }
 
 export const colorPickerStore: Writable<ColorPickerCall | null> = writable(null);
