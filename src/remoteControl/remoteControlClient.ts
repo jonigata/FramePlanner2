@@ -40,6 +40,34 @@ function payloadToArgs(command: string, payload: unknown): string[] {
   if (!payload || typeof payload !== 'object') return [];
   const p = payload as Record<string, unknown>;
 
+  // 明示的に args 配列を渡すパス(任意のコマンドで使える)
+  if (Array.isArray(p.args)) {
+    return (p.args as unknown[]).map(v => v == null ? '' : String(v));
+  }
+
+  // コマンド別マッピング
+  if (command === 'fs-list') {
+    return [String(p.path ?? ''), String(p.since ?? '')];
+  }
+  if (command === 'fs-mkdir') {
+    return [String(p.path ?? '')];
+  }
+  if (command === 'open-book') {
+    return [String(p.id ?? p.fileId ?? '')];
+  }
+  if (command === 'fs-move') {
+    return [String(p.id ?? p.fileId ?? ''), String(p.dst ?? p.dstPath ?? '')];
+  }
+  if (command === 'delete-page') {
+    return [String(p.index ?? '')];
+  }
+  if (command === 'delete-empty-pages') {
+    return [String(p.threshold ?? '')];
+  }
+  if (command === 'merge-folder') {
+    return [String(p.path ?? '')];
+  }
+
   // genai-theme, genai-plot, genai-scenario: { text: "..." }
   if ('text' in p && typeof p.text === 'string') {
     return [p.text];
@@ -134,8 +162,8 @@ async function handleCommand(msg: CommandMessage): Promise<void> {
 
   try {
     console.log('[RemoteControl] executing action for:', msg.command);
-    await def.action(args);
-    const result = collectResult(def.result);
+    const actionResult = await def.action(args);
+    const result = actionResult !== undefined ? actionResult : collectResult(def.result);
     console.log('[RemoteControl] action completed for:', msg.command, 'result:', result);
     sendMessage({
       kind: 'job-update',
