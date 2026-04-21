@@ -31,6 +31,9 @@ export const ImagingModelSchema = z.enum([
   "gpt-image-1.5/low",
   "gpt-image-1.5/medium",
   "gpt-image-1.5/high",
+  "gpt-image-2/low",
+  "gpt-image-2/medium",
+  "gpt-image-2/high",
   "qwen-image",
   "qwen-image-2",
   "qwen-image-2/pro",
@@ -54,7 +57,7 @@ export const ImagingModelSchema = z.enum([
 ]);
 export type ImagingModel = z.infer<typeof ImagingModelSchema>;
 
-export const ImagingProviderSchema = z.enum(["flux", "gpt-image-1", "gpt-image-1.5", "qwen", "seedream", "decart"]);
+export const ImagingProviderSchema = z.enum(["flux", "gpt-image-1", "gpt-image-1.5", "gpt-image-2", "qwen", "seedream", "decart"]);
 export type ImagingProvider = z.infer<typeof ImagingProviderSchema>;
 
 const AngleSchema = z.object({

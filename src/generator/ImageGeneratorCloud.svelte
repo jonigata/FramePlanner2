@@ -261,6 +261,12 @@
         <option value="opaque">{$_('generator.normalBackground')}</option>
         <option value="transparent">{$_('generator.transparentBackground')}</option>
       </select>
+    {:else if uiType == 'gpt-image-2'}
+      <ImageSizeControls {model} bind:width bind:height bind:batchCount bind:aspectRatio={nanoBananaAspectRatio} />
+      <select class="select h-8 p-0" bind:value={background}>
+        <option value="opaque">{$_('generator.normalBackground')}</option>
+        <option value="transparent">{$_('generator.transparentBackground')}</option>
+      </select>
     {:else}
       <ImageSizeControls {model} bind:width bind:height bind:batchCount bind:aspectRatio={nanoBananaAspectRatio} />
     {/if}
@@ -328,6 +334,9 @@
     width: 100%;
     align-items: center;
     justify-content: space-between;
+  }
+  .mode {
+    font-size: 0.85rem;
   }
   .textarea-container {
     position: relative;
