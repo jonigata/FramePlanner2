@@ -5,6 +5,7 @@ import type { CharacterBase } from "../lib/book/types/notebook";
 import { type FileSystem, getNodeByPath, type File } from "../lib/filesystem/fileSystem";
 import { canvasToBlob, createCanvasFromBlob } from "../lib/layeredCanvas/tools/imageUtil";
 import { buildNullableMedia } from "../lib/layeredCanvas/dataModels/media";
+import { ulid } from "ulid";
 
 export const rosterOpen: Writable<boolean> = writable(false);
 export const rosterSelectedCharacter: Writable<CharacterLocal | null>  = writable(null);
@@ -99,7 +100,6 @@ export async function hireCharacterByName(
   name: string,
   onUpdate: () => void,
 ): Promise<CharacterLocal | null> {
-  const { ulid } = await import('ulid');
   const rosterCharacters = await loadCharactersFromRoster(fs);
   const found = rosterCharacters.find(c => c.name === name);
   if (!found) return null;

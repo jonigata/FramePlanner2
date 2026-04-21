@@ -569,6 +569,7 @@
     on:clickAway={() => ($fileManagerOpen = false)}
   >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="drawer-content" on:click|self={clearSelection}>
       <h2>{$_('storage.browserStorage')}</h2>
       <Accordion class="my-2 px-4">

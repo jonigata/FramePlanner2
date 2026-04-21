@@ -342,9 +342,6 @@
     width: 24px;
     height: 24px;
   }
-  p {
-    font-family: '源暎アンチック';
-  }
   .ref-counter {
     font-family: '源暎アンチック';
     font-size: 12px;
