@@ -4,6 +4,10 @@ import { frameExamples } from '../lib/layeredCanvas/tools/frameExamples';
 import { commitBook, newBook, type NotebookOptions, type CharacterLocal } from '../lib/book/book';
 import type { CharacterBase } from '../lib/book/types/notebook';
 import { collectImages, collectLeaves } from '../lib/layeredCanvas/dataModels/frameTree';
+import { mergeSelectedFilms } from '../bookeditor/operations/filmMergeOperations';
+import { ImageMedia } from '../lib/layeredCanvas/dataModels/media';
+import { Film } from '../lib/layeredCanvas/dataModels/film';
+import { upscaleCanvasWithoutDialog } from '../utils/upscaleImage';
 import { newBookToken, gadgetFileSystem, mainBookFileSystem, loadToken, loadBookFrom, saveBookTo, newFile } from '../filemanager/fileManagerStore';
 import type { FileSystem, Folder, BindId, NodeId, Entry } from '../lib/filesystem/fileSystem';
 import { makeFolders } from '../lib/filesystem/fileSystem';
@@ -595,6 +599,99 @@ function deleteEmptyPagesAction(_args: string[]): unknown {
   };
 }
 
+async function flattenAndUpscaleAction(args: string[]): Promise<unknown> {
+  const thresholdRaw = (args[0] ?? '').trim();
+  const threshold = thresholdRaw ? Number.parseInt(thresholdRaw, 10) : 2000;
+  if (!Number.isFinite(threshold) || threshold <= 0) {
+    return { error: `invalid threshold: ${thresholdRaw}` };
+  }
+  const book = get(mainBook);
+  if (!book) return { error: 'no mainBook' };
+
+  const report: {
+    page: number;
+    leaf: number;
+    action: 'flattened' | 'flattened+upscaled' | 'upscaled' | 'skipped' | 'error';
+    detail?: string;
+  }[] = [];
+
+  for (let pageIdx = 0; pageIdx < book.pages.length; pageIdx++) {
+    const page = book.pages[pageIdx];
+    const leaves = collectLeaves(page.frameTree);
+
+    for (let leafIdx = 0; leafIdx < leaves.length; leafIdx++) {
+      const leaf = leaves[leafIdx];
+      const stack = leaf.filmStack;
+      if (!stack || stack.films.length === 0) {
+        report.push({ page: pageIdx, leaf: leafIdx, action: 'skipped', detail: 'no films' });
+        continue;
+      }
+
+      let flattened = false;
+      if (stack.films.length >= 2) {
+        const merged = mergeSelectedFilms(stack, page.paperSize);
+        if (!merged) {
+          report.push({ page: pageIdx, leaf: leafIdx, action: 'error', detail: 'merge failed' });
+          continue;
+        }
+        flattened = true;
+      }
+
+      const film = stack.films[0];
+      if (film.content.kind !== 'media' || !(film.content.media instanceof ImageMedia)) {
+        report.push({
+          page: pageIdx, leaf: leafIdx,
+          action: flattened ? 'flattened' : 'skipped',
+          detail: 'non-image film',
+        });
+        continue;
+      }
+
+      const canvas = film.content.media.drawSourceCanvas;
+      const longSide = Math.max(canvas.width, canvas.height);
+      if (longSide > threshold) {
+        report.push({
+          page: pageIdx, leaf: leafIdx,
+          action: flattened ? 'flattened' : 'skipped',
+          detail: `${canvas.width}x${canvas.height} > ${threshold}`,
+        });
+        continue;
+      }
+
+      try {
+        const upscaled = await upscaleCanvasWithoutDialog(canvas);
+        if (!upscaled) {
+          report.push({
+            page: pageIdx, leaf: leafIdx,
+            action: flattened ? 'flattened' : 'error',
+            detail: 'upscale returned null',
+          });
+          continue;
+        }
+
+        // 表示サイズを保つため n_scale/n_translation は据え置き、mediaのみ置換
+        const newMedia = new ImageMedia(upscaled);
+        film.media = newMedia;
+        report.push({
+          page: pageIdx, leaf: leafIdx,
+          action: flattened ? 'flattened+upscaled' : 'upscaled',
+          detail: `${canvas.width}x${canvas.height} -> ${upscaled.width}x${upscaled.height}`,
+        });
+      } catch (e) {
+        report.push({
+          page: pageIdx, leaf: leafIdx,
+          action: 'error',
+          detail: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+  }
+
+  commitBook(book, 'effect');
+  mainBook.set(book);
+  return { ok: true, report };
+}
+
 async function mergeFolderAction(args: string[]): Promise<unknown> {
   const path = (args[0] ?? '').trim();
   if (!path) return { error: 'missing folder path' };
@@ -828,6 +925,13 @@ export const commandTable: CommandDef[] = [
     args: [],
     result: { tag: 'Generic' },
     action: saveBookAction,
+  },
+  {
+    name: 'flatten-and-upscale',
+    description: '各コマのfilmStackを全結合し、長辺≤thresholdならアップスケール (default threshold=2000)',
+    args: [{ type: { tag: 'FreeText', label: 'threshold' }, required: false }],
+    result: { tag: 'Generic' },
+    action: flattenAndUpscaleAction,
   },
   {
     name: 'merge-folder',

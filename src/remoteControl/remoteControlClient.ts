@@ -67,6 +67,9 @@ function payloadToArgs(command: string, payload: unknown): string[] {
   if (command === 'merge-folder') {
     return [String(p.path ?? '')];
   }
+  if (command === 'flatten-and-upscale') {
+    return [String(p.threshold ?? '')];
+  }
 
   // genai-theme, genai-plot, genai-scenario: { text: "..." }
   if ('text' in p && typeof p.text === 'string') {
