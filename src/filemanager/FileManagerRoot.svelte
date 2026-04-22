@@ -195,9 +195,13 @@
   function onUsedSizeUpdate(fs: FileSystem | null) {
     // TODO: filesystemsizeなんか怪しい
     if (fs && fs === localFileSystem) {
-      fs.collectTotalSize().then((size) => {
-        usedSize = formatMillions(size);
-      });
+      fs.collectTotalSize()
+        .then((size) => {
+          usedSize = formatMillions(size);
+        })
+        .catch((e) => {
+          console.warn('collectTotalSize failed', e);
+        });
     }
   }
 
