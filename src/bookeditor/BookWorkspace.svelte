@@ -29,6 +29,7 @@
 
   let editingBookId: string | null = null;
   let bookSnapshot: string | null = null;
+  let lastBookRef: Book | null = null;
 
   let operators: BookWorkspaceOperators;
   const defaultBubbleSlot = new DefaultBubbleSlot(new Bubble());
@@ -95,7 +96,10 @@
     if (!canvas || !book) { return; }
 
     const newBookSnapshot = makeBookSnapshot(book);
-    if (bookSnapshot === newBookSnapshot) { return; }
+    // 参照が同一かつ内容も同じならスキップ。
+    // 別インスタンスのBook(同一ファイルの再ロード等)は内容一致でも再構築が必要 - FrameLayerのクロージャが古いpage参照を握ったままになるため。
+    if (lastBookRef === book && bookSnapshot === newBookSnapshot) { return; }
+    lastBookRef = book;
     bookSnapshot = newBookSnapshot;
 
     if (!$viewport) {
