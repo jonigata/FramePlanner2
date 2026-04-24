@@ -94,14 +94,24 @@
   }
 
   // メディア変化・ロード完了・外部再描画トリガで更新
-  $: if (media) { updateImageUrlIfNeeded(); }
+  let lastMediaForUrl: Media | null = null;
+  let lastLoadedForUrl = false;
+  $: if (media && (media !== lastMediaForUrl || media.isLoaded !== lastLoadedForUrl)) {
+    lastMediaForUrl = media;
+    lastLoadedForUrl = media.isLoaded;
+    updateImageUrlIfNeeded();
+  }
   $: if ($redrawToken) { updateImageUrlIfNeeded(); }
   onDestroy(() => { if (imageDataUrl) URL.revokeObjectURL(imageDataUrl); });
 
   $: isMissing = media ? isMissingMediaReference(media.persistentSource) : false;
 
   // メディアが変わったら一度描画（以降はrAF）
-  $: if (media) { drawFrame(); }
+  let lastMediaForDraw: Media | null = null;
+  $: if (media && media !== lastMediaForDraw) {
+    lastMediaForDraw = media;
+    drawFrame();
+  }
   // img/video用のサイズ更新（canvasを使わないとき）
   $: if (media && containerDiv && !usingCanvasNow()) { updateComputedSize(); }
 
