@@ -209,6 +209,10 @@ export class Bubble {
     b.text = json.text ?? "";
     b.shape = json.shape ?? "square";
     if (b.shape == "harsh-curve") b.shape = "shout";
+    if (!(b.shape in bubbleOptionSets)) {
+      console.warn(`Unknown bubble shape "${b.shape}", falling back to "square"`);
+      b.shape = "square";
+    }
     b.embedded = json.embedded ?? false;
     b.fontStyle = json.fontStyle ?? "normal";
     b.fontWeight = json.fontWeight ?? "400";
