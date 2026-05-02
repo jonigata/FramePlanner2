@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import Gallery from '../gallery/Gallery.svelte';
   import { gadgetFileSystem } from '../filemanager/fileManagerStore';
-  import { loadCharactersFromRoster } from '../notebook/rosterStore';
+  import { loadCharactersFromRoster, loadCharacterPortraits } from '../notebook/rosterStore';
   import type { CharacterLocal } from '../lib/book/book';
   import { buildMedia, type Media } from '../lib/layeredCanvas/dataModels/media';
   import { createEventDispatcher } from 'svelte';
@@ -11,8 +11,9 @@
   export let columnWidth: number = 220;
 
   const dispatch = createEventDispatcher();
-  let items: (() => Promise<Media[]>)[] = [];
-  let characterIds = new WeakMap<(Media | (() => Promise<Media[]>)), string>();
+  let items: GalleryItem[] = [];
+  let characterIds = new WeakMap<GalleryItem, string>();
+  let loading = true;
 
   function onChildDragStart(e: CustomEvent<Media>) {
     dispatch('dragstart', e.detail);
@@ -22,24 +23,32 @@
     if (!$gadgetFileSystem) return;
 
     const characters = await loadCharactersFromRoster($gadgetFileSystem);
-    const newItems = [];
-    const newCharacterIds = new WeakMap<(Media | (() => Promise<Media[]>)), string>();
 
-    for (const character of characters) {
-      if (character.portrait && character.portrait !== 'loading') {
-        const portrait = character.portrait;
-        const loader = async () => {
-          const media = buildMedia(portrait.persistentSource);
-          newCharacterIds.set(media, character.ulid);
-          return [media];
-        };
-        newItems.push(loader);
-        newCharacterIds.set(loader, character.ulid);
+    const addedUlids = new Set<string>();
+
+    const appendNewlyLoaded = () => {
+      let added = false;
+      for (const character of characters) {
+        if (addedUlids.has(character.ulid)) continue;
+        if (character.portrait && character.portrait !== 'loading') {
+          const media = buildMedia(character.portrait.persistentSource);
+          items.push(media);
+          characterIds.set(media, character.ulid);
+          addedUlids.add(character.ulid);
+          added = true;
+        }
       }
-    }
+      if (added) {
+        items = items;
+      }
+    };
 
-    items = newItems;
-    characterIds = newCharacterIds;
+    try {
+      await loadCharacterPortraits($gadgetFileSystem, characters, appendNewlyLoaded);
+      appendNewlyLoaded();
+    } finally {
+      loading = false;
+    }
   }
 
   onMount(displayRosterImages);
@@ -48,6 +57,10 @@
 <div class="gallery-content">
   {#if items.length > 0}
     <Gallery {columnWidth} referable={false} bind:items={items} on:dragstart={onChildDragStart}/>
+  {:else if loading}
+    <div class="empty-state">
+      <p class="empty-message">読み込み中...</p>
+    </div>
   {:else}
     <div class="empty-state">
       <p class="empty-message">役者が登録されていません</p>
