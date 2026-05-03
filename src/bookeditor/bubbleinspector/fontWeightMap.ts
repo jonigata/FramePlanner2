@@ -81,6 +81,21 @@ export const fontWeightLabels: Record<string, string> = {
   "900": "900 Black",
 };
 
+// queryLocalFonts() 等で実行時に発見したフォントの weight を保持する。
+// fontWeightMap に登録の無いフォントはこちらが優先される。
+const runtimeFontWeightMap: Record<string, Set<string>> = {};
+
+export function registerRuntimeFontWeight(fontFamily: string, weight: string): void {
+  if (!runtimeFontWeightMap[fontFamily]) {
+    runtimeFontWeightMap[fontFamily] = new Set();
+  }
+  runtimeFontWeightMap[fontFamily].add(weight);
+}
+
 export function getAvailableWeights(fontFamily: string): string[] {
-  return fontWeightMap[fontFamily] ?? ["400"];
+  const baseline = fontWeightMap[fontFamily];
+  if (baseline) return baseline;
+  const runtime = runtimeFontWeightMap[fontFamily];
+  if (runtime && runtime.size > 0) return [...runtime].sort();
+  return ["400"];
 }
