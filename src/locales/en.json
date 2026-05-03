@@ -264,6 +264,7 @@
     "installedSection": "Pick from fonts installed on your system",
     "showInstalledList": "Show installed fonts",
     "refreshInstalledList": "Refresh list",
+    "newFontHint": "Newly installed fonts may not appear here until Chrome is restarted. In that case, try \"Enter a font name manually\" below.",
     "filterPlaceholder": "Filter",
     "loading": "Loading…",
     "errorPrefix": "Error: ",

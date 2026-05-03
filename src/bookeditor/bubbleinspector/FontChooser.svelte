@@ -184,6 +184,7 @@
               </button>
               <input class="input px-2 grow" type="text" placeholder={$_('fontChooser.filterPlaceholder')} bind:value={installedFontFilter} />
             </div>
+            <div class="text-xs new-font-hint">{$_('fontChooser.newFontHint')}</div>
             {#if installedFontsLoading}
               <div class="text-sm">{$_('fontChooser.loading')}</div>
             {:else if installedFontsError}
@@ -306,6 +307,10 @@
   .refresh-installed-button {
     white-space: nowrap;
     flex-shrink: 0;
+  }
+  .new-font-hint {
+    color: rgba(0, 0, 0, 0.55);
+    line-height: 1.4;
   }
   .apply-button {
     white-space: nowrap;

@@ -29,32 +29,38 @@ const cache = new Set<string>();
 // と思いきや一瞬ちらつくようなのでキャッシュする
 export async function loadFont(family: string, weight: string): Promise<boolean> {
   const key = `${family}:${weight}`;
-  if (cache.has(key)) { return false; }
+  if (cache.has(key)) {
+    console.log("[loadFont] cache hit", { family, weight });
+    return false;
+  }
 
   try {
     const localFile = localFontFiles[family];
-    console.log("load font", family, weight, localFile)
     if (localFile) {
       const url = `/fonts/${localFile}.woff2`;
+      console.log("[loadFont] preset webfont", { family, weight, url });
       const font = new FontFace(family, `url(${url}) format('woff2')`, { style: 'normal', weight });
       await font.load();
       document.fonts.add(font);
     } else if (isLocalFontRegistered(family)) {
       // FontChooser の Local Font Access API 経由で既にロード済み
+      console.log("[loadFont] already registered (Local Font Access API)", { family, weight });
     } else if (fontWeightMap[family]) {
       // FramePlanner がカタログしている Google Font
+      console.log("[loadFont] curated Google Font", { family, weight });
       await loadGoogleFontForCanvas(family, [weight]);
     } else {
       // ユーザーが手入力したと思われる名前。@font-face の local() を差し込み、
       // PostScript Name / Full Font Name でのマッチも狙う。
       // 一致するインストール済みフォントが無い場合はブラウザのフォールバック動作になる。
+      console.log("[loadFont] typed/unknown family -> declareLocalFont", { family, weight });
       declareLocalFont(family, weight);
     }
     cache.add(key);
     return true;
   }
   catch (e) {
-    console.error(e);
+    console.error("[loadFont] error", { family, weight, error: e });
     return false;
   }
 }
