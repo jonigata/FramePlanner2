@@ -101,6 +101,9 @@
       case "layerize":
         onLayerize(film);
         break;
+      case "manga-layerize":
+        onMangaLayerize(film);
+        break;
     }
   }
 
@@ -166,6 +169,11 @@
   function onLayerize(film: Film) {
     $frameInspectorTarget!.commandTargetFilm = film;
     $frameInspectorTarget!.command = "layerize";
+  }
+
+  function onMangaLayerize(film: Film) {
+    $frameInspectorTarget!.commandTargetFilm = film;
+    $frameInspectorTarget!.command = "manga-layerize";
   }
 
   function onTextLift(e: CustomEvent<Film>) {
