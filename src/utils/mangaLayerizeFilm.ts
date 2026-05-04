@@ -162,6 +162,11 @@ async function attachLeafContent(
     if (films.length > 0) {
       // 葉フレームの bbox に bg + chars を一括フィット
       insertFrameLayers(treeRoot, paperSize, el, 0, films);
+      // panel-cropped 画像にはコマ枠線が混入していることがあるので
+      // 中心固定のまま少し拡大して枠線を切り落とす
+      for (const film of films) {
+        film.n_scale *= PANEL_LAYER_SCALE;
+      }
     }
     return;
   }
@@ -187,6 +192,10 @@ type ManifestTextBox = NonNullable<LayerizeManifest['text_boxes']>[number];
 // 認識領域は文字だけのタイトな bbox なので、フキダシらしい余白を持たせるために膨らませる
 const BUBBLE_SIZE_SCALE = 1.45;
 
+// panel-cropped 画像 (bg / characters) には元のコマ枠線が含まれることがあるので、
+// 中心固定で少し拡大して枠線をフレームクリップ外に追い出す
+const PANEL_LAYER_SCALE = 1.01;
+
 function makeBubbleFromTextBox(tb: ManifestTextBox, paperSize: [number, number]): Bubble {
   const { x0, y0, x1, y1 } = tb.box_2d;
   const cx = (x0 + x1) * 0.5;
@@ -196,7 +205,7 @@ function makeBubbleFromTextBox(tb: ManifestTextBox, paperSize: [number, number])
 
   const bubble = new Bubble();
   bubble.text = normalizeBubbleText(tb.text);
-  bubble.shape = 'ellipse';
+  bubble.shape = tb.shape ?? 'ellipse';
   bubble.initOptions();
   bubble.direction = tb.orientation === 'vertical' ? 'v' : 'h';
   bubble.fillColor = '#ffffff';

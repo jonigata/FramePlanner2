@@ -50,6 +50,8 @@ export type LayerizeManifest = {
     text: string;
     char_height: number;
     orientation: 'horizontal' | 'vertical';
+    /** Bubble outline classified by Gemini. May be absent on older Workers — fall back to 'ellipse'. */
+    shape?: 'ellipse' | 'rounded' | 'square' | 'polygon' | 'soft' | 'shout' | 'thought' | 'none';
   }>;
   /** Per-step wall durations and estimated USD cost. Filled in by the Worker
    *  (Modal compute time isn't observable from there — see `missing`). */
