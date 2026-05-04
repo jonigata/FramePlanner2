@@ -57,7 +57,9 @@ FramePlanner エディタから「ページ 1 枚をキャラ別レイヤー / �
 
 ## API 仕様 (MangaFarm SvelteKit)
 
-ベース URL: 開発時は `http://localhost:5174` (Vite dev サーバ)。本番は MangaFarm 本番ドメイン。
+ベース URL: 開発時は `https://example.local:5174` (Vite dev サーバ、`npm run dev-https` で起動)。
+本番は MangaFarm 本番ドメイン。FramePlanner 側の URL 構築は
+`src/utils/mangaLayerize.ts` の `getMangaFarmBase()` を参照。
 
 ### 1. POST `/api/manga-layerize/request` — ジョブ投入
 
@@ -580,43 +582,89 @@ attachLeafContent(root, frameTree, result.manifest, result.files);
 
 ## ローカル開発時のセットアップ
 
-完全な End-to-End 検証 (ジョブ走らせて ZIP 受け取る) を FramePlanner 側でやりたい場合:
+FramePlanner (`https://frameplanner.example.local:3000`) は HTTPS で立つので、
+MangaFarm 側も **HTTPS で立てる必要**がある (HTTP だと mixed content でブラウザに
+ブロックされ、サーバまで届かない)。
 
-1. **MangaFarm を起動**
-   ```bash
-   cd MangaFarm
-   npm run dev   # 通常 5175 で起動
-   ```
+### 必要なもの一式
 
-2. **Worker をローカル起動**
-   ```bash
-   cd MangaFarm/workers/manga-layerize
-   cp .dev.vars.example .dev.vars
-   # .dev.vars に FAL_KEY と WORKER_SECRET を埋める
-   npx wrangler dev --port 8788
-   ```
+1. **MangaFarm SvelteKit (HTTPS)** — `https://example.local:5174` で API を提供
+2. **manga-layerize Worker** — `127.0.0.1:8788` で R2 アップロード / Workflow 起動
+3. **FramePlanner エディタ (HTTPS)** — `https://frameplanner.example.local:3000`
 
-3. **MangaFarm の `.env` で Worker をローカル向き**
-   ```
-   MANGA_LAYERIZE_WORKER_URL=http://localhost:8788
-   MANGA_LAYERIZE_WORKER_SECRET=local-dev-secret  # .dev.vars と同じ値
-   CHARGE_ENABLED=false
-   ```
+### 初回セットアップ (1 回だけ)
 
-4. **FramePlanner 側で `BASE` を MangaFarm dev サーバに**
-   ```ts
-   const BASE = import.meta.env.DEV ? 'http://localhost:5175' : 'https://manga-farm.online';
-   ```
-   CORS / cookie 共有のため、ホスト名のサブドメイン関係に注意 (FramePlanner 側も
-   `*.example.local` で立てる等)。
+#### a. mkcert 証明書を `example.local` 用に発行
 
-5. **ログイン**: 普通に MangaFarm にログインしてセッション確立してから API 叩く。
+mkcert の CA は **Windows 側で `mkcert -install` 済み**であることが前提
+(WSL の Chrome は Windows 側のトラストストアを参照)。
+
+```bash
+cd MangaFarm
+# Windows 版 mkcert で発行 (古い CA = ブラウザ信頼済 CA で署名するため)
+/mnt/c/ProgramData/chocolatey/bin/mkcert.exe \
+  -cert-file example.local.pem -key-file example.local-key.pem \
+  example.local "*.example.local"
+```
+
+WSL 内 mkcert で生成すると別 CA で署名されてしまい、Chrome が
+`ERR_CERT_AUTHORITY_INVALID` で蹴る。**Windows 側 mkcert を使うこと**。
+
+cert / key は `.gitignore` 済 (`*.pem`)。
+
+#### b. MangaFarm `.env` を Worker ローカル向きに
+
+```
+MANGA_LAYERIZE_WORKER_URL=http://127.0.0.1:8788
+MANGA_LAYERIZE_WORKER_SECRET=local-dev-secret  # .dev.vars と同じ値
+CHARGE_ENABLED=false
+```
+
+#### c. Worker の `.dev.vars`
+
+```bash
+cd MangaFarm/workers/manga-layerize
+cp .dev.vars.example .dev.vars
+# .dev.vars に FAL_KEY と WORKER_SECRET=local-dev-secret を埋める
+```
+
+### 起動 (毎回)
+
+ターミナル 3 枚:
+
+```bash
+# Terminal 1: MangaFarm SvelteKit (HTTPS)
+cd MangaFarm
+npm run dev-https              # https://example.local:5174
+
+# Terminal 2: manga-layerize Worker
+cd MangaFarm
+npm run manga-layerize:dev     # http://127.0.0.1:8788
+
+# Terminal 3: FramePlanner
+cd FramePlanner2
+npm run dev                    # https://frameplanner.example.local:3000
+```
+
+`npm run dev-https` (HTTPS) を使わないと FramePlanner からの cross-origin fetch が
+mixed content でブロックされる。HTTP の `npm run dev` は Stripe webhook など他用途用。
 
 ### CORS / CSRF
-- SvelteKit はデフォルトで CSRF をかけてるので、`POST /request` は **`Origin` ヘッダ
-  必須**。fetch で `credentials: 'include'` を付けるなら自動で付くが、テストで curl
-  使う時は手動付与。
-- 別ドメインから叩く場合は MangaFarm 側に CORS 設定が要る (今は同一ドメイン前提)。
+
+FramePlanner は `*.example.local` の別サブドメインから cross-origin で API を叩くため、
+MangaFarm 側で以下が設定済:
+
+- **`svelte.config.js`**: `kit.csrf.checkOrigin = false`
+  SvelteKit 標準の同一オリジン強制 (cross-origin POST → 403) を無効化。
+- **`hooks.server.ts`**:
+  - `/api/*` への OPTIONS preflight に応答 (port 5174 から見て CORS preflight)
+  - `/api/*` レスポンスに `Access-Control-Allow-Origin` / `-Credentials: true` を付与
+  - 状態変更系メソッド (POST/PUT/PATCH/DELETE) で Origin が `CORS_ALLOWED_DOMAINS`
+    にない cross-origin 呼び出しを 403 で蹴る (CSRF 保護の自前代替)
+  - 許可ドメイン: `example.local`, `manga-farm.online`, `mangafarm.pages.dev`,
+    `pages.dev` のいずれかとサブドメイン
+
+新しい cross-origin クライアントを足すときは `CORS_ALLOWED_DOMAINS` に追記する。
 
 ### 動作確認手順 (3 段階)
 
@@ -642,8 +690,8 @@ Worker から先 (Worker → fal.ai → Modal → R2) のフルパイプライ�
 やらない手順**。
 
 ```bash
-cd MangaFarm/workers/manga-layerize
-npx wrangler dev --port 8788
+cd MangaFarm
+npm run manga-layerize:dev   # = workers/manga-layerize で wrangler dev --port 8788
 # .dev.vars に FAL_KEY と WORKER_SECRET=local-dev-secret を設定済前提
 ```
 
@@ -687,9 +735,9 @@ Worker 単体 + MangaFarm SvelteKit + ブラウザログイン session の組み
 
 ```bash
 # Terminal 1
-cd MangaFarm/workers/manga-layerize && npx wrangler dev --port 8788
+cd MangaFarm && npm run manga-layerize:dev    # http://127.0.0.1:8788
 # Terminal 2
-cd MangaFarm && npm run dev   # → http://example.local:5175 (ホスト名は環境による)
+cd MangaFarm && npm run dev-https             # https://example.local:5174
 ```
 
 ブラウザで MangaFarm のローカル URL にログイン → DevTools console で:
