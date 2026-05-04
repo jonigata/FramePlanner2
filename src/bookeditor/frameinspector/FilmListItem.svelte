@@ -34,6 +34,7 @@
   import downloadIcon from '../../assets/download.webp';
   import textLiftIcon from '../../assets/filmlist/textlift.webp';
   import layerizeIcon from '../../assets/filmlist/layerize.webp';
+  import mangaLayerizeIcon from '../../assets/filmlist/manga-layerize.webp';
   import stampIcon from '../../assets/stamp.webp';
   import { drawProceduralEffect } from '../../lib/layeredCanvas/tools/draw/proceduralEffectRenderer';
   import { tick } from 'svelte';
@@ -476,8 +477,8 @@
           <button class="transformix-item" use:toolTip={`${$_('frame.actions.layerize')}[8]`} on:click={onLayerize}>
             <img draggable={false} src={layerizeIcon} alt={$_('frame.actions.layerize')}/>
           </button>
-          <button class="transformix-item" use:toolTip={'ページレイヤー化 (キャラ別レイヤーに分解して新規ページに挿入)'} on:click={onMangaLayerize}>
-            <img draggable={false} src={layerizeIcon} alt="ページレイヤー化"/>
+          <button class="transformix-item" use:toolTip={$_('frame.actions.mangaLayerize')} on:click={onMangaLayerize}>
+            <img draggable={false} src={mangaLayerizeIcon} alt={$_('frame.actions.mangaLayerize')}/>
           </button>
           <button class="transformix-item" use:toolTip={$_('frame.actions.download')} on:click={onDownload}>
             <img draggable={false} src={downloadIcon} alt={$_('frame.actions.download')}/>
