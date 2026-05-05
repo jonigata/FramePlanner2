@@ -45,3 +45,4 @@ frameplanner.example.local-key.pem
 frameplanner.example.local.pem
 .env
 .codex/
+.claude/*.lock
