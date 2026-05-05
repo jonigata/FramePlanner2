@@ -321,7 +321,8 @@
       "sendVideoFrameToMaterialCollection": "このフレームを画像として素材集に送る",
       "download": "ダウンロード",
       "textlift": "フキダシ化",
-      "layerize": "レイヤー化"
+      "layerize": "レイヤー化",
+      "mangaLayerize": "ページ分解"
     },
     "procedural": {
       "settings": "プロシージャル設定"

@@ -19,6 +19,7 @@ import { angleEditFilmInline } from "../../utils/angleEditFilm";
 import { mainBook } from '../workspaceStore'; // デバッグ用
 import { textLiftFilm } from "../../utils/textLiftFilm";
 import { layerizeFilm } from "../../utils/layerizeFilm";
+import { mangaLayerizeFilm } from "../../utils/mangaLayerizeFilm";
 import type { GeneratedFilmResult } from "../../generator/imageGeneratorStore";
 import type { FrameElement } from "../../lib/layeredCanvas/dataModels/frameTree";
 
@@ -254,6 +255,21 @@ export async function handleTextLiftCommand<T extends FilmOperationTarget & { fr
     commit(null);
   }
   loading.set(false);
+}
+
+export async function handleMangaLayerizeCommand<T extends FilmOperationTarget>(
+  target: T
+): Promise<void> {
+  try {
+    const result = await mangaLayerizeFilm(target.page, target.commandTargetFilm!);
+    if (result) {
+      commit(null);
+    }
+  } catch (e) {
+    console.error('handleMangaLayerizeCommand', e);
+  } finally {
+    loading.set(false);
+  }
 }
 
 export async function handleLayerizeCommand<T extends FilmOperationTarget>(

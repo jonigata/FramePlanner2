@@ -321,7 +321,8 @@
       "sendVideoFrameToMaterialCollection": "Send this frame as image to Material Collection",
       "download": "Download",
       "textlift": "Text Lifting",
-      "layerize": "Layerize"
+      "layerize": "Layerize",
+      "mangaLayerize": "Page Decompose"
     },
     "procedural": {
       "settings": "Procedural Settings"
