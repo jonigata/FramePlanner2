@@ -9,7 +9,13 @@ import { canvasToBlob, createCanvasFromBlob } from '../lib/layeredCanvas/tools/i
 import { loading } from './loadingStore';
 import { requireSignIn } from './signInPrompt';
 import { analyticsEvent } from './analyticsEvent';
-import { layerizePage, LayerizeError, type LayerizeFrameTreeNode, type LayerizeManifest } from './mangaLayerize';
+import {
+  layerizePage,
+  LayerizeError,
+  type LayerizeFrameTreeNode,
+  type LayerizeManifest,
+} from './mangaLayerize';
+import { waitDialog } from './waitDialog';
 import { mainBook } from '../bookeditor/workspaceStore';
 
 export type MangaLayerizeResult = {
@@ -45,15 +51,35 @@ export async function mangaLayerizeFilm(sourcePage: Page, film: Film): Promise<M
     return null;
   }
 
-  loading.set(true);
-  console.log('[manga-layerize] mangaLayerizeFilm: loading=true');
   try {
     const blob = await canvasToBlob(sourceCanvas, 'image/png');
     console.log('[manga-layerize] mangaLayerizeFilm: canvas->png blob', blob.size, 'bytes');
+
+    // Phase 1: ダイアログ内で /detect を走らせてコマ割りを取り、ユーザーに
+    // どのコマをレイヤー化対象から外すか聞く。
+    const dialogResult = await waitDialog<{ skipPanels: number[] } | null>(
+      'layerizePanelSelect',
+      {
+        title: 'レイヤー化するコマを選択',
+        imageSource: sourceCanvas,
+        imageBlob: blob,
+      },
+    );
+    if (!dialogResult) {
+      console.log('[manga-layerize] cancelled by user');
+      return null;
+    }
+    loading.set(true);
+
+    const skipPanels = dialogResult.skipPanels ?? [];
+    console.log('[manga-layerize] skipPanels:', skipPanels);
     toastStore.trigger({ message: 'ページレイヤー化を開始しました (2〜5分かかります)', timeout: 4000 });
 
+    // Phase 2: Worker に委譲。skipPanels 込みで送ると Modal が必要なコマだけ
+    // レイヤー化し、残りは元画像のまま返す。
     const result = await layerizePage(blob, {
       sourceRef: `frameplanner:${book.revision.id}:${sourcePage.id}`,
+      skipPanels,
     });
     console.log('[manga-layerize] mangaLayerizeFilm: layerizePage returned, building page');
 

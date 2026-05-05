@@ -72,6 +72,7 @@
   import TextLiftDialog from './utils/TextLiftDialog.svelte';
   import AngleEditDialog from './utils/AngleEditDialog.svelte';
   import LayerizeDialog from './utils/LayerizeDialog.svelte';
+  import LayerizePanelSelectDialog from './utils/LayerizePanelSelectDialog.svelte';
   import Upscaler from './generator/Upscaler.svelte';
   import Dump from './transfer/Dump.svelte';
   import Undump from './transfer/Undump.svelte';
@@ -137,6 +138,9 @@
     },
     layerize: {
       ref: LayerizeDialog,
+    },
+    layerizePanelSelect: {
+      ref: LayerizePanelSelectDialog,
     },
     upscaler: {
       ref: Upscaler,

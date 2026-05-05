@@ -37,6 +37,10 @@ export type LayerizeManifest = {
     index: number;
     frame_bbox: LayerizeBBox;
     size: [number, number];
+    /** True when the user opted out of layerizing this panel. The panel
+     *  folder's bg/panel are cropped from the ORIGINAL page (bubbles + chars
+     *  intact) and char_files / text_bboxes are empty for it. */
+    skipped?: boolean;
     files: { panel: string; bg: string; composite: string };
     char_files: string[];
     character_ids: number[];
@@ -151,10 +155,17 @@ function explainFetchFailure(targetUrl: string, e: unknown): void {
 }
 
 
-export async function startLayerize(image: Blob, sourceRef?: string): Promise<string> {
+export async function startLayerize(
+  image: Blob,
+  sourceRef?: string,
+  skipPanels?: number[],
+): Promise<string> {
   const fd = new FormData();
   fd.append('image', image, 'page.png');
   if (sourceRef) { fd.append('sourceRef', sourceRef); }
+  if (skipPanels && skipPanels.length > 0) {
+    fd.append('skipPanels', JSON.stringify(skipPanels));
+  }
 
   const url = `${getMangaFarmBase()}/api/manga-layerize/request`;
   console.log('[manga-layerize] startLayerize: POST', url, 'image size:', image.size, 'sourceRef:', sourceRef);
@@ -290,15 +301,112 @@ export type LayerizePageOptions = {
   sourceRef?: string;
   signal?: AbortSignal;
   onProgress?: (status: LayerizeStatus) => void;
+  /** 1-based reading-order panel indices to leave un-layerized (panel-cropped
+   *  from the original page only, no bg / chars / bubbles). */
+  skipPanels?: number[];
 };
 
 export async function layerizePage(image: Blob, options: LayerizePageOptions): Promise<LayerizeResult> {
-  console.log('[manga-layerize] layerizePage: begin');
-  const jobId = await startLayerize(image, options.sourceRef);
+  console.log('[manga-layerize] layerizePage: begin', 'skipPanels=', options.skipPanels);
+  const jobId = await startLayerize(image, options.sourceRef, options.skipPanels);
   await pollLayerize(jobId, { signal: options.signal, onProgress: options.onProgress });
   const result = await fetchLayerizeResult(jobId);
   console.log('[manga-layerize] layerizePage: done jobId', jobId);
   return result;
+}
+
+export type DetectFrame = {
+  /** 1-based reading-order index. */
+  index: number;
+  bbox: LayerizeBBox;
+};
+
+export type DetectPanelsResult = {
+  pageWidth: number;
+  pageHeight: number;
+  frames: DetectFrame[];
+};
+
+const DETECT_TIMEOUT_MS = 60_000;
+
+/** Phase 1 of layerize: ask Modal /detect (via MangaFarm) for the page's frame
+ *  layout so the FramePlanner panel-select dialog can preview each panel and
+ *  let the user decide which ones to skip. */
+export async function detectPanels(image: Blob): Promise<DetectPanelsResult> {
+  const fd = new FormData();
+  fd.append('image', image, 'page.png');
+
+  const url = `${getMangaFarmBase()}/api/manga-layerize/detect`;
+  console.log('[manga-layerize] detectPanels: POST', url, 'image size:', image.size);
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), DETECT_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url, { method: 'POST', credentials: 'include', body: fd, signal: ctrl.signal });
+  } catch (e) {
+    if ((e as any)?.name === 'AbortError') {
+      throw new LayerizeError(`検出がタイムアウトしました (${Math.round(DETECT_TIMEOUT_MS / 1000)}秒)`, 'network');
+    }
+    explainFetchFailure(url, e);
+    throw new LayerizeError(`ネットワークエラー: ${(e as Error)?.message ?? String(e)}`, 'network');
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (res.status === 401) throw new LayerizeError('MangaFarm にサインインしてください', 'unauthorized');
+  if (res.status === 413) throw new LayerizeError('画像サイズが大きすぎます (20MB 以下)', 'too-large');
+  if (res.status === 415) throw new LayerizeError('PNG 形式の画像のみ対応しています', 'invalid-format');
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    console.error('[manga-layerize] detectPanels: non-OK body', body);
+    throw new LayerizeError(`detect failed: HTTP ${res.status}`, 'network');
+  }
+  const data = await res.json() as {
+    width: number;
+    height: number;
+    detections: Array<{ label: number; class_name: string; score: number; bbox: LayerizeBBox }>;
+  };
+  // Reading-order is computed Modal-side too, but only inside /group_panels.
+  // Replicate it here (right→left, top→bottom for Japanese manga) so the
+  // user-facing panel index in the dialog matches manifest.frames[].index later.
+  const rawFrames = data.detections
+    .filter((d) => d.label === 2)
+    .map((d) => d.bbox);
+  const ordered = readingOrder(rawFrames);
+  return {
+    pageWidth: data.width,
+    pageHeight: data.height,
+    frames: ordered.map((bbox, i) => ({ index: i + 1, bbox })),
+  };
+}
+
+/** Right→left, top→bottom (Japanese manga) — same algorithm Modal uses. */
+function readingOrder(frames: LayerizeBBox[]): LayerizeBBox[] {
+  if (frames.length === 0) return [];
+  const band = Math.min(...frames.map((b) => b[3] - b[1])) * 0.5;
+  const indexed = frames.map((bbox, i) => ({ bbox, i }));
+  indexed.sort((a, b) => a.bbox[1] - b.bbox[1]);
+  const rows: { bbox: LayerizeBBox; i: number }[][] = [];
+  for (const item of indexed) {
+    const cy = (item.bbox[1] + item.bbox[3]) / 2;
+    let placed = false;
+    for (const row of rows) {
+      const rowCy = row.reduce((acc, r) => acc + (r.bbox[1] + r.bbox[3]) / 2, 0) / row.length;
+      if (Math.abs(cy - rowCy) < band) {
+        row.push(item);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) rows.push([item]);
+  }
+  const out: LayerizeBBox[] = [];
+  for (const row of rows) {
+    row.sort((a, b) => -((a.bbox[0] + a.bbox[2]) / 2) + ((b.bbox[0] + b.bbox[2]) / 2));
+    for (const r of row) out.push(r.bbox);
+  }
+  return out;
 }
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
