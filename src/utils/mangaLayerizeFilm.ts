@@ -56,8 +56,11 @@ export async function mangaLayerizeFilm(sourcePage: Page, film: Film): Promise<M
     console.log('[manga-layerize] mangaLayerizeFilm: canvas->png blob', blob.size, 'bytes');
 
     // Phase 1: ダイアログ内で /detect を走らせてコマ割りを取り、ユーザーに
-    // どのコマをレイヤー化対象から外すか聞く。
-    const dialogResult = await waitDialog<{ skipPanels: number[] } | null>(
+    // 各コマのレイヤー化モード (skip / bubble_only / full) を聞く。
+    const dialogResult = await waitDialog<{
+      skipPanels: number[];
+      bubbleOnlyPanels: number[];
+    } | null>(
       'layerizePanelSelect',
       {
         title: 'レイヤー化するコマを選択',
@@ -72,14 +75,16 @@ export async function mangaLayerizeFilm(sourcePage: Page, film: Film): Promise<M
     loading.set(true);
 
     const skipPanels = dialogResult.skipPanels ?? [];
-    console.log('[manga-layerize] skipPanels:', skipPanels);
+    const bubbleOnlyPanels = dialogResult.bubbleOnlyPanels ?? [];
+    console.log('[manga-layerize] skipPanels:', skipPanels, 'bubbleOnlyPanels:', bubbleOnlyPanels);
     toastStore.trigger({ message: 'ページレイヤー化を開始しました (2〜5分かかります)', timeout: 4000 });
 
-    // Phase 2: Worker に委譲。skipPanels 込みで送ると Modal が必要なコマだけ
-    // レイヤー化し、残りは元画像のまま返す。
+    // Phase 2: Worker に委譲。skipPanels / bubbleOnlyPanels 込みで送ると
+    // Modal が必要なコマだけ必要な深さでレイヤー化する。
     const result = await layerizePage(blob, {
       sourceRef: `frameplanner:${book.revision.id}:${sourcePage.id}`,
       skipPanels,
+      bubbleOnlyPanels,
     });
     console.log('[manga-layerize] mangaLayerizeFilm: layerizePage returned, building page');
 

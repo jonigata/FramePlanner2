@@ -37,10 +37,13 @@ export type LayerizeManifest = {
     index: number;
     frame_bbox: LayerizeBBox;
     size: [number, number];
-    /** True when the user opted out of layerizing this panel. The panel
-     *  folder's bg/panel are cropped from the ORIGINAL page (bubbles + chars
-     *  intact) and char_files / text_bboxes are empty for it. */
+    /** @deprecated true only when mode === 'skip'. Prefer `mode`. */
     skipped?: boolean;
+    /** Per-panel layerize mode chosen by the user.
+     *  - 'skip': not layerized (bg = original crop, no char/bubble extraction)
+     *  - 'bubble_only': bubble removed + char baked into bg, bubbles emitted
+     *  - 'full': bubble removed + char separated, bubbles emitted */
+    mode: 'skip' | 'bubble_only' | 'full';
     files: { panel: string; bg: string; composite: string };
     char_files: string[];
     character_ids: number[];
@@ -159,12 +162,16 @@ export async function startLayerize(
   image: Blob,
   sourceRef?: string,
   skipPanels?: number[],
+  bubbleOnlyPanels?: number[],
 ): Promise<string> {
   const fd = new FormData();
   fd.append('image', image, 'page.png');
   if (sourceRef) { fd.append('sourceRef', sourceRef); }
   if (skipPanels && skipPanels.length > 0) {
     fd.append('skipPanels', JSON.stringify(skipPanels));
+  }
+  if (bubbleOnlyPanels && bubbleOnlyPanels.length > 0) {
+    fd.append('bubbleOnlyPanels', JSON.stringify(bubbleOnlyPanels));
   }
 
   const url = `${getMangaFarmBase()}/api/manga-layerize/request`;
@@ -304,11 +311,17 @@ export type LayerizePageOptions = {
   /** 1-based reading-order panel indices to leave un-layerized (panel-cropped
    *  from the original page only, no bg / chars / bubbles). */
   skipPanels?: number[];
+  /** 1-based reading-order panel indices to layerize as bubble-only (bubble
+   *  removed + char baked into bg, bubbles emitted, no char separation).
+   *  Must be disjoint from `skipPanels`. */
+  bubbleOnlyPanels?: number[];
 };
 
 export async function layerizePage(image: Blob, options: LayerizePageOptions): Promise<LayerizeResult> {
-  console.log('[manga-layerize] layerizePage: begin', 'skipPanels=', options.skipPanels);
-  const jobId = await startLayerize(image, options.sourceRef, options.skipPanels);
+  console.log('[manga-layerize] layerizePage: begin',
+    'skipPanels=', options.skipPanels,
+    'bubbleOnlyPanels=', options.bubbleOnlyPanels);
+  const jobId = await startLayerize(image, options.sourceRef, options.skipPanels, options.bubbleOnlyPanels);
   await pollLayerize(jobId, { signal: options.signal, onProgress: options.onProgress });
   const result = await fetchLayerizeResult(jobId);
   console.log('[manga-layerize] layerizePage: done jobId', jobId);

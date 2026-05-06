@@ -21,12 +21,49 @@
   let imageCanvas: HTMLCanvasElement;
   let overlayCanvas: HTMLCanvasElement;
 
+  type PanelMode = 'full' | 'bubble_only' | 'skip';
+
   type PanelState = {
     /** 1-based reading-order index from manga-detect. */
     index: number;
     bbox: { x0: number; y0: number; x1: number; y1: number };
-    /** false = ユーザーが「このコマはレイヤー化しない」と指定した状態 */
-    enabled: boolean;
+    /** どの深さでレイヤー化するか。
+     *  - full: キャラまで分離する (デフォルト)
+     *  - bubble_only: フキダシだけ分離 (キャラは bg に焼き込み)
+     *  - skip: レイヤー化しない (原画のまま) */
+    mode: PanelMode;
+  };
+
+  // re-click したときの巡回順 (full → bubble_only → skip → full)
+  const NEXT_MODE: Record<PanelMode, PanelMode> = {
+    full: 'bubble_only',
+    bubble_only: 'skip',
+    skip: 'full',
+  };
+
+  const MODE_LABELS: Record<PanelMode, string> = {
+    full: '全てレイヤー化する',
+    bubble_only: 'フキダシだけ抽出する',
+    skip: 'レイヤー化しない',
+  };
+
+  // [stroke, fill-tint, label-bg]
+  const MODE_COLORS: Record<PanelMode, { stroke: string; fill: string | null; label: string }> = {
+    full: {
+      stroke: 'rgba(80, 200, 120, 0.95)',
+      fill: null,
+      label: 'rgba(80, 200, 120, 0.9)',
+    },
+    bubble_only: {
+      stroke: 'rgba(255, 170, 50, 0.95)',
+      fill: 'rgba(255, 170, 50, 0.18)',
+      label: 'rgba(255, 170, 50, 0.95)',
+    },
+    skip: {
+      stroke: 'rgba(180, 180, 180, 0.9)',
+      fill: 'rgba(60, 60, 60, 0.55)',
+      label: 'rgba(150, 150, 150, 0.9)',
+    },
   };
 
   type DrawInfo = {
@@ -43,7 +80,9 @@
   let detectionState: DetectionState = 'idle';
   let errorMessage = '';
 
-  $: enabledCount = panels.filter((p) => p.enabled).length;
+  $: fullCount = panels.filter((p) => p.mode === 'full').length;
+  $: bubbleOnlyCount = panels.filter((p) => p.mode === 'bubble_only').length;
+  $: skipCount = panels.filter((p) => p.mode === 'skip').length;
 
   onMount(() => {
     const meta = $modalStore[0]?.meta ?? {};
@@ -110,7 +149,7 @@
       panels = result.frames.map((f) => ({
         index: f.index,
         bbox: { x0: f.bbox[0], y0: f.bbox[1], x1: f.bbox[2], y1: f.bbox[3] },
-        enabled: true,
+        mode: 'full' as PanelMode,
       }));
       detectionState = 'ready';
       redrawOverlay();
@@ -134,9 +173,11 @@
       const dw = (p.bbox.x1 - p.bbox.x0) * drawInfo.scale;
       const dh = (p.bbox.y1 - p.bbox.y0) * drawInfo.scale;
 
-      // OFF (skip) のコマはグレー半透明で塗る
-      if (!p.enabled) {
-        ctx.fillStyle = 'rgba(60, 60, 60, 0.55)';
+      const colors = MODE_COLORS[p.mode];
+
+      // モードに応じた塗り (skip は暗く、bubble_only は薄く)
+      if (colors.fill) {
+        ctx.fillStyle = colors.fill;
         ctx.fillRect(dx, dy, dw, dh);
       }
 
@@ -144,25 +185,24 @@
       if (isSelected) {
         const rect: Rect = [dx, dy, dw, dh];
         const trapezoid = rectToTrapezoid(rect);
-        const color = p.enabled ? 'rgba(255, 200, 0, 1)' : 'rgba(180, 180, 180, 1)';
-        drawSelectionFrame(ctx, color, trapezoid, 3, 5, true, 0, [10, 10]);
+        drawSelectionFrame(ctx, colors.stroke, trapezoid, 3, 5, true, 0, [10, 10]);
       } else {
         ctx.save();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = p.enabled ? 'rgba(80, 200, 120, 0.9)' : 'rgba(180, 180, 180, 0.9)';
-        if (!p.enabled) ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = colors.stroke;
+        if (p.mode === 'skip') ctx.setLineDash([6, 4]);
         ctx.strokeRect(dx, dy, dw, dh);
         ctx.restore();
       }
 
-      // index ラベル
-      const label = String(p.index);
-      ctx.font = 'bold 16px sans-serif';
-      const padding = 4;
+      // ラベル: "index モード"
+      const label = `${p.index} ${MODE_LABELS[p.mode]}`;
+      ctx.font = 'bold 12px sans-serif';
+      const padding = 5;
       const textMetrics = ctx.measureText(label);
       const labelW = textMetrics.width + padding * 2;
-      const labelH = 22;
-      ctx.fillStyle = p.enabled ? 'rgba(80, 200, 120, 0.9)' : 'rgba(150, 150, 150, 0.9)';
+      const labelH = 18;
+      ctx.fillStyle = colors.label;
       ctx.fillRect(dx, dy, labelW, labelH);
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'middle';
@@ -214,9 +254,9 @@
       return;
     }
     if (selectedIndex === hit.index) {
-      // 既選択を再度クリック → ON/OFF トグル
+      // 既選択を再度クリック → モードを巡回 (full → bubble_only → skip → full)
       panels = panels.map((p) =>
-        p.index === hit.index ? { ...p, enabled: !p.enabled } : p
+        p.index === hit.index ? { ...p, mode: NEXT_MODE[p.mode] } : p
       );
     } else {
       selectedIndex = hit.index;
@@ -224,8 +264,8 @@
     redrawOverlay();
   }
 
-  function selectAll(state: boolean) {
-    panels = panels.map((p) => ({ ...p, enabled: state }));
+  function setAll(mode: PanelMode) {
+    panels = panels.map((p) => ({ ...p, mode }));
     redrawOverlay();
   }
 
@@ -235,8 +275,9 @@
   }
 
   function onSubmit() {
-    const skipPanels = panels.filter((p) => !p.enabled).map((p) => p.index);
-    $modalStore[0]?.response?.({ skipPanels });
+    const skipPanels = panels.filter((p) => p.mode === 'skip').map((p) => p.index);
+    const bubbleOnlyPanels = panels.filter((p) => p.mode === 'bubble_only').map((p) => p.index);
+    $modalStore[0]?.response?.({ skipPanels, bubbleOnlyPanels });
     modalStore.close();
   }
 
@@ -299,16 +340,21 @@
         </div>
       </div>
       {#if detectionState === 'ready'}
-        <div class="enabled-row">
-          <div class="pill">{enabledCount}/{panels.length} レイヤー化</div>
-          <div class="hint-text">クリックで選択、もう一度クリックで ON⇄OFF</div>
+        <div class="legend-row">
+          <div class="pill pill-full">全てレイヤー化する {fullCount}</div>
+          <div class="pill pill-bubble">フキダシだけ抽出する {bubbleOnlyCount}</div>
+          <div class="pill pill-skip">レイヤー化しない {skipCount}</div>
+          <div class="hint-text">クリックで選択、もう一度クリックでモード切替 (全てレイヤー化する → フキダシだけ抽出する → レイヤー化しない)</div>
         </div>
         <div class="bulk-row">
-          <button class="btn btn-sm variant-ghost-surface" type="button" on:click={() => selectAll(true)}>
-            全部 ON
+          <button class="btn btn-sm variant-ghost-surface" type="button" on:click={() => setAll('full')}>
+            全部 全てレイヤー化する
           </button>
-          <button class="btn btn-sm variant-ghost-surface" type="button" on:click={() => selectAll(false)}>
-            全部 OFF
+          <button class="btn btn-sm variant-ghost-surface" type="button" on:click={() => setAll('bubble_only')}>
+            全部 フキダシだけ抽出する
+          </button>
+          <button class="btn btn-sm variant-ghost-surface" type="button" on:click={() => setAll('skip')}>
+            全部 レイヤー化しない
           </button>
         </div>
       {/if}
@@ -366,6 +412,24 @@
     padding: 6px 12px;
     font-weight: 600;
     font-family: '源暎アンチック';
+  }
+
+  .pill-full {
+    background: rgba(80, 200, 120, 0.15);
+    color: rgb(40, 130, 80);
+    border-color: rgba(80, 200, 120, 0.55);
+  }
+
+  .pill-bubble {
+    background: rgba(255, 170, 50, 0.18);
+    color: rgb(170, 110, 0);
+    border-color: rgba(255, 170, 50, 0.55);
+  }
+
+  .pill-skip {
+    background: rgba(120, 120, 120, 0.18);
+    color: rgb(80, 80, 80);
+    border-color: rgba(120, 120, 120, 0.5);
   }
 
   .dialog-body {
@@ -441,11 +505,12 @@
     align-items: center;
   }
 
-  .enabled-row {
+  .legend-row {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .hint-text {
