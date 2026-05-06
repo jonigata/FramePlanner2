@@ -88,7 +88,7 @@ export async function mangaLayerizeFilm(sourcePage: Page, film: Film): Promise<M
     });
     console.log('[manga-layerize] mangaLayerizeFilm: layerizePage returned, building page');
 
-    const newPageObj = await buildLayerizedPage(result.manifest, result.files);
+    const newPageObj = await buildLayerizedPage(result.manifest, result.files, sourcePage, film);
     console.log('[manga-layerize] mangaLayerizeFilm: buildLayerizedPage done');
 
     const insertIndex = sourceIndex + 1;
@@ -118,14 +118,53 @@ function handleLayerizeError(e: unknown): void {
   toastStore.trigger({ message: 'ページレイヤー化に失敗しました', timeout: 5000 });
 }
 
-async function buildLayerizedPage(manifest: LayerizeManifest, files: Map<string, Blob>): Promise<Page> {
-  const paperSize: [number, number] = [manifest.page.width, manifest.page.height];
+async function buildLayerizedPage(
+  manifest: LayerizeManifest,
+  files: Map<string, Blob>,
+  sourcePage: Page,
+  film: Film,
+): Promise<Page> {
+  // 新ページの paperSize は sourcePage と揃える。Modal の frame_tree / text_boxes は
+  // 元画像 px 座標系なので、film の (n_scale, n_translation) で paper 座標系に投影する
+  // (rotation は仕様により無視)。
+  const paperSize: [number, number] = [sourcePage.paperSize[0], sourcePage.paperSize[1]];
+  const imageSize: [number, number] = [manifest.page.width, manifest.page.height];
+  const filmRect = computeFilmRectOnPaper(paperSize, imageSize, film);
+  const imgToPaperScale = imageSize[0] > 0 ? filmRect.w / imageSize[0] : 1;
+  console.log(
+    '[manga-layerize] film rect on paper:', filmRect,
+    'paper:', paperSize, 'image:', imageSize,
+  );
 
-  // manifest.frame_tree をそのままコンパイル (panel フィールドは markUp 上にだけ残る)
-  const frameTree = FrameElement.compile(manifest.frame_tree);
+  // Modal frame_tree の root には「画像端 → コマ bbox」の padding が cornerOffsets
+  // として入っているが、 frameTree.ts の calculateOffsettedCorners は cornerOffsets を
+  // 「角ごとに右下方向へ」加算するため、 padding 用途で使うと右と下にズレる(常に均等
+  // padding でも topRight/bottomRight が右下に動いて結果的にはみ出す)。
+  // そこで cornerOffsets は使わず、 paper にぴったり fit する frame_tree を pseudo leaf で
+  // 構築する: row[ rightPad?, columnContent, leftPad? ] / column[ topPad?, inner, bottomPad? ]。
+  const inner = FrameElement.compile(manifest.frame_tree);
+  const modalPad = extractCornerOffsetsAsPadding(inner);
+  inner.cornerOffsets = zeroCornerOffsets();
 
-  // 葉ノードに panel-cropped 素材 (bg + 各キャラ) を流し込む
-  await attachLeafContent(frameTree, manifest.frame_tree, manifest, files, paperSize);
+  // 各 padding を paper px で計算: paper 端 → filmRect 端の余白 + filmRect 内の
+  // Modal padding (= 画像 px 比率を filmRect サイズで paper px に展開)。
+  const topPad = Math.max(0, filmRect.y + modalPad.top * filmRect.h);
+  const bottomPad = Math.max(0, paperSize[1] - filmRect.y - filmRect.h + modalPad.bottom * filmRect.h);
+  const leftPad = Math.max(0, filmRect.x + modalPad.left * filmRect.w);
+  const rightPad = Math.max(0, paperSize[0] - filmRect.x - filmRect.w + modalPad.right * filmRect.w);
+  const middleW = Math.max(1, paperSize[0] - leftPad - rightPad);
+  const middleH = Math.max(1, paperSize[1] - topPad - bottomPad);
+  console.log(
+    '[manga-layerize] paddings (paper px) top/right/bottom/left:',
+    topPad, rightPad, bottomPad, leftPad,
+    'middle:', middleW, middleH,
+  );
+
+  const root = wrapWithPaddings(inner, { top: topPad, right: rightPad, bottom: bottomPad, left: leftPad }, { w: middleW, h: middleH });
+
+  // attachLeafContent は inner を起点に再帰し、 pseudo leaf は skip する。
+  // tree のレイアウト計算は新 root から行う必要があるので root を渡す。
+  await attachLeafContent(inner, manifest.frame_tree, manifest, files, paperSize, root);
 
   // フキダシは Worker 側で抽出済みの text_boxes (Cloud Vision + Gemini) を
   // そのまま使う。manifest.panels[].text_bboxes (Modal の text class 検出) は
@@ -142,15 +181,102 @@ async function buildLayerizedPage(manifest: LayerizeManifest, files: Map<string,
   }
   const bubbles: Bubble[] = [];
   for (const tb of textBoxes) {
-    bubbles.push(makeBubbleFromTextBox(tb, paperSize));
+    bubbles.push(makeBubbleFromTextBox(tb, paperSize, filmRect, imgToPaperScale));
   }
 
-  const page = newPage(frameTree, bubbles);
+  const page = newPage(root, bubbles);
   page.paperSize = paperSize;
   page.paperColor = '#ffffff';
   page.frameColor = '#000000';
   page.frameWidth = 2;
   return page;
+}
+
+type FilmRectOnPaper = { x: number; y: number; w: number; h: number };
+
+function computeFilmRectOnPaper(
+  paperSize: [number, number],
+  imageSize: [number, number],
+  film: Film,
+): FilmRectOnPaper {
+  // Film.getShiftedRect は paper 中心を原点とした矩形を返すので、paper 絶対座標に直す
+  const r = Film.getShiftedRect(paperSize, imageSize, film.n_scale, film.n_translation, 0);
+  return {
+    x: r[0] + paperSize[0] / 2,
+    y: r[1] + paperSize[1] / 2,
+    w: r[2],
+    h: r[3],
+  };
+}
+
+function zeroCornerOffsets() {
+  return {
+    topLeft: [0, 0] as [number, number],
+    topRight: [0, 0] as [number, number],
+    bottomLeft: [0, 0] as [number, number],
+    bottomRight: [0, 0] as [number, number],
+  };
+}
+
+function extractCornerOffsetsAsPadding(elem: FrameElement): { left: number; top: number; right: number; bottom: number } {
+  // Modal が markUp.padding で設定した cornerOffsets は均等 padding なので
+  // 1 隅から 4 値を取り出せば十分。
+  return {
+    left: elem.cornerOffsets.topLeft[0],
+    top: elem.cornerOffsets.topLeft[1],
+    right: elem.cornerOffsets.topRight[0],
+    bottom: elem.cornerOffsets.bottomLeft[1],
+  };
+}
+
+function makePseudoLeaf(rawSize: number): FrameElement {
+  const elem = new FrameElement(rawSize);
+  elem.pseudo = true;
+  elem.visibility = 0;
+  return elem;
+}
+
+function wrapWithPaddings(
+  inner: FrameElement,
+  pad: { top: number; right: number; bottom: number; left: number },
+  middle: { w: number; h: number },
+): FrameElement {
+  // inner を中央 (column) に置き、上下左右に pseudo leaf で padding を表現。
+  // direction='h' は右→左の読み順なので row.children は [right, middle, left] の順。
+  let columnContent: FrameElement;
+  if (inner.direction === 'v') {
+    // inner 自体が縦 column なので children に直接 padding を挿入
+    inner.children = [
+      ...(pad.top > 0 ? [makePseudoLeaf(pad.top)] : []),
+      ...inner.children,
+      ...(pad.bottom > 0 ? [makePseudoLeaf(pad.bottom)] : []),
+    ];
+    inner.rawSize = middle.w;
+    inner.calculateLengthAndBreadth();
+    columnContent = inner;
+  } else {
+    // direction='h' or null (leaf) は column wrapper で包む
+    inner.rawSize = middle.h;
+    inner.calculateLengthAndBreadth();
+    columnContent = new FrameElement(middle.w);
+    columnContent.direction = 'v';
+    columnContent.children = [
+      ...(pad.top > 0 ? [makePseudoLeaf(pad.top)] : []),
+      inner,
+      ...(pad.bottom > 0 ? [makePseudoLeaf(pad.bottom)] : []),
+    ];
+    columnContent.calculateLengthAndBreadth();
+  }
+
+  const root = new FrameElement(1);
+  root.direction = 'h';
+  root.children = [
+    ...(pad.right > 0 ? [makePseudoLeaf(pad.right)] : []),
+    columnContent,
+    ...(pad.left > 0 ? [makePseudoLeaf(pad.left)] : []),
+  ];
+  root.calculateLengthAndBreadth();
+  return root;
 }
 
 async function attachLeafContent(
@@ -203,13 +329,18 @@ async function attachLeafContent(
   }
 
   const childMarks = node.row ?? node.column ?? [];
+  let markIdx = 0;
   for (let i = 0; i < el.children.length; i++) {
-    const childMark = childMarks[i];
+    const child = el.children[i];
+    // wrapWithPaddings で挿入した pseudo leaf は manifest 側に対応物が無いので skip
+    if (child.pseudo) continue;
+    const childMark = childMarks[markIdx];
+    markIdx++;
     if (!childMark) {
       console.warn('manga-layerize: child markup missing at', i);
       continue;
     }
-    await attachLeafContent(el.children[i], childMark, manifest, files, paperSize, treeRoot);
+    await attachLeafContent(child, childMark, manifest, files, paperSize, treeRoot);
   }
 }
 
@@ -227,12 +358,19 @@ const BUBBLE_SIZE_SCALE = 1.45;
 // 中心固定で少し拡大して枠線をフレームクリップ外に追い出す
 const PANEL_LAYER_SCALE = 1.01;
 
-function makeBubbleFromTextBox(tb: ManifestTextBox, paperSize: [number, number]): Bubble {
+function makeBubbleFromTextBox(
+  tb: ManifestTextBox,
+  paperSize: [number, number],
+  filmRect: FilmRectOnPaper,
+  imgToPaperScale: number,
+): Bubble {
+  // text_box の座標は元画像 px 系。film の paper 上配置に合わせて変換する。
   const { x0, y0, x1, y1 } = tb.box_2d;
-  const cx = (x0 + x1) * 0.5;
-  const cy = (y0 + y1) * 0.5;
-  const w = Math.abs(x1 - x0) * BUBBLE_SIZE_SCALE;
-  const h = Math.abs(y1 - y0) * BUBBLE_SIZE_SCALE;
+  const cx = filmRect.x + (x0 + x1) * 0.5 * imgToPaperScale;
+  const cy = filmRect.y + (y0 + y1) * 0.5 * imgToPaperScale;
+  const w = Math.abs(x1 - x0) * imgToPaperScale * BUBBLE_SIZE_SCALE;
+  const h = Math.abs(y1 - y0) * imgToPaperScale * BUBBLE_SIZE_SCALE;
+  const fontSize = tb.char_height * imgToPaperScale;
 
   const bubble = new Bubble();
   bubble.text = normalizeBubbleText(tb.text);
@@ -242,7 +380,7 @@ function makeBubbleFromTextBox(tb: ManifestTextBox, paperSize: [number, number])
   bubble.fillColor = '#ffffff';
   bubble.setPhysicalCenter(paperSize, [cx, cy]);
   bubble.setPhysicalSize(paperSize, Bubble.enoughSize([w, h]));
-  bubble.setPhysicalFontSize(paperSize, Math.max(10, tb.char_height));
+  bubble.setPhysicalFontSize(paperSize, Math.max(10, fontSize));
   return bubble;
 }
 
