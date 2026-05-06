@@ -98,6 +98,7 @@
     "duplicateFailed": "複製中にエラーが発生しました",
     "duplicateNameSuffix": " のコピー",
     "registeredBubbleTemplate": "フキダシテンプレートを登録しました<br/>シェイプと同様に使えます",
+    "registeredFrameLayoutTemplate": "コマ割りテンプレートを登録しました",
     "envelopeImported": "envelopeファイルをインポートしました",
     "folderImported": "フォルダ構造をインポートしました",
     "zipImportFailed": "ZIPファイルのインポートに失敗しました",

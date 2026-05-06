@@ -34,6 +34,12 @@ export const fileManagerOpen = writable(false);
 export const fileManagerDragging: Writable<Dragging | null> = writable(null);
 export const newBookToken: Writable<Book | null> = writable(null);
 export const saveBubbleToken: Writable<Bubble | null> = writable(null);
+export type FrameLayoutTemplateData = {
+  displayName: string;
+  frameTree: any; // FrameElement.decompile出力
+  bubbles: any[]; // Bubble.decompile出力配列
+};
+export const saveFrameLayoutToken: Writable<FrameLayoutTemplateData | null> = writable(null);
 export const fileManagerUsedSizeToken: Writable<FileSystem | null> = writable(null);
 export const loadToken: Writable<LoadToken | null> = writable(null);
 export const fileManagerMarkedFlag = writable(false);
@@ -428,6 +434,15 @@ export async function loadBubbleFrom(paperSize: Vector, file: File): Promise<Bub
   const markUp = JSON.parse(content);
   const bubble = Bubble.compile(paperSize, markUp);
   return bubble;
+}
+
+export async function saveFrameLayoutTo(data: FrameLayoutTemplateData, file: File) {
+  await file.write(JSON.stringify(data));
+}
+
+export async function loadFrameLayoutFrom(file: File): Promise<FrameLayoutTemplateData> {
+  const content = await file.read();
+  return JSON.parse(content) as FrameLayoutTemplateData;
 }
 
 export async function dryLoadBookFrom(fileSystem: FileSystem, file: File, images: NodeId[]) { // ガベコレの調査用

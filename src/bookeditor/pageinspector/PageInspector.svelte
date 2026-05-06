@@ -11,7 +11,8 @@
   import { shapeChooserOpen, chosenShape } from '../bubbleinspector/shapeStore';
   import BubbleSample from '../bubbleinspector/BubbleSample.svelte';
   import { triggerTemplateChoice } from '../templateChooserStore';
-  import { frameExamples } from '../../lib/layeredCanvas/tools/frameExamples';
+  import { saveFrameLayoutToken, type FrameLayoutTemplateData } from '../../filemanager/fileManagerStore';
+  import { Bubble } from '../../lib/layeredCanvas/dataModels/bubble';
   import { FrameElement, collectLeaves, calculatePhysicalLayout, constraintRecursive } from '../../lib/layeredCanvas/dataModels/frameTree';
   import { FilmStack } from '../../lib/layeredCanvas/dataModels/film';
   import { LayeredCanvas, Viewport } from '../../lib/layeredCanvas/system/layeredCanvas';
@@ -185,10 +186,7 @@
     if (!$pageInspectorTarget || originalFilmStacks === null) return;
     const page = $pageInspectorTarget;
 
-    const templateKey = await triggerTemplateChoice.trigger();
-    if (!templateKey) return;
-
-    const sample = frameExamples[templateKey];
+    const sample = await triggerTemplateChoice.trigger();
     if (!sample) return;
 
     const newFrameTree = FrameElement.compile(sample.frameTree);
@@ -220,6 +218,17 @@
     // 本文側を再ビルド
     page.frameTreeId = (page.frameTreeId ?? 0) + 1;
     $mainBook = $mainBook;
+  }
+
+  function registerFrameLayoutTemplate() {
+    if (!$pageInspectorTarget) return;
+    const page = $pageInspectorTarget;
+    const data: FrameLayoutTemplateData = {
+      displayName: "コマ割り",
+      frameTree: FrameElement.decompile(page.frameTree),
+      bubbles: page.bubbles.map(b => Bubble.decompile(b)),
+    };
+    $saveFrameLayoutToken = data;
   }
 
   function confirmFrameLayout() {
@@ -283,6 +292,9 @@
               {#if frameLayoutReplaced}
                 <button class="btn btn-sm variant-filled-warning" on:click={confirmFrameLayout}>確定</button>
               {/if}
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-sm variant-filled" on:click={registerFrameLayoutTemplate}>テンプレートに登録</button>
             </div>
           </div>
         </div>

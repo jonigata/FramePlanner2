@@ -210,8 +210,9 @@ export class BookWorkspaceOperators implements BookOperators {
   insertPageWithTemplate(index: number, templateName: string): void {
     this.focusKeeper!.setFocus(null);
     redrawToken.set(true);
-    this.book.newPageProperty.templateName = templateName;
-    insertNewPageToBook(this.book, index);
+    const sample = frameExamples[templateName];
+    this.book.newPageProperty.templateName = sample.templateName;
+    insertNewPageToBook(this.book, index, sample);
     commit(null);
   }
 

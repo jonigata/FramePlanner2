@@ -17,8 +17,8 @@ export function insertPage(
   setRedrawToken(true);
   return triggerTemplateChoice.trigger().then(result => {
     if (result != null) {
-      book.newPageProperty.templateName = result;
-      insertNewPageToBook(book, pageIndex);
+      book.newPageProperty.templateName = result.templateName;
+      insertNewPageToBook(book, pageIndex, result);
       commit(null);
     }
   });

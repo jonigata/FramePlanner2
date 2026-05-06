@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import streamSaver from 'streamsaver';
   import { _ } from 'svelte-i18n';
-  import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, newFile, fileManagerMarkedFlag, saveBubbleTo, loadToken, type LoadToken, mainBookFileSystem, gadgetFileSystem, clearSelection } from "./fileManagerStore";
+  import { fileManagerUsedSizeToken, fileManagerOpen, saveBookTo, loadBookFrom, getCurrentDateTime, newBookToken, saveBubbleToken, saveFrameLayoutToken, type FrameLayoutTemplateData, newFile, fileManagerMarkedFlag, saveBubbleTo, saveFrameLayoutTo, loadToken, type LoadToken, mainBookFileSystem, gadgetFileSystem, clearSelection } from "./fileManagerStore";
   import type { FileSystem, NodeId, Folder, EmbodiedEntry } from '../lib/filesystem/fileSystem';
   import { type Book } from '../lib/book/book';
   import { newBook, revisionEqual, getHistoryWeight, collectAllFilms } from '../lib/book/book';
@@ -406,6 +406,18 @@
     await saveBubbleTo(bubble, file);
     await folder.link(getCurrentDateTime(), file.id);
     toastStore.trigger({ message: $_('fileManager.registeredBubbleTemplate'), timeout: 1500});
+  }
+
+  $:onNewFrameLayoutRequest($saveFrameLayoutToken);
+  async function onNewFrameLayoutRequest(data: FrameLayoutTemplateData | null) {
+    if (!data) { return; }
+    $saveFrameLayoutToken = null;
+    const root = await $gadgetFileSystem!.getRoot();
+    const folder = (await root!.getNodeByName("コマ割りテンプレート"))!.asFolder()!;
+    const file = await $gadgetFileSystem!.createFile();
+    await saveFrameLayoutTo(data, file);
+    await folder.link(getCurrentDateTime(), file.id);
+    toastStore.trigger({ message: $_('fileManager.registeredFrameLayoutTemplate'), timeout: 1500});
   }
 
   $:onLoadRequest($loadToken);

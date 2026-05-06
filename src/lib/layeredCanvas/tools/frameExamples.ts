@@ -1,5 +1,6 @@
 export const frameExamples: Record<string, any> = {
   "standard": {
+    templateName: "standard",
     frameTree: { // オーソドックス
       bgColor: "white",
       height: 100,
@@ -31,6 +32,7 @@ export const frameExamples: Record<string, any> = {
     bubbles: []
   },
   "1koma": {
+    templateName: "1koma",
     frameTree: { // 一コマ
       bgColor: "white",
       height: 100,
@@ -56,6 +58,7 @@ export const frameExamples: Record<string, any> = {
     bubbles: []
   },
   "white-paper": {
+    templateName: "white-paper",
     frameTree: { // 一コマ(マージンなし)
       bgColor: "white",
       borderWidth: 0,
@@ -71,6 +74,7 @@ export const frameExamples: Record<string, any> = {
     bubbles: []
   },
   "4koma": {
+    templateName: "4koma",
     frameTree: { // 4コマ
       bgColor: "white",
       height: 100,
@@ -130,6 +134,7 @@ export const frameExamples: Record<string, any> = {
     ]
   },
   "4koma-x2": {
+    templateName: "4koma-x2",
     frameTree: { // 4コマ2段
       bgColor: "white",
       height: 100,
@@ -226,6 +231,7 @@ export const frameExamples: Record<string, any> = {
     ]
   },
   "standard1": {
+    templateName: "standard1",
     frameTree: { // オーソドックス2
       height: 100,
       bgColor: "white",
@@ -269,6 +275,7 @@ export const frameExamples: Record<string, any> = {
     bubbles: []
   },
   "transparent": {
+    templateName: "transparent",
     frameTree: {
       bgColor: "transparent",
       borderWidth: 0,
@@ -276,6 +283,7 @@ export const frameExamples: Record<string, any> = {
     bubbles: []
   },
   "4koma-wide": {
+    templateName: "4koma-wide",
     frameTree: { // 4コマ(ワイド)
       bgColor: "white",
       height: 100,
@@ -335,6 +343,7 @@ export const frameExamples: Record<string, any> = {
     ]
   },
   "4koma-splash": {
+    templateName: "4koma-splash",
     frameTree: { // 4コマ(右がぶち抜き)
       bgColor: "white",
       height: 100,

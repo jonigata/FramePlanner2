@@ -1,7 +1,7 @@
 import { type Writable, writable, derived } from "svelte/store";
 import type { Viewport } from "../lib/layeredCanvas/system/layeredCanvas";
 import { type Book, type BookOperators, newPage } from '../lib/book/book';
-import { frameExamples } from "../lib/layeredCanvas/tools/frameExamples";
+import type { FrameLayoutSample } from './templateChooserStore';
 import { FrameElement } from "../lib/layeredCanvas/dataModels/frameTree";
 import { Bubble } from "../lib/layeredCanvas/dataModels/bubble";
 import { loadFonts } from "./fontLoading"
@@ -24,13 +24,12 @@ export const renderPreference: RenderPreference = { bubbleRenderMode: BubbleRend
 
 export let mainBookExceptionHandler: Writable<((e: any) => void) | null> = writable(null);
 
-export function insertNewPageToBook(book: Book, index: number) {
+export function insertNewPageToBook(book: Book, index: number, sample: FrameLayoutSample) {
   const p = book.newPageProperty;
-  const example = frameExamples[p.templateName];
-  const bubbles = example.bubbles.map((b: any) => Bubble.compile(p.paperSize, b));
-  const page = newPage(FrameElement.compile(example.frameTree), bubbles);
+  const bubbles = sample.bubbles.map((b: any) => Bubble.compile(p.paperSize, b));
+  const page = newPage(FrameElement.compile(sample.frameTree), bubbles);
   page.paperSize = [...p.paperSize];
-  page.paperColor = example.frameTree.bgColor === 'transparent' ? '#00000000' : p.paperColor;
+  page.paperColor = sample.frameTree.bgColor === 'transparent' ? '#00000000' : p.paperColor;
   page.frameColor = p.frameColor;
   page.frameWidth = p.frameWidth;
   book.pages.splice(index, 0, page);
