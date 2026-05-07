@@ -173,6 +173,7 @@ export async function startLayerize(
   if (bubbleOnlyPanels && bubbleOnlyPanels.length > 0) {
     fd.append('bubbleOnlyPanels', JSON.stringify(bubbleOnlyPanels));
   }
+  fd.append('engine', 'gpt');
 
   const url = `${getMangaFarmBase()}/api/manga-layerize/request`;
   console.log('[manga-layerize] startLayerize: POST', url, 'image size:', image.size, 'sourceRef:', sourceRef);
