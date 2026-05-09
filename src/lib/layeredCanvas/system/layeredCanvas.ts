@@ -680,19 +680,20 @@ export class LayeredCanvas {
 
   async handlePaste(event: ClipboardEvent): Promise<void> {
     if (event.clipboardData == null) { return; }
-    if (this.pointerCursor == null) { return; }
+    const cursor = this.pointerCursor;
+    if (cursor == null) { return; }
 
     let accepted = false;
     const paste = event.clipboardData.getData("text");
     if (paste != "") {
-      if (this.rootPaper.handlePaste(this.pointerCursor, paste)) {
+      if (this.rootPaper.handlePaste(cursor, paste)) {
         accepted = true;
       }
     }
 
     const mediaResources = await handleDataTransfer(event.clipboardData);
     for (let media of mediaResources) {
-      if (this.rootPaper.handlePaste(this.pointerCursor, media)) {
+      if (this.rootPaper.handlePaste(cursor, media)) {
         accepted = true;
       }
     }
