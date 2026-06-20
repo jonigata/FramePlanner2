@@ -146,10 +146,58 @@ function createAuthStore(): AuthStore {
   }
 
   async function signOut(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    // セッションが存在しない場合は既にログアウト状態なので無視
-    if (error && error.name !== 'AuthSessionMissingError') {
-      throw error;
+    try {
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error && error.name !== 'AuthSessionMissingError') {
+          console.warn('[signOut] global error, falling back to local:', error);
+          throw error;
+        }
+      } catch (e) {
+        console.warn('[signOut] global failed, falling back to local:', e);
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch (e2) {
+          console.warn('[signOut] local also failed:', e2);
+        }
+      }
+    } finally {
+      // global/local 成否によらず localStorage と cookie を確実に削除
+      clearAuthStorage();
+    }
+  }
+
+  function clearAuthStorage(): void {
+    // localStorage: sb-*-auth-token (Supabase JS が使う) を全部消す
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    // cookie: 現存する cookie 名を列挙し、auth 関連を全部消す
+    // (domain あり/なし、ドメイン候補を複数試行 — どこに書かれているか不明なため)
+    const isDevelopment = storeGet(developmentFlag);
+    const domainCandidates = isDevelopment
+      ? ['.example.local', 'example.local']
+      : ['.manga-farm.online', 'manga-farm.online'];
+    const expires = new Date(0).toUTCString();
+
+    for (const cookieStr of document.cookie.split(';')) {
+      const [name] = cookieStr.trim().split('=');
+      if (!name) continue;
+      // Supabase JS 系 (sb-*-auth-token, sb-*-auth-token.0, ...) と旧形式 (my-access-token, my-refresh-token)
+      const isAuthCookie =
+        (name.startsWith('sb-') && (name.endsWith('-auth-token') || name.includes('-auth-token.'))) ||
+        name === 'my-access-token' ||
+        name === 'my-refresh-token';
+      if (!isAuthCookie) continue;
+      // Domain 指定なし
+      document.cookie = `${name}=; path=/; expires=${expires}; SameSite=Lax`;
+      // Domain 指定あり (候補すべて)
+      for (const d of domainCandidates) {
+        document.cookie = `${name}=; Domain=${d}; path=/; expires=${expires}; SameSite=Lax`;
+      }
     }
   }
 

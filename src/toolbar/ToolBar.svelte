@@ -161,8 +161,8 @@
     }
   }
 
-  function signOut() {
-    authStore.signOut();
+  async function signOut() {
+    await authStore.signOut();
     const authHere = $developmentFlag;
     if (authHere) {
       console.log(`http://example.local:5174/auth/signout?next=${encodeURIComponent(window.location.href)}`);

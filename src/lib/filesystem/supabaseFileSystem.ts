@@ -37,8 +37,8 @@ export class SupabaseFileSystem extends FileSystem {
     this.isVault = true;
     const user = await supabase.auth.getUser();
     if (!user.data.user) {
-      // サーバー側でセッションが無効 → 明示的にサインアウトして状態を同期
-      await supabase.auth.signOut();
+      // サーバー側でセッションが無効 → localStorage のみクリア (global は token 失効で失敗するため)
+      await supabase.auth.signOut({ scope: 'local' });
       throw new Error('Session expired');
     }
     this.userId = user.data.user.id;
