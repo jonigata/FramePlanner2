@@ -44,5 +44,8 @@ certs/
 frameplanner.example.local-key.pem
 frameplanner.example.local.pem
 .env
-.codex/
+.codex/*
+!.codex/prompts/
+.codex/prompts/*
+!.codex/prompts/sentry.md
 .claude/*.lock

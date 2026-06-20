@@ -304,9 +304,11 @@
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
+    const target = $bubbleInspectorTarget;
+    if (!target) return;
     const {index, films} = e.detail;
-    const page = $bubbleInspectorTarget!.page;
-    const b = $bubbleInspectorTarget!.bubble;
+    const page = target.page;
+    const b = target.bubble;
     const paperSize = page.paperSize;
     insertBubbleLayers(paperSize, b, index, films);
 

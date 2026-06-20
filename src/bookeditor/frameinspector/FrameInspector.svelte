@@ -51,10 +51,12 @@
   }
 
   function onAccept(e: CustomEvent<{index: number, films: Film[]}>) {
+    const target = $frameInspectorTarget;
+    if (!target) return;
     const {index, films} = e.detail;
     console.log("FrameInspector.onAccept", index, films);
-    const page = $frameInspectorTarget!.page;
-    const element = $frameInspectorTarget!.frame;
+    const page = target.page;
+    const element = target.frame;
     const paperSize = page.paperSize;
     insertFrameLayers(page.frameTree, paperSize, element, index, films);
 
