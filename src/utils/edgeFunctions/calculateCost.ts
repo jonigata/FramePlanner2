@@ -54,6 +54,7 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     "kontext/max": { kind: 'fixed', value: 13 },
     "kontext/inscene": { kind: 'perMP', value: 7 },
     "nano-banana": { kind: 'fixed', value: 6 },
+    "nano-banana-lite": { kind: 'fixed', value: 6 },
     "nano-banana-pro": { kind: 'perResolution', tiers: { "0.5K": 22, "1K": 22, "2K": 22, "4K": 45 } },
     "nano-banana-2": { kind: 'perResolution', tiers: { "0.5K": 8, "1K": 11, "2K": 16, "4K": 22 } },
     "chrono-edit": { kind: 'fixed', value: 3 },

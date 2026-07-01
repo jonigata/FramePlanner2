@@ -362,6 +362,7 @@ export const modeOptionsTree: readonly ModeTreeItem[] = [
   // Nano Banana
   { value: 'nano-banana-2', name: 'Nano Banana 2', uiType: 'flux', textedit: true, refRange: { min: 0, max: 14 }, timeFactor: 12, pageImaging: true },
   { value: 'nano-banana-pro', name: 'Nano Banana Pro', uiType: 'flux', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 12, pageImaging: true },
+  { value: 'nano-banana-lite', name: 'Nano Banana Lite', uiType: 'flux', textedit: true, refRange: { min: 0, max: 14 }, timeFactor: 5, pageImaging: true },
   // Seedream
   { value: 'chrono-edit', name: 'Chrono Edit', uiType: 'seedream', textedit: true, refRange: { min: 1, max: 1 }, timeFactor: 12, pageImaging: false },
   { value: 'seedream/v5-lite', name: 'Seedream v5 Lite', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 10 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1536, max: 3072 } },

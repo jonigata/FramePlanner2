@@ -43,6 +43,7 @@ export const ImagingModelSchema = z.enum([
   "nano-banana",
   "nano-banana-pro",
   "nano-banana-2",
+  "nano-banana-lite",
   "chrono-edit",
   "seedream/v4",
   "seedream/v4.5",
