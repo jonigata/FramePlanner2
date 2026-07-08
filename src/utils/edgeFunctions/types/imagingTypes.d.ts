@@ -48,6 +48,7 @@ export const ImagingModelSchema = z.enum([
   "seedream/v4",
   "seedream/v4.5",
   "seedream/v5-lite",
+  "seedream/v5-pro",
   "qwen-image-edit/multiple-angles",
   "flux-2-dev",
   "flux-2-pro",
@@ -55,6 +56,8 @@ export const ImagingModelSchema = z.enum([
   "flux-2-klein",
   "z-image",
   "kling-image/o1",
+  "ideogram/v4/instant",
+  "ideogram/v4/fast",
 ]);
 export type ImagingModel = z.infer<typeof ImagingModelSchema>;
 

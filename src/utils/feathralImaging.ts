@@ -365,10 +365,14 @@ export const modeOptionsTree: readonly ModeTreeItem[] = [
   { value: 'nano-banana-lite', name: 'Nano Banana Lite', uiType: 'flux', textedit: true, refRange: { min: 0, max: 14 }, timeFactor: 5, pageImaging: true },
   // Seedream
   { value: 'chrono-edit', name: 'Chrono Edit', uiType: 'seedream', textedit: true, refRange: { min: 1, max: 1 }, timeFactor: 12, pageImaging: false },
+  { value: 'seedream/v5-pro', name: 'Seedream v5 Pro', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 10 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1536, max: 2048 } },
   { value: 'seedream/v5-lite', name: 'Seedream v5 Lite', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 10 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1536, max: 3072 } },
   { value: 'seedream/v4.5', name: 'Seedream v4.5', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1920, max: 4096 } },
   // Kling
   { value: 'kling-image/o1', name: 'Kling Image O1', uiType: 'flux', textedit: true, refRange: { min: 1, max: 4 }, timeFactor: 12, pageImaging: false },
+  // Ideogram（T2I専用）
+  { value: 'ideogram/v4/instant', name: 'Ideogram V4 Instant', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: true, sizeRange: { min: 512, max: 2048 } },
+  { value: 'ideogram/v4/fast', name: 'Ideogram V4 Fast', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: true, sizeRange: { min: 512, max: 2048 } },
   // Qwen
   // { value: 'qwen-image-2', name: 'Qwen Image 2', uiType: 'flux', textedit: true, refRange: { min: 0, max: 6 }, timeFactor: 12, pageImaging: true },
   // { value: 'qwen-image-2/pro', name: 'Qwen Image 2 Pro', uiType: 'flux', textedit: true, refRange: { min: 0, max: 6 }, timeFactor: 12, pageImaging: true },

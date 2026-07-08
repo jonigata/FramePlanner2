@@ -24,7 +24,7 @@ export function getResolutionFromSize(size: { width: number; height: number }): 
     return "4K";
 }
 
-type CostSpec = { kind: 'fixed', value: number } | { kind: 'perMP', value: number } | { kind: 'perMP/IO', input: number, output: number } | { kind: 'perResolution', tiers: Record<NanoBananaResolution, number> };
+type CostSpec = { kind: 'fixed', value: number } | { kind: 'perMP', value: number } | { kind: 'perMP/IO', input: number, output: number } | { kind: 'perResolution', tiers: Record<NanoBananaResolution, number> } | { kind: 'perSizeTier', tiers: { maxPixels: number, value: number }[] };
 
 // モード単位で単一仕様に一般化（ref画像数には非依存）
 const COST_SPEC: Record<ImagingModel, CostSpec> = {
@@ -61,6 +61,8 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     "seedream/v4": { kind: 'fixed', value: 5 },
     "seedream/v4.5": { kind: 'fixed', value: 6 },
     "seedream/v5-lite": { kind: 'fixed', value: 5 },
+    // seedream/v5-pro は出力サイズで2段階（$0.0675 @≤1536², $0.135 @≤2048²）
+    "seedream/v5-pro": { kind: 'perSizeTier', tiers: [{ maxPixels: 1536 * 1536, value: 10 }, { maxPixels: Infinity, value: 20 }] },
     // FLUX 2 系
     "flux-2-dev": { kind: 'perMP/IO', input: 2, output:2 },
     "flux-2-pro": { kind: 'perMP/IO', input: 2, output:5 },
@@ -69,6 +71,9 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     // その他
     "z-image": { kind: 'perMP', value: 1 },
     "kling-image/o1": { kind: 'fixed', value: 5 },
+    // Ideogram v4（面積比例、T2I専用）
+    "ideogram/v4/instant": { kind: 'perMP', value: 1 },
+    "ideogram/v4/fast": { kind: 'perMP', value: 2 },
 };
 
 // 互換のための内部ヘルパ（アスペクト比からピクセル数を推定）
@@ -181,6 +186,13 @@ function calcFromSpec(spec: CostSpec, outputSize: ImageSize, inputSizes: ImageSi
         }
         case 'perResolution':
             return spec.tiers[getResolutionFromSize(outputSize)];
+        case 'perSizeTier': {
+            const px = outputSize.width * outputSize.height;
+            for (const tier of spec.tiers) {
+                if (px <= tier.maxPixels) return tier.value;
+            }
+            return spec.tiers[spec.tiers.length - 1].value;
+        }
     }
 }
 
