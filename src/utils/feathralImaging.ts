@@ -370,9 +370,9 @@ export const modeOptionsTree: readonly ModeTreeItem[] = [
   { value: 'seedream/v4.5', name: 'Seedream v4.5', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1920, max: 4096 } },
   // Kling
   { value: 'kling-image/o1', name: 'Kling Image O1', uiType: 'flux', textedit: true, refRange: { min: 1, max: 4 }, timeFactor: 12, pageImaging: false },
-  // Ideogram（T2I専用）
-  { value: 'ideogram/v4/instant', name: 'Ideogram V4 Instant', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: false, sizeRange: { min: 512, max: 2048 } },
-  { value: 'ideogram/v4/fast', name: 'Ideogram V4 Fast', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: false, sizeRange: { min: 512, max: 2048 } },
+  // Ideogram（T2I専用）: 品質不十分のためUI封印（enum/バックエンドは維持）
+  // { value: 'ideogram/v4/instant', name: 'Ideogram V4 Instant', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: false, sizeRange: { min: 512, max: 2048 } },
+  // { value: 'ideogram/v4/fast', name: 'Ideogram V4 Fast', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: false, sizeRange: { min: 512, max: 2048 } },
   // Qwen
   // { value: 'qwen-image-2', name: 'Qwen Image 2', uiType: 'flux', textedit: true, refRange: { min: 0, max: 6 }, timeFactor: 12, pageImaging: true },
   // { value: 'qwen-image-2/pro', name: 'Qwen Image 2 Pro', uiType: 'flux', textedit: true, refRange: { min: 0, max: 6 }, timeFactor: 12, pageImaging: true },
