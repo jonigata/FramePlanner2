@@ -3,120 +3,120 @@
   import sliderIcon from '../assets/horizontal.webp';
   import { _ } from 'svelte-i18n';
   import { mainBook, bookOperators, viewport } from '../bookeditor/workspaceStore';
-  import { RangeSlider } from '@skeletonlabs/skeleton';
   import { onMount, onDestroy } from 'svelte';
-  
-  let showSlider = false;
-  let sliderValue = 1;
-  let lastAutoValue = 1;
-  let isUpdatingFromViewport = false;
-  
-  $: maxValue = $mainBook ? $mainBook.pages.length : 1;
+
+  let showPanel = false;
+  let currentPageIndex = 0;
+  let dragging = false;
+  let panelElement: HTMLDivElement;
+  let buttonElement: HTMLButtonElement;
+
+  $: pageCount = $mainBook ? $mainBook.pages.length : 0;
+  $: columns = Math.min(pageCount, 10);
   $: isRightToLeft = $mainBook?.direction === "right-to-left";
-  
+
   // Subscribe to viewport changes
   let unsubscribe: (() => void) | null = null;
-  
+
   onMount(() => {
-    // Subscribe to viewport changes to update slider
     unsubscribe = viewport.subscribe(($viewport) => {
-      if ($viewport && $mainBook && $bookOperators && !isUpdatingFromViewport) {
-        updateSliderFromViewport();
+      if ($viewport && $mainBook && $bookOperators) {
+        updateCurrentPageFromViewport();
       }
     });
   });
-  
+
   onDestroy(() => {
     if (unsubscribe) {
       unsubscribe();
     }
   });
-  
-  function updateSliderFromViewport() {
+
+  function updateCurrentPageFromViewport() {
     try {
       const currentPage = $bookOperators!.getFocusedPage();
       const pageIndex = $mainBook!.pages.indexOf(currentPage);
-      if (pageIndex >= 0) {
-        let autoValue: number;
-        if (isRightToLeft) {
-          // Right-to-left: first page = max value, last page = 1
-          autoValue = maxValue - pageIndex;
-        } else {
-          // Left-to-right: first page = 1, last page = max value
-          autoValue = pageIndex + 1;
-        }
-        
-        // Only update if this is different from current value
-        if (autoValue !== sliderValue) {
-          sliderValue = autoValue;
-          lastAutoValue = autoValue;
-        }
+      if (0 <= pageIndex) {
+        currentPageIndex = pageIndex;
       }
     } catch (e) {
       // getFocusedPage might fail during initialization
     }
   }
-  
-  // React to slider value changes (user input)
-  $: onSliderChange(sliderValue);
-  
-  function onSliderChange(value: number) {
+
+  function jumpToPage(pageIndex: number) {
     if (!$bookOperators || !$mainBook) return;
-    
-    // Convert slider value to page index based on direction
-    let pageIndex: number;
-    if (isRightToLeft) {
-      // Right-to-left: slider 1 = last page, slider max = first page
-      pageIndex = maxValue - Math.round(value);
-    } else {
-      // Left-to-right: slider 1 = first page, slider max = last page
-      pageIndex = Math.round(value) - 1;
-    }
-    
-    if (pageIndex < 0 || pageIndex >= $mainBook.pages.length) return;
-    
-    // Only jump if this is different from the auto-tracked value
-    if (value !== lastAutoValue) {
-      isUpdatingFromViewport = true;
-      $bookOperators.focusToPage(pageIndex, 1, true); // keepScale = true
-      lastAutoValue = value;
-      // Reset flag after a short delay to allow viewport update
-      setTimeout(() => {
-        isUpdatingFromViewport = false;
-      }, 100);
+    if (pageIndex < 0 || pageCount <= pageIndex) return;
+    if (pageIndex === currentPageIndex) return;
+    currentPageIndex = pageIndex;
+    $bookOperators.focusToPage(pageIndex, 1, true); // keepScale = true
+  }
+
+  function pageIndexFromEvent(e: PointerEvent): number | null {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el?.closest('[data-page-index]');
+    if (!cell) return null;
+    return parseInt(cell.getAttribute('data-page-index')!, 10);
+  }
+
+  function onGridPointerDown(e: PointerEvent) {
+    const index = pageIndexFromEvent(e);
+    if (index == null) return;
+    dragging = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    jumpToPage(index);
+  }
+
+  function onGridPointerMove(e: PointerEvent) {
+    if (!dragging) return;
+    const index = pageIndexFromEvent(e);
+    if (index != null) {
+      jumpToPage(index);
     }
   }
-  
+
+  function onGridPointerUp(e: PointerEvent) {
+    dragging = false;
+  }
+
   function toggle() {
-    showSlider = !showSlider;
+    showPanel = !showPanel;
+  }
+
+  function onWindowPointerDown(e: PointerEvent) {
+    if (!showPanel) return;
+    const target = e.target as Node;
+    if (panelElement?.contains(target) || buttonElement?.contains(target)) return;
+    showPanel = false;
   }
 </script>
 
+<svelte:window on:pointerdown|capture={onWindowPointerDown} />
+
 {#if $mainBook && $mainBook.pages.length > 1}
-  <button class="variant-ghost-surface text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={toggle}
-    use:toolTip={showSlider ? 'スライダーを隠す' : 'スライダーを表示'}>
-    <img src={sliderIcon} alt="slider"/>
+  <button bind:this={buttonElement} class="variant-ghost-surface text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={toggle}
+    use:toolTip={showPanel ? 'ページ表を隠す' : 'ページ表を表示'}>
+    <img src={sliderIcon} alt="page map"/>
   </button>
 
-  {#if showSlider}
-    <div class="slider-container">
-      <div class="flex justify-between text-xs text-gray-700 mb-2">
-        {#if isRightToLeft}
-          <div>{maxValue}</div>
-          <div>1</div>
-        {:else}
-          <div>1</div>
-          <div>{maxValue}</div>
-        {/if}
+  {#if showPanel}
+    <div class="panel" bind:this={panelElement}>
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div
+        class="page-grid"
+        class:rtl={isRightToLeft}
+        style="grid-template-columns: repeat({columns}, 1fr);"
+        on:pointerdown={onGridPointerDown}
+        on:pointermove={onGridPointerMove}
+        on:pointerup={onGridPointerUp}
+        on:pointercancel={onGridPointerUp}
+      >
+        {#each { length: pageCount } as _unused, i}
+          <div class="page-cell" class:current={i === currentPageIndex} data-page-index={i}>
+            {i + 1}
+          </div>
+        {/each}
       </div>
-      <RangeSlider 
-        name="page-slider" 
-        bind:value={sliderValue} 
-        min={1} 
-        max={maxValue} 
-        step={1} 
-        ticked={true}
-      />
     </div>
   {/if}
 {/if}
@@ -136,27 +136,61 @@
       bottom: 10px;
     }
   }
-  
+
   img {
     width: 80%;
     height: 80%;
   }
-  
-  .slider-container {
+
+  .panel {
     position: absolute;
     bottom: 20px;
     right: 420px;
-    width: 250px;
     background-color: rgba(240, 240, 240, 0.95);
     border-radius: 8px;
-    padding: 15px 20px;
+    padding: 12px;
     pointer-events: auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     @media (max-width: 640px), (max-height: 800px) {
       right: 310px;
-      width: 200px;
       bottom: 10px;
-      padding: 10px 15px;
+      padding: 8px;
     }
+  }
+
+  .page-grid {
+    display: grid;
+    gap: 4px;
+    touch-action: none;
+    user-select: none;
+    cursor: pointer;
+  }
+
+  .page-grid.rtl {
+    direction: rtl;
+  }
+
+  .page-cell {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #444;
+    background-color: white;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    @media (max-width: 640px), (max-height: 800px) {
+      width: 22px;
+      height: 22px;
+      font-size: 10px;
+    }
+  }
+
+  .page-cell.current {
+    background-color: #3b82f6;
+    border-color: #2563eb;
+    color: white;
   }
 </style>
