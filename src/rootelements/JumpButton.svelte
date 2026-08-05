@@ -3,10 +3,18 @@
   import sliderIcon from '../assets/horizontal.webp';
   import { _ } from 'svelte-i18n';
   import { mainBook, bookOperators, viewport } from '../bookeditor/workspaceStore';
+  import { RangeSlider, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+  import { createPreference } from '../preferences';
   import { onMount, onDestroy } from 'svelte';
 
+  type JumpMode = "grid" | "slider";
+  const modePreference = createPreference<JumpMode>("tweakUi", "pageJumpMode");
+
   let showPanel = false;
+  let mode: JumpMode = "grid";
+  let modeLoaded = false;
   let currentPageIndex = 0;
+  let sliderValue = 1;
   let dragging = false;
   let panelElement: HTMLDivElement;
   let buttonElement: HTMLButtonElement;
@@ -18,12 +26,14 @@
   // Subscribe to viewport changes
   let unsubscribe: (() => void) | null = null;
 
-  onMount(() => {
+  onMount(async () => {
     unsubscribe = viewport.subscribe(($viewport) => {
       if ($viewport && $mainBook && $bookOperators) {
         updateCurrentPageFromViewport();
       }
     });
+    mode = await modePreference.getOrDefault("grid");
+    modeLoaded = true;
   });
 
   onDestroy(() => {
@@ -50,6 +60,24 @@
     if (pageIndex === currentPageIndex) return;
     currentPageIndex = pageIndex;
     $bookOperators.focusToPage(pageIndex, 1, true); // keepScale = true
+  }
+
+  // Keep the slider in sync with the focused page
+  $: syncSlider(currentPageIndex, isRightToLeft, pageCount);
+
+  function syncSlider(pageIndex: number, rtl: boolean, count: number) {
+    const value = rtl ? count - pageIndex : pageIndex + 1;
+    if (value !== sliderValue) {
+      sliderValue = value;
+    }
+  }
+
+  // React to slider value changes (user input)
+  $: onSliderChange(sliderValue);
+
+  function onSliderChange(value: number) {
+    const pageIndex = isRightToLeft ? pageCount - Math.round(value) : Math.round(value) - 1;
+    jumpToPage(pageIndex);
   }
 
   function pageIndexFromEvent(e: PointerEvent): number | null {
@@ -83,6 +111,10 @@
     showPanel = !showPanel;
   }
 
+  $: if (modeLoaded) {
+    modePreference.set(mode);
+  }
+
   function onWindowPointerDown(e: PointerEvent) {
     if (!showPanel) return;
     const target = e.target as Node;
@@ -95,28 +127,57 @@
 
 {#if $mainBook && $mainBook.pages.length > 1}
   <button bind:this={buttonElement} class="variant-ghost-surface text-white hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-200 open-button hbox" on:click={toggle}
-    use:toolTip={showPanel ? 'ページ表を隠す' : 'ページ表を表示'}>
-    <img src={sliderIcon} alt="page map"/>
+    use:toolTip={showPanel ? 'ページジャンプを隠す' : 'ページジャンプを表示'}>
+    <img src={sliderIcon} alt="page jump"/>
   </button>
 
   {#if showPanel}
     <div class="panel" bind:this={panelElement}>
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div
-        class="page-grid"
-        class:rtl={isRightToLeft}
-        style="grid-template-columns: repeat({columns}, 1fr);"
-        on:pointerdown={onGridPointerDown}
-        on:pointermove={onGridPointerMove}
-        on:pointerup={onGridPointerUp}
-        on:pointercancel={onGridPointerUp}
-      >
-        {#each { length: pageCount } as _unused, i}
-          <div class="page-cell" class:current={i === currentPageIndex} data-page-index={i}>
-            {i + 1}
-          </div>
-        {/each}
+      <div class="mode-toggle">
+        <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+          <RadioItem bind:group={mode} name="jump-mode" value={"grid"}><span class="radio-text">ページ表</span></RadioItem>
+          <RadioItem bind:group={mode} name="jump-mode" value={"slider"}><span class="radio-text">スライダー</span></RadioItem>
+        </RadioGroup>
       </div>
+
+      {#if mode === "grid"}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div
+          class="page-grid"
+          class:rtl={isRightToLeft}
+          style="grid-template-columns: repeat({columns}, 1fr);"
+          on:pointerdown={onGridPointerDown}
+          on:pointermove={onGridPointerMove}
+          on:pointerup={onGridPointerUp}
+          on:pointercancel={onGridPointerUp}
+        >
+          {#each { length: pageCount } as _unused, i}
+            <div class="page-cell" class:current={i === currentPageIndex} data-page-index={i}>
+              {i + 1}
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <div class="slider-area">
+          <div class="flex justify-between text-xs text-gray-700 mb-2">
+            {#if isRightToLeft}
+              <div>{pageCount}</div>
+              <div>1</div>
+            {:else}
+              <div>1</div>
+              <div>{pageCount}</div>
+            {/if}
+          </div>
+          <RangeSlider
+            name="page-slider"
+            bind:value={sliderValue}
+            min={1}
+            max={pageCount}
+            step={1}
+            ticked={true}
+          />
+        </div>
+      {/if}
     </div>
   {/if}
 {/if}
@@ -158,6 +219,16 @@
     }
   }
 
+  .mode-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .radio-text {
+    font-size: 12px;
+  }
+
   .page-grid {
     display: grid;
     gap: 4px;
@@ -192,5 +263,13 @@
     background-color: #3b82f6;
     border-color: #2563eb;
     color: white;
+  }
+
+  .slider-area {
+    width: 220px;
+    padding: 0 4px;
+    @media (max-width: 640px), (max-height: 800px) {
+      width: 180px;
+    }
   }
 </style>
