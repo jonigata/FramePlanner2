@@ -5,7 +5,7 @@
   import { mainBook, bookOperators, viewport } from '../bookeditor/workspaceStore';
   import { RangeSlider, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { createPreference } from '../preferences';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
 
   type JumpMode = "grid" | "slider";
   const modePreference = createPreference<JumpMode>("tweakUi", "pageJumpMode");
@@ -113,6 +113,16 @@
 
   $: if (modeLoaded) {
     modePreference.set(mode);
+  }
+
+  // Make sure the focused page is visible when the grid opens
+  $: if (showPanel && mode === "grid") {
+    scrollCurrentIntoView();
+  }
+
+  async function scrollCurrentIntoView() {
+    await tick();
+    panelElement?.querySelector('.page-cell.current')?.scrollIntoView({ block: 'nearest' });
   }
 
   function onWindowPointerDown(e: PointerEvent) {
@@ -232,6 +242,8 @@
   .page-grid {
     display: grid;
     gap: 4px;
+    max-height: min(50vh, 400px);
+    overflow-y: auto;
     touch-action: none;
     user-select: none;
     cursor: pointer;
