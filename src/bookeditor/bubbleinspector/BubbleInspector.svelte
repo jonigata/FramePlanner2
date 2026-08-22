@@ -191,6 +191,11 @@
       if (b) {
         $chosenShape = b.shape;
         await tick();
+        // canvasクリック(mousedown)のデフォルト処理がフォーカスを奪うため、その後に回す
+        setTimeout(() => {
+          textarea?.focus({preventScroll: true});
+          textarea?.select();
+        }, 0);
         bubbleSnapshot = makeSnapshot(b);
         // 新規作成じなど。ロード済みなら特に何もおきない
         $fontLoadToken = [{ family: b.fontFamily, weight: b.fontWeight }];
@@ -382,10 +387,6 @@
     textSelected = info.hasSelection;
   }
 
-  function onFocus() {
-    textarea?.select();    
-  }
-
   function wrapRange(range: SelectionInfo, prefix: string, suffix: string) {
     if (!textarea) {
       return;
@@ -561,7 +562,6 @@
               bind:value={$bubble.text}
               bind:this={textarea}
               on:keypress={onKeyPress}
-              on:focus={onFocus}
               use:selection={onSelectionChanged}/>
           {/if}
           <div class="btn-group variant-filled-primary h-6">

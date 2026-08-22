@@ -1,5 +1,14 @@
 export const keyDownFlags: { [key: string]: boolean } = {};
 
+export function isEditableElementFocused(): boolean {
+  const e = document.activeElement;
+  return (
+    e instanceof HTMLInputElement ||
+    e instanceof HTMLTextAreaElement ||
+    (e instanceof HTMLElement && e.isContentEditable)
+  );
+}
+
 export function initializeKeyCache(canvas: HTMLCanvasElement, consume: (code: string) => boolean) {
   if ((canvas as any)["keyCacheInitialized"]) { return; }
   (canvas as any)["keyCacheInitialized"] = true;
@@ -41,6 +50,9 @@ export function initializeKeyCache(canvas: HTMLCanvasElement, consume: (code: st
     mouseCursor = [-1, -1];
   });
   document.addEventListener("keydown", (event) => {
+    if (isEditableElementFocused()) {
+      return;
+    }
     if (!isMouseOnCanvas()) {
       return;
     }

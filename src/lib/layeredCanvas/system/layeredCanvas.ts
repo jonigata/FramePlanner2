@@ -1,4 +1,5 @@
 import { handleDataTransfer } from "../tools/fileUtil";
+import { isEditableElementFocused } from "./keyCache";
 import { convertPointFromNodeToPage, convertPointFromPageToNode } from "../tools/geometry/convertPoint";
 import type { Vector, Rect } from "../tools/geometry/geometry";
 import { rectIntersectsRect, scale2D } from "../tools/geometry/geometry";
@@ -719,6 +720,9 @@ export class LayeredCanvas {
   async handleKeyDown(event: KeyboardEvent): Promise<void> {
     // このハンドラだけはdocumentに登録する
     this.rebuildPageLayouts();
+    if (isEditableElementFocused()) {
+      return;
+    }
     if (!this.isPointerOnCanvas()) {
       return;
     }
