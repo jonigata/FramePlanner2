@@ -195,15 +195,27 @@ export class PaperRendererLayer extends LayerBase {
       bubbleDic[bubble.uuid] = bubble;
     }
 
-    // 親子関係解決
+    // 親子関係解決(リンク切れ・多段リンク・循環を正規化する)
     for (let bubble of bubbles) {
-      if (bubble.parent) {
-        if (bubbleDic[bubble.parent] == null) {
-          bubble.parent = null;
-        } else {
-          bubbleDic[bubble.parent].renderInfo!.children.push(bubble);
-        }
+      if (bubble.parent == null) { continue; }
+      if (bubbleDic[bubble.parent] == null) {
+        bubble.parent = null;
+        continue;
       }
+      // 親をたどってルートを求める(循環していた場合は自分自身をルートとみなす)
+      const visited = new Set<string>([bubble.uuid]);
+      let root = bubbleDic[bubble.parent];
+      while (root.parent != null && !visited.has(root.uuid)) {
+        visited.add(root.uuid);
+        const next = bubbleDic[root.parent];
+        if (next == null) { break; }
+        root = next;
+      }
+      bubble.parent = root === bubble ? null : root.uuid;
+    }
+    for (let bubble of bubbles) {
+      if (bubble.parent == null) { continue; }
+      bubbleDic[bubble.parent].renderInfo!.children.push(bubble);
     }
 
     // パス作成
@@ -473,7 +485,13 @@ export class PaperRendererLayer extends LayerBase {
     }
     for (let bubble of bubbles) {
       if (bubble.parent == null) { continue; }
-      const ctx = bubbleCanvases[bubble.parent].getContext('2d')!;
+      const parentCanvas = bubbleCanvases[bubble.parent];
+      if (parentCanvas == null) {
+        // resolveLinkagesで正規化済みのはずだが、念のため
+        console.warn(`renderApart: parent bubble not found: ${bubble.parent}`);
+        continue;
+      }
+      const ctx = parentCanvas.getContext('2d')!;
       renderBubbleForeground(ctx, this.getPaperSize(), bubble, true, this.supportsDpr, false, this.fontSizeCoefficient);
     }
 

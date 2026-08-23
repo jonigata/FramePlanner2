@@ -1459,6 +1459,7 @@ export class BubbleLayer extends LayerBase {
   regularizeGroup(g: Bubble[]) {
     // parent1つに集約する
     const parent = g[0];
+    parent.parent = null;
     for (let i = 1; i < g.length; i++) {
       const child = g[i];
       child.linkTo(parent);
