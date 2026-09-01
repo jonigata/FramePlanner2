@@ -19,13 +19,39 @@ function notebookCommit(): void {
   mainBook.set(book);
 }
 
+// 直近に生成したテーマを覚えておき、次の生成時にサーバーへ渡す。
+// 似たテーマばかり出るのを避けるためのもので、失われても支障はないためlocalStorageに置く。
+const recentThemesKey = 'notebook.recentThemes';
+const recentThemesMax = 10;
+
+function loadRecentThemes(): string[] {
+  try {
+    const json = localStorage.getItem(recentThemesKey);
+    if (!json) { return []; }
+    const themes = JSON.parse(json);
+    return Array.isArray(themes) ? themes.filter(t => typeof t === 'string') : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function pushRecentTheme(theme: string): void {
+  try {
+    const themes = [theme, ...loadRecentThemes().filter(t => t !== theme)].slice(0, recentThemesMax);
+    localStorage.setItem(recentThemesKey, JSON.stringify(themes));
+  } catch (e) {
+    // 保存できなくてもテーマ生成自体は成立するので無視する
+  }
+}
+
 export async function runAdviseTheme(notebook: NotebookLocal, thinker: Thinker): Promise<void> {
   try {
     themeWaiting.set(true);
-    const r = await adviseTheme({ thinker, notebook });
+    const r = await adviseTheme({ thinker, notebook, recentThemes: loadRecentThemes() });
     notebook.theme = r.theme;
     notebook.pageNumber = r.pageNumber;
     notebook.format = r.format;
+    pushRecentTheme(r.theme);
     notebookCommit();
   } catch (e) {
     toastStore.trigger({ message: 'テーマ生成に失敗しました', timeout: 1500 });

@@ -42,7 +42,7 @@ import { isHandledHttpError } from '../utils/edgeFunctions/edgeFunctions';
 
   let notebook: NotebookLocal | null;
   $: notebook = $mainBook?.notebook ?? null;
-  let thinker: Thinker = "gpt4.1";
+  let thinker: Thinker = "gemini-flash-lite";
   // let thinker: Thinker = "gpt-5-mini"; // Default to the latest model
 
   let fullAutoRunning = false;

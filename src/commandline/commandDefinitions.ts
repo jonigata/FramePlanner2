@@ -276,7 +276,7 @@ async function genaiThemeAction(args: string[]): Promise<void> {
     notebookCommit();
   } else {
     notebookOpen.set(true);
-    try { await runAdviseTheme(book.notebook, "gpt4.1"); } catch (_) {}
+    try { await runAdviseTheme(book.notebook, "gemini-flash-lite"); } catch (_) {}
   }
 }
 
@@ -291,7 +291,7 @@ async function genaiPlotAction(args: string[]): Promise<void> {
     notebookCommit();
   } else {
     notebookOpen.set(true);
-    try { await runAdvisePlot(book.notebook, "gpt4.1", ''); } catch (_) {}
+    try { await runAdvisePlot(book.notebook, "gemini-flash-lite", ''); } catch (_) {}
   }
 }
 
@@ -306,7 +306,7 @@ async function genaiScenarioAction(args: string[]): Promise<void> {
     notebookCommit();
   } else {
     notebookOpen.set(true);
-    try { await runAdviseScenario(book.notebook, "gpt4.1"); } catch (_) {}
+    try { await runAdviseScenario(book.notebook, "gemini-flash-lite"); } catch (_) {}
   }
 }
 
@@ -323,7 +323,7 @@ async function genaiCharactersAction(_args: string[]): Promise<void> {
   try {
     charactersWaiting.set(true);
     book.notebook.characters = [];
-    const newCharacters = await adviseCharacters({ thinker: "gpt4.1", notebook: book.notebook }) as CharacterBase[];
+    const newCharacters = await adviseCharacters({ thinker: "gemini-flash-lite", notebook: book.notebook }) as CharacterBase[];
     newCharacters.forEach((c: CharacterBase) => {
       book.notebook.characters.push({ ...c, ulid: ulid(), portrait: null });
     });
@@ -344,7 +344,7 @@ async function genaiCharactersAddAction(_args: string[]): Promise<void> {
   notebookOpen.set(true);
   try {
     charactersWaiting.set(true);
-    const newCharacters = await adviseCharacters({ thinker: "gpt4.1", notebook: book.notebook }) as CharacterBase[];
+    const newCharacters = await adviseCharacters({ thinker: "gemini-flash-lite", notebook: book.notebook }) as CharacterBase[];
     for (const c of newCharacters) {
       const index = book.notebook.characters.findIndex(v => v.name === c.name);
       if (index < 0) {

@@ -19,7 +19,7 @@ import {
 import { EraseFileResponseSchema, GetDownloadUrlResponseSchema, GetUploadUrlResponseSchema } from "$protocolTypes/cloudFileTypes.d";
 import { type ListMaterialsRequest, ListMaterialsRequestSchema, ListMaterialsResponseSchema, type RecordMaterialRequest, RecordMaterialRequestSchema, RecordMaterialResponseSchema } from "$protocolTypes/materialTypes.d";
 import { type ListActorsRequest, ListActorsRequestSchema, ListActorsResponseSchema, type RecordActorRequest, RecordActorRequestSchema, RecordActorResponseSchema } from "./utils/edgeFunctions/types/actorTypes.d";
-import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest, AdviseThemeResponseSchema, type AdviseThemeResponse, AdvisePageGenerationResponseSchema } from "$protocolTypes/adviseTypes.d";
+import { NotebookRequestSchema, NotebookWithInstructionRequestSchema, type NotebookRequest, type NotebookWithInstructionRequest, AdviseThemeRequestSchema, type AdviseThemeRequest, AdviseThemeResponseSchema, type AdviseThemeResponse, AdvisePageGenerationResponseSchema } from "$protocolTypes/adviseTypes.d";
 import { FunctionsHttpError } from '@supabase/supabase-js'
 
 // リクエストスキーマの定義
@@ -120,8 +120,8 @@ export async function layerize(req: LayerizeRequest) {
   return await invoke("charged/imaging/layerize", req, LayerizeRequestSchema, LayerizeResponseSchema);
 }
 
-export async function adviseTheme(req: NotebookRequest) {
-  return await invoke("charged/advise/theme", req, NotebookRequestSchema, AdviseThemeResponseSchema);
+export async function adviseTheme(req: AdviseThemeRequest) {
+  return await invoke("charged/advise/theme", req, AdviseThemeRequestSchema, AdviseThemeResponseSchema);
 }
 
 export async function adviseCharacters(req: NotebookRequest) {
