@@ -261,7 +261,7 @@
         <option value="opaque">{$_('generator.normalBackground')}</option>
         <option value="transparent">{$_('generator.transparentBackground')}</option>
       </select>
-    {:else if uiType == 'gpt-image-2'}
+    {:else if uiType == 'gpt-image-2' || uiType == 'gpt-image-2.5'}
       <ImageSizeControls {model} bind:width bind:height bind:batchCount bind:aspectRatio={nanoBananaAspectRatio} />
       <select class="select h-8 p-0" bind:value={background}>
         <option value="opaque">{$_('generator.normalBackground')}</option>

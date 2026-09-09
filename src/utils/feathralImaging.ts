@@ -96,6 +96,7 @@ export function buildImageDataUrlsForPrompt(
 export function inferProvider(m: ImagingModel): ImagingProvider {
   if (m.startsWith('gpt-image-1/')) return 'gpt-image-1';
   if (m.startsWith('gpt-image-1.5/')) return 'gpt-image-1.5';
+  if (m.startsWith('gpt-image-2.5/')) return 'gpt-image-2.5';
   if (m.startsWith('gpt-image-2/')) return 'gpt-image-2';
   if (m.startsWith('qwen-image')) return 'qwen';
   if (m.startsWith('seedream/')) return 'seedream';
@@ -395,6 +396,26 @@ export const modeOptionsTree: readonly ModeTreeItem[] = [
       { value: 'kontext/pro', name: 'Kontext [Pro]', uiType: 'flux', textedit: true, refRange: { min: 1, max: 1 }, timeFactor: 12, pageImaging: false },
       { value: 'kontext/max', name: 'Kontext [Max]', uiType: 'flux', textedit: true, refRange: { min: 1, max: 1 }, timeFactor: 12, pageImaging: false },
       { value: 'kontext/inscene', name: 'Kontext [InScene]', uiType: 'flux', textedit: true, refRange: { min: 1, max: 1 }, timeFactor: 12, pageImaging: false },
+    ] as const,
+  },
+  // GPT-image-2.5 Flare グループ
+  {
+    groupId: 'gpt-image-2.5-flare',
+    groupName: 'gpt-image-2.5 Flare(高速)',
+    children: [
+      { value: 'gpt-image-2.5/flare/low', name: 'gpt-image-2.5 Flare Low', uiType: 'gpt-image-2.5', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 15, pageImaging: true, sizeRange: { min: 1024, max: 3840 } },
+      { value: 'gpt-image-2.5/flare/medium', name: 'gpt-image-2.5 Flare Medium', uiType: 'gpt-image-2.5', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 22, pageImaging: true, sizeRange: { min: 1024, max: 3840 } },
+      { value: 'gpt-image-2.5/flare/high', name: 'gpt-image-2.5 Flare High', uiType: 'gpt-image-2.5', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 40, pageImaging: true, sizeRange: { min: 1024, max: 3840 } },
+    ] as const,
+  },
+  // GPT-image-2.5 Sunburst グループ
+  {
+    groupId: 'gpt-image-2.5-sunburst',
+    groupName: 'gpt-image-2.5 Sunburst(精密)',
+    children: [
+      { value: 'gpt-image-2.5/sunburst/low', name: 'gpt-image-2.5 Sunburst Low', uiType: 'gpt-image-2.5', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 15, pageImaging: true, sizeRange: { min: 1024, max: 3840 } },
+      { value: 'gpt-image-2.5/sunburst/medium', name: 'gpt-image-2.5 Sunburst Medium', uiType: 'gpt-image-2.5', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 22, pageImaging: true, sizeRange: { min: 1024, max: 3840 } },
+      { value: 'gpt-image-2.5/sunburst/high', name: 'gpt-image-2.5 Sunburst High', uiType: 'gpt-image-2.5', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 40, pageImaging: true, sizeRange: { min: 1024, max: 3840 } },
     ] as const,
   },
   // GPT-image-2 グループ

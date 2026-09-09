@@ -44,6 +44,12 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     "gpt-image-2/low": { kind: 'perMP', value: 2 },
     "gpt-image-2/medium": { kind: 'perMP', value: 9 },
     "gpt-image-2/high": { kind: 'perMP', value: 33 },
+    "gpt-image-2.5/sunburst/low": { kind: 'perMP', value: 2 },
+    "gpt-image-2.5/sunburst/medium": { kind: 'perMP', value: 9 },
+    "gpt-image-2.5/sunburst/high": { kind: 'perMP', value: 33 },
+    "gpt-image-2.5/flare/low": { kind: 'perMP', value: 2 },
+    "gpt-image-2.5/flare/medium": { kind: 'perMP', value: 9 },
+    "gpt-image-2.5/flare/high": { kind: 'perMP', value: 33 },
     // Qwen
     "qwen-image": { kind: 'perMP', value: 4 },
     "qwen-image-2": { kind: 'fixed', value: 5 },

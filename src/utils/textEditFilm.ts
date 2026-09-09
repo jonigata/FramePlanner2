@@ -22,7 +22,7 @@ const GPT_IMAGE_2_MAX_TEXT_EDIT_ASPECT = 3;
 const GPT_IMAGE_2_SIZE_UNIT = 16;
 
 function isGptImage2(model: ImagingModel): boolean {
-  return model.startsWith('gpt-image-2/');
+  return model.startsWith('gpt-image-2/') || model.startsWith('gpt-image-2.5/');
 }
 
 function roundUpToUnit(value: number, unit: number): number {
