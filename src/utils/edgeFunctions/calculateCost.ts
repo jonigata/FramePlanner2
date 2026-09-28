@@ -68,6 +68,7 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     "seedream/v4.5": { kind: 'fixed', value: 6 },
     "seedream/v5-lite": { kind: 'fixed', value: 5 },
     // seedream/v5-pro は出力サイズで2段階（$0.0675 @≤1536², $0.135 @≤2048²）
+    "seedream/v5-flash": { kind: 'fixed', value: 4 },
     "seedream/v5-pro": { kind: 'perSizeTier', tiers: [{ maxPixels: 1536 * 1536, value: 10 }, { maxPixels: Infinity, value: 20 }] },
     // FLUX 2 系
     "flux-2-dev": { kind: 'perMP/IO', input: 2, output:2 },

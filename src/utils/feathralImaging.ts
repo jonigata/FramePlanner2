@@ -367,6 +367,7 @@ export const modeOptionsTree: readonly ModeTreeItem[] = [
   // Seedream
   { value: 'chrono-edit', name: 'Chrono Edit', uiType: 'seedream', textedit: true, refRange: { min: 1, max: 1 }, timeFactor: 12, pageImaging: false },
   { value: 'seedream/v5-pro', name: 'Seedream v5 Pro', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 10 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1536, max: 2048 } },
+  { value: 'seedream/v5-flash', name: 'Seedream v5 Flash', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 10 }, timeFactor: 8, pageImaging: true, sizeRange: { min: 1024, max: 2048 } },
   { value: 'seedream/v5-lite', name: 'Seedream v5 Lite', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 10 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1536, max: 3072 } },
   { value: 'seedream/v4.5', name: 'Seedream v4.5', uiType: 'seedream', textedit: true, refRange: { min: 0, max: 4 }, timeFactor: 12, pageImaging: true, sizeRange: { min: 1920, max: 4096 } },
   // Kling
