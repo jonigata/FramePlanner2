@@ -7,6 +7,7 @@ import { clamp, magnitude2D, perpendicular2D, normalize2D, rotate2D, scale2D, pr
 import { PaperOffset } from 'paperjs-offset'
 import type { Vector, Rect } from "../geometry/geometry";
 import rough from 'roughjs';
+import { drawInkStroke } from "./inkStroke";
 import rgba from 'color-rgba'
 // import { getStroke, type StrokeOptions } from 'perfect-freehand'
 // import { Paper } from "../../system/layeredCanvas";
@@ -918,7 +919,11 @@ export function drawPath(context: CanvasRenderingContext2D, method: string, unif
       break;
     case 'stroke':
       const roughness = opts.roughness ?? 0;
-      if (0 < roughness) {
+      const handDrawn = opts.handDrawn ?? 0;
+      const inkPool = opts.inkPool ?? 0;
+      if (0 < handDrawn || 0 < inkPool) {
+        drawInkStroke(context, unified, context.lineWidth, { handDrawn, inkPool, seed: opts.randomSeed ?? 0 });
+      } else if (0 < roughness) {
         const seed = (opts.randomSeed ?? 0) + 1;
         const rc = rough.canvas(context.canvas, {options:{seed, roughness, strokeWidth: context.lineWidth, stroke: context.strokeStyle as string}});
         rc.path(unified.pathData);
