@@ -118,7 +118,7 @@ export function createGenerationActions(deps: GenerationDeps) {
       const canvases = await executeProcessAndNotify(
         5000,
         get(_)("generator.imageGenerated"),
-        async () => await generateImage(fullPrompt, imageSize, deps.getImagingModel(), batchCount, DEFAULT_BACKGROUND, []),
+        async () => await generateImage(fullPrompt, imageSize, deps.getImagingModel(), batchCount, DEFAULT_BACKGROUND, [], { kind: 'none' }, false),
         (r) => r.length > 0,
       );
 
@@ -213,11 +213,12 @@ export function createGenerationActions(deps: GenerationDeps) {
             },
           }
         : { kind: 'none' as const };
+      // 先頭の選択画像そのものを編集する操作なので精密編集を要求する
       const canvases = await executeProcessAndNotify(
         5000,
         get(_)("generator.imageGenerated"),
         async () =>
-          await generateImage(fullPrompt, imageSize, imagingMode, batchCount, 'auto', referenceUrls, option),
+          await generateImage(fullPrompt, imageSize, imagingMode, batchCount, 'auto', referenceUrls, option, true),
         (r) => r.length > 0,
       );
 

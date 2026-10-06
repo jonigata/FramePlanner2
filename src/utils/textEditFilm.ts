@@ -130,6 +130,7 @@ export async function textEditFilmInline(film: Film): Promise<Film | null> {
     model: request.model,
     background: 'auto',
     imageDataUrls,
+    preciseEdit: true,
   };
 
   // beforeRequest形式でImageMediaを作成

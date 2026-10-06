@@ -140,7 +140,8 @@ export async function generateImage(
   num_images: number,
   background: ImagingBackground,
   imageDataUrls: string[],
-  option: TextToImageOption = { kind: 'none' },
+  option: TextToImageOption,
+  preciseEdit: boolean,
 ): Promise<HTMLCanvasElement[]> {
   const req: TextToImageRequest = {
     provider: inferProvider(model),
@@ -151,6 +152,7 @@ export async function generateImage(
     background,
     imageDataUrls,
     option,
+    preciseEdit,
   };
   return submitImagingRequest(req);
 }
@@ -355,6 +357,17 @@ export function isModeGroup(item: ModeTreeItem): item is ModeGroup {
   return 'groupId' in item && 'children' in item;
 }
 
+// Ideogram V4.5 T2I が受け付ける出力サイズ（これ以外は400）
+const IDEOGRAM_V45_SIZES: readonly SizePair[] = [
+  [1024, 1024], [2048, 2048],
+  [1120, 896], [896, 1120], [1152, 864], [864, 1152], [1248, 832], [832, 1248],
+  [1280, 720], [720, 1280], [1280, 800], [800, 1280], [1440, 720], [720, 1440],
+  [1792, 2240], [2240, 1792], [1728, 2304], [2304, 1728], [1664, 2496], [2496, 1664],
+  [1600, 2560], [2560, 1600], [1440, 2560], [2560, 1440], [1440, 2880], [2880, 1440],
+  [1024, 3072], [3072, 1024], [1152, 2944], [2944, 1152], [1248, 3328], [3328, 1248],
+  [1280, 3072], [3072, 1280], [1296, 3168], [3168, 1296],
+].map(([width, height]) => ({ width, height }));
+
 // 階層化されたモードオプション
 // pageImaging: ページ単位の出力に耐える性能があるかどうか（人間がテストして判断）
 export const modeOptionsTree: readonly ModeTreeItem[] = [
@@ -375,6 +388,17 @@ export const modeOptionsTree: readonly ModeTreeItem[] = [
   // Ideogram（T2I専用）: 品質不十分のためUI封印（enum/バックエンドは維持）
   // { value: 'ideogram/v4/instant', name: 'Ideogram V4 Instant', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: false, sizeRange: { min: 512, max: 2048 } },
   // { value: 'ideogram/v4/fast', name: 'Ideogram V4 Fast', uiType: 'flux', textedit: false, refRange: { min: 0, max: 0 }, timeFactor: 5, pageImaging: false, sizeRange: { min: 512, max: 2048 } },
+  // Ideogram V4.5 グループ（very_lowはEdit専用、参照画像は元画像1枚+参照4枚）
+  {
+    groupId: 'ideogram-v4.5',
+    groupName: 'Ideogram V4.5',
+    children: [
+      { value: 'ideogram/v4.5/very_low', name: 'Ideogram V4.5 Very Low', uiType: 'flux', textedit: true, refRange: { min: 1, max: 5 }, timeFactor: 8, pageImaging: true, supportedSizes: IDEOGRAM_V45_SIZES },
+      { value: 'ideogram/v4.5/low', name: 'Ideogram V4.5 Low', uiType: 'flux', textedit: true, refRange: { min: 0, max: 5 }, timeFactor: 10, pageImaging: true, supportedSizes: IDEOGRAM_V45_SIZES },
+      { value: 'ideogram/v4.5/medium', name: 'Ideogram V4.5 Medium', uiType: 'flux', textedit: true, refRange: { min: 0, max: 5 }, timeFactor: 15, pageImaging: true, supportedSizes: IDEOGRAM_V45_SIZES },
+      { value: 'ideogram/v4.5/high', name: 'Ideogram V4.5 High', uiType: 'flux', textedit: true, refRange: { min: 0, max: 5 }, timeFactor: 30, pageImaging: true, supportedSizes: IDEOGRAM_V45_SIZES },
+    ] as const,
+  },
   // Qwen
   // { value: 'qwen-image-2', name: 'Qwen Image 2', uiType: 'flux', textedit: true, refRange: { min: 0, max: 6 }, timeFactor: 12, pageImaging: true },
   // { value: 'qwen-image-2/pro', name: 'Qwen Image 2 Pro', uiType: 'flux', textedit: true, refRange: { min: 0, max: 6 }, timeFactor: 12, pageImaging: true },

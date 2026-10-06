@@ -65,6 +65,10 @@ export const ImagingModelSchema = z.enum([
   "kling-image/o1",
   "ideogram/v4/instant",
   "ideogram/v4/fast",
+  "ideogram/v4.5/very_low",
+  "ideogram/v4.5/low",
+  "ideogram/v4.5/medium",
+  "ideogram/v4.5/high",
 ]);
 export type ImagingModel = z.infer<typeof ImagingModelSchema>;
 
@@ -100,6 +104,8 @@ const BaseTextToImageRequestSchema = z.object({
   option: TextToImageOptionSchema,
   // TextEdit 用の参照画像を Imaging にも許容
   imageDataUrls: z.array(z.string()),
+  // 先頭画像そのものの編集（対話編集など）であることを示す。対応モデルでは非変更部分を保持する精密編集を使う
+  preciseEdit: z.boolean().optional(),
 });
 
 export const TextToImageRequestSchema = BaseTextToImageRequestSchema;

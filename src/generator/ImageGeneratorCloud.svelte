@@ -174,7 +174,9 @@
             model,
             batchCount,
             background,
-            imageDataUrls
+            imageDataUrls,
+            { kind: 'none' },
+            false
           );
           // return { feathral: 99, result: { image: makePlainImage(imageRequest.width, imageRequest.height, "#00ff00ff") } };
         },

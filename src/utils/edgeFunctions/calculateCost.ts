@@ -81,6 +81,11 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     // Ideogram v4（面積比例、T2I専用）
     "ideogram/v4/instant": { kind: 'perMP', value: 1 },
     "ideogram/v4/fast": { kind: 'perMP', value: 2 },
+    // Ideogram v4.5（1枚固定、サイズ非依存。very_lowはEdit専用）
+    "ideogram/v4.5/very_low": { kind: 'fixed', value: 1 },
+    "ideogram/v4.5/low": { kind: 'fixed', value: 5 },
+    "ideogram/v4.5/medium": { kind: 'fixed', value: 9 },
+    "ideogram/v4.5/high": { kind: 'fixed', value: 33 },
 };
 
 // 互換のための内部ヘルパ（アスペクト比からピクセル数を推定）
