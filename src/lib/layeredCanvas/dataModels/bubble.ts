@@ -596,6 +596,7 @@ export const bubbleOptionSets: { [key: string]: any } = {
     superEllipse: { label: "矩形っぽさ", type: "number", min: 1, max: 8, step: 0.1, init: (b: Bubble) => 3 },
     vertexCount: { label: "頂点の数", type: "number", min: 4, max: 20, step: 1, init: (b: Bubble) => 7 },
     angleJitter: { label: "角度ジッター", type: "number", min: 0, max: 1.0, step: 0.1, init: (b: Bubble) => 0.4 },
+    cornerRound: { label: "角丸", type: "number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0 },
     extract: {label: "食い込み", type:"boolean", init: (b: Bubble) => false},
     extractWidth: {label: "食い込み広さ", type:"number", min: 0, max: 1, step: 0.01, init: (b: Bubble) => 0.2},
     shapeExpand: {label: "はみだし", type: "number", min: 0, max: 0.2, step: 0.01, init: (b: Bubble) => 0},

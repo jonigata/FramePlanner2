@@ -839,11 +839,38 @@ function getPolygonPath(size: Vector, opts: any, seed: string) {
   const rawPoints = generateSuperEllipsePoints(size, angles, opts.superEllipse);
   const points: any = QuickHull(rawPoints); // 型定義不足でコンパイルエラーが出るのでworkaround
 
-  const path = new paper.Path();
-  path.addSegments(points);
+  const cornerRound = opts.cornerRound ?? 0;
+  const path = 0 < cornerRound ? makeRoundedPolygonPath(points, cornerRound) : new paper.Path(points);
   path.closed = true;
 
   return addTrivialTail(path, size, opts);
+}
+
+// 各頂点を、隣接辺の短い方の半分×roundまで削って2次曲線でつなぐ
+function makeRoundedPolygonPath(points: Vector[], round: number): paper.Path {
+  const n = points.length;
+  const path = new paper.Path();
+  const corners = points.map((p, i) => {
+    const prev = points[(i + n - 1) % n];
+    const next = points[(i + 1) % n];
+    const lenPrev = Math.hypot(prev[0] - p[0], prev[1] - p[1]);
+    const lenNext = Math.hypot(next[0] - p[0], next[1] - p[1]);
+    const d = Math.min(1, round) * 0.5 * Math.min(lenPrev, lenNext);
+    const kPrev = lenPrev == 0 ? 0 : d / lenPrev;
+    const kNext = lenNext == 0 ? 0 : d / lenNext;
+    return {
+      p,
+      in: [p[0] + (prev[0] - p[0]) * kPrev, p[1] + (prev[1] - p[1]) * kPrev] as Vector,
+      out: [p[0] + (next[0] - p[0]) * kNext, p[1] + (next[1] - p[1]) * kNext] as Vector,
+    };
+  });
+  path.moveTo(corners[0].out);
+  for (let i = 1; i <= n; i++) {
+    const c = corners[i % n];
+    path.lineTo(c.in);
+    path.quadraticCurveTo(c.p, c.out);
+  }
+  return path;
 }
 
 function drawEllipseBubble(context: CanvasRenderingContext2D, method: DrawMethod, seed: string, size: Vector, opts: any) {
