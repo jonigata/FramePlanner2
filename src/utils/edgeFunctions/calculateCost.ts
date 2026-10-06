@@ -24,6 +24,19 @@ export function getResolutionFromSize(size: { width: number; height: number }): 
     return "4K";
 }
 
+// FLUX 3 は解像度段階で1枚固定価格。出力面積から段階を選ぶ（4kは遅く高価なので使わない）
+export type Flux3Resolution = "768sq" | "1k" | "2k";
+const FLUX3_TIERS: { maxPixels: number, resolution: Flux3Resolution, value: number }[] = [
+    { maxPixels: 0.8 * 1024 * 1024, resolution: "768sq", value: 6 },   // $0.041
+    { maxPixels: 2 * 1024 * 1024, resolution: "1k", value: 7 },        // $0.048
+    { maxPixels: Infinity, resolution: "2k", value: 15 },              // $0.10
+];
+
+export function getFlux3Resolution(size: { width: number; height: number }): Flux3Resolution {
+    const px = size.width * size.height;
+    return (FLUX3_TIERS.find(t => px <= t.maxPixels) ?? FLUX3_TIERS[FLUX3_TIERS.length - 1]).resolution;
+}
+
 type CostSpec = { kind: 'fixed', value: number } | { kind: 'perMP', value: number } | { kind: 'perMP/IO', input: number, output: number } | { kind: 'perResolution', tiers: Record<NanoBananaResolution, number> } | { kind: 'perSizeTier', tiers: { maxPixels: number, value: number }[] };
 
 // モード単位で単一仕様に一般化（ref画像数には非依存）
@@ -75,6 +88,7 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     "flux-2-pro": { kind: 'perMP/IO', input: 2, output:5 },
     "flux-2-flex": { kind: 'perMP/IO', input: 9, output: 9 },
     "flux-2-klein": { kind: 'perMP/IO', input: 2, output: 2 },
+    "flux-3": { kind: 'perSizeTier', tiers: FLUX3_TIERS.map(({ maxPixels, value }) => ({ maxPixels, value })) },
     // その他
     "z-image": { kind: 'perMP', value: 1 },
     "kling-image/o1": { kind: 'fixed', value: 5 },
