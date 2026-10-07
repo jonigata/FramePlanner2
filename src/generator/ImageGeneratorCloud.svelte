@@ -99,7 +99,7 @@
   }
 
   function autoSizeFromFrame() {
-    const isNanoBanana = model === 'nano-banana' || model === 'nano-banana-pro' || model === 'nano-banana-2';
+    const isNanoBanana = model === 'nano-banana' || model === 'nano-banana-pro' || model === 'nano-banana-2' || model === 'nano-banana-2.1';
     if (isNanoBanana) {
       const targetRatio = frameSize[0] / frameSize[1];
       nanoBananaAspectRatio = findClosestNanoBananaAspect(targetRatio);

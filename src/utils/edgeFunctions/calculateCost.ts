@@ -76,6 +76,7 @@ const COST_SPEC: Record<ImagingModel, CostSpec> = {
     "nano-banana-lite": { kind: 'fixed', value: 6 },
     "nano-banana-pro": { kind: 'perResolution', tiers: { "0.5K": 22, "1K": 22, "2K": 22, "4K": 45 } },
     "nano-banana-2": { kind: 'perResolution', tiers: { "0.5K": 8, "1K": 11, "2K": 16, "4K": 22 } },
+    "nano-banana-2.1": { kind: 'perResolution', tiers: { "0.5K": 12, "1K": 12, "2K": 18, "4K": 24 } }, // $0.08@1K, 2K=1.5x, 4K=2x, 0.5K非対応→1K
     "chrono-edit": { kind: 'fixed', value: 3 },
     "seedream/v4": { kind: 'fixed', value: 5 },
     "seedream/v4.5": { kind: 'fixed', value: 6 },

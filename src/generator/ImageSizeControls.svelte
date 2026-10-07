@@ -14,11 +14,11 @@
   export let aspectRatio = "1:1";
   let nanoBananaResolution: "0.5K" | "1K" | "2K" | "4K" = "1K";
 
-  $: isNanoBanana = model === 'nano-banana' || model === 'nano-banana-pro' || model === 'nano-banana-2';
+  $: isNanoBanana = model === 'nano-banana' || model === 'nano-banana-pro' || model === 'nano-banana-2' || model === 'nano-banana-2.1';
   $: ({ min: sizeMin, max: sizeMax } = getSizeRangeForMode(model));
 
-  // nano-banana-proは0.5K非対応→1Kにフォールバック
-  $: if (model === 'nano-banana-pro' && nanoBananaResolution === '0.5K') {
+  // nano-banana-pro/2.1は0.5K非対応→1Kにフォールバック
+  $: if ((model === 'nano-banana-pro' || model === 'nano-banana-2.1') && nanoBananaResolution === '0.5K') {
     nanoBananaResolution = '1K';
   }
 
